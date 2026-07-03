@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REC 9.9.2 Quality Handover Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>       
+        body { 
+    font-family: Arial, sans-serif; 
+    background-color: #f1f5f9; 
+    color: #0f172a; 
+    padding: 20px; 
+    font-size: 14px; 
+}
+        .section-card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 16px; 
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+        }
+
+        .section-title { 
+            font-weight: 800; 
+            font-size: 16px; 
+            margin-bottom: 16px; 
+            border-bottom: 1px solid #e2e8f0; 
+            padding-bottom: 8px; 
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bubble-btn { 
+            padding: 10px 12px; 
+            border-radius: 50px; 
+            border: 1px solid #e2e8f0; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            background: #f8fafc; 
+            text-align: center;
+            color: #334155;
+            font-size: 12px;
+        }
+        .bubble-btn.conforming { background: #f0fdf4; border-color: #22c55e; color: #166534; box-shadow: 0 0 0 1px #22c55e; }
+        .bubble-btn.nc { background: #fef2f2; border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 0 1px #ef4444; }
+
+        .bubble-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-height: 55px;
+            width: 100%;
+            max-width: 110px;
+            margin: 0 auto;
+        }
+        .bubble-block.conforming { background: #dcfce7 !important; border-color: #22c55e !important; }
+        .bubble-block.nc { background: #fee2e2 !important; border-color: #ef4444 !important; }
+
+        .bubble-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; text-align: center; }
+        .bubble-val-input { background: transparent !important; border: none !important; padding: 0 !important; font-size: 18px !important; font-weight: 800 !important; color: #1e293b !important; width: 100% !important; outline: none !important; line-height: 1; text-align: center; }
+        .bubble-range { font-size: 10px; font-weight: 600; color: #94a3b8; text-align: center; }
+
+        .compliance-row { transition: all 0.2s; border-radius: 6px; padding: 4px 8px; position: relative; }
+        .compliance-row.is-conforming { background-color: #f0fdf4; color: #166534; border: 1px solid #22c55e; }
+        .compliance-row.is-nc { background-color: #fef2f2; color: #b91c1c; border: 1px solid #ef4444; }
+
+        .indicator-icon { font-size: 14px; margin-left: 8px; font-weight: bold; }
+
+        .compliance-row input[type="radio"] { display: none; }
+        .compliance-row label {
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            font-size: 10px;
+            transition: all 0.2s;
+            background: white;
+            color: #64748b;
+        }
+        .compliance-row.is-conforming label:has(input:checked) { background: #166534; color: white; border-color: #166534; }
+        .compliance-row.is-nc label:has(input:checked) { background: #b91c1c; color: white; border-color: #b91c1c; }
+
+        .print-header { display: none; }
+        .print-only { display: none; }
+        .status-icon { display: none; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 0.6cm; }
+            body { background: white; padding: 0; color: black; font-size: 11px; line-height: 1.2; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            
+            .status-icon { display: inline-block !important; font-size: 18px !important; margin-right: 6px; }
+            .print-header { display: block; text-align: center; border-bottom: 2.5px solid #000; margin-bottom: 12px; padding-bottom: 6px; }
+            .print-header h1 { font-size: 15px; font-weight: 900; margin: 0; text-transform: uppercase; }
+            
+            .section-card { border: none; margin-bottom: 12px; padding: 0; page-break-inside: avoid; }
+            .section-title { font-size: 12px; border-bottom: 2px solid #000; margin-bottom: 4px; padding-bottom: 2px; text-transform: uppercase; color: black; font-weight: 800; }
+            
+            .ccp-print-container { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; width: 100% !important; }
+            .grid-print-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+            .ccp-block-print { margin-bottom: 0 !important; border: 1.5px solid #000 !important; padding: 8px !important; background: transparent !important; }
+            .ccp-header-print { background: #eee !important; -webkit-print-color-adjust: exact; padding: 4px; border-bottom: 1.5px solid #000; font-weight: 900; margin-bottom: 6px; }
+            
+            .bubble-block { padding: 4px; background: #fff !important; border: 1px solid #000 !important; text-align: center; border-radius: 4px; min-height: auto; max-width: 75px; }
+            .bubble-block.conforming { background: #dcfce7 !important; -webkit-print-color-adjust: exact; }
+            .bubble-block.nc { background: #fee2e2 !important; -webkit-print-color-adjust: exact; }
+            .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
+            
+            .compliance-answer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
+            .section-print-notes { font-size: 12px !important; font-weight: 700 !important; color: #b91c1c !important; margin-top: 8px; font-style: italic; line-height: 1.4; border-top: 0.5px solid #eee; padding-top: 4px; }
+
+            .page-break { page-break-before: always; margin-top: 1cm; }
+            .nrcs-summary-print { border: 1.5px solid #000; padding: 8px; font-weight: 800; font-size: 11px; background: #f8fafc; text-align: center; border-radius: 4px; text-transform: uppercase; }
+            .nrcs-row-print { display: flex !important; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
+            
+            .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
+        }
+    </style>
+</head>
+<body onload="init()">
+
+    <div class="max-w-5xl mx-auto">
+        <div class="print-header">
+            <h1 id="dynamicPrintTitle">REC 9.9.2 QUALITY HANDOVER REPORT  ${shiftVal} - ${dateVal}</h1>
+            <h2 id="dynamicPrintName" class="text-lg" style="margin-top: 5px;">COMPLETED BY: ${shiftVal}</h2>
+        </div>
+
+        <div class="flex justify-between items-center mb-6 no-print">
+            <h1 class="text-3xl font-black text-slate-900">REC 9.9.2 Quality Handover</h1>
+            <div class="flex gap-4 items-center">
+                <span id="printWarning" class="text-[10px] text-red-500 font-bold uppercase">Complete footer to print</span>
+                <button id="printBtn" disabled onclick="preparePrint()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 disabled:bg-slate-300 transition-all">GENERATE PDF</button>
+            </div>
+        </div>
+
+        <!-- 1. Cleaning -->
+        <div class="section-card" id="sec-1">
+            <div class="section-title"><span id="status-1" class="status-icon">⚪</span>1. Cleaning Inspection (REC 7.6.1)</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
+                <div class="bubble-btn" data-name="Entrance/Handwash" onclick="cycleStatus(this, 'sec-1')">Entrance/Handwash</div>
+                <div class="bubble-btn" data-name="Shucking Area" onclick="cycleStatus(this, 'sec-1')">Shucking Area</div>
+                <div class="bubble-btn" data-name="Sorting Area" onclick="cycleStatus(this, 'sec-1')">Sorting Area</div>
+                <div class="bubble-btn" data-name="Live Holding Area" onclick="cycleStatus(this, 'sec-1')">Live Holding Area</div>
+                <div class="bubble-btn" data-name="Live packing room" onclick="cycleStatus(this, 'sec-1')">Live packing room</div>
+                <div class="bubble-btn" data-name="Washing/Salting" onclick="cycleStatus(this, 'sec-1')">Washing/Salting</div>
+                <div class="bubble-btn" data-name="Canning Area" onclick="cycleStatus(this, 'sec-1')">Canning Area</div>
+                <div class="bubble-btn" data-name="Bin Wash" onclick="cycleStatus(this, 'sec-1')">Bin Wash</div>
+            </div>
+            <textarea id="comment-sec-1" class="hidden mt-4 p-3 w-full border-2 border-red-200 rounded-lg text-sm bg-red-50 no-print" placeholder="Describe Cleaning Non-Conformance..."></textarea>
+            <div id="print-notes-1" class="print-only section-print-notes"></div>
+        </div>
+
+        <!-- 2. Hygiene -->
+        <div class="section-card" id="sec-2">
+            <div class="section-title"><span id="status-2" class="status-icon">⚪</span>2. Hygiene + PPE (REC 7.7.1)</div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
+                <div class="bubble-btn" data-name="Uniforms & PPE" onclick="cycleStatus(this, 'sec-2')">Uniforms & PPE</div>
+                <div class="bubble-btn" data-name="Hair & Beard Nets" onclick="cycleStatus(this, 'sec-2')">Hair & Beard Nets</div>
+                <div class="bubble-btn" data-name="No Jewelry Policy" onclick="cycleStatus(this, 'sec-2')">No Jewelry Policy</div>
+                <div class="bubble-btn" data-name="Hand Sanitising" onclick="cycleStatus(this, 'sec-2')">Hand Sanitising</div>
+                <div class="bubble-btn" data-name="Gumboots/Footwear" onclick="cycleStatus(this, 'sec-2')">Gumboots/Footwear</div>
+            </div>
+            <textarea id="comment-sec-2" class="hidden mt-4 p-3 w-full border-2 border-red-200 rounded-lg text-sm bg-red-50 no-print" placeholder="Describe Hygiene Non-Conformance..."></textarea>
+            <div id="print-notes-2" class="print-only section-print-notes"></div>
+        </div>
+
+        <!-- 3. Control Points -->
+        <div class="section-card" id="sec-3">
+            <div class="section-title"><span id="status-3" class="status-icon">⚪</span>3. Control Points Monitoring</div>
+            <div class="flex flex-wrap justify-start gap-3">
+                <div class="bubble-block" data-name="Dry AV Temp"><span class="bubble-label">Dry AV Temp</span><input type="number" class="bubble-val-input cp-val" placeholder="--" oninput="validateBubble(this, 25, 32)"><span class="bubble-range">25-32°C</span></div>
+                <div class="bubble-block" data-name="Dry RH %"><span class="bubble-label">Dry RH %</span><input type="number" class="bubble-val-input cp-val" placeholder="--" oninput="validateBubble(this, 0, 100)"><span class="bubble-range">Range: %</span></div>
+                <div class="bubble-block" data-name="Incubator"><span class="bubble-label">Incubator</span><input type="number" class="bubble-val-input cp-val" placeholder="--" oninput="validateBubble(this, 32, 38)"><span class="bubble-range">32-38°C</span></div>
+                <div class="bubble-block" data-name="LHA Water"><span class="bubble-label">LHA Water</span><input type="number" class="bubble-val-input cp-val" placeholder="--" oninput="validateBubble(this, 11, 18)"><span class="bubble-range">11-18°C</span></div>
+                <div class="bubble-block" data-name="Chiller 1"><span class="bubble-label">Chiller 1</span><input type="number" class="bubble-val-input cp-val" placeholder="--" oninput="validateBubble(this, 0, 10)"><span class="bubble-range">0-10°C</span></div>
+                <div class="bubble-block" data-name="Chiller 2"><span class="bubble-label">Chiller 2</span><input type="number" class="bubble-val-input cp-val" placeholder="--" oninput="validateBubble(this, 0, 10)"><span class="bubble-range">0-10°C</span></div>
+                <div class="bubble-block" data-name="Freezer"><span class="bubble-label">Freezer</span><input type="number" class="bubble-val-input cp-val" placeholder="--" oninput="validateBubble(this, -25, -18)"><span class="bubble-range">-25/-18</span></div>
+            </div>
+            <textarea id="comment-sec-3" class="hidden mt-4 p-3 w-full border-2 border-red-200 rounded-lg text-sm bg-red-50 no-print" placeholder="Explain temperature/humidity deviation..."></textarea>
+            <div id="print-notes-3" class="print-only section-print-notes"></div>
+        </div>
+
+        <div class="section-card" id="sec-4">
+            <div class="section-title"><span id="status-4" class="status-icon">⚪</span>4. Critical Control Points (CCP's)</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ccp-print-container">
+                <div class="p-3 border rounded-lg bg-slate-50 ccp-block-print">
+                    <h3 class="font-bold text-blue-800 text-[10px] mb-2 uppercase print:text-black ccp-header-print">SEAMING (REC 7.2.12)</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div class="print-only font-bold text-[9px]">AG CODE: <span id="p-ag-code" class="border-b border-black px-2">---</span></div>
+                        <div class="print-only font-bold text-[9px]">PALLET: <span id="p-pallet-num" class="border-b border-black px-2">---</span></div>
+                        <input type="text" id="ag-code" placeholder="AG CODE" class="ccp-input uppercase no-print border rounded p-1 text-xs">
+                        <input type="text" id="pallet-num" placeholder="PALLET" class="ccp-input uppercase no-print border rounded p-1 text-xs">
+                    </div>
+                    <div class="space-y-1 text-[10px] print:text-[11px]">
+                        <div class="flex justify-between items-center compliance-row" id="row-ccp1">
+                            <span>Seam Inspections OK? <span class="indicator-icon"></span></span>
+                            <div class="flex gap-2 no-print">
+                                <label><input type="radio" name="ccp1" value="YES" onchange="updateRadioTheme(this)"> Y</label>
+                                <label><input type="radio" name="ccp1" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                            </div>
+                            <span class="print-only compliance-answer font-black" id="p-ccp1">---</span>
+                        </div>
+                        <div class="flex justify-between items-center compliance-row" id="row-ccp2">
+                            <span>Producer end seams in spec? <span class="indicator-icon"></span></span>
+                            <div class="flex gap-2 no-print">
+                                <label><input type="radio" name="ccp2" value="YES" onchange="updateRadioTheme(this)"> Y</label>
+                                <label><input type="radio" name="ccp2" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                            </div>
+                            <span class="print-only compliance-answer font-black" id="p-ccp2">---</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-3 border rounded-lg bg-orange-50 ccp-block-print">
+                    <h3 class="font-bold text-orange-800 text-[10px] mb-2 uppercase print:text-black ccp-header-print">RETORTING (REC 7.2.8)</h3>
+                    <div class="grid grid-cols-1 mb-2">
+                        <div class="print-only font-bold text-[9px]">AG CODE: <span id="p-batch-code" class="border-b border-black px-2">---</span></div>
+                        <input type="text" id="batch-code" placeholder="AG CODE" class="ccp-input uppercase no-print border rounded p-1 text-xs">
+                    </div>
+                    <div class="space-y-1 text-[10px] print:text-[11px]">
+                        <div class="flex justify-between items-center compliance-row" id="row-ccp3">
+                            <span>Recipes Correct? <span class="indicator-icon"></span></span>
+                            <div class="flex gap-2 no-print">
+                                <label><input type="radio" name="ccp3" value="YES" onchange="updateRadioTheme(this)"> Y</label>
+                                <label><input type="radio" name="ccp3" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                            </div>
+                            <span class="print-only compliance-answer font-black" id="p-ccp3">---</span>
+                        </div>
+                        <div class="flex justify-between items-center compliance-row" id="row-ccp4">
+                            <span>No Faults/Alarms? <span class="indicator-icon"></span></span>
+                            <div class="flex gap-2 no-print">
+                                <label><input type="radio" name="ccp4" value="YES" onchange="updateRadioTheme(this)"> Y</label>
+                                <label><input type="radio" name="ccp4" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                            </div>
+                            <span class="print-only compliance-answer font-black" id="p-ccp4">---</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <textarea id="comment-sec-4" class="hidden mt-3 p-3 w-full border-2 border-red-200 rounded-lg text-sm bg-red-50 no-print" placeholder="Describe CCP Action taken..."></textarea>
+            <div id="print-notes-4" class="print-only section-print-notes"></div>
+        </div>
+
+        <div class="section-card" id="sec-5">
+            <div class="section-title"><span id="status-5" class="status-icon">⚪</span>5. Operational PRPs</div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                <div class="flex justify-between items-center compliance-row" id="row-op1">
+                    <span>Dried size consistency? <span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op1" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op1" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-op1">--</span>
+                </div>
+                <div class="flex justify-between items-center compliance-row" id="row-op2">
+                    <span>Dried color acceptable? <span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op2" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op2" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-op2">--</span>
+                </div>
+                <div class="flex justify-between items-center compliance-row" id="row-op3">
+                    <span>Live tags correct? <span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op3" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op3" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-op3">--</span>
+                </div>
+                <div class="flex justify-between items-center compliance-row" id="row-op4">
+                    <span>Live grades correct? <span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op4" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op4" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-op4">--</span>
+                </div>
+            </div>
+            <textarea id="comment-sec-5" class="hidden mt-2 p-2 w-full border-2 border-red-200 rounded-lg text-xs bg-red-50 no-print" placeholder="Describe deviation..."></textarea>
+            <div id="print-notes-5" class="print-only section-print-notes"></div>
+        </div>
+
+        <div class="section-card" id="sec-6">
+            <div class="section-title"><span id="status-6" class="status-icon">⚪</span>6. Final Inspections</div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                <div class="flex justify-between items-center compliance-row" id="row-f1">
+                    <span>Cans within spec? <span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="f1" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f1" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-f1">--</span>
+                </div>
+                <div class="flex justify-between items-center compliance-row" id="row-f2">
+                    <span>Dried within spec? <span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="f2" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f2" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-f2">--</span>
+                </div>
+                <div class="flex justify-between items-center compliance-row" id="row-f3">
+                    <span>Live within spec? <span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="f3" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f3" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-f3">--</span>
+                </div>
+                <div class="flex justify-between items-center compliance-row" id="row-f4">
+                    <span>Labels correct? (dry and live labels printed)<span class="indicator-icon"></span></span>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="f4" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f4" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <span class="print-only compliance-answer font-black" id="p-f4">--</span>
+                </div>
+            </div>
+            <textarea id="comment-sec-6" class="hidden mt-2 p-2 w-full border-2 border-red-200 rounded-lg text-xs bg-red-50 no-print" placeholder="Describe deviation..."></textarea>
+            <div id="print-notes-6" class="print-only section-print-notes"></div>
+        </div>
+
+        <div class="section-card" id="sec-7">
+            <div class="section-title"><span id="status-7" class="status-icon">⚪</span>7. NRCS Inspection Reporting</div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-4 grid-print-2">
+                <div class="compliance-row border-b pb-1 mb-2" id="row-rel-can">
+                    <div class="flex justify-between items-center text-[10px] print:text-[11px]">
+                        <span class="font-bold uppercase">Can Releases up to date? <span class="indicator-icon"></span></span>
+                        <div class="flex gap-2 no-print">
+                            <label><input type="radio" name="rel-can" value="YES" onchange="updateRadioTheme(this)"> Y</label>
+                            <label><input type="radio" name="rel-can" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                        </div>
+                        <span class="print-only compliance-answer font-black" id="p-rel-can">---</span>
+                    </div>
+                </div>
+                <div class="compliance-row border-b pb-1 mb-2" id="row-rel-dry">
+                    <div class="flex justify-between items-center text-[10px] print:text-[11px]">
+                        <span class="font-bold uppercase">Dry Releases up to date? <span class="indicator-icon"></span></span>
+                        <div class="flex gap-2 no-print">
+                            <label><input type="radio" name="rel-dry" value="YES" onchange="updateRadioTheme(this)"> Y</label>
+                            <label><input type="radio" name="rel-dry" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                        </div>
+                        <span class="print-only compliance-answer font-black" id="p-rel-dry">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Removed sec-7 specific comment textarea as requested -->
+
+            <div id="nrcs-container" class="space-y-3 no-print">
+                <div class="nrcs-row space-y-2 pb-3 border-b last:border-0">
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="AG Batch Code" class="w-1/4 border rounded p-1 text-xs nrcs-code-input uppercase">
+                        <select class="w-1/2 border rounded p-1 text-xs nrcs-desc-input">
+                            <option value="">-- Select Product --</option>
+                            <option value="Abalone in Brine (Can)">Abalone in Brine (Can)</option>
+                            <option value="Abalone in Sauce (Can)">Abalone in Sauce (Can)</option>
+                            <option value="Whole Dried Abalone">Whole Dried Abalone</option>
+                            <option value="Live Abalone">Live Abalone</option>
+                            <option value="Canned Minced Abalone">Canned Minced Abalone</option>
+                        </select>
+                        <select class="w-1/4 border rounded p-1 text-xs nrcs-conform-input">
+                            <option value="YES">CONFORMS: YES</option>
+                            <option value="NO">CONFORMS: NO</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-center px-1">
+                        <div class="flex gap-6 items-center text-[10px] font-black text-slate-500">
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="nrcs-retort w-3 h-3"> RETORT PAPERWORK SIGNED</label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="nrcs-seam w-3 h-3"> SEAM PAPERWORK SIGNED</label>
+                        </div>
+                        <button class="text-red-500 font-bold text-[9px] uppercase hover:underline" onclick="this.closest('.nrcs-row').remove()">Remove</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="print-only nrcs-summary-print">
+                NRCS Batches Inspected during shift: <span id="nrcs-count-val">0</span>
+            </div>
+            
+            <button onclick="addNRCS()" class="mt-3 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] no-print hover:bg-blue-700 shadow-md transition-all">+ ADD BATCH</button>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">8. General Handover Comments</div>
+            <textarea id="gen-comments" rows="2" placeholder="Enter additional shift notes..." class="no-print p-3 text-sm w-full border rounded"></textarea>
+            <div id="print-gen-comments" class="print-only text-[11px] font-medium italic min-h-[30px] border p-2 rounded whitespace-pre-wrap break-words"></div>
+        </div>
+
+        <div class="bg-slate-900 p-4 rounded-xl text-white mb-6 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Date:</label>
+                    <input type="date" id="hDate" class="bg-white text-black font-bold border-none w-full rounded-md p-2 outline-none text-xs" oninput="validatePrint()">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Shift:</label>
+                    <select id="hShift" class="bg-white text-black font-bold border-none w-full rounded-md p-2 outline-none text-xs" oninput="validatePrint()">
+                        <option value="">SELECT SHIFT</option>
+                        <option value="DAY">DAY</option>
+                        <option value="NIGHT">NIGHT</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Quality Controller:</label>
+                    <input type="text" id="hName" class="bg-white text-black font-bold border-none w-full rounded-md p-2 outline-none text-xs uppercase" oninput="validatePrint()">
+                </div>
+            </div>
+        </div>
+        
+        <div class="print-only signature-area">
+            <div class="signature-line"></div>
+        </div>
+
+        <div class="print-only page-break">
+            <div class="section-title">Annexure: NRCS Batch Details</div>
+            <div id="nrcs-detail-print"></div>
+            <p class="text-[9px] mt-4 italic text-slate-500">End of Report Details</p>
+        </div>
+
+    </div>
+
+    <script>
+        function init() {
+            updateComplianceIcons();
+            validatePrint();
+        }
+
+        function cycleStatus(btn, sectionId) {
+            if (btn.classList.contains('conforming')) {
+                btn.classList.remove('conforming');
+                btn.classList.add('nc');
+            } else if (btn.classList.contains('nc')) {
+                btn.classList.remove('nc');
+            } else {
+                btn.classList.add('conforming');
+            }
+            updateComplianceIcons();
+        }
+
+        function validateBubble(input, min, max) {
+            const val = parseFloat(input.value);
+            const parent = input.closest('.bubble-block');
+            if (!input.value) {
+                parent.classList.remove('conforming', 'nc');
+            } else if (val >= min && val <= max) {
+                parent.classList.add('conforming');
+                parent.classList.remove('nc');
+            } else {
+                parent.classList.add('nc');
+                parent.classList.remove('conforming');
+            }
+            updateComplianceIcons();
+        }
+
+        function updateRadioTheme(radio) {
+            const row = radio.closest('.compliance-row');
+            const indicator = row.querySelector('.indicator-icon');
+            const printAns = document.getElementById('p-' + radio.name);
+            
+            if (radio.value === 'YES') {
+                row.classList.add('is-conforming');
+                row.classList.remove('is-nc');
+                if (printAns) { printAns.innerText = '✅'; printAns.style.color = '#166534'; }
+            } else {
+                row.classList.add('is-nc');
+                row.classList.remove('is-conforming');
+                if (printAns) { printAns.innerText = '❌'; printAns.style.color = '#b91c1c'; }
+            }
+            updateComplianceIcons();
+        }
+
+        function updateComplianceIcons() {
+            const sections = [
+                { id: 'sec-1', statusId: 'status-1', ncSelector: '.nc', anySelector: '.conforming, .nc' },
+                { id: 'sec-2', statusId: 'status-2', ncSelector: '.nc', anySelector: '.conforming, .nc' },
+                { id: 'sec-3', statusId: 'status-3', ncSelector: '.nc', anySelector: '.conforming, .nc' },
+                { id: 'sec-4', statusId: 'status-4', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' },
+                { id: 'sec-5', statusId: 'status-5', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' },
+                { id: 'sec-6', statusId: 'status-6', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' },
+                { id: 'sec-7', statusId: 'status-7', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' }
+            ];
+            sections.forEach(sec => {
+                const sectionEl = document.getElementById(sec.id);
+                if (!sectionEl) return;
+                const isNC = sectionEl.querySelectorAll(sec.ncSelector).length > 0;
+                const hasInput = sectionEl.querySelectorAll(sec.anySelector).length > 0;
+                const icon = document.getElementById(sec.statusId);
+                
+                if (!hasInput) { icon.innerText = '⚪'; icon.style.color = '#94a3b8'; } 
+                else if (isNC) { icon.innerText = '❌'; icon.style.color = '#ef4444'; } 
+                else { icon.innerText = '✅'; icon.style.color = '#22c55e'; }
+
+                const commentBox = document.getElementById(`comment-${sec.id}`);
+                if (commentBox) {
+                    if (isNC) commentBox.classList.remove('hidden');
+                    else commentBox.classList.add('hidden');
+                }
+            });
+        }
+
+        function addNRCS() {
+            const container = document.getElementById('nrcs-container');
+            const row = document.createElement('div');
+            row.className = 'nrcs-row space-y-2 pb-3 border-b last:border-0';
+            row.innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" placeholder="AG Batch Code" class="w-1/4 border rounded p-1 text-xs nrcs-code-input uppercase">
+                    <select class="w-1/2 border rounded p-1 text-xs nrcs-desc-input">
+                        <option value="">-- Select Product --</option>
+                        <option value="Abalone in Brine (Can)">Abalone in Brine (Can)</option>
+                        <option value="Abalone in Sauce (Can)">Abalone in Sauce (Can)</option>
+                        <option value="Whole Dried Abalone">Whole Dried Abalone</option>
+                        <option value="Live Abalone">Live Abalone</option>
+                        <option value="Canned Minced Abalone">Canned Minced Abalone</option>
+                    </select>
+                    <select class="w-1/4 border rounded p-1 text-xs nrcs-conform-input">
+                        <option value="YES">CONFORMS: YES</option>
+                        <option value="NO">CONFORMS: NO</option>
+                    </select>
+                </div>
+                <div class="flex justify-between items-center px-1">
+                    <div class="flex gap-6 items-center text-[10px] font-black text-slate-500">
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="nrcs-retort w-3 h-3"> RETORT PAPERWORK SIGNED</label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="nrcs-seam w-3 h-3"> SEAM PAPERWORK SIGNED</label>
+                    </div>
+                    <button class="text-red-500 font-bold text-[9px] uppercase hover:underline" onclick="this.closest('.nrcs-row').remove()">Remove</button>
+                </div>`;
+            container.appendChild(row);
+        }
+
+        function validatePrint() {
+            const dateInput = document.getElementById('hDate').value;
+            const shiftInput = document.getElementById('hShift').value;
+            const nameInput = document.getElementById('hName').value.trim();
+            const btn = document.getElementById('printBtn');
+            const isReady = (dateInput !== "" && shiftInput !== "" && nameInput !== "");
+            btn.disabled = !isReady;
+            if(document.getElementById('printWarning')) document.getElementById('printWarning').classList.toggle('hidden', isReady);
+        }
+
+        function preparePrint() {
+            const dateVal = document.getElementById('hDate').value;
+            const shiftVal = document.getElementById('hShift').value;
+            
+            document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HANDOVER REPORT              ${shiftVal} SHIFT - ${dateVal}`;
+            document.title = `REC_9.9.2_Quality_Handover_${shiftVal}SHIFT_${dateVal}`;
+            
+            document.getElementById('p-ag-code').innerText = document.getElementById('ag-code').value || "---";
+            document.getElementById('p-pallet-num').innerText = document.getElementById('pallet-num').value || "---";
+            document.getElementById('p-batch-code').innerText = document.getElementById('batch-code').value || "---";
+            
+            for (let i = 1; i <= 6; i++) {
+                const commentBox = document.getElementById(`comment-sec-${i}`);
+                const commentText = commentBox ? commentBox.value : "";
+                const section = document.getElementById(`sec-${i}`);
+                if(!section) continue;
+
+                let ncDetails = "";
+                if (i <= 3) {
+                    const ncItems = [];
+                    section.querySelectorAll('.nc').forEach(el => {
+                        const name = el.getAttribute('data-name');
+                        if (name) ncItems.push(name);
+                    });
+                    if (ncItems.length > 0) ncDetails = "NON-CONFORMING: " + ncItems.join(", ") + ". ";
+                } else {
+                    const ncRows = [];
+                    section.querySelectorAll('.is-nc').forEach(row => {
+                        const label = row.querySelector('span')?.innerText;
+                        if (label) ncRows.push(label.trim());
+                    });
+                    if (ncRows.length > 0) ncDetails = "DEVIATION DETECTED: " + ncRows.join(", ") + ". ";
+                }
+                const finalOutput = document.getElementById(`print-notes-${i}`);
+                if (finalOutput) finalOutput.innerText = (ncDetails + commentText).trim();
+            }
+
+            const detailContainer = document.getElementById('nrcs-detail-print');
+            detailContainer.innerHTML = "";
+            let batchCount = 0;
+            
+            document.querySelectorAll('.nrcs-row').forEach(row => {
+                const code = row.querySelector('.nrcs-code-input').value.trim();
+                const desc = row.querySelector('.nrcs-desc-input').value;
+                const conform = row.querySelector('.nrcs-conform-input').value === 'YES' ? "✅" : "❌";
+                const retortChecked = row.querySelector('.nrcs-retort').checked ? "✅" : "❌";
+                const seamChecked = row.querySelector('.nrcs-seam').checked ? "✅" : "❌";
+                
+                if(code) {
+                    batchCount++;
+                    const detailRow = document.createElement('div');
+                    detailRow.className = 'nrcs-row-print';
+                    detailRow.innerHTML = `
+                        <div style="flex:1">CODE: ${code.toUpperCase()}</div>
+                        <div style="flex:2">PRODUCT: ${desc || "---"}</div>
+                        <div style="flex:0.8">CONFORMS: ${conform}</div>
+                        <div style="flex:1.2">RETORT PAPERWORK SIGNED: ${retortChecked}</div>
+                        <div style="flex:1.2">SEAM PAPERWORK SIGNED: ${seamChecked}</div>
+                    `;
+                    detailContainer.appendChild(detailRow);
+                }
+            });
+            document.getElementById('nrcs-count-val').innerText = batchCount;
+            document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || "No additional comments recorded.";
+            
+            window.print();
+        }
+    </script>
+</body>
+</html>
