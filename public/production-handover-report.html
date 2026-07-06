@@ -63,7 +63,7 @@
         .bubble-block.nc { background: #fee2e2 !important; border-color: #ef4444 !important; }
         .bubble-label {
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 600;
             color: #64748b;
             text-transform: uppercase;
             text-align: left;
@@ -73,7 +73,7 @@
             border: none !important;
             padding: 0 !important;
             font-size: 12px !important;
-            font-weight: 800 !important;
+            font-weight: 600 !important;
             color: #1e293b !important;
             width: 100% !important;
             outline: none !important;
@@ -81,7 +81,7 @@
         }
         .bubble-range {
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 500;
             color: #94a3b8;
             text-align: left;
         }
@@ -498,22 +498,14 @@
         }
 
         function toggleField(btn, fieldId, sectionId) {
-            const sectionEl = document.getElementById(sectionId);
             const fieldBlock = document.getElementById(fieldId);
             const isOpen = !fieldBlock.classList.contains('hidden');
-            const relatedPanels = sectionEl.querySelectorAll('[id$="-fields"], [id^="harvest-"]');
 
             if (isOpen) {
                 fieldBlock.classList.add('hidden');
                 btn.classList.remove('conforming');
                 clearSectionFields(fieldBlock);
             } else {
-                relatedPanels.forEach(panel => {
-                    if (panel.id !== fieldId) {
-                        panel.classList.add('hidden');
-                        clearSectionFields(panel);
-                    }
-                });
                 fieldBlock.classList.remove('hidden');
                 btn.classList.add('conforming');
             }
@@ -547,14 +539,27 @@
             });
             const countSpan = container.querySelector('.bubble-val-input[id$="-count"]');
             if (countSpan) countSpan.innerText = '--';
-            container.querySelectorAll('.bubble-block').forEach(block => block.classList.remove('conforming'));
+            container.querySelectorAll('.bubble-block').forEach(block => {
+                block.classList.remove('conforming');
+                block.classList.remove('nc');
+            });
         }
 
         function markFieldInput(input) {
             const parent = input.closest('.bubble-block');
             if (!parent) return;
-            if (input.value.trim()) parent.classList.add('conforming');
-            else parent.classList.remove('conforming');
+            const value = input.value.trim();
+            const isYesNoField = /yes\s*\/\s*no/i.test(input.getAttribute('placeholder') || '');
+            if (!value) {
+                parent.classList.remove('conforming');
+                parent.classList.remove('nc');
+            } else if (isYesNoField && /^yes\b/i.test(value)) {
+                parent.classList.remove('conforming');
+                parent.classList.add('nc');
+            } else {
+                parent.classList.remove('nc');
+                parent.classList.add('conforming');
+            }
             updateComplianceIcons();
         }
 
