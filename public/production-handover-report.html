@@ -928,9 +928,14 @@
             const rows = Array.from(document.querySelectorAll('#harvest-job-list .compliance-row'));
             if (!rows.length) return '<div class="print-empty">No harvest jobs recorded.</div>';
             const items = rows.map(row => {
-                const parts = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).filter(Boolean);
+                const parts = [];
+                // prefer inline-detail-pill spans, fall back to any immediate child text
+                row.querySelectorAll('.inline-detail-pill, div > div, div > span, span').forEach(el => {
+                    const t = el.textContent.trim();
+                    if (t) parts.push(t);
+                });
                 return parts.join(' | ');
-            });
+            }).filter(Boolean);
             return renderPrintList(items);
         }
 
@@ -957,10 +962,16 @@
                 { id: 'thirdparty-job-list', title: 'Third party abalone' }
             ];
             lists.forEach(list => {
-                const rows = Array.from(document.getElementById(list.id).querySelectorAll('.compliance-row'));
+                const container = document.getElementById(list.id);
+                if (!container) return;
+                const rows = Array.from(container.querySelectorAll('.compliance-row'));
                 rows.forEach(row => {
-                    const parts = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).filter(Boolean);
-                    items.push(`${list.title}: ${parts.join(' | ')}`);
+                    const parts = [];
+                    row.querySelectorAll('.inline-detail-pill, div > div, div > span, span').forEach(el => {
+                        const t = el.textContent.trim();
+                        if (t) parts.push(t);
+                    });
+                    if (parts.length) items.push(`${list.title}: ${parts.join(' | ')}`);
                 });
             });
             if (!items.length) {
@@ -995,10 +1006,16 @@
                 { id: 'dry-grade-job-list', title: 'Grading' }
             ];
             lists.forEach(list => {
-                const rows = Array.from(document.getElementById(list.id).querySelectorAll('.compliance-row'));
+                const container = document.getElementById(list.id);
+                if (!container) return;
+                const rows = Array.from(container.querySelectorAll('.compliance-row'));
                 rows.forEach(row => {
-                    const parts = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).filter(Boolean);
-                    items.push(`${list.title}: ${parts.join(' | ')}`);
+                    const parts = [];
+                    row.querySelectorAll('.inline-detail-pill, div > div, div > span, span').forEach(el => {
+                        const t = el.textContent.trim();
+                        if (t) parts.push(t);
+                    });
+                    if (parts.length) items.push(`${list.title}: ${parts.join(' | ')}`);
                 });
             });
             if (!items.length) {
