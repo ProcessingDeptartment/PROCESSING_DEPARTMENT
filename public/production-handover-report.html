@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REC 9.9.1 Production Handover Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 20px;
+            font-size: 14px;
+        }
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .section-title {
+            font-weight: 800;
+            font-size: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bubble-btn {
+            padding: 10px 12px;
+            border-radius: 50px;
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+            text-align: center;
+            color: #334155;
+            font-size: 12px;
+            user-select: none;
+        }
+        .bubble-btn.conforming { background: #f0fdf4; border-color: #22c55e; color: #166534; box-shadow: 0 0 0 1px #22c55e; }
+        .bubble-btn.nc { background: #fef2f2; border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 0 1px #ef4444; }
+        .bubble-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-height: 65px;
+            width: 100%;
+            max-width: 260px;
+        }
+        .bubble-block.conforming { background: #dcfce7 !important; border-color: #22c55e !important; }
+        .bubble-block.nc { background: #fee2e2 !important; border-color: #ef4444 !important; }
+        .bubble-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            text-align: left;
+        }
+        .bubble-val-input {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            font-size: 16px !important;
+            font-weight: 800 !important;
+            color: #1e293b !important;
+            width: 100% !important;
+            outline: none !important;
+            line-height: 1.2;
+        }
+        .bubble-range {
+            font-size: 10px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-align: left;
+        }
+        .compliance-row {
+            transition: all 0.2s;
+            border-radius: 6px;
+            padding: 8px 10px;
+            position: relative;
+            border: 1px solid #e2e8f0;
+        }
+        .compliance-row.is-conforming { background-color: #f0fdf4; color: #166534; border: 1px solid #22c55e; }
+        .compliance-row.is-nc { background-color: #fef2f2; color: #b91c1c; border: 1px solid #ef4444; }
+        .indicator-icon { font-size: 14px; margin-left: 8px; font-weight: bold; }
+        .compliance-row input[type="radio"] { display: none; }
+        .compliance-row label {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            font-size: 10px;
+            transition: all 0.2s;
+            background: white;
+            color: #64748b;
+        }
+        .compliance-row.is-conforming label:has(input:checked) { background: #166534; color: white; border-color: #166534; }
+        .compliance-row.is-nc label:has(input:checked) { background: #b91c1c; color: white; border-color: #b91c1c; }
+        .print-header { display: none; }
+        .print-only { display: none; }
+        .status-icon { display: none; }
+        @media print {
+            @page { size: A4 portrait; margin: 0.6cm; }
+            body { background: white; padding: 0; color: black; font-size: 11px; line-height: 1.2; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .status-icon { display: inline-block !important; font-size: 18px !important; margin-right: 6px; }
+            .print-header { display: block; text-align: center; border-bottom: 2.5px solid #000; margin-bottom: 12px; padding-bottom: 6px; }
+            .print-header h1 { font-size: 15px; font-weight: 900; margin: 0; text-transform: uppercase; }
+            .section-card { border: none; margin-bottom: 12px; padding: 0; page-break-inside: avoid; }
+            .section-title { font-size: 12px; border-bottom: 2px solid #000; margin-bottom: 4px; padding-bottom: 2px; text-transform: uppercase; color: black; font-weight: 800; }
+            .bubble-block { padding: 4px; background: #fff !important; border: 1px solid #000 !important; text-align: center; border-radius: 4px; min-height: auto; max-width: 75px; }
+            .bubble-block.conforming { background: #dcfce7 !important; -webkit-print-color-adjust: exact; }
+            .bubble-block.nc { background: #fee2e2 !important; -webkit-print-color-adjust: exact; }
+            .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
+            .compliance-answer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
+            .section-print-notes { font-size: 12px !important; font-weight: 700 !important; color: #b91c1c !important; margin-top: 8px; font-style: italic; line-height: 1.4; border-top: 0.5px solid #eee; padding-top: 4px; }
+            .page-break { page-break-before: always; margin-top: 1cm; }
+            .production-row-print { display: flex !important; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
+            .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
+        }
+    </style>
+</head>
+<body onload="init()">
+    <div class="max-w-5xl mx-auto">
+        <div class="print-header">
+            <h1 id="dynamicPrintTitle">REC 9.9.1 PRODUCTION HANDOVER REPORT</h1>
+            <h2 id="dynamicPrintName" class="text-lg" style="margin-top: 5px;">COMPLETED BY:</h2>
+        </div>
+
+        <div class="flex justify-between items-center mb-6 no-print">
+            <h1 class="text-3xl font-black text-slate-900">REC 9.9.1 Production Handover</h1>
+            <div class="flex gap-4 items-center">
+                <span id="printWarning" class="text-[10px] text-red-500 font-bold uppercase">Complete footer to print</span>
+                <button id="printBtn" disabled onclick="preparePrint()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 disabled:bg-slate-300 transition-all">GENERATE PDF</button>
+            </div>
+        </div>
+
+        <!-- 2. Staffing & Attendance -->
+        <div class="section-card" id="sec-2">
+            <div class="section-title"><span id="status-2" class="status-icon">⚪</span>2. Staffing & Attendance</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
+                <div class="bubble-btn" data-name="Staff absent" onclick="toggleField(this, 'staff-absent-fields', 'sec-2')">Staff absent</div>
+                <div class="bubble-btn" data-name="Staff on leave" onclick="toggleField(this, 'staff-leave-fields', 'sec-2')">Staff on leave</div>
+            </div>
+            <div id="staff-absent-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="bubble-block">
+                    <span class="bubble-label">Staff absent</span>
+                    <input type="text" id="staff-absent-input" class="bubble-val-input" placeholder="Names / count" oninput="markFieldInput(this)">
+                </div>
+            </div>
+            <div id="staff-leave-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="bubble-block">
+                    <span class="bubble-label">Staff on leave</span>
+                    <input type="text" id="staff-leave-input" class="bubble-val-input" placeholder="Names / reason" oninput="markFieldInput(this)">
+                </div>
+            </div>
+            <textarea id="comment-sec-2" class="hidden mt-4 p-3 w-full border-2 border-red-200 rounded-lg text-sm bg-red-50 no-print" placeholder="Describe staffing notes or actions..."></textarea>
+            <div id="print-notes-2" class="print-only section-print-notes"></div>
+        </div>
+
+        <!-- 1. Processes on shift -->
+        <div class="section-card" id="sec-1">
+            <div class="section-title"><span id="status-1" class="status-icon">⚪</span>1. Processes on shift</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
+                <div class="bubble-btn" data-name="Live sorting" onclick="cycleStatus(this, 'sec-1')">Live sorting</div>
+                <div class="bubble-btn" data-name="Live packing" onclick="cycleStatus(this, 'sec-1')">Live packing</div>
+                <div class="bubble-btn" data-name="Frozen sorting" onclick="cycleStatus(this, 'sec-1')">Frozen sorting</div>
+                <div class="bubble-btn" data-name="Harvesting" onclick="cycleStatus(this, 'sec-1')">Harvesting</div>
+                <div class="bubble-btn" data-name="Scrub and Precook" onclick="cycleStatus(this, 'sec-1')">Scrub and Precook</div>
+                <div class="bubble-btn" data-name="Dry cooking" onclick="cycleStatus(this, 'sec-1')">Dry cooking</div>
+                <div class="bubble-btn" data-name="Dry grading" onclick="cycleStatus(this, 'sec-1')">Dry grading</div>
+                <div class="bubble-btn" data-name="Canning and retorting" onclick="cycleStatus(this, 'sec-1')">Canning and retorting</div>
+            </div>
+            <textarea id="comment-sec-1" class="hidden mt-4 p-3 w-full border-2 border-red-200 rounded-lg text-sm bg-red-50 no-print" placeholder="Describe any process non-conformance..."></textarea>
+            <div id="print-notes-1" class="print-only section-print-notes"></div>
+        </div>
+
+        <!-- 3. Harvesting -->
+        <div class="section-card" id="sec-3">
+            <div class="section-title"><span id="status-3" class="status-icon">⚪</span>3. Harvesting</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
+                <div class="bubble-btn" data-name="Can" onclick="toggleField(this, 'harvest-can', 'sec-3')">Can</div>
+                <div class="bubble-btn" data-name="Dry" onclick="toggleField(this, 'harvest-dry', 'sec-3')">Dry</div>
+            </div>
+            <div id="harvest-can" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="bubble-block">
+                        <span class="bubble-label">Job number</span>
+                        <input type="text" id="harvest-can-job" class="bubble-val-input" placeholder="Enter job number" oninput="updateHarvestCount('CAN')">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Weight</span>
+                        <input type="number" id="harvest-can-weight" class="bubble-val-input" placeholder="Weight" min="0" oninput="updateHarvestCount('CAN')">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Size range</span>
+                        <select id="harvest-can-size" class="bubble-val-input" onchange="updateHarvestCount('CAN')">
+                            <option value="">Select size</option>
+                            <option value="25">0-50g</option>
+                            <option value="75">50-100g</option>
+                            <option value="125">100-150g</option>
+                            <option value="175">150-200g</option>
+                            <option value="225">200-250g</option>
+                            <option value="275">250-300g</option>
+                            <option value="325">300-350g</option>
+                            <option value="375">350-400g</option>
+                            <option value="425">400-450g</option>
+                            <option value="475">450-500g</option>
+                            <option value="525">500g +</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bubble-block mt-3">
+                    <span class="bubble-label">Auto count</span>
+                    <span id="harvest-can-count" class="bubble-val-input">--</span>
+                </div>
+                <button onclick="addHarvestJob('CAN')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
+            </div>
+            <div id="harvest-dry" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="bubble-block">
+                        <span class="bubble-label">Job number</span>
+                        <input type="text" id="harvest-dry-job" class="bubble-val-input" placeholder="Enter job number" oninput="updateHarvestCount('DRY')">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Weight</span>
+                        <input type="number" id="harvest-dry-weight" class="bubble-val-input" placeholder="Weight" min="0" oninput="updateHarvestCount('DRY')">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Size range</span>
+                        <select id="harvest-dry-size" class="bubble-val-input" onchange="updateHarvestCount('DRY')">
+                            <option value="">Select size</option>
+                            <option value="25">0-50g</option>
+                            <option value="75">50-100g</option>
+                            <option value="125">100-150g</option>
+                            <option value="175">150-200g</option>
+                            <option value="225">200-250g</option>
+                            <option value="275">250-300g</option>
+                            <option value="325">300-350g</option>
+                            <option value="375">350-400g</option>
+                            <option value="425">400-450g</option>
+                            <option value="475">450-500g</option>
+                            <option value="525">500g +</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bubble-block mt-3">
+                    <span class="bubble-label">Auto count</span>
+                    <span id="harvest-dry-count" class="bubble-val-input">--</span>
+                </div>
+                <button onclick="addHarvestJob('DRY')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
+            </div>
+            <div id="harvest-job-list" class="space-y-3 mt-4 no-print"></div>
+            <div id="print-notes-3" class="print-only section-print-notes"></div>
+        </div>
+
+        <!-- 4. Live -->
+        <div class="section-card" id="sec-4">
+            <div class="section-title"><span id="status-4" class="status-icon">⚪</span>4. Live</div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
+                <div class="bubble-btn" data-name="Live sorting" onclick="toggleField(this, 'live-sorting-fields', 'sec-4')">Live sorting</div>
+                <div class="bubble-btn" data-name="Frozen sorting" onclick="toggleField(this, 'frozen-sorting-fields', 'sec-4')">Frozen sorting</div>
+                <div class="bubble-btn" data-name="Live packing" onclick="toggleField(this, 'live-packing-fields', 'sec-4')">Live packing</div>
+            </div>
+            <div id="live-sorting-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="bubble-block">
+                    <span class="bubble-label">No. of baskets in</span>
+                    <input type="number" id="live-sorting-baskets" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                </div>
+                <div class="bubble-block">
+                    <span class="bubble-label">No. of bags produced</span>
+                    <input type="number" id="live-sorting-bags" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                </div>
+            </div>
+            <div id="frozen-sorting-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="bubble-block">
+                    <span class="bubble-label">No. of baskets in</span>
+                    <input type="number" id="frozen-sorting-baskets" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                </div>
+                <div class="bubble-block">
+                    <span class="bubble-label">No. of bags produced</span>
+                    <input type="number" id="frozen-sorting-bags" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                </div>
+            </div>
+            <div id="live-packing-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="bubble-block">
+                    <span class="bubble-label">No. of boxes packed</span>
+                    <input type="number" id="live-packing-boxes" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                </div>
+            </div>
+            <div id="print-notes-4" class="print-only section-print-notes"></div>
+        </div>
+
+        <!-- 5. Canning -->
+        <div class="section-card" id="sec-5">
+            <div class="section-title"><span id="status-5" class="status-icon">⚪</span>5. Canning</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
+                <div class="bubble-btn" data-name="Cultivated abalone" onclick="toggleField(this, 'cultivated-fields', 'sec-5')">Cultivated abalone</div>
+                <div class="bubble-btn" data-name="Third party abalone" onclick="toggleField(this, 'thirdparty-fields', 'sec-5')">Third party abalone</div>
+            </div>
+            <div id="cultivated-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="bubble-block">
+                        <span class="bubble-label">Job number</span>
+                        <input type="text" id="cultivated-job" class="bubble-val-input" placeholder="Job number" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">OOSW %</span>
+                        <input type="number" id="cultivated-oosw" class="bubble-val-input" min="0" max="100" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Precook %</span>
+                        <input type="number" id="cultivated-precook" class="bubble-val-input" min="0" max="100" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">No. of cans closed</span>
+                        <input type="number" id="cultivated-cans" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Product carried over to next shift?</span>
+                        <input type="text" id="cultivated-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                    </div>
+                </div>
+            </div>
+            <div id="thirdparty-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="bubble-block">
+                        <span class="bubble-label">Job number</span>
+                        <input type="text" id="thirdparty-job" class="bubble-val-input" placeholder="Job number" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">OOSW %</span>
+                        <input type="number" id="thirdparty-oosw" class="bubble-val-input" min="0" max="100" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Precook %</span>
+                        <input type="number" id="thirdparty-precook" class="bubble-val-input" min="0" max="100" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">No. of cans closed</span>
+                        <input type="number" id="thirdparty-cans" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Product carried over to next shift?</span>
+                        <input type="text" id="thirdparty-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                    </div>
+                </div>
+            </div>
+            <div id="print-notes-5" class="print-only section-print-notes"></div>
+        </div>
+
+        <!-- 6. Drying -->
+        <div class="section-card" id="sec-6">
+            <div class="section-title"><span id="status-6" class="status-icon">⚪</span>6. Drying</div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
+                <div class="bubble-btn" data-name="Dry processing" onclick="toggleField(this, 'dry-processing-fields', 'sec-6')">Dry processing</div>
+                <div class="bubble-btn" data-name="Grading" onclick="toggleField(this, 'dry-grading-fields', 'sec-6')">Grading</div>
+            </div>
+            <div id="dry-processing-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="bubble-block">
+                        <span class="bubble-label">Job number</span>
+                        <input type="text" id="dry-process-job" class="bubble-val-input" placeholder="Job number" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">OOSW %</span>
+                        <input type="number" id="dry-process-oosw" class="bubble-val-input" min="0" max="100" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">No. of pots cooked</span>
+                        <input type="number" id="dry-process-pots" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">All product stringed & hung?</span>
+                        <input type="text" id="dry-process-stringed" class="bubble-val-input" placeholder="Yes / No" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Product carried over to next shift?</span>
+                        <input type="text" id="dry-process-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                    </div>
+                </div>
+            </div>
+            <div id="dry-grading-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="bubble-block">
+                        <span class="bubble-label">Job number</span>
+                        <input type="text" id="dry-grade-job" class="bubble-val-input" placeholder="Job number" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Date in drying room</span>
+                        <input type="date" id="dry-grade-in" class="bubble-val-input" oninput="updateDaysInDrying()">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Date removed</span>
+                        <input type="date" id="dry-grade-out" class="bubble-val-input" oninput="updateDaysInDrying()">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Days in drying room</span>
+                        <input type="text" id="dry-grade-days" class="bubble-val-input" readonly placeholder="Auto-calc">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Grading complete</span>
+                        <input type="text" id="dry-grade-complete" class="bubble-val-input" placeholder="Yes / No" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Boxing complete</span>
+                        <input type="text" id="dry-grade-boxing" class="bubble-val-input" placeholder="Yes / No" oninput="markFieldInput(this)">
+                    </div>
+                    <div class="bubble-block">
+                        <span class="bubble-label">Product carried over to next shift?</span>
+                        <input type="text" id="dry-grade-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                    </div>
+                </div>
+            </div>
+            <div id="print-notes-6" class="print-only section-print-notes"></div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">7. General Handover Comments</div>
+            <textarea id="gen-comments" rows="2" placeholder="Enter additional shift notes..." class="no-print p-3 text-sm w-full border rounded"></textarea>
+            <div id="print-gen-comments" class="print-only text-[11px] font-medium italic min-h-[30px] border p-2 rounded whitespace-pre-wrap break-words"></div>
+        </div>
+
+        <div class="bg-slate-900 p-4 rounded-xl text-white mb-6 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Date:</label>
+                    <input type="date" id="hDate" class="bg-white text-black font-bold border-none w-full rounded-md p-2 outline-none text-xs" oninput="validatePrint()">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Shift:</label>
+                    <select id="hShift" class="bg-white text-black font-bold border-none w-full rounded-md p-2 outline-none text-xs" oninput="validatePrint()">
+                        <option value="">SELECT SHIFT</option>
+                        <option value="DAY">DAY</option>
+                        <option value="NIGHT">NIGHT</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Shift Manager:</label>
+                    <input type="text" id="hName" class="bg-white text-black font-bold border-none w-full rounded-md p-2 outline-none text-xs uppercase" oninput="validatePrint()">
+                </div>
+            </div>
+        </div>
+
+        <div class="print-only signature-area">
+            <div class="signature-line"></div>
+        </div>
+
+        <div class="print-only page-break">
+            <div class="section-title">Annexure: Production Job Details</div>
+            <div id="production-detail-print"></div>
+            <p class="text-[9px] mt-4 italic text-slate-500">End of Report Details</p>
+        </div>
+
+    </div>
+
+    <script>
+        function init() {
+            updateComplianceIcons();
+            validatePrint();
+        }
+
+        function cycleStatus(btn, sectionId) {
+            if (btn.classList.contains('conforming')) {
+                btn.classList.remove('conforming');
+                btn.classList.add('nc');
+            } else if (btn.classList.contains('nc')) {
+                btn.classList.remove('nc');
+            } else {
+                btn.classList.add('conforming');
+            }
+            updateComplianceIcons();
+        }
+
+        function toggleField(btn, fieldId, sectionId) {
+            const fieldBlock = document.getElementById(fieldId);
+            const isOpen = !fieldBlock.classList.contains('hidden');
+            if (isOpen) {
+                fieldBlock.classList.add('hidden');
+                btn.classList.remove('conforming');
+                clearSectionFields(fieldBlock);
+            } else {
+                fieldBlock.classList.remove('hidden');
+                btn.classList.add('conforming');
+            }
+            updateComplianceIcons();
+        }
+
+        function clearSectionFields(container) {
+            const inputs = container.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
+                else input.value = '';
+                if (input.id === 'dry-grade-days') input.value = '';
+            });
+            const countSpan = container.querySelector('.bubble-val-input[id$="-count"]');
+            if (countSpan) countSpan.innerText = '--';
+            container.querySelectorAll('.bubble-block').forEach(block => block.classList.remove('conforming'));
+        }
+
+        function markFieldInput(input) {
+            const parent = input.closest('.bubble-block');
+            if (!parent) return;
+            if (input.value.trim()) parent.classList.add('conforming');
+            else parent.classList.remove('conforming');
+            updateComplianceIcons();
+        }
+
+        function updateHarvestCount(type) {
+            const prefix = type === 'CAN' ? 'harvest-can' : 'harvest-dry';
+            const weight = parseFloat(document.getElementById(`${prefix}-weight`).value);
+            const size = parseFloat(document.getElementById(`${prefix}-size`).value);
+            const countElement = document.getElementById(`${prefix}-count`);
+            let countText = '--';
+            if (!isNaN(weight) && !isNaN(size) && weight > 0) {
+                const computed = Math.round(weight * size);
+                countText = computed.toString();
+            }
+            countElement.innerText = countText;
+            if (countText !== '--') countElement.closest('.bubble-block')?.classList.add('conforming');
+            updateComplianceIcons();
+        }
+
+        function addHarvestJob(type) {
+            const prefix = type === 'CAN' ? 'harvest-can' : 'harvest-dry';
+            const job = document.getElementById(`${prefix}-job`).value.trim();
+            const weight = document.getElementById(`${prefix}-weight`).value.trim();
+            const sizeText = document.getElementById(`${prefix}-size`).selectedOptions[0]?.textContent || '';
+            const sizeValue = document.getElementById(`${prefix}-size`).value;
+            const count = document.getElementById(`${prefix}-count`).innerText;
+            if (!job || !weight || !sizeValue || count === '--') {
+                alert('Please complete job number, weight and size range before adding the job.');
+                return;
+            }
+            const container = document.getElementById('harvest-job-list');
+            const row = document.createElement('div');
+            row.className = 'compliance-row';
+            row.innerHTML = `
+                <div class="flex flex-col gap-2 text-[12px]">
+                    <div><strong>Type:</strong> ${type}</div>
+                    <div><strong>Job:</strong> ${job}</div>
+                    <div><strong>Weight:</strong> ${weight}</div>
+                    <div><strong>Size:</strong> ${sizeText}</div>
+                    <div><strong>Count:</strong> ${count}</div>
+                </div>
+                <button class="text-red-500 font-bold text-[10px] uppercase hover:underline self-start" onclick="this.closest('.compliance-row').remove(); updateComplianceIcons();">Remove</button>
+            `;
+            container.appendChild(row);
+            document.getElementById(`${prefix}-job`).value = '';
+            document.getElementById(`${prefix}-weight`).value = '';
+            document.getElementById(`${prefix}-size`).value = '';
+            document.getElementById(`${prefix}-count`).innerText = '--';
+            updateComplianceIcons();
+        }
+
+        function updateDaysInDrying() {
+            const start = document.getElementById('dry-grade-in').value;
+            const end = document.getElementById('dry-grade-out').value;
+            const output = document.getElementById('dry-grade-days');
+            if (start && end) {
+                const startDate = new Date(start);
+                const endDate = new Date(end);
+                const diff = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+                output.value = diff >= 0 ? diff.toString() : '';
+            } else {
+                output.value = '';
+            }
+            markFieldInput(output);
+        }
+
+        function updateComplianceIcons() {
+            const sections = [
+                { id: 'sec-1', statusId: 'status-1', ncSelector: '.nc', activeSelector: '.conforming' },
+                { id: 'sec-2', statusId: 'status-2', ncSelector: '.nc', activeSelector: '.conforming' },
+                { id: 'sec-3', statusId: 'status-3', ncSelector: '.nc', activeSelector: '.conforming' },
+                { id: 'sec-4', statusId: 'status-4', ncSelector: '.nc', activeSelector: '.conforming' },
+                { id: 'sec-5', statusId: 'status-5', ncSelector: '.nc', activeSelector: '.conforming' },
+                { id: 'sec-6', statusId: 'status-6', ncSelector: '.nc', activeSelector: '.conforming' }
+            ];
+            sections.forEach(sec => {
+                const sectionEl = document.getElementById(sec.id);
+                if (!sectionEl) return;
+                const isNC = sectionEl.querySelectorAll(sec.ncSelector).length > 0;
+                const hasActive = sectionEl.querySelectorAll(sec.activeSelector).length > 0;
+                const hasJobRows = sec.id === 'sec-3' && document.getElementById('harvest-job-list').children.length > 0;
+                const icon = document.getElementById(sec.statusId);
+                if (!hasActive && !hasJobRows) {
+                    icon.innerText = '⚪';
+                    icon.style.color = '#94a3b8';
+                } else if (isNC) {
+                    icon.innerText = '❌';
+                    icon.style.color = '#ef4444';
+                } else {
+                    icon.innerText = '✅';
+                    icon.style.color = '#22c55e';
+                }
+            });
+        }
+
+        function validatePrint() {
+            const dateInput = document.getElementById('hDate').value;
+            const shiftInput = document.getElementById('hShift').value;
+            const nameInput = document.getElementById('hName').value.trim();
+            const btn = document.getElementById('printBtn');
+            const isReady = (dateInput !== '' && shiftInput !== '' && nameInput !== '');
+            btn.disabled = !isReady;
+            document.getElementById('printWarning').classList.toggle('hidden', isReady);
+        }
+
+        function preparePrint() {
+            const dateVal = document.getElementById('hDate').value;
+            const shiftVal = document.getElementById('hShift').value;
+            const managerName = document.getElementById('hName').value || '---';
+            document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.1 PRODUCTION HANDOVER REPORT ${shiftVal} SHIFT - ${dateVal}`;
+            document.getElementById('dynamicPrintName').innerText = `COMPLETED BY: ${managerName}`;
+            document.title = `REC_9.9.1_Production_Handover_${shiftVal}SHIFT_${dateVal}`;
+
+            const sectionSummaries = {
+                'sec-1': buildSectionSummary('sec-1', ['Live sorting','Live packing','Frozen sorting','Harvesting','Scrub and Precook','Dry cooking','Dry grading','Canning and retorting']),
+                'sec-2': buildStaffingSummary(),
+                'sec-3': buildHarvestSummary(),
+                'sec-4': buildLiveSummary(),
+                'sec-5': buildCanningSummary(),
+                'sec-6': buildDryingSummary()
+            };
+
+            Object.keys(sectionSummaries).forEach(key => {
+                const printNode = document.getElementById(`print-notes-${key.split('-')[1]}`);
+                if (printNode) printNode.innerText = sectionSummaries[key];
+            });
+
+            const detailContainer = document.getElementById('production-detail-print');
+            detailContainer.innerHTML = '';
+            const jobRows = document.querySelectorAll('#harvest-job-list .compliance-row');
+            if (jobRows.length === 0) {
+                detailContainer.innerHTML = '<div class="text-[11px]">No harvest jobs added.</div>';
+            } else {
+                jobRows.forEach(row => {
+                    const detail = document.createElement('div');
+                    detail.className = 'production-row-print';
+                    detail.innerHTML = row.innerHTML.replace(/onclick="[^"]*"/g, '');
+                    detailContainer.appendChild(detail);
+                });
+            }
+
+            document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || 'No additional comments recorded.';
+            window.print();
+        }
+
+        function buildSectionSummary(sectionId, labels) {
+            const section = document.getElementById(sectionId);
+            if (!section) return '';
+            const ncItems = [];
+            section.querySelectorAll('.nc').forEach(el => {
+                const name = el.getAttribute('data-name');
+                if (name) ncItems.push(name);
+            });
+            if (ncItems.length > 0) return `NON-CONFORMING: ${ncItems.join(', ')}.`;
+            const activeItems = [];
+            labels.forEach(label => {
+                const btn = Array.from(section.querySelectorAll('.bubble-btn')).find(el => el.getAttribute('data-name') === label);
+                if (btn && btn.classList.contains('conforming')) activeItems.push(label);
+            });
+            return activeItems.length ? `Active: ${activeItems.join(', ')}.` : '';
+        }
+
+        function buildStaffingSummary() {
+            const absent = document.getElementById('staff-absent-input').value.trim();
+            const leave = document.getElementById('staff-leave-input').value.trim();
+            const items = [];
+            if (absent) items.push(`Absent: ${absent}`);
+            if (leave) items.push(`On leave: ${leave}`);
+            return items.length ? items.join(' | ') : 'No staffing notes recorded.';
+        }
+
+        function buildHarvestSummary() {
+            const rows = Array.from(document.querySelectorAll('#harvest-job-list .compliance-row'));
+            if (!rows.length) return 'No harvest jobs recorded.';
+            return rows.map(row => {
+                const text = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).join(' | ');
+                return text;
+            }).join('\n');
+        }
+
+        function buildLiveSummary() {
+            const values = [];
+            const mapping = [
+                { id: 'live-sorting-baskets', label: 'Live sorting baskets in' },
+                { id: 'live-sorting-bags', label: 'Live sorting bags produced' },
+                { id: 'frozen-sorting-baskets', label: 'Frozen sorting baskets in' },
+                { id: 'frozen-sorting-bags', label: 'Frozen sorting bags produced' },
+                { id: 'live-packing-boxes', label: 'Live packing boxes packed' }
+            ];
+            mapping.forEach(item => {
+                const value = document.getElementById(item.id).value.trim();
+                if (value) values.push(`${item.label}: ${value}`);
+            });
+            return values.length ? values.join(' | ') : 'No live activity details recorded.';
+        }
+
+        function buildCanningSummary() {
+            const sets = [
+                { prefix: 'cultivated', title: 'Cultivated' },
+                { prefix: 'thirdparty', title: 'Third party' }
+            ];
+            const items = [];
+            sets.forEach(set => {
+                const job = document.getElementById(`${set.prefix}-job`).value.trim();
+                if (!job) return;
+                const oosw = document.getElementById(`${set.prefix}-oosw`).value.trim();
+                const precook = document.getElementById(`${set.prefix}-precook`).value.trim();
+                const cans = document.getElementById(`${set.prefix}-cans`).value.trim();
+                const carry = document.getElementById(`${set.prefix}-carry`).value.trim();
+                items.push(`${set.title} job ${job} | OOSW%: ${oosw || 'n/a'} | Precook%: ${precook || 'n/a'} | Cans closed: ${cans || 'n/a'} | Carry: ${carry || 'n/a'}`);
+            });
+            return items.length ? items.join('\n') : 'No canning details recorded.';
+        }
+
+        function buildDryingSummary() {
+            const items = [];
+            const processJob = document.getElementById('dry-process-job').value.trim();
+            if (processJob) {
+                const process = `Dry processing job ${processJob} | OOSW%: ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'} | Pots cooked: ${document.getElementById('dry-process-pots').value.trim() || 'n/a'} | Stringed & hung: ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'} | Carry: ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`;
+                items.push(process);
+            }
+            const gradeJob = document.getElementById('dry-grade-job').value.trim();
+            if (gradeJob) {
+                const grading = `Grading job ${gradeJob} | In: ${document.getElementById('dry-grade-in').value || 'n/a'} | Out: ${document.getElementById('dry-grade-out').value || 'n/a'} | Days: ${document.getElementById('dry-grade-days').value || 'n/a'} | Grading complete: ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete: ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry: ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
+                items.push(grading);
+            }
+            return items.length ? items.join('\n') : 'No drying details recorded.';
+        }
+    </script>
+</body>
+</html>
