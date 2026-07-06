@@ -126,7 +126,11 @@
             .bubble-block.nc { background: #fee2e2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
             .compliance-answer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
-            .section-print-notes { font-size: 12px !important; font-weight: 700 !important; color: #b91c1c !important; margin-top: 8px; font-style: italic; line-height: 1.4; border-top: 0.5px solid #eee; padding-top: 4px; }
+            .section-print-notes { font-size: 11px !important; font-weight: 700 !important; color: #111827 !important; margin-top: 8px; line-height: 1.4; border-top: 1px solid #d1d5db; padding-top: 6px; }
+            .print-summary-list { display: flex; flex-direction: column; gap: 4px; }
+            .print-summary-item { padding: 3px 0; border-bottom: 0.5px solid #e5e7eb; }
+            .print-summary-item:last-child { border-bottom: none; }
+            .print-empty { color: #6b7280; font-style: italic; }
             .page-break { page-break-before: always; margin-top: 1cm; }
             .production-row-print { display: flex !important; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
             .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
@@ -198,6 +202,7 @@
                 <div class="bubble-btn" data-name="Dry" onclick="toggleField(this, 'harvest-dry', 'sec-3')">Dry</div>
             </div>
             <div id="harvest-can" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Can</div>
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="bubble-block">
                         <span class="bubble-label">Job number</span>
@@ -232,6 +237,7 @@
                 <button onclick="addHarvestJob('CAN')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
             </div>
             <div id="harvest-dry" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Dry</div>
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="bubble-block">
                         <span class="bubble-label">Job number</span>
@@ -278,6 +284,7 @@
                 <div class="bubble-btn" data-name="Live packing" onclick="toggleField(this, 'live-packing-fields', 'sec-4')">Live packing</div>
             </div>
             <div id="live-sorting-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="font-bold text-[12px] uppercase mb-2 text-slate-700 md:col-span-2">Live sorting</div>
                 <div class="bubble-block">
                     <span class="bubble-label">No. of baskets in</span>
                     <input type="number" id="live-sorting-baskets" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
@@ -288,6 +295,7 @@
                 </div>
             </div>
             <div id="frozen-sorting-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="font-bold text-[12px] uppercase mb-2 text-slate-700 md:col-span-2">Frozen sorting</div>
                 <div class="bubble-block">
                     <span class="bubble-label">No. of baskets in</span>
                     <input type="number" id="frozen-sorting-baskets" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
@@ -298,6 +306,7 @@
                 </div>
             </div>
             <div id="live-packing-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+                <div class="font-bold text-[12px] uppercase mb-2 text-slate-700 md:col-span-2">Live packing</div>
                 <div class="bubble-block">
                     <span class="bubble-label">No. of boxes packed</span>
                     <input type="number" id="live-packing-boxes" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
@@ -314,6 +323,7 @@
                 <div class="bubble-btn" data-name="Third party abalone" onclick="toggleField(this, 'thirdparty-fields', 'sec-5')">Third party abalone</div>
             </div>
             <div id="cultivated-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Cultivated abalone</div>
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="bubble-block">
                         <span class="bubble-label">Job number</span>
@@ -338,6 +348,7 @@
                 </div>
             </div>
             <div id="thirdparty-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Third party abalone</div>
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="bubble-block">
                         <span class="bubble-label">Job number</span>
@@ -372,6 +383,7 @@
                 <div class="bubble-btn" data-name="Grading" onclick="toggleField(this, 'dry-grading-fields', 'sec-6')">Grading</div>
             </div>
             <div id="dry-processing-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Dry processing</div>
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="bubble-block">
                         <span class="bubble-label">Job number</span>
@@ -396,6 +408,7 @@
                 </div>
             </div>
             <div id="dry-grading-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
+                <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Grading</div>
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="bubble-block">
                         <span class="bubble-label">Job number</span>
@@ -488,14 +501,26 @@
         }
 
         function toggleField(btn, fieldId, sectionId) {
+            const sectionEl = document.getElementById(sectionId);
             const fieldBlock = document.getElementById(fieldId);
             const isOpen = !fieldBlock.classList.contains('hidden');
+            const relatedPanels = sectionEl.querySelectorAll('[id$="-fields"], [id^="harvest-"]');
+
             if (isOpen) {
                 fieldBlock.classList.add('hidden');
                 btn.classList.remove('conforming');
                 clearSectionFields(fieldBlock);
             } else {
+                relatedPanels.forEach(panel => {
+                    if (panel.id !== fieldId) {
+                        panel.classList.add('hidden');
+                        clearSectionFields(panel);
+                    }
+                });
                 fieldBlock.classList.remove('hidden');
+                sectionEl.querySelectorAll('.bubble-btn').forEach(otherBtn => {
+                    otherBtn.classList.remove('conforming');
+                });
                 btn.classList.add('conforming');
             }
             updateComplianceIcons();
@@ -559,6 +584,11 @@
 
         function addHarvestJob(type) {
             const prefix = type === 'CAN' ? 'harvest-can' : 'harvest-dry';
+            const panel = document.getElementById(prefix);
+            if (panel.classList.contains('hidden')) {
+                alert(`Please open the ${type === 'CAN' ? 'Can' : 'Dry'} section before adding a job.`);
+                return;
+            }
             const job = document.getElementById(`${prefix}-job`).value.trim();
             const weight = document.getElementById(`${prefix}-weight`).value.trim();
             const sizeText = document.getElementById(`${prefix}-size`).selectedOptions[0]?.textContent || '';
@@ -662,7 +692,7 @@
 
             Object.keys(sectionSummaries).forEach(key => {
                 const printNode = document.getElementById(`print-notes-${key.split('-')[1]}`);
-                if (printNode) printNode.innerText = sectionSummaries[key];
+                if (printNode) printNode.innerHTML = sectionSummaries[key];
             });
 
             const detailContainer = document.getElementById('production-detail-print');
@@ -683,6 +713,11 @@
             window.print();
         }
 
+        function renderPrintList(items) {
+            if (!items.length) return '<div class="print-empty">No details entered.</div>';
+            return `<div class="print-summary-list">${items.map(item => `<div class="print-summary-item">${item}</div>`).join('')}</div>`;
+        }
+
         function buildSectionSummary(sectionId, labels) {
             const section = document.getElementById(sectionId);
             if (!section) return '';
@@ -691,31 +726,32 @@
                 const name = el.getAttribute('data-name');
                 if (name) ncItems.push(name);
             });
-            if (ncItems.length > 0) return `NON-CONFORMING: ${ncItems.join(', ')}.`;
+            if (ncItems.length > 0) return renderPrintList([`NON-CONFORMING: ${ncItems.join(', ')}.`]);
             const activeItems = [];
             labels.forEach(label => {
                 const btn = Array.from(section.querySelectorAll('.bubble-btn')).find(el => el.getAttribute('data-name') === label);
-                if (btn && btn.classList.contains('conforming')) activeItems.push(label);
+                if (btn && btn.classList.contains('conforming')) activeItems.push(`Active: ${label}`);
             });
-            return activeItems.length ? `Active: ${activeItems.join(', ')}.` : '';
+            return renderPrintList(activeItems);
         }
 
         function buildStaffingSummary() {
             const absent = document.getElementById('staff-absent-input').value.trim();
             const leave = document.getElementById('staff-leave-input').value.trim();
             const items = [];
-            if (absent) items.push(`Absent: ${absent}`);
-            if (leave) items.push(`On leave: ${leave}`);
-            return items.length ? items.join(' | ') : 'No staffing notes recorded.';
+            if (absent) items.push(`Absent staff: ${absent}`);
+            if (leave) items.push(`Staff on leave: ${leave}`);
+            return renderPrintList(items);
         }
 
         function buildHarvestSummary() {
             const rows = Array.from(document.querySelectorAll('#harvest-job-list .compliance-row'));
-            if (!rows.length) return 'No harvest jobs recorded.';
-            return rows.map(row => {
-                const text = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).join(' | ');
-                return text;
-            }).join('\n');
+            if (!rows.length) return '<div class="print-empty">No harvest jobs recorded.</div>';
+            const items = rows.map(row => {
+                const parts = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).filter(Boolean);
+                return parts.join(' | ');
+            });
+            return renderPrintList(items);
         }
 
         function buildLiveSummary() {
@@ -731,13 +767,13 @@
                 const value = document.getElementById(item.id).value.trim();
                 if (value) values.push(`${item.label}: ${value}`);
             });
-            return values.length ? values.join(' | ') : 'No live activity details recorded.';
+            return renderPrintList(values);
         }
 
         function buildCanningSummary() {
             const sets = [
-                { prefix: 'cultivated', title: 'Cultivated' },
-                { prefix: 'thirdparty', title: 'Third party' }
+                { prefix: 'cultivated', title: 'Cultivated abalone' },
+                { prefix: 'thirdparty', title: 'Third party abalone' }
             ];
             const items = [];
             sets.forEach(set => {
@@ -747,24 +783,24 @@
                 const precook = document.getElementById(`${set.prefix}-precook`).value.trim();
                 const cans = document.getElementById(`${set.prefix}-cans`).value.trim();
                 const carry = document.getElementById(`${set.prefix}-carry`).value.trim();
-                items.push(`${set.title} job ${job} | OOSW%: ${oosw || 'n/a'} | Precook%: ${precook || 'n/a'} | Cans closed: ${cans || 'n/a'} | Carry: ${carry || 'n/a'}`);
+                items.push(`${set.title}: Job ${job} | OOSW% ${oosw || 'n/a'} | Precook% ${precook || 'n/a'} | Cans closed ${cans || 'n/a'} | Carry over ${carry || 'n/a'}`);
             });
-            return items.length ? items.join('\n') : 'No canning details recorded.';
+            return renderPrintList(items);
         }
 
         function buildDryingSummary() {
             const items = [];
             const processJob = document.getElementById('dry-process-job').value.trim();
             if (processJob) {
-                const process = `Dry processing job ${processJob} | OOSW%: ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'} | Pots cooked: ${document.getElementById('dry-process-pots').value.trim() || 'n/a'} | Stringed & hung: ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'} | Carry: ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`;
+                const process = `Dry processing: Job ${processJob} | OOSW% ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'} | Pots cooked ${document.getElementById('dry-process-pots').value.trim() || 'n/a'} | Stringed & hung ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`;
                 items.push(process);
             }
             const gradeJob = document.getElementById('dry-grade-job').value.trim();
             if (gradeJob) {
-                const grading = `Grading job ${gradeJob} | In: ${document.getElementById('dry-grade-in').value || 'n/a'} | Out: ${document.getElementById('dry-grade-out').value || 'n/a'} | Days: ${document.getElementById('dry-grade-days').value || 'n/a'} | Grading complete: ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete: ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry: ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
+                const grading = `Grading: Job ${gradeJob} | In ${document.getElementById('dry-grade-in').value || 'n/a'} | Out ${document.getElementById('dry-grade-out').value || 'n/a'} | Days ${document.getElementById('dry-grade-days').value || 'n/a'} | Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
                 items.push(grading);
             }
-            return items.length ? items.join('\n') : 'No drying details recorded.';
+            return renderPrintList(items);
         }
     </script>
 </body>
