@@ -892,8 +892,10 @@
 
         function renderPrintList(items) {
             if (!items.length) return '<div class="print-empty">No details entered.</div>';
+            // join all items into a single inline string to force horizontal layout
             const content = items.join(' • ');
-            return `<div class="print-summary-list"><span class="print-summary-item">${content}</span></div>`;
+            return `<div class="print-summary-list" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">` +
+                   `<span class="print-summary-item">${content}</span></div>`;
         }
 
         function buildSectionSummary(sectionId, labels) {
