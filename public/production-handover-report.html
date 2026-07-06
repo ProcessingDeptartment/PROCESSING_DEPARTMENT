@@ -102,6 +102,26 @@
             font-size: 10px;
             line-height: 1.2;
         }
+        .yesno-toggle {
+            display: inline-flex;
+            gap: 6px;
+            margin-top: 2px;
+        }
+        .yesno-toggle button {
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            background: white;
+            color: #64748b;
+            cursor: pointer;
+        }
+        .yesno-toggle button.active {
+            background: #1d4ed8;
+            color: white;
+            border-color: #1d4ed8;
+        }
         .compliance-row {
             transition: all 0.2s;
             border-radius: 6px;
@@ -151,6 +171,8 @@
             .page-break { page-break-before: always; margin-top: 1cm; }
             .production-row-print { display: flex !important; flex-wrap: wrap; gap: 6px; align-items: center; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
             .inline-detail-pill { border-color: #000; background: #fff; }
+            .print-summary-list { display: flex; flex-direction: column; gap: 3px; }
+            .print-summary-item { padding: 2px 0; border-bottom: 0.5px solid #e5e7eb; }
             .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
         }
     </style>
@@ -361,7 +383,11 @@
                     </div>
                     <div class="bubble-block">
                         <span class="bubble-label">Product carried over to next shift?</span>
-                        <input type="text" id="cultivated-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                        <div class="yesno-toggle" data-target="cultivated-carry">
+                            <button type="button" data-value="Yes" onclick="setYesNoValue(this, 'cultivated-carry')">Yes</button>
+                            <button type="button" data-value="No" onclick="setYesNoValue(this, 'cultivated-carry')">No</button>
+                        </div>
+                        <input type="hidden" id="cultivated-carry" value="">
                     </div>
                 </div>
                 <button onclick="addCanningJob('cultivated')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
@@ -388,7 +414,11 @@
                     </div>
                     <div class="bubble-block">
                         <span class="bubble-label">Product carried over to next shift?</span>
-                        <input type="text" id="thirdparty-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                        <div class="yesno-toggle" data-target="thirdparty-carry">
+                            <button type="button" data-value="Yes" onclick="setYesNoValue(this, 'thirdparty-carry')">Yes</button>
+                            <button type="button" data-value="No" onclick="setYesNoValue(this, 'thirdparty-carry')">No</button>
+                        </div>
+                        <input type="hidden" id="thirdparty-carry" value="">
                     </div>
                 </div>
                 <button onclick="addCanningJob('thirdparty')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
@@ -421,11 +451,19 @@
                     </div>
                     <div class="bubble-block">
                         <span class="bubble-label">All product stringed & hung?</span>
-                        <input type="text" id="dry-process-stringed" class="bubble-val-input" placeholder="Yes / No" oninput="markFieldInput(this)">
+                        <div class="yesno-toggle" data-target="dry-process-stringed">
+                            <button type="button" data-value="Yes" onclick="setYesNoValue(this, 'dry-process-stringed')">Yes</button>
+                            <button type="button" data-value="No" onclick="setYesNoValue(this, 'dry-process-stringed')">No</button>
+                        </div>
+                        <input type="hidden" id="dry-process-stringed" value="">
                     </div>
                     <div class="bubble-block">
                         <span class="bubble-label">Product carried over to next shift?</span>
-                        <input type="text" id="dry-process-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                        <div class="yesno-toggle" data-target="dry-process-carry">
+                            <button type="button" data-value="Yes" onclick="setYesNoValue(this, 'dry-process-carry')">Yes</button>
+                            <button type="button" data-value="No" onclick="setYesNoValue(this, 'dry-process-carry')">No</button>
+                        </div>
+                        <input type="hidden" id="dry-process-carry" value="">
                     </div>
                 </div>
                 <button onclick="addDryingJob('processing')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
@@ -452,15 +490,27 @@
                     </div>
                     <div class="bubble-block">
                         <span class="bubble-label">Grading complete</span>
-                        <input type="text" id="dry-grade-complete" class="bubble-val-input" placeholder="Yes / No" oninput="markFieldInput(this)">
+                        <div class="yesno-toggle" data-target="dry-grade-complete">
+                            <button type="button" data-value="Yes" onclick="setYesNoValue(this, 'dry-grade-complete')">Yes</button>
+                            <button type="button" data-value="No" onclick="setYesNoValue(this, 'dry-grade-complete')">No</button>
+                        </div>
+                        <input type="hidden" id="dry-grade-complete" value="">
                     </div>
                     <div class="bubble-block">
                         <span class="bubble-label">Boxing complete</span>
-                        <input type="text" id="dry-grade-boxing" class="bubble-val-input" placeholder="Yes / No" oninput="markFieldInput(this)">
+                        <div class="yesno-toggle" data-target="dry-grade-boxing">
+                            <button type="button" data-value="Yes" onclick="setYesNoValue(this, 'dry-grade-boxing')">Yes</button>
+                            <button type="button" data-value="No" onclick="setYesNoValue(this, 'dry-grade-boxing')">No</button>
+                        </div>
+                        <input type="hidden" id="dry-grade-boxing" value="">
                     </div>
                     <div class="bubble-block">
                         <span class="bubble-label">Product carried over to next shift?</span>
-                        <input type="text" id="dry-grade-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
+                        <div class="yesno-toggle" data-target="dry-grade-carry">
+                            <button type="button" data-value="Yes" onclick="setYesNoValue(this, 'dry-grade-carry')">Yes</button>
+                            <button type="button" data-value="No" onclick="setYesNoValue(this, 'dry-grade-carry')">No</button>
+                        </div>
+                        <input type="hidden" id="dry-grade-carry" value="">
                     </div>
                 </div>
                 <button onclick="addDryingJob('grading')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
@@ -572,11 +622,27 @@
             const parent = input.closest('.bubble-block');
             if (!parent) return;
             const value = input.value.trim();
-            const isYesNoField = /yes\s*\/\s*no/i.test(input.getAttribute('placeholder') || '');
             if (!value) {
                 parent.classList.remove('conforming');
                 parent.classList.remove('nc');
-            } else if (isYesNoField && /^yes\b/i.test(value)) {
+            } else {
+                parent.classList.remove('nc');
+                parent.classList.add('conforming');
+            }
+            updateComplianceIcons();
+        }
+
+        function setYesNoValue(button, inputId) {
+            const input = document.getElementById(inputId);
+            const parent = input.closest('.bubble-block');
+            const toggle = button.closest('.yesno-toggle');
+            const value = button.getAttribute('data-value');
+            input.value = value;
+            toggle.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn === button));
+            if (!value) {
+                parent.classList.remove('conforming');
+                parent.classList.remove('nc');
+            } else if (/^yes\b/i.test(value)) {
                 parent.classList.remove('conforming');
                 parent.classList.add('nc');
             } else {
@@ -908,7 +974,14 @@
                     const precook = document.getElementById(`${set.prefix}-precook`).value.trim();
                     const cans = document.getElementById(`${set.prefix}-cans`).value.trim();
                     const carry = document.getElementById(`${set.prefix}-carry`).value.trim();
-                    items.push(`${set.title}: Job ${job} | OOSW% ${oosw || 'n/a'} | Precook% ${precook || 'n/a'} | Cans closed ${cans || 'n/a'} | Carry over ${carry || 'n/a'}`);
+                    const details = [
+                        `Job ${job}`,
+                        `OOSW% ${oosw || 'n/a'}`,
+                        `Precook% ${precook || 'n/a'}`,
+                        `Cans closed ${cans || 'n/a'}`,
+                        `Carry over ${carry || 'n/a'}`
+                    ].filter(Boolean);
+                    items.push(`${set.title}: ${details.join(' | ')}`);
                 });
             }
             return renderPrintList(items);
@@ -930,14 +1003,30 @@
             if (!items.length) {
                 const processJob = document.getElementById('dry-process-job').value.trim();
                 if (processJob) {
-                    const process = `Dry processing: Job ${processJob} | OOSW% ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'} | Pots cooked ${document.getElementById('dry-process-pots').value.trim() || 'n/a'} | Stringed & hung ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`;
+                    const processDetails = [
+                        `Job ${processJob}`,
+                        `OOSW% ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'}`,
+                        `Pots cooked ${document.getElementById('dry-process-pots').value.trim() || 'n/a'}`,
+                        `Stringed & hung ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'}`,
+                        `Carry over ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`
+                    ].filter(Boolean);
+                    const process = `Dry processing: ${processDetails.join(' | ')}`;
                     items.push(process);
                 }
                 const gradeJob = document.getElementById('dry-grade-job').value.trim();
                 if (gradeJob) {
                     const days = document.getElementById('dry-grade-days').value.trim();
                     const warning = parseInt(days, 10) > 25 ? ' | WARNING: Days in drying room exceeds 25' : '';
-                    const grading = `Grading: Job ${gradeJob} | In ${document.getElementById('dry-grade-in').value || 'n/a'} | Out ${document.getElementById('dry-grade-out').value || 'n/a'} | Days ${days || 'n/a'}${warning} | Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
+                    const gradingDetails = [
+                        `Job ${gradeJob}`,
+                        `In ${document.getElementById('dry-grade-in').value || 'n/a'}`,
+                        `Out ${document.getElementById('dry-grade-out').value || 'n/a'}`,
+                        `Days ${days || 'n/a'}${warning}`,
+                        `Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'}`,
+                        `Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'}`,
+                        `Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`
+                    ].filter(Boolean);
+                    const grading = `Grading: ${gradingDetails.join(' | ')}`;
                     items.push(grading);
                 }
             }
