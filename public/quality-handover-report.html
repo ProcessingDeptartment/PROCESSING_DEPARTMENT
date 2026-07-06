@@ -131,8 +131,8 @@
 
     <div class="max-w-5xl mx-auto">
         <div class="print-header">
-            <h1 id="dynamicPrintTitle">REC 9.9.2 QUALITY HANDOVER REPORT  ${shiftVal} - ${dateVal}</h1>
-            <h2 id="dynamicPrintName" class="text-lg" style="margin-top: 5px;">COMPLETED BY: ${shiftVal}</h2>
+            <h1 id="dynamicPrintTitle">REC 9.9.2 QUALITY HANDOVER REPORT</h1>
+            <h2 id="dynamicPrintName" class="text-lg" style="margin-top: 5px;">COMPLETED BY:</h2>
         </div>
 
         <div class="flex justify-between items-center mb-6 no-print">
@@ -531,7 +531,8 @@
             const dateVal = document.getElementById('hDate').value;
             const shiftVal = document.getElementById('hShift').value;
             
-            document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HANDOVER REPORT              ${shiftVal} SHIFT - ${dateVal}`;
+document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HANDOVER REPORT ${shiftVal} SHIFT - ${dateVal}`;
+            document.getElementById('dynamicPrintName').innerText = `COMPLETED BY: ${document.getElementById('hName').value || '---'}`;
             document.title = `REC_9.9.2_Quality_Handover_${shiftVal}SHIFT_${dateVal}`;
             
             document.getElementById('p-ag-code').innerText = document.getElementById('ag-code').value || "---";
