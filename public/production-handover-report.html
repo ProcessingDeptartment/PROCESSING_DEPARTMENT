@@ -165,8 +165,8 @@
             .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
             .compliance-answer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
             .section-print-notes { font-size: 11px !important; font-weight: 700 !important; color: #111827 !important; margin-top: 8px; line-height: 1.4; border-top: 1px solid #d1d5db; padding-top: 6px; }
-            .print-summary-list { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-            .print-summary-item { display: inline-block; padding: 2px 0; border-bottom: none; }
+            .print-summary-list { display: block; margin: 0; padding: 0; }
+            .print-summary-item { display: block; padding: 2px 0; margin: 0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .print-summary-item:last-child { border-bottom: none; }
             .print-empty { color: #6b7280; font-style: italic; }
             .page-break { page-break-before: always; margin-top: 1cm; }
@@ -872,32 +872,33 @@
             // Job details are included in each section's summary; annex removed.
 
             document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || 'No additional comments recorded.';
-            // Temporarily hide interactive form elements so only print summaries appear
-            const hiddenContainers = [];
-            document.querySelectorAll('.section-card').forEach(card => {
-                // hide any direct field panels and bubble-blocks inside the card
-                card.querySelectorAll('.p-4, .bubble-block, .grid, .yesno-toggle, input, textarea, select, button').forEach(el => {
-                    const container = el.closest('.p-4, .bubble-block, .grid, .live-op-panel') || el.closest('.section-card');
-                    if (container && !container.classList.contains('print-only') && !container.classList.contains('no-print')) {
-                        container.classList.add('no-print');
-                        hiddenContainers.push(container);
-                    }
-                });
+            // Temporarily hide interactive-only elements (those already marked 'no-print' in markup)
+            // Avoid adding no-print to entire .section-card to preserve print-only summaries
+            const interactiveEls = Array.from(document.querySelectorAll('.section-card .p-4, .section-card .bubble-block, .section-card .grid, .section-card .yesno-toggle, .section-card input, .section-card textarea, .section-card select, .section-card button'));
+            const toRestore = [];
+            interactiveEls.forEach(el => {
+                if (!el.classList.contains('print-only') && !el.classList.contains('no-print')) {
+                    el.style.displayBackup = el.style.display || '';
+                    el.style.display = 'none';
+                    toRestore.push(el);
+                }
             });
 
-            // Print and then restore the hidden containers
+            // Print and then restore the interactive elements
             window.print();
             setTimeout(() => {
-                hiddenContainers.forEach(c => c.classList.remove('no-print'));
-            }, 1000);
+                toRestore.forEach(el => {
+                    el.style.display = el.style.displayBackup || '';
+                    delete el.style.displayBackup;
+                });
+            }, 400);
         }
 
         function renderPrintList(items) {
             if (!items.length) return '<div class="print-empty">No details entered.</div>';
-            // join all items into a single inline string to force horizontal layout
-            const content = items.join(' • ');
-            return `<div class="print-summary-list" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">` +
-                   `<span class="print-summary-item">${content}</span></div>`;
+            // Render each item on its own line so multiple jobs show as separate rows
+            const html = items.map(i => `<div class="print-summary-item">${i}</div>`).join('');
+            return `<div class="print-summary-list">${html}</div>`;
         }
 
         function buildSectionSummary(sectionId, labels) {
