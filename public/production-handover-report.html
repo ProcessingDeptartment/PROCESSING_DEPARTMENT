@@ -45,7 +45,7 @@
             font-size: 12px;
             user-select: none;
         }
-        .bubble-btn.conforming { background: #f0fdf4; border-color: #22c55e; color: #166534; box-shadow: 0 0 0 1px #22c55e; }
+        .bubble-btn.conforming { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; box-shadow: 0 0 0 1px #3b82f6; }
         .bubble-btn.nc { background: #fef2f2; border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 0 1px #ef4444; }
         .bubble-block {
             background: #f8fafc;
@@ -59,7 +59,7 @@
             width: 100%;
             max-width: 240px;
         }
-        .bubble-block.conforming { background: #dcfce7 !important; border-color: #22c55e !important; }
+        .bubble-block.conforming { background: #f8fafc !important; border-color: #e2e8f0 !important; }
         .bubble-block.nc { background: #fee2e2 !important; border-color: #ef4444 !important; }
         .bubble-label {
             font-size: 12px;
@@ -422,7 +422,7 @@
                         <span class="bubble-label">Date removed</span>
                         <input type="date" id="dry-grade-out" class="bubble-val-input" oninput="updateDaysInDrying()">
                     </div>
-                    <div class="bubble-block">
+                    <div class="bubble-block" id="dry-grade-days-block">
                         <span class="bubble-label">Days in drying room</span>
                         <input type="text" id="dry-grade-days" class="bubble-val-input" readonly placeholder="Auto-calc">
                     </div>
@@ -491,9 +491,6 @@
         function cycleStatus(btn, sectionId) {
             if (btn.classList.contains('conforming')) {
                 btn.classList.remove('conforming');
-                btn.classList.add('nc');
-            } else if (btn.classList.contains('nc')) {
-                btn.classList.remove('nc');
             } else {
                 btn.classList.add('conforming');
             }
@@ -518,9 +515,6 @@
                     }
                 });
                 fieldBlock.classList.remove('hidden');
-                sectionEl.querySelectorAll('.bubble-btn').forEach(otherBtn => {
-                    otherBtn.classList.remove('conforming');
-                });
                 btn.classList.add('conforming');
             }
             updateComplianceIcons();
@@ -540,9 +534,6 @@
                 hideField.classList.add('hidden');
                 clearSectionFields(hideField);
                 btn.classList.add('conforming');
-                btn.parentElement.querySelectorAll('.bubble-btn').forEach(otherBtn => {
-                    if (otherBtn !== btn) otherBtn.classList.remove('conforming');
-                });
             }
             updateComplianceIcons();
         }
@@ -623,13 +614,23 @@
             const start = document.getElementById('dry-grade-in').value;
             const end = document.getElementById('dry-grade-out').value;
             const output = document.getElementById('dry-grade-days');
+            const block = document.getElementById('dry-grade-days-block');
             if (start && end) {
                 const startDate = new Date(start);
                 const endDate = new Date(end);
                 const diff = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
                 output.value = diff >= 0 ? diff.toString() : '';
+                if (diff > 25) {
+                    block.classList.add('nc');
+                    block.classList.remove('conforming');
+                } else {
+                    block.classList.remove('nc');
+                    block.classList.add('conforming');
+                }
             } else {
                 output.value = '';
+                block.classList.remove('nc');
+                block.classList.remove('conforming');
             }
             markFieldInput(output);
         }
@@ -797,7 +798,9 @@
             }
             const gradeJob = document.getElementById('dry-grade-job').value.trim();
             if (gradeJob) {
-                const grading = `Grading: Job ${gradeJob} | In ${document.getElementById('dry-grade-in').value || 'n/a'} | Out ${document.getElementById('dry-grade-out').value || 'n/a'} | Days ${document.getElementById('dry-grade-days').value || 'n/a'} | Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
+                const days = document.getElementById('dry-grade-days').value.trim();
+                const warning = parseInt(days, 10) > 25 ? ' | WARNING: Days in drying room exceeds 25' : '';
+                const grading = `Grading: Job ${gradeJob} | In ${document.getElementById('dry-grade-in').value || 'n/a'} | Out ${document.getElementById('dry-grade-out').value || 'n/a'} | Days ${days || 'n/a'}${warning} | Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
                 items.push(grading);
             }
             return renderPrintList(items);
