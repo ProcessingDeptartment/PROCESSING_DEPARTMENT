@@ -352,6 +352,10 @@
                     <span class="bubble-label">No. of boxes packed</span>
                     <input type="number" id="live-packing-boxes" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
                 </div>
+                <div class="bubble-block">
+                    <span class="bubble-label">No. of boxes prepared</span>
+                    <input type="number" id="live-packing-prepared" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
+                </div>
             </div>
             <div id="print-notes-4" class="print-only section-print-notes"></div>
         </div>
@@ -826,25 +830,10 @@
                 const hasActive = sectionEl.querySelectorAll(sec.activeSelector).length > 0;
                 const hasJobRows = sec.id === 'sec-3' && document.getElementById('harvest-job-list').children.length > 0;
                 const icon = document.getElementById(sec.statusId);
-                // Special rule for staffing (sec-2): if no inputs filled, mark green (all present)
-                if (sec.id === 'sec-2') {
-                    const absent = document.getElementById('staff-absent-input').value.trim();
-                    const leave = document.getElementById('staff-leave-input').value.trim();
-                    if (!absent && !leave) {
-                        icon.innerText = '✅';
-                        icon.style.color = '#22c55e';
-                        return;
-                    }
-                }
-                if (!hasActive && !hasJobRows) {
-                    icon.innerText = '⚪';
-                    icon.style.color = '#94a3b8';
-                } else if (isNC) {
-                    icon.innerText = '❌';
-                    icon.style.color = '#ef4444';
-                } else {
-                    icon.innerText = '✅';
-                    icon.style.color = '#22c55e';
+                // Remove visual emoji/status text - keep icons empty per user preference
+                if (icon) {
+                    icon.innerText = '';
+                    icon.style.color = '';
                 }
             });
         }
@@ -927,7 +916,7 @@
             const activeItems = [];
             labels.forEach(label => {
                 const btn = Array.from(section.querySelectorAll('.bubble-btn')).find(el => el.getAttribute('data-name') === label);
-                if (btn && btn.classList.contains('conforming')) activeItems.push(`Active: ${label}`);
+                if (btn && btn.classList.contains('conforming')) activeItems.push(label);
             });
             // For section 1 (Processes on shift) render active items inline rather than each on its own line
             if (sectionId === 'sec-1') {
@@ -1009,20 +998,32 @@
         }
 
         function buildLiveSummary() {
-            const values = [];
-            // Group live sorting baskets and bags on one line, frozen sorting baskets and bags on one line
+            const output = [];
             const liveBaskets = document.getElementById('live-sorting-baskets').value.trim();
             const liveBags = document.getElementById('live-sorting-bags').value.trim();
-            if (liveBaskets || liveBags) values.push(`Live sorting: ${liveBaskets ? `Baskets ${liveBaskets}` : ''}${liveBaskets && liveBags ? ' • ' : ''}${liveBags ? `Bags ${liveBags}` : ''}`);
+            if (liveBaskets || liveBags) {
+                output.push(`<strong>Live sorting</strong>`);
+                const line = `No. of baskets in: ${liveBaskets || '0'} / No. of bags produced: ${liveBags || '0'}`;
+                output.push(line);
+            }
 
             const frozenBaskets = document.getElementById('frozen-sorting-baskets').value.trim();
             const frozenBags = document.getElementById('frozen-sorting-bags').value.trim();
-            if (frozenBaskets || frozenBags) values.push(`Frozen sorting: ${frozenBaskets ? `Baskets ${frozenBaskets}` : ''}${frozenBaskets && frozenBags ? ' • ' : ''}${frozenBags ? `Bags ${frozenBags}` : ''}`);
+            if (frozenBaskets || frozenBags) {
+                output.push(`<strong>Frozen sorting</strong>`);
+                const line = `No. of baskets in: ${frozenBaskets || '0'} / No. of bags produced: ${frozenBags || '0'}`;
+                output.push(line);
+            }
 
-            const livePacking = document.getElementById('live-packing-boxes').value.trim();
-            if (livePacking) values.push(`Live packing boxes packed: ${livePacking}`);
+            const packed = document.getElementById('live-packing-boxes').value.trim();
+            const prepared = document.getElementById('live-packing-prepared').value.trim();
+            if (packed || prepared) {
+                output.push(`<strong>Live packing</strong>`);
+                const line = `No. of boxes packed: ${packed || '0'} / No. of boxes prepared: ${prepared || '0'}`;
+                output.push(line);
+            }
 
-            return renderPrintList(values);
+            return renderPrintList(output);
         }
 
         function buildCanningSummary() {
