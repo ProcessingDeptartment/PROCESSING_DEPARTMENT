@@ -85,6 +85,23 @@
             color: #94a3b8;
             text-align: left;
         }
+        .live-op-panel {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 1rem;
+        }
+        .inline-detail-pill {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 2px 6px;
+            background: white;
+            font-size: 10px;
+            line-height: 1.2;
+        }
         .compliance-row {
             transition: all 0.2s;
             border-radius: 6px;
@@ -132,7 +149,8 @@
             .print-summary-item:last-child { border-bottom: none; }
             .print-empty { color: #6b7280; font-style: italic; }
             .page-break { page-break-before: always; margin-top: 1cm; }
-            .production-row-print { display: flex !important; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
+            .production-row-print { display: flex !important; flex-wrap: wrap; gap: 6px; align-items: center; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
+            .inline-detail-pill { border-color: #000; background: #fff; }
             .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
         }
     </style>
@@ -157,7 +175,7 @@
             <div class="section-title"><span id="status-2" class="status-icon">⚪</span>2. Staffing & Attendance</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
                 <div class="flex flex-col gap-2">
-                    <button type="button" class="bubble-btn" data-name="Staff absent" onclick="toggleStaffingSelection(this, 'staff-absent-fields', 'staff-leave-fields')">Staff absent</button>
+                    <button type="button" class="bubble-btn" data-name="Staff absent" onclick="toggleStaffingSelection(this, 'staff-absent-fields')">Staff absent</button>
                     <div id="staff-absent-fields" class="hidden">
                         <div class="bubble-block">
                             <input type="number" id="staff-absent-input" class="bubble-val-input" placeholder="No. of staff" oninput="markFieldInput(this)">
@@ -165,7 +183,7 @@
                     </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button type="button" class="bubble-btn" data-name="Staff on leave" onclick="toggleStaffingSelection(this, 'staff-leave-fields', 'staff-absent-fields')">Staff on leave</button>
+                    <button type="button" class="bubble-btn" data-name="Staff on leave" onclick="toggleStaffingSelection(this, 'staff-leave-fields')">Staff on leave</button>
                     <div id="staff-leave-fields" class="hidden">
                         <div class="bubble-block">
                             <input type="number" id="staff-leave-input" class="bubble-val-input" placeholder="No. of staff" oninput="markFieldInput(this)">
@@ -271,7 +289,7 @@
                 </div>
                 <button onclick="addHarvestJob('DRY')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
             </div>
-            <div id="harvest-job-list" class="space-y-3 mt-4 no-print"></div>
+            <div id="harvest-job-list" class="space-y-3 mt-4 no-print section-job-list"></div>
             <div id="print-notes-3" class="print-only section-print-notes"></div>
         </div>
 
@@ -283,7 +301,7 @@
                 <div class="bubble-btn" data-name="Frozen sorting" onclick="toggleField(this, 'frozen-sorting-fields', 'sec-4')">Frozen sorting</div>
                 <div class="bubble-btn" data-name="Live packing" onclick="toggleField(this, 'live-packing-fields', 'sec-4')">Live packing</div>
             </div>
-            <div id="live-sorting-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+            <div id="live-sorting-fields" class="hidden mt-4 live-op-panel grid gap-3 md:grid-cols-2">
                 <div class="font-bold text-[12px] uppercase mb-2 text-slate-700 md:col-span-2">Live sorting</div>
                 <div class="bubble-block">
                     <span class="bubble-label">No. of baskets in</span>
@@ -294,7 +312,7 @@
                     <input type="number" id="live-sorting-bags" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
                 </div>
             </div>
-            <div id="frozen-sorting-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+            <div id="frozen-sorting-fields" class="hidden mt-4 live-op-panel grid gap-3 md:grid-cols-2">
                 <div class="font-bold text-[12px] uppercase mb-2 text-slate-700 md:col-span-2">Frozen sorting</div>
                 <div class="bubble-block">
                     <span class="bubble-label">No. of baskets in</span>
@@ -305,7 +323,7 @@
                     <input type="number" id="frozen-sorting-bags" class="bubble-val-input" min="0" oninput="markFieldInput(this)">
                 </div>
             </div>
-            <div id="live-packing-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
+            <div id="live-packing-fields" class="hidden mt-4 live-op-panel grid gap-3 md:grid-cols-2">
                 <div class="font-bold text-[12px] uppercase mb-2 text-slate-700 md:col-span-2">Live packing</div>
                 <div class="bubble-block">
                     <span class="bubble-label">No. of boxes packed</span>
@@ -346,6 +364,8 @@
                         <input type="text" id="cultivated-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
                     </div>
                 </div>
+                <button onclick="addCanningJob('cultivated')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
+                <div id="cultivated-job-list" class="space-y-3 mt-4 no-print section-job-list"></div>
             </div>
             <div id="thirdparty-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
                 <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Third party abalone</div>
@@ -371,6 +391,8 @@
                         <input type="text" id="thirdparty-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
                     </div>
                 </div>
+                <button onclick="addCanningJob('thirdparty')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
+                <div id="thirdparty-job-list" class="space-y-3 mt-4 no-print section-job-list"></div>
             </div>
             <div id="print-notes-5" class="print-only section-print-notes"></div>
         </div>
@@ -406,6 +428,8 @@
                         <input type="text" id="dry-process-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
                     </div>
                 </div>
+                <button onclick="addDryingJob('processing')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
+                <div id="dry-process-job-list" class="space-y-3 mt-4 no-print section-job-list"></div>
             </div>
             <div id="dry-grading-fields" class="hidden mt-4 p-4 border rounded-lg bg-slate-50">
                 <div class="font-bold text-[12px] uppercase mb-3 text-slate-700">Grading</div>
@@ -439,6 +463,8 @@
                         <input type="text" id="dry-grade-carry" class="bubble-val-input" placeholder="Yes / No / details" oninput="markFieldInput(this)">
                     </div>
                 </div>
+                <button onclick="addDryingJob('grading')" class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-blue-700 transition-all no-print">+ ADD JOB</button>
+                <div id="dry-grade-job-list" class="space-y-3 mt-4 no-print section-job-list"></div>
             </div>
             <div id="print-notes-6" class="print-only section-print-notes"></div>
         </div>
@@ -512,9 +538,8 @@
             updateComplianceIcons();
         }
 
-        function toggleStaffingSelection(btn, showFieldId, hideFieldId) {
+        function toggleStaffingSelection(btn, showFieldId) {
             const showField = document.getElementById(showFieldId);
-            const hideField = document.getElementById(hideFieldId);
             const isOpen = !showField.classList.contains('hidden');
 
             if (isOpen) {
@@ -523,8 +548,6 @@
                 clearSectionFields(showField);
             } else {
                 showField.classList.remove('hidden');
-                hideField.classList.add('hidden');
-                clearSectionFields(hideField);
                 btn.classList.add('conforming');
             }
             updateComplianceIcons();
@@ -594,25 +617,109 @@
                 alert('Please complete job number, weight and size range before adding the job.');
                 return;
             }
-            const container = document.getElementById('harvest-job-list');
-            const row = document.createElement('div');
-            row.className = 'compliance-row';
-            row.innerHTML = `
-                <div class="flex flex-col gap-2 text-[12px]">
-                    <div><strong>Type:</strong> ${type}</div>
-                    <div><strong>Job:</strong> ${job}</div>
-                    <div><strong>Weight:</strong> ${weight}</div>
-                    <div><strong>Size:</strong> ${sizeText}</div>
-                    <div><strong>Count:</strong> ${count}</div>
-                </div>
-                <button class="text-red-500 font-bold text-[10px] uppercase hover:underline self-start" onclick="this.closest('.compliance-row').remove(); updateComplianceIcons();">Remove</button>
-            `;
-            container.appendChild(row);
+            addSectionJob('harvest-job-list', [
+                { label: 'Type', value: type },
+                { label: 'Job', value: job },
+                { label: 'Weight', value: weight },
+                { label: 'Size', value: sizeText },
+                { label: 'Count', value: count }
+            ]);
             document.getElementById(`${prefix}-job`).value = '';
             document.getElementById(`${prefix}-weight`).value = '';
             document.getElementById(`${prefix}-size`).value = '';
             document.getElementById(`${prefix}-count`).innerText = '--';
             updateComplianceIcons();
+        }
+
+        function addSectionJob(listId, values) {
+            const container = document.getElementById(listId);
+            if (!container) return;
+            const visibleValues = values.filter(item => item.value !== undefined && item.value !== null && String(item.value).trim() !== '');
+            if (!visibleValues.length) return;
+            const row = document.createElement('div');
+            row.className = 'compliance-row';
+            row.innerHTML = `
+                <div class="flex flex-wrap items-center gap-2 text-[12px]">
+                    ${visibleValues.map(item => `<span class="inline-detail-pill"><strong>${item.label}:</strong> ${String(item.value).trim()}</span>`).join('')}
+                </div>
+                <button class="text-red-500 font-bold text-[10px] uppercase hover:underline self-start" onclick="this.closest('.compliance-row').remove(); updateComplianceIcons();">Remove</button>
+            `;
+            container.appendChild(row);
+            updateComplianceIcons();
+        }
+
+        function addCanningJob(type) {
+            const prefix = type === 'cultivated' ? 'cultivated' : 'thirdparty';
+            const panel = document.getElementById(`${prefix}-fields`);
+            if (panel.classList.contains('hidden')) {
+                alert(`Please open the ${type === 'cultivated' ? 'Cultivated abalone' : 'Third party abalone'} section before adding a job.`);
+                return;
+            }
+            const job = document.getElementById(`${prefix}-job`).value.trim();
+            if (!job) {
+                alert('Please complete the job number before adding the job.');
+                return;
+            }
+            addSectionJob(`${prefix}-job-list`, [
+                { label: 'Type', value: type === 'cultivated' ? 'Cultivated abalone' : 'Third party abalone' },
+                { label: 'Job', value: job },
+                { label: 'OOSW%', value: document.getElementById(`${prefix}-oosw`).value.trim() || 'n/a' },
+                { label: 'Precook%', value: document.getElementById(`${prefix}-precook`).value.trim() || 'n/a' },
+                { label: 'Cans closed', value: document.getElementById(`${prefix}-cans`).value.trim() || 'n/a' },
+                { label: 'Carry over', value: document.getElementById(`${prefix}-carry`).value.trim() || 'n/a' }
+            ]);
+            document.getElementById(`${prefix}-job`).value = '';
+            document.getElementById(`${prefix}-oosw`).value = '';
+            document.getElementById(`${prefix}-precook`).value = '';
+            document.getElementById(`${prefix}-cans`).value = '';
+            document.getElementById(`${prefix}-carry`).value = '';
+        }
+
+        function addDryingJob(type) {
+            const prefix = type === 'processing' ? 'dry-process' : 'dry-grade';
+            const panel = document.getElementById(`${prefix === 'dry-process' ? 'dry-processing' : 'dry-grading'}-fields`);
+            if (panel.classList.contains('hidden')) {
+                alert(`Please open the ${type === 'processing' ? 'Dry processing' : 'Grading'} section before adding a job.`);
+                return;
+            }
+            const job = document.getElementById(`${prefix}-job`).value.trim();
+            if (!job) {
+                alert('Please complete the job number before adding the job.');
+                return;
+            }
+            if (type === 'processing') {
+                addSectionJob('dry-process-job-list', [
+                    { label: 'Type', value: 'Dry processing' },
+                    { label: 'Job', value: job },
+                    { label: 'OOSW%', value: document.getElementById('dry-process-oosw').value.trim() || 'n/a' },
+                    { label: 'Pots cooked', value: document.getElementById('dry-process-pots').value.trim() || 'n/a' },
+                    { label: 'Stringed & hung', value: document.getElementById('dry-process-stringed').value.trim() || 'n/a' },
+                    { label: 'Carry over', value: document.getElementById('dry-process-carry').value.trim() || 'n/a' }
+                ]);
+                document.getElementById('dry-process-job').value = '';
+                document.getElementById('dry-process-oosw').value = '';
+                document.getElementById('dry-process-pots').value = '';
+                document.getElementById('dry-process-stringed').value = '';
+                document.getElementById('dry-process-carry').value = '';
+            } else {
+                addSectionJob('dry-grade-job-list', [
+                    { label: 'Type', value: 'Grading' },
+                    { label: 'Job', value: job },
+                    { label: 'Date in', value: document.getElementById('dry-grade-in').value || 'n/a' },
+                    { label: 'Date out', value: document.getElementById('dry-grade-out').value || 'n/a' },
+                    { label: 'Days', value: document.getElementById('dry-grade-days').value.trim() || 'n/a' },
+                    { label: 'Grading complete', value: document.getElementById('dry-grade-complete').value.trim() || 'n/a' },
+                    { label: 'Boxing complete', value: document.getElementById('dry-grade-boxing').value.trim() || 'n/a' },
+                    { label: 'Carry over', value: document.getElementById('dry-grade-carry').value.trim() || 'n/a' }
+                ]);
+                document.getElementById('dry-grade-job').value = '';
+                document.getElementById('dry-grade-in').value = '';
+                document.getElementById('dry-grade-out').value = '';
+                document.getElementById('dry-grade-days').value = '';
+                document.getElementById('dry-grade-complete').value = '';
+                document.getElementById('dry-grade-boxing').value = '';
+                document.getElementById('dry-grade-carry').value = '';
+            }
         }
 
         function updateDaysInDrying() {
@@ -703,9 +810,9 @@
 
             const detailContainer = document.getElementById('production-detail-print');
             detailContainer.innerHTML = '';
-            const jobRows = document.querySelectorAll('#harvest-job-list .compliance-row');
+            const jobRows = document.querySelectorAll('.section-job-list .compliance-row');
             if (jobRows.length === 0) {
-                detailContainer.innerHTML = '<div class="text-[11px]">No harvest jobs added.</div>';
+                detailContainer.innerHTML = '<div class="text-[11px]">No job details added.</div>';
             } else {
                 jobRows.forEach(row => {
                     const detail = document.createElement('div');
@@ -777,36 +884,62 @@
         }
 
         function buildCanningSummary() {
-            const sets = [
-                { prefix: 'cultivated', title: 'Cultivated abalone' },
-                { prefix: 'thirdparty', title: 'Third party abalone' }
-            ];
             const items = [];
-            sets.forEach(set => {
-                const job = document.getElementById(`${set.prefix}-job`).value.trim();
-                if (!job) return;
-                const oosw = document.getElementById(`${set.prefix}-oosw`).value.trim();
-                const precook = document.getElementById(`${set.prefix}-precook`).value.trim();
-                const cans = document.getElementById(`${set.prefix}-cans`).value.trim();
-                const carry = document.getElementById(`${set.prefix}-carry`).value.trim();
-                items.push(`${set.title}: Job ${job} | OOSW% ${oosw || 'n/a'} | Precook% ${precook || 'n/a'} | Cans closed ${cans || 'n/a'} | Carry over ${carry || 'n/a'}`);
+            const lists = [
+                { id: 'cultivated-job-list', title: 'Cultivated abalone' },
+                { id: 'thirdparty-job-list', title: 'Third party abalone' }
+            ];
+            lists.forEach(list => {
+                const rows = Array.from(document.getElementById(list.id).querySelectorAll('.compliance-row'));
+                rows.forEach(row => {
+                    const parts = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).filter(Boolean);
+                    items.push(`${list.title}: ${parts.join(' | ')}`);
+                });
             });
+            if (!items.length) {
+                const sets = [
+                    { prefix: 'cultivated', title: 'Cultivated abalone' },
+                    { prefix: 'thirdparty', title: 'Third party abalone' }
+                ];
+                sets.forEach(set => {
+                    const job = document.getElementById(`${set.prefix}-job`).value.trim();
+                    if (!job) return;
+                    const oosw = document.getElementById(`${set.prefix}-oosw`).value.trim();
+                    const precook = document.getElementById(`${set.prefix}-precook`).value.trim();
+                    const cans = document.getElementById(`${set.prefix}-cans`).value.trim();
+                    const carry = document.getElementById(`${set.prefix}-carry`).value.trim();
+                    items.push(`${set.title}: Job ${job} | OOSW% ${oosw || 'n/a'} | Precook% ${precook || 'n/a'} | Cans closed ${cans || 'n/a'} | Carry over ${carry || 'n/a'}`);
+                });
+            }
             return renderPrintList(items);
         }
 
         function buildDryingSummary() {
             const items = [];
-            const processJob = document.getElementById('dry-process-job').value.trim();
-            if (processJob) {
-                const process = `Dry processing: Job ${processJob} | OOSW% ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'} | Pots cooked ${document.getElementById('dry-process-pots').value.trim() || 'n/a'} | Stringed & hung ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`;
-                items.push(process);
-            }
-            const gradeJob = document.getElementById('dry-grade-job').value.trim();
-            if (gradeJob) {
-                const days = document.getElementById('dry-grade-days').value.trim();
-                const warning = parseInt(days, 10) > 25 ? ' | WARNING: Days in drying room exceeds 25' : '';
-                const grading = `Grading: Job ${gradeJob} | In ${document.getElementById('dry-grade-in').value || 'n/a'} | Out ${document.getElementById('dry-grade-out').value || 'n/a'} | Days ${days || 'n/a'}${warning} | Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
-                items.push(grading);
+            const lists = [
+                { id: 'dry-process-job-list', title: 'Dry processing' },
+                { id: 'dry-grade-job-list', title: 'Grading' }
+            ];
+            lists.forEach(list => {
+                const rows = Array.from(document.getElementById(list.id).querySelectorAll('.compliance-row'));
+                rows.forEach(row => {
+                    const parts = Array.from(row.querySelectorAll('div > div')).map(div => div.textContent.trim()).filter(Boolean);
+                    items.push(`${list.title}: ${parts.join(' | ')}`);
+                });
+            });
+            if (!items.length) {
+                const processJob = document.getElementById('dry-process-job').value.trim();
+                if (processJob) {
+                    const process = `Dry processing: Job ${processJob} | OOSW% ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'} | Pots cooked ${document.getElementById('dry-process-pots').value.trim() || 'n/a'} | Stringed & hung ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`;
+                    items.push(process);
+                }
+                const gradeJob = document.getElementById('dry-grade-job').value.trim();
+                if (gradeJob) {
+                    const days = document.getElementById('dry-grade-days').value.trim();
+                    const warning = parseInt(days, 10) > 25 ? ' | WARNING: Days in drying room exceeds 25' : '';
+                    const grading = `Grading: Job ${gradeJob} | In ${document.getElementById('dry-grade-in').value || 'n/a'} | Out ${document.getElementById('dry-grade-out').value || 'n/a'} | Days ${days || 'n/a'}${warning} | Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'} | Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'} | Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`;
+                    items.push(grading);
+                }
             }
             return renderPrintList(items);
         }
