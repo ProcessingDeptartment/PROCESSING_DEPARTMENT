@@ -146,7 +146,15 @@
         <!-- 1. Cleaning -->
         <div class="section-card" id="sec-1">
             <div class="section-title"><span id="status-1" class="status-icon">⚪</span>1. Cleaning Inspection (REC 7.6.1)</div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
+            <div class="flex justify-between items-center compliance-row mb-3" id="row-conf1">
+                <span class="font-bold">Conforms? <span class="indicator-icon"></span></span>
+                <div class="flex gap-2 no-print">
+                    <label><input type="radio" name="conf1" value="YES" onclick="handleRadioClick(this)"> Y</label>
+                    <label><input type="radio" name="conf1" value="NO" onclick="handleRadioClick(this)"> N</label>
+                </div>
+                <span class="print-only compliance-answer font-black" id="p-conf1">---</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print hidden" id="bubbles-sec-1">
                 <div class="bubble-btn" data-name="Entrance/Handwash" onclick="cycleStatus(this, 'sec-1')">Entrance/Handwash</div>
                 <div class="bubble-btn" data-name="Shucking Area" onclick="cycleStatus(this, 'sec-1')">Shucking Area</div>
                 <div class="bubble-btn" data-name="Sorting Area" onclick="cycleStatus(this, 'sec-1')">Sorting Area</div>
@@ -163,7 +171,15 @@
         <!-- 2. Hygiene -->
         <div class="section-card" id="sec-2">
             <div class="section-title"><span id="status-2" class="status-icon">⚪</span>2. Hygiene + PPE (REC 7.7.1)</div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
+            <div class="flex justify-between items-center compliance-row mb-3" id="row-conf2">
+                <span class="font-bold">Conforms? <span class="indicator-icon"></span></span>
+                <div class="flex gap-2 no-print">
+                    <label><input type="radio" name="conf2" value="YES" onclick="handleRadioClick(this)"> Y</label>
+                    <label><input type="radio" name="conf2" value="NO" onclick="handleRadioClick(this)"> N</label>
+                </div>
+                <span class="print-only compliance-answer font-black" id="p-conf2">---</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print hidden" id="bubbles-sec-2">
                 <div class="bubble-btn" data-name="Uniforms & PPE" onclick="cycleStatus(this, 'sec-2')">Uniforms & PPE</div>
                 <div class="bubble-btn" data-name="Hair & Beard Nets" onclick="cycleStatus(this, 'sec-2')">Hair & Beard Nets</div>
                 <div class="bubble-btn" data-name="No Jewelry Policy" onclick="cycleStatus(this, 'sec-2')">No Jewelry Policy</div>
@@ -195,32 +211,22 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ccp-print-container">
                 <div class="p-3 border rounded-lg bg-slate-50 ccp-block-print">
                     <h3 class="font-bold text-blue-800 text-[10px] mb-2 uppercase print:text-black ccp-header-print">SEAMING (REC 7.2.12)</h3>
-                    <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div class="grid grid-cols-1 gap-2 mb-2">
                         <div class="print-only font-bold text-[9px]">AG CODE: <span id="p-ag-code" class="border-b border-black px-2">---</span></div>
-                        <div class="print-only font-bold text-[9px]">PALLET: <span id="p-pallet-num" class="border-b border-black px-2">---</span></div>
                         <input type="text" id="ag-code" placeholder="AG CODE" class="ccp-input uppercase no-print border rounded p-1 text-xs">
-                        <input type="text" id="pallet-num" placeholder="PALLET" class="ccp-input uppercase no-print border rounded p-1 text-xs">
                     </div>
                     <div class="space-y-1 text-[10px] print:text-[11px]">
                         <div class="flex justify-between items-center compliance-row" id="row-ccp1">
-                            <span>Seam Inspections OK? <span class="indicator-icon"></span></span>
+                            <span>Seams within specification <span class="indicator-icon"></span></span>
                             <div class="flex gap-2 no-print">
-                                <label><input type="radio" name="ccp1" value="YES" onchange="updateRadioTheme(this)"> Y</label>
-                                <label><input type="radio" name="ccp1" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                                <label><input type="radio" name="ccp1" value="YES" onclick="handleRadioClick(this)"> Y</label>
+                                <label><input type="radio" name="ccp1" value="NO" onclick="handleRadioClick(this)"> N</label>
                             </div>
                             <span class="print-only compliance-answer font-black" id="p-ccp1">---</span>
                         </div>
-                        <div class="flex justify-between items-center compliance-row" id="row-ccp2">
-                            <span>Producer end seams in spec? <span class="indicator-icon"></span></span>
-                            <div class="flex gap-2 no-print">
-                                <label><input type="radio" name="ccp2" value="YES" onchange="updateRadioTheme(this)"> Y</label>
-                                <label><input type="radio" name="ccp2" value="NO" onchange="updateRadioTheme(this)"> N</label>
-                            </div>
-                            <span class="print-only compliance-answer font-black" id="p-ccp2">---</span>
-                        </div>
                     </div>
                 </div>
-                
+
                 <div class="p-3 border rounded-lg bg-orange-50 ccp-block-print">
                     <h3 class="font-bold text-orange-800 text-[10px] mb-2 uppercase print:text-black ccp-header-print">RETORTING (REC 7.2.8)</h3>
                     <div class="grid grid-cols-1 mb-2">
@@ -228,21 +234,13 @@
                         <input type="text" id="batch-code" placeholder="AG CODE" class="ccp-input uppercase no-print border rounded p-1 text-xs">
                     </div>
                     <div class="space-y-1 text-[10px] print:text-[11px]">
-                        <div class="flex justify-between items-center compliance-row" id="row-ccp3">
-                            <span>Recipes Correct? <span class="indicator-icon"></span></span>
+                        <div class="flex justify-between items-center compliance-row" id="row-ccp3" data-invert="true">
+                            <span>Any deviation? <span class="indicator-icon"></span></span>
                             <div class="flex gap-2 no-print">
-                                <label><input type="radio" name="ccp3" value="YES" onchange="updateRadioTheme(this)"> Y</label>
-                                <label><input type="radio" name="ccp3" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                                <label><input type="radio" name="ccp3" value="YES" onclick="handleRadioClick(this)"> Y</label>
+                                <label><input type="radio" name="ccp3" value="NO" onclick="handleRadioClick(this)"> N</label>
                             </div>
                             <span class="print-only compliance-answer font-black" id="p-ccp3">---</span>
-                        </div>
-                        <div class="flex justify-between items-center compliance-row" id="row-ccp4">
-                            <span>No Faults/Alarms? <span class="indicator-icon"></span></span>
-                            <div class="flex gap-2 no-print">
-                                <label><input type="radio" name="ccp4" value="YES" onchange="updateRadioTheme(this)"> Y</label>
-                                <label><input type="radio" name="ccp4" value="NO" onchange="updateRadioTheme(this)"> N</label>
-                            </div>
-                            <span class="print-only compliance-answer font-black" id="p-ccp4">---</span>
                         </div>
                     </div>
                 </div>
@@ -256,22 +254,22 @@
             <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
                 <div class="flex justify-between items-center compliance-row" id="row-op1">
                     <span>Dried size consistency? <span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="op1" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op1" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op1" value="YES" onclick="handleRadioClick(this)"> Y</label><label><input type="radio" name="op1" value="NO" onclick="handleRadioClick(this)"> N</label></div>
                     <span class="print-only compliance-answer font-black" id="p-op1">--</span>
                 </div>
                 <div class="flex justify-between items-center compliance-row" id="row-op2">
                     <span>Dried color acceptable? <span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="op2" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op2" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op2" value="YES" onclick="handleRadioClick(this)"> Y</label><label><input type="radio" name="op2" value="NO" onclick="handleRadioClick(this)"> N</label></div>
                     <span class="print-only compliance-answer font-black" id="p-op2">--</span>
                 </div>
                 <div class="flex justify-between items-center compliance-row" id="row-op3">
                     <span>Live tags correct? <span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="op3" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op3" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op3" value="YES" onclick="handleRadioClick(this)"> Y</label><label><input type="radio" name="op3" value="NO" onclick="handleRadioClick(this)"> N</label></div>
                     <span class="print-only compliance-answer font-black" id="p-op3">--</span>
                 </div>
                 <div class="flex justify-between items-center compliance-row" id="row-op4">
                     <span>Live grades correct? <span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="op4" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="op4" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="op4" value="YES" onclick="handleRadioClick(this)"> Y</label><label><input type="radio" name="op4" value="NO" onclick="handleRadioClick(this)"> N</label></div>
                     <span class="print-only compliance-answer font-black" id="p-op4">--</span>
                 </div>
             </div>
@@ -284,23 +282,18 @@
             <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
                 <div class="flex justify-between items-center compliance-row" id="row-f1">
                     <span>Cans within spec? <span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="f1" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f1" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="f1" value="YES" onclick="handleRadioClick(this)"> Y</label><label><input type="radio" name="f1" value="NO" onclick="handleRadioClick(this)"> N</label></div>
                     <span class="print-only compliance-answer font-black" id="p-f1">--</span>
                 </div>
                 <div class="flex justify-between items-center compliance-row" id="row-f2">
                     <span>Dried within spec? <span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="f2" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f2" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="f2" value="YES" onclick="handleRadioClick(this)"> Y</label><label><input type="radio" name="f2" value="NO" onclick="handleRadioClick(this)"> N</label></div>
                     <span class="print-only compliance-answer font-black" id="p-f2">--</span>
                 </div>
                 <div class="flex justify-between items-center compliance-row" id="row-f3">
                     <span>Live within spec? <span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="f3" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f3" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
+                    <div class="flex gap-1 no-print"><label><input type="radio" name="f3" value="YES" onclick="handleRadioClick(this)"> Y</label><label><input type="radio" name="f3" value="NO" onclick="handleRadioClick(this)"> N</label></div>
                     <span class="print-only compliance-answer font-black" id="p-f3">--</span>
-                </div>
-                <div class="flex justify-between items-center compliance-row" id="row-f4">
-                    <span>Labels correct? (dry and live labels printed)<span class="indicator-icon"></span></span>
-                    <div class="flex gap-1 no-print"><label><input type="radio" name="f4" value="YES" onchange="updateRadioTheme(this)"> Y</label><label><input type="radio" name="f4" value="NO" onchange="updateRadioTheme(this)"> N</label></div>
-                    <span class="print-only compliance-answer font-black" id="p-f4">--</span>
                 </div>
             </div>
             <textarea id="comment-sec-6" class="hidden mt-2 p-2 w-full border-2 border-red-200 rounded-lg text-xs bg-red-50 no-print" placeholder="Describe deviation..."></textarea>
@@ -315,8 +308,8 @@
                     <div class="flex justify-between items-center text-[10px] print:text-[11px]">
                         <span class="font-bold uppercase">Can Releases up to date? <span class="indicator-icon"></span></span>
                         <div class="flex gap-2 no-print">
-                            <label><input type="radio" name="rel-can" value="YES" onchange="updateRadioTheme(this)"> Y</label>
-                            <label><input type="radio" name="rel-can" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                            <label><input type="radio" name="rel-can" value="YES" onclick="handleRadioClick(this)"> Y</label>
+                            <label><input type="radio" name="rel-can" value="NO" onclick="handleRadioClick(this)"> N</label>
                         </div>
                         <span class="print-only compliance-answer font-black" id="p-rel-can">---</span>
                     </div>
@@ -325,8 +318,8 @@
                     <div class="flex justify-between items-center text-[10px] print:text-[11px]">
                         <span class="font-bold uppercase">Dry Releases up to date? <span class="indicator-icon"></span></span>
                         <div class="flex gap-2 no-print">
-                            <label><input type="radio" name="rel-dry" value="YES" onchange="updateRadioTheme(this)"> Y</label>
-                            <label><input type="radio" name="rel-dry" value="NO" onchange="updateRadioTheme(this)"> N</label>
+                            <label><input type="radio" name="rel-dry" value="YES" onclick="handleRadioClick(this)"> Y</label>
+                            <label><input type="radio" name="rel-dry" value="NO" onclick="handleRadioClick(this)"> N</label>
                         </div>
                         <span class="print-only compliance-answer font-black" id="p-rel-dry">---</span>
                     </div>
@@ -443,10 +436,11 @@
 
         function updateRadioTheme(radio) {
             const row = radio.closest('.compliance-row');
-            const indicator = row.querySelector('.indicator-icon');
+            const invert = row.dataset.invert === 'true';
             const printAns = document.getElementById('p-' + radio.name);
-            
-            if (radio.value === 'YES') {
+            const isConforming = invert ? radio.value === 'NO' : radio.value === 'YES';
+
+            if (isConforming) {
                 row.classList.add('is-conforming');
                 row.classList.remove('is-nc');
                 if (printAns) { printAns.innerText = '✅'; printAns.style.color = '#166534'; }
@@ -455,13 +449,44 @@
                 row.classList.remove('is-conforming');
                 if (printAns) { printAns.innerText = '❌'; printAns.style.color = '#b91c1c'; }
             }
+            toggleConformBubbles(radio, radio.value === 'NO');
             updateComplianceIcons();
+        }
+
+        const radioSelection = {};
+
+        function handleRadioClick(radio) {
+            if (radioSelection[radio.name] === radio.value) {
+                radio.checked = false;
+                delete radioSelection[radio.name];
+                resetComplianceRow(radio);
+            } else {
+                radioSelection[radio.name] = radio.value;
+                updateRadioTheme(radio);
+            }
+        }
+
+        function resetComplianceRow(radio) {
+            const row = radio.closest('.compliance-row');
+            row.classList.remove('is-conforming', 'is-nc');
+            const printAns = document.getElementById('p-' + radio.name);
+            if (printAns) { printAns.innerText = '---'; printAns.style.color = ''; }
+            toggleConformBubbles(radio, false);
+            updateComplianceIcons();
+        }
+
+        function toggleConformBubbles(radio, show) {
+            const map = { conf1: 'bubbles-sec-1', conf2: 'bubbles-sec-2' };
+            const containerId = map[radio.name];
+            if (!containerId) return;
+            const container = document.getElementById(containerId);
+            if (container) container.classList.toggle('hidden', !show);
         }
 
         function updateComplianceIcons() {
             const sections = [
-                { id: 'sec-1', statusId: 'status-1', ncSelector: '.nc', anySelector: '.conforming, .nc' },
-                { id: 'sec-2', statusId: 'status-2', ncSelector: '.nc', anySelector: '.conforming, .nc' },
+                { id: 'sec-1', statusId: 'status-1', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' },
+                { id: 'sec-2', statusId: 'status-2', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' },
                 { id: 'sec-3', statusId: 'status-3', ncSelector: '.nc', anySelector: '.conforming, .nc' },
                 { id: 'sec-4', statusId: 'status-4', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' },
                 { id: 'sec-5', statusId: 'status-5', ncSelector: '.is-nc', anySelector: '.is-conforming, .is-nc' },
@@ -536,9 +561,8 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
             document.title = `REC_9.9.2_Quality_Handover_${shiftVal}SHIFT_${dateVal}`;
             
             document.getElementById('p-ag-code').innerText = document.getElementById('ag-code').value || "---";
-            document.getElementById('p-pallet-num').innerText = document.getElementById('pallet-num').value || "---";
             document.getElementById('p-batch-code').innerText = document.getElementById('batch-code').value || "---";
-            
+
             for (let i = 1; i <= 6; i++) {
                 const commentBox = document.getElementById(`comment-sec-${i}`);
                 const commentText = commentBox ? commentBox.value : "";
@@ -546,7 +570,7 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
                 if(!section) continue;
 
                 let ncDetails = "";
-                if (i <= 3) {
+                if (i === 3) {
                     const ncItems = [];
                     section.querySelectorAll('.nc').forEach(el => {
                         const name = el.getAttribute('data-name');
@@ -560,6 +584,15 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
                         if (label) ncRows.push(label.trim());
                     });
                     if (ncRows.length > 0) ncDetails = "DEVIATION DETECTED: " + ncRows.join(", ") + ". ";
+
+                    if (i === 1 || i === 2) {
+                        const areaItems = [];
+                        section.querySelectorAll('.bubble-btn.nc').forEach(el => {
+                            const name = el.getAttribute('data-name');
+                            if (name) areaItems.push(name);
+                        });
+                        if (areaItems.length > 0) ncDetails += "AREAS: " + areaItems.join(", ") + ". ";
+                    }
                 }
                 const finalOutput = document.getElementById(`print-notes-${i}`);
                 if (finalOutput) finalOutput.innerText = (ncDetails + commentText).trim();
