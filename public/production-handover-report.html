@@ -549,11 +549,7 @@
             <div class="signature-line"></div>
         </div>
 
-        <div class="print-only page-break">
-            <div class="section-title">Annexure: Production Job Details</div>
-            <div id="production-detail-print"></div>
-            <p class="text-[9px] mt-4 italic text-slate-500">End of Report Details</p>
-        </div>
+        <!-- Annexure removed: job details are included in each section's print summary -->
 
     </div>
 
@@ -873,40 +869,7 @@
                 if (printNode) printNode.innerHTML = sectionSummaries[key];
             });
 
-            const detailContainer = document.getElementById('production-detail-print');
-            detailContainer.innerHTML = '';
-            const jobRows = document.querySelectorAll('.section-job-list .compliance-row');
-            if (jobRows.length === 0) {
-                detailContainer.innerHTML = '<div class="text-[11px]">No job details added.</div>';
-            } else {
-                jobRows.forEach(row => {
-                    const detail = document.createElement('div');
-                    detail.className = 'production-row-print';
-                    // build sanitized inline pills for print to avoid block-level stacking
-                    const parts = [];
-                    row.querySelectorAll('.inline-detail-pill, div > div, div > span, span').forEach(el => {
-                        const t = el.textContent.trim();
-                        if (t) parts.push(t);
-                    });
-                    if (parts.length) {
-                        parts.forEach(p => {
-                            const span = document.createElement('span');
-                            span.className = 'inline-detail-pill';
-                            span.style.whiteSpace = 'nowrap';
-                            span.style.marginRight = '8px';
-                            span.textContent = p;
-                            detail.appendChild(span);
-                        });
-                    } else {
-                        const txt = row.textContent.trim();
-                        const span = document.createElement('span');
-                        span.className = 'inline-detail-pill';
-                        span.textContent = txt;
-                        detail.appendChild(span);
-                    }
-                    detailContainer.appendChild(detail);
-                });
-            }
+            // Job details are included in each section's summary; annex removed.
 
             document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || 'No additional comments recorded.';
             // Temporarily hide interactive form elements so only print summaries appear
@@ -965,16 +928,40 @@
 
         function buildHarvestSummary() {
             const rows = Array.from(document.querySelectorAll('#harvest-job-list .compliance-row'));
-            if (!rows.length) return '<div class="print-empty">No harvest jobs recorded.</div>';
-            const items = rows.map(row => {
-                const parts = [];
-                // prefer inline-detail-pill spans, fall back to any immediate child text
-                row.querySelectorAll('.inline-detail-pill, div > div, div > span, span').forEach(el => {
-                    const t = el.textContent.trim();
-                    if (t) parts.push(t);
+            const items = [];
+            if (rows.length) {
+                rows.forEach(row => {
+                    const parts = [];
+                    row.querySelectorAll('.inline-detail-pill, div > div, div > span, span').forEach(el => {
+                        const t = el.textContent.trim();
+                        if (t) parts.push(t);
+                    });
+                    if (parts.length) items.push(parts.join(' | '));
                 });
-                return parts.join(' | ');
-            }).filter(Boolean);
+            } else {
+                // No job rows: collect any current Can/Dry fields so Harvest prints like other sections
+                const canJob = document.getElementById('harvest-can-job').value.trim();
+                const canWeight = document.getElementById('harvest-can-weight').value.trim();
+                const canSize = document.getElementById('harvest-can-size').value;
+                const canCount = document.getElementById('harvest-can-count').textContent.trim();
+                const canParts = [];
+                if (canJob) canParts.push(`Job ${canJob}`);
+                if (canWeight) canParts.push(`Weight ${canWeight}`);
+                if (canSize) canParts.push(`Size ${document.querySelector('#harvest-can-size option:checked')?.text || canSize}`);
+                if (canCount && canCount !== '--') canParts.push(`Auto count ${canCount}`);
+                if (canParts.length) items.push(`Can: ${canParts.join(' | ')}`);
+
+                const dryJob = document.getElementById('harvest-dry-job').value.trim();
+                const dryWeight = document.getElementById('harvest-dry-weight').value.trim();
+                const drySize = document.getElementById('harvest-dry-size').value;
+                const dryCount = document.getElementById('harvest-dry-count').textContent.trim();
+                const dryParts = [];
+                if (dryJob) dryParts.push(`Job ${dryJob}`);
+                if (dryWeight) dryParts.push(`Weight ${dryWeight}`);
+                if (drySize) dryParts.push(`Size ${document.querySelector('#harvest-dry-size option:checked')?.text || drySize}`);
+                if (dryCount && dryCount !== '--') dryParts.push(`Auto count ${dryCount}`);
+                if (dryParts.length) items.push(`Dry: ${dryParts.join(' | ')}`);
+            }
             return renderPrintList(items);
         }
 
