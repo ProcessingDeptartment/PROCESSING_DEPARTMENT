@@ -909,7 +909,24 @@
             }
 
             document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || 'No additional comments recorded.';
+            // Temporarily hide interactive form elements so only print summaries appear
+            const hiddenContainers = [];
+            document.querySelectorAll('.section-card').forEach(card => {
+                // hide any direct field panels and bubble-blocks inside the card
+                card.querySelectorAll('.p-4, .bubble-block, .grid, .yesno-toggle, input, textarea, select, button').forEach(el => {
+                    const container = el.closest('.p-4, .bubble-block, .grid, .live-op-panel') || el.closest('.section-card');
+                    if (container && !container.classList.contains('print-only') && !container.classList.contains('no-print')) {
+                        container.classList.add('no-print');
+                        hiddenContainers.push(container);
+                    }
+                });
+            });
+
+            // Print and then restore the hidden containers
             window.print();
+            setTimeout(() => {
+                hiddenContainers.forEach(c => c.classList.remove('no-print'));
+            }, 1000);
         }
 
         function renderPrintList(items) {
