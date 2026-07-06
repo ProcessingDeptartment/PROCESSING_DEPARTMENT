@@ -44,6 +44,7 @@
             color: #334155;
             font-size: 12px;
             user-select: none;
+        
         }
         .bubble-btn.conforming { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; box-shadow: 0 0 0 1px #3b82f6; }
         .bubble-btn.nc { background: #fef2f2; border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 0 1px #ef4444; }
@@ -158,7 +159,7 @@
             .print-header h1 { font-size: 15px; font-weight: 900; margin: 0; text-transform: uppercase; }
             .section-card { border: none; margin-bottom: 12px; padding: 0; page-break-inside: avoid; }
             .section-title { font-size: 12px; border-bottom: 2px solid #000; margin-bottom: 4px; padding-bottom: 2px; text-transform: uppercase; color: black; font-weight: 800; }
-            .bubble-block { padding: 4px; background: #fff !important; border: 1px solid #000 !important; text-align: center; border-radius: 4px; min-height: auto; max-width: 75px; }
+            .bubble-block { padding: 6px !important; background: #fff !important; border: 1px solid #000 !important; text-align: left !important; border-radius: 4px; min-height: auto; display: inline-flex !important; flex-direction: column !important; align-items: flex-start !important; box-sizing: border-box !important; max-width: 30% !important; }
             .bubble-block.conforming { background: #dcfce7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .bubble-block.nc { background: #fee2e2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
@@ -881,7 +882,28 @@
                 jobRows.forEach(row => {
                     const detail = document.createElement('div');
                     detail.className = 'production-row-print';
-                    detail.innerHTML = row.innerHTML.replace(/onclick="[^"]*"/g, '');
+                    // build sanitized inline pills for print to avoid block-level stacking
+                    const parts = [];
+                    row.querySelectorAll('.inline-detail-pill, div > div, div > span, span').forEach(el => {
+                        const t = el.textContent.trim();
+                        if (t) parts.push(t);
+                    });
+                    if (parts.length) {
+                        parts.forEach(p => {
+                            const span = document.createElement('span');
+                            span.className = 'inline-detail-pill';
+                            span.style.whiteSpace = 'nowrap';
+                            span.style.marginRight = '8px';
+                            span.textContent = p;
+                            detail.appendChild(span);
+                        });
+                    } else {
+                        const txt = row.textContent.trim();
+                        const span = document.createElement('span');
+                        span.className = 'inline-detail-pill';
+                        span.textContent = txt;
+                        detail.appendChild(span);
+                    }
                     detailContainer.appendChild(detail);
                 });
             }
