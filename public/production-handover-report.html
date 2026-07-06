@@ -55,14 +55,14 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            min-height: 65px;
+            min-height: 55px;
             width: 100%;
-            max-width: 260px;
+            max-width: 240px;
         }
         .bubble-block.conforming { background: #dcfce7 !important; border-color: #22c55e !important; }
         .bubble-block.nc { background: #fee2e2 !important; border-color: #ef4444 !important; }
         .bubble-label {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 800;
             color: #64748b;
             text-transform: uppercase;
@@ -72,7 +72,7 @@
             background: transparent !important;
             border: none !important;
             padding: 0 !important;
-            font-size: 16px !important;
+            font-size: 12px !important;
             font-weight: 800 !important;
             color: #1e293b !important;
             width: 100% !important;
@@ -80,7 +80,7 @@
             line-height: 1.2;
         }
         .bubble-range {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 600;
             color: #94a3b8;
             text-align: left;
@@ -122,8 +122,8 @@
             .section-card { border: none; margin-bottom: 12px; padding: 0; page-break-inside: avoid; }
             .section-title { font-size: 12px; border-bottom: 2px solid #000; margin-bottom: 4px; padding-bottom: 2px; text-transform: uppercase; color: black; font-weight: 800; }
             .bubble-block { padding: 4px; background: #fff !important; border: 1px solid #000 !important; text-align: center; border-radius: 4px; min-height: auto; max-width: 75px; }
-            .bubble-block.conforming { background: #dcfce7 !important; -webkit-print-color-adjust: exact; }
-            .bubble-block.nc { background: #fee2e2 !important; -webkit-print-color-adjust: exact; }
+            .bubble-block.conforming { background: #dcfce7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .bubble-block.nc { background: #fee2e2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
             .compliance-answer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
             .section-print-notes { font-size: 12px !important; font-weight: 700 !important; color: #b91c1c !important; margin-top: 8px; font-style: italic; line-height: 1.4; border-top: 0.5px solid #eee; padding-top: 4px; }
@@ -151,20 +151,22 @@
         <!-- 2. Staffing & Attendance -->
         <div class="section-card" id="sec-2">
             <div class="section-title"><span id="status-2" class="status-icon">⚪</span>2. Staffing & Attendance</div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
-                <div class="bubble-btn" data-name="Staff absent" onclick="toggleField(this, 'staff-absent-fields', 'sec-2')">Staff absent</div>
-                <div class="bubble-btn" data-name="Staff on leave" onclick="toggleField(this, 'staff-leave-fields', 'sec-2')">Staff on leave</div>
-            </div>
-            <div id="staff-absent-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
-                <div class="bubble-block">
-                    <span class="bubble-label">Staff absent</span>
-                    <input type="text" id="staff-absent-input" class="bubble-val-input" placeholder="Names / count" oninput="markFieldInput(this)">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="Staff absent" onclick="toggleStaffingSelection(this, 'staff-absent-fields', 'staff-leave-fields')">Staff absent</button>
+                    <div id="staff-absent-fields" class="hidden">
+                        <div class="bubble-block">
+                            <input type="number" id="staff-absent-input" class="bubble-val-input" placeholder="No. of staff" oninput="markFieldInput(this)">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div id="staff-leave-fields" class="hidden mt-4 grid gap-3 md:grid-cols-2">
-                <div class="bubble-block">
-                    <span class="bubble-label">Staff on leave</span>
-                    <input type="text" id="staff-leave-input" class="bubble-val-input" placeholder="Names / reason" oninput="markFieldInput(this)">
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="Staff on leave" onclick="toggleStaffingSelection(this, 'staff-leave-fields', 'staff-absent-fields')">Staff on leave</button>
+                    <div id="staff-leave-fields" class="hidden">
+                        <div class="bubble-block">
+                            <input type="number" id="staff-leave-input" class="bubble-val-input" placeholder="No. of staff" oninput="markFieldInput(this)">
+                        </div>
+                    </div>
                 </div>
             </div>
             <textarea id="comment-sec-2" class="hidden mt-4 p-3 w-full border-2 border-red-200 rounded-lg text-sm bg-red-50 no-print" placeholder="Describe staffing notes or actions..."></textarea>
@@ -495,6 +497,27 @@
             } else {
                 fieldBlock.classList.remove('hidden');
                 btn.classList.add('conforming');
+            }
+            updateComplianceIcons();
+        }
+
+        function toggleStaffingSelection(btn, showFieldId, hideFieldId) {
+            const showField = document.getElementById(showFieldId);
+            const hideField = document.getElementById(hideFieldId);
+            const isOpen = !showField.classList.contains('hidden');
+
+            if (isOpen) {
+                showField.classList.add('hidden');
+                btn.classList.remove('conforming');
+                clearSectionFields(showField);
+            } else {
+                showField.classList.remove('hidden');
+                hideField.classList.add('hidden');
+                clearSectionFields(hideField);
+                btn.classList.add('conforming');
+                btn.parentElement.querySelectorAll('.bubble-btn').forEach(otherBtn => {
+                    if (otherBtn !== btn) otherBtn.classList.remove('conforming');
+                });
             }
             updateComplianceIcons();
         }
