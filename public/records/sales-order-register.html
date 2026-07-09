@@ -25,7 +25,6 @@
   .sor-top .doc-code{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
   .sor-top h1{ font-size:17px; letter-spacing:.01em; }
   .sor-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .sor-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
   .btn{ padding:7px 13px; font-size:12.5px; }
   .btn-primary{ background:var(--accent); color:#241a0a; }
   .btn-primary:hover{ background:#dd9536; }
@@ -100,22 +99,11 @@
       <h1>Sales Order Register</h1>
     </div>
     <div class="sor-topline">
-      <label class="role-label">Acting as (temporary stand-in for login)
-        <select id="actingRoleSelect" style="width:190px;"></select>
-      </label>
       <button class="btn btn-primary" id="newOrderBtn">+ Add order</button>
     </div>
   </div>
 
   <div class="sor-body">
-
-    <div class="info-note">
-      This register captures customer orders as they come in — <strong>not</strong> can production
-      output, which stays in Syspro. Every order gets a hard <strong>preferred shipping date</strong>.
-      Sales can flag an order as urgent, but the queue is ranked by that date plus a
-      <strong>confirmed priority</strong> set by production planning — so a customer being told
-      "it's urgent" doesn't automatically jump the line ahead of orders that genuinely are.
-    </div>
 
     <div class="panel">
       <div class="panel-head"><h2>Order queue</h2><span class="muted" id="queueCountTag" style="font-family:var(--mono);font-size:10.5px;"></span></div>
@@ -131,6 +119,8 @@
                 <th>PO #</th>
                 <th>Product</th>
                 <th>Cartons</th>
+                <th>Available stock</th>
+                <th>Stock gap</th>
                 <th>Order date</th>
                 <th>Required ship date</th>
                 <th>Days left</th>
@@ -142,7 +132,6 @@
             <tbody id="ordersBody"></tbody>
           </table>
         </div>
-        <div class="share-note">Orders are shared data — visible to everyone using this register. Nothing is ever deleted: cancelled orders stay in the "Cancelled" tab with the reason on record.</div>
       </div>
     </div>
 
@@ -163,9 +152,13 @@
       </div>
       <div class="grid grid-4" style="margin-bottom:10px;">
         <label class="field">Cartons ordered<input id="o_cartons" type="number" min="0" step="1"></label>
+        <label class="field">Available stock (cartons)<span class="hint">manually updated</span><input id="o_availableStock" type="number" min="0" step="1"></label>
         <label class="field">Order date received<input id="o_orderDate" type="date"></label>
         <label class="field">Preferred / required ship date<input id="o_requiredShipDate" type="date"></label>
+      </div>
+      <div class="grid grid-2" style="margin-bottom:10px;">
         <label class="field">Entered by<input id="o_enteredBy"></label>
+        <label class="field">Stock gap (automatic)<input id="o_stockGap" disabled></label>
       </div>
       <div class="grid grid-2" style="margin-bottom:10px;">
         <label class="field">Requested priority (as told by customer / sales)
@@ -178,7 +171,7 @@
         <label class="field" id="o_reasonWrap">Reason given for urgency<input id="o_requestedPriorityReason" placeholder="e.g. customer's vessel books this week"></label>
       </div>
       <div class="grid grid-2" style="margin-bottom:10px;">
-        <label class="field">Confirmed priority<span class="hint" id="confirmedPriorityHint">set by production planning</span>
+        <label class="field">Confirmed priority<span class="hint">set by production planning</span>
           <select id="o_confirmedPriority">
             <option value="">— Not yet triaged —</option>
             <option value="P1">P1 — Critical</option>
@@ -220,7 +213,6 @@
 </div>
 
 <script src="../lib/data-store.js"></script>
-<script src="../lib/permission-rules.js"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -294,6 +286,19 @@
 
   function statusLabel(key){ return (STATUSES.find(s=>s.key===key)||{}).label || key; }
 
+  // Confirm/Cancel are deliberate one-click decisions, kept separate from the
+  // in-production/ready-to-ship/shipped progression dropdown so they can't be
+  // casually picked from the same list as routine progress updates.
+  const PROGRESSION_STATUSES = ['confirmed','in_production','ready_to_ship','shipped'];
+  function statusCellHtml(o){
+    if(o.status==='cancelled') return `<span class="badge badge-muted">${statusLabel(o.status)}</span>`;
+    if(o.status==='shipped') return `<span class="badge badge-steel">${statusLabel(o.status)}</span>`;
+    if(o.status==='pending_review'){
+      return `<span class="badge badge-muted">Pending review</span> <button class="btn btn-flat small-btn" data-confirm="${o.id}" style="margin-top:4px;">Confirm</button>`;
+    }
+    return `<select data-status-for="${o.id}">${STATUSES.filter(s=>PROGRESSION_STATUSES.includes(s.key)).map(s=>`<option value="${s.key}" ${s.key===o.status?'selected':''}>${s.label}</option>`).join('')}</select>`;
+  }
+
   // ---------- storage ----------
   async function loadOrders(){
     const raw = await window.storage.get(STORE_KEY, true).catch(()=>null);
@@ -306,7 +311,17 @@
   }
   function logHistory(order, action, detail){
     order.history = order.history || [];
-    order.history.push({ ts: Date.now(), role: PermissionRules.getCurrentRole(), action, detail: detail||'' });
+    order.history.push({ ts: Date.now(), action, detail: detail||'' });
+  }
+
+  function stockGapInfo(order){
+    if(order.availableStock===''||order.availableStock==null) return null;
+    const avail = Number(order.availableStock)||0;
+    const need = Number(order.cartons)||0;
+    const diff = avail - need;
+    if(diff < 0) return {label:'Short by '+Math.abs(diff), cls:'badge-fail'};
+    if(diff === 0) return {label:'Exactly covered', cls:'badge-ok'};
+    return {label:'Surplus of '+diff, cls:'badge-ok'};
   }
 
   // ---------- option lists ----------
@@ -352,16 +367,14 @@
     const list = filteredSortedOrders();
     $('queueCountTag').textContent = `${list.length} order(s)`;
     if(!list.length){
-      $('ordersBody').innerHTML = `<tr class="empty-row"><td colspan="12">No orders in this view yet.</td></tr>`;
+      $('ordersBody').innerHTML = `<tr class="empty-row"><td colspan="14">No orders in this view yet.</td></tr>`;
       return;
     }
     $('ordersBody').innerHTML = list.map(o=>{
       const urg = computedUrgency(o);
       const days = daysUntil(o.requiredShipDate);
-      const canEditStatus = PermissionRules.can('changeOrderStatus') && o.status!=='cancelled';
-      const statusCell = canEditStatus
-        ? `<select data-status-for="${o.id}">${STATUSES.filter(s=>s.key!=='cancelled').map(s=>`<option value="${s.key}" ${s.key===o.status?'selected':''}>${s.label}</option>`).join('')}</select>`
-        : `<span class="badge ${o.status==='cancelled'?'badge-muted':'badge-steel'}">${statusLabel(o.status)}</span>`;
+      const gap = stockGapInfo(o);
+      const statusCell = statusCellHtml(o);
       return `<tr class="${o.status==='cancelled'?'row-cancelled':''} ${!o.confirmedPriority && o.status!=='cancelled' && o.status!=='shipped' ?'row-untriaged':''}">
         <td>${confirmedPriorityBadge(o)}</td>
         <td>${requestedPriorityBadge(o)}${urg && o.status!=='cancelled' && o.status!=='shipped' ? `<div style="margin-top:3px;"><span class="badge ${urg.cls}">${urg.label}</span></div>` : ''}</td>
@@ -369,15 +382,17 @@
         <td>${o.customerPO||''}</td>
         <td>${o.productLabel||''}</td>
         <td class="num">${o.cartons!==''&&o.cartons!=null?o.cartons:''}</td>
+        <td><input type="number" min="0" step="1" style="width:80px;" data-stock-for="${o.id}" value="${o.availableStock!==''&&o.availableStock!=null?o.availableStock:''}"></td>
+        <td>${gap ? `<span class="badge ${gap.cls}">${gap.label}</span>` : '<span class="muted">—</span>'}</td>
         <td>${o.orderDate||''}</td>
         <td>${o.requiredShipDate||''}</td>
         <td class="num">${days===null?'':(o.status==='shipped'||o.status==='cancelled')?'—':days}</td>
         <td>${statusCell}</td>
         <td>${o.enteredBy||''}</td>
         <td><div class="row-actions">
-          <button class="btn btn-flat small-btn" data-edit="${o.id}" ${PermissionRules.can('editOrder')?'':'disabled'}>Edit</button>
+          <button class="btn btn-flat small-btn" data-edit="${o.id}">Edit</button>
           <button class="btn btn-flat small-btn" data-history="${o.id}">History</button>
-          ${o.status!=='cancelled' && o.status!=='shipped' ? `<button class="btn btn-danger small-btn" data-cancel="${o.id}" ${PermissionRules.can('cancelOrder')?'':'disabled'}>Cancel</button>` : ''}
+          ${o.status!=='cancelled' && o.status!=='shipped' ? `<button class="btn btn-danger small-btn" data-cancel="${o.id}">Cancel</button>` : ''}
         </div></td>
       </tr>`;
     }).join('');
@@ -388,12 +403,17 @@
     $('ordersBody').querySelectorAll('[data-status-for]').forEach(sel=>{
       sel.addEventListener('change', ()=>onStatusChange(sel.dataset.statusFor, sel.value));
     });
+    $('ordersBody').querySelectorAll('[data-confirm]').forEach(b=>{
+      b.addEventListener('click', ()=>onStatusChange(b.dataset.confirm, 'confirmed'));
+    });
+    $('ordersBody').querySelectorAll('[data-stock-for]').forEach(inp=>{
+      inp.addEventListener('change', ()=>onAvailableStockChange(inp.dataset.stockFor, inp.value));
+    });
   }
 
   async function onStatusChange(id, newStatus){
     const o = orders.find(x=>x.id===id);
     if(!o) return;
-    if(!PermissionRules.can('changeOrderStatus')){ toast('Your role cannot change order status.'); renderTable(); return; }
     const old = o.status;
     o.status = newStatus;
     o.updatedAt = Date.now();
@@ -403,12 +423,24 @@
     renderTable();
   }
 
+  async function onAvailableStockChange(id, value){
+    const o = orders.find(x=>x.id===id);
+    if(!o) return;
+    const old = o.availableStock;
+    o.availableStock = value === '' ? '' : Number(value);
+    o.updatedAt = Date.now();
+    logHistory(o, 'stock_update', `Available stock: ${old===''||old==null?'(none)':old} → ${o.availableStock===''?'(none)':o.availableStock}`);
+    await persistOrders();
+    toast('Available stock updated.');
+    renderTable();
+  }
+
   // ---------- order modal ----------
   function blankOrder(){
     return {
       id: null, createdAt: null, updatedAt: null,
       customer:'', customerPO:'', productLabel:'', pieces:'', productType:'', packSize:'',
-      cartons:'', orderDate: todayISO(), requiredShipDate:'',
+      cartons:'', availableStock:'', orderDate: todayISO(), requiredShipDate:'',
       requestedPriority:'standard', requestedPriorityReason:'',
       confirmedPriority:'', status:'pending_review', notes:'', enteredBy:'',
       history:[]
@@ -426,19 +458,16 @@
     const urg = computedUrgency(draft);
     $('o_computedUrgency').value = urg ? urg.label : '—';
   }
-  function updateConfirmedPriorityGating(){
-    const can = PermissionRules.can('setConfirmedPriority');
-    $('o_confirmedPriority').disabled = !can;
-    $('confirmedPriorityHint').textContent = can ? 'set by production planning' : 'read-only — production planning role required';
+  function updateStockGapField(){
+    const draft = { cartons: $('o_cartons').value, availableStock: $('o_availableStock').value };
+    const gap = stockGapInfo(draft);
+    $('o_stockGap').value = gap ? gap.label : '—';
   }
 
   function openOrderModal(id){
     editingId = id || null;
     const o = editingId ? orders.find(x=>x.id===editingId) : blankOrder();
     if(editingId && !o) return;
-    if(!PermissionRules.can(editingId ? 'editOrder' : 'createOrder')){
-      toast('Your role cannot ' + (editingId?'edit':'create') + ' orders.'); return;
-    }
     $('orderModalTitle').textContent = editingId ? 'Edit order' : 'Add order';
     $('o_customer').value = o.customer;
     $('o_customerPO').value = o.customerPO;
@@ -446,6 +475,7 @@
     $('o_productType').value = o.productType || '';
     $('o_packSize').value = o.packSize || '';
     $('o_cartons').value = o.cartons;
+    $('o_availableStock').value = o.availableStock;
     $('o_orderDate').value = o.orderDate || todayISO();
     $('o_requiredShipDate').value = o.requiredShipDate;
     $('o_requestedPriority').value = o.requestedPriority || 'standard';
@@ -456,16 +486,13 @@
     $('orderModalStatus').textContent = editingId ? `${o.id} · ${statusLabel(o.status)}` : 'New order';
     updateReasonWrapVisibility();
     updateComputedUrgencyField();
-    updateConfirmedPriorityGating();
+    updateStockGapField();
     $('orderModal').classList.add('show');
   }
   function closeOrderModal(){ $('orderModal').classList.remove('show'); editingId=null; }
 
   async function saveOrderFromModal(){
     const isNew = !editingId;
-    if(!PermissionRules.can(isNew ? 'createOrder' : 'editOrder')){
-      toast('Your role cannot ' + (isNew?'create':'edit') + ' orders.'); return;
-    }
     const customer = $('o_customer').value.trim();
     const requiredShipDate = $('o_requiredShipDate').value;
     const pieces = $('o_pieces').value;
@@ -492,7 +519,7 @@
     }
 
     const prevConfirmed = o.confirmedPriority;
-    const newConfirmed = PermissionRules.can('setConfirmedPriority') ? $('o_confirmedPriority').value : o.confirmedPriority;
+    const newConfirmed = $('o_confirmedPriority').value;
 
     o.customer = customer;
     o.customerPO = $('o_customerPO').value.trim();
@@ -501,6 +528,7 @@
     o.packSize = packSize;
     o.productLabel = buildProductLabel(pieces, productType, packSize);
     o.cartons = $('o_cartons').value === '' ? '' : Number($('o_cartons').value);
+    o.availableStock = $('o_availableStock').value === '' ? '' : Number($('o_availableStock').value);
     o.orderDate = $('o_orderDate').value;
     o.requiredShipDate = requiredShipDate;
     o.requestedPriority = requestedPriority;
@@ -531,14 +559,13 @@
     const o = orders.find(x=>x.id===id);
     const list = (o && o.history) || [];
     $('historyList').innerHTML = list.length
-      ? list.slice().reverse().map(h=>`<div class="history-item"><div>${h.action.replace(/_/g,' ')}${h.detail?': '+h.detail:''}</div><div class="meta">${new Date(h.ts).toLocaleString()} · ${h.role}</div></div>`).join('')
+      ? list.slice().reverse().map(h=>`<div class="history-item"><div>${h.action.replace(/_/g,' ')}${h.detail?': '+h.detail:''}</div><div class="meta">${new Date(h.ts).toLocaleString()}</div></div>`).join('')
       : '<div class="history-item muted">No history yet.</div>';
     $('historyModal').classList.add('show');
   }
 
   // ---------- cancel modal ----------
   function openCancelModal(id){
-    if(!PermissionRules.can('cancelOrder')){ toast('Your role cannot cancel orders.'); return; }
     cancellingId = id;
     $('cancelReasonInput').value = '';
     $('cancelModal').classList.add('show');
@@ -557,28 +584,20 @@
     renderTable();
   }
 
-  // ---------- role ----------
-  function wireActingRole(){
-    const sel = $('actingRoleSelect');
-    sel.innerHTML = PermissionRules.ROLES.map(r=>`<option value="${r}">${r.replace(/_/g,' ')}</option>`).join('');
-    sel.value = PermissionRules.getCurrentRole();
-    sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
-  }
-
   function renderAll(){
     renderTabs();
     renderTable();
-    $('newOrderBtn').disabled = !PermissionRules.can('createOrder');
   }
 
   function wire(){
-    wireActingRole();
     renderProductOptionLists();
     $('newOrderBtn').addEventListener('click', ()=>openOrderModal(null));
     $('orderModalCancelBtn').addEventListener('click', closeOrderModal);
     $('orderModalSaveBtn').addEventListener('click', saveOrderFromModal);
     $('o_requestedPriority').addEventListener('change', updateReasonWrapVisibility);
     $('o_requiredShipDate').addEventListener('input', updateComputedUrgencyField);
+    $('o_cartons').addEventListener('input', updateStockGapField);
+    $('o_availableStock').addEventListener('input', updateStockGapField);
     $('historyCloseBtn').addEventListener('click', ()=>$('historyModal').classList.remove('show'));
     $('cancelModalCloseBtn').addEventListener('click', ()=>$('cancelModal').classList.remove('show'));
     $('cancelModalConfirmBtn').addEventListener('click', confirmCancel);
