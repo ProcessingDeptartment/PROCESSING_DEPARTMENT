@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8123", "--directory", "public"],
       "port": 8123
+    },
+    {
+      "name": "sales-order-register-standalone",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8124", "--directory", "../SALES_ORDER_REGISTER"],
+      "port": 8124
     }
   ]
 }

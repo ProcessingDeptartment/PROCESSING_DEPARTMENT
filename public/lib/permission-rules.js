@@ -13,7 +13,7 @@
  * every record calls PermissionRules.can(action), so that is the only change needed.
  */
 (function () {
-  const ROLES = ['PRODUCTION_OPERATOR', 'QUALITY_TECHNICIAN', 'QA_MANAGER', 'SALES', 'PRODUCTION_PLANNER', 'ADMIN'];
+  const ROLES = ['PRODUCTION_OPERATOR', 'QUALITY_TECHNICIAN', 'QA_MANAGER', 'ADMIN'];
 
   // action name -> roles allowed to perform it
   const RULES = {
@@ -24,13 +24,7 @@
     acknowledgeSpecChange: ['PRODUCTION_OPERATOR', 'QUALITY_TECHNICIAN', 'QA_MANAGER', 'ADMIN'],
     updateSpecProfile: ['QA_MANAGER', 'ADMIN'],
     publishSpecVersion: ['QA_MANAGER', 'ADMIN'],
-    uploadSpecFile: ['QA_MANAGER', 'ADMIN'],
-
-    createOrder: ['SALES', 'PRODUCTION_PLANNER', 'ADMIN'],
-    editOrder: ['SALES', 'PRODUCTION_PLANNER', 'ADMIN'],
-    setConfirmedPriority: ['PRODUCTION_PLANNER', 'ADMIN'],
-    changeOrderStatus: ['SALES', 'PRODUCTION_PLANNER', 'ADMIN'],
-    cancelOrder: ['SALES', 'PRODUCTION_PLANNER', 'ADMIN']
+    uploadSpecFile: ['QA_MANAGER', 'ADMIN']
   };
 
   const ROLE_KEY = 'acting_as_role';
