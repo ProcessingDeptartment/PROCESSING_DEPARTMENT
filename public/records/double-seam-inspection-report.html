@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.12 Double Seam Inspection Report</title>
+<style>
+  :root{
+    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
+    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
+    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  }
+  #dsir-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }
+  #dsir-root *{ box-sizing:border-box; }
+  #dsir-root h1,#dsir-root h2,#dsir-root h3{ margin:0; font-weight:700; }
+  #dsir-root input, #dsir-root select, #dsir-root textarea{
+    font-family:var(--mono); font-size:12.5px; border:1px solid var(--line); border-radius:3px;
+    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
+  }
+  #dsir-root input:focus, #dsir-root select:focus, #dsir-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
+  #dsir-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .dsir-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .dsir-top .doc-code{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .dsir-top h1{ font-size:17px; letter-spacing:.01em; }
+  .dsir-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .dsir-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
+  .btn{ padding:7px 13px; font-size:12.5px; }
+  .btn-primary{ background:var(--accent); color:#241a0a; }
+  .btn-primary:hover{ background:#dd9536; }
+  .btn-ghost{ background:transparent; color:#f4f1e8; border:1px solid #55636e !important; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-danger{ background:var(--fail); color:#fff; }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-flat:hover{ background:#d5d8d6; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .dsir-body{ padding:16px 18px 60px; max-width:1400px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; }
+  .panel-head{ padding:9px 14px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:center; background:#fbfbfa; border-radius:6px 6px 0 0; }
+  .panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--steel); }
+  .panel-body{ padding:14px; }
+
+  .grid{ display:grid; gap:10px; }
+  .grid-4{ grid-template-columns:repeat(4,1fr); }
+  .grid-3{ grid-template-columns:repeat(3,1fr); }
+  .grid-2{ grid-template-columns:repeat(2,1fr); }
+  label.field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:#54606b; font-weight:600; }
+  label.field span.hint{ font-weight:400; color:#8a939b; font-family:var(--mono); font-size:10.5px; }
+
+  .stage-tabs{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .stage-tab{ padding:7px 14px; background:var(--line-soft); border-radius:4px 4px 0 0; font-size:12px; font-weight:700; color:#5c6771; }
+  .stage-tab.active{ background:var(--steel); color:#fff; }
+
+  table.meas{ width:100%; border-collapse:collapse; }
+  table.meas th, table.meas td{ border:1px solid var(--line-soft); padding:4px 6px; text-align:center; vertical-align:middle;}
+  table.meas th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; }
+  table.meas td.row-label{ text-align:left; font-size:11.5px; font-weight:600; color:#33404a; background:#fcfcfb; white-space:nowrap; }
+  table.meas td.row-label span.spec{ display:block; font-weight:400; color:#8a939b; font-family:var(--mono); font-size:10px; }
+  table.meas input{ text-align:center; padding:3px 2px; }
+  td.oor input{ background:var(--fail-bg); border-color:var(--fail); color:var(--fail); font-weight:700; }
+  td.warn-cell input{ background:var(--warn-bg); border-color:var(--warn); }
+  .calc-row td{ background:#f2f6f4; font-family:var(--mono); font-weight:700; }
+  .calc-row td.fail-calc{ background:var(--fail-bg); color:var(--fail); }
+  .calc-row td.ok-calc{ color:var(--ok); }
+
+  .can-block{ margin-bottom:16px; }
+  .can-block h3{ font-size:12.5px; color:var(--steel); margin-bottom:6px; display:flex; gap:10px; align-items:center; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; letter-spacing:.02em; }
+  .badge-ok{ background:var(--ok-bg); color:var(--ok); }
+  .badge-fail{ background:var(--fail-bg); color:var(--fail); }
+  .badge-draft{ background:#eee; color:#777; }
+
+  .vac-row{ display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+  .vac-row label{ font-size:11.5px; font-weight:600; color:#54606b; white-space:nowrap; }
+  .vac-row input{ max-width:110px; }
+
+  .issues{ border:1px solid var(--fail); background:var(--fail-bg); border-radius:6px; padding:10px 14px; margin-bottom:14px; color:var(--fail); font-size:12px; }
+  .issues h3{ font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .issues ul{ margin:0; padding-left:18px; }
+  .issues.ok{ border-color:var(--ok); background:var(--ok-bg); color:var(--ok); }
+  .issues.warn{ border-color:var(--warn); background:var(--warn-bg); color:#7a5310; }
+
+  .footer-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; flex-wrap:wrap; align-items:center; }
+  .status-line{ font-size:11.5px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
+
+  .history-list{ max-height:220px; overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
+  .history-item{ padding:7px 10px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:center; font-size:11.5px; cursor:pointer; }
+  .history-item:hover{ background:#fbfbfa; }
+  .history-item:last-child{ border-bottom:none; }
+  .small-btn{ padding:3px 9px; font-size:10.5px; }
+  .muted{ color:#8a939b; }
+  .search-row{ display:flex; gap:8px; }
+  .search-row input{ max-width:260px; }
+  .spec-editor textarea{ font-family:var(--mono); font-size:11px; min-height:160px; }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .toast.show{ opacity:1; }
+  .share-note{ font-size:10.5px; color:#8a939b; margin-top:4px; }
+  .spec-meta-row{ display:flex; gap:8px; margin-bottom:10px; }
+  @media (max-width:900px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} .footer-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div id="dsir-root">
+  <div class="dsir-top">
+    <div>
+      <div class="doc-code">REC 7.2.12 &nbsp;·&nbsp; Rev 11</div>
+      <h1>Double Seam Inspection Report</h1>
+    </div>
+    <div class="dsir-topline">
+      <label class="role-label">Acting as (temporary stand-in for login)
+        <select id="actingRoleSelect" style="width:190px;"></select>
+      </label>
+      <select id="specProfileSelect" style="width:220px;"></select>
+      <button class="btn btn-ghost" id="manageSpecsBtn">Specs</button>
+      <button class="btn btn-ghost" id="newRecordBtn">New</button>
+      <button class="btn btn-primary" id="saveDraftBtn">Save draft</button>
+      <button class="btn btn-primary" id="submitBtn">Submit complete</button>
+    </div>
+  </div>
+
+  <div class="dsir-body">
+
+    <div class="panel">
+      <div class="panel-head"><h2>Batch lookup &amp; traceability</h2><span class="muted" id="recordIdTag" style="font-family:var(--mono);font-size:10.5px;"></span></div>
+      <div class="panel-body">
+        <div class="search-row" style="margin-bottom:10px;">
+          <input id="batchSearchInput" placeholder="Enter Fujian batch code (cans) to recall history…" />
+          <button class="btn btn-flat" id="batchSearchBtn">Search</button>
+        </div>
+        <div id="historyWrap" style="display:none;">
+          <div class="muted" style="margin-bottom:6px;">Previous submissions for this batch:</div>
+          <div class="history-list" id="historyList"></div>
+        </div>
+        <div class="share-note">Batch and inspection data is stored as shared data — visible to everyone using this record system, so it can support cross-record traceability.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Header</h2></div>
+      <div class="panel-body">
+        <div class="grid grid-4" style="margin-bottom:10px;">
+          <label class="field">AG Code<input id="h_agCode"></label>
+          <label class="field">Date<input id="h_reportDate" type="date"></label>
+          <label class="field">Can size<input id="h_canSize"></label>
+          <label class="field">Date produced<input id="h_dateProduced" type="date"></label>
+        </div>
+        <div class="grid grid-2" style="margin-bottom:10px;">
+          <label class="field">Fujian batch code (cans)<input id="h_batchCans"></label>
+          <label class="field">Fujian batch code (can ends)<input id="h_batchEnds"></label>
+        </div>
+        <div class="grid grid-4">
+          <label class="field">Micrometer serial number<input id="h_microSerial"></label>
+          <label class="field">Micrometer verified (±0.02mm)
+            <select id="h_microVerified"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+          </label>
+          <label class="field">Size 1.21mm — actual reading<span class="hint">tol ±0.02mm</span><input id="h_gauge121" type="number" step="0.001"></label>
+          <label class="field">Size 3.00mm — actual reading<span class="hint">tol ±0.02mm</span><input id="h_gauge300" type="number" step="0.001"></label>
+        </div>
+      </div>
+    </div>
+
+    <div id="issuesPanel"></div>
+
+    <div class="stage-tabs" id="stageTabs"></div>
+    <div id="stageContent"></div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Comments</h2></div>
+      <div class="panel-body">
+        <textarea id="commentsBox" rows="3" placeholder="Notes, deviations, corrective actions…"></textarea>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Sign-off</h2></div>
+      <div class="panel-body footer-grid">
+        <label class="field">Completed by<input id="f_completedBy"></label>
+        <label class="field">Signature (type name to sign)<input id="f_completedSig"></label>
+        <label class="field">Date<input id="f_completedDate" type="date"></label>
+        <label class="field">Verified by<input id="f_verifiedBy"></label>
+        <label class="field">Signature (type name to sign)<input id="f_verifiedSig"></label>
+        <label class="field">Date<input id="f_verifiedDate" type="date"></label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <span class="status-line" id="statusLine"></span>
+      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
+    </div>
+  </div>
+
+  <div id="specModal" style="display:none; position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:8px; width:min(680px,92vw); max-height:88vh; overflow:auto; padding:16px;">
+      <h2 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin-bottom:10px;">Manufacturer spec profiles</h2>
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <input id="specNameInput" placeholder="Profile name (e.g. Manufacturer X — 300g can)">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label class="field">Upload specification file (.json)<span class="hint">Loads into the editor below — still requires a change reason and Update/Save to publish</span>
+          <input id="specUploadInput" type="file" accept="application/json,.json">
+        </label>
+      </div>
+      <div class="spec-editor">
+        <textarea id="specJsonBox" spellcheck="false"></textarea>
+      </div>
+      <div class="grid grid-2 spec-meta-row" style="margin-top:10px;">
+        <label class="field">Change reason (required to publish)<input id="specChangeReason" placeholder="e.g. Manufacturer tightened seam length tolerance"></label>
+        <label class="field">Published by (required to publish)<input id="specPublishedBy" placeholder="Name"></label>
+      </div>
+      <div class="share-note">Spec profiles are shared across all users of this record. Every change is published as a new numbered version — nothing is overwritten. Records validated against an older version will be prompted to re-validate.</div>
+      <div class="actions" style="margin-top:10px;">
+        <button class="btn btn-flat" id="specCloseBtn">Close</button>
+        <button class="btn btn-flat small-btn" id="specSaveAsNewBtn">Save as new profile</button>
+        <button class="btn btn-primary" id="specUpdateBtn">Publish new version of this profile</button>
+      </div>
+      <h2 style="font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:14px 0 6px;">Version history</h2>
+      <div class="history-list" id="specHistoryList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="../lib/data-store.js"></script>
+<script src="../lib/permission-rules.js"></script>
+<script src="../lib/spec-registry.js"></script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const STAGES = [
+    {key:'before', label:'Before production'},
+    {key:'during', label:'During production'},
+    {key:'after', label:'After production'}
+  ];
+  const CANS = ['can1','can2'];
+  const POINTS = [0,1,2];
+
+  const ROWS = [
+    {key:'seamLength', label:'Seam length', unit:'mm'},
+    {key:'seamThickness', label:'Seam thickness', unit:'mm'},
+    {key:'bodyHook', label:'Body hook', unit:'mm'},
+    {key:'coverHook', label:'Cover hook', unit:'mm'},
+    {key:'bhbPct', label:'% B.H.B.', unit:'%'},
+    {key:'freespace', label:'Freespace', unit:'mm'},
+    {key:'internal', label:'Internal', unit:'mm'},
+    {key:'tightnessPct', label:'Tightness / wrinkle', unit:'%'},
+    {key:'plateThicknessEnd', label:'Plate thickness (tin end)', unit:'mm'},
+    {key:'plateThicknessBody', label:'Plate thickness (tin body)', unit:'mm'}
+  ];
+
+  const DEFAULT_SPEC = {
+    name: 'Standard spec (Rev 11 default)',
+    vacuum: { op:'gt', value:-10, label:'>-10 kPa' },
+    seamLength: {min:2.70, max:3.10},
+    seamThickness: {min:1.20, max:1.30},
+    bodyHook: {min:1.75, max:2.15},
+    coverHook: {min:1.75, max:2.15},
+    overlapPctMin: 50,
+    bhbPct: {min:70, max:90},
+    actualOverlapMin: 1,
+    freespace: {min:0.03, max:0.19},
+    internal: {min:0.06, max:0.17},
+    tightnessPctMin: 80,
+    plateThicknessEnd: null,
+    plateThicknessBody: null,
+    gauge121Target: 1.21,
+    gauge300Target: 3.00,
+    gaugeTolerance: 0.02
+  };
+
+  function blankPoint(){
+    return {seamLength:'', seamThickness:'', bodyHook:'', coverHook:'', bhbPct:'',
+      freespace:'', internal:'', tightnessPct:'', plateThicknessEnd:'', plateThicknessBody:''};
+  }
+  function blankCan(){ return { vacuum:'', points:[blankPoint(), blankPoint(), blankPoint()] }; }
+  function blankStage(){ return { can1: blankCan(), can2: blankCan() }; }
+
+  function newRecord(){
+    return {
+      id: null, revision: 1, status:'draft',
+      specProfileId: 'default-rev11', specVersionAtSave: null,
+      header:{ agCode:'', reportDate:'', canSize:'', dateProduced:'', batchCans:'', batchEnds:'',
+        microSerial:'', microVerified:'', gauge121:'', gauge300:'' },
+      stages:{ before: blankStage(), during: blankStage(), after: blankStage() },
+      comments:'',
+      completedBy:'', completedSig:'', completedDate:'',
+      verifiedBy:'', verifiedSig:'', verifiedDate:'',
+      createdAt: null, updatedAt: null
+    };
+  }
+
+  let state = newRecord();
+  let activeStage = 'before';
+  let specProfiles = {}; // id -> spec (latest published version content)
+  let specIndex = []; // [{id,name}]
+
+  function toast(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
+  function num(v){ const n = parseFloat(v); return isNaN(n) ? null : n; }
+
+  // ---------- storage helpers ----------
+  async function storeGet(key, shared){
+    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  async function storeSet(key, value, shared){
+    try{ await window.storage.set(key, value, shared); return true; }
+    catch(e){ console.error('storage set failed', e); return false; }
+  }
+
+  // ---------- spec profiles (versioned via SpecRegistry) ----------
+  async function loadSpecProfiles(){
+    const idxRaw = await storeGet('spec_profiles_index', true);
+    if(idxRaw){
+      try{ specIndex = JSON.parse(idxRaw); }catch(e){ specIndex = []; }
+    }
+    if(!specIndex.length){
+      specIndex = [{id:'default-rev11', name: DEFAULT_SPEC.name}];
+      await storeSet('spec_profiles_index', JSON.stringify(specIndex), true);
+      await SpecRegistry.proposeVersion('default-rev11', DEFAULT_SPEC, {changeReason:'Initial standard spec (Rev 11)', publishedBy:'System'});
+    }
+    specProfiles = {};
+    for(const s of specIndex){
+      let content = await SpecRegistry.getPublished(s.id);
+      if(!content){
+        content = await SpecRegistry.proposeVersion(s.id, DEFAULT_SPEC, {changeReason:'Backfilled missing spec version', publishedBy:'System'});
+      }
+      specProfiles[s.id] = content;
+    }
+    renderSpecSelect();
+  }
+  function renderSpecSelect(){
+    const sel = $('specProfileSelect');
+    sel.innerHTML = specIndex.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    sel.value = state.specProfileId in specProfiles ? state.specProfileId : specIndex[0].id;
+  }
+  function currentSpec(){ return specProfiles[state.specProfileId] || DEFAULT_SPEC; }
+  function currentProfileName(){ return (specIndex.find(s=>s.id===state.specProfileId) || {}).name || 'Unknown profile'; }
+
+  // If this record has never been checked against a spec version yet (brand new,
+  // or profile was just switched), adopt whatever is currently published as the
+  // baseline -- there is nothing to "re-validate" against on first contact.
+  function ensureSpecVersionBaseline(){
+    if(state.specVersionAtSave == null){
+      const s = currentSpec();
+      if(s && s.versionNumber != null) state.specVersionAtSave = s.versionNumber;
+    }
+  }
+
+  // Returns the current published spec if it is newer than what this record was
+  // last validated against, else null.
+  function specMismatchInfo(){
+    const spec = currentSpec();
+    if(!spec || spec.versionNumber == null) return null;
+    if(state.specVersionAtSave == null) return null;
+    if(state.specVersionAtSave < spec.versionNumber) return spec;
+    return null;
+  }
+
+  async function acknowledgeSpecChange(){
+    if(!PermissionRules.can('acknowledgeSpecChange')){ toast('You do not have permission to do this.'); return; }
+    const spec = currentSpec();
+    state.specVersionAtSave = spec.versionNumber;
+    state.revision = (state.revision||1) + 1;
+    toast(`Re-validated against spec version ${spec.versionNumber}. Revision bumped to ${state.revision}.`);
+    renderAll();
+  }
+
+  // ---------- calculations ----------
+  // Overlap % = 100 x (BH + CH + T - SH) / (SH - (2T + BPT))
+  // worst-case across the 3 points: min BH, min CH, min T(end), min BPT(body), max SH
+  function calcOverlapForCan(can){
+    const pts = can.points;
+    const bh = pts.map(p=>num(p.bodyHook)).filter(v=>v!==null);
+    const ch = pts.map(p=>num(p.coverHook)).filter(v=>v!==null);
+    const sl = pts.map(p=>num(p.seamLength)).filter(v=>v!==null);
+    const te = pts.map(p=>num(p.plateThicknessEnd)).filter(v=>v!==null);
+    const tb = pts.map(p=>num(p.plateThicknessBody)).filter(v=>v!==null);
+    if(!bh.length || !ch.length || !sl.length || !te.length || !tb.length) return {overlapPct:null, actualOverlap:null};
+    const BH = Math.min(...bh), CH = Math.min(...ch), SH = Math.max(...sl), T = Math.min(...te), BPT = Math.min(...tb);
+    const actualOverlap = BH + CH + T - SH;
+    const denom = SH - (2*T + BPT);
+    const overlapPct = denom !== 0 ? (100 * actualOverlap / denom) : null;
+    return { overlapPct: overlapPct!==null ? Math.round(overlapPct*10)/10 : null,
+             actualOverlap: Math.round(actualOverlap*1000)/1000 };
+  }
+
+  function checkRange(val, range){
+    if(val===null || !range) return null;
+    if(range.min!==undefined && val < range.min) return 'fail';
+    if(range.max!==undefined && val > range.max) return 'fail';
+    return 'ok';
+  }
+  function checkMin(val, min){
+    if(val===null || min===undefined || min===null) return null;
+    return val >= min ? 'ok' : 'fail';
+  }
+
+  // returns list of issue strings, and mutates nothing
+  function evaluateRecord(){
+    const spec = currentSpec();
+    const issues = [];
+    // gauges
+    const g121 = num(state.header.gauge121), g300 = num(state.header.gauge300);
+    if(g121!==null && Math.abs(g121 - spec.gauge121Target) > spec.gaugeTolerance)
+      issues.push('1.21mm gauge block reading out of tolerance (±'+spec.gaugeTolerance+'mm).');
+    if(g300!==null && Math.abs(g300 - spec.gauge300Target) > spec.gaugeTolerance)
+      issues.push('3.00mm gauge block reading out of tolerance (±'+spec.gaugeTolerance+'mm).');
+    if(state.header.microVerified === 'no')
+      issues.push('Micrometer verification marked NO.');
+
+    for(const stage of STAGES){
+      for(const canKey of CANS){
+        const can = state.stages[stage.key][canKey];
+        const vac = num(can.vacuum);
+        if(vac!==null && spec.vacuum && spec.vacuum.op==='gt' && !(vac > spec.vacuum.value))
+          issues.push(`${stage.label} / ${canKey.toUpperCase()}: vacuum ${vac} kPa fails spec (${spec.vacuum.label}).`);
+
+        can.points.forEach((p, i)=>{
+          const pointLabel = `${stage.label} / ${canKey.toUpperCase()} / pt${i+1}`;
+          const checks = [
+            ['seamLength', spec.seamLength, 'range'],
+            ['seamThickness', spec.seamThickness, 'range'],
+            ['bodyHook', spec.bodyHook, 'range'],
+            ['coverHook', spec.coverHook, 'range'],
+            ['bhbPct', spec.bhbPct, 'range'],
+            ['freespace', spec.freespace, 'range'],
+            ['internal', spec.internal, 'range'],
+          ];
+          checks.forEach(([key, range, kind])=>{
+            const v = num(p[key]);
+            if(v!==null && range){
+              const r = checkRange(v, range);
+              if(r==='fail') issues.push(`${pointLabel}: ${ROWS.find(r2=>r2.key===key).label} ${v} out of spec (${range.min}–${range.max}).`);
+            }
+          });
+          const tp = num(p.tightnessPct);
+          if(tp!==null && checkMin(tp, spec.tightnessPctMin)==='fail')
+            issues.push(`${pointLabel}: tightness ${tp}% below minimum ${spec.tightnessPctMin}%.`);
+        });
+
+        const {overlapPct, actualOverlap} = calcOverlapForCan(can);
+        if(overlapPct!==null && checkMin(overlapPct, spec.overlapPctMin)==='fail')
+          issues.push(`${stage.label} / ${canKey.toUpperCase()}: calculated % overlap ${overlapPct}% below minimum ${spec.overlapPctMin}%.`);
+        if(actualOverlap!==null && checkMin(actualOverlap, spec.actualOverlapMin)==='fail')
+          issues.push(`${stage.label} / ${canKey.toUpperCase()}: calculated actual overlap ${actualOverlap}mm below minimum ${spec.actualOverlapMin}mm.`);
+      }
+    }
+    return issues;
+  }
+
+  // ---------- rendering ----------
+  function renderStageTabs(){
+    $('stageTabs').innerHTML = STAGES.map(s=>
+      `<div class="stage-tab ${s.key===activeStage?'active':''}" data-stage="${s.key}">${s.label}</div>`
+    ).join('');
+    $('stageTabs').querySelectorAll('.stage-tab').forEach(el=>{
+      el.addEventListener('click', ()=>{ activeStage = el.dataset.stage; renderAll(); });
+    });
+  }
+
+  function cellClass(rowKey, value, spec){
+    const v = num(value);
+    if(v===null) return '';
+    let range = null, minOnly = null;
+    if(rowKey==='seamLength') range = spec.seamLength;
+    else if(rowKey==='seamThickness') range = spec.seamThickness;
+    else if(rowKey==='bodyHook') range = spec.bodyHook;
+    else if(rowKey==='coverHook') range = spec.coverHook;
+    else if(rowKey==='bhbPct') range = spec.bhbPct;
+    else if(rowKey==='freespace') range = spec.freespace;
+    else if(rowKey==='internal') range = spec.internal;
+    else if(rowKey==='tightnessPct') minOnly = spec.tightnessPctMin;
+    if(range){ return checkRange(v, range)==='fail' ? 'oor' : ''; }
+    if(minOnly!==null && minOnly!==undefined){ return checkMin(v, minOnly)==='fail' ? 'oor' : ''; }
+    return '';
+  }
+
+  function specLabelFor(rowKey, spec){
+    if(rowKey==='seamLength') return spec.seamLength ? `${spec.seamLength.min}–${spec.seamLength.max}mm` : '';
+    if(rowKey==='seamThickness') return spec.seamThickness ? `${spec.seamThickness.min}–${spec.seamThickness.max}mm` : '';
+    if(rowKey==='bodyHook') return spec.bodyHook ? `${spec.bodyHook.min}–${spec.bodyHook.max}mm` : '';
+    if(rowKey==='coverHook') return spec.coverHook ? `${spec.coverHook.min}–${spec.coverHook.max}mm` : '';
+    if(rowKey==='bhbPct') return spec.bhbPct ? `${spec.bhbPct.min}–${spec.bhbPct.max}%` : '';
+    if(rowKey==='freespace') return spec.freespace ? `${spec.freespace.min}–${spec.freespace.max}mm` : '';
+    if(rowKey==='internal') return spec.internal ? `${spec.internal.min}–${spec.internal.max}mm` : '';
+    if(rowKey==='tightnessPct') return spec.tightnessPctMin!==null ? `min ${spec.tightnessPctMin}%` : '';
+    if(rowKey==='plateThicknessEnd') return spec.plateThicknessEnd ? `${spec.plateThicknessEnd.min}–${spec.plateThicknessEnd.max}mm` : 'record only';
+    if(rowKey==='plateThicknessBody') return spec.plateThicknessBody ? `${spec.plateThicknessBody.min}–${spec.plateThicknessBody.max}mm` : 'record only';
+    return '';
+  }
+
+  function renderCanTable(stageKey, canKey){
+    const spec = currentSpec();
+    const can = state.stages[stageKey][canKey];
+    const {overlapPct, actualOverlap} = calcOverlapForCan(can);
+    const overlapFail = overlapPct!==null && checkMin(overlapPct, spec.overlapPctMin)==='fail';
+    const actualFail = actualOverlap!==null && checkMin(actualOverlap, spec.actualOverlapMin)==='fail';
+
+    let html = `<div class="can-block">
+      <h3>${canKey==='can1'?'Can 1':'Can 2'}
+        <span class="badge ${overlapFail||actualFail?'badge-fail':'badge-ok'}">${overlapFail||actualFail?'Check overlap':'Overlap OK'}</span>
+      </h3>
+      <div class="vac-row">
+        <label>Vacuum KPa (${spec.vacuum ? spec.vacuum.label : ''})</label>
+        <input type="number" step="0.1" data-path="${stageKey}.${canKey}.vacuum" value="${can.vacuum}">
+      </div>
+      <table class="meas"><thead><tr><th style="text-align:left;">Measurement</th><th>Point 1</th><th>Point 2</th><th>Point 3</th></tr></thead><tbody>`;
+
+    for(const row of ROWS){
+      html += `<tr><td class="row-label">${row.label}<span class="spec">${specLabelFor(row.key, spec)}</span></td>`;
+      for(const i of POINTS){
+        const val = can.points[i][row.key];
+        const cls = cellClass(row.key, val, spec);
+        html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
+      }
+      html += `</tr>`;
+    }
+    html += `<tr class="calc-row">
+        <td class="row-label">Calculated % overlap<span class="spec">min ${spec.overlapPctMin}%, worst-case of points</span></td>
+        <td colspan="3" class="${overlapFail?'fail-calc':'ok-calc'}">${overlapPct===null?'—':overlapPct+'%'}</td>
+      </tr>
+      <tr class="calc-row">
+        <td class="row-label">Calculated actual overlap<span class="spec">min ${spec.actualOverlapMin}mm</span></td>
+        <td colspan="3" class="${actualFail?'fail-calc':'ok-calc'}">${actualOverlap===null?'—':actualOverlap+'mm'}</td>
+      </tr>
+      </tbody></table></div>`;
+    return html;
+  }
+
+  function renderStageContent(){
+    const stageKey = activeStage;
+    let html = `<div class="panel"><div class="panel-head"><h2>${STAGES.find(s=>s.key===stageKey).label} — 2 cans × 3 points each</h2></div><div class="panel-body">`;
+    html += renderCanTable(stageKey,'can1');
+    html += renderCanTable(stageKey,'can2');
+    html += `</div></div>`;
+    $('stageContent').innerHTML = html;
+    $('stageContent').querySelectorAll('input[data-path]').forEach(inp=>{
+      inp.addEventListener('input', onFieldInput);
+    });
+  }
+
+  function setDeep(obj, path, value){
+    const parts = path.split('.');
+    let cur = obj;
+    for(let i=0;i<parts.length-1;i++){
+      cur = cur[parts[i]];
+    }
+    cur[parts[parts.length-1]] = value;
+  }
+
+  function onFieldInput(e){
+    const path = e.target.dataset.path;
+    setDeep(state, path, e.target.value);
+    renderIssuesAndCalcOnly();
+  }
+
+  function renderIssuesAndCalcOnly(){
+    // re-render just the active stage's calc rows / cell highlighting + issues, without losing focus on other inputs
+    const active = document.activeElement;
+    const activePath = active && active.dataset ? active.dataset.path : null;
+    renderStageContent();
+    renderIssues();
+    if(activePath){
+      const el = $('stageContent').querySelector(`[data-path="${activePath}"]`);
+      if(el){ el.focus(); const v = el.value; el.value=''; el.value=v; }
+    }
+  }
+
+  function renderIssues(){
+    const issues = evaluateRecord();
+    const mismatch = specMismatchInfo();
+    const panel = $('issuesPanel');
+    let html = '';
+    if(mismatch){
+      html += `<div class="issues warn">
+        <h3>Specification updated — re-validation required</h3>
+        <div>Profile "${currentProfileName()}" was published as <strong>version ${mismatch.versionNumber}</strong> on ${new Date(mismatch.publishedAt).toLocaleString()} by ${mismatch.publishedBy}.<br>
+        Reason: ${mismatch.changeReason}<br>
+        This record was last validated against version ${state.specVersionAtSave ?? '—'} and must be re-validated before it can be completed.</div>
+        <div style="margin-top:8px;"><button class="btn btn-primary small-btn" id="ackSpecBtn" ${PermissionRules.can('acknowledgeSpecChange')?'':'disabled'}>Acknowledge &amp; re-validate against v${mismatch.versionNumber}</button></div>
+      </div>`;
+    }
+    if(!issues.length){
+      html += `<div class="issues ok"><h3>No spec breaches detected</h3></div>`;
+    } else {
+      html += `<div class="issues"><h3>${issues.length} item(s) out of spec — must be resolved before this record can be submitted as complete</h3><ul>${issues.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+    }
+    panel.innerHTML = html;
+    const ackBtn = $('ackSpecBtn');
+    if(ackBtn) ackBtn.addEventListener('click', acknowledgeSpecChange);
+    $('submitBtn').disabled = issues.length>0 || !!mismatch || !PermissionRules.can('completeRecord');
+    return issues;
+  }
+
+  function renderHeader(){
+    $('h_agCode').value = state.header.agCode;
+    $('h_reportDate').value = state.header.reportDate;
+    $('h_canSize').value = state.header.canSize;
+    $('h_dateProduced').value = state.header.dateProduced;
+    $('h_batchCans').value = state.header.batchCans;
+    $('h_batchEnds').value = state.header.batchEnds;
+    $('h_microSerial').value = state.header.microSerial;
+    $('h_microVerified').value = state.header.microVerified;
+    $('h_gauge121').value = state.header.gauge121;
+    $('h_gauge300').value = state.header.gauge300;
+    $('commentsBox').value = state.comments;
+    $('f_completedBy').value = state.completedBy;
+    $('f_completedSig').value = state.completedSig;
+    $('f_completedDate').value = state.completedDate;
+    $('f_verifiedBy').value = state.verifiedBy;
+    $('f_verifiedSig').value = state.verifiedSig;
+    $('f_verifiedDate').value = state.verifiedDate;
+    $('recordIdTag').textContent = state.id ? `${state.id} · rev ${state.revision} · ${state.status}` : 'unsaved draft';
+  }
+
+  function bindHeaderInputs(){
+    const map = {
+      h_agCode:'agCode', h_reportDate:'reportDate', h_canSize:'canSize', h_dateProduced:'dateProduced',
+      h_batchCans:'batchCans', h_batchEnds:'batchEnds', h_microSerial:'microSerial',
+      h_microVerified:'microVerified', h_gauge121:'gauge121', h_gauge300:'gauge300'
+    };
+    Object.entries(map).forEach(([id,key])=>{
+      $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; renderIssues(); });
+    });
+    $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
+    ['f_completedBy','f_completedSig','f_completedDate','f_verifiedBy','f_verifiedSig','f_verifiedDate'].forEach(id=>{
+      const key = id.replace('f_','');
+      $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
+    });
+  }
+
+  function applyPermissionGating(){
+    $('saveDraftBtn').disabled = !PermissionRules.can('saveDraft');
+  }
+
+  function renderAll(){
+    ensureSpecVersionBaseline();
+    renderHeader();
+    renderStageTabs();
+    renderStageContent();
+    renderIssues();
+    applyPermissionGating();
+    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
+  }
+
+  // ---------- save / recall ----------
+  async function saveRecord(finalize){
+    if(finalize && !PermissionRules.can('completeRecord')){
+      toast('Your current role cannot submit a record as complete.');
+      return;
+    }
+    if(!finalize && !PermissionRules.can('saveDraft')){
+      toast('Your current role cannot save drafts.');
+      return;
+    }
+    const issues = renderIssues();
+    if(finalize && issues.length){
+      toast('Cannot submit — resolve spec breaches first.');
+      return;
+    }
+    if(finalize && specMismatchInfo()){
+      toast('Cannot submit — acknowledge the updated specification first.');
+      return;
+    }
+    const batchCode = safeKey(state.header.batchCans || 'UNSPECIFIED');
+    const now = Date.now();
+    if(!state.id){
+      state.id = `dsir_${batchCode}_${now}`;
+      state.createdAt = now;
+    }
+    state.updatedAt = now;
+    if(finalize){
+      if(state.status === 'complete') state.revision = (state.revision||1) + 1;
+      state.status = 'complete';
+    } else {
+      state.status = 'draft';
+    }
+
+    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
+    if(!ok){ toast('Save failed — please retry.'); return; }
+
+    // update batch index
+    let idxRaw = await storeGet('batch_index:'+batchCode, true);
+    let idx = [];
+    try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
+    idx = idx.filter(r=>r.recordId !== state.id);
+    idx.unshift({
+      recordId: state.id, revision: state.revision, status: state.status,
+      reportDate: state.header.reportDate, completedBy: state.completedBy, updatedAt: state.updatedAt
+    });
+    await storeSet('batch_index:'+batchCode, JSON.stringify(idx), true);
+
+    toast(finalize ? 'Submitted as complete.' : 'Draft saved.');
+    renderAll();
+  }
+
+  async function searchBatch(){
+    const raw = $('batchSearchInput').value.trim();
+    if(!raw){ toast('Enter a batch code first.'); return; }
+    const batchCode = safeKey(raw);
+    const idxRaw = await storeGet('batch_index:'+batchCode, true);
+    let idx = [];
+    try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
+    const wrap = $('historyWrap'), list = $('historyList');
+    if(!idx.length){
+      wrap.style.display='block';
+      list.innerHTML = `<div class="history-item muted">No previous submissions found for "${raw}".</div>`;
+      return;
+    }
+    wrap.style.display='block';
+    list.innerHTML = idx.map(r=>`
+      <div class="history-item" data-record="${r.recordId}">
+        <span>${r.reportDate||'(no date)'} · rev ${r.revision} · <span class="badge ${r.status==='complete'?'badge-ok':'badge-draft'}">${r.status}</span> ${r.completedBy?(' · '+r.completedBy):''}</span>
+        <button class="btn btn-flat small-btn" data-load="${r.recordId}">Load</button>
+      </div>`).join('');
+    list.querySelectorAll('[data-load]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const raw2 = await storeGet('record:'+btn.dataset.load, true);
+        if(raw2){ state = JSON.parse(raw2); toast('Loaded record.'); renderAll(); }
+      });
+    });
+  }
+
+  // ---------- spec modal ----------
+  async function renderSpecHistory(){
+    const list = await SpecRegistry.history(state.specProfileId);
+    const el = $('specHistoryList');
+    if(!list.length){ el.innerHTML = '<div class="history-item muted">No published versions yet.</div>'; return; }
+    el.innerHTML = list.map(v=>`
+      <div class="history-item">
+        <span>v${v.versionNumber} · ${v.status} · ${new Date(v.publishedAt).toLocaleString()} · ${v.publishedBy}<br><span class="muted">${v.changeReason}</span></span>
+      </div>`).join('');
+  }
+
+  async function openSpecModal(){
+    $('specModal').style.display='flex';
+    $('specNameInput').value = specIndex.find(s=>s.id===state.specProfileId)?.name || '';
+    $('specJsonBox').value = JSON.stringify(currentSpec(), null, 2);
+    $('specChangeReason').value = '';
+    $('specPublishedBy').value = '';
+    const canPublish = PermissionRules.can('publishSpecVersion');
+    $('specUpdateBtn').disabled = !canPublish;
+    $('specSaveAsNewBtn').disabled = !canPublish;
+    $('specUploadInput').disabled = !PermissionRules.can('uploadSpecFile');
+    await renderSpecHistory();
+  }
+
+  async function updateCurrentProfile(){
+    if(!PermissionRules.can('publishSpecVersion')){ toast('You do not have permission to publish spec changes.'); return; }
+    let parsed;
+    try{ parsed = JSON.parse($('specJsonBox').value); }
+    catch(e){ toast('Spec JSON is invalid.'); return; }
+    const name = $('specNameInput').value || parsed.name || 'Untitled spec';
+    parsed.name = name;
+    try{
+      const full = await SpecRegistry.proposeVersion(state.specProfileId, parsed, {
+        changeReason: $('specChangeReason').value, publishedBy: $('specPublishedBy').value
+      });
+      specProfiles[state.specProfileId] = full;
+      const entry = specIndex.find(s=>s.id===state.specProfileId);
+      if(entry){ entry.name = name; await storeSet('spec_profiles_index', JSON.stringify(specIndex), true); }
+      renderSpecSelect();
+      await renderSpecHistory();
+      toast(`Spec profile updated — now version ${full.versionNumber}.`);
+      renderAll();
+    }catch(e){ toast(e.message); }
+  }
+
+  async function saveAsNewProfile(){
+    if(!PermissionRules.can('publishSpecVersion')){ toast('You do not have permission to publish spec changes.'); return; }
+    let parsed;
+    try{ parsed = JSON.parse($('specJsonBox').value); }
+    catch(e){ toast('Spec JSON is invalid.'); return; }
+    const name = $('specNameInput').value || 'Untitled spec';
+    const id = 'spec_' + safeKey(name.toLowerCase()) + '_' + Date.now();
+    parsed.name = name;
+    try{
+      const full = await SpecRegistry.proposeVersion(id, parsed, {
+        changeReason: $('specChangeReason').value, publishedBy: $('specPublishedBy').value
+      });
+      specProfiles[id] = full;
+      specIndex.push({id, name});
+      await storeSet('spec_profiles_index', JSON.stringify(specIndex), true);
+      state.specProfileId = id;
+      state.specVersionAtSave = full.versionNumber;
+      renderSpecSelect();
+      await renderSpecHistory();
+      toast('New spec profile saved and applied.');
+      renderAll();
+    }catch(e){ toast(e.message); }
+  }
+
+  function wireSpecUpload(){
+    $('specUploadInput').addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const text = await file.text();
+      try{
+        const parsed = JSON.parse(text);
+        $('specJsonBox').value = JSON.stringify(parsed, null, 2);
+        if(parsed.name) $('specNameInput').value = parsed.name;
+        toast('Specification file loaded into editor — add a change reason, then Update or Save as new to publish it.');
+      }catch(err){ toast('Uploaded file is not valid JSON.'); }
+      e.target.value = '';
+    });
+  }
+
+  // ---------- wiring ----------
+  function wireActingRole(){
+    const sel = $('actingRoleSelect');
+    sel.innerHTML = PermissionRules.ROLES.map(r=>`<option value="${r}">${r.replace(/_/g,' ')}</option>`).join('');
+    sel.value = PermissionRules.getCurrentRole();
+    sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
+  }
+
+  function wire(){
+    wireActingRole();
+    bindHeaderInputs();
+    wireSpecUpload();
+    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
+    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
+    $('newRecordBtn').addEventListener('click', ()=>{
+      if(confirm('Start a new blank record? Unsaved changes will be lost.')){
+        state = newRecord(); state.specProfileId = $('specProfileSelect').value || 'default-rev11';
+        renderAll();
+      }
+    });
+    $('batchSearchBtn').addEventListener('click', searchBatch);
+    $('batchSearchInput').addEventListener('keydown', e=>{ if(e.key==='Enter') searchBatch(); });
+    $('specProfileSelect').addEventListener('change', ()=>{
+      state.specProfileId = $('specProfileSelect').value;
+      state.specVersionAtSave = null;
+      renderAll();
+    });
+    $('manageSpecsBtn').addEventListener('click', openSpecModal);
+    $('specCloseBtn').addEventListener('click', ()=>$('specModal').style.display='none');
+    $('specUpdateBtn').addEventListener('click', updateCurrentProfile);
+    $('specSaveAsNewBtn').addEventListener('click', saveAsNewProfile);
+    $('exportBtn').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (state.id || 'double_seam_report_draft') + '.json';
+      a.click();
+    });
+  }
+
+  (async function init(){
+    wire();
+    await loadSpecProfiles();
+    renderAll();
+  })();
+})();
+</script>
+</body>
+</html>

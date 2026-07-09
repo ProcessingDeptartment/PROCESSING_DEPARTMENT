@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Order Register</title>
+<style>
+  :root{
+    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
+    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
+    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  }
+  #sor-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }
+  #sor-root *{ box-sizing:border-box; }
+  #sor-root h1,#sor-root h2,#sor-root h3{ margin:0; font-weight:700; }
+  #sor-root input, #sor-root select, #sor-root textarea{
+    font-family:var(--mono); font-size:12.5px; border:1px solid var(--line); border-radius:3px;
+    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
+  }
+  #sor-root input:focus, #sor-root select:focus, #sor-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
+  #sor-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .sor-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .sor-top .doc-code{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .sor-top h1{ font-size:17px; letter-spacing:.01em; }
+  .sor-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .sor-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
+  .btn{ padding:7px 13px; font-size:12.5px; }
+  .btn-primary{ background:var(--accent); color:#241a0a; }
+  .btn-primary:hover{ background:#dd9536; }
+  .btn-ghost{ background:transparent; color:#f4f1e8; border:1px solid #55636e !important; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-danger{ background:var(--fail); color:#fff; }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-flat:hover{ background:#d5d8d6; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .sor-body{ padding:16px 18px 60px; max-width:1500px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; }
+  .panel-head{ padding:9px 14px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:center; background:#fbfbfa; border-radius:6px 6px 0 0; }
+  .panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--steel); }
+  .panel-body{ padding:14px; }
+
+  .grid{ display:grid; gap:10px; }
+  .grid-4{ grid-template-columns:repeat(4,1fr); }
+  .grid-3{ grid-template-columns:repeat(3,1fr); }
+  .grid-2{ grid-template-columns:repeat(2,1fr); }
+  label.field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:#54606b; font-weight:600; }
+  label.field span.hint{ font-weight:400; color:#8a939b; font-family:var(--mono); font-size:10.5px; }
+
+  .share-note{ font-size:10.5px; color:#8a939b; margin-top:4px; }
+  .info-note{ border:1px solid var(--line-soft); background:#fbfbfa; border-radius:6px; padding:10px 14px; margin-bottom:14px; color:#54606b; font-size:12px; }
+  .info-note strong{ color:var(--ink); }
+
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+  .badge-ok{ background:var(--ok-bg); color:var(--ok); }
+  .badge-fail{ background:var(--fail-bg); color:var(--fail); }
+  .badge-warn{ background:var(--warn-bg); color:var(--warn); }
+  .badge-muted{ background:#eee; color:#777; }
+  .badge-steel{ background:#e6ebee; color:var(--steel); }
+
+  .filter-tabs{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .filter-tab{ padding:6px 13px; background:var(--line-soft); border-radius:20px; font-size:11.5px; font-weight:700; color:#5c6771; cursor:pointer; }
+  .filter-tab.active{ background:var(--steel); color:#fff; }
+
+  table.orders{ width:100%; border-collapse:collapse; font-size:11.5px; }
+  table.orders th, table.orders td{ border:1px solid var(--line-soft); padding:5px 7px; text-align:left; vertical-align:middle; }
+  table.orders th{ background:#fbfbfa; font-size:10px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; white-space:nowrap; }
+  table.orders td.num{ text-align:right; font-family:var(--mono); }
+  table.orders tr.row-cancelled{ opacity:.55; }
+  table.orders tr.row-untriaged td{ background:#fdfaf3; }
+  table.orders select, table.orders input{ font-size:11px; padding:3px 4px; }
+  .row-actions{ display:flex; gap:5px; flex-wrap:wrap; }
+  .small-btn{ padding:3px 9px; font-size:10.5px; }
+  .muted{ color:#8a939b; }
+  .empty-row td{ text-align:center; color:#8a939b; padding:20px; }
+
+  .history-list{ max-height:220px; overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
+  .history-item{ padding:7px 10px; border-bottom:1px solid var(--line-soft); font-size:11.5px; }
+  .history-item:last-child{ border-bottom:none; }
+  .history-item .meta{ color:#8a939b; font-family:var(--mono); font-size:10px; }
+
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .toast.show{ opacity:1; }
+
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center; }
+  .modal-overlay.show{ display:flex; }
+  .modal-box{ background:#fff; border-radius:8px; width:min(720px,92vw); max-height:88vh; overflow:auto; padding:16px; }
+  .modal-box h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin-bottom:12px; }
+  .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap; align-items:center; }
+  @media (max-width:900px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div id="sor-root">
+  <div class="sor-top">
+    <div>
+      <div class="doc-code">INTERNAL &nbsp;·&nbsp; Sales / Production Planning</div>
+      <h1>Sales Order Register</h1>
+    </div>
+    <div class="sor-topline">
+      <label class="role-label">Acting as (temporary stand-in for login)
+        <select id="actingRoleSelect" style="width:190px;"></select>
+      </label>
+      <button class="btn btn-primary" id="newOrderBtn">+ Add order</button>
+    </div>
+  </div>
+
+  <div class="sor-body">
+
+    <div class="info-note">
+      This register captures customer orders as they come in — <strong>not</strong> can production
+      output, which stays in Syspro. Every order gets a hard <strong>preferred shipping date</strong>.
+      Sales can flag an order as urgent, but the queue is ranked by that date plus a
+      <strong>confirmed priority</strong> set by production planning — so a customer being told
+      "it's urgent" doesn't automatically jump the line ahead of orders that genuinely are.
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Order queue</h2><span class="muted" id="queueCountTag" style="font-family:var(--mono);font-size:10.5px;"></span></div>
+      <div class="panel-body">
+        <div class="filter-tabs" id="filterTabs"></div>
+        <div style="overflow-x:auto;">
+          <table class="orders">
+            <thead>
+              <tr>
+                <th>Confirmed priority</th>
+                <th>Customer urgency</th>
+                <th>Customer</th>
+                <th>PO #</th>
+                <th>Product</th>
+                <th>Cartons</th>
+                <th>Order date</th>
+                <th>Required ship date</th>
+                <th>Days left</th>
+                <th>Status</th>
+                <th>Entered by</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <div class="share-note">Orders are shared data — visible to everyone using this register. Nothing is ever deleted: cancelled orders stay in the "Cancelled" tab with the reason on record.</div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal-box">
+      <h2 id="orderModalTitle">Add order</h2>
+      <div class="grid grid-2" style="margin-bottom:10px;">
+        <label class="field">Customer<input id="o_customer" placeholder="Type customer name"></label>
+        <label class="field">Customer PO number<input id="o_customerPO"></label>
+      </div>
+      <div class="grid grid-3" style="margin-bottom:10px;">
+        <label class="field">Pieces<select id="o_pieces"></select></label>
+        <label class="field">Type<select id="o_productType"></select></label>
+        <label class="field">Pack size<select id="o_packSize"></select></label>
+      </div>
+      <div class="grid grid-4" style="margin-bottom:10px;">
+        <label class="field">Cartons ordered<input id="o_cartons" type="number" min="0" step="1"></label>
+        <label class="field">Order date received<input id="o_orderDate" type="date"></label>
+        <label class="field">Preferred / required ship date<input id="o_requiredShipDate" type="date"></label>
+        <label class="field">Entered by<input id="o_enteredBy"></label>
+      </div>
+      <div class="grid grid-2" style="margin-bottom:10px;">
+        <label class="field">Requested priority (as told by customer / sales)
+          <select id="o_requestedPriority">
+            <option value="standard">Standard</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </label>
+        <label class="field" id="o_reasonWrap">Reason given for urgency<input id="o_requestedPriorityReason" placeholder="e.g. customer's vessel books this week"></label>
+      </div>
+      <div class="grid grid-2" style="margin-bottom:10px;">
+        <label class="field">Confirmed priority<span class="hint" id="confirmedPriorityHint">set by production planning</span>
+          <select id="o_confirmedPriority">
+            <option value="">— Not yet triaged —</option>
+            <option value="P1">P1 — Critical</option>
+            <option value="P2">P2 — High</option>
+            <option value="P3">P3 — Standard</option>
+            <option value="P4">P4 — Low / flexible</option>
+          </select>
+        </label>
+        <label class="field">Computed urgency (from ship date, automatic)<input id="o_computedUrgency" disabled></label>
+      </div>
+      <label class="field" style="margin-bottom:10px;">Special instructions / notes<textarea id="o_notes" rows="2"></textarea></label>
+      <div class="actions">
+        <span class="status-line muted" style="margin-right:auto;font-size:11px;" id="orderModalStatus"></span>
+        <button class="btn btn-flat" id="orderModalCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="orderModalSaveBtn">Save order</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-box" style="width:min(560px,92vw);">
+      <h2>Order history</h2>
+      <div class="history-list" id="historyList"></div>
+      <div class="actions"><button class="btn btn-flat" id="historyCloseBtn">Close</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="cancelModal">
+    <div class="modal-box" style="width:min(480px,92vw);">
+      <h2>Cancel order</h2>
+      <label class="field" style="margin-bottom:10px;">Reason for cancellation (required)<input id="cancelReasonInput"></label>
+      <div class="actions">
+        <button class="btn btn-flat" id="cancelModalCloseBtn">Back</button>
+        <button class="btn btn-danger" id="cancelModalConfirmBtn">Confirm cancellation</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../lib/data-store.js"></script>
+<script src="../lib/permission-rules.js"></script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const STORE_KEY = 'sales_order_register';
+
+  const PIECE_COUNTS = Array.from({length:50}, (_,i)=>i+1); // 1PC - 50PC
+  const PACK_SIZES = ['80g','180g','200g','213g','234g'];
+  const PRODUCT_TYPES = ['Brine','Braised'];
+
+  const STATUSES = [
+    {key:'pending_review', label:'Pending review'},
+    {key:'confirmed', label:'Confirmed'},
+    {key:'in_production', label:'In production'},
+    {key:'ready_to_ship', label:'Ready to ship'},
+    {key:'shipped', label:'Shipped'},
+    {key:'cancelled', label:'Cancelled'}
+  ];
+  const ACTIVE_STATUSES = ['pending_review','confirmed','in_production','ready_to_ship'];
+
+  const TABS = [
+    {key:'active', label:'Active queue'},
+    {key:'shipped', label:'Shipped'},
+    {key:'cancelled', label:'Cancelled'},
+    {key:'all', label:'All'}
+  ];
+
+  let orders = [];
+  let activeTab = 'active';
+  let editingId = null;
+  let historyOrderId = null;
+  let cancellingId = null;
+
+  function toast(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function daysUntil(dateStr){
+    if(!dateStr) return null;
+    const d = new Date(dateStr + 'T00:00:00');
+    const now = new Date(); now.setHours(0,0,0,0);
+    return Math.round((d - now) / 86400000);
+  }
+
+  function computedUrgency(order){
+    if(order.status==='shipped' || order.status==='cancelled') return null;
+    const d = daysUntil(order.requiredShipDate);
+    if(d===null) return {key:'unknown', label:'No ship date', cls:'badge-muted'};
+    if(d < 0) return {key:'overdue', label:'OVERDUE ' + Math.abs(d) + 'd', cls:'badge-fail'};
+    if(d <= 7) return {key:'critical', label:'≤ 7 DAYS', cls:'badge-fail'};
+    if(d <= 14) return {key:'high', label:'≤ 14 DAYS', cls:'badge-warn'};
+    return {key:'standard', label:d + 'd out', cls:'badge-ok'};
+  }
+
+  function requestedPriorityBadge(order){
+    const map = {urgent:['URGENT','badge-fail'], high:['HIGH','badge-warn'], standard:['Standard','badge-muted']};
+    const [label, cls] = map[order.requestedPriority] || map.standard;
+    let mismatch = '';
+    const urg = computedUrgency(order);
+    if(order.requestedPriority==='urgent' && urg && (urg.key==='standard' || urg.key==='high')){
+      mismatch = `<div class="muted" style="font-size:10px;margin-top:2px;">⚠ flagged urgent, but ${urg.label.toLowerCase()}</div>`;
+    }
+    return `<span class="badge ${cls}">${label}</span>${mismatch}`;
+  }
+
+  function confirmedPriorityBadge(order){
+    if(!order.confirmedPriority) return '<span class="badge badge-muted">Not triaged</span>';
+    const cls = {P1:'badge-fail',P2:'badge-warn',P3:'badge-steel',P4:'badge-muted'}[order.confirmedPriority] || 'badge-steel';
+    return `<span class="badge ${cls}">${order.confirmedPriority}</span>`;
+  }
+
+  function statusLabel(key){ return (STATUSES.find(s=>s.key===key)||{}).label || key; }
+
+  // ---------- storage ----------
+  async function loadOrders(){
+    const raw = await window.storage.get(STORE_KEY, true).catch(()=>null);
+    try{ orders = raw && raw.value ? JSON.parse(raw.value) : []; }catch(e){ orders = []; }
+  }
+  async function persistOrders(){
+    const ok = await window.storage.set(STORE_KEY, JSON.stringify(orders), true).catch(()=>false);
+    if(!ok) toast('Save failed -- please retry.');
+    return ok;
+  }
+  function logHistory(order, action, detail){
+    order.history = order.history || [];
+    order.history.push({ ts: Date.now(), role: PermissionRules.getCurrentRole(), action, detail: detail||'' });
+  }
+
+  // ---------- option lists ----------
+  function renderProductOptionLists(){
+    $('o_pieces').innerHTML = '<option value="">— Select —</option>' + PIECE_COUNTS.map(n=>`<option value="${n}">${n}PC</option>`).join('');
+    $('o_productType').innerHTML = '<option value="">— Select —</option>' + PRODUCT_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('');
+    $('o_packSize').innerHTML = '<option value="">— Select —</option>' + PACK_SIZES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  }
+  function buildProductLabel(pieces, productType, packSize){
+    if(!pieces || !productType || !packSize) return '';
+    return `${pieces}PC ${productType} ${packSize}`;
+  }
+
+  // ---------- tabs ----------
+  function renderTabs(){
+    $('filterTabs').innerHTML = TABS.map(t=>
+      `<div class="filter-tab ${t.key===activeTab?'active':''}" data-tab="${t.key}">${t.label}</div>`
+    ).join('');
+    $('filterTabs').querySelectorAll('.filter-tab').forEach(el=>{
+      el.addEventListener('click', ()=>{ activeTab = el.dataset.tab; renderTabs(); renderTable(); });
+    });
+  }
+
+  function filteredSortedOrders(){
+    let list = orders.slice();
+    if(activeTab==='active') list = list.filter(o=>ACTIVE_STATUSES.includes(o.status));
+    else if(activeTab==='shipped') list = list.filter(o=>o.status==='shipped');
+    else if(activeTab==='cancelled') list = list.filter(o=>o.status==='cancelled');
+    const rank = p => p ? {P1:1,P2:2,P3:3,P4:4}[p] : 0; // untriaged (0) bubbles to top so it isn't missed
+    list.sort((a,b)=>{
+      const ra = rank(a.confirmedPriority), rb = rank(b.confirmedPriority);
+      if(ra!==rb) return ra-rb;
+      const da = daysUntil(a.requiredShipDate), db = daysUntil(b.requiredShipDate);
+      if(da===null && db===null) return 0;
+      if(da===null) return 1;
+      if(db===null) return -1;
+      return da-db;
+    });
+    return list;
+  }
+
+  function renderTable(){
+    const list = filteredSortedOrders();
+    $('queueCountTag').textContent = `${list.length} order(s)`;
+    if(!list.length){
+      $('ordersBody').innerHTML = `<tr class="empty-row"><td colspan="12">No orders in this view yet.</td></tr>`;
+      return;
+    }
+    $('ordersBody').innerHTML = list.map(o=>{
+      const urg = computedUrgency(o);
+      const days = daysUntil(o.requiredShipDate);
+      const canEditStatus = PermissionRules.can('changeOrderStatus') && o.status!=='cancelled';
+      const statusCell = canEditStatus
+        ? `<select data-status-for="${o.id}">${STATUSES.filter(s=>s.key!=='cancelled').map(s=>`<option value="${s.key}" ${s.key===o.status?'selected':''}>${s.label}</option>`).join('')}</select>`
+        : `<span class="badge ${o.status==='cancelled'?'badge-muted':'badge-steel'}">${statusLabel(o.status)}</span>`;
+      return `<tr class="${o.status==='cancelled'?'row-cancelled':''} ${!o.confirmedPriority && o.status!=='cancelled' && o.status!=='shipped' ?'row-untriaged':''}">
+        <td>${confirmedPriorityBadge(o)}</td>
+        <td>${requestedPriorityBadge(o)}${urg && o.status!=='cancelled' && o.status!=='shipped' ? `<div style="margin-top:3px;"><span class="badge ${urg.cls}">${urg.label}</span></div>` : ''}</td>
+        <td>${o.customer||''}</td>
+        <td>${o.customerPO||''}</td>
+        <td>${o.productLabel||''}</td>
+        <td class="num">${o.cartons!==''&&o.cartons!=null?o.cartons:''}</td>
+        <td>${o.orderDate||''}</td>
+        <td>${o.requiredShipDate||''}</td>
+        <td class="num">${days===null?'':(o.status==='shipped'||o.status==='cancelled')?'—':days}</td>
+        <td>${statusCell}</td>
+        <td>${o.enteredBy||''}</td>
+        <td><div class="row-actions">
+          <button class="btn btn-flat small-btn" data-edit="${o.id}" ${PermissionRules.can('editOrder')?'':'disabled'}>Edit</button>
+          <button class="btn btn-flat small-btn" data-history="${o.id}">History</button>
+          ${o.status!=='cancelled' && o.status!=='shipped' ? `<button class="btn btn-danger small-btn" data-cancel="${o.id}" ${PermissionRules.can('cancelOrder')?'':'disabled'}>Cancel</button>` : ''}
+        </div></td>
+      </tr>`;
+    }).join('');
+
+    $('ordersBody').querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>openOrderModal(b.dataset.edit)));
+    $('ordersBody').querySelectorAll('[data-history]').forEach(b=>b.addEventListener('click', ()=>openHistoryModal(b.dataset.history)));
+    $('ordersBody').querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click', ()=>openCancelModal(b.dataset.cancel)));
+    $('ordersBody').querySelectorAll('[data-status-for]').forEach(sel=>{
+      sel.addEventListener('change', ()=>onStatusChange(sel.dataset.statusFor, sel.value));
+    });
+  }
+
+  async function onStatusChange(id, newStatus){
+    const o = orders.find(x=>x.id===id);
+    if(!o) return;
+    if(!PermissionRules.can('changeOrderStatus')){ toast('Your role cannot change order status.'); renderTable(); return; }
+    const old = o.status;
+    o.status = newStatus;
+    o.updatedAt = Date.now();
+    logHistory(o, 'status_change', `${statusLabel(old)} → ${statusLabel(newStatus)}`);
+    await persistOrders();
+    toast('Status updated.');
+    renderTable();
+  }
+
+  // ---------- order modal ----------
+  function blankOrder(){
+    return {
+      id: null, createdAt: null, updatedAt: null,
+      customer:'', customerPO:'', productLabel:'', pieces:'', productType:'', packSize:'',
+      cartons:'', orderDate: todayISO(), requiredShipDate:'',
+      requestedPriority:'standard', requestedPriorityReason:'',
+      confirmedPriority:'', status:'pending_review', notes:'', enteredBy:'',
+      history:[]
+    };
+  }
+
+  function updateReasonWrapVisibility(){
+    $('o_reasonWrap').style.display = $('o_requestedPriority').value==='urgent' ? '' : 'none';
+  }
+  function updateComputedUrgencyField(){
+    const draft = {
+      status: editingId ? (orders.find(o=>o.id===editingId)||{}).status : 'pending_review',
+      requiredShipDate: $('o_requiredShipDate').value
+    };
+    const urg = computedUrgency(draft);
+    $('o_computedUrgency').value = urg ? urg.label : '—';
+  }
+  function updateConfirmedPriorityGating(){
+    const can = PermissionRules.can('setConfirmedPriority');
+    $('o_confirmedPriority').disabled = !can;
+    $('confirmedPriorityHint').textContent = can ? 'set by production planning' : 'read-only — production planning role required';
+  }
+
+  function openOrderModal(id){
+    editingId = id || null;
+    const o = editingId ? orders.find(x=>x.id===editingId) : blankOrder();
+    if(editingId && !o) return;
+    if(!PermissionRules.can(editingId ? 'editOrder' : 'createOrder')){
+      toast('Your role cannot ' + (editingId?'edit':'create') + ' orders.'); return;
+    }
+    $('orderModalTitle').textContent = editingId ? 'Edit order' : 'Add order';
+    $('o_customer').value = o.customer;
+    $('o_customerPO').value = o.customerPO;
+    $('o_pieces').value = o.pieces || '';
+    $('o_productType').value = o.productType || '';
+    $('o_packSize').value = o.packSize || '';
+    $('o_cartons').value = o.cartons;
+    $('o_orderDate').value = o.orderDate || todayISO();
+    $('o_requiredShipDate').value = o.requiredShipDate;
+    $('o_requestedPriority').value = o.requestedPriority || 'standard';
+    $('o_requestedPriorityReason').value = o.requestedPriorityReason;
+    $('o_confirmedPriority').value = o.confirmedPriority || '';
+    $('o_notes').value = o.notes;
+    $('o_enteredBy').value = o.enteredBy;
+    $('orderModalStatus').textContent = editingId ? `${o.id} · ${statusLabel(o.status)}` : 'New order';
+    updateReasonWrapVisibility();
+    updateComputedUrgencyField();
+    updateConfirmedPriorityGating();
+    $('orderModal').classList.add('show');
+  }
+  function closeOrderModal(){ $('orderModal').classList.remove('show'); editingId=null; }
+
+  async function saveOrderFromModal(){
+    const isNew = !editingId;
+    if(!PermissionRules.can(isNew ? 'createOrder' : 'editOrder')){
+      toast('Your role cannot ' + (isNew?'create':'edit') + ' orders.'); return;
+    }
+    const customer = $('o_customer').value.trim();
+    const requiredShipDate = $('o_requiredShipDate').value;
+    const pieces = $('o_pieces').value;
+    const productType = $('o_productType').value;
+    const packSize = $('o_packSize').value;
+    if(!customer){ toast('Customer is required.'); return; }
+    if(!pieces || !productType || !packSize){ toast('Select pieces, type, and pack size.'); return; }
+    if(!requiredShipDate){ toast('Preferred / required ship date is required.'); return; }
+    const requestedPriority = $('o_requestedPriority').value;
+    const requestedPriorityReason = $('o_requestedPriorityReason').value.trim();
+    if(requestedPriority==='urgent' && !requestedPriorityReason){
+      toast('Please note the reason this order was flagged urgent.'); return;
+    }
+
+    let o;
+    if(isNew){
+      o = blankOrder();
+      o.id = 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      o.createdAt = Date.now();
+      orders.unshift(o);
+    } else {
+      o = orders.find(x=>x.id===editingId);
+      if(!o) return;
+    }
+
+    const prevConfirmed = o.confirmedPriority;
+    const newConfirmed = PermissionRules.can('setConfirmedPriority') ? $('o_confirmedPriority').value : o.confirmedPriority;
+
+    o.customer = customer;
+    o.customerPO = $('o_customerPO').value.trim();
+    o.pieces = pieces;
+    o.productType = productType;
+    o.packSize = packSize;
+    o.productLabel = buildProductLabel(pieces, productType, packSize);
+    o.cartons = $('o_cartons').value === '' ? '' : Number($('o_cartons').value);
+    o.orderDate = $('o_orderDate').value;
+    o.requiredShipDate = requiredShipDate;
+    o.requestedPriority = requestedPriority;
+    o.requestedPriorityReason = requestedPriorityReason;
+    o.confirmedPriority = newConfirmed;
+    o.notes = $('o_notes').value;
+    o.enteredBy = $('o_enteredBy').value.trim();
+    o.updatedAt = Date.now();
+
+    if(isNew){
+      logHistory(o, 'created', `${o.customer} · ${o.productLabel} · ${o.cartons||0} cartons`);
+    } else {
+      logHistory(o, 'edited', 'Order details updated');
+    }
+    if(newConfirmed !== prevConfirmed){
+      logHistory(o, 'priority_set', `Confirmed priority: ${prevConfirmed||'(none)'} → ${newConfirmed||'(none)'}`);
+    }
+
+    await persistOrders();
+    toast(isNew ? 'Order added.' : 'Order updated.');
+    closeOrderModal();
+    renderTable();
+  }
+
+  // ---------- history modal ----------
+  function openHistoryModal(id){
+    historyOrderId = id;
+    const o = orders.find(x=>x.id===id);
+    const list = (o && o.history) || [];
+    $('historyList').innerHTML = list.length
+      ? list.slice().reverse().map(h=>`<div class="history-item"><div>${h.action.replace(/_/g,' ')}${h.detail?': '+h.detail:''}</div><div class="meta">${new Date(h.ts).toLocaleString()} · ${h.role}</div></div>`).join('')
+      : '<div class="history-item muted">No history yet.</div>';
+    $('historyModal').classList.add('show');
+  }
+
+  // ---------- cancel modal ----------
+  function openCancelModal(id){
+    if(!PermissionRules.can('cancelOrder')){ toast('Your role cannot cancel orders.'); return; }
+    cancellingId = id;
+    $('cancelReasonInput').value = '';
+    $('cancelModal').classList.add('show');
+  }
+  async function confirmCancel(){
+    const reason = $('cancelReasonInput').value.trim();
+    if(!reason){ toast('A reason is required to cancel an order.'); return; }
+    const o = orders.find(x=>x.id===cancellingId);
+    if(!o) return;
+    o.status = 'cancelled';
+    o.updatedAt = Date.now();
+    logHistory(o, 'cancelled', reason);
+    await persistOrders();
+    $('cancelModal').classList.remove('show');
+    toast('Order cancelled.');
+    renderTable();
+  }
+
+  // ---------- role ----------
+  function wireActingRole(){
+    const sel = $('actingRoleSelect');
+    sel.innerHTML = PermissionRules.ROLES.map(r=>`<option value="${r}">${r.replace(/_/g,' ')}</option>`).join('');
+    sel.value = PermissionRules.getCurrentRole();
+    sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
+  }
+
+  function renderAll(){
+    renderTabs();
+    renderTable();
+    $('newOrderBtn').disabled = !PermissionRules.can('createOrder');
+  }
+
+  function wire(){
+    wireActingRole();
+    renderProductOptionLists();
+    $('newOrderBtn').addEventListener('click', ()=>openOrderModal(null));
+    $('orderModalCancelBtn').addEventListener('click', closeOrderModal);
+    $('orderModalSaveBtn').addEventListener('click', saveOrderFromModal);
+    $('o_requestedPriority').addEventListener('change', updateReasonWrapVisibility);
+    $('o_requiredShipDate').addEventListener('input', updateComputedUrgencyField);
+    $('historyCloseBtn').addEventListener('click', ()=>$('historyModal').classList.remove('show'));
+    $('cancelModalCloseBtn').addEventListener('click', ()=>$('cancelModal').classList.remove('show'));
+    $('cancelModalConfirmBtn').addEventListener('click', confirmCancel);
+  }
+
+  (async function init(){
+    wire();
+    await loadOrders();
+    renderAll();
+  })();
+})();
+</script>
+</body>
+</html>
