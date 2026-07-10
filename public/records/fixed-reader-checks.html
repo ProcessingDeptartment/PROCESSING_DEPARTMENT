@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.00 Fixed Reader Checks</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'fixed-reader-checks',
+    docCode: 'REC 7.1.00',
+    title: 'Fixed Reader Checks',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'Check that RFID tags match the QDE system reading at each fixed reader location.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'location', label: 'Location', type: 'text', required: true },
+      { key: 'startTime', label: 'Start time', type: 'text' },
+      { key: 'endTime', label: 'End time', type: 'text' },
+      { key: 'itemNo', label: 'Item', type: 'number' },
+      { key: 'rfidTagNumber', label: 'RFID tag number', type: 'text' },
+      { key: 'qdeMatch', label: 'QDE match?', type: 'yesno' },
+      { key: 'comment', label: 'Comment', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

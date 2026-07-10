@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.3.1 Bleeding and Salting</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'bleeding-and-salting',
+    docCode: 'REC 7.1.3.1',
+    title: 'Bleeding and Salting',
+    docRevisionStart: 6,
+    instructions: [
+      { label: 'Bleeding time', text: '20-60g: 30 minutes; 70g+: 1-2 hours. Ranched: 6-8 hours.' },
+      { label: 'Salting mix', text: 'Canning: salt 20-40% of shuck weight & 500g baking soda per two crates (no baking soda for Ranched).' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'noOfCrates', label: 'No. of crates', type: 'number' },
+      { key: 'bleedingStartTime', label: 'Bleeding — start time', type: 'text' },
+      { key: 'bleedingFinishTime', label: 'Bleeding — finish time', type: 'text' },
+      { key: 'bleedingTotalTime', label: 'Bleeding — total time', type: 'text' },
+      { key: 'standardSaltingTime', label: 'Standard salting time', type: 'text' },
+      { key: 'saltingStartTime', label: 'Salting — start time', type: 'text' },
+      { key: 'saltingFinishTime', label: 'Salting — finish time', type: 'text' },
+      { key: 'shuckWeight', label: 'Shuck weight', type: 'number', unit: 'kg' },
+      { key: 'saltKg', label: 'Salt', type: 'number', unit: 'kg' },
+      { key: 'saltPercent', label: 'Salt', type: 'number', unit: '%' },
+      { key: 'saltBatchCode', label: 'Salt batch code', type: 'text' },
+      { key: 'bakingSodaG', label: 'Baking soda', type: 'number', unit: 'g' },
+      { key: 'bakingSodaBatchCode', label: 'Baking soda batch code', type: 'text' },
+      { key: 'saltingTotalTime', label: 'Salting — total time', type: 'text' },
+      { key: 'operator', label: 'Operator', type: 'text', required: true },
+      { key: 'qualityController', label: 'Quality controller', type: 'text' },
+      { key: 'processDeviation', label: 'Process deviation', type: 'textarea' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

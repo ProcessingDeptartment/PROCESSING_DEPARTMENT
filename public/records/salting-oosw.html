@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.5 Salting (OOSW)</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'salting-oosw',
+    docCode: 'REC 7.1.5',
+    title: 'Salting (OOSW)',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'Record out-of-shell-weight (OOSW) tray samples taken during salting.' }
+    ],
+    entryFields: [
+      { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
+      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'trackingNo', label: 'Tracking no.', type: 'text' },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'trayNumber', label: 'Tray no.', type: 'number' },
+      { key: 'weight', label: 'Weight', type: 'number', unit: 'kg' },
+      { key: 'operator', label: 'Operator', type: 'text', required: true },
+      { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
+      { key: 'totalOosw', label: 'Total OOSW', type: 'number', unit: 'kg' },
+      { key: 'ooswPercent', label: 'OOSW', type: 'number', unit: '%' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 01 Cans Released Form</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'cans-released-form',
+    docCode: 'REC 01',
+    title: 'Cans Released Form (Awaiting NRCS Releases)',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'Record cans released from hold, awaiting NRCS clearance.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'noOfPieces', label: 'No. of pieces', type: 'number' },
+      { key: 'brineOrBraised', label: 'Brine / Braised', type: 'select', options: ['Brine', 'Braised'] },
+      { key: 'noOfGrams', label: 'No. of grams', type: 'number' },
+      { key: 'noOfCans', label: 'No. of cans', type: 'number' },
+      { key: 'agCode', label: 'AG code', type: 'text' },
+      { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

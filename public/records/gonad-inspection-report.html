@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 1. Gonad Inspection Report</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'gonad-inspection-report',
+    docCode: 'REC 1',
+    title: 'Gonad Inspection Report',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Stage 0', text: 'Immature, sex indeterminate, digestive gland visible as grey/brown mass.' },
+      { label: 'Stage 1', text: 'Sex determinable, gonad small, colouration, tip pointed.' },
+      { label: 'Stage 2', text: 'Gonad large, tip rounded but not swollen.' },
+      { label: 'Stage 3', text: 'Gonad very large, tip rounded and swollen, bulging at shell edge.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dry', 'Live sorting'] },
+      { key: 'stage', label: 'Stage', type: 'select', options: ['0', '1', '2', '3'] },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'sex', label: 'Sex', type: 'select', options: ['Male', 'Female'] },
+      { key: 'damagesAfterGutting', label: 'Damages after gutting', type: 'text' },
+      { key: 'basketReceivingComments', label: 'Basket receiving — comments', type: 'textarea' },
+      { key: 'checkedBy', label: 'QC online — checked by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

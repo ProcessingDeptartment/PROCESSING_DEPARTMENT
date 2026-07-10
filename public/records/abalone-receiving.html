@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.2 Abalone Receiving</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'abalone-receiving',
+    docCode: 'REC 7.1.2',
+    title: 'Abalone Receiving',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'Record each basket of abalone received, its whole weight, and the farm vs. factory mortality count.' }
+    ],
+    entryFields: [
+      { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
+      { key: 'receivedFrom', label: 'Abalone received from', type: 'text', required: true },
+      { key: 'toBeProcessedFor', label: 'To be processed for', type: 'select', options: ['Can', 'Dry', 'Live', 'Other'] },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'basketNr', label: 'Basket nr.', type: 'number' },
+      { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
+      { key: 'farmCount', label: 'Farm count', type: 'number' },
+      { key: 'factoryCount', label: 'Factory count', type: 'number' },
+      { key: 'mortalityCount', label: 'Mortality count', type: 'number' },
+      { key: 'checkedBy', label: 'Checked & completed by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

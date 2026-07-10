@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.1 Basket Removal, Shucking &amp; Gutting</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'basket-removal-shucking-gutting',
+    docCode: 'REC 7.1.1',
+    title: 'Basket Removal, Shucking & Gutting',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Temperature limit', text: 'Incoming abalone temperature must be below 20°C.' },
+      { label: 'If out of spec', text: 'Record process deviations and corrective action taken.' }
+    ],
+    entryFields: [
+      { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'harvestFarm', label: 'Harvest farm (wild: record area)', type: 'text' },
+      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dry', 'Other'] },
+      { key: 'canJobNo', label: 'Can job no.', type: 'text' },
+      { key: 'dryJobNo', label: 'Dry job no.', type: 'text' },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'incomingTemp', label: 'Incoming abalone temp', type: 'number', unit: '°C', specKey: 'incomingTemp' },
+      { key: 'noOfMortalities', label: 'No. of mortalities', type: 'number' },
+      { key: 'signsOfParasites', label: 'Signs of parasites?', type: 'yesno' },
+      { key: 'foreignObjects', label: 'Foreign/physical objects?', type: 'yesno' },
+      { key: 'damagesOnFoot', label: 'Damages on foot?', type: 'yesno' },
+      { key: 'damagesAfterShucking', label: 'Damages after shucking', type: 'text' },
+      { key: 'beakCutCorrect', label: 'Beak cut correct?', type: 'yesno' },
+      { key: 'damagesAfterGutting', label: 'Damages after gutting & beaking', type: 'text' },
+      { key: 'processDeviations', label: 'Process deviations', type: 'textarea' },
+      { key: 'checkedBy', label: 'QC online — checked by', type: 'text', required: true }
+    ],
+    specFields: [
+      { key: 'incomingTemp', label: 'Incoming abalone temperature', unit: '°C', min: null, max: 20 }
+    ],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

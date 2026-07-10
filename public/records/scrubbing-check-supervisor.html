@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.6 Scrubbing Check - Supervisor</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'scrubbing-check-supervisor',
+    docCode: 'REC 7.1.6',
+    title: 'Scrubbing Check - Supervisor',
+    docRevisionStart: 5,
+    instructions: [
+      { label: 'Purpose', text: 'Supervisor check that abalone is cleaned effectively during scrubbing, and any damage is recorded.' }
+    ],
+    entryFields: [
+      { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
+      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'abaloneSize', label: 'Abalone size', type: 'number', unit: 'g' },
+      { key: 'date', label: 'Date', type: 'date' },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'productCleanedEffectively', label: 'Product cleaned effectively?', type: 'yesno' },
+      { key: 'damagedAbalone', label: 'Damaged abalone?', type: 'yesno' },
+      { key: 'weightDamagedAbalone', label: 'Weight damaged abalone', type: 'number', unit: 'kg' },
+      { key: 'weightDamagedTrimmed', label: 'Weight damaged abalone trimmed', type: 'number', unit: 'kg' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.0 Daily Weight Sampling</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'daily-weight-sampling',
+    docCode: 'REC 7.1.0',
+    title: 'Daily Weight Sampling',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'Sample basket weights daily by size range and farm.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'basketNumber', label: 'Basket number', type: 'number' },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'farm', label: 'Farm', type: 'text' },
+      { key: 'weight', label: 'Weight', type: 'number', unit: 'kg' },
+      { key: 'comments', label: 'Comments', type: 'textarea' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>
