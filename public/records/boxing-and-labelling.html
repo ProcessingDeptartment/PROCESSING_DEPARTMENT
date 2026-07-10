@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.5 Boxing &amp; Labelling</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'boxing-and-labelling',
+    docCode: 'REC 7.4.5',
+    title: 'Boxing & Labelling',
+    docRevisionStart: 4,
+    instructions: [
+      { label: 'Note', text: 'The bin code is used as the "box code" on the label.' }
+    ],
+    entryFields: [
+      { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
+      { key: 'tareWeight', label: 'Tare weight', type: 'number', unit: 'kg' },
+      { key: 'binCode', label: 'Bin code', type: 'text', required: true },
+      { key: 'sizeGrade', label: 'Size grade', type: 'text' },
+      { key: 'colourUniform', label: 'Colour uniform?', type: 'yesno' },
+      { key: 'correctSizeGrade', label: 'Correct size grade?', type: 'yesno' },
+      { key: 'frillsPresent', label: 'Frills present?', type: 'yesno' },
+      { key: 'bagAndBoxSealed', label: 'Bag and box sealed?', type: 'yesno' },
+      { key: 'nettWeight', label: 'Nett weight', type: 'number', unit: 'kg' },
+      { key: 'qualityController', label: 'Quality controller', type: 'text', required: true },
+      { key: 'supervisor', label: 'Supervisor', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

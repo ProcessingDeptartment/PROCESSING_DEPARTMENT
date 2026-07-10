@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.10 Dried Abalone Transfer</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'dried-abalone-transfer',
+    docCode: 'REC 7.4.10',
+    title: 'Dried Abalone Transfer',
+    docRevisionStart: 2,
+    listColumns: ['intakeDate', 'jobNumber', 'totalDriedWeight', 'dryYield'],
+    sections: [
+      { title: 'Batch details', fields: [
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+        { key: 'jobNumber', label: 'Job number', type: 'text', required: true },
+        { key: 'intakeWeight', label: 'Intake weight', type: 'number' },
+        { key: 'actualDriedDate', label: 'Actual dried date', type: 'date' }
+      ]},
+      { title: 'Totals', fields: [
+        { key: 'totalDriedWeight', label: 'Total dried weight', type: 'number' },
+        { key: 'dryYield', label: 'Dry yield', type: 'number' },
+        { key: 'receivedBy', label: 'Received by', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Crates',
+      columns: [
+        { key: 'crateNumber', label: 'Crate number', type: 'number' },
+        { key: 'weight', label: 'Weight (kg)', type: 'number' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

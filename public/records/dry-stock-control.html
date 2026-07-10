@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.6 Dry Stock Control</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'dry-stock-control',
+    docCode: 'REC 7.4.6',
+    title: 'Dry Stock Control',
+    docRevisionStart: 3,
+    entryFields: [
+      { key: 'month', label: 'Month', type: 'month', required: true },
+      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'intakeDate', label: 'Intake date', type: 'date' },
+      { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
+      { key: 'cookingDate', label: 'Cooking date', type: 'date' },
+      { key: 'noOfTrolleys', label: 'No. of trolleys', type: 'number' },
+      { key: 'weightIn', label: 'Weight in', type: 'number', unit: 'kg' },
+      { key: 'dateIn', label: 'Date in', type: 'date' },
+      { key: 'countInFactory', label: 'Count in — factory', type: 'number' },
+      { key: 'countInFinance', label: 'Count in — finance', type: 'number' },
+      { key: 'weightOut', label: 'Weight out', type: 'number', unit: 'kg' },
+      { key: 'dateOut', label: 'Date out', type: 'date' },
+      { key: 'countOutFactory', label: 'Count out — factory', type: 'number' },
+      { key: 'countOutFinance', label: 'Count out — finance', type: 'number' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

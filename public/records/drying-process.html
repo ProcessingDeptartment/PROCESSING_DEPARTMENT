@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.1 Drying Process</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'drying-process',
+    docCode: 'REC 7.4.1',
+    title: 'Drying Process',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Note', text: 'The paper form has one Date/Time per steam cycle (up to 14). This digital version records the date of each steam turn — steam 1 through 14 — plus the milestone dates either side.' }
+    ],
+    entryFields: [
+      { key: 'jobNumber', label: 'Job number', type: 'text', required: true },
+      { key: 'intakeDate', label: 'Intake date', type: 'date' },
+      { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
+      { key: 'cookingDate', label: 'Cooking date', type: 'date' },
+      { key: 'cookingWeight', label: 'Cooking weight', type: 'number', unit: 'kg' },
+      { key: 'movementToDryRoom1Date', label: 'Movement to dry room 1', type: 'date' },
+      { key: 'steam1Date', label: 'Steam 1', type: 'date' },
+      { key: 'steam2Date', label: 'Steam 2', type: 'date' },
+      { key: 'steam3Date', label: 'Steam 3', type: 'date' },
+      { key: 'steam4Date', label: 'Steam 4', type: 'date' },
+      { key: 'steam5Date', label: 'Steam 5', type: 'date' },
+      { key: 'steam6Date', label: 'Steam 6', type: 'date' },
+      { key: 'steam7Date', label: 'Steam 7', type: 'date' },
+      { key: 'steam8Date', label: 'Steam 8', type: 'date' },
+      { key: 'steam9Date', label: 'Steam 9', type: 'date' },
+      { key: 'steam10Date', label: 'Steam 10', type: 'date' },
+      { key: 'steam11Date', label: 'Steam 11', type: 'date' },
+      { key: 'steam12Date', label: 'Steam 12', type: 'date' },
+      { key: 'steam13Date', label: 'Steam 13', type: 'date' },
+      { key: 'steam14Date', label: 'Steam 14', type: 'date' },
+      { key: 'movementToContainerDate', label: 'Movement to container', type: 'date' },
+      { key: 'removedFromTrolleysDate', label: 'Removed from trolleys', type: 'date' },
+      { key: 'movementToGradingRoomDate', label: 'Movement to grading room', type: 'date' },
+      { key: 'dateDeString', label: 'Date de-string', type: 'date' },
+      { key: 'dateGraded', label: 'Date graded', type: 'date' },
+      { key: 'totalDryingTimeDays', label: 'Total drying time', type: 'number', unit: 'days' },
+      { key: 'dryWeight', label: 'Dry weight', type: 'number', unit: 'kg' },
+      { key: 'estimateYield', label: 'Estimate yield', type: 'number', unit: '%' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.2 Dry Monitoring</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'dry-monitoring',
+    docCode: 'REC 7.4.2',
+    title: 'Dry Monitoring',
+    docRevisionStart: 3,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'intakeWeight', label: 'Intake weight', type: 'number', unit: 'kg' },
+      { key: 'intakeDate', label: 'Intake date', type: 'date' },
+      { key: 'cookingDate', label: 'Cooking date', type: 'date' },
+      { key: 'dryRoomArea', label: 'Dry room area', type: 'text' },
+      { key: 'noOfTrolleys', label: 'No. of trolleys', type: 'number' },
+      { key: 'trolleysClearlyMarked', label: 'Trolleys clearly marked', type: 'yesno' },
+      { key: 'estimatedDryDate', label: 'Estimated dry date', type: 'date' },
+      { key: 'mouldVisible', label: 'Mould visible', type: 'yesno' },
+      { key: 'whiteSaltOnSurface', label: 'White salt on surface', type: 'yesno' },
+      { key: 'caseHardening', label: 'Case hardening', type: 'yesno' },
+      { key: 'surfaceShine', label: 'Surface shine', type: 'yesno' },
+      { key: 'footDamage', label: 'Foot damage', type: 'yesno' },
+      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'qcCheck', label: 'QC check', type: 'text', required: true },
+      { key: 'supervisor', label: 'Supervisor', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

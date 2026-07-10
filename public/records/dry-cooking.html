@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.0 Dry Cooking</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'dry-cooking',
+    docCode: 'REC 7.4.0',
+    title: 'Dry Cooking',
+    docRevisionStart: 7,
+    entryFields: [
+      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'cookingDate', label: 'Cooking date', type: 'date' },
+      { key: 'blanchSeaWater', label: 'Blanching — sea water', type: 'number', unit: 'L' },
+      { key: 'blanchPh', label: 'Blanching — pH', type: 'number' },
+      { key: 'blanchSaltKg', label: 'Blanching — salt', type: 'number', unit: 'kg' },
+      { key: 'blanchTemp', label: 'Blanching — temperature', type: 'number', unit: '°C' },
+      { key: 'blanchBatchNumber', label: 'Blanching — record batch number', type: 'text' },
+      { key: 'cookingTime', label: 'Cooking time', type: 'text' },
+      { key: 'potNumber', label: 'Pot number', type: 'text' },
+      { key: 'abaloneKg', label: 'Abalone', type: 'number', unit: 'kg' },
+      { key: 'cookSeaWater', label: 'Cooking — sea water', type: 'number', unit: 'L' },
+      { key: 'cookPh', label: 'Cooking — pH', type: 'number' },
+      { key: 'saltKg', label: 'Salt (if applicable)', type: 'number', unit: 'kg' },
+      { key: 'saltBatchNumber', label: 'Salt — record batch number', type: 'text' },
+      { key: 'sugarKg', label: 'Sugar (if applicable)', type: 'number', unit: 'kg' },
+      { key: 'sugarBatchNumber', label: 'Sugar — record batch number', type: 'text' },
+      { key: 'vinegarKg', label: 'Vinegar (if applicable)', type: 'number', unit: 'kg' },
+      { key: 'vinegarBatchNumber', label: 'Vinegar — record batch number', type: 'text' },
+      { key: 'startTime', label: 'Start time', type: 'text' },
+      { key: 'startingTemp', label: 'Starting temperature', type: 'number', unit: '°C' },
+      { key: 'temp20MinAfter', label: '20 min after reaching cooking temp.', type: 'number', unit: '°C' },
+      { key: 'endOfCookingTemp', label: 'End of cooking cycle', type: 'number', unit: '°C' },
+      { key: 'timeOut', label: 'Time out', type: 'text' },
+      { key: 'totalCookingTime', label: 'Total cooking time', type: 'text' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'cooker', label: 'Cooker', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

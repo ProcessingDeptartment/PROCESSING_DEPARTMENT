@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.8 Dry Labelling List</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'dry-labelling-list',
+    docCode: 'REC 7.4.8',
+    title: 'Dry Labelling List',
+    docRevisionStart: 2,
+    listColumns: ['customer', 'flight', 'nettWeight'],
+    sections: [
+      { title: 'Shipment details', fields: [
+        { key: 'customer', label: 'Customer', type: 'text', required: true },
+        { key: 'flight', label: 'Flight', type: 'text' },
+        { key: 'address', label: 'Address', type: 'text', wide: true },
+        { key: 'airwaybillNr', label: 'Airwaybill nr.', type: 'text' },
+        { key: 'etd', label: 'ETD', type: 'date' },
+        { key: 'nettWeight', label: 'Nett weight', type: 'number' }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'salesDept', label: 'Sales dept.', type: 'text' },
+        { key: 'driverFromFreightCo', label: 'Driver from freight company', type: 'text' },
+        { key: 'abagoldEmployee', label: 'Abagold employee', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Boxes',
+      columns: [
+        { key: 'boxNo', label: 'Box no.', type: 'number' },
+        { key: 'gradeRange', label: 'Grade range', type: 'text' },
+        { key: 'boxCode', label: 'Box code', type: 'text' },
+        { key: 'agCode', label: 'NRCS AG code', type: 'text' },
+        { key: 'weight', label: 'Weight (kg)', type: 'number' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

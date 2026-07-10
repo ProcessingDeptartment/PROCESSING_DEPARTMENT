@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.4 Grading &amp; Boxing Traceability</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'grading-boxing-traceability',
+    docCode: 'REC 7.4.4',
+    title: 'Grading & Boxing Traceability',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Bin code', text: 'Code: size grade - bin sequence number (e.g. 1720-01 or 2628-01). Once a bin fills boxes, create a new code and continue.' }
+    ],
+    entryFields: [
+      { key: 'dateCreated', label: 'Date created', type: 'date', required: true },
+      { key: 'binCode', label: 'Bin code', type: 'text', required: true },
+      { key: 'sizeGrade', label: 'Size grade', type: 'text' },
+      { key: 'jobNumbersInBin', label: 'Job numbers in bin', type: 'textarea' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

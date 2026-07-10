@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.7 Labelling of Dry Boxes</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'labelling-of-dry-boxes',
+    docCode: 'REC 7.4.7',
+    title: 'Labelling of Dry Boxes',
+    docRevisionStart: 2,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'clientName', label: 'Client name', type: 'text' },
+      { key: 'clientAddress', label: 'Client address', type: 'text' },
+      { key: 'quantityOfBoxes', label: 'Quantity of boxes', type: 'number' },
+      { key: 'productDescription', label: 'Product description', type: 'text' },
+      { key: 'agCodeMatchesInspection', label: 'NRCS AG code matches inspection report?', type: 'yesno' },
+      { key: 'sizeRangeCorrectAcrossBoxes', label: 'Product size range correct across all boxes?', type: 'yesno' },
+      { key: 'boxCountMatchesPackingList', label: 'Number of boxes matches packing list?', type: 'yesno' },
+      { key: 'addressMatchesPackingList', label: 'Address on label matches packing list?', type: 'yesno' },
+      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
+      { key: 'inspectedByProcessing', label: 'Inspected by — Processing', type: 'text', required: true },
+      { key: 'inspectedByQC', label: 'Inspected by — QC', type: 'text' },
+      { key: 'inspectedByFG01', label: 'Inspected by — FG01', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.4.3.1 Grading Production Log (Cultivated)</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'grading-production-log-cultivated',
+    docCode: 'REC 7.4.3.1',
+    title: 'Grading Production Log (Cultivated)',
+    docRevisionStart: 6,
+    listColumns: ['intakeDate', 'jobNumber', 'actualGradedWeight', 'yield'],
+    sections: [
+      { title: 'Batch details', fields: [
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+        { key: 'jobNumber', label: 'Job number', type: 'text', required: true },
+        { key: 'driedWeightReceived', label: 'Dried weight received (with strings)', type: 'number' },
+        { key: 'actualDriedWeight', label: 'Actual dried weight (no strings)', type: 'number' },
+        { key: 'dateIntoGradingRoom', label: 'Date into grading room', type: 'date' },
+        { key: 'gradingDate', label: 'Grading date', type: 'date' }
+      ]},
+      { title: 'Size grade weights (kg)', fields: [
+        { key: 'under8g', label: 'Under 8g', type: 'number' },
+        { key: 'g8to10', label: '8g-10g', type: 'number' },
+        { key: 'g11to13', label: '11g-13g', type: 'number' },
+        { key: 'g14to16', label: '14g-16g', type: 'number' },
+        { key: 'g17to20', label: '17g-20g', type: 'number' },
+        { key: 'g21to23', label: '21g-23g', type: 'number' },
+        { key: 'g24to25', label: '24g-25g', type: 'number' },
+        { key: 'g26to28', label: '26g-28g', type: 'number' },
+        { key: 'g29to31', label: '29g-31g', type: 'number' },
+        { key: 'g32to35', label: '32g-35g', type: 'number' },
+        { key: 'g36to39', label: '36g-39g', type: 'number' },
+        { key: 'g40to44', label: '40g-44g', type: 'number' },
+        { key: 'g45to50', label: '45g-50g', type: 'number' },
+        { key: 'g51to55', label: '51g-55g', type: 'number' },
+        { key: 'g56to60', label: '56g-60g', type: 'number' },
+        { key: 'g60plus', label: '60g+', type: 'number' },
+        { key: 'bGrade', label: 'B-grade', type: 'number' },
+        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
+      ]},
+      { title: 'Totals & sign-off', fields: [
+        { key: 'actualGradedWeight', label: 'Actual graded weight (kg)', type: 'number' },
+        { key: 'yield', label: 'Yield (%)', type: 'number' },
+        { key: 'nameOfGraders', label: 'Name of graders', type: 'text' },
+        { key: 'supervisor', label: 'Supervisor', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Collection bins',
+      columns: [
+        { key: 'binCode', label: 'Bin code', type: 'text' },
+        { key: 'binWeightStart', label: 'Bin weight (start)', type: 'number' },
+        { key: 'fullBoxWeight', label: 'Full box weight', type: 'number' },
+        { key: 'finalBinWeight', label: 'Final bin weight', type: 'number' },
+        { key: 'gradedWeight', label: 'Graded weight', type: 'number' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>
