@@ -26,6 +26,7 @@
   .dsir-top h1{ font-size:17px; letter-spacing:.01em; }
   .dsir-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .dsir-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
+  .dsir-topline input{ width:150px; }
   .btn{ padding:7px 13px; font-size:12.5px; }
   .btn-primary{ background:var(--accent); color:#241a0a; }
   .btn-primary:hover{ background:#dd9536; }
@@ -82,34 +83,65 @@
   .issues.ok{ border-color:var(--ok); background:var(--ok-bg); color:var(--ok); }
   .issues.warn{ border-color:var(--warn); background:var(--warn-bg); color:#7a5310; }
 
-  .footer-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  .footer-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; flex-wrap:wrap; align-items:center; }
   .status-line{ font-size:11.5px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
 
   .history-list{ max-height:220px; overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
-  .history-item{ padding:7px 10px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:center; font-size:11.5px; cursor:pointer; }
+  .history-item{ padding:7px 10px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:11.5px; }
   .history-item:hover{ background:#fbfbfa; }
   .history-item:last-child{ border-bottom:none; }
   .small-btn{ padding:3px 9px; font-size:10.5px; }
   .muted{ color:#8a939b; }
   .search-row{ display:flex; gap:8px; }
   .search-row input{ max-width:260px; }
-  .spec-editor textarea{ font-family:var(--mono); font-size:11px; min-height:160px; }
   .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .toast.show{ opacity:1; }
   .share-note{ font-size:10.5px; color:#8a939b; margin-top:4px; }
-  .spec-meta-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .spec-modal-inner{ background:#fff; border-radius:8px; width:min(760px,94vw); max-height:90vh; overflow:auto; padding:16px; }
+  .spec-modal-inner h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin-bottom:10px; }
+  .spec-modal-inner h3{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#5c6771; margin:14px 0 6px; }
+  .print-only{ display:none; }
   @media (max-width:900px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} .footer-grid{grid-template-columns:1fr;} }
+  @media print{
+    @page{ size:A4 portrait; margin:9mm; }
+    body{ background:#fff; }
+    .no-print{ display:none !important; }
+    .print-only{ display:block !important; }
+    #dsir-root{ font-size:10px; background:#fff; }
+    .panel{ border:1px solid #000; break-inside:avoid; page-break-inside:avoid; margin-bottom:8px; }
+    .panel-body{ padding:8px; }
+    .print-page-break{ page-break-before:always; break-before:page; }
+    table.meas th, table.meas td{ border:1px solid #000; padding:2px 4px; }
+    table.meas{ font-size:9.5px; }
+    #printOnlyStages .can-block{ margin-bottom:8px; page-break-inside:avoid; break-inside:avoid; }
+    #printOnlyStages table.meas td.row-label span.spec{ display:none; }
+    .footer-grid{ grid-template-columns:1fr 1fr !important; gap:6px; }
+    #printPage1Extra label.field span{ display:block; font-size:12px; font-weight:400; color:#1b2330; margin-top:2px; }
+    #printSpecSummary table.meas td.row-label{ white-space:normal; width:auto; }
+    #printSpecSummary table.meas td{ text-align:left; }
+    #dsir-root{ padding-top:56px; }
+    .dsir-top{
+      position:fixed; top:0; left:0; right:0;
+      background:#fff !important; padding:8px 18px;
+      border-bottom:1.5px solid #000;
+    }
+    .dsir-top .doc-code{ color:#333 !important; }
+    .dsir-top h1{ color:#000 !important; font-size:13px; }
+  }
 </style>
 </head>
 <body>
 <div id="dsir-root">
   <div class="dsir-top">
     <div>
-      <div class="doc-code">REC 7.2.12 &nbsp;·&nbsp; Rev 11</div>
+      <div class="doc-code" id="docCodeBadge">REC 7.2.12</div>
       <h1>Double Seam Inspection Report</h1>
     </div>
-    <div class="dsir-topline">
+    <div class="dsir-topline no-print">
+      <label class="role-label">Your name
+        <input id="actingNameInput" placeholder="Type your name">
+      </label>
       <label class="role-label">Acting as (temporary stand-in for login)
         <select id="actingRoleSelect" style="width:190px;"></select>
       </label>
@@ -123,7 +155,7 @@
 
   <div class="dsir-body">
 
-    <div class="panel">
+    <div class="panel no-print">
       <div class="panel-head"><h2>Batch lookup &amp; traceability</h2><span class="muted" id="recordIdTag" style="font-family:var(--mono);font-size:10.5px;"></span></div>
       <div class="panel-body">
         <div class="search-row" style="margin-bottom:10px;">
@@ -164,69 +196,105 @@
 
     <div id="issuesPanel"></div>
 
-    <div class="stage-tabs" id="stageTabs"></div>
-    <div id="stageContent"></div>
+    <div id="printPage1Extra" class="print-only"></div>
 
-    <div class="panel">
+    <div class="stage-tabs no-print" id="stageTabs"></div>
+    <div id="stageContent" class="no-print"></div>
+    <div id="printOnlyStages" class="print-only"></div>
+
+    <div class="panel no-print">
       <div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">
         <textarea id="commentsBox" rows="3" placeholder="Notes, deviations, corrective actions…"></textarea>
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel no-print">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body footer-grid">
         <label class="field">Completed by<input id="f_completedBy"></label>
-        <label class="field">Signature (type name to sign)<input id="f_completedSig"></label>
-        <label class="field">Date<input id="f_completedDate" type="date"></label>
         <label class="field">Verified by<input id="f_verifiedBy"></label>
+        <label class="field">Signature (type name to sign)<input id="f_completedSig"></label>
         <label class="field">Signature (type name to sign)<input id="f_verifiedSig"></label>
+        <label class="field">Date<input id="f_completedDate" type="date"></label>
         <label class="field">Date<input id="f_verifiedDate" type="date"></label>
       </div>
     </div>
 
-    <div class="actions">
+    <div class="actions no-print">
       <span class="status-line" id="statusLine"></span>
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
+      <button class="btn btn-flat" id="generatePdfBtn">Generate PDF</button>
     </div>
   </div>
 
-  <div id="specModal" style="display:none; position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:8px; width:min(680px,92vw); max-height:88vh; overflow:auto; padding:16px;">
-      <h2 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin-bottom:10px;">Manufacturer spec profiles</h2>
-      <div style="display:flex; gap:8px; margin-bottom:10px;">
-        <input id="specNameInput" placeholder="Profile name (e.g. Manufacturer X — 300g can)">
+  <div id="specModal" class="no-print" style="display:none; position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center;">
+    <div class="spec-modal-inner">
+
+      <div id="specListView">
+        <h2>Specifications</h2>
+        <div class="actions" style="justify-content:space-between;">
+          <span class="muted">Document revision: <strong id="docRevInModal"></strong></span>
+          <button class="btn btn-primary small-btn" id="specAddNewBtn">+ Add new specification</button>
+        </div>
+        <div class="history-list" id="specListing"></div>
+        <h3>Document revision history</h3>
+        <div class="history-list" id="docRevHistoryList"></div>
+        <div class="share-note">Specifications are per can type (e.g. Fujian 73x119mm EOA vs NEO) and exist side by side — adding or editing one does not obsolete the others, but it does bump the record's own document revision above, with a required reason, name and title.</div>
+        <div class="actions" style="margin-top:10px;">
+          <button class="btn btn-flat" id="specCloseBtn">Close</button>
+        </div>
       </div>
-      <div style="margin-bottom:10px;">
-        <label class="field">Upload specification file (.json)<span class="hint">Loads into the editor below — still requires a change reason and Update/Save to publish</span>
-          <input id="specUploadInput" type="file" accept="application/json,.json">
-        </label>
+
+      <div id="specFormView" style="display:none;">
+        <h2 id="specFormTitle">Add new specification</h2>
+        <div class="grid grid-2">
+          <label class="field">Specification name / can type<input id="specForm_name" placeholder="e.g. Fujian 73x119mm EOA"></label>
+          <label class="field">Attach original spec (PDF)<input id="specForm_pdf" type="file" accept="application/pdf">
+            <span class="hint" id="specForm_pdfStatus">No PDF attached yet</span>
+          </label>
+        </div>
+        <h3>Vacuum &amp; gauge checks</h3>
+        <div class="grid grid-3">
+          <label class="field">Vacuum minimum (kPa, must exceed)<input id="specForm_vacuum" type="number" step="0.1"></label>
+          <label class="field">1.21mm gauge target<input id="specForm_gauge121" type="number" step="0.001"></label>
+          <label class="field">3.00mm gauge target<input id="specForm_gauge300" type="number" step="0.001"></label>
+        </div>
+        <label class="field" style="max-width:220px; margin-top:8px;">Gauge tolerance (±mm)<input id="specForm_gaugeTol" type="number" step="0.001"></label>
+
+        <h3>Measurement points <span class="hint">(leave blank = record only, no pass/fail check)</span></h3>
+        <div id="specFormRowsContainer"></div>
+
+        <h3>Minimum-only checks</h3>
+        <div class="grid grid-3">
+          <label class="field">% Overlap minimum<input id="specForm_overlapPctMin" type="number" step="1"></label>
+          <label class="field">Actual overlap minimum (mm)<input id="specForm_actualOverlapMin" type="number" step="0.01"></label>
+          <label class="field">Tightness/wrinkle minimum (%)<input id="specForm_tightnessPctMin" type="number" step="1"></label>
+        </div>
+
+        <h3>Change attribution (required to save)</h3>
+        <div class="grid grid-3">
+          <label class="field">Reason for this change<input id="specForm_reason" placeholder="e.g. New can type introduced"></label>
+          <label class="field">Your name<input id="specForm_changedBy"></label>
+          <label class="field">Your title<input id="specForm_changedByTitle"></label>
+        </div>
+        <div class="share-note">Saving publishes a new version of this specification and bumps the record's document revision.</div>
+        <div class="actions" style="margin-top:10px;">
+          <button class="btn btn-flat" id="specFormCancelBtn">Cancel</button>
+          <button class="btn btn-primary" id="specFormSaveBtn">Save specification</button>
+        </div>
       </div>
-      <div class="spec-editor">
-        <textarea id="specJsonBox" spellcheck="false"></textarea>
-      </div>
-      <div class="grid grid-2 spec-meta-row" style="margin-top:10px;">
-        <label class="field">Change reason (required to publish)<input id="specChangeReason" placeholder="e.g. Manufacturer tightened seam length tolerance"></label>
-        <label class="field">Published by (required to publish)<input id="specPublishedBy" placeholder="Name"></label>
-      </div>
-      <div class="share-note">Spec profiles are shared across all users of this record. Every change is published as a new numbered version — nothing is overwritten. Records validated against an older version will be prompted to re-validate.</div>
-      <div class="actions" style="margin-top:10px;">
-        <button class="btn btn-flat" id="specCloseBtn">Close</button>
-        <button class="btn btn-flat small-btn" id="specSaveAsNewBtn">Save as new profile</button>
-        <button class="btn btn-primary" id="specUpdateBtn">Publish new version of this profile</button>
-      </div>
-      <h2 style="font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:14px 0 6px;">Version history</h2>
-      <div class="history-list" id="specHistoryList"></div>
+
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast no-print" id="toast"></div>
 </div>
 
-<script src="../lib/data-store.js"></script>
-<script src="../lib/permission-rules.js"></script>
-<script src="../lib/spec-registry.js"></script>
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=2"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -248,32 +316,46 @@
     {key:'internal', label:'Internal', unit:'mm'},
     {key:'tightnessPct', label:'Tightness / wrinkle', unit:'%'},
     {key:'plateThicknessEnd', label:'Plate thickness (tin end)', unit:'mm'},
-    {key:'plateThicknessBody', label:'Plate thickness (tin body)', unit:'mm'}
+    {key:'plateThicknessBody', label:'Plate thickness (tin body)', unit:'mm'},
+    {key:'countersinkDepth', label:'Countersink depth', unit:'mm'}
   ];
+  const RANGE_ROWS = ROWS.filter(r=>r.key!=='tightnessPct');
 
-  const DEFAULT_SPEC = {
-    name: 'Standard spec (Rev 11 default)',
+  const DOC_REVISION_KEY = 'double-seam-inspection-report';
+  const DOC_REVISION_START = 11; // paper REC 7.2.12 is currently at Rev 11
+
+  // Seeded from "3. Production/3. CAN/73 dia. double seam inspection report.xls".
+  // That sheet only gave one dataset, so EOA and NEO start identical -- use Specs ->
+  // Edit to enter the real NEO-specific tolerances when known. Seam length, cover hook,
+  // internal and tightness% weren't specified there either, so they're left as
+  // "record only" rather than guessed; the seam-thickness cell in that sheet (0.19/0.03)
+  // matches the Free space row exactly and looks like a copy-paste artifact, so it was
+  // NOT carried over -- fill it in via Specs -> Edit once confirmed.
+  const DEFAULT_SPEC_EOA = {
+    name: 'Fujian 73x119mm EOA',
     vacuum: { op:'gt', value:-10, label:'>-10 kPa' },
-    seamLength: {min:2.70, max:3.10},
-    seamThickness: {min:1.20, max:1.30},
-    bodyHook: {min:1.75, max:2.15},
-    coverHook: {min:1.75, max:2.15},
-    overlapPctMin: 50,
-    bhbPct: {min:70, max:90},
+    seamLength: null,
+    seamThickness: null,
+    bodyHook: {min:1.83, max:2.23},
+    coverHook: null,
+    overlapPctMin: 45,
+    bhbPct: {min:70, max:100},
     actualOverlapMin: 1,
     freespace: {min:0.03, max:0.19},
-    internal: {min:0.06, max:0.17},
-    tightnessPctMin: 80,
+    internal: null,
+    tightnessPctMin: null,
     plateThicknessEnd: null,
     plateThicknessBody: null,
+    countersinkDepth: {min:4.73, max:4.97},
     gauge121Target: 1.21,
     gauge300Target: 3.00,
     gaugeTolerance: 0.02
   };
+  const DEFAULT_SPEC_NEO = Object.assign({}, DEFAULT_SPEC_EOA, { name: 'Fujian 73x119mm NEO' });
 
   function blankPoint(){
     return {seamLength:'', seamThickness:'', bodyHook:'', coverHook:'', bhbPct:'',
-      freespace:'', internal:'', tightnessPct:'', plateThicknessEnd:'', plateThicknessBody:''};
+      freespace:'', internal:'', tightnessPct:'', plateThicknessEnd:'', plateThicknessBody:'', countersinkDepth:''};
   }
   function blankCan(){ return { vacuum:'', points:[blankPoint(), blankPoint(), blankPoint()] }; }
   function blankStage(){ return { can1: blankCan(), can2: blankCan() }; }
@@ -281,7 +363,7 @@
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',
-      specProfileId: 'default-rev11', specVersionAtSave: null,
+      specProfileId: 'fujian-73x119-eoa', specVersionAtSave: null,
       header:{ agCode:'', reportDate:'', canSize:'', dateProduced:'', batchCans:'', batchEnds:'',
         microSerial:'', microVerified:'', gauge121:'', gauge300:'' },
       stages:{ before: blankStage(), during: blankStage(), after: blankStage() },
@@ -296,13 +378,19 @@
   let activeStage = 'before';
   let specProfiles = {}; // id -> spec (latest published version content)
   let specIndex = []; // [{id,name}]
+  let docRevisionNumber = DOC_REVISION_START;
+  let specFormEditingId = null;
+  let specFormPdfDataUrl = null;
+
+  const ACTING_NAME_KEY = 'acting_as_name';
+  let actingName = window.localStorage.getItem(ACTING_NAME_KEY) || '';
 
   function toast(msg){
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'), 2200);
   }
   function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
-  function num(v){ const n = parseFloat(v); return isNaN(n) ? null : n; }
+  function num(v){ const n = parseFloat(v); return (v===''||v==null||isNaN(n)) ? null : n; }
 
   // ---------- storage helpers ----------
   async function storeGet(key, shared){
@@ -314,6 +402,23 @@
     catch(e){ console.error('storage set failed', e); return false; }
   }
 
+  // ---------- document revision (record-template level, not per-inspection) ----------
+  async function renderDocRevBadge(){
+    docRevisionNumber = await DocumentRevision.getCurrent(DOC_REVISION_KEY, DOC_REVISION_START);
+    $('docCodeBadge').textContent = `REC 7.2.12 · Rev ${docRevisionNumber}`;
+    const modalTag = $('docRevInModal');
+    if(modalTag) modalTag.textContent = `Rev ${docRevisionNumber}`;
+  }
+  async function renderDocRevHistory(){
+    const hist = await DocumentRevision.history(DOC_REVISION_KEY);
+    const el = $('docRevHistoryList');
+    if(!hist.length){ el.innerHTML = `<div class="history-item muted">No revisions logged yet (currently Rev ${DOC_REVISION_START}).</div>`; return; }
+    el.innerHTML = hist.map(h=>`
+      <div class="history-item">
+        <span>Rev ${h.revisionNumber} · ${new Date(h.changedAt).toLocaleString()} · ${h.changedBy} (${h.changedByTitle})<br><span class="muted">${h.reason}</span></span>
+      </div>`).join('');
+  }
+
   // ---------- spec profiles (versioned via SpecRegistry) ----------
   async function loadSpecProfiles(){
     const idxRaw = await storeGet('spec_profiles_index', true);
@@ -321,15 +426,21 @@
       try{ specIndex = JSON.parse(idxRaw); }catch(e){ specIndex = []; }
     }
     if(!specIndex.length){
-      specIndex = [{id:'default-rev11', name: DEFAULT_SPEC.name}];
+      specIndex = [
+        {id:'fujian-73x119-eoa', name: DEFAULT_SPEC_EOA.name},
+        {id:'fujian-73x119-neo', name: DEFAULT_SPEC_NEO.name}
+      ];
       await storeSet('spec_profiles_index', JSON.stringify(specIndex), true);
-      await SpecRegistry.proposeVersion('default-rev11', DEFAULT_SPEC, {changeReason:'Initial standard spec (Rev 11)', publishedBy:'System'});
+      await SpecRegistry.proposeVersion('fujian-73x119-eoa', DEFAULT_SPEC_EOA, {
+        changeReason:'Seeded from 73 dia. double seam inspection sheet', publishedBy:'System', changedByTitle:'System'});
+      await SpecRegistry.proposeVersion('fujian-73x119-neo', DEFAULT_SPEC_NEO, {
+        changeReason:'Seeded from 73 dia. double seam inspection sheet (mirrors EOA pending NEO-specific tolerances)', publishedBy:'System', changedByTitle:'System'});
     }
     specProfiles = {};
     for(const s of specIndex){
       let content = await SpecRegistry.getPublished(s.id);
       if(!content){
-        content = await SpecRegistry.proposeVersion(s.id, DEFAULT_SPEC, {changeReason:'Backfilled missing spec version', publishedBy:'System'});
+        content = await SpecRegistry.proposeVersion(s.id, DEFAULT_SPEC_EOA, {changeReason:'Backfilled missing spec version', publishedBy:'System', changedByTitle:'System'});
       }
       specProfiles[s.id] = content;
     }
@@ -340,7 +451,7 @@
     sel.innerHTML = specIndex.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
     sel.value = state.specProfileId in specProfiles ? state.specProfileId : specIndex[0].id;
   }
-  function currentSpec(){ return specProfiles[state.specProfileId] || DEFAULT_SPEC; }
+  function currentSpec(){ return specProfiles[state.specProfileId] || DEFAULT_SPEC_EOA; }
   function currentProfileName(){ return (specIndex.find(s=>s.id===state.specProfileId) || {}).name || 'Unknown profile'; }
 
   // If this record has never been checked against a spec version yet (brand new,
@@ -424,20 +535,12 @@
 
         can.points.forEach((p, i)=>{
           const pointLabel = `${stage.label} / ${canKey.toUpperCase()} / pt${i+1}`;
-          const checks = [
-            ['seamLength', spec.seamLength, 'range'],
-            ['seamThickness', spec.seamThickness, 'range'],
-            ['bodyHook', spec.bodyHook, 'range'],
-            ['coverHook', spec.coverHook, 'range'],
-            ['bhbPct', spec.bhbPct, 'range'],
-            ['freespace', spec.freespace, 'range'],
-            ['internal', spec.internal, 'range'],
-          ];
-          checks.forEach(([key, range, kind])=>{
-            const v = num(p[key]);
+          RANGE_ROWS.forEach(row=>{
+            const v = num(p[row.key]);
+            const range = spec[row.key];
             if(v!==null && range){
               const r = checkRange(v, range);
-              if(r==='fail') issues.push(`${pointLabel}: ${ROWS.find(r2=>r2.key===key).label} ${v} out of spec (${range.min}–${range.max}).`);
+              if(r==='fail') issues.push(`${pointLabel}: ${row.label} ${v} out of spec (${range.min ?? '—'}–${range.max ?? '—'}).`);
             }
           });
           const tp = num(p.tightnessPct);
@@ -468,32 +571,20 @@
   function cellClass(rowKey, value, spec){
     const v = num(value);
     if(v===null) return '';
-    let range = null, minOnly = null;
-    if(rowKey==='seamLength') range = spec.seamLength;
-    else if(rowKey==='seamThickness') range = spec.seamThickness;
-    else if(rowKey==='bodyHook') range = spec.bodyHook;
-    else if(rowKey==='coverHook') range = spec.coverHook;
-    else if(rowKey==='bhbPct') range = spec.bhbPct;
-    else if(rowKey==='freespace') range = spec.freespace;
-    else if(rowKey==='internal') range = spec.internal;
-    else if(rowKey==='tightnessPct') minOnly = spec.tightnessPctMin;
+    if(rowKey==='tightnessPct'){
+      return spec.tightnessPctMin!=null && checkMin(v, spec.tightnessPctMin)==='fail' ? 'oor' : '';
+    }
+    const range = spec[rowKey];
     if(range){ return checkRange(v, range)==='fail' ? 'oor' : ''; }
-    if(minOnly!==null && minOnly!==undefined){ return checkMin(v, minOnly)==='fail' ? 'oor' : ''; }
     return '';
   }
 
   function specLabelFor(rowKey, spec){
-    if(rowKey==='seamLength') return spec.seamLength ? `${spec.seamLength.min}–${spec.seamLength.max}mm` : '';
-    if(rowKey==='seamThickness') return spec.seamThickness ? `${spec.seamThickness.min}–${spec.seamThickness.max}mm` : '';
-    if(rowKey==='bodyHook') return spec.bodyHook ? `${spec.bodyHook.min}–${spec.bodyHook.max}mm` : '';
-    if(rowKey==='coverHook') return spec.coverHook ? `${spec.coverHook.min}–${spec.coverHook.max}mm` : '';
-    if(rowKey==='bhbPct') return spec.bhbPct ? `${spec.bhbPct.min}–${spec.bhbPct.max}%` : '';
-    if(rowKey==='freespace') return spec.freespace ? `${spec.freespace.min}–${spec.freespace.max}mm` : '';
-    if(rowKey==='internal') return spec.internal ? `${spec.internal.min}–${spec.internal.max}mm` : '';
-    if(rowKey==='tightnessPct') return spec.tightnessPctMin!==null ? `min ${spec.tightnessPctMin}%` : '';
-    if(rowKey==='plateThicknessEnd') return spec.plateThicknessEnd ? `${spec.plateThicknessEnd.min}–${spec.plateThicknessEnd.max}mm` : 'record only';
-    if(rowKey==='plateThicknessBody') return spec.plateThicknessBody ? `${spec.plateThicknessBody.min}–${spec.plateThicknessBody.max}mm` : 'record only';
-    return '';
+    if(rowKey==='tightnessPct') return spec.tightnessPctMin!=null ? `min ${spec.tightnessPctMin}%` : 'record only';
+    const row = ROWS.find(r=>r.key===rowKey);
+    const range = spec[rowKey];
+    if(!range) return 'record only';
+    return `${range.min ?? '—'}–${range.max ?? '—'}${row.unit}`;
   }
 
   function renderCanTable(stageKey, canKey){
@@ -728,107 +819,228 @@
     });
   }
 
-  // ---------- spec modal ----------
-  async function renderSpecHistory(){
-    const list = await SpecRegistry.history(state.specProfileId);
-    const el = $('specHistoryList');
-    if(!list.length){ el.innerHTML = '<div class="history-item muted">No published versions yet.</div>'; return; }
-    el.innerHTML = list.map(v=>`
-      <div class="history-item">
-        <span>v${v.versionNumber} · ${v.status} · ${new Date(v.publishedAt).toLocaleString()} · ${v.publishedBy}<br><span class="muted">${v.changeReason}</span></span>
-      </div>`).join('');
+  // ---------- PDF generation (separate from Submit) ----------
+  // Page 1 = header (prints natively) + issues + this spec/comments/signoff block, all
+  // on one page. Each stage then gets its own page (before/during/after = 4 pages total).
+  function buildSpecSummaryHtml(){
+    const spec = currentSpec();
+    const pairs = [
+      ['Vacuum', spec.vacuum && spec.vacuum.label ? spec.vacuum.label : 'record only'],
+      ['1.21mm gauge target', `${spec.gauge121Target ?? '—'} ± ${spec.gaugeTolerance ?? '—'}mm`],
+      ['3.00mm gauge target', `${spec.gauge300Target ?? '—'} ± ${spec.gaugeTolerance ?? '—'}mm`]
+    ];
+    RANGE_ROWS.forEach(row=>pairs.push([row.label, specLabelFor(row.key, spec)]));
+    pairs.push(['Tightness / wrinkle min', spec.tightnessPctMin!=null?spec.tightnessPctMin+'%':'record only']);
+    pairs.push(['% Overlap minimum', spec.overlapPctMin!=null?spec.overlapPctMin+'%':'record only']);
+    pairs.push(['Actual overlap minimum', spec.actualOverlapMin!=null?spec.actualOverlapMin+'mm':'record only']);
+
+    let rowsHtml = '';
+    for(let i=0;i<pairs.length;i+=2){
+      const [l1,v1] = pairs[i];
+      const second = pairs[i+1];
+      rowsHtml += `<tr><td class="row-label">${l1}</td><td>${v1}</td><td class="row-label">${second?second[0]:''}</td><td>${second?second[1]:''}</td></tr>`;
+    }
+    return `<div class="panel" id="printSpecSummary"><div class="panel-head"><h2>Specification used — ${currentProfileName()} (v${spec.versionNumber ?? '—'})</h2></div>
+      <div class="panel-body">
+        <table class="meas"><tbody>${rowsHtml}</tbody></table>
+      </div></div>`;
   }
 
-  async function openSpecModal(){
-    $('specModal').style.display='flex';
-    $('specNameInput').value = specIndex.find(s=>s.id===state.specProfileId)?.name || '';
-    $('specJsonBox').value = JSON.stringify(currentSpec(), null, 2);
-    $('specChangeReason').value = '';
-    $('specPublishedBy').value = '';
-    const canPublish = PermissionRules.can('publishSpecVersion');
-    $('specUpdateBtn').disabled = !canPublish;
-    $('specSaveAsNewBtn').disabled = !canPublish;
-    $('specUploadInput').disabled = !PermissionRules.can('uploadSpecFile');
-    await renderSpecHistory();
+  function buildCommentsSignoffHtml(){
+    return `<div class="panel"><div class="panel-head"><h2>Comments</h2></div>
+      <div class="panel-body">${(state.comments||'—').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>
+      <div class="panel"><div class="panel-head"><h2>Sign-off</h2></div>
+      <div class="panel-body footer-grid">
+        <label class="field">Completed by<span>${state.completedBy||'—'}</span></label>
+        <label class="field">Verified by<span>${state.verifiedBy||'—'}</span></label>
+        <label class="field">Signature<span>${state.completedSig||'—'}</span></label>
+        <label class="field">Signature<span>${state.verifiedSig||'—'}</span></label>
+        <label class="field">Date<span>${state.completedDate||'—'}</span></label>
+        <label class="field">Date<span>${state.verifiedDate||'—'}</span></label>
+      </div></div>`;
   }
 
-  async function updateCurrentProfile(){
-    if(!PermissionRules.can('publishSpecVersion')){ toast('You do not have permission to publish spec changes.'); return; }
-    let parsed;
-    try{ parsed = JSON.parse($('specJsonBox').value); }
-    catch(e){ toast('Spec JSON is invalid.'); return; }
-    const name = $('specNameInput').value || parsed.name || 'Untitled spec';
-    parsed.name = name;
-    try{
-      const full = await SpecRegistry.proposeVersion(state.specProfileId, parsed, {
-        changeReason: $('specChangeReason').value, publishedBy: $('specPublishedBy').value
+  function generatePdf(){
+    $('printPage1Extra').innerHTML = buildSpecSummaryHtml() + buildCommentsSignoffHtml();
+    const parts = STAGES.map(s=>
+      `<div class="panel print-page-break"><div class="panel-head"><h2>${s.label} — 2 cans × 3 points each</h2></div><div class="panel-body">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div>`
+    );
+    $('printOnlyStages').innerHTML = parts.join('');
+    document.title = `REC_7.2.12_Double_Seam_${safeKey(state.header.batchCans||'record')}_${state.header.reportDate||''}`;
+    window.print();
+  }
+
+  // ---------- spec management (list + structured add/edit form) ----------
+  async function renderSpecListing(){
+    const el = $('specListing');
+    const canManage = PermissionRules.can('manageSpecs');
+    el.innerHTML = specIndex.map(s=>{
+      const spec = specProfiles[s.id] || {};
+      const pdfLink = spec.pdfDataUrl ? `<a href="#" class="spec-view-pdf" data-id="${s.id}">View original</a>` : '<span class="muted">No PDF attached</span>';
+      return `<div class="history-item">
+        <span>${s.name} · v${spec.versionNumber ?? '—'}<br><span class="muted">${pdfLink}</span></span>
+        <button class="btn btn-flat small-btn" data-edit="${s.id}" ${canManage?'':'disabled'}>Edit</button>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', ()=>openSpecForm(btn.dataset.edit));
+    });
+    el.querySelectorAll('.spec-view-pdf').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const spec = specProfiles[a.dataset.id];
+        if(spec && spec.pdfDataUrl) window.open(spec.pdfDataUrl, '_blank');
+        else toast('No PDF attached to this specification.');
       });
-      specProfiles[state.specProfileId] = full;
-      const entry = specIndex.find(s=>s.id===state.specProfileId);
-      if(entry){ entry.name = name; await storeSet('spec_profiles_index', JSON.stringify(specIndex), true); }
-      renderSpecSelect();
-      await renderSpecHistory();
-      toast(`Spec profile updated — now version ${full.versionNumber}.`);
-      renderAll();
-    }catch(e){ toast(e.message); }
+    });
+    $('specAddNewBtn').disabled = !canManage;
   }
 
-  async function saveAsNewProfile(){
-    if(!PermissionRules.can('publishSpecVersion')){ toast('You do not have permission to publish spec changes.'); return; }
-    let parsed;
-    try{ parsed = JSON.parse($('specJsonBox').value); }
-    catch(e){ toast('Spec JSON is invalid.'); return; }
-    const name = $('specNameInput').value || 'Untitled spec';
-    const id = 'spec_' + safeKey(name.toLowerCase()) + '_' + Date.now();
-    parsed.name = name;
+  function buildSpecFormRows(){
+    $('specFormRowsContainer').innerHTML = `<table class="meas"><thead><tr><th style="text-align:left;">Measurement</th><th>Low</th><th>High</th></tr></thead><tbody>` +
+      RANGE_ROWS.map(row=>`
+        <tr><td class="row-label">${row.label} (${row.unit})</td>
+        <td><input type="number" step="0.001" id="specForm_${row.key}_min"></td>
+        <td><input type="number" step="0.001" id="specForm_${row.key}_max"></td></tr>
+      `).join('') + `</tbody></table>`;
+  }
+
+  function fillSpecForm(spec){
+    $('specForm_name').value = spec?.name || '';
+    $('specForm_vacuum').value = spec?.vacuum ? spec.vacuum.value : -10;
+    $('specForm_gauge121').value = spec?.gauge121Target ?? 1.21;
+    $('specForm_gauge300').value = spec?.gauge300Target ?? 3.00;
+    $('specForm_gaugeTol').value = spec?.gaugeTolerance ?? 0.02;
+    RANGE_ROWS.forEach(row=>{
+      const range = spec ? spec[row.key] : null;
+      $(`specForm_${row.key}_min`).value = (range && range.min!=null) ? range.min : '';
+      $(`specForm_${row.key}_max`).value = (range && range.max!=null) ? range.max : '';
+    });
+    $('specForm_overlapPctMin').value = spec?.overlapPctMin ?? '';
+    $('specForm_actualOverlapMin').value = spec?.actualOverlapMin ?? '';
+    $('specForm_tightnessPctMin').value = spec?.tightnessPctMin ?? '';
+    specFormPdfDataUrl = spec?.pdfDataUrl || null;
+    $('specForm_pdfStatus').textContent = specFormPdfDataUrl ? 'PDF attached — choose a file to replace it' : 'No PDF attached yet';
+    $('specForm_reason').value = '';
+    $('specForm_changedBy').value = actingName || '';
+    $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules.getCurrentRole()] || '';
+  }
+
+  function readSpecForm(){
+    const data = { name: $('specForm_name').value.trim() || 'Untitled specification' };
+    const vacVal = num($('specForm_vacuum').value);
+    data.vacuum = { op:'gt', value: vacVal, label: vacVal!=null ? `>${vacVal} kPa` : '' };
+    data.gauge121Target = num($('specForm_gauge121').value);
+    data.gauge300Target = num($('specForm_gauge300').value);
+    data.gaugeTolerance = num($('specForm_gaugeTol').value);
+    RANGE_ROWS.forEach(row=>{
+      const min = num($(`specForm_${row.key}_min`).value);
+      const max = num($(`specForm_${row.key}_max`).value);
+      data[row.key] = (min===null && max===null) ? null : {
+        min: min===null?undefined:min, max: max===null?undefined:max
+      };
+    });
+    data.overlapPctMin = num($('specForm_overlapPctMin').value);
+    data.actualOverlapMin = num($('specForm_actualOverlapMin').value);
+    data.tightnessPctMin = num($('specForm_tightnessPctMin').value);
+    if(specFormPdfDataUrl) data.pdfDataUrl = specFormPdfDataUrl;
+    return data;
+  }
+
+  function openSpecForm(specId){
+    if(!PermissionRules.can('manageSpecs')){ toast('You do not have permission to manage specifications.'); return; }
+    specFormEditingId = specId || null;
+    const spec = specId ? specProfiles[specId] : null;
+    $('specFormTitle').textContent = specId ? `Edit specification — ${spec?.name||''}` : 'Add new specification';
+    fillSpecForm(spec);
+    $('specListView').style.display='none';
+    $('specFormView').style.display='block';
+  }
+  function closeSpecForm(){
+    $('specFormView').style.display='none';
+    $('specListView').style.display='block';
+  }
+
+  async function saveSpecForm(){
+    if(!PermissionRules.can('manageSpecs')){ toast('You do not have permission to manage specifications.'); return; }
+    const reason = $('specForm_reason').value.trim();
+    const changedBy = $('specForm_changedBy').value.trim();
+    const changedByTitle = $('specForm_changedByTitle').value.trim();
+    const data = readSpecForm();
+    const id = specFormEditingId || ('spec_' + safeKey(data.name.toLowerCase()) + '_' + Date.now());
     try{
-      const full = await SpecRegistry.proposeVersion(id, parsed, {
-        changeReason: $('specChangeReason').value, publishedBy: $('specPublishedBy').value
-      });
+      const full = await SpecRegistry.proposeVersion(id, data, {changeReason:reason, publishedBy:changedBy, changedByTitle});
       specProfiles[id] = full;
-      specIndex.push({id, name});
+      if(!specFormEditingId){
+        specIndex.push({id, name:data.name});
+      } else {
+        const entry = specIndex.find(s=>s.id===id);
+        if(entry) entry.name = data.name;
+      }
       await storeSet('spec_profiles_index', JSON.stringify(specIndex), true);
-      state.specProfileId = id;
-      state.specVersionAtSave = full.versionNumber;
+      const rev = await DocumentRevision.bump(DOC_REVISION_KEY, {reason, changedBy, changedByTitle}, DOC_REVISION_START);
+      docRevisionNumber = rev.revisionNumber;
+      if(!specFormEditingId){ state.specProfileId = id; state.specVersionAtSave = full.versionNumber; }
       renderSpecSelect();
-      await renderSpecHistory();
-      toast('New spec profile saved and applied.');
+      await renderDocRevBadge();
+      await renderSpecListing();
+      await renderDocRevHistory();
+      closeSpecForm();
+      toast(`Specification saved — document is now Rev ${docRevisionNumber}.`);
       renderAll();
     }catch(e){ toast(e.message); }
   }
 
-  function wireSpecUpload(){
-    $('specUploadInput').addEventListener('change', async (e)=>{
+  function wireSpecPdfUpload(){
+    $('specForm_pdf').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
       if(!file) return;
-      const text = await file.text();
-      try{
-        const parsed = JSON.parse(text);
-        $('specJsonBox').value = JSON.stringify(parsed, null, 2);
-        if(parsed.name) $('specNameInput').value = parsed.name;
-        toast('Specification file loaded into editor — add a change reason, then Update or Save as new to publish it.');
-      }catch(err){ toast('Uploaded file is not valid JSON.'); }
+      if(file.type !== 'application/pdf'){ toast('Please attach a PDF file.'); e.target.value=''; return; }
+      const dataUrl = await new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=>resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      specFormPdfDataUrl = dataUrl;
+      $('specForm_pdfStatus').textContent = `Attached: ${file.name}`;
       e.target.value = '';
     });
+  }
+
+  async function openSpecManager(){
+    $('specModal').style.display='flex';
+    $('specListView').style.display='block';
+    $('specFormView').style.display='none';
+    await renderDocRevBadge();
+    await renderSpecListing();
+    await renderDocRevHistory();
   }
 
   // ---------- wiring ----------
   function wireActingRole(){
     const sel = $('actingRoleSelect');
-    sel.innerHTML = PermissionRules.ROLES.map(r=>`<option value="${r}">${r.replace(/_/g,' ')}</option>`).join('');
+    sel.innerHTML = PermissionRules.ROLES.map(r=>`<option value="${r}">${PermissionRules.ROLE_LABELS[r]}</option>`).join('');
     sel.value = PermissionRules.getCurrentRole();
     sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
+  }
+  function wireActingName(){
+    const inp = $('actingNameInput');
+    inp.value = actingName;
+    inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
   }
 
   function wire(){
     wireActingRole();
+    wireActingName();
     bindHeaderInputs();
-    wireSpecUpload();
+    buildSpecFormRows();
+    wireSpecPdfUpload();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
     $('newRecordBtn').addEventListener('click', ()=>{
       if(confirm('Start a new blank record? Unsaved changes will be lost.')){
-        state = newRecord(); state.specProfileId = $('specProfileSelect').value || 'default-rev11';
+        state = newRecord(); state.specProfileId = $('specProfileSelect').value || 'fujian-73x119-eoa';
         renderAll();
       }
     });
@@ -839,10 +1051,11 @@
       state.specVersionAtSave = null;
       renderAll();
     });
-    $('manageSpecsBtn').addEventListener('click', openSpecModal);
+    $('manageSpecsBtn').addEventListener('click', openSpecManager);
     $('specCloseBtn').addEventListener('click', ()=>$('specModal').style.display='none');
-    $('specUpdateBtn').addEventListener('click', updateCurrentProfile);
-    $('specSaveAsNewBtn').addEventListener('click', saveAsNewProfile);
+    $('specAddNewBtn').addEventListener('click', ()=>openSpecForm(null));
+    $('specFormCancelBtn').addEventListener('click', closeSpecForm);
+    $('specFormSaveBtn').addEventListener('click', saveSpecForm);
     $('exportBtn').addEventListener('click', ()=>{
       const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
       const a = document.createElement('a');
@@ -850,10 +1063,12 @@
       a.download = (state.id || 'double_seam_report_draft') + '.json';
       a.click();
     });
+    $('generatePdfBtn').addEventListener('click', generatePdf);
   }
 
   (async function init(){
     wire();
+    await renderDocRevBadge();
     await loadSpecProfiles();
     renderAll();
   })();

@@ -52,16 +52,20 @@
     return await getVersion(specKey, entry.versionNumber);
   }
 
-  // data: the spec JSON object. meta: { changeReason, publishedBy }.
-  // Throws if changeReason or publishedBy is missing -- every version must be
-  // attributable, per the system overview's change-management rules.
+  // data: the spec JSON object (may itself carry a pdfDataUrl for the original doc).
+  // meta: { changeReason, publishedBy, changedByTitle }.
+  // Throws if any of those is missing -- every version must be attributable (who, what
+  // title, and why), per the system overview's change-management rules.
   async function proposeVersion(specKey, data, meta) {
     meta = meta || {};
     if (!meta.changeReason || !String(meta.changeReason).trim()) {
       throw new Error('A change reason is required to publish a spec version.');
     }
     if (!meta.publishedBy || !String(meta.publishedBy).trim()) {
-      throw new Error('A publisher name is required to publish a spec version.');
+      throw new Error('A name is required to publish a spec version.');
+    }
+    if (!meta.changedByTitle || !String(meta.changedByTitle).trim()) {
+      throw new Error('A title is required to publish a spec version.');
     }
     const idx = await loadIndex(specKey);
     const nextVersion = idx.reduce((max, v) => Math.max(max, v.versionNumber), 0) + 1;
@@ -74,6 +78,7 @@
       status: 'PUBLISHED',
       changeReason: meta.changeReason,
       publishedBy: meta.publishedBy,
+      changedByTitle: meta.changedByTitle,
       publishedAt
     });
     await saveIndex(specKey, idx);
@@ -81,6 +86,7 @@
       versionNumber: nextVersion,
       changeReason: meta.changeReason,
       publishedBy: meta.publishedBy,
+      changedByTitle: meta.changedByTitle,
       publishedAt
     });
     await window.storage.set('spec_version:' + specKey + ':' + nextVersion, JSON.stringify(full), true);

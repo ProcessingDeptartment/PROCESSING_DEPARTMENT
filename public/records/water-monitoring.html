@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.9 Water Monitoring</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'water-monitoring',
+    docCode: 'REC 7.8.9',
+    title: 'Water Monitoring',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Note', text: 'Targets for fresh water pH and sea water pH/salt are not specified on the paper form — set them under Thresholds once confirmed. Readings are recorded either way.' }
+    ],
+    entryFields: [
+      { key: 'month', label: 'Month', type: 'month' },
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'freshWaterPh', label: 'Fresh water pH', type: 'number', specKey: 'freshPh' },
+      { key: 'seaWaterSalt', label: 'Sea water salt', type: 'number', unit: '%', specKey: 'seaSalt' },
+      { key: 'seaWaterPh', label: 'Sea water pH', type: 'number', specKey: 'seaPh' },
+      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+      { key: 'comments', label: 'Comments for any deviation', type: 'textarea' }
+    ],
+    specFields: [
+      { key: 'freshPh', label: 'Fresh water pH', min: null, max: null },
+      { key: 'seaSalt', label: 'Sea water salt', unit: '%', min: null, max: null },
+      { key: 'seaPh', label: 'Sea water pH', min: null, max: null }
+    ],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

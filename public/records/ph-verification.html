@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.10.2 pH Verification</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'ph-verification',
+    docCode: 'REC 7.10.2',
+    title: 'pH Verification',
+    docRevisionStart: 8,
+    instructions: [
+      { label: 'Weekly', text: 'Measure 20ml of buffer pH 4, insert probe, take reading. Repeat with buffer pH 7 and pH 10. Meter should read within 3.9–4.1 (buffer 4.01), 6.9–7.1 (buffer 7.01), 9.9–10.1 (buffer 10.01). If outside range, record the deviation and repeat the monthly calibration; if still out of spec, record it and report the issue.' },
+      { label: 'Monthly', text: 'Measure 20ml of buffer pH 4, 7 and 10, click CAL on the pH meter and follow the instructions. Record that the calibration was done successfully.' }
+    ],
+    primaryLogTitle: 'Weekly pH check',
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'meterSerial', label: 'pH meter serial number', type: 'text' },
+      { key: 'buffer4Reading', label: 'Buffer 4.01 reading', type: 'number', specKey: 'buffer4' },
+      { key: 'buffer7Reading', label: 'Buffer 7.01 reading', type: 'number', specKey: 'buffer7' },
+      { key: 'buffer10Reading', label: 'Buffer 10.01 reading', type: 'number', specKey: 'buffer10' },
+      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+      { key: 'comments', label: 'Comments / deviation', type: 'textarea' }
+    ],
+    specFields: [
+      { key: 'buffer4', label: 'pH buffer 4.01 reading', min: 3.9, max: 4.1 },
+      { key: 'buffer7', label: 'pH buffer 7.01 reading', min: 6.9, max: 7.1 },
+      { key: 'buffer10', label: 'pH buffer 10.01 reading', min: 9.9, max: 10.1 }
+    ],
+    deviationLabel: 'Equipment accurate',
+    deviationPolarity: 'accurate',
+    secondaryLog: {
+      key: 'monthly-calibration',
+      title: 'Monthly calibration',
+      deviationLabel: 'Calibrated',
+      deviationPolarity: 'accurate',
+      entryFields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'calibrationPerformed', label: 'Calibration performed', type: 'yesno' },
+        { key: 'comments', label: 'Comments', type: 'textarea' },
+        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -13,22 +13,31 @@
  * every record calls PermissionRules.can(action), so that is the only change needed.
  */
 (function () {
-  const ROLES = ['PRODUCTION_OPERATOR', 'QUALITY_TECHNICIAN', 'QA_MANAGER', 'ADMIN'];
+  const ROLES = ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'];
 
-  // action name -> roles allowed to perform it
+  const ROLE_LABELS = {
+    PRODUCTION_SUPERVISOR: 'Production Supervisor',
+    SHIFT_MANAGER: 'Shift Manager',
+    QUALITY_SUPERVISOR: 'Quality Supervisor',
+    QUALITY_CONTROLLER: 'Quality Controller'
+  };
+
+  // action name -> roles allowed to perform it.
+  // First-pass guess: quality roles hold sign-off/spec authority, production roles can
+  // fill in and save but not complete/verify/change specs. Not yet confirmed against
+  // real policy -- adjust freely, this is the only place that needs editing.
   const RULES = {
-    fillMeasurements: ['PRODUCTION_OPERATOR', 'QUALITY_TECHNICIAN', 'QA_MANAGER', 'ADMIN'],
-    saveDraft: ['PRODUCTION_OPERATOR', 'QUALITY_TECHNICIAN', 'QA_MANAGER', 'ADMIN'],
-    completeRecord: ['QA_MANAGER', 'ADMIN'],
-    verifyRecord: ['QA_MANAGER', 'ADMIN'],
-    acknowledgeSpecChange: ['PRODUCTION_OPERATOR', 'QUALITY_TECHNICIAN', 'QA_MANAGER', 'ADMIN'],
-    updateSpecProfile: ['QA_MANAGER', 'ADMIN'],
-    publishSpecVersion: ['QA_MANAGER', 'ADMIN'],
-    uploadSpecFile: ['QA_MANAGER', 'ADMIN']
+    fillMeasurements: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
+    saveDraft: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
+    completeRecord: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
+    verifyRecord: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
+    acknowledgeSpecChange: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
+    manageSpecs: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER']
   };
 
   const ROLE_KEY = 'acting_as_role';
-  let currentRole = window.localStorage.getItem(ROLE_KEY) || 'PRODUCTION_OPERATOR';
+  const storedRole = window.localStorage.getItem(ROLE_KEY);
+  let currentRole = ROLES.includes(storedRole) ? storedRole : 'PRODUCTION_SUPERVISOR';
 
   function getCurrentRole() {
     return currentRole;
@@ -46,5 +55,5 @@
     return allowed.includes(currentRole);
   }
 
-  window.PermissionRules = { ROLES, RULES, can, getCurrentRole, setCurrentRole };
+  window.PermissionRules = { ROLES, ROLE_LABELS, RULES, can, getCurrentRole, setCurrentRole };
 })();
