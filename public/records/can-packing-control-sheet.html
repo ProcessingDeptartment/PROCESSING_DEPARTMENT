@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.5 Can Packing Control Sheet</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'can-packing-control-sheet',
+    docCode: 'REC 7.2.5',
+    title: 'Can Packing Control Sheet',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'trackingOrJobNo', label: 'Tracking no. or Job no.', type: 'text' },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'qualityOfAbalone', label: 'Quality of abalone? Off odours etc.', type: 'text' },
+      { key: 'piecesSizes', label: 'Pieces / sizes', type: 'text' },
+      { key: 'ingoWeightSpec', label: 'Ingo weight spec', type: 'number', unit: 'g' },
+      { key: 'actualIngoWeight', label: 'Actual ingo weight', type: 'number', unit: 'g' },
+      { key: 'packer', label: 'Packer', type: 'text', required: true },
+      { key: 'processDeviation', label: 'Process deviation', type: 'textarea' },
+      { key: 'qcOnline', label: 'QC online', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

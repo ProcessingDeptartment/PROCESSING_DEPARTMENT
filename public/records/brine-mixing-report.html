@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.3.6 Brine Mixing Report</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'brine-mixing-report',
+    docCode: 'REC 7.3.6',
+    title: 'Brine Mixing Report',
+    docRevisionStart: 2,
+    instructions: [
+      { label: 'Frequency', text: 'QC inspection done for every batch produced. Before taking a reading on the salt/brix meter, verify the accuracy of the meter with water or solution.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'sample', label: 'Sample', type: 'text' },
+      { key: 'productDescription', label: 'Product description', type: 'text' },
+      { key: 'productionDateIngo', label: 'Production date ingo', type: 'date' },
+      { key: 'canPieces', label: 'Can pieces', type: 'number' },
+      { key: 'nettWeightMin', label: 'Nett weight min', type: 'number', unit: 'g' },
+      { key: 'drainMassMin', label: 'Drain mass min', type: 'number', unit: 'g' },
+      { key: 'drainMassMax', label: 'Drain mass max', type: 'number', unit: 'g' },
+      { key: 'saltG', label: 'Salt', type: 'number', unit: 'g' },
+      { key: 'saltBatchNo', label: 'Salt batch no.', type: 'text' },
+      { key: 'saltPercent', label: 'Salt @25°C', type: 'number', unit: '%' },
+      { key: 'sugarG', label: 'Sugar', type: 'number', unit: 'g' },
+      { key: 'sugarBatchNo', label: 'Sugar batch no.', type: 'text' },
+      { key: 'sugarPercent', label: 'Sugar @25°C', type: 'number', unit: '%' },
+      { key: 'maltG', label: 'Malt', type: 'number', unit: 'g' },
+      { key: 'maltBatchNo', label: 'Malt batch no.', type: 'text' },
+      { key: 'commentsDeviations', label: 'Comments / deviations', type: 'textarea' },
+      { key: 'completedBy', label: 'Completed by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

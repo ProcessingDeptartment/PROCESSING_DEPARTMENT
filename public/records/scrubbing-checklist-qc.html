@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.2 Scrubbing Checklist</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'scrubbing-checklist-qc',
+    docCode: 'REC 7.2.2',
+    title: 'Scrubbing Checklist',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'QC check of scrubbing quality — crates inspected, damage, and whether abalone is scrubbed clean.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'trackingOrJobNo', label: 'Tracking no. or Job no.', type: 'text' },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'noOfCratesInspected', label: 'No. of crates inspected', type: 'number' },
+      { key: 'damagedAbalone', label: 'Damaged abalone?', type: 'yesno' },
+      { key: 'allScrubbedClean', label: 'All abalone scrubbed clean?', type: 'yesno' },
+      { key: 'acceptableDamageTrimmed', label: 'Acceptable damaged abalone trimmed?', type: 'yesno' },
+      { key: 'processDeviation', label: 'Process deviation', type: 'textarea' },
+      { key: 'checkedBy', label: 'QC online — checked by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.3.3 Sauce Mixing</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'sauce-mixing',
+    docCode: 'REC 7.3.3',
+    title: 'Sauce Mixing',
+    docRevisionStart: 3,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'brothBatchDate', label: 'Broth batch date', type: 'date' },
+      { key: 'potNo', label: 'Pot no.', type: 'text', required: true },
+      { key: 'phBroth', label: 'pH broth', type: 'number' },
+      { key: 'brixBroth', label: 'Brix broth', type: 'number' },
+      { key: 'saltBroth', label: 'Salt broth', type: 'number' },
+      { key: 'litres', label: 'Litres', type: 'number', unit: 'L' },
+      { key: 'chickenLiquidWeight', label: 'Chicken liquid — weight added', type: 'number', unit: 'kg' },
+      { key: 'chickenLiquidBatchCode', label: 'Chicken liquid — batch code', type: 'text' },
+      { key: 'smokeyFlavourWeight', label: 'Smokey flavour — weight added', type: 'number', unit: 'kg' },
+      { key: 'smokeyFlavourBatchCode', label: 'Smokey flavour — batch code', type: 'text' },
+      { key: 'cvgMixBatchCode', label: 'CVG mix — batch code', type: 'text' },
+      { key: 'xg1BatchCode', label: 'XG-1 — batch code', type: 'text' },
+      { key: 'xg2BatchCode', label: 'XG-2 — batch code', type: 'text' },
+      { key: 'xg3BatchCode', label: 'XG-3 — batch code', type: 'text' },
+      { key: 'mdMixBatchCode', label: 'MD mix — batch code', type: 'text' },
+      { key: 'tsMixBatchCode', label: 'TS mix — batch code', type: 'text' },
+      { key: 'soMixBatchCode', label: 'SO mix — batch code', type: 'text' },
+      { key: 'mixedBy', label: 'Mixed by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

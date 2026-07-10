@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.3.1 Broth Cooking</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'broth-cooking',
+    docCode: 'REC 7.3.1',
+    title: 'Broth Cooking',
+    docRevisionStart: 5,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'potNo', label: 'Pot no.', type: 'text', required: true },
+      { key: 'waterLitres', label: 'Water', type: 'number', unit: 'L' },
+      { key: 'abaloneShellsIntakeDate', label: 'Abalone shells — intake date', type: 'date' },
+      { key: 'driedKelpWeight', label: 'Dried kelp weight', type: 'number', unit: 'kg' },
+      { key: 'scallopJuiceWeight', label: 'Scallop juice weight', type: 'number', unit: 'kg' },
+      { key: 'finalBrothLitres', label: 'Final broth', type: 'number', unit: 'L' },
+      { key: 'ph', label: 'pH', type: 'number' },
+      { key: 'salt', label: 'Salt', type: 'number' },
+      { key: 'brix', label: 'Brix', type: 'number' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'cookedBy', label: 'Cooked by', type: 'text', required: true },
+      { key: 'checkedAndCompletedBy', label: 'Checked and completed by', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

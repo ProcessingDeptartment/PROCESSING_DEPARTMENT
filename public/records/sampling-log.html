@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2 Sampling Log</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'sampling-log',
+    docCode: 'REC 7.2',
+    title: 'Sampling Log',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'Record any product samples taken (AG code / DW / dry job number / live tag / ranched incoming date) and why.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'productInfo', label: 'Product information (AG code, DW / dry job no. / live tag / ranched incoming date)', type: 'text', required: true },
+      { key: 'pieces', label: 'Pieces', type: 'number' },
+      { key: 'quantity', label: 'Quantity (amount or grams)', type: 'number' },
+      { key: 'reason', label: 'Reason for sampling', type: 'text' },
+      { key: 'sampledBy', label: 'Sampled by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

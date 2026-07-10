@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.6.1 Printing Control Sheet</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'printing-control-sheet',
+    docCode: 'REC 7.2.6.1',
+    title: 'Printing Control Sheet',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Work instruction', text: 'Check printing on can is correct (pieces, best before date). Check pieces on can for the first and last can whenever the printer changes.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'productionDate', label: 'Production date', type: 'date' },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'codeCorrect', label: 'Code correct?', type: 'yesno' },
+      { key: 'canPosition', label: 'Printing — first or last can', type: 'select', options: ['First can', 'Last can'] },
+      { key: 'actualCanPieces', label: 'Actual can pieces', type: 'number' },
+      { key: 'piecesOnCan', label: 'Pieces on can', type: 'number' },
+      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

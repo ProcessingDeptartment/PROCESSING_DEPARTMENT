@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.15 Labelling of Cans</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'labelling-of-cans',
+    docCode: 'REC 7.2.15',
+    title: 'Labelling of Cans',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'labelUsed', label: 'Label used (400g/425g/455g/850g/Tell Mama etc.)', type: 'text' },
+      { key: 'stickersUsed', label: 'Stickers used (Tell Mama etc.)', type: 'text' },
+      { key: 'clientDetails', label: 'Client details', type: 'text' },
+      { key: 'quantityLabelsIssued', label: 'Quantity labels issued', type: 'number' },
+      { key: 'quantityIssued', label: 'Quantity issued', type: 'number' },
+      { key: 'boxesFull', label: 'Boxes full? (24×400g/425g, 25×425g/455g, or 12×850g per box)', type: 'yesno' },
+      { key: 'cansCheckedBeforeLabelling', label: 'Cans checked before labelling for damage/deterioration?', type: 'yesno' },
+      { key: 'cansCheckedAfterLabelling', label: 'Cans checked after labelling for correct labelling, neatness, skew, crimping & adherence?', type: 'yesno' },
+      { key: 'correctLabelUsed', label: 'Correct label used & cans labelled correctly?', type: 'yesno' },
+      { key: 'labellingRequirementCorrect', label: 'Correct labelling requirement followed (e.g. Tell Mama sticker on top)?', type: 'yesno' },
+      { key: 'cartonLabelsCorrespond', label: 'Carton labels correspond to production code on cans inside box?', type: 'yesno' },
+      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
+      { key: 'inspectedBy', label: 'Inspected by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

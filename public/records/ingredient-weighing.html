@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.3.2 Ingredient Weighing</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'ingredient-weighing',
+    docCode: 'REC 7.3.2',
+    title: 'Ingredient Weighing',
+    docRevisionStart: 2,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'chickenFlavourWeight', label: 'Chicken flavour — weight added', type: 'number', unit: 'g' },
+      { key: 'chickenFlavourBatchCode', label: 'Chicken flavour — batch code', type: 'text' },
+      { key: 'vegetableBaseWeight', label: 'Vegetable base — weight added', type: 'number', unit: 'g' },
+      { key: 'vegetableBaseBatchCode', label: 'Vegetable base — batch code', type: 'text' },
+      { key: 'gelatineWeight', label: 'Gelatine — weight added', type: 'number', unit: 'g' },
+      { key: 'gelatineBatchCode', label: 'Gelatine — batch code', type: 'text' },
+      { key: 'xanthanGumWeight', label: 'Xanthan gum — weight added', type: 'number', unit: 'g' },
+      { key: 'xanthanGumBatchCode', label: 'Xanthan gum — batch code', type: 'text' },
+      { key: 'maltSugarWeight', label: 'Malt sugar — weight added', type: 'number', unit: 'g' },
+      { key: 'maltSugarBatchCode', label: 'Malt sugar — batch code', type: 'text' },
+      { key: 'tapiocaStarchWeight', label: 'Tapioca starch — weight added', type: 'number', unit: 'g' },
+      { key: 'tapiocaStarchBatchCode', label: 'Tapioca starch — batch code', type: 'text' },
+      { key: 'brownSugarWeight', label: 'Brown sugar — weight added', type: 'number', unit: 'g' },
+      { key: 'brownSugarBatchCode', label: 'Brown sugar — batch code', type: 'text' },
+      { key: 'sherloneSauceWeight', label: 'Sherlone sauce — weight added', type: 'number', unit: 'g' },
+      { key: 'sherloneSauceBatchCode', label: 'Sherlone sauce — batch code', type: 'text' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'weighedBy', label: 'Weighed by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

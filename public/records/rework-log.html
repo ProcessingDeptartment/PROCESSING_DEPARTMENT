@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.13 Rework Log</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'rework-log',
+    docCode: 'REC 7.2.13',
+    title: 'Rework Log',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'reasonForRework', label: 'Reason for rework', type: 'textarea', required: true },
+      { key: 'reworkApprovalBy', label: 'Rework approval by', type: 'text' },
+      { key: 'productDescriptionDw', label: 'Product description & DW', type: 'text' },
+      { key: 'productionDateOrFg01TransferDate', label: 'Production date / FG01 transfer date', type: 'date' },
+      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'quantityCans', label: 'Quantity cans', type: 'number' },
+      { key: 'newProductionDate', label: 'New production date', type: 'date' },
+      { key: 'quantityProduced', label: 'Quantity produced', type: 'number' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true },
+      { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

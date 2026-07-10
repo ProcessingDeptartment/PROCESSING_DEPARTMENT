@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.8 Retorting Control Sheet</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'retorting-control-sheet',
+    docCode: 'REC 7.2.8',
+    title: 'Retorting Control Sheet',
+    docRevisionStart: 4,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'productionCode', label: 'Production code', type: 'text' },
+      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'productRecipe', label: 'Product recipe', type: 'text' },
+      { key: 'timeTrolleyIn', label: 'Time trolley in', type: 'text' },
+      { key: 'retortNo', label: 'Retort no.', type: 'text' },
+      { key: 'pressureOnGauge', label: 'Pressure on gauge', type: 'number' },
+      { key: 'tempOnGauge', label: 'Temp on gauge', type: 'number', unit: '°C' },
+      { key: 'pressureOnScreen', label: 'Pressure on screen', type: 'number' },
+      { key: 'tempOnScreen', label: 'Temp on screen', type: 'number', unit: '°C' },
+      { key: 'startSterilization', label: 'Start sterilization', type: 'text' },
+      { key: 'startCooling', label: 'Start cooling', type: 'text' },
+      { key: 'timeTrolleyOut', label: 'Time trolley out', type: 'text' },
+      { key: 'processDeviation', label: 'Process deviation', type: 'textarea' },
+      { key: 'checkedBy', label: 'Checked & completed by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

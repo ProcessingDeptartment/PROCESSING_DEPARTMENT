@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.3.5 Sauce Batch Coding</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'sauce-batch-coding',
+    docCode: 'REC 7.3.5',
+    title: 'Sauce Batch Coding',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'dateOfMix', label: 'Date of mix', type: 'date', required: true },
+      { key: 'potCode', label: 'Pot code (A-G)', type: 'select', options: ['A', 'B', 'C', 'D', 'E', 'F', 'G'] },
+      { key: 'bucketNumber', label: 'Bucket number', type: 'number' },
+      { key: 'weightOfBucket', label: 'Weight of bucket', type: 'number', unit: 'kg' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

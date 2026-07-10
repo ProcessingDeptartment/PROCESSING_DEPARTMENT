@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.4 Abalone Packing Specification</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'abalone-packing-specification',
+    docCode: 'REC 7.2.4',
+    title: 'Abalone Packing Specification',
+    docRevisionStart: 3,
+    instructions: [
+      { label: 'Purpose', text: 'Packing specification (ingo weights) — pieces, drained weight and ingo weight per pack size.' }
+    ],
+    entryFields: [
+      { key: 'effectiveDate', label: 'Effective date', type: 'date', required: true },
+      { key: 'changedDate', label: 'Changed date', type: 'date' },
+      { key: 'pcs', label: 'Pcs', type: 'number' },
+      { key: 'dw', label: 'DW', type: 'text' },
+      { key: 'ingo', label: 'Ingo', type: 'number' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'checkedBy', label: 'Checked by (QC)', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

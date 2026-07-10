@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.14 Product Label Checklist</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'product-label-checklist',
+    docCode: 'REC 7.2.14',
+    title: 'Product Label Checklist',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Purpose', text: 'All labels must be checked and verified against an approved label artwork on receipt.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'supplier', label: 'Supplier', type: 'text' },
+      { key: 'labelDescription', label: 'Label description', type: 'text' },
+      { key: 'quantityOrdered', label: 'Quantity ordered', type: 'number' },
+      { key: 'quantityReceived', label: 'Quantity received', type: 'number' },
+      { key: 'generalConditionAtReceiving', label: 'General condition at receiving? (wet, broken packaging etc.)', type: 'yesno' },
+      { key: 'labelDimensionsCorrect', label: 'Label dimensions correct?', type: 'yesno' },
+      { key: 'labelVersion', label: 'Label version?', type: 'text' },
+      { key: 'artworkCorrect', label: 'Artwork correct?', type: 'yesno' },
+      { key: 'ingredientStatementCorrect', label: 'Ingredient statement correct?', type: 'yesno' },
+      { key: 'allergenDeclarationComplies', label: 'Allergen declaration complies?', type: 'yesno' },
+      { key: 'labelCompliesApproved', label: 'Label complies and approved?', type: 'yesno' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'receivedBy', label: 'Received by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.11 QC Report</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'qc-report',
+    docCode: 'REC 7.2.11',
+    title: 'QC Report',
+    docRevisionStart: 4,
+    instructions: [
+      { label: 'Frequency', text: 'QC inspection done for every batch produced. Before taking a reading on a salt/brix meter, verify with water.' },
+      { label: 'Vacuum', text: 'Reject: no vacuum. Acceptable: min -5kPa.' },
+      { label: 'Cracks on pieces', text: 'Not more than 0.2mm wide.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      { key: 'productionCode', label: 'Production code', type: 'text' },
+      { key: 'productDescription', label: 'Product description', type: 'text' },
+      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'canPieces', label: 'Can pieces', type: 'number' },
+      { key: 'nettMassMin', label: 'Nett mass min', type: 'number', unit: 'g' },
+      { key: 'drainMassMin', label: 'Drain mass min', type: 'number', unit: 'g' },
+      { key: 'drainMassMax', label: 'Drain mass max', type: 'number', unit: 'g' },
+      { key: 'ph', label: 'pH @25°C', type: 'number' },
+      { key: 'brix', label: 'Brix @25°C', type: 'number' },
+      { key: 'waterReading', label: 'Water reading', type: 'number' },
+      { key: 'saltPercent', label: '% Salt @25°C', type: 'number', unit: '%' },
+      { key: 'vacuum', label: 'Vacuum (negative kPa)', type: 'number', unit: 'kPa', specKey: 'vacuum' },
+      { key: 'rustOnCans', label: 'Rust on cans', type: 'yesno' },
+      { key: 'rustOnLids', label: 'Rust on lids', type: 'yesno' },
+      { key: 'dentsOnBatch', label: 'Dents on batch', type: 'yesno' },
+      { key: 'oddOursOnOpening', label: 'Odours on opening cans', type: 'yesno' },
+      { key: 'damagedPcsInCans', label: 'Damaged pcs in cans', type: 'yesno' },
+      { key: 'bluingBlackSpots', label: 'Bluing, black spots', type: 'yesno' },
+      { key: 'sauceColour', label: 'Sauce colour OK?', type: 'yesno' },
+      { key: 'visualAppearance', label: 'Visual appearance OK?', type: 'yesno' },
+      { key: 'textureOfAbalone', label: 'Texture of abalone OK?', type: 'yesno' },
+      { key: 'tasteOfProduct', label: 'Taste of product OK?', type: 'yesno' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'qualityControl', label: 'Quality control', type: 'text', required: true }
+    ],
+    specFields: [
+      { key: 'vacuum', label: 'Vacuum (acceptable: -5kPa or stronger)', unit: 'kPa', min: null, max: -5 }
+    ],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>
