@@ -26,15 +26,15 @@
 (function () {
   // ------------------------------------------------------------------ CONFIG
   // Paste your project values here (Supabase dashboard -> Project Settings -> API).
-  const SUPABASE_URL = 'YOUR_SUPABASE_URL';        // e.g. https://abcdefgh.supabase.co
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const SUPABASE_URL = 'https://axesykcfbfsmmgzbmgee.supabase.co';        // e.g. https://abcdefgh.supabase.co
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZXN5a2NmYmZzbW1nemJtZ2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mjk5MTYsImV4cCI6MjA5OTUwNTkxNn0.Owuid-gCbuL1UKcZxRIfs-ikCz07XiIzUmGZJSl0-OM';
   const TABLE = 'kv_store';
   // -------------------------------------------------------------------------
 
   const PREFIX = 'facility_records:';
   const configured =
     SUPABASE_URL && SUPABASE_ANON_KEY &&
-    SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0;
+    SUPABASE_URL.indexOf('https://axesykcfbfsmmgzbmgee.supabase.co') !== 0 && SUPABASE_ANON_KEY.indexOf('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZXN5a2NmYmZzbW1nemJtZ2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mjk5MTYsImV4cCI6MjA5OTUwNTkxNn0.Owuid-gCbuL1UKcZxRIfs-ikCz07XiIzUmGZJSl0-OM') !== 0;
 
   if (!configured) {
     console.warn(
