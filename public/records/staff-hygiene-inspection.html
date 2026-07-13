@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.7 Staff Hygiene Inspection</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'staff-hygiene-inspection',
+    docCode: 'REC 7.6.7',
+    title: 'Staff Hygiene Inspection',
+    docRevisionStart: 1,
+    listColumns: ['weekStarting', 'shift'],
+    instructions: [
+      { label: 'Work instruction', text: 'Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Key: ✓ = Compliance, x = Non-compliance, A = Absent.' }
+    ],
+    sections: [
+      { title: 'Week details', fields: [
+        { key: 'weekStarting', label: 'Date (beginning of working week)', type: 'date', required: true },
+        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Staff members — one row per staff member per day (Mon-Fri)',
+      columns: [
+        { key: 'staffMember', label: 'Staff member', type: 'text' },
+        { key: 'day', label: 'Day', type: 'select', options: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+        { key: 'protectiveClothing', label: 'Protective clothing', type: 'text' },
+        { key: 'hairBootsClean', label: 'Hair covered & boots washed', type: 'text' },
+        { key: 'fingernails', label: 'Fingernails short & clean', type: 'text' },
+        { key: 'noJewelleryMakeup', label: 'No jewellery/watches/make-up', type: 'text' },
+        { key: 'handWash', label: 'Hand wash protocol followed', type: 'text' },
+        { key: 'noFoodDrink', label: 'No food & drink', type: 'text' },
+        { key: 'injuryIllness', label: 'Injury / illness', type: 'text' },
+        { key: 'comment', label: 'Comment / corrective action', type: 'text' },
+        { key: 'qcSignature', label: 'QC signature', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

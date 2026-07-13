@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.2 Weekly Cleaning Record</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'weekly-cleaning-record',
+    docCode: 'REC 7.6.2',
+    title: 'Weekly Cleaning Record',
+    docRevisionStart: 3,
+    listColumns: ['weekOf', 'checkedBy'],
+    sections: [
+      { title: 'Week', fields: [
+        { key: 'weekOf', label: 'Week of', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+        { key: 'supervisor', label: 'Supervisor', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Checklist items — covers floors/doors/walls, humidifiers, drains, ceilings, tanks, chillers, seamer, retort, motors, roof, outside areas, etc.',
+      columns: [
+        { key: 'areaEquipment', label: 'Area / equipment', type: 'text' },
+        { key: 'done', label: 'Yes / No', type: 'yesno' },
+        { key: 'comments', label: 'Comments', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

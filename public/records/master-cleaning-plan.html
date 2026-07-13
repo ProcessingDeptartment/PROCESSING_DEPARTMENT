@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Cleaning Plan</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'master-cleaning-plan',
+    docCode: 'Master Cleaning Plan',
+    title: 'Master Cleaning Plan',
+    docRevisionStart: 2,
+    listColumns: ['effectiveDate', 'approvedBy'],
+    instructions: [
+      { label: 'Purpose', text: 'The reference cleaning schedule that REC 7.6.1 (Daily Cleaning Inspection), REC 7.6.1.1 (Deep Cleaning Record Weekly) and REC 7.6.2 (Weekly Cleaning Record) point to. Update this when the cleaning method, frequency or responsible party for any part/area changes.' }
+    ],
+    sections: [
+      { title: 'Plan details', fields: [
+        { key: 'effectiveDate', label: 'Effective date', type: 'date', required: true },
+        { key: 'approvedBy', label: 'Approved by', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Cleaning tasks',
+      columns: [
+        { key: 'partToBeCleaned', label: 'Part to be cleaned', type: 'text' },
+        { key: 'where', label: 'Where', type: 'text' },
+        { key: 'frequency', label: 'When / frequency', type: 'text' },
+        { key: 'cleaningSupplies', label: 'Cleaning supplies', type: 'text' },
+        { key: 'how', label: 'How', type: 'textarea' },
+        { key: 'who', label: 'Who', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

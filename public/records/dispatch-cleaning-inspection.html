@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.2.2 Dispatch Cleaning Inspection</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'dispatch-cleaning-inspection',
+    docCode: 'REC 7.6.2.2',
+    title: 'Dispatch Cleaning Inspection',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'entranceDoorClosed', label: 'Entrance area door closed', type: 'yesno' },
+      { key: 'damagedDirtyBoxesPallets', label: 'Evidence of damaged & dirty boxes, pallets', type: 'yesno' },
+      { key: 'evidenceOfDust', label: 'Evidence of dust', type: 'yesno' },
+      { key: 'palletsStackedOnEachOther', label: 'Pallets stacked on each other', type: 'yesno' },
+      { key: 'loadingSpaceClean', label: 'Loading space clean, free from odours and mould growth', type: 'yesno' },
+      { key: 'noCansOnFloor', label: 'No cans on the floor', type: 'yesno' },
+      { key: 'ventilationOk', label: 'Ventilation in the area', type: 'yesno' },
+      { key: 'floorsWallsClean', label: 'Floors and walls clean', type: 'yesno' },
+      { key: 'cleaningEquipmentStoredCorrectly', label: 'Cleaning equipment stored correctly', type: 'yesno' },
+      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
+      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.8 Allergen Cleaning Verification</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'allergen-cleaning-verification',
+    docCode: 'REC 7.6.8',
+    title: 'Allergen Cleaning Verification',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Note', text: 'Swabbing tests for the presence/absence of protein traces after cleaning, which indirectly indicates presence/absence of the allergens of concern for the products involved.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'area', label: 'Area', type: 'text', required: true },
+      { key: 'equipmentSwabbed', label: 'Equipment swabbed', type: 'text' },
+      { key: 'allergensInvolved', label: 'Allergens involved', type: 'text' },
+      { key: 'productBefore', label: 'Product produced — prior to allergen wash down', type: 'text' },
+      { key: 'productAfter', label: 'Product produced — after allergen wash down', type: 'text' },
+      { key: 'debrisInspection', label: 'Debris inspection (no debris present)', type: 'yesno' },
+      { key: 'equipmentCleaned', label: 'Equipment cleaned', type: 'yesno' },
+      { key: 'correctBrushwareUse', label: 'Correct brush-ware use', type: 'yesno' },
+      { key: 'protectiveClothingChanged', label: 'Personnel changed protective clothing?', type: 'yesno' },
+      { key: 'handsWashedGlovesChanged', label: 'Personnel washed hands / changed gloves after cleaning?', type: 'yesno' },
+      { key: 'partOfEquipmentSwabbed', label: 'Part of equipment swabbed', type: 'text' },
+      { key: 'swabResult', label: 'Swab result', type: 'select', options: ['Pass', 'Fail'] },
+      { key: 'swabResult2nd', label: '2nd swab result (if 1st fail)', type: 'select', options: ['Pass', 'Fail'] },
+      { key: 'swabResult3rd', label: '3rd swab result (if 2nd fail)', type: 'select', options: ['Pass', 'Fail'] },
+      { key: 'correctiveActionIfFailed', label: 'Corrective action if failed', type: 'textarea' },
+      { key: 'completedBy', label: 'Completed by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

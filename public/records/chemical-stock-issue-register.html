@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.4 Chemical Stock &amp; Issue Register</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'chemical-stock-issue-register',
+    docCode: 'REC 7.6.4',
+    title: 'Chemical Stock & Issue Register',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'nameOfChemical', label: 'Name of chemical', type: 'text', required: true },
+      { key: 'approvedSupplier', label: 'Approved supplier', type: 'text' },
+      { key: 'batchNumber', label: 'Batch number', type: 'text' },
+      { key: 'msdsAvailable', label: 'MSDS available', type: 'yesno' },
+      { key: 'expiryDate', label: 'Expiry date', type: 'date' },
+      { key: 'dateOfIssue', label: 'Date of issue', type: 'date', required: true },
+      { key: 'quantityIssued', label: 'Quantity issued', type: 'number' },
+      { key: 'dilution', label: 'Dilution', type: 'text' },
+      { key: 'issuedTo', label: 'Issued to', type: 'text' },
+      { key: 'issuedBy', label: 'Issued by', type: 'text', required: true },
+      { key: 'areaToBeCleaned', label: 'Area to be cleaned?', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

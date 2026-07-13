@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.0a Production Areas Cleaning Record</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'production-areas-cleaning-record',
+    docCode: 'REC 7.6.0a',
+    title: 'Production Areas Cleaning Record',
+    docRevisionStart: 1,
+    listColumns: ['date', 'shift'],
+    sections: [
+      { title: 'Shift details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'inspectedBy', label: 'Inspected by', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Checklist items (one row per area/equipment item checked)',
+      columns: [
+        { key: 'area', label: 'Area', type: 'text' },
+        { key: 'item', label: 'Item / equipment', type: 'text' },
+        { key: 'status', label: 'C / NC', type: 'select', options: ['C', 'NC'] },
+        { key: 'nonConformance', label: 'Non-conformance', type: 'text' },
+        { key: 'correctionSignOff', label: 'Correction and sign off', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.3.1 Facility Inspection NC Report</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'facility-inspection-nc-report',
+    docCode: 'REC 7.6.3.1',
+    title: 'Facility Inspection NC Report',
+    docRevisionStart: 4,
+    listColumns: ['inspectionDate', 'completedBy'],
+    sections: [
+      { title: 'Inspection details', fields: [
+        { key: 'completedBy', label: 'Completed by', type: 'text', required: true },
+        { key: 'inspectionDate', label: 'Inspection date', type: 'date', required: true }
+      ]},
+      { title: 'Management verification', fields: [
+        { key: 'managementVerification', label: 'Management verification', type: 'text' },
+        { key: 'verificationDate', label: 'Date', type: 'date' }
+      ]}
+    ],
+    roster: {
+      title: 'Non-conformances by area',
+      columns: [
+        { key: 'area', label: 'Area', type: 'text' },
+        { key: 'nonConformance', label: 'Non-conformance', type: 'textarea' },
+        { key: 'correctiveAction', label: 'Corrective action', type: 'textarea' },
+        { key: 'targetDate', label: 'Target date', type: 'date' },
+        { key: 'actualDateCompleted', label: 'Actual date completed', type: 'date' },
+        { key: 'personResponsible', label: 'Person / department responsible', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

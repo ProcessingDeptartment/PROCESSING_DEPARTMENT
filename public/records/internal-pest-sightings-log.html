@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.5 Internal Pest Sightings Log</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'internal-pest-sightings-log',
+    docCode: 'REC 7.6.5',
+    title: 'Internal Pest Sightings Log',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Instruction', text: 'If any pest or presence of pest activity is noted or reported, the Internal Pest Controller completes this log and informs management.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'areaOfSighting', label: 'Area of pest / activity sighting (incl. brief description)', type: 'textarea', required: true },
+      { key: 'typeOfPest', label: 'Type of pest sighted', type: 'text' },
+      { key: 'reportedBy', label: 'Pest sighting reported by', type: 'text' },
+      { key: 'carCompleted', label: 'CAR completed?', type: 'yesno' },
+      { key: 'pestControlCompanyNotified', label: 'Pest control company notified?', type: 'yesno' },
+      { key: 'internalPestController', label: 'Internal pest controller', type: 'text', required: true },
+      { key: 'managementVerification', label: 'Management verification', type: 'text' },
+      { key: 'comment', label: 'Comment', type: 'textarea' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

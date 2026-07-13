@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.3 Facility Inspection</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'facility-inspection',
+    docCode: 'REC 7.6.3',
+    title: 'Facility Inspection',
+    docRevisionStart: 7,
+    listColumns: ['date', 'completedBy'],
+    sections: [
+      { title: 'Inspection details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'completedBy', label: 'Completed by', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Areas inspected — Factory surroundings, Staff Canteen/Change rooms/Toilets, Chemical & PPE storage, Shucking/Sorting/Live Holding/Live Packing areas, Raw material & packaging store, etc.',
+      columns: [
+        { key: 'area', label: 'Area', type: 'text' },
+        { key: 'checklist', label: 'Checklist requirement', type: 'textarea' },
+        { key: 'findings', label: 'Findings', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

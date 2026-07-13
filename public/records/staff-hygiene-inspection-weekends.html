@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.7a Staff Hygiene Inspection - Weekends</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'staff-hygiene-inspection-weekends',
+    docCode: 'REC 7.6.7a',
+    title: 'Staff Hygiene Inspection - Weekends',
+    docRevisionStart: 2,
+    listColumns: ['date'],
+    instructions: [
+      { label: 'Work instruction', text: 'Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Non-compliance observed should be recorded and reported to supervisors.' }
+    ],
+    sections: [
+      { title: 'Shift details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Staff members — day shift',
+      columns: [
+        { key: 'staffMember', label: 'Staff member', type: 'text' },
+        { key: 'protectiveClothing', label: 'Protective clothing', type: 'text' },
+        { key: 'hairBootsClean', label: 'Hair covered and boot washed', type: 'text' },
+        { key: 'fingernails', label: 'Fingernails short and clean', type: 'text' },
+        { key: 'noJewelleryMakeup', label: 'No jewellery/make-up', type: 'text' },
+        { key: 'handWash', label: 'Hand wash', type: 'text' },
+        { key: 'injuryIllness', label: 'Injury / illness', type: 'text' },
+        { key: 'noFood', label: 'No food', type: 'text' },
+        { key: 'correctiveAction', label: 'Corrective action', type: 'text' },
+        { key: 'comments', label: 'Comments', type: 'text' },
+        { key: 'qcSignature', label: 'QC signature', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

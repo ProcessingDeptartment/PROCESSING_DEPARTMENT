@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Cleaning Checklist</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'master-cleaning-checklist',
+    docCode: 'Master Cleaning Checklist',
+    title: 'Master Cleaning Checklist (New Plant)',
+    docRevisionStart: 1,
+    listColumns: ['weekOf', 'responsibleOperator'],
+    instructions: [
+      { label: 'Note', text: 'The paper form has separate Day/Night tick columns for every day of the week. This digital version records one row per equipment item per day — use the day field to log which day/shift a cleaning was done, and add a row per occurrence.' }
+    ],
+    sections: [
+      { title: 'Week details', fields: [
+        { key: 'weekOf', label: 'Week of', type: 'date', required: true },
+        { key: 'responsibleOperator', label: 'Responsible operator', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Equipment / item cleaning log',
+      columns: [
+        { key: 'equipmentOrItem', label: 'Equipment or item', type: 'text' },
+        { key: 'frequency', label: 'Frequency', type: 'text' },
+        { key: 'day', label: 'Day', type: 'select', options: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
+        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
+        { key: 'done', label: 'Done?', type: 'yesno' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>
