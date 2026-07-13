@@ -148,15 +148,21 @@
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-head"><h2>Weight Measurements (kg)</h2></div>
+    <div class="panel no-print">
+      <div class="panel-head"><h2>Add Weight</h2></div>
       <div class="panel-body">
-        <div class="weight-input-section no-print">
+        <div class="weight-input-section">
           <div class="weight-input-row">
-            <input id="newWeightInput" type="number" step="0.01" placeholder="Enter weight">
+            <input id="newWeightInput" type="number" step="0.01" placeholder="Enter weight (kg)">
             <button class="btn btn-flat" id="addWeightBtn">+ Add weight</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Weight Measurements (kg)</h2></div>
+      <div class="panel-body">
         <table class="weights" id="weightsTable">
           <thead><tr><th>Wt 1</th><th>Wt 2</th><th>Wt 3</th><th>Wt 4</th><th>Wt 5</th><th>Wt 6</th></tr></thead>
           <tbody id="weightsBody"><tr><td colspan="6" style="text-align:center; color:#8a939b; padding:6px;">No weights added yet</td></tr></tbody>
