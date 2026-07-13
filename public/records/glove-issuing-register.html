@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.5 Glove Issuing Register</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'glove-issuing-register',
+    docCode: 'REC 7.7.5',
+    title: 'Glove Issuing Register',
+    docRevisionStart: 9,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'personAllocated', label: 'Person allocated', type: 'text', required: true },
+      { key: 'quantityIssued', label: 'Quantity issued', type: 'number' },
+      { key: 'conditionWhenReturned', label: 'Condition of gloves when returned', type: 'text' },
+      { key: 'correctiveAction', label: 'Action / corrective action taken (not returned, broken etc.)', type: 'textarea' },
+      { key: 'signature', label: 'Signature', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

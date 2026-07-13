@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.1 Daily Equipment Checklist</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'daily-equipment-checklist',
+    docCode: 'REC 7.7.1',
+    title: 'Daily Equipment Checklist',
+    docRevisionStart: 6,
+    listColumns: ['weekOf', 'checkedBy'],
+    instructions: [
+      { label: 'Inspection', text: 'Inspect all equipment and devices daily. ✓ = Good condition/working, X = Faulty/damaged.' }
+    ],
+    sections: [
+      { title: 'Week', fields: [
+        { key: 'weekOf', label: 'Week of', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+        { key: 'deviations', label: 'Deviations', type: 'textarea' },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Equipment / device checks — covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
+      columns: [
+        { key: 'equipmentOrDevice', label: 'Equipment / device', type: 'text' },
+        { key: 'date', label: 'Date', type: 'date' },
+        { key: 'condition', label: 'Condition (✓ good / X faulty)', type: 'select', options: ['✓', 'X'] },
+        { key: 'comments', label: 'Comments', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

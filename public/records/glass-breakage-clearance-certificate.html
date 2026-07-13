@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.3 Glass Breakage Clearance Certificate</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'glass-breakage-clearance-certificate',
+    docCode: 'REC 7.7.3',
+    title: 'Glass Breakage Clearance Certificate',
+    docRevisionStart: 1,
+    listColumns: ['date', 'areaOfBreakage'],
+    sections: [
+      { title: 'Incident details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'timeOfBreakage', label: 'Time of breakage', type: 'text' },
+        { key: 'areaOfBreakage', label: 'Area where breakage occurred', type: 'text', required: true },
+        { key: 'reportedBy', label: 'Person who reported the incident', type: 'text' },
+        { key: 'factoryManager', label: 'Factory manager', type: 'text' },
+        { key: 'productsProcessed', label: 'Products processed at time of breakage', type: 'text' }
+      ]},
+      { title: 'Contamination check', fields: [
+        { key: 'finishedProductContaminated', label: 'Finished product contaminated?', type: 'yesno' },
+        { key: 'rawMaterialContaminated', label: 'Raw material contaminated?', type: 'yesno' },
+        { key: 'packagingContaminated', label: 'Packaging contaminated?', type: 'yesno' },
+        { key: 'machineEquipContaminated', label: 'Machine / equipment contaminated?', type: 'yesno' }
+      ]},
+      { title: 'Handling checklist', fields: [
+        { key: 'areaIsolated', label: 'Area isolated (min. 5m²)?', type: 'yesno' },
+        { key: 'areasEquipmentCleaned', label: 'All affected areas and equipment cleaned?', type: 'yesno' },
+        { key: 'clothingFootwearChecked', label: 'All staff clothing and footwear checked for contamination?', type: 'yesno' },
+        { key: 'clothingContainedRemoved', label: 'Contaminated clothing/footwear safely contained and removed?', type: 'yesno' },
+        { key: 'staffExcluded', label: 'Staff excluded from affected area?', type: 'yesno' },
+        { key: 'cleaningEquipmentDiscarded', label: 'All cleaning equipment used discarded?', type: 'yesno' },
+        { key: 'minCleanersUsed', label: 'Minimum number of cleaners used?', type: 'yesno' },
+        { key: 'glassSampleRetained', label: 'Sample of glass/fragment retained?', type: 'yesno' },
+        { key: 'allFragmentsRemoved', label: 'All broken fragments removed?', type: 'yesno' },
+        { key: 'affectedMaterialIsolated', label: 'All affected product/material isolated?', type: 'yesno' },
+        { key: 'areaInspectedAfterCleaning', label: 'Area inspected after cleaning?', type: 'yesno' },
+        { key: 'contaminatedProductDiscarded', label: 'Contaminated product safely discarded?', type: 'yesno' },
+        { key: 'safeToRestart', label: 'Safe to continue production?', type: 'yesno' },
+        { key: 'timeOfRestart', label: 'Time of production restart', type: 'text' }
+      ]},
+      { title: 'Close-out', fields: [
+        { key: 'carCompleted', label: 'Corrective Action Request record completed?', type: 'yesno' },
+        { key: 'carNo', label: 'CAR no.', type: 'text' },
+        { key: 'rootCauseIdentified', label: 'Root cause identified?', type: 'yesno' },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Raw materials / product contaminated or potentially contaminated',
+      columns: [
+        { key: 'code', label: 'Code', type: 'text' },
+        { key: 'productDescription', label: 'Product description', type: 'text' },
+        { key: 'batchNo', label: 'Batch no.', type: 'text' },
+        { key: 'qty', label: 'Qty', type: 'number' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

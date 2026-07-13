@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.2 Glass, Plastic &amp; Equipment Inspection</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'glass-plastic-equipment-inspection',
+    docCode: 'REC 7.7.2',
+    title: 'Glass, Plastic & Equipment Inspection',
+    docRevisionStart: 5,
+    listColumns: ['weekOf', 'inspectorInitials'],
+    instructions: [
+      { label: 'Key', text: 'Y = Inspected and in order. N = Inspected but not conforming.' },
+      { label: 'What to check', text: 'Every morning before starting up, check light fittings, windows, temperature dial displays, extractor fan grids, wall clocks, computer screens and plastic crates. Check equipment/machinery (rollers, conveyers, racking, trolleys, tanks) is in good repair. Detail any non-conformance in Comments.' }
+    ],
+    sections: [
+      { title: 'Week', fields: [
+        { key: 'weekOf', label: 'Week of', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'inspectorInitials', label: 'Inspector initials', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Areas checked — Sorting, Live Holding, Live Packing, Receiving, Shucking, Salting & Washing/Metal grid, Grading, Pre-cooking, Filling & Seam, Retort, Washing bay, Can Storage, Cold rooms, Dry room, Dry cooking room, Dry grading room',
+      columns: [
+        { key: 'areaChecked', label: 'Area checked', type: 'text' },
+        { key: 'day', label: 'Day', type: 'select', options: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] },
+        { key: 'glassPlastics', label: 'Glass & plastics (Y/N)', type: 'select', options: ['Y', 'N'] },
+        { key: 'equipment', label: 'Equipment (Y/N)', type: 'select', options: ['Y', 'N'] },
+        { key: 'comments', label: 'Comments', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

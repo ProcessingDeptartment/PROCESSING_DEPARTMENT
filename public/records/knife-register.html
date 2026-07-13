@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.4c Knife Register</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'knife-register',
+    docCode: 'REC 7.7.4c',
+    title: 'Knife Register',
+    docRevisionStart: 2,
+    listColumns: ['weekStarting', 'shift'],
+    instructions: [
+      { label: 'Key', text: '✓ = Compliance, x = Non-compliance.' }
+    ],
+    sections: [
+      { title: 'Week details', fields: [
+        { key: 'weekStarting', label: 'Date (beginning of working week)', type: 'date', required: true },
+        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Staff members — one row per staff member per day (Mon-Sat)',
+      columns: [
+        { key: 'staffMember', label: 'Staff member', type: 'text' },
+        { key: 'day', label: 'Day', type: 'select', options: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] },
+        { key: 'issued', label: 'Issued', type: 'yesno' },
+        { key: 'returned', label: 'Returned', type: 'yesno' },
+        { key: 'comment', label: 'Comment / corrective action', type: 'text' },
+        { key: 'signature', label: 'Signature', type: 'text' },
+        { key: 'qc', label: 'QC', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

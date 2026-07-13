@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.6 Plaster Issuing / Dressing Inspection</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'plaster-dressing-inspection',
+    docCode: 'REC 7.7.6',
+    title: 'Plaster Issuing / Dressing Inspection',
+    docRevisionStart: 3,
+    entryFields: [
+      { key: 'dateOfIncident', label: 'Date of incident', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'itemIssued', label: 'Item issued (plaster, glove, bandage)', type: 'text' },
+      { key: 'nameOfInjured', label: 'Name and surname of injured', type: 'text', required: true },
+      { key: 'descriptionOfInjury', label: 'Short description of injury', type: 'textarea' },
+      { key: 'firstAider', label: 'Name and surname of first aider', type: 'text' },
+      { key: 'incidentRecordedNo', label: 'Incident recorded #', type: 'text' },
+      { key: 'breakTime', label: 'Break time', type: 'text' },
+      { key: 'lunchTime', label: 'Lunch time', type: 'text' },
+      { key: 'knockOffTime', label: 'Knock off time', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>
