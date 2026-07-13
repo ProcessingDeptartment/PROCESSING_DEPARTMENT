@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.12 Factory Maintenance Inspection</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'factory-maintenance-inspection',
+    docCode: 'REC 7.8.12',
+    title: 'Factory Maintenance Inspection',
+    docRevisionStart: 7,
+    listColumns: ['month', 'date', 'checkedBy'],
+    instructions: [
+      { label: 'Work instruction', text: 'Conduct inspections at start of shift, checking that all listed areas are clean and in good, functioning condition, and that equipment/machinery is in a good state of repair and intact. Detail any non-conformance in the Comments column. Key: Y = Inspected and in order, N = Inspected but not conforming.' }
+    ],
+    sections: [
+      { title: 'Inspection details', fields: [
+        { key: 'month', label: 'Month', type: 'month', required: true },
+        { key: 'date', label: 'Date', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Equipment checks — covers Conveyors/Seamer, Washing machines/tumblers, Retort 1&2, Steamer, Boiler room, Can Drier, tanks (sea/fresh water), Compressor, Cooling system, Effluent water, Live area seawater tank, Sewage, etc.',
+      columns: [
+        { key: 'category', label: 'Category', type: 'text' },
+        { key: 'equipment', label: 'Equipment', type: 'text' },
+        { key: 'inspected', label: 'Inspected (Y/N)', type: 'select', options: ['Y', 'N'] },
+        { key: 'commentsAction', label: 'Comments / action to be taken', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

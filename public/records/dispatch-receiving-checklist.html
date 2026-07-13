@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.8.1 Dispatch Receiving Checklist</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'dispatch-receiving-checklist',
+    docCode: 'REC 7.8.8.1',
+    title: 'Dispatch Receiving Checklist',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'clientDetails', label: 'Client details', type: 'text' },
+      { key: 'noOfPalletsBoxes', label: 'No. of pallets/boxes', type: 'number' },
+      { key: 'deliveryNote', label: 'Delivery note', type: 'text' },
+      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'productDispatched', label: 'Product dispatched', type: 'text' },
+      { key: 'outerCartonSealed', label: 'Outer carton sealed tightly & neat', type: 'yesno' },
+      { key: 'damagedDirtyBoxesPallets', label: 'Evidence of damaged & dirty boxes, pallets on loading', type: 'yesno' },
+      { key: 'damagedStockLoaded', label: 'Evidence of damaged stock being loaded', type: 'yesno' },
+      { key: 'pestInfestationStock', label: 'Evidence of pest infestation in stock loaded', type: 'yesno' },
+      { key: 'loadingSpaceClean', label: 'Loading space clean, free from odours and mould growth', type: 'yesno' },
+      { key: 'stockNotLoadedWithNonFood', label: 'Stock not loaded with any other non-food products', type: 'yesno' },
+      { key: 'rustDentSigns', label: 'Any signs of rust or dent from the cans', type: 'yesno' },
+      { key: 'truckSecuredLocked', label: 'Truck secured and locked after loading', type: 'yesno' },
+      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
+      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

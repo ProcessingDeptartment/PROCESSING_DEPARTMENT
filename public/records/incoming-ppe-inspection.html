@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.5 Incoming PPE Inspection</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'incoming-ppe-inspection',
+    docCode: 'REC 7.8.5',
+    title: 'Incoming PPE Inspection',
+    docRevisionStart: 4,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'product', label: 'Product', type: 'text', required: true },
+      { key: 'supplier', label: 'Supplier', type: 'text' },
+      { key: 'approvedSupplier', label: 'Approved supplier?', type: 'yesno' },
+      { key: 'deliveryNote', label: 'Delivery note', type: 'text' },
+      { key: 'quantity', label: 'Quantity', type: 'number' },
+      { key: 'carRequired', label: 'CAR required?', type: 'yesno' },
+      { key: 'carNr', label: 'CAR nr.', type: 'text' },
+      { key: 'receivedBy', label: 'Received by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

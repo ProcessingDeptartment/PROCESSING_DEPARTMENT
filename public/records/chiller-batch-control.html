@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.1 Chiller Batch Control</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'chiller-batch-control',
+    docCode: 'REC 7.8.1',
+    title: 'Chiller Batch Control (Canning)',
+    docRevisionStart: 4,
+    entryFields: [
+      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      { key: 'processingStep', label: 'Processing step', type: 'select', options: ['After first wash', 'After second wash', 'After scrubbing'] },
+      { key: 'trackingNo', label: 'Tracking no.', type: 'text', required: true },
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      { key: 'traysClearlyMarked', label: 'Trays clearly marked?', type: 'yesno' },
+      { key: 'noOfTrays', label: 'No. of trays', type: 'number' },
+      { key: 'chillerTemp', label: 'Chiller temp', type: 'number', unit: '°C' },
+      { key: 'totalDaysInChiller', label: 'Total days in chiller', type: 'number' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

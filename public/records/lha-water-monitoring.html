@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.9.1 LHA Water Monitoring</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'lha-water-monitoring',
+    docCode: 'REC 7.8.9.1',
+    title: 'LHA Water Monitoring',
+    docRevisionStart: 4,
+    instructions: [
+      { label: 'Scope', text: 'Live Holding Area chiller unit — separate from the general Water Monitoring record (REC 7.8.9), which covers a different water source.' },
+      { label: 'Frequency', text: 'Complete record twice per shift.' },
+      { label: 'Parameter', text: 'Temperature 12-18°C.' }
+    ],
+    entryFields: [
+      { key: 'month', label: 'Month', type: 'month', required: true },
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
+      { key: 'timeOfCheck', label: 'Time of check', type: 'text' },
+      { key: 'chillerUnitOperating', label: 'Chiller unit operating', type: 'yesno' },
+      { key: 'temperature', label: 'Temperature', type: 'number', unit: '°C', specKey: 'lhaTemp' },
+      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
+    ],
+    specFields: [
+      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: '°C', min: 12, max: 18 }
+    ],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.12.1 Equipment Checklist - Roof</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'equipment-checklist-roof',
+    docCode: 'REC 7.8.12.1',
+    title: 'Equipment Checklist - Roof (Daily Ozone & Compressor)',
+    docRevisionStart: 1,
+    listColumns: ['date', 'checkedBy'],
+    instructions: [
+      { label: 'To-do — daily', text: 'Drain the compressor tank. Empty the drip tray underneath the 250-pipe connection.' },
+      { label: 'To-do — weekly', text: 'Drain and clean the filters.' }
+    ],
+    sections: [
+      { title: 'Inspection details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Daily Ozone and compressor checklist',
+      columns: [
+        { key: 'component', label: 'Component', type: 'select', options: ['Ozone', 'Compressor'] },
+        { key: 'description', label: 'Description', type: 'text' },
+        { key: 'inspected', label: 'Inspected (Y/N)', type: 'select', options: ['Y', 'N'] },
+        { key: 'commentsAction', label: 'Comments / action to be taken', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

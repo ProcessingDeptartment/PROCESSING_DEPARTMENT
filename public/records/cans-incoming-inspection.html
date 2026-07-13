@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.6 Cans Incoming Inspection</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'cans-incoming-inspection',
+    docCode: 'REC 7.8.6',
+    title: 'Cans Incoming Inspection',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'supplier', label: 'Supplier', type: 'text' },
+      { key: 'descriptionOfProducts', label: 'Description of product(s) received', type: 'text' },
+      { key: 'quantityReceived', label: 'Quantity received', type: 'number' },
+      { key: 'productionDate', label: 'Production date', type: 'date' },
+      { key: 'productionTime', label: 'Production time', type: 'text' },
+      { key: 'sampleSize', label: 'Sample size', type: 'text' },
+      { key: 'palletTrackingNo', label: 'Pallet tracking no.', type: 'text' },
+      { key: 'vehicleClean', label: 'Vehicle clean? (no dust, rust etc.)', type: 'yesno' },
+      { key: 'noPestActivity', label: 'No signs of pest activity/infestation?', type: 'yesno' },
+      { key: 'noNonFoodTransported', label: 'No other non-food transported with foodstuff?', type: 'yesno' },
+      { key: 'noBrokenPalletsWetCans', label: 'No broken pallets, plastic wrap or wet cans?', type: 'yesno' },
+      { key: 'cansFromApprovedSupplier', label: 'Cans/lids from approved supplier?', type: 'yesno' },
+      { key: 'qtyAccordingToOrder', label: 'Product and qty received according to order?', type: 'yesno' },
+      { key: 'coaReceived', label: 'COA received with cans/lids?', type: 'yesno' },
+      { key: 'seamOrFlangeDefects', label: 'Seam or flange defects?', type: 'yesno' },
+      { key: 'dentedScratchesDust', label: 'Dented, scratches or dust?', type: 'yesno' },
+      { key: 'rustedCans', label: 'Any rusted cans?', type: 'yesno' },
+      { key: 'foreignMatter', label: 'Foreign matter?', type: 'yesno' },
+      { key: 'pestInfestationSigns', label: 'Any signs of pest infestation?', type: 'yesno' },
+      { key: 'weldingDefects', label: 'Welding defects?', type: 'yesno' },
+      { key: 'otherIrregularities', label: 'Any other irregularities?', type: 'textarea' },
+      { key: 'cansAcceptedRejected', label: 'Cans acceptable/rejected?', type: 'select', options: ['Acceptable', 'Rejected'] },
+      { key: 'receivedInspectedBy', label: 'Received & inspected by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

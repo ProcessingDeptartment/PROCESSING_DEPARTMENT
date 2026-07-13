@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.3 Boiler Inspection Report</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'boiler-inspection-report',
+    docCode: 'REC 7.8.3',
+    title: 'Boiler Inspection Report',
+    docRevisionStart: 4,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'timeBoilerStarted', label: 'Time boiler started', type: 'text' },
+      { key: 'waterLevelChecked', label: 'Water level checked and adjusted', type: 'yesno' },
+      { key: 'airReleaseValveOpened', label: 'Air release valve opened', type: 'yesno' },
+      { key: 'burnerSwitchedOn', label: 'Burner switched on', type: 'yesno' },
+      { key: 'burnerLowFire', label: 'Burner set to "low fire"', type: 'yesno' },
+      { key: 'pressureChecked', label: 'Pressure checked', type: 'yesno' },
+      { key: 'mowbreyOpened', label: 'Single & dual Mowbrey opened', type: 'yesno' },
+      { key: 'mainSteamValveOpened', label: 'Main steam valve opened', type: 'yesno' },
+      { key: 'timeBoilerTurnedOff', label: 'Time boiler turned off', type: 'text' },
+      { key: 'burnerAdjustedHighToLow', label: 'Burner adjusted from high fire to low fire', type: 'yesno' },
+      { key: 'powerFailure', label: 'Power failure', type: 'yesno' },
+      { key: 'boilerRestarted', label: 'Boiler restarted if there was power failure', type: 'yesno' },
+      { key: 'dieselReading', label: 'Diesel reading', type: 'number', unit: 'L' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'boilerOperator', label: 'Boiler operator', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

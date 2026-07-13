@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.7 Incoming Goods Inspection</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'incoming-goods-inspection',
+    docCode: 'REC 7.8.7',
+    title: 'Incoming Goods Inspection',
+    docRevisionStart: 5,
+    instructions: [
+      { label: 'Sampling', text: 'On receiving of lot/batches, refer to the sampling tables (PRO 8.2.18) to determine sampling size for inspection. If the product does not comply, do not accept the delivery.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'supplier', label: 'Supplier', type: 'text' },
+      { key: 'productReceived', label: 'Product received', type: 'text' },
+      { key: 'quantityReceived', label: 'Quantity received', type: 'number' },
+      { key: 'batchNumber', label: 'Batch number', type: 'text' },
+      { key: 'expiryDate', label: 'Expiry date', type: 'date' },
+      { key: 'coaReceived', label: 'COA received', type: 'yesno' },
+      { key: 'sampleSize', label: 'Sample size', type: 'text' },
+      { key: 'fromApprovedSupplier', label: 'Product from an approved supplier?', type: 'yesno' },
+      { key: 'receivedAccordingToOrder', label: 'Product received according to order?', type: 'yesno' },
+      { key: 'vehicleConditionAcceptable', label: 'Condition of delivery vehicle acceptable/clean?', type: 'yesno' },
+      { key: 'pestSignsInVehicle', label: 'Any signs of pest activity/infestation in vehicle?', type: 'yesno' },
+      { key: 'foreignObjectsRisk', label: 'Any foreign objects that could pose a risk?', type: 'yesno' },
+      { key: 'contaminatingProductsTransported', label: 'Any contaminating products transported with the product?', type: 'yesno' },
+      { key: 'packagedLabelledCorrectly', label: 'Product packaged and labelled correctly?', type: 'yesno' },
+      { key: 'conformsToSpecification', label: 'Product conforms to the specification?', type: 'yesno' },
+      { key: 'otherConcerns', label: 'Other concerns/non-conformances', type: 'textarea' },
+      { key: 'inspectedReceivedBy', label: 'Inspected/received by', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

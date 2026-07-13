@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.10 Maintenance Job Card</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'maintenance-job-card',
+    docCode: 'REC 7.8.10',
+    title: 'Maintenance Job Card',
+    docRevisionStart: 1,
+    listColumns: ['jobCardNumber', 'issueDate', 'completedBy'],
+    sections: [
+      { title: 'Job details', fields: [
+        { key: 'jobCardNumber', label: 'Maintenance job card number', type: 'text', required: true },
+        { key: 'maintenanceDetail', label: 'Maintenance detail', type: 'select', options: ['Preventive Maintenance', 'Equipment / Utensil Breakdown', 'Facility & Premises Repairs', 'Other'] },
+        { key: 'completedBy', label: 'Completed by', type: 'text', required: true },
+        { key: 'issueDate', label: 'Issue date', type: 'date', required: true },
+        { key: 'descriptionRequired', label: 'Description of maintenance required', type: 'textarea', wide: true },
+        { key: 'actualMaintenancePerformed', label: 'Actual maintenance performed', type: 'textarea', wide: true },
+        { key: 'timeStarted', label: 'Time started', type: 'text' },
+        { key: 'timeFinished', label: 'Time finished', type: 'text' },
+        { key: 'technicianSignature', label: 'Technician signature', type: 'text' },
+        { key: 'comments', label: 'Comments related to maintenance activity', type: 'textarea', wide: true }
+      ]},
+      { title: 'Verification', fields: [
+        { key: 'suitablyCarriedOut', label: 'Was the maintenance suitably carried out and completed?', type: 'yesno' },
+        { key: 'nutsBoltsAccountedFor', label: 'Are all nuts, bolts, tools and loose parts accounted for and in place?', type: 'yesno' },
+        { key: 'areaCleanedAfter', label: 'Was the area/equipment suitably cleaned after maintenance?', type: 'yesno' },
+        { key: 'managementVerification', label: 'Management verification', type: 'text' },
+        { key: 'verificationDate', label: 'Date', type: 'date' }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

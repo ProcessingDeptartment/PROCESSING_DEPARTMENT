@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.2 Daily Waste Removal</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'daily-waste-removal',
+    docCode: 'REC 7.8.2',
+    title: 'Daily Waste Removal',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Note', text: 'Once the waste is offloaded, the person at the dumpsite or area of dumping must sign the form.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'timeOfCollection', label: 'Time of waste collection', type: 'text' },
+      { key: 'areaRemovedFrom', label: 'Area where waste is removed from', type: 'text' },
+      { key: 'typeOfWaste', label: 'Type of waste removed (description)', type: 'text' },
+      { key: 'destinationDumpsite', label: 'Destination of waste (name of dumpsite)', type: 'text' },
+      { key: 'dumpsiteRepSignature', label: 'Signature of dumpsite representative', type: 'text' },
+      { key: 'vehicleRegNr', label: 'Vehicle registration nr.', type: 'text' },
+      { key: 'driver', label: 'Driver', type: 'text' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>
