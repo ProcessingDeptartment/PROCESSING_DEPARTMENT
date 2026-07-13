@@ -32,9 +32,9 @@
   // -------------------------------------------------------------------------
 
   const PREFIX = 'facility_records:';
+  // Configured once the constants above are real values (not the YOUR_... placeholders).
   const configured =
-    SUPABASE_URL && SUPABASE_ANON_KEY &&
-    SUPABASE_URL.indexOf('https://axesykcfbfsmmgzbmgee.supabase.co') !== 0 && SUPABASE_ANON_KEY.indexOf('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZXN5a2NmYmZzbW1nemJtZ2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mjk5MTYsImV4cCI6MjA5OTUwNTkxNn0.Owuid-gCbuL1UKcZxRIfs-ikCz07XiIzUmGZJSl0-OM') !== 0;
+    /^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 40;
 
   if (!configured) {
     console.warn(
