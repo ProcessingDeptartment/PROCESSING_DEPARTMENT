@@ -4,44 +4,347 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.1.5 Salting (OOSW)</title>
+<style>
+  :root{
+    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
+    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
+    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  }
+  #so-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }
+  #so-root *{ box-sizing:border-box; }
+  #so-root h1,#so-root h2,#so-root h3{ margin:0; font-weight:700; }
+  #so-root input, #so-root select, #so-root textarea{
+    font-family:var(--mono); font-size:12.5px; border:1px solid var(--line); border-radius:3px;
+    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
+  }
+  #so-root input:focus, #so-root select:focus, #so-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
+  #so-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .so-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .so-top .doc-code{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .so-top h1{ font-size:17px; letter-spacing:.01em; }
+  .so-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .so-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
+  .so-topline input{ width:150px; }
+  .btn{ padding:7px 13px; font-size:12.5px; }
+  .btn-primary{ background:var(--accent); color:#241a0a; }
+  .btn-primary:hover{ background:#dd9536; }
+  .btn-ghost{ background:transparent; color:#f4f1e8; border:1px solid #55636e !important; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-flat:hover{ background:#d5d8d6; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .so-body{ padding:16px 18px 60px; max-width:1000px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; }
+  .panel-head{ padding:9px 14px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:center; background:#fbfbfa; border-radius:6px 6px 0 0; }
+  .panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--steel); }
+  .panel-body{ padding:14px; }
+
+  .grid{ display:grid; gap:10px; }
+  .grid-4{ grid-template-columns:repeat(4,1fr); }
+  .grid-3{ grid-template-columns:repeat(3,1fr); }
+  .grid-2{ grid-template-columns:repeat(2,1fr); }
+  label.field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:#54606b; font-weight:600; }
+
+  table.meas{ width:100%; border-collapse:collapse; }
+  table.meas th, table.meas td{ border:1px solid var(--line-soft); padding:4px 6px; text-align:center; vertical-align:middle;}
+  table.meas th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; }
+  table.meas td.row-label{ text-align:left; font-size:11.5px; font-weight:600; color:#33404a; background:#fcfcfb; white-space:nowrap; }
+  table.meas input{ text-align:center; padding:3px 2px; }
+
+  .footer-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; flex-wrap:wrap; align-items:center; }
+  .status-line{ font-size:11.5px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
+  .muted{ color:#8a939b; }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .toast.show{ opacity:1; }
+
+  @media (max-width:900px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} .footer-grid{grid-template-columns:1fr;} }
+  @media print{
+    @page{ size:A4 portrait; margin:9mm; }
+    body{ background:#fff; }
+    .no-print{ display:none !important; }
+    #so-root{ font-size:10px; background:#fff; }
+    .panel{ border:1px solid #000; break-inside:avoid; page-break-inside:avoid; margin-bottom:8px; }
+    .panel-body{ padding:8px; }
+    table.meas th, table.meas td{ border:1px solid #000; padding:2px 4px; }
+    table.meas{ font-size:9.5px; }
+    #so-root{ padding-top:56px; }
+    .so-top{
+      position:fixed; top:0; left:0; right:0;
+      background:#fff !important; padding:8px 18px;
+      border-bottom:1.5px solid #000;
+    }
+    .so-top .doc-code{ color:#333 !important; }
+    .so-top h1{ color:#000 !important; font-size:13px; }
+  }
+</style>
 </head>
 <body>
-<div id="mlRoot"></div>
+<div id="so-root">
+  <div class="so-top">
+    <div>
+      <div class="doc-code" id="docCodeBadge">REC 7.1.5</div>
+      <h1>Salting (OOSW)</h1>
+    </div>
+    <div class="so-topline no-print">
+      <label class="role-label">Your name
+        <input id="actingNameInput" placeholder="Type your name">
+      </label>
+      <button class="btn btn-ghost" id="newRecordBtn">New</button>
+      <button class="btn btn-primary" id="saveDraftBtn">Save draft</button>
+      <button class="btn btn-primary" id="submitBtn">Submit complete</button>
+    </div>
+  </div>
+
+  <div class="so-body">
+
+    <div class="panel">
+      <div class="panel-head"><h2>Header</h2></div>
+      <div class="panel-body">
+        <div class="grid grid-4" style="margin-bottom:10px;">
+          <label class="field">Intake date<input id="h_intakeDate" type="date"></label>
+          <label class="field">Harvest farm<input id="h_harvestFarm"></label>
+          <label class="field">Processing for<select id="h_processingFor"><option value="">—</option><option value="Can">Can</option><option value="Dried">Dried</option><option value="Other">Other</option></select></label>
+          <label class="field">Size range<input id="h_sizeRange"></label>
+        </div>
+        <div class="grid grid-4">
+          <label class="field">Job number<input id="h_jobNumber"></label>
+          <label class="field">Tracking no.<input id="h_trackingNo"></label>
+          <label class="field">Operator<input id="h_operator" required></label>
+          <label class="field">Supervisor<input id="h_supervisor"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>OOSW Measurements</h2></div>
+      <div class="panel-body">
+        <table class="meas">
+          <thead>
+            <tr>
+              <th style="text-align:left;">Tray no.</th>
+              <th>Weight (kg)</th>
+              <th>Whole weight (kg)</th>
+              <th>Total OOSW (kg)</th>
+              <th>OOSW (%)</th>
+            </tr>
+          </thead>
+          <tbody id="measurementRows"></tbody>
+        </table>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost" id="addRowBtn" style="background:var(--line-soft); color:var(--ink);">+ Add row</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Comments</h2></div>
+      <div class="panel-body">
+        <textarea id="commentsBox" rows="3" placeholder="Notes, deviations, corrective actions…"></textarea>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Sign-off</h2></div>
+      <div class="panel-body footer-grid">
+        <label class="field">Completed by<input id="f_completedBy"></label>
+        <label class="field">Verified by<input id="f_verifiedBy"></label>
+        <label class="field">Signature (type name to sign)<input id="f_completedSig"></label>
+        <label class="field">Signature (type name to sign)<input id="f_verifiedSig"></label>
+        <label class="field">Date<input id="f_completedDate" type="date"></label>
+        <label class="field">Date<input id="f_verifiedDate" type="date"></label>
+      </div>
+    </div>
+
+    <div class="actions no-print">
+      <span class="status-line" id="statusLine"></span>
+      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
+      <button class="btn btn-flat" id="generatePdfBtn">Generate PDF</button>
+    </div>
+  </div>
+
+  <div class="toast no-print" id="toast"></div>
+</div>
 
 <script src="../lib/data-store.js?v=1"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=1"></script>
-<script src="../lib/monitoring-log.js?v=1"></script>
 <script>
-(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'salting-oosw',
-    docCode: 'REC 7.1.5',
-    title: 'Salting (OOSW)',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Purpose', text: 'Record out-of-shell-weight (OOSW) tray samples taken during salting.' }
-    ],
-    entryFields: [
-      { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
-      { key: 'jobNumber', label: 'Job number', type: 'text' },
-      { key: 'trackingNo', label: 'Tracking no.', type: 'text' },
-      { key: 'sizeRange', label: 'Size range', type: 'text' },
-      { key: 'trayNumber', label: 'Tray no.', type: 'number' },
-      { key: 'weight', label: 'Weight', type: 'number', unit: 'kg' },
-      { key: 'operator', label: 'Operator', type: 'text', required: true },
-      { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
-      { key: 'totalOosw', label: 'Total OOSW', type: 'number', unit: 'kg' },
-      { key: 'ooswPercent', label: 'OOSW', type: 'number', unit: '%' },
-      { key: 'supervisor', label: 'Supervisor', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+(function(){
+  const $ = id => document.getElementById(id);
+  const DOC_REVISION_KEY = 'salting-oosw';
+  const DOC_REVISION_START = 1;
+
+  function newRecord(){
+    return {
+      id: null, revision: 1, status:'draft',
+      header:{ intakeDate:'', harvestFarm:'', processingFor:'', jobNumber:'', trackingNo:'', sizeRange:'', operator:'', supervisor:'' },
+      measurements: [],
+      comments:'',
+      completedBy:'', completedSig:'', completedDate:'',
+      verifiedBy:'', verifiedSig:'', verifiedDate:'',
+      createdAt: null, updatedAt: null
+    };
+  }
+
+  let state = newRecord();
+  const ACTING_NAME_KEY = 'acting_as_name_oosw';
+  let actingName = window.localStorage.getItem(ACTING_NAME_KEY) || '';
+
+  function toast(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
+  function num(v){ const n = parseFloat(v); return (v===''||v==null||isNaN(n)) ? null : n; }
+
+  async function storeGet(key, shared){
+    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  async function storeSet(key, value, shared){
+    try{ await window.storage.set(key, value, shared); return true; }
+    catch(e){ console.error('storage set failed', e); return false; }
+  }
+
+  function renderMeasurementTable(){
+    const tbody = $('measurementRows');
+    if(!state.measurements.length){
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#8a939b;">No measurements recorded yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = state.measurements.map((m, i) => `
+      <tr>
+        <td><input type="number" step="1" data-idx="${i}" data-field="trayNumber" value="${m.trayNumber || ''}"></td>
+        <td><input type="number" step="0.01" data-idx="${i}" data-field="weight" value="${m.weight || ''}"></td>
+        <td><input type="number" step="0.01" data-idx="${i}" data-field="wholeWeight" value="${m.wholeWeight || ''}"></td>
+        <td><input type="number" step="0.01" data-idx="${i}" data-field="totalOosw" value="${m.totalOosw || ''}"></td>
+        <td><input type="number" step="0.01" data-idx="${i}" data-field="ooswPercent" value="${m.ooswPercent || ''}"></td>
+        <td><button class="btn btn-flat" style="width:auto; padding:3px 9px;" data-delete="${i}">Delete</button></td>
+      </tr>
+    `).join('');
+    tbody.querySelectorAll('input[data-field]').forEach(inp=>{
+      inp.addEventListener('input', (e)=>{
+        const idx = parseInt(e.target.dataset.idx);
+        const field = e.target.dataset.field;
+        state.measurements[idx][field] = e.target.value;
+      });
+    });
+    tbody.querySelectorAll('[data-delete]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.delete);
+        state.measurements.splice(idx, 1);
+        renderMeasurementTable();
+      });
+    });
+  }
+
+  function renderHeader(){
+    $('h_intakeDate').value = state.header.intakeDate;
+    $('h_harvestFarm').value = state.header.harvestFarm;
+    $('h_processingFor').value = state.header.processingFor;
+    $('h_sizeRange').value = state.header.sizeRange;
+    $('h_jobNumber').value = state.header.jobNumber;
+    $('h_trackingNo').value = state.header.trackingNo;
+    $('h_operator').value = state.header.operator;
+    $('h_supervisor').value = state.header.supervisor;
+    $('commentsBox').value = state.comments;
+    $('f_completedBy').value = state.completedBy;
+    $('f_completedSig').value = state.completedSig;
+    $('f_completedDate').value = state.completedDate;
+    $('f_verifiedBy').value = state.verifiedBy;
+    $('f_verifiedSig').value = state.verifiedSig;
+    $('f_verifiedDate').value = state.verifiedDate;
+  }
+
+  function bindHeaderInputs(){
+    const map = {
+      h_intakeDate:'intakeDate', h_harvestFarm:'harvestFarm', h_processingFor:'processingFor',
+      h_sizeRange:'sizeRange', h_jobNumber:'jobNumber', h_trackingNo:'trackingNo',
+      h_operator:'operator', h_supervisor:'supervisor'
+    };
+    Object.entries(map).forEach(([id,key])=>{
+      $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; });
+    });
+    $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
+    ['f_completedBy','f_completedSig','f_completedDate','f_verifiedBy','f_verifiedSig','f_verifiedDate'].forEach(id=>{
+      const key = id.replace('f_','');
+      $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
+    });
+  }
+
+  function renderAll(){
+    renderHeader();
+    renderMeasurementTable();
+    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
+  }
+
+  async function saveRecord(finalize){
+    if(finalize && !state.header.operator){
+      toast('Operator is required.');
+      return;
+    }
+    const now = Date.now();
+    if(!state.id){
+      state.id = `oosw_${safeKey(state.header.harvestFarm || 'UNSPECIFIED')}_${now}`;
+      state.createdAt = now;
+    }
+    state.updatedAt = now;
+    if(finalize){
+      if(state.status === 'complete') state.revision = (state.revision||1) + 1;
+      state.status = 'complete';
+    } else {
+      state.status = 'draft';
+    }
+
+    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
+    if(!ok){ toast('Save failed — please retry.'); return; }
+    toast(finalize ? 'Submitted as complete.' : 'Draft saved.');
+    renderAll();
+  }
+
+  function generatePdf(){
+    document.title = `REC_7.1.5_Salting_OOSW_${safeKey(state.header.harvestFarm||'record')}_${state.header.intakeDate||''}`;
+    window.print();
+  }
+
+  function wireActingName(){
+    const inp = $('actingNameInput');
+    inp.value = actingName;
+    inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
+  }
+
+  function wire(){
+    wireActingName();
+    bindHeaderInputs();
+    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
+    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
+    $('newRecordBtn').addEventListener('click', ()=>{
+      if(confirm('Start a new blank record? Unsaved changes will be lost.')){
+        state = newRecord();
+        renderAll();
+      }
+    });
+    $('addRowBtn').addEventListener('click', ()=>{
+      state.measurements.push({trayNumber:'', weight:'', wholeWeight:'', totalOosw:'', ooswPercent:''});
+      renderMeasurementTable();
+    });
+    $('exportBtn').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (state.id || 'salting_oosw_draft') + '.json';
+      a.click();
+    });
+    $('generatePdfBtn').addEventListener('click', generatePdf);
+  }
+
+  (async function init(){
+    wire();
+    renderAll();
+  })();
 })();
 </script>
 </body>
