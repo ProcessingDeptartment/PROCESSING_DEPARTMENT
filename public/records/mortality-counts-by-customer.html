@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mortality Counts by Customer</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'mortality-counts-by-customer',
+    docCode: 'Mortality Counts by Customer',
+    title: 'Mortality Counts by Customer',
+    docRevisionStart: 1,
+    listColumns: ['date'],
+    instructions: [
+      { label: 'Note', text: 'The paper version used one spreadsheet tab per date with a customer × size-band matrix that varies in width each time — this roster form captures the same data (customer, size band, mortality count) as flexible rows instead.' }
+    ],
+    sections: [
+      { title: 'Date', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Mortality counts',
+      columns: [
+        { key: 'customer', label: 'Customer', type: 'text' },
+        { key: 'sizeRange', label: 'Size range', type: 'text' },
+        { key: 'noMortalities', label: 'No. mortalities', type: 'number' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

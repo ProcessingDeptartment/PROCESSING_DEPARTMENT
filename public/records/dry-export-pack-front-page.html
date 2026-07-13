@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dry Export Pack Front Page</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'dry-export-pack-front-page',
+    docCode: 'Dry Export Pack Front Page',
+    title: 'Dry Export Pack Front Page',
+    docRevisionStart: 1,
+    listColumns: ['packingDate', 'jobNumber'],
+    sections: [
+      { title: 'Shipment details', fields: [
+        { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
+        { key: 'jobNumber', label: 'Job number', type: 'text' },
+        { key: 'noOfBoxesExported', label: 'No. of boxes exported', type: 'number' }
+      ]},
+      { title: 'Attachments checklist', fields: [
+        { key: 'rec747Attached', label: 'REC 7.4.7 Labelling of Dry Boxes attached?', type: 'yesno' },
+        { key: 'rec748Attached', label: 'REC 7.4.8 Dry Labelling List attached?', type: 'yesno' },
+        { key: 'rec749Attached', label: 'REC 7.4.9 Dry Stock Transfers attached?', type: 'yesno' },
+        { key: 'signedPackingListsAttached', label: 'Signed packing lists attached?', type: 'yesno' },
+        { key: 'healthCertificatesAttached', label: 'Health certificates attached?', type: 'yesno' }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'completedBySupervisor', label: 'Completed by (Supervisor)', type: 'text', required: true },
+        { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' },
+        { key: 'verificationBy', label: 'Verification by', type: 'text' }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Leftovers Log</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'live-leftovers-log',
+    docCode: 'Live Leftovers Log',
+    title: 'Live Leftovers Log',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Note', text: 'Tracks live product leftover weight by size class after packing — a standalone running log, separate from the per-pack leftovers fields on REC 7.5.2 Live Pack Checklist.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'sizeClass', label: 'Size class', type: 'select', options: ['30-40g', '40-50g', '50-60g', '60-70g', '70-90g', '90-110g', '110-150g', '150-200g', '350-500g', 'Wild'] },
+      { key: 'weight', label: 'Weight', type: 'number', unit: 'kg' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA1 Damaged Cans and Lids</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'qa1-damaged-cans-and-lids',
+    docCode: 'QA1',
+    title: 'Damaged Cans and Lids',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'noOfCansEnds', label: 'No. of cans/ends', type: 'number' },
+      { key: 'palletNumberProductionDate', label: 'Pallet number and production date', type: 'text' },
+      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true },
+      { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

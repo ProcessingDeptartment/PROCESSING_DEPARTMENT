@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Information NRCS (Rework)</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'production-information-nrcs-rework',
+    docCode: 'Production Information NRCS (Rework)',
+    title: 'Production Information NRCS (Rework)',
+    docRevisionStart: 1,
+    listColumns: ['reworkDate', 'productionCode', 'nrcsAgCode'],
+    sections: [
+      { title: 'Batch details', fields: [
+        { key: 'reworkDate', label: 'Rework date', type: 'date', required: true },
+        { key: 'dateOfInspection', label: 'Date of inspection', type: 'date' },
+        { key: 'productionCode', label: 'Production code', type: 'text' },
+        { key: 'nrcsAgCode', label: 'NRCS AG code', type: 'text' },
+        { key: 'productDescription', label: 'Product description', type: 'text' },
+        { key: 'reasonsForRework', label: 'Reasons for the rework', type: 'textarea', wide: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text', required: true },
+        { key: 'verificationBy', label: 'Verification by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Records included — Rework Log (7.2.13), Retort Inspection Reports (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming Inspection for Cans & Lids (7.8.6), Double Seam Inspection Report (7.2.12), Retort reports, Production figure (cans produced)',
+      columns: [
+        { key: 'recordName', label: 'Record', type: 'text' },
+        { key: 'recordCode', label: 'REC code', type: 'text' },
+        { key: 'included', label: 'Included', type: 'select', options: ['Yes', 'No', 'N/A'] }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dry NRCS Packs — Production Information NRCS</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'dry-nrcs-packs',
+    docCode: 'Production Information NRCS (Dry)',
+    title: 'Dry NRCS Packs — Production Information NRCS',
+    docRevisionStart: 1,
+    listColumns: ['jobNumberProductionDate', 'nrcsAgCode'],
+    sections: [
+      { title: 'Batch details', fields: [
+        { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
+        { key: 'dateOfInspection', label: 'Date of inspection', type: 'date' },
+        { key: 'jobNumberProductionDate', label: 'Job number / production date', type: 'text' },
+        { key: 'nrcsAgCode', label: 'NRCS AG code', type: 'text' },
+        { key: 'productDescription', label: 'Product description', type: 'text' }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text', required: true },
+        { key: 'verificationBy', label: 'Verification by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Dry Cooking (7.4.0), Dry Monitoring (7.4.2), Grading/Packing/Boxing of Dried Abalone (7.4.3)',
+      columns: [
+        { key: 'recordName', label: 'Record', type: 'text' },
+        { key: 'recordCode', label: 'REC code', type: 'text' },
+        { key: 'included', label: 'Included', type: 'select', options: ['Yes', 'No', 'N/A'] }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>
