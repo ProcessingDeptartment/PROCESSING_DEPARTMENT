@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.5.1 Live Production Pack</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'live-production-pack',
+    docCode: 'REC 7.5.1',
+    title: 'Live Production Pack',
+    docRevisionStart: 4,
+    entryFields: [
+      { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
+      { key: 'idnsPacked', label: 'IDNs packed', type: 'text' },
+      { key: 'livePackChecklistAttached', label: 'Live pack checklist (REC 7.5.2) attached?', type: 'yesno' },
+      { key: 'oxygenBatchNumber', label: 'Oxygen — batch number', type: 'text' },
+      { key: 'spongesBatchNumber', label: 'Sponges — batch number', type: 'text' },
+      { key: 'bagsBoxFlatBoardBatchNumber', label: 'Plastic bags, box, flat board — batch number', type: 'text' },
+      { key: 'icePacksBatchNumber', label: 'Ice packs — batch number', type: 'text' },
+      { key: 'signedPackingListsAttached', label: 'Signed packing lists attached?', type: 'yesno' },
+      { key: 'completedBySupervisor', label: 'Completed by (Supervisor)', type: 'text', required: true },
+      { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

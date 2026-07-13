@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.5.3 Live Packing - Bag Quality Check</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'live-packing-bag-quality-check',
+    docCode: 'REC 7.5.3',
+    title: 'Live Packing - Bag Quality Check',
+    docRevisionStart: 3,
+    listColumns: ['dateOfChecking', 'dateOfPacking', 'noOfBagsToBeChecked'],
+    instructions: [
+      { label: 'Purpose', text: 'On the day of packing (or the shift before), all bags allocated for the live pack must be checked by a team of 2 from live sorting and 2 from processing.' }
+    ],
+    sections: [
+      { title: 'Checking details', fields: [
+        { key: 'dateOfChecking', label: 'Date of checking', type: 'date', required: true },
+        { key: 'dateOfPacking', label: 'Date of packing', type: 'date' },
+        { key: 'noOfBagsScheduled', label: 'No. of bags scheduled for pack', type: 'number' },
+        { key: 'noOfBagsToBeChecked', label: 'No. of bags to be checked', type: 'number' },
+        { key: 'waterTemperature', label: 'Water temperature at time of checking', type: 'number', unit: '°C' }
+      ]},
+      { title: 'Totals & sign-off', fields: [
+        { key: 'totalMortalityWeight', label: 'Total mortality weight', type: 'number' },
+        { key: 'additionalComments', label: 'Additional comments', type: 'textarea', wide: true },
+        { key: 'supervisorFarm', label: 'Supervisor — Farm', type: 'text' },
+        { key: 'supervisorProcessing', label: 'Supervisor — Processing', type: 'text', required: true },
+        { key: 'qcProcessing', label: 'QC — Processing', type: 'text' },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Bags checked',
+      columns: [
+        { key: 'client', label: 'Client', type: 'text' },
+        { key: 'idn', label: 'IDN', type: 'text' },
+        { key: 'dateSorted', label: 'Date sorted', type: 'date' },
+        { key: 'qualityOfBags', label: 'Quality of bags (broken/tied correctly/dirty)', type: 'text' },
+        { key: 'tankNumber', label: 'Tank number', type: 'text' },
+        { key: 'bagsInTank', label: 'Bags in tank', type: 'number' },
+        { key: 'mortalitiesRemoved', label: 'Mortalities removed?', type: 'yesno' },
+        { key: 'mortalitiesQuantity', label: 'Quantity (if yes)', type: 'number' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

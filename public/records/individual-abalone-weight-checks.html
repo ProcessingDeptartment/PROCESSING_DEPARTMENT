@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.5.4 Individual Abalone Weight Checks - Quality</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'individual-abalone-weight-checks',
+    docCode: 'REC 7.5.4',
+    title: 'Individual Abalone Weight Checks - Quality',
+    docRevisionStart: 2,
+    listColumns: ['date', 'shift'],
+    sections: [
+      { title: 'Shift details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text', required: true },
+        { key: 'qaVerification', label: 'QA verification', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Bags graded',
+      columns: [
+        { key: 'nameOfGrader', label: 'Name of grader', type: 'text' },
+        { key: 'nameOfCapturer', label: 'Name of capturer', type: 'text' },
+        { key: 'nameOfSupervisor', label: 'Name of supervisor', type: 'text' },
+        { key: 'bagNumber', label: 'Bag number', type: 'text' },
+        { key: 'sizeRange', label: 'Size range', type: 'text' },
+        { key: 'gradeRange', label: 'Grade range', type: 'text' },
+        { key: 'individualWeights', label: 'Individual weights (1-24, comma-separated)', type: 'textarea' },
+        { key: 'approved', label: 'Approved?', type: 'yesno' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>
