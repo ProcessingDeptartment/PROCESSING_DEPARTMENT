@@ -13,13 +13,17 @@
  * every record calls PermissionRules.can(action), so that is the only change needed.
  */
 (function () {
-  const ROLES = ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'];
+  const ROLES = ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA MANAGER', 'PRODUCTION MANAGER', 'OPERATOR' , 'ADMINISTRATOR'];
 
   const ROLE_LABELS = {
     PRODUCTION_SUPERVISOR: 'Production Supervisor',
     SHIFT_MANAGER: 'Shift Manager',
     QUALITY_SUPERVISOR: 'Quality Supervisor',
-    QUALITY_CONTROLLER: 'Quality Controller'
+    QUALITY_CONTROLLER: 'Quality Controller',
+    QA_MANAGER: 'QA Manager',
+    PRODUCTION_MANAGER: 'Production Manager',
+    OPERATOR: 'Operator'
+    ADMINISTRATOR: 'Administrator'
   };
 
   // action name -> roles allowed to perform it.
@@ -27,12 +31,12 @@
   // fill in and save but not complete/verify/change specs. Not yet confirmed against
   // real policy -- adjust freely, this is the only place that needs editing.
   const RULES = {
-    fillMeasurements: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
-    saveDraft: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
-    completeRecord: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
-    verifyRecord: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
-    acknowledgeSpecChange: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER'],
-    manageSpecs: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER']
+    fillMeasurements: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'OPERATOR', 'ADMINISTRATOR'],
+    saveDraft: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'OPERATOR', 'ADMINISTRATOR'],
+    completeRecord: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR', 'OPERATOR', 'ADMINISTRATOR'],
+    verifyRecord: ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'],
+    acknowledgeSpecChange: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER'],
+    manageSpecs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'ADMINISTRATOR'],
   };
 
   const ROLE_KEY = 'acting_as_role';
