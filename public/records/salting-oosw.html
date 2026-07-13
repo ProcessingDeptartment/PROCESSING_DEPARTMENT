@@ -82,7 +82,68 @@
   .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:11px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .toast.show{ opacity:1; }
 
-  @media (max-width:900px){ .grid-6{grid-template-columns:repeat(3,1fr);} .grid-4{grid-template-columns:repeat(2,1fr);} .signoff-grid{grid-template-columns:1fr;} .job-number-row{grid-template-columns:80px 1fr;} }
+  @media (max-width:900px){
+    .grid-6{grid-template-columns:repeat(3,1fr);}
+    .grid-4{grid-template-columns:repeat(2,1fr);}
+    .signoff-grid{grid-template-columns:1fr;}
+    .job-number-row{grid-template-columns:80px 1fr;}
+  }
+  @media (max-width:768px){
+    #so-root{ font-size:14px; }
+    .so-top{ padding:10px 12px; }
+    .so-top h1{ font-size:14px; }
+    .so-topline{ gap:6px; }
+    .so-topline input{ width:100px; font-size:12px; }
+    .btn{ padding:6px 12px; font-size:12px; }
+    .so-body{ padding:10px 12px 40px; }
+    .grid-6{ grid-template-columns:repeat(2,1fr); }
+    .grid-4{ grid-template-columns:1fr; }
+    .grid-2{ grid-template-columns:1fr; }
+    .grid-3{ grid-template-columns:repeat(2,1fr); }
+    label.field input, label.field select{ font-size:13px; padding:6px; }
+    .job-number-row{ grid-template-columns:70px 1fr; gap:6px; }
+    .weight-input-section{ padding:12px; }
+    .weight-input-row{ gap:6px; flex-wrap:wrap; }
+    .weight-input-row input{ flex:1 1 140px; min-width:120px; font-size:16px; padding:10px; }
+    .weight-input-row button{ flex:1 1 auto; min-width:100px; padding:10px 12px; font-size:13px; }
+    table.weights{ font-size:10px; }
+    table.weights th, table.weights td{ padding:3px 2px; }
+    table.weights input{ font-size:10px; padding:2px; }
+    .summary-row{ grid-template-columns:1fr; }
+    .signoff-grid{ gap:8px; }
+    .signoff-item label{ font-size:10px; }
+    .panel-body{ padding:10px; }
+  }
+  @media (max-width:480px){
+    #so-root{ font-size:12px; }
+    .so-top{ padding:8px 10px; gap:8px; }
+    .so-top h1{ font-size:13px; }
+    .so-topline{ gap:4px; flex-direction:column; }
+    .so-topline label.role-label{ font-size:8.5px; }
+    .so-topline input{ width:100%; font-size:11px; }
+    .btn{ padding:5px 10px; font-size:11px; }
+    .so-body{ padding:8px 10px 40px; }
+    .grid-6, .grid-4, .grid-3, .grid-2{ grid-template-columns:1fr; gap:6px; }
+    label.field{ font-size:10px; }
+    label.field input, label.field select{ font-size:14px; padding:8px; }
+    .job-number-row{ grid-template-columns:60px 1fr; gap:4px; }
+    .weight-input-section{ padding:10px; margin-bottom:8px; }
+    .weight-input-row{ gap:4px; }
+    .weight-input-row input{ flex:1 1 auto; font-size:16px; padding:10px 8px; }
+    .weight-input-row button{ flex:0 0 100%; padding:10px; font-size:12px; margin-top:4px; }
+    table.weights{ font-size:9px; margin-top:6px; }
+    table.weights th, table.weights td{ padding:2px 1px; }
+    table.weights input{ font-size:9px; padding:1px; }
+    table.weights .clear-btn{ font-size:7px; padding:1px 2px; }
+    .summary-row{ padding:6px; margin-bottom:6px; }
+    .summary-item{ font-size:10px; }
+    .summary-item .value{ font-size:14px; }
+    .signoff-grid{ gap:6px; }
+    .signoff-item label{ font-size:9px; }
+    .panel-head h2{ font-size:10px; }
+    .panel-body{ padding:8px; }
+    textarea{ font-size:12px; }
+  }
   @media print{
     @page{ size:A4 portrait; margin:6mm; }
     body{ background:#fff; padding:0; margin:0; }
