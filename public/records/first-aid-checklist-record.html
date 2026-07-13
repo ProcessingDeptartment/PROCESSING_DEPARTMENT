@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.6a First Aid Checklist Record</title>
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=1"></script>
+<script>
+(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'first-aid-checklist-record',
+    docCode: 'REC 7.7.6a',
+    title: 'First Aid Checklist Record (Plaster/Dressing Inspection)',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
+      { key: 'dateOfIncident', label: 'Date of incident', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'text' },
+      { key: 'itemIssued', label: 'Item issued (plaster, glove, bandage)', type: 'text' },
+      { key: 'intact', label: 'Intact', type: 'yesno' },
+      { key: 'cleanlinessOfDressing', label: 'Cleanliness of the dressing', type: 'text' },
+      { key: 'firstAider', label: 'Name and surname of first aider', type: 'text' },
+      { key: 'nameOfInjured', label: 'Name of the injured', type: 'text', required: true },
+      { key: 'breakTime', label: 'Break time', type: 'text' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+</body>
+</html>

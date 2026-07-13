@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 6.1.2 Training Register</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'training-register',
+    docCode: 'REC 6.1.2',
+    title: 'Training Register',
+    docRevisionStart: 1,
+    listColumns: ['trainingCourse', 'date', 'trainer'],
+    sections: [
+      { title: 'Training details', fields: [
+        { key: 'trainingCourse', label: 'Training course', type: 'text', required: true },
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'documentNumbers', label: 'Document numbers referred to', type: 'text' },
+        { key: 'duration', label: 'Duration', type: 'text' },
+        { key: 'trainer', label: 'Trainer / facilitator', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Attendees',
+      columns: [
+        { key: 'nameSurname', label: 'Name & surname', type: 'text' },
+        { key: 'signature', label: 'Signature', type: 'text' },
+        { key: 'employeeNumber', label: 'Employee number', type: 'text' },
+        { key: 'competencyConfirmed', label: 'Competency confirmed after evaluation?', type: 'yesno' },
+        { key: 'carNo', label: 'CAR no. (if competency could not be demonstrated)', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

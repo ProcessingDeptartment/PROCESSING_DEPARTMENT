@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.4.a Emergency Evacuation Attendance Register</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'emergency-evacuation-attendance-register',
+    docCode: 'REC 8.4.a',
+    title: 'Emergency Evacuation Attendance Register',
+    docRevisionStart: 1,
+    listColumns: ['date', 'buildingArea', 'typeOfDrill'],
+    sections: [
+      { title: 'Drill details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'buildingArea', label: 'Building / area', type: 'text' },
+        { key: 'typeOfDrill', label: 'Type of drill or emergency', type: 'text' },
+        { key: 'timeStarted', label: 'Time started', type: 'text' },
+        { key: 'timeEnded', label: 'Time ended', type: 'text' }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'notesComments', label: 'Notes and comments', type: 'textarea', wide: true },
+        { key: 'safetyOfficer', label: 'Signed by safety officer', type: 'text', required: true },
+        { key: 'management', label: 'Signed by management', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Participants',
+      columns: [
+        { key: 'name', label: 'Name', type: 'text' },
+        { key: 'signature', label: 'Signature', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

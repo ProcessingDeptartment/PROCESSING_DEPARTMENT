@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTW Medical Questionnaire</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'rtw-medical-questionnaire',
+    docCode: 'RTW Medical Questionnaire',
+    title: 'Return to Work Medical Questionnaire',
+    docRevisionStart: 1,
+    listColumns: ['employeeNr', 'employeeSignatureDate'],
+    instructions: [
+      { label: 'Note', text: 'Ticking "yes" does not automatically make the employee unfit for duty — it provides baseline health statistics and supports health & safety legislation compliance. If any question is answered yes, refer the employee to a medical practitioner; if all no, the employee is fit to resume duties.' }
+    ],
+    sections: [
+      { title: 'Employee details', fields: [
+        { key: 'employeeNr', label: 'Employee nr.', type: 'text', required: true }
+      ]},
+      { title: 'Questions', fields: [
+        { key: 'skinRashes', label: 'Skin rashes, eczema, dermatitis incl. septic cuts and boils?', type: 'yesno' },
+        { key: 'skinRashesRemarks', label: 'Remarks', type: 'text' },
+        { key: 'gumsThroatMouthDisease', label: 'Any disease of gums, throat or mouth?', type: 'yesno' },
+        { key: 'gumsThroatMouthRemarks', label: 'Remarks', type: 'text' },
+        { key: 'diarrhoeaVomiting', label: 'Suffered from diarrhoea and/or vomiting in last 7 days?', type: 'yesno' },
+        { key: 'diarrhoeaVomitingRemarks', label: 'Remarks', type: 'text' },
+        { key: 'earsNoseEyesDischarge', label: 'Any disease or discharge from ears, nose, eyes or other sites?', type: 'yesno' },
+        { key: 'earsNoseEyesRemarks', label: 'Remarks', type: 'text' },
+        { key: 'coldsCoughsFever', label: 'Heavy colds/coughs, sinus infections, sore throat and fever?', type: 'yesno' },
+        { key: 'coldsCoughsFeverRemarks', label: 'Remarks', type: 'text' }
+      ]},
+      { title: 'Declaration', fields: [
+        { key: 'employeeSignature', label: 'Employee signature', type: 'text', required: true },
+        { key: 'employeeSignatureDate', label: 'Date', type: 'date' },
+        { key: 'supervisorSignature', label: 'Supervisor signature', type: 'text' }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

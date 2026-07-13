@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.4.b Handling of Emergencies and Incidences</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'handling-of-emergencies-and-incidences',
+    docCode: 'REC 8.4.b',
+    title: 'Handling of Emergencies and Incidences (Emergency Drill Report)',
+    docRevisionStart: 2,
+    listColumns: ['typeOfDrill', 'completedBy'],
+    instructions: [
+      { label: 'Purpose', text: 'Food safety factors to consider during an emergency drill — process for managing incidents that seriously compromise hygiene, food safety, quality, personnel or premises. Key factors: time and temperature.' }
+    ],
+    sections: [
+      { title: 'Drill details', fields: [
+        { key: 'typeOfDrill', label: 'Type of emergency drill conducted', type: 'text', required: true },
+        { key: 'timeEvacuating', label: 'Time of evacuating factory', type: 'text' },
+        { key: 'timeReturning', label: 'Time of returning to factory', type: 'text' }
+      ]},
+      { title: 'Food safety questions', fields: [
+        { key: 'durationOfDrill', label: 'How long was the emergency drill conducted?', type: 'text' },
+        { key: 'durationComments', label: 'Comments', type: 'text' },
+        { key: 'durationDeviation', label: 'Deviation', type: 'text' },
+        { key: 'chillerTempAfterDrill', label: 'Average temperature of product in chiller after the drill', type: 'text' },
+        { key: 'chillerTempComments', label: 'Comments', type: 'text' },
+        { key: 'chillerTempDeviation', label: 'Deviation', type: 'text' },
+        { key: 'tableTempAfterDrill', label: 'Temperature of product on tables after the drill', type: 'text' },
+        { key: 'tableTempComments', label: 'Comments', type: 'text' },
+        { key: 'tableTempDeviation', label: 'Deviation', type: 'text' },
+        { key: 'foreignMatterSigns', label: 'Any signs of foreign matter on the product after the drill?', type: 'yesno' },
+        { key: 'foreignMatterComments', label: 'Comments', type: 'text' },
+        { key: 'dryCookingWithinSpec', label: 'Temperature and pH of product at dry cooking pot within spec?', type: 'yesno' },
+        { key: 'dryCookingComments', label: 'Comments', type: 'text' },
+        { key: 'retortReportWithinSpec', label: 'Retort report of product left in retort during drill within spec?', type: 'yesno' },
+        { key: 'retortReportComments', label: 'Comments', type: 'text' },
+        { key: 'hygieneInspectionAfterDrill', label: 'Hygiene inspection conducted after emergency drill?', type: 'yesno' },
+        { key: 'hygieneInspectionComments', label: 'Comments', type: 'text' },
+        { key: 'ppeChangedAfterEvacuation', label: 'Has all personnel changed their PPE after the emergency evacuation?', type: 'yesno' },
+        { key: 'ppeChangedComments', label: 'Comments', type: 'text' }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'completedBy', label: 'Completed by', type: 'text', required: true },
+        { key: 'completedDate', label: 'Date', type: 'date' },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' },
+        { key: 'verifiedDate', label: 'Date', type: 'date' }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

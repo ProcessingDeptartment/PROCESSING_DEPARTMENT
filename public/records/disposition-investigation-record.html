@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.1.3 Disposition Investigation Record</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'disposition-investigation-record',
+    docCode: 'REC 8.1.3',
+    title: 'Disposition Investigation Record',
+    docRevisionStart: 1,
+    listColumns: ['date', 'productInvestigated', 'initiatedBy'],
+    sections: [
+      { title: 'Investigation details', fields: [
+        { key: 'productInvestigated', label: 'Product investigated', type: 'text', required: true },
+        { key: 'initiatedBy', label: 'Initiated by', type: 'text', required: true },
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'productionCode', label: 'Production code', type: 'text' },
+        { key: 'assignedTo', label: 'Disposition investigation assigned to', type: 'text' },
+        { key: 'reasonForInvestigation', label: 'Reason for investigation', type: 'select', options: ['CCP Exceeded', 'OPRP out of control', 'Product contamination', 'Product spoilage', 'Other'] },
+        { key: 'reasonOtherSpecify', label: 'If Other, specify', type: 'text' }
+      ]},
+      { title: 'Considerations', fields: [
+        { key: 'hazardsReducedAcceptable', label: 'Reviewing monitoring systems, could all food safety hazards be reduced to acceptable levels?', type: 'yesno' },
+        { key: 'controlMeasuresEffective', label: 'Did control measures reduce hazards to acceptable levels before release?', type: 'yesno' },
+        { key: 'productStillMeetsLevel', label: 'Does the product still meet the defined acceptable hazard level despite the non-conformity?', type: 'yesno' },
+        { key: 'isolatedToSingleItem', label: 'Is the non-conformance isolated to a single item?', type: 'yesno' },
+        { key: 'potentiallyUnsafe', label: 'Is the product potentially unsafe for human consumption?', type: 'yesno' },
+        { key: 'allProductStillOnSite', label: 'Are all affected products still being stored on site?', type: 'yesno' },
+        { key: 'analysisCanDemonstrateSafety', label: 'Could analysis/verification demonstrate acceptable food safety levels are met?', type: 'yesno' },
+        { key: 'clientsContactedForWithdrawal', label: 'Do clients have to be contacted to initiate withdrawal?', type: 'yesno' },
+        { key: 'dispositionNecessary', label: 'Considering the investigation, does the product have to be disposed of?', type: 'yesno' },
+        { key: 'quarantinedSegregated', label: 'Is the affected product suitably quarantined and segregated?', type: 'yesno' },
+        { key: 'dispositionDeemedNecessary', label: 'Product disposition deemed necessary based on investigation?', type: 'yesno' }
+      ]},
+      { title: 'Method of disposition & close-out', fields: [
+        { key: 'methodOfDisposition', label: 'Method of disposition', type: 'select', options: ['Reworked through further treatment or processing to reduce the hazard to acceptable levels', 'Destroyed by authorized channels only, with an Unfit For Human Consumption disposal certificate'] },
+        { key: 'allPartiesNotified', label: 'All parties notified of decision and method to withdraw product?', type: 'yesno' },
+        { key: 'approvedBy', label: 'Approved by', type: 'text', required: true },
+        { key: 'dateReviewed', label: 'Date reviewed', type: 'date' }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

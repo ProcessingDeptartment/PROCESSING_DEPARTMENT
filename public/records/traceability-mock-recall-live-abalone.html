@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.1.8 Traceability &amp; Mock Recall Checklist for Live Abalone</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'traceability-mock-recall-live-abalone',
+    docCode: 'REC 8.1.8',
+    title: 'Traceability & Mock Recall Checklist for Live Abalone',
+    docRevisionStart: 4,
+    listColumns: ['recallInitiationDate', 'packingDate'],
+    instructions: [
+      { label: 'Note', text: 'Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
+    ],
+    sections: [
+      { title: 'Batch details', fields: [
+        { key: 'recallInitiationDate', label: 'Recall initiation date', type: 'date', required: true },
+        { key: 'packingDate', label: 'Packing date', type: 'date' }
+      ]}
+    ],
+    roster: {
+      title: 'Records — covers Live Production Pack (7.5.1), Live Pack Checklist / Bag Checks (7.5.2/7.5.3), IDN/Customer Order, NRCS Health Certificate, and related cleaning/hygiene records',
+      columns: [
+        { key: 'recordName', label: 'Record', type: 'text' },
+        { key: 'recordCode', label: 'QC record / REC code', type: 'text' },
+        { key: 'summary', label: 'Summary', type: 'textarea' },
+        { key: 'included', label: 'Included', type: 'select', options: ['Yes', 'No', 'N/A'] }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

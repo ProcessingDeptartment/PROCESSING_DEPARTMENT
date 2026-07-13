@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.1.4 Withdrawal (Mock Recall) Record</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'withdrawal-mock-recall-record',
+    docCode: 'REC 8.1.4',
+    title: 'Withdrawal (Mock Recall) Record',
+    docRevisionStart: 1,
+    listColumns: ['date', 'chairedBy', 'typeOfRecall'],
+    instructions: [
+      { label: 'Note', text: 'Mock recall to be completed within 72 hours due to time difference to country of export.' }
+    ],
+    sections: [
+      { title: 'Meeting details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'chairedBy', label: 'Chaired by', type: 'text', required: true },
+        { key: 'apologies', label: 'Apologies', type: 'text' }
+      ]},
+      { title: 'Recall details', fields: [
+        { key: 'typeOfRecall', label: 'Type of recall/withdrawal (Actual/Mock)', type: 'select', options: ['Actual', 'Mock'] },
+        { key: 'reasonsForRecall', label: 'Reasons for product recall/withdrawal', type: 'textarea', wide: true },
+        { key: 'initiatedBy', label: 'Initiated by', type: 'text' },
+        { key: 'productionCodePackingDate', label: 'Production code / packing date', type: 'text' },
+        { key: 'bestBeforeDate', label: 'Best before date', type: 'date' },
+        { key: 'dateTimeStarted', label: 'Date & time started', type: 'text' },
+        { key: 'dateTimeFinished', label: 'Date & time finished', type: 'text' }
+      ]},
+      { title: 'Stock accounting', fields: [
+        { key: 'amountStockProduced', label: 'Amount stock produced', type: 'number' },
+        { key: 'amountDistributedStock', label: 'Amount distributed stock', type: 'number' },
+        { key: 'customersDistributedTo', label: 'Customers distributed to', type: 'text' },
+        { key: 'amountCurrentlyInStock', label: 'Amount currently in stock', type: 'number' },
+        { key: 'amountAtCustomer', label: 'Amount at customer', type: 'number' },
+        { key: 'amountSoldByCustomer', label: 'Amount sold by customer', type: 'number' }
+      ]},
+      { title: 'Action taken', fields: [
+        { key: 'actionsTaken', label: 'Actions taken to ensure all affected product is retrieved (date, time, action, responsible person)', type: 'textarea', wide: true }
+      ]}
+    ],
+    roster: {
+      title: 'Attendees',
+      columns: [
+        { key: 'nameSurname', label: 'Name and surname', type: 'text' },
+        { key: 'department', label: 'Department', type: 'text' },
+        { key: 'openingSignature', label: 'Opening — signature', type: 'text' },
+        { key: 'closingSignature', label: 'Closing — signature', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

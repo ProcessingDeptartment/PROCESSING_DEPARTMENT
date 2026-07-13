@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 9.2 Daily Factory Feedback Meeting</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'daily-factory-feedback-meeting',
+    docCode: 'REC 9.2',
+    title: 'Daily Factory Feedback Meeting',
+    docRevisionStart: 1,
+    listColumns: ['date'],
+    instructions: [
+      { label: 'Note', text: 'Attendance is a roster (name + present) rather than a fixed name list, so it stays accurate as staff changes.' }
+    ],
+    sections: [
+      { title: 'Meeting details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true }
+      ]},
+      { title: 'Production & planning', fields: [
+        { key: 'intakes', label: 'Intakes', type: 'textarea', wide: true },
+        { key: 'adherenceToPreviousPlan', label: 'Adherence to plan of previous day', type: 'textarea', wide: true },
+        { key: 'planForTheDay', label: 'Plan for the day', type: 'textarea', wide: true },
+        { key: 'productToBeCannedToday', label: 'Product to be canned today', type: 'textarea', wide: true }
+      ]},
+      { title: 'Quality & cleaning', fields: [
+        { key: 'cleaningConforming', label: 'Cleaning conforming to the standard', type: 'textarea', wide: true },
+        { key: 'noOfDamages', label: 'No. of damages', type: 'text' },
+        { key: 'productExceeding2DaysInChiller', label: 'Product exceeding 2 days in chiller', type: 'textarea', wide: true },
+        { key: 'ingoConcerns', label: 'Ingo concerns', type: 'textarea', wide: true },
+        { key: 'drainWeightsPreviousDay', label: 'Drain weights of previous day', type: 'textarea', wide: true },
+        { key: 'seamProblem', label: 'Seam problem (Y/N)', type: 'yesno' },
+        { key: 'printingMisprints', label: 'Printing — no. of misprints', type: 'text' },
+        { key: 'cansOutOfSpec', label: 'Cans out of spec', type: 'textarea', wide: true }
+      ]},
+      { title: 'Staff & waste', fields: [
+        { key: 'absenteeismSickLeave', label: 'Absenteeism, sick and leave', type: 'textarea', wide: true },
+        { key: 'wasteManagement', label: 'Waste management', type: 'textarea', wide: true }
+      ]}
+    ],
+    roster: {
+      title: 'Attendance',
+      columns: [
+        { key: 'nameSurname', label: 'Name and surname', type: 'text' },
+        { key: 'present', label: 'Present?', type: 'yesno' }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

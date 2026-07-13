@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.1.1.a Internal CAR</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'internal-car',
+    docCode: 'REC 8.1.1.a',
+    title: 'Internal CAR',
+    docRevisionStart: 1,
+    listColumns: ['date', 'raisedBy', 'category'],
+    sections: [
+      { title: 'CAR details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'raisedBy', label: 'Raised by', type: 'text', required: true },
+        { key: 'raisedForArea', label: 'Raised for which area', type: 'text' },
+        { key: 'category', label: 'CAR category', type: 'select', options: ['Personnel', 'Equipment', 'Production Environment', 'Production Methods', 'Quality/Food Safety'] },
+        { key: 'investigationTeam', label: 'Investigation team', type: 'text' }
+      ]},
+      { title: 'Description of non-conformance (WHAT)', fields: [
+        { key: 'where', label: 'Where did it happen?', type: 'text' },
+        { key: 'who', label: 'Who was involved?', type: 'text' },
+        { key: 'when', label: 'When did it happen?', type: 'text' },
+        { key: 'visibleTrends', label: 'Any visible trends?', type: 'textarea' },
+        { key: 'details', label: 'Details of the non-conformance', type: 'textarea', wide: true },
+        { key: 'immediateAction', label: 'Action taken right away', type: 'textarea', wide: true }
+      ]},
+      { title: 'Root cause & corrective action', fields: [
+        { key: 'rootCause', label: 'Root cause analysis (why did this happen?)', type: 'textarea', wide: true },
+        { key: 'correctiveAction', label: 'Corrective action (long term action/plan)', type: 'textarea', wide: true },
+        { key: 'verification', label: 'Verification (proof the issue is resolved)', type: 'textarea', wide: true }
+      ]},
+      { title: 'Close-out', fields: [
+        { key: 'closedBy', label: 'CAR closed out by', type: 'text' },
+        { key: 'closeDate', label: 'Close out date', type: 'date' },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' },
+        { key: 'verifiedDate', label: 'Date', type: 'date' }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

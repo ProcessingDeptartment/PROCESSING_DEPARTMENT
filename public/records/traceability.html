@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.1.5 Traceability</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'traceability',
+    docCode: 'REC 8.1.5',
+    title: 'Traceability Exercise',
+    docRevisionStart: 1,
+    listColumns: ['dateInitiated', 'selectedItemDescription', 'lotBatchNumber'],
+    sections: [
+      { title: 'Exercise details', fields: [
+        { key: 'dateInitiated', label: 'Date initiated', type: 'date', required: true },
+        { key: 'startTime', label: 'Start time', type: 'text' },
+        { key: 'finishTime', label: 'Finish time', type: 'text' },
+        { key: 'selectedItemDescription', label: 'Selected item description', type: 'text', required: true },
+        { key: 'itemType', label: 'Item type', type: 'select', options: ['Finished Product', 'Ingredient', 'Processing Aid', 'Packaging Material'] },
+        { key: 'lotBatchNumber', label: 'Lot/batch number', type: 'text' }
+      ]},
+      { title: 'Effectiveness of exercise', fields: [
+        { key: 'totalAmountReceivedProduced', label: 'Total amount received or produced', type: 'number' },
+        { key: 'receivingMatchesShipped', label: 'Receiving record matches amount confirmed shipped from supplier?', type: 'yesno' },
+        { key: 'amountRawWarehouse', label: 'Amount — raw warehouse storage', type: 'number' },
+        { key: 'amountOnHold', label: 'Amount — currently on hold', type: 'number' },
+        { key: 'amountInProcess', label: 'Amount — in process', type: 'number' },
+        { key: 'amountFinishedWarehouse', label: 'Amount — finished warehouse storage', type: 'number' },
+        { key: 'amountShipped', label: 'Amount — shipped', type: 'number' },
+        { key: 'percentageAccountedFor', label: 'Percentage of product accounted for', type: 'number', unit: '%' },
+        { key: 'managementSignature', label: 'Management signature', type: 'text', required: true }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

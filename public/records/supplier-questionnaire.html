@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.2.1 Supplier Questionnaire</title>
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/data-store.js?v=1"></script>
+<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/form-record.js?v=1"></script>
+<script>
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'supplier-questionnaire',
+    docCode: 'REC 8.2.1',
+    title: 'Supplier Questionnaire',
+    docRevisionStart: 6,
+    listColumns: ['companyName', 'certificateDate'],
+    sections: [
+      { title: 'Company details', fields: [
+        { key: 'companyName', label: 'Company name', type: 'text', required: true },
+        { key: 'companyAddress', label: 'Company address', type: 'textarea', wide: true },
+        { key: 'emergencyContactName', label: 'Emergency after-hours contact name', type: 'text' },
+        { key: 'emergencyContactNumbers', label: 'Emergency after-hours contact numbers', type: 'text' },
+        { key: 'productsSupplied', label: 'Products supplied to Abagold Ltd', type: 'textarea', wide: true }
+      ]},
+      { title: 'Technical & account information', fields: [
+        { key: 'foodSafetyContact', label: 'Food safety contact (name / email)', type: 'text' },
+        { key: 'accountsContact', label: 'Accounts contact (name / email)', type: 'text' },
+        { key: 'productionContact', label: 'Production contact (name / email)', type: 'text' },
+        { key: 'technicalQualityContact', label: 'Technical/quality contact (name / email)', type: 'text' }
+      ]},
+      { title: 'Food safety certification', fields: [
+        { key: 'certificateOfAcceptability', label: 'Valid "Certificate of Acceptability" (R918/R638)?', type: 'yesno' },
+        { key: 'facilityCertified', label: 'Production facility has food safety certification?', type: 'yesno' },
+        { key: 'certificationType', label: 'Certification type (GMP/FSA/HACCP/BRC/ISO 22000/FSSC 22000 etc.)', type: 'text' },
+        { key: 'certificateDate', label: 'Expiry date of certificate', type: 'date' },
+        { key: 'certificateAttached', label: 'Certificate attached?', type: 'yesno' }
+      ]},
+      { title: 'Food safety questions (Yes/No/NA)', fields: [
+        { key: 'writtenQualityPolicy', label: 'Written quality and/or food safety policy?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'riskAssessmentUndertaken', label: 'Food safety risk assessment undertaken?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'foodSafetySystem', label: 'Food safety plan/HACCP/other food safety system?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'cleaningProcedures', label: 'Cleaning procedures?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'employeeHygieneProgram', label: 'Employee hygiene program?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'personnelTrainedHygiene', label: 'Personnel trained in food hygiene and safety?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'pestControlProgram', label: 'Pest control program?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'crossContaminationControlled', label: 'Cross-contamination risks controlled?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'recallProgram', label: 'Recall program?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'fullTraceability', label: 'Full traceability from raw material source to client?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'complaintsHandlingSystem', label: 'System for handling customer complaints?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'handlesAllergens', label: 'Handle allergens on-site?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'allergenControlProgram', label: 'Allergen control program on-site?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'supplierApprovalProgram', label: 'Supplier approval program?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'manufacturingInstructionsDocumented', label: 'Manufacturing instructions documented?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'auditingCarriedOut', label: 'Internal or external auditing carried out?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'liabilityInsurance', label: 'Carry liability insurance?', type: 'select', options: ['Yes', 'No', 'N/A'] },
+        { key: 'otherFoodSafetyControls', label: 'Other food safety controls in place?', type: 'textarea', wide: true }
+      ]},
+      { title: 'Completion & approval', fields: [
+        { key: 'completedByName', label: 'Form completed by — name', type: 'text', required: true },
+        { key: 'completedByPosition', label: 'Position', type: 'text' },
+        { key: 'completedByPhone', label: 'Telephone number', type: 'text' },
+        { key: 'completedByDate', label: 'Date', type: 'date' },
+        { key: 'sqaApprovalName', label: 'SQA approval — name', type: 'text' },
+        { key: 'sqaApprovalPosition', label: 'SQA approval — position', type: 'text' },
+        { key: 'sqaApprovalDate', label: 'SQA approval — date', type: 'date' },
+        { key: 'provisionalApproval', label: 'Provisional approval', type: 'select', options: ['Accepted', 'Rejected'] }
+      ]}
+    ]
+  });
+})();
+</script>
+</body>
+</html>
