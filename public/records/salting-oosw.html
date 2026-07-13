@@ -34,6 +34,7 @@
   .btn-ghost:hover{ background:#33444f; }
   .btn-flat{ background:var(--line-soft); color:var(--ink); }
   .btn-flat:hover{ background:#d5d8d6; }
+  .btn-sm{ padding:3px 8px; font-size:10px; }
   .btn:disabled{ opacity:.45; cursor:not-allowed; }
 
   .so-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
@@ -50,14 +51,20 @@
   label.field{ display:flex; flex-direction:column; gap:2px; font-size:10.5px; color:#54606b; font-weight:600; }
   label.field input, label.field select{ font-size:11.5px; padding:3px 5px; }
 
-  table.weights{ width:100%; border-collapse:collapse; margin-bottom:8px; }
-  table.weights th, table.weights td{ border:1px solid var(--line-soft); padding:3px 5px; text-align:center; font-size:11px; }
-  table.weights th{ background:#fbfbfa; font-weight:700; color:#5c6771; text-transform:uppercase; letter-spacing:.02em; }
-  table.weights input{ width:100%; text-align:center; padding:2px; font-size:10.5px; }
+  .job-number-row{ display:grid; grid-template-columns:100px 1fr; gap:8px; }
+  .job-number-row select, .job-number-row input{ font-size:11.5px; padding:3px 5px; }
 
-  .weight-input-row{ display:flex; gap:6px; align-items:flex-end; margin-bottom:6px; }
-  .weight-input-row input{ flex:0 0 120px; }
-  .weight-input-row button{ flex:0 0 auto; }
+  .weight-input-section{ background:#fbfbfa; padding:20px; border-radius:4px; margin-bottom:10px; }
+  .weight-input-row{ display:flex; gap:12px; align-items:center; }
+  .weight-input-row input{ flex:0 0 200px; font-size:18px; padding:12px 12px; }
+  .weight-input-row button{ flex:0 0 auto; padding:10px 24px; font-size:14px; font-weight:700; }
+
+  table.weights{ width:100%; border-collapse:collapse; margin-top:8px; font-size:9.5px; }
+  table.weights th, table.weights td{ border:1px solid var(--line-soft); padding:2px 4px; text-align:center; }
+  table.weights th{ background:#fbfbfa; font-weight:700; color:#5c6771; text-transform:uppercase; letter-spacing:.02em; font-size:9px; }
+  table.weights input{ width:100%; text-align:center; padding:1px; font-size:9px; }
+  table.weights .clear-btn{ padding:1px 3px; font-size:8px; width:auto; background:#f0e0e0; color:#8a343d; }
+  table.weights .clear-btn:hover{ background:#e0d0d0; }
 
   .summary-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px; background:#fbfbfa; border-radius:3px; margin-bottom:8px; }
   .summary-item{ font-size:11px; }
@@ -70,11 +77,12 @@
 
   .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
   .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
+  .record-status{ font-size:10px; color:#54606b; font-weight:600; padding:4px 8px; background:#e2e4e3; border-radius:3px; }
   .muted{ color:#8a939b; }
   .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:11px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .toast.show{ opacity:1; }
 
-  @media (max-width:900px){ .grid-6{grid-template-columns:repeat(3,1fr);} .grid-4{grid-template-columns:repeat(2,1fr);} .signoff-grid{grid-template-columns:1fr;} }
+  @media (max-width:900px){ .grid-6{grid-template-columns:repeat(3,1fr);} .grid-4{grid-template-columns:repeat(2,1fr);} .signoff-grid{grid-template-columns:1fr;} .job-number-row{grid-template-columns:80px 1fr;} }
   @media print{
     @page{ size:A4 portrait; margin:6mm; }
     body{ background:#fff; padding:0; margin:0; }
@@ -88,9 +96,11 @@
     .panel-head h2{ font-size:10px; }
     .panel-body{ padding:6px; }
     label.field{ font-size:9px; gap:1px; }
-    table.weights{ font-size:8px; margin-bottom:4px; }
+    .weight-input-section{ display:none; }
+    table.weights{ font-size:8px; margin-top:6px; }
     table.weights th, table.weights td{ padding:2px 3px; }
     table.weights input{ font-size:9px; padding:1px; }
+    table.weights .clear-btn{ display:none; }
     .summary-row{ padding:4px; margin-bottom:4px; }
     .summary-item{ font-size:9px; }
     .summary-item .value{ font-size:11px; }
@@ -98,6 +108,7 @@
     .signoff-item{ gap:4px; }
     .signoff-item label{ font-size:9px; }
     .actions{ display:none; }
+    .record-status{ display:none; }
   }
 </style>
 </head>
@@ -113,6 +124,7 @@
         <input id="actingNameInput" placeholder="Name">
       </label>
       <button class="btn btn-ghost" id="newRecordBtn">New</button>
+      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
       <button class="btn btn-primary" id="submitBtn">Submit</button>
     </div>
   </div>
@@ -125,13 +137,13 @@
         <div class="grid grid-6" style="margin-bottom:8px;">
           <label class="field">Intake date<input id="h_intakeDate" type="date"></label>
           <label class="field">Harvest farm<input id="h_harvestFarm" placeholder="Farm"></label>
-          <label class="field">Job number<input id="h_jobNumber" placeholder="Job #"></label>
           <label class="field">Tracking no.<input id="h_trackingNo" placeholder="Track"></label>
-          <label class="field">Size range<input id="h_sizeRange" placeholder="Size"></label>
           <label class="field">Processing for<select id="h_processingFor"><option value="">—</option><option value="Can">Can</option><option value="Dried">Dried</option><option value="Other">Other</option></select></label>
+          <label class="field">Size range<select id="h_sizeRange"><option value="">—</option></select></label>
+          <label class="field" style="grid-column:span 1;">Whole weight (kg)<input id="h_wholeWeight" type="number" step="0.01" placeholder="0.00" style="margin-top:auto;"></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Whole weight (kg)<input id="h_wholeWeight" type="number" step="0.01" placeholder="0.00"></label>
+          <label class="field">Job number<div class="job-number-row"><select id="h_jobPrefix"><option value="">—</option><option value="CPR">CPR</option><option value="DPR">DPR</option><option value="3CP">3CP</option><option value="3DP">3DP</option></select><input id="h_jobNumber" placeholder="Number" type="text"></div></label>
         </div>
       </div>
     </div>
@@ -139,15 +151,16 @@
     <div class="panel">
       <div class="panel-head"><h2>Weight Measurements (kg)</h2></div>
       <div class="panel-body">
+        <div class="weight-input-section no-print">
+          <div class="weight-input-row">
+            <input id="newWeightInput" type="number" step="0.01" placeholder="Enter weight">
+            <button class="btn btn-flat" id="addWeightBtn">+ Add weight</button>
+          </div>
+        </div>
         <table class="weights" id="weightsTable">
           <thead><tr><th>Wt 1</th><th>Wt 2</th><th>Wt 3</th><th>Wt 4</th><th>Wt 5</th><th>Wt 6</th></tr></thead>
           <tbody id="weightsBody"><tr><td colspan="6" style="text-align:center; color:#8a939b; padding:6px;">No weights added yet</td></tr></tbody>
         </table>
-        <div class="weight-input-row no-print">
-          <input id="newWeightInput" type="number" step="0.01" placeholder="Enter weight (kg)">
-          <button class="btn btn-flat" id="addWeightBtn">+ Add</button>
-          <button class="btn btn-flat" id="clearWeightsBtn" style="background:#f0e0e0; color:#8a343d;">Clear all</button>
-        </div>
       </div>
     </div>
 
@@ -195,6 +208,7 @@
     </div>
 
     <div class="actions no-print">
+      <span class="record-status" id="recordStatus"></span>
       <span class="status-line" id="statusLine"></span>
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
@@ -204,6 +218,7 @@
   <div class="toast no-print" id="toast"></div>
 </div>
 
+<script src="../lib/size-ranges.js"></script>
 <script src="../lib/data-store.js?v=1"></script>
 <script>
 (function(){
@@ -212,7 +227,7 @@
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',
-      header:{ intakeDate:'', harvestFarm:'', jobNumber:'', trackingNo:'', sizeRange:'', processingFor:'', wholeWeight:'' },
+      header:{ intakeDate:'', harvestFarm:'', trackingNo:'', processingFor:'', sizeRange:'', wholeWeight:'', jobPrefix:'', jobNumber:'' },
       weights: [],
       comments:'',
       operator:'', operatorDate:'',
@@ -264,7 +279,8 @@
       html += '<tr>';
       for(let j = 0; j < 6; j++){
         const w = rowWeights[j];
-        html += `<td><input type="number" step="0.01" data-idx="${i+j}" value="${w || ''}" style="width:100%;"></td>`;
+        const idx = i + j;
+        html += `<td style="position:relative;"><input type="number" step="0.01" data-idx="${idx}" value="${w || ''}" style="width:100%; padding-right:20px;"><button class="clear-btn" data-clear="${idx}" title="Clear this cell" style="position:absolute; right:2px; top:2px;">✕</button></td>`;
       }
       html += '</tr>';
     }
@@ -276,17 +292,25 @@
         updateResults();
       });
     });
+    tbody.querySelectorAll('.clear-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.clear);
+        state.weights[idx] = '';
+        renderWeightsTable();
+      });
+    });
     updateResults();
   }
 
   function renderHeader(){
     $('h_intakeDate').value = state.header.intakeDate;
     $('h_harvestFarm').value = state.header.harvestFarm;
-    $('h_jobNumber').value = state.header.jobNumber;
     $('h_trackingNo').value = state.header.trackingNo;
-    $('h_sizeRange').value = state.header.sizeRange;
     $('h_processingFor').value = state.header.processingFor;
+    $('h_sizeRange').value = state.header.sizeRange;
     $('h_wholeWeight').value = state.header.wholeWeight;
+    $('h_jobPrefix').value = state.header.jobPrefix;
+    $('h_jobNumber').value = state.header.jobNumber;
     $('commentsBox').value = state.comments;
     $('f_operator').value = state.operator;
     $('f_operatorDate').value = state.operatorDate;
@@ -298,8 +322,9 @@
 
   function bindInputs(){
     const headerMap = {
-      h_intakeDate:'intakeDate', h_harvestFarm:'harvestFarm', h_jobNumber:'jobNumber',
-      h_trackingNo:'trackingNo', h_sizeRange:'sizeRange', h_processingFor:'processingFor', h_wholeWeight:'wholeWeight'
+      h_intakeDate:'intakeDate', h_harvestFarm:'harvestFarm', h_trackingNo:'trackingNo',
+      h_processingFor:'processingFor', h_sizeRange:'sizeRange', h_wholeWeight:'wholeWeight',
+      h_jobPrefix:'jobPrefix', h_jobNumber:'jobNumber'
     };
     Object.entries(headerMap).forEach(([id,key])=>{
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; updateResults(); });
@@ -311,42 +336,38 @@
     });
   }
 
+  function updateRecordStatus(){
+    const jobStr = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'No job';
+    const submitted = state.status === 'submitted';
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+  }
+
   function renderAll(){
     renderHeader();
     renderWeightsTable();
+    updateRecordStatus();
     $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
   }
 
   async function saveRecord(finalize){
-    if(finalize && !state.operator){
-      toast('Operator is required.');
-      return;
-    }
-    if(finalize && !state.supervisor){
-      toast('Supervisor is required.');
-      return;
-    }
     const now = Date.now();
     if(!state.id){
-      state.id = `oosw_${safeKey(state.header.jobNumber || state.header.harvestFarm || 'UNSPECIFIED')}_${now}`;
+      const jobId = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'NOJOB';
+      state.id = `oosw_${safeKey(jobId)}_${now}`;
       state.createdAt = now;
     }
     state.updatedAt = now;
-    if(finalize){
-      if(state.status === 'complete') state.revision++;
-      state.status = 'complete';
-    } else {
-      state.status = 'draft';
-    }
+    state.status = finalize ? 'submitted' : 'draft';
 
     const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
     if(!ok){ toast('Save failed.'); return; }
-    toast(finalize ? 'Submitted.' : 'Saved.');
+    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
     renderAll();
   }
 
   function generatePdf(){
-    document.title = `REC_7.1.5_OOSW_${safeKey(state.header.jobNumber || state.header.harvestFarm || 'record')}_${state.header.intakeDate||''}`;
+    const jobStr = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'record';
+    document.title = `REC_7.1.5_OOSW_${safeKey(jobStr)}_${state.header.intakeDate||''}`;
     window.print();
   }
 
@@ -356,9 +377,23 @@
     inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
   }
 
+  function populateSizeRanges(){
+    const sel = $('h_sizeRange');
+    if(window.SizeRanges && window.SizeRanges.ranges){
+      window.SizeRanges.ranges.forEach(range=>{
+        const opt = document.createElement('option');
+        opt.value = range;
+        opt.textContent = range;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
   function wire(){
     wireActingName();
     bindInputs();
+    populateSizeRanges();
+    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
     $('newRecordBtn').addEventListener('click', ()=>{
       if(confirm('Start new record? Unsaved changes will be lost.')){
@@ -377,14 +412,12 @@
     $('newWeightInput').addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){ $('addWeightBtn').click(); }
     });
-    $('clearWeightsBtn').addEventListener('click', ()=>{
-      if(confirm('Clear all weights?')){ state.weights = []; renderWeightsTable(); }
-    });
     $('exportBtn').addEventListener('click', ()=>{
       const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = (state.id || 'oosw_draft') + '.json';
+      const jobStr = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'oosw_draft';
+      a.download = `oosw_${safeKey(jobStr)}.json`;
       a.click();
     });
     $('generatePdfBtn').addEventListener('click', generatePdf);
