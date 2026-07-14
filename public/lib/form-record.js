@@ -126,6 +126,11 @@
   }
 
   async function init(config) {
+    // Require authentication before showing the record
+    if (window.LoginUI) {
+      await window.LoginUI.ensureAuthenticated();
+    }
+
     injectStyleOnce();
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
     mount.classList.add('fr-app');
@@ -369,11 +374,19 @@
           source: 'manual', // future automated feeds set 'device' here
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          history: []
+          history: [],
+          signOffs: []
         };
         if (hasRoster) sub.roster = rosterRows;
         submissions.push(sub);
         savedSub = sub;
+      }
+      // Add sign-off from current authenticated user
+      if (window.Auth && window.Auth.isAuthenticated()) {
+        const signOff = window.Auth.createSignOff('submitted');
+        if (signOff && savedSub.signOffs) {
+          savedSub.signOffs.push(signOff);
+        }
       }
       const ok = await persist();
       if (!ok) { toast('Save failed — please retry.'); return; }

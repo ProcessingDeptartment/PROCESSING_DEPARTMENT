@@ -355,6 +355,11 @@
   }
 
   async function init(config) {
+    // Require authentication before showing the record
+    if (window.LoginUI) {
+      await window.LoginUI.ensureAuthenticated();
+    }
+
     injectStyleOnce();
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
     mount.classList.add('ml-app');

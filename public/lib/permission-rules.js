@@ -22,7 +22,7 @@
     QUALITY_CONTROLLER: 'Quality Controller',
     QA_MANAGER: 'QA Manager',
     PRODUCTION_MANAGER: 'Production Manager',
-    OPERATOR: 'Operator'
+    OPERATOR: 'Operator',
     ADMINISTRATOR: 'Administrator'
   };
 
