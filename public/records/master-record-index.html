@@ -6,29 +6,55 @@
 <title>Master Record Index</title>
 <style>
   body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
-  .mri-top{ background:#1d2b38; color:#f4f1e8; padding:14px 18px; }
-  .mri-top h1{ margin:0; font-size:17px; }
-  .mri-top p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
-  .mri-body{ padding:16px 18px 60px; max-width:1100px; margin:0 auto; }
-  .mri-section{ margin-bottom:22px; }
-  .mri-section h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:#2f4356; margin:0 0 8px; }
-  table.mri-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; }
-  table.mri-table th,table.mri-table td{ border-bottom:1px solid #e2e4e3; padding:7px 10px; text-align:left; font-size:12px; }
-  table.mri-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; }
-  table.mri-table td.rev{ font-family:'IBM Plex Mono',monospace; font-weight:700; color:#2f4356; white-space:nowrap; }
-  table.mri-table a{ color:#1d4ed8; font-weight:600; text-decoration:none; }
-  table.mri-table a:hover{ text-decoration:underline; }
-  .back-link{ display:inline-block; margin-top:10px; color:#1d4ed8; text-decoration:none; font-size:0.9rem; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .container{ max-width:1100px; margin:0 auto; padding:20px; }
+  .search-box{ background:#fff; border:1px solid #d0d5db; border-radius:8px; padding:16px; margin-bottom:20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  .search-input{ width:100%; padding:10px 12px; border:1px solid #d0d5db; border-radius:6px; font-size:14px; }
+  .search-input::placeholder{ color:#9ca3af; }
+  .search-input:focus{ outline:none; border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
+  table.records-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; }
+  table.records-table th,table.records-table td{ border-bottom:1px solid #e2e4e3; padding:10px 12px; text-align:left; font-size:12px; }
+  table.records-table th{ background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; padding:10px 12px; }
+  table.records-table td.doc-code{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:#2f4356; white-space:nowrap; }
+  table.records-table td.title a{ color:#1d4ed8; text-decoration:none; font-weight:500; }
+  table.records-table td.title a:hover{ text-decoration:underline; }
+  table.records-table td.revision{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:#2f4356; }
+  table.records-table tbody tr:hover{ background:#f9fafb; }
+  table.records-table tbody tr.hidden{ display:none; }
+  .no-results{ text-align:center; color:#6b7280; padding:40px 20px; }
+  .back-link{ display:inline-block; margin-top:16px; color:#1d4ed8; text-decoration:none; font-size:0.9rem; }
   .back-link:hover{ text-decoration:underline; }
+  .search-hint{ font-size:11px; color:#9ca3af; margin-top:8px; }
+  .info-bar{ background:#eff6ff; border-left:4px solid #3b82f6; padding:12px 16px; border-radius:4px; margin-bottom:16px; font-size:12px; color:#1e40af; }
 </style>
 </head>
 <body>
-<div class="mri-top">
+<div class="header">
   <h1>Master Record Index</h1>
-  <p>Every digitised record and its current document-control revision, read live from each record's own revision history — not a hand-maintained list.</p>
+  <p>All digitised records with current document-control revision</p>
 </div>
-<div class="mri-body">
-  <div id="sections"></div>
+<div class="container">
+  <div class="info-bar">
+   🔍 Search by record name, doc code, or record key to find the document you need.
+  </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search by name, doc code, or record key..." autocomplete="off">
+    <div class="search-hint">Showing <span id="resultCount">0</span> of <span id="totalCount">0</span> records</div>
+  </div>
+  <table class="records-table">
+    <thead>
+      <tr>
+        <th>Doc Code</th>
+        <th>Title</th>
+        <th>Current Rev</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+    </tbody>
+  </table>
+  <div class="no-results" id="noResults" style="display:none;">No records found. Try a different search.</div>
   <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
 </div>
 
@@ -36,211 +62,181 @@
 <script src="../lib/document-revision.js?v=1"></script>
 <script>
 (function () {
-  // Every entry here is one digitised record. `recordKey` and `docRevisionStart` must
-  // match the values the record's own page passes to DocumentRevision, so the "current
-  // revision" column always reflects that record's real history — nothing here is
-  // hand-typed per revision.
-  const SECTIONS = [
-    {
-      title: 'Can/Point Inspection',
-      records: [
-        { docCode: 'REC 7.2.12', title: 'Double Seam Inspection Report', recordKey: 'double-seam-inspection-report', docRevisionStart: 11, href: 'double-seam-inspection-report.html' }
-      ]
-    },
-    {
-      title: 'Monitoring Logs (7.8.9 / 7.9.x / 7.10.x)',
-      records: [
-        { docCode: 'REC 7.9.1', title: 'Chiller Temperature Monitoring', recordKey: 'chiller-temperature-monitoring', docRevisionStart: 9, href: 'chiller-temperature-monitoring.html' },
-        { docCode: 'REC 7.9.2', title: 'Daily Incubator Temperature Check', recordKey: 'incubator-temperature-check', docRevisionStart: 6, href: 'incubator-temperature-check.html' },
-        { docCode: 'REC 7.9.3.1', title: 'Dry Room Temp & Humidity Log', recordKey: 'dry-room-temp-humidity-log', docRevisionStart: 6, href: 'dry-room-temp-humidity-log.html' },
-        { docCode: 'REC 7.9.3.2', title: 'Grading Room Temp & Humidity Log', recordKey: 'grading-room-temp-humidity-log', docRevisionStart: 1, href: 'grading-room-temp-humidity-log.html' },
-        { docCode: 'REC 7.10.2', title: 'pH Verification', recordKey: 'ph-verification', docRevisionStart: 8, href: 'ph-verification.html' },
-        { docCode: 'REC 7.10.3', title: 'Thermometer Verification', recordKey: 'thermometer-verification', docRevisionStart: 5, href: 'thermometer-verification.html' },
-        { docCode: 'REC 7.10.4', title: 'Thermometer Correction Factors', recordKey: 'thermometer-correction-factors', docRevisionStart: 1, href: 'thermometer-correction-factors.html' },
-        { docCode: 'REC 7.8.9', title: 'Water Monitoring', recordKey: 'water-monitoring', docRevisionStart: 1, href: 'water-monitoring.html' }
-      ]
-    },
-    {
-      title: 'Live Intake & Handling (7.1.x)',
-      records: [
-        { docCode: 'REC 7.1.2', title: 'Abalone Receiving', recordKey: 'abalone-receiving', docRevisionStart: 1, href: 'abalone-receiving.html' },
-        { docCode: 'REC 7.1.0', title: 'Daily Weight Sampling', recordKey: 'daily-weight-sampling', docRevisionStart: 1, href: 'daily-weight-sampling.html' },
-        { docCode: 'REC 1', title: 'Gonad Inspection Report', recordKey: 'gonad-inspection-report', docRevisionStart: 1, href: 'gonad-inspection-report.html' },
-        { docCode: 'REC 7.1.00', title: 'Fixed Reader Checks', recordKey: 'fixed-reader-checks', docRevisionStart: 1, href: 'fixed-reader-checks.html' },
-        { docCode: 'REC 7.1.1', title: 'Basket Removal, Shucking & Gutting', recordKey: 'basket-removal-shucking-gutting', docRevisionStart: 1, href: 'basket-removal-shucking-gutting.html' },
-        { docCode: 'REC 7.1.3.1', title: 'Bleeding and Salting', recordKey: 'bleeding-and-salting', docRevisionStart: 6, href: 'bleeding-and-salting.html' },
-        { docCode: 'REC 7.1.3', title: 'Salting and Tumbling', recordKey: 'salting-and-tumbling', docRevisionStart: 9, href: 'salting-and-tumbling.html' },
-        { docCode: 'REC 7.1.5', title: 'Salting (OOSW)', recordKey: 'salting-oosw', docRevisionStart: 1, href: 'salting-oosw.html' },
-        { docCode: 'REC 7.1.4', title: 'Washing Control Sheet', recordKey: 'washing-control-sheet', docRevisionStart: 9, href: 'washing-control-sheet.html' },
-        { docCode: 'REC 7.1.6', title: 'Scrubbing Check - Supervisor', recordKey: 'scrubbing-check-supervisor', docRevisionStart: 5, href: 'scrubbing-check-supervisor.html' },
-        { docCode: 'REC 7.1', title: 'Incubator Cans Log', recordKey: 'incubator-cans-log', docRevisionStart: 1, href: 'incubator-cans-log.html' },
-        { docCode: 'REC 01', title: 'Cans Released Form (Awaiting NRCS Releases)', recordKey: 'cans-released-form', docRevisionStart: 1, href: 'cans-released-form.html' }
-      ]
-    },
-    {
-      title: 'Canning (7.2.x / 7.3.x)',
-      records: [
-        { docCode: 'REC 7.2', title: 'Sampling Log', recordKey: 'sampling-log', docRevisionStart: 1, href: 'sampling-log.html' },
-        { docCode: 'REC 7.2.2', title: 'Scrubbing Checklist', recordKey: 'scrubbing-checklist-qc', docRevisionStart: 1, href: 'scrubbing-checklist-qc.html' },
-        { docCode: 'REC 7.2.3', title: 'Precooking Check Sheet', recordKey: 'precooking-check-sheet', docRevisionStart: 5, href: 'precooking-check-sheet.html' },
-        { docCode: 'REC 7.2.4', title: 'Abalone Packing Specification', recordKey: 'abalone-packing-specification', docRevisionStart: 3, href: 'abalone-packing-specification.html' },
-        { docCode: 'REC 7.2.5', title: 'Can Packing Control Sheet', recordKey: 'can-packing-control-sheet', docRevisionStart: 1, href: 'can-packing-control-sheet.html' },
-        { docCode: 'REC 7.2.6', title: 'Can Filling and Printing', recordKey: 'can-filling-and-printing', docRevisionStart: 5, href: 'can-filling-and-printing.html' },
-        { docCode: 'REC 7.2.6.1', title: 'Printing Control Sheet', recordKey: 'printing-control-sheet', docRevisionStart: 1, href: 'printing-control-sheet.html' },
-        { docCode: 'REC 7.2.7', title: 'Cans Produced', recordKey: 'cans-produced', docRevisionStart: 6, href: 'cans-produced.html' },
-        { docCode: 'REC 7.2.8', title: 'Retorting Control Sheet', recordKey: 'retorting-control-sheet', docRevisionStart: 4, href: 'retorting-control-sheet.html' },
-        { docCode: 'REC 7.2.9', title: 'Retort Inspection Report', recordKey: 'retort-inspection-report', docRevisionStart: 7, href: 'retort-inspection-report.html' },
-        { docCode: 'REC 7.2.10', title: 'Stock Loading', recordKey: 'stock-loading', docRevisionStart: 1, href: 'stock-loading.html' },
-        { docCode: 'REC 7.2.11', title: 'QC Report', recordKey: 'qc-report', docRevisionStart: 4, href: 'qc-report.html' },
-        { docCode: 'REC 7.2.13', title: 'Rework Log', recordKey: 'rework-log', docRevisionStart: 1, href: 'rework-log.html' },
-        { docCode: 'REC 7.2.14', title: 'Product Label Checklist', recordKey: 'product-label-checklist', docRevisionStart: 1, href: 'product-label-checklist.html' },
-        { docCode: 'REC 7.2.15', title: 'Labelling of Cans', recordKey: 'labelling-of-cans', docRevisionStart: 1, href: 'labelling-of-cans.html' },
-        { docCode: 'REC 7.2.16', title: 'Stock Transfers', recordKey: 'stock-transfers', docRevisionStart: 2, href: 'stock-transfers.html' },
-        { docCode: 'REC 7.3.1', title: 'Broth Cooking', recordKey: 'broth-cooking', docRevisionStart: 5, href: 'broth-cooking.html' },
-        { docCode: 'REC 7.3.2', title: 'Ingredient Weighing', recordKey: 'ingredient-weighing', docRevisionStart: 2, href: 'ingredient-weighing.html' },
-        { docCode: 'REC 7.3.3', title: 'Sauce Mixing', recordKey: 'sauce-mixing', docRevisionStart: 3, href: 'sauce-mixing.html' },
-        { docCode: 'REC 7.3.4', title: 'Final Sauce Mix', recordKey: 'final-sauce-mix', docRevisionStart: 3, href: 'final-sauce-mix.html' },
-        { docCode: 'REC 7.3.5', title: 'Sauce Batch Coding', recordKey: 'sauce-batch-coding', docRevisionStart: 1, href: 'sauce-batch-coding.html' },
-        { docCode: 'REC 7.3.6', title: 'Brine Mixing Report', recordKey: 'brine-mixing-report', docRevisionStart: 2, href: 'brine-mixing-report.html' },
-        { docCode: 'QA1', title: 'QA1 Damaged Cans and Lids', recordKey: 'qa1-damaged-cans-and-lids', docRevisionStart: 1, href: 'qa1-damaged-cans-and-lids.html' },
-        { docCode: 'Production Information NRCS (Canning)', title: 'Production Information NRCS', recordKey: 'production-information-nrcs', docRevisionStart: 1, href: 'production-information-nrcs.html' },
-        { docCode: 'Production Information NRCS (Rework)', title: 'Production Information NRCS (Rework)', recordKey: 'production-information-nrcs-rework', docRevisionStart: 1, href: 'production-information-nrcs-rework.html' }
-      ]
-    },
-    {
-      title: 'Dry Processing (7.4.x)',
-      records: [
-        { docCode: 'REC 7.4.0', title: 'Dry Cooking', recordKey: 'dry-cooking', docRevisionStart: 7, href: 'dry-cooking.html' },
-        { docCode: 'REC 7.4.1', title: 'Drying Process', recordKey: 'drying-process', docRevisionStart: 1, href: 'drying-process.html' },
-        { docCode: 'REC 7.4.2', title: 'Dry Monitoring', recordKey: 'dry-monitoring', docRevisionStart: 3, href: 'dry-monitoring.html' },
-        { docCode: 'REC 7.4.3.1', title: 'Grading Production Log (Cultivated)', recordKey: 'grading-production-log-cultivated', docRevisionStart: 6, href: 'grading-production-log-cultivated.html' },
-        { docCode: 'REC 7.4.3.2', title: 'Grading Production Log (Ranched)', recordKey: 'grading-production-log-ranched', docRevisionStart: 6, href: 'grading-production-log-ranched.html' },
-        { docCode: 'REC 7.4.4', title: 'Grading & Boxing Traceability', recordKey: 'grading-boxing-traceability', docRevisionStart: 1, href: 'grading-boxing-traceability.html' },
-        { docCode: 'REC 7.4.5', title: 'Boxing & Labelling', recordKey: 'boxing-and-labelling', docRevisionStart: 4, href: 'boxing-and-labelling.html' },
-        { docCode: 'REC 7.4.6', title: 'Dry Stock Control', recordKey: 'dry-stock-control', docRevisionStart: 3, href: 'dry-stock-control.html' },
-        { docCode: 'REC 7.4.7', title: 'Labelling of Dry Boxes', recordKey: 'labelling-of-dry-boxes', docRevisionStart: 2, href: 'labelling-of-dry-boxes.html' },
-        { docCode: 'REC 7.4.8', title: 'Dry Labelling List', recordKey: 'dry-labelling-list', docRevisionStart: 2, href: 'dry-labelling-list.html' },
-        { docCode: 'REC 7.4.9', title: 'Dry Stock Transfers', recordKey: 'dry-stock-transfers', docRevisionStart: 2, href: 'dry-stock-transfers.html' },
-        { docCode: 'REC 7.4.10', title: 'Dried Abalone Transfer', recordKey: 'dried-abalone-transfer', docRevisionStart: 2, href: 'dried-abalone-transfer.html' },
-        { docCode: 'Dry Export Pack Front Page', title: 'Dry Export Pack Front Page', recordKey: 'dry-export-pack-front-page', docRevisionStart: 1, href: 'dry-export-pack-front-page.html' },
-        { docCode: 'Production Information NRCS (Dry)', title: 'Dry NRCS Packs', recordKey: 'dry-nrcs-packs', docRevisionStart: 1, href: 'dry-nrcs-packs.html' }
-      ]
-    },
-    {
-      title: 'Live Product (7.5.x)',
-      records: [
-        { docCode: 'REC 7.5.1', title: 'Live Production Pack', recordKey: 'live-production-pack', docRevisionStart: 4, href: 'live-production-pack.html' },
-        { docCode: 'REC 7.5.2', title: 'Live Pack Checklist', recordKey: 'live-pack-checklist', docRevisionStart: 6, href: 'live-pack-checklist.html' },
-        { docCode: 'REC 7.5.3', title: 'Live Packing - Bag Quality Check', recordKey: 'live-packing-bag-quality-check', docRevisionStart: 3, href: 'live-packing-bag-quality-check.html' },
-        { docCode: 'REC 7.5.4', title: 'Individual Abalone Weight Checks - Quality', recordKey: 'individual-abalone-weight-checks', docRevisionStart: 2, href: 'individual-abalone-weight-checks.html' },
-        { docCode: 'REC 7.5.5', title: 'Receiving Live Returns', recordKey: 'receiving-live-returns', docRevisionStart: 2, href: 'receiving-live-returns.html' },
-        { docCode: 'Live Leftovers Log', title: 'Live Leftovers Log', recordKey: 'live-leftovers-log', docRevisionStart: 1, href: 'live-leftovers-log.html' },
-        { docCode: 'Mortalities Log', title: 'Mortalities Log', recordKey: 'mortalities-log', docRevisionStart: 1, href: 'mortalities-log.html' },
-        { docCode: 'Mortality Counts by Customer', title: 'Mortality Counts by Customer', recordKey: 'mortality-counts-by-customer', docRevisionStart: 1, href: 'mortality-counts-by-customer.html' }
-      ]
-    },
-    {
-      title: 'Cleaning (7.6.x)',
-      records: [
-        { docCode: 'REC 7.6.0a', title: 'Production Areas Cleaning Record', recordKey: 'production-areas-cleaning-record', docRevisionStart: 1, href: 'production-areas-cleaning-record.html' },
-        { docCode: 'REC 7.6.0b', title: 'Live Product Areas Cleaning Record', recordKey: 'live-product-areas-cleaning-record', docRevisionStart: 1, href: 'live-product-areas-cleaning-record.html' },
-        { docCode: 'REC 7.6.0c', title: 'Personnel Facilities Cleaning Record', recordKey: 'personnel-facilities-cleaning-record', docRevisionStart: 1, href: 'personnel-facilities-cleaning-record.html' },
-        { docCode: 'REC 7.6.1', title: 'Daily Cleaning Inspection', recordKey: 'daily-cleaning-inspection', docRevisionStart: 4, href: 'daily-cleaning-inspection.html' },
-        { docCode: 'REC 7.6.1.1', title: 'Deep Cleaning Record Weekly', recordKey: 'deep-cleaning-record-weekly', docRevisionStart: 1, href: 'deep-cleaning-record-weekly.html' },
-        { docCode: 'REC 7.6.2', title: 'Weekly Cleaning Record', recordKey: 'weekly-cleaning-record', docRevisionStart: 3, href: 'weekly-cleaning-record.html' },
-        { docCode: 'REC 7.6.2.2', title: 'Dispatch Cleaning Inspection', recordKey: 'dispatch-cleaning-inspection', docRevisionStart: 1, href: 'dispatch-cleaning-inspection.html' },
-        { docCode: 'REC 7.6.3', title: 'Facility Inspection', recordKey: 'facility-inspection', docRevisionStart: 7, href: 'facility-inspection.html' },
-        { docCode: 'REC 7.6.3.1', title: 'Facility Inspection NC Report', recordKey: 'facility-inspection-nc-report', docRevisionStart: 4, href: 'facility-inspection-nc-report.html' },
-        { docCode: 'REC 7.6.4', title: 'Chemical Stock & Issue Register', recordKey: 'chemical-stock-issue-register', docRevisionStart: 1, href: 'chemical-stock-issue-register.html' },
-        { docCode: 'REC 7.6.5', title: 'Internal Pest Sightings Log', recordKey: 'internal-pest-sightings-log', docRevisionStart: 1, href: 'internal-pest-sightings-log.html' },
-        { docCode: 'REC 7.6.6', title: 'Pest Inspection Record', recordKey: 'pest-inspection-record', docRevisionStart: 7, href: 'pest-inspection-record.html' },
-        { docCode: 'REC 7.6.7', title: 'Staff Hygiene Inspection', recordKey: 'staff-hygiene-inspection', docRevisionStart: 1, href: 'staff-hygiene-inspection.html' },
-        { docCode: 'REC 7.6.7a', title: 'Staff Hygiene Inspection - Weekends', recordKey: 'staff-hygiene-inspection-weekends', docRevisionStart: 2, href: 'staff-hygiene-inspection-weekends.html' },
-        { docCode: 'REC 7.6.8', title: 'Allergen Cleaning Verification', recordKey: 'allergen-cleaning-verification', docRevisionStart: 1, href: 'allergen-cleaning-verification.html' },
-        { docCode: 'Master Cleaning Plan', title: 'Master Cleaning Plan', recordKey: 'master-cleaning-plan', docRevisionStart: 2, href: 'master-cleaning-plan.html' },
-        { docCode: 'Master Cleaning Checklist', title: 'Master Cleaning Checklist (New Plant)', recordKey: 'master-cleaning-checklist', docRevisionStart: 1, href: 'master-cleaning-checklist.html' }
-      ]
-    },
-    {
-      title: 'PPE & Utensils (7.7.x)',
-      records: [
-        { docCode: 'REC 7.7.1', title: 'Daily Equipment Checklist', recordKey: 'daily-equipment-checklist', docRevisionStart: 6, href: 'daily-equipment-checklist.html' },
-        { docCode: 'REC 7.7.2', title: 'Glass, Plastic & Equipment Inspection', recordKey: 'glass-plastic-equipment-inspection', docRevisionStart: 5, href: 'glass-plastic-equipment-inspection.html' },
-        { docCode: 'REC 7.7.3', title: 'Glass Breakage Clearance Certificate', recordKey: 'glass-breakage-clearance-certificate', docRevisionStart: 1, href: 'glass-breakage-clearance-certificate.html' },
-        { docCode: 'REC 7.7.4', title: 'Utensil Issue Record', recordKey: 'utensil-issue-record', docRevisionStart: 6, href: 'utensil-issue-record.html' },
-        { docCode: 'REC 7.7.4c', title: 'Knife Register', recordKey: 'knife-register', docRevisionStart: 2, href: 'knife-register.html' },
-        { docCode: 'REC 7.7.4.1a', title: 'Safety Glass Register', recordKey: 'safety-glass-register', docRevisionStart: 1, href: 'safety-glass-register.html' },
-        { docCode: 'REC 7.7.4.1b', title: 'Goggles Register', recordKey: 'goggles-register', docRevisionStart: 1, href: 'goggles-register.html' },
-        { docCode: 'REC 7.7.5', title: 'Glove Issuing Register', recordKey: 'glove-issuing-register', docRevisionStart: 9, href: 'glove-issuing-register.html' },
-        { docCode: 'REC 7.7.6', title: 'Plaster Issuing / Dressing Inspection', recordKey: 'plaster-dressing-inspection', docRevisionStart: 3, href: 'plaster-dressing-inspection.html' },
-        { docCode: 'REC 7.7.7', title: 'Salt Issuing Register', recordKey: 'salt-issuing-register', docRevisionStart: 1, href: 'salt-issuing-register.html' }
-      ]
-    },
-    {
-      title: 'Incoming & Equipment (7.8.x)',
-      records: [
-        { docCode: 'REC 7.8.1', title: 'Chiller Batch Control (Canning)', recordKey: 'chiller-batch-control', docRevisionStart: 4, href: 'chiller-batch-control.html' },
-        { docCode: 'REC 7.8.1', title: 'Dry Chiller Batch Control', recordKey: 'dry-chiller-batch-control', docRevisionStart: 3, href: 'dry-chiller-batch-control.html' },
-        { docCode: 'REC 7.8.2', title: 'Daily Waste Removal', recordKey: 'daily-waste-removal', docRevisionStart: 1, href: 'daily-waste-removal.html' },
-        { docCode: 'REC 7.8.3', title: 'Boiler Inspection Report', recordKey: 'boiler-inspection-report', docRevisionStart: 4, href: 'boiler-inspection-report.html' },
-        { docCode: 'REC 7.8.4', title: 'Seamer Inspection Report', recordKey: 'seamer-inspection-report', docRevisionStart: 7, href: 'seamer-inspection-report.html' },
-        { docCode: 'REC 7.8.5', title: 'Incoming PPE Inspection', recordKey: 'incoming-ppe-inspection', docRevisionStart: 4, href: 'incoming-ppe-inspection.html' },
-        { docCode: 'REC 7.8.5.1', title: 'Incoming Goods Inspection (Log)', recordKey: 'incoming-goods-inspection-log', docRevisionStart: 1, href: 'incoming-goods-inspection-log.html' },
-        { docCode: 'REC 7.8.6', title: 'Cans Incoming Inspection', recordKey: 'cans-incoming-inspection', docRevisionStart: 1, href: 'cans-incoming-inspection.html' },
-        { docCode: 'REC 7.8.6.1', title: 'Lids Incoming Inspection', recordKey: 'lids-incoming-inspection', docRevisionStart: 1, href: 'lids-incoming-inspection.html' },
-        { docCode: 'REC 7.8.6.2', title: 'Lids Incoming Inspection (Internal)', recordKey: 'lids-incoming-inspection-internal', docRevisionStart: 1, href: 'lids-incoming-inspection-internal.html' },
-        { docCode: 'REC 7.8.7', title: 'Incoming Goods Inspection', recordKey: 'incoming-goods-inspection', docRevisionStart: 5, href: 'incoming-goods-inspection.html' },
-        { docCode: 'REC 7.8.8', title: 'Dispatch Loading Inspection Checklist', recordKey: 'dispatch-loading-inspection-checklist', docRevisionStart: 1, href: 'dispatch-loading-inspection-checklist.html' },
-        { docCode: 'REC 7.8.8.1', title: 'Dispatch Receiving Checklist', recordKey: 'dispatch-receiving-checklist', docRevisionStart: 1, href: 'dispatch-receiving-checklist.html' },
-        { docCode: 'REC 7.8.9.1', title: 'LHA Water Monitoring', recordKey: 'lha-water-monitoring', docRevisionStart: 4, href: 'lha-water-monitoring.html' },
-        { docCode: 'REC 7.8.10', title: 'Maintenance Job Card', recordKey: 'maintenance-job-card', docRevisionStart: 1, href: 'maintenance-job-card.html' },
-        { docCode: 'REC 7.8.11', title: 'Water Tank Inspection', recordKey: 'water-tank-inspection', docRevisionStart: 1, href: 'water-tank-inspection.html' },
-        { docCode: 'REC 7.8.12', title: 'Factory Maintenance Inspection', recordKey: 'factory-maintenance-inspection', docRevisionStart: 7, href: 'factory-maintenance-inspection.html' },
-        { docCode: 'REC 7.8.12.1', title: 'Equipment Checklist - Roof', recordKey: 'equipment-checklist-roof', docRevisionStart: 1, href: 'equipment-checklist-roof.html' }
-      ]
-    },
-    {
-      title: 'Quality, HR & Traceability (8.x / 9.2 / 6.1.2)',
-      records: [
-        { docCode: 'REC 8.1.1.a', title: 'Internal CAR', recordKey: 'internal-car', docRevisionStart: 1, href: 'internal-car.html' },
-        { docCode: 'REC 8.1.3', title: 'Disposition Investigation Record', recordKey: 'disposition-investigation-record', docRevisionStart: 1, href: 'disposition-investigation-record.html' },
-        { docCode: 'REC 8.1.4', title: 'Withdrawal (Mock Recall) Record', recordKey: 'withdrawal-mock-recall-record', docRevisionStart: 1, href: 'withdrawal-mock-recall-record.html' },
-        { docCode: 'REC 8.1.5', title: 'Traceability Exercise', recordKey: 'traceability', docRevisionStart: 1, href: 'traceability.html' },
-        { docCode: 'REC 8.1.6', title: 'Traceability & Mock Recall — Canned Abalone', recordKey: 'traceability-mock-recall-canned-abalone', docRevisionStart: 2, href: 'traceability-mock-recall-canned-abalone.html' },
-        { docCode: 'REC 8.1.6a', title: 'Traceability & Mock Recall — Canned Braised Abalone', recordKey: 'traceability-mock-recall-canned-braised-abalone', docRevisionStart: 5, href: 'traceability-mock-recall-canned-braised-abalone.html' },
-        { docCode: 'REC 8.1.6b', title: 'Traceability & Mock Recall — Canned Minced Abalone', recordKey: 'traceability-mock-recall-canned-minced-abalone', docRevisionStart: 1, href: 'traceability-mock-recall-canned-minced-abalone.html' },
-        { docCode: 'REC 8.1.7', title: 'Traceability & Mock Recall — Dried Abalone', recordKey: 'traceability-mock-recall-dried-abalone', docRevisionStart: 4, href: 'traceability-mock-recall-dried-abalone.html' },
-        { docCode: 'REC 8.1.8', title: 'Traceability & Mock Recall — Live Abalone', recordKey: 'traceability-mock-recall-live-abalone', docRevisionStart: 4, href: 'traceability-mock-recall-live-abalone.html' },
-        { docCode: 'REC 8.2.1', title: 'Supplier Questionnaire', recordKey: 'supplier-questionnaire', docRevisionStart: 6, href: 'supplier-questionnaire.html' },
-        { docCode: 'REC 8.2.2', title: 'Supplier Approval Record', recordKey: 'supplier-approval-record', docRevisionStart: 1, href: 'supplier-approval-record.html' },
-        { docCode: 'REC 8.2.8', title: 'Rapid Food Handler Medicals', recordKey: 'rapid-food-handler-medicals', docRevisionStart: 3, href: 'rapid-food-handler-medicals.html' },
-        { docCode: 'REC 8.2.8.1', title: 'RFH Medical Result', recordKey: 'rfh-medical-result', docRevisionStart: 1, href: 'rfh-medical-result.html' },
-        { docCode: 'RTW Medical Questionnaire', title: 'Return to Work Medical Questionnaire', recordKey: 'rtw-medical-questionnaire', docRevisionStart: 1, href: 'rtw-medical-questionnaire.html' },
-        { docCode: 'REC 7.7.6a', title: 'First Aid Checklist Record', recordKey: 'first-aid-checklist-record', docRevisionStart: 1, href: 'first-aid-checklist-record.html' },
-        { docCode: 'REC 8.4.a', title: 'Emergency Evacuation Attendance Register', recordKey: 'emergency-evacuation-attendance-register', docRevisionStart: 1, href: 'emergency-evacuation-attendance-register.html' },
-        { docCode: 'REC 8.4.b', title: 'Handling of Emergencies and Incidences', recordKey: 'handling-of-emergencies-and-incidences', docRevisionStart: 2, href: 'handling-of-emergencies-and-incidences.html' },
-        { docCode: 'REC 9.2', title: 'Daily Factory Feedback Meeting', recordKey: 'daily-factory-feedback-meeting', docRevisionStart: 1, href: 'daily-factory-feedback-meeting.html' },
-        { docCode: 'REC 6.1.2', title: 'Training Register', recordKey: 'training-register', docRevisionStart: 1, href: 'training-register.html' }
-      ]
-    }
+  const RECORDS = [
+    { docCode: 'REC 7.2.12', title: 'Double Seam Inspection Report', recordKey: 'double-seam-inspection-report', docRevisionStart: 11, href: 'double-seam-inspection-report.html' },
+    { docCode: 'REC 7.9.1', title: 'Chiller Temperature Monitoring', recordKey: 'chiller-temperature-monitoring', docRevisionStart: 9, href: 'chiller-temperature-monitoring.html' },
+    { docCode: 'REC 7.9.2', title: 'Daily Incubator Temperature Check', recordKey: 'incubator-temperature-check', docRevisionStart: 6, href: 'incubator-temperature-check.html' },
+    { docCode: 'REC 7.9.3.1', title: 'Dry Room Temp & Humidity Log', recordKey: 'dry-room-temp-humidity-log', docRevisionStart: 6, href: 'dry-room-temp-humidity-log.html' },
+    { docCode: 'REC 7.9.3.2', title: 'Grading Room Temp & Humidity Log', recordKey: 'grading-room-temp-humidity-log', docRevisionStart: 1, href: 'grading-room-temp-humidity-log.html' },
+    { docCode: 'REC 7.10.2', title: 'pH Verification', recordKey: 'ph-verification', docRevisionStart: 8, href: 'ph-verification.html' },
+    { docCode: 'REC 7.10.3', title: 'Thermometer Verification', recordKey: 'thermometer-verification', docRevisionStart: 5, href: 'thermometer-verification.html' },
+    { docCode: 'REC 7.10.4', title: 'Thermometer Correction Factors', recordKey: 'thermometer-correction-factors', docRevisionStart: 1, href: 'thermometer-correction-factors.html' },
+    { docCode: 'REC 7.8.9', title: 'Water Monitoring', recordKey: 'water-monitoring', docRevisionStart: 1, href: 'water-monitoring.html' },
+    { docCode: 'REC 7.1.2', title: 'Abalone Receiving', recordKey: 'abalone-receiving', docRevisionStart: 1, href: 'abalone-receiving.html' },
+    { docCode: 'REC 7.1.0', title: 'Daily Weight Sampling', recordKey: 'daily-weight-sampling', docRevisionStart: 1, href: 'daily-weight-sampling.html' },
+    { docCode: 'REC 1', title: 'Gonad Inspection Report', recordKey: 'gonad-inspection-report', docRevisionStart: 1, href: 'gonad-inspection-report.html' },
+    { docCode: 'REC 7.1.00', title: 'Fixed Reader Checks', recordKey: 'fixed-reader-checks', docRevisionStart: 1, href: 'fixed-reader-checks.html' },
+    { docCode: 'REC 7.1.1', title: 'Basket Removal, Shucking & Gutting', recordKey: 'basket-removal-shucking-gutting', docRevisionStart: 1, href: 'basket-removal-shucking-gutting.html' },
+    { docCode: 'REC 7.1.3.1', title: 'Bleeding and Salting', recordKey: 'bleeding-and-salting', docRevisionStart: 6, href: 'bleeding-and-salting.html' },
+    { docCode: 'REC 7.1.3', title: 'Salting and Tumbling', recordKey: 'salting-and-tumbling', docRevisionStart: 9, href: 'salting-and-tumbling.html' },
+    { docCode: 'REC 7.1.5', title: 'Salting (OOSW)', recordKey: 'salting-oosw', docRevisionStart: 1, href: 'salting-oosw.html' },
+    { docCode: 'REC 7.1.4', title: 'Washing Control Sheet', recordKey: 'washing-control-sheet', docRevisionStart: 9, href: 'washing-control-sheet.html' },
+    { docCode: 'REC 7.1.6', title: 'Scrubbing Check - Supervisor', recordKey: 'scrubbing-check-supervisor', docRevisionStart: 5, href: 'scrubbing-check-supervisor.html' },
+    { docCode: 'REC 7.1', title: 'Incubator Cans Log', recordKey: 'incubator-cans-log', docRevisionStart: 1, href: 'incubator-cans-log.html' },
+    { docCode: 'REC 01', title: 'Cans Released Form (Awaiting NRCS Releases)', recordKey: 'cans-released-form', docRevisionStart: 1, href: 'cans-released-form.html' },
+    { docCode: 'REC 7.2', title: 'Sampling Log', recordKey: 'sampling-log', docRevisionStart: 1, href: 'sampling-log.html' },
+    { docCode: 'REC 7.2.2', title: 'Scrubbing Checklist', recordKey: 'scrubbing-checklist-qc', docRevisionStart: 1, href: 'scrubbing-checklist-qc.html' },
+    { docCode: 'REC 7.2.3', title: 'Precooking Check Sheet', recordKey: 'precooking-check-sheet', docRevisionStart: 5, href: 'precooking-check-sheet.html' },
+    { docCode: 'REC 7.2.4', title: 'Abalone Packing Specification', recordKey: 'abalone-packing-specification', docRevisionStart: 3, href: 'abalone-packing-specification.html' },
+    { docCode: 'REC 7.2.5', title: 'Can Packing Control Sheet', recordKey: 'can-packing-control-sheet', docRevisionStart: 1, href: 'can-packing-control-sheet.html' },
+    { docCode: 'REC 7.2.6', title: 'Can Filling and Printing', recordKey: 'can-filling-and-printing', docRevisionStart: 5, href: 'can-filling-and-printing.html' },
+    { docCode: 'REC 7.2.6.1', title: 'Printing Control Sheet', recordKey: 'printing-control-sheet', docRevisionStart: 1, href: 'printing-control-sheet.html' },
+    { docCode: 'REC 7.2.7', title: 'Cans Produced', recordKey: 'cans-produced', docRevisionStart: 6, href: 'cans-produced.html' },
+    { docCode: 'REC 7.2.8', title: 'Retorting Control Sheet', recordKey: 'retorting-control-sheet', docRevisionStart: 4, href: 'retorting-control-sheet.html' },
+    { docCode: 'REC 7.2.9', title: 'Retort Inspection Report', recordKey: 'retort-inspection-report', docRevisionStart: 7, href: 'retort-inspection-report.html' },
+    { docCode: 'REC 7.2.10', title: 'Stock Loading', recordKey: 'stock-loading', docRevisionStart: 1, href: 'stock-loading.html' },
+    { docCode: 'REC 7.2.11', title: 'QC Report', recordKey: 'qc-report', docRevisionStart: 4, href: 'qc-report.html' },
+    { docCode: 'REC 7.2.13', title: 'Rework Log', recordKey: 'rework-log', docRevisionStart: 1, href: 'rework-log.html' },
+    { docCode: 'REC 7.2.14', title: 'Product Label Checklist', recordKey: 'product-label-checklist', docRevisionStart: 1, href: 'product-label-checklist.html' },
+    { docCode: 'REC 7.2.15', title: 'Labelling of Cans', recordKey: 'labelling-of-cans', docRevisionStart: 1, href: 'labelling-of-cans.html' },
+    { docCode: 'REC 7.2.16', title: 'Stock Transfers', recordKey: 'stock-transfers', docRevisionStart: 2, href: 'stock-transfers.html' },
+    { docCode: 'REC 7.3.1', title: 'Broth Cooking', recordKey: 'broth-cooking', docRevisionStart: 5, href: 'broth-cooking.html' },
+    { docCode: 'REC 7.3.2', title: 'Ingredient Weighing', recordKey: 'ingredient-weighing', docRevisionStart: 2, href: 'ingredient-weighing.html' },
+    { docCode: 'REC 7.3.3', title: 'Sauce Mixing', recordKey: 'sauce-mixing', docRevisionStart: 3, href: 'sauce-mixing.html' },
+    { docCode: 'REC 7.3.4', title: 'Final Sauce Mix', recordKey: 'final-sauce-mix', docRevisionStart: 3, href: 'final-sauce-mix.html' },
+    { docCode: 'REC 7.3.5', title: 'Sauce Batch Coding', recordKey: 'sauce-batch-coding', docRevisionStart: 1, href: 'sauce-batch-coding.html' },
+    { docCode: 'REC 7.3.6', title: 'Brine Mixing Report', recordKey: 'brine-mixing-report', docRevisionStart: 2, href: 'brine-mixing-report.html' },
+    { docCode: 'QA1', title: 'QA1 Damaged Cans and Lids', recordKey: 'qa1-damaged-cans-and-lids', docRevisionStart: 1, href: 'qa1-damaged-cans-and-lids.html' },
+    { docCode: 'Production Information NRCS (Canning)', title: 'Production Information NRCS', recordKey: 'production-information-nrcs', docRevisionStart: 1, href: 'production-information-nrcs.html' },
+    { docCode: 'Production Information NRCS (Rework)', title: 'Production Information NRCS (Rework)', recordKey: 'production-information-nrcs-rework', docRevisionStart: 1, href: 'production-information-nrcs-rework.html' },
+    { docCode: 'REC 7.4.0', title: 'Dry Cooking', recordKey: 'dry-cooking', docRevisionStart: 7, href: 'dry-cooking.html' },
+    { docCode: 'REC 7.4.1', title: 'Drying Process', recordKey: 'drying-process', docRevisionStart: 1, href: 'drying-process.html' },
+    { docCode: 'REC 7.4.2', title: 'Dry Monitoring', recordKey: 'dry-monitoring', docRevisionStart: 3, href: 'dry-monitoring.html' },
+    { docCode: 'REC 7.4.3.1', title: 'Grading Production Log (Cultivated)', recordKey: 'grading-production-log-cultivated', docRevisionStart: 6, href: 'grading-production-log-cultivated.html' },
+    { docCode: 'REC 7.4.3.2', title: 'Grading Production Log (Ranched)', recordKey: 'grading-production-log-ranched', docRevisionStart: 6, href: 'grading-production-log-ranched.html' },
+    { docCode: 'REC 7.4.4', title: 'Grading & Boxing Traceability', recordKey: 'grading-boxing-traceability', docRevisionStart: 1, href: 'grading-boxing-traceability.html' },
+    { docCode: 'REC 7.4.5', title: 'Boxing & Labelling', recordKey: 'boxing-and-labelling', docRevisionStart: 4, href: 'boxing-and-labelling.html' },
+    { docCode: 'REC 7.4.6', title: 'Dry Stock Control', recordKey: 'dry-stock-control', docRevisionStart: 3, href: 'dry-stock-control.html' },
+    { docCode: 'REC 7.4.7', title: 'Labelling of Dry Boxes', recordKey: 'labelling-of-dry-boxes', docRevisionStart: 2, href: 'labelling-of-dry-boxes.html' },
+    { docCode: 'REC 7.4.8', title: 'Dry Labelling List', recordKey: 'dry-labelling-list', docRevisionStart: 2, href: 'dry-labelling-list.html' },
+    { docCode: 'REC 7.4.9', title: 'Dry Stock Transfers', recordKey: 'dry-stock-transfers', docRevisionStart: 2, href: 'dry-stock-transfers.html' },
+    { docCode: 'REC 7.4.10', title: 'Dried Abalone Transfer', recordKey: 'dried-abalone-transfer', docRevisionStart: 2, href: 'dried-abalone-transfer.html' },
+    { docCode: 'Dry Export Pack Front Page', title: 'Dry Export Pack Front Page', recordKey: 'dry-export-pack-front-page', docRevisionStart: 1, href: 'dry-export-pack-front-page.html' },
+    { docCode: 'Production Information NRCS (Dry)', title: 'Dry NRCS Packs', recordKey: 'dry-nrcs-packs', docRevisionStart: 1, href: 'dry-nrcs-packs.html' },
+    { docCode: 'REC 7.5.1', title: 'Live Production Pack', recordKey: 'live-production-pack', docRevisionStart: 4, href: 'live-production-pack.html' },
+    { docCode: 'REC 7.5.2', title: 'Live Pack Checklist', recordKey: 'live-pack-checklist', docRevisionStart: 6, href: 'live-pack-checklist.html' },
+    { docCode: 'REC 7.5.3', title: 'Live Packing - Bag Quality Check', recordKey: 'live-packing-bag-quality-check', docRevisionStart: 3, href: 'live-packing-bag-quality-check.html' },
+    { docCode: 'REC 7.5.4', title: 'Individual Abalone Weight Checks - Quality', recordKey: 'individual-abalone-weight-checks', docRevisionStart: 2, href: 'individual-abalone-weight-checks.html' },
+    { docCode: 'REC 7.5.5', title: 'Receiving Live Returns', recordKey: 'receiving-live-returns', docRevisionStart: 2, href: 'receiving-live-returns.html' },
+    { docCode: 'Live Leftovers Log', title: 'Live Leftovers Log', recordKey: 'live-leftovers-log', docRevisionStart: 1, href: 'live-leftovers-log.html' },
+    { docCode: 'Mortalities Log', title: 'Mortalities Log', recordKey: 'mortalities-log', docRevisionStart: 1, href: 'mortalities-log.html' },
+    { docCode: 'Mortality Counts by Customer', title: 'Mortality Counts by Customer', recordKey: 'mortality-counts-by-customer', docRevisionStart: 1, href: 'mortality-counts-by-customer.html' },
+    { docCode: 'REC 7.6.0a', title: 'Production Areas Cleaning Record', recordKey: 'production-areas-cleaning-record', docRevisionStart: 1, href: 'production-areas-cleaning-record.html' },
+    { docCode: 'REC 7.6.0b', title: 'Live Product Areas Cleaning Record', recordKey: 'live-product-areas-cleaning-record', docRevisionStart: 1, href: 'live-product-areas-cleaning-record.html' },
+    { docCode: 'REC 7.6.0c', title: 'Personnel Facilities Cleaning Record', recordKey: 'personnel-facilities-cleaning-record', docRevisionStart: 1, href: 'personnel-facilities-cleaning-record.html' },
+    { docCode: 'REC 7.6.1', title: 'Daily Cleaning Inspection', recordKey: 'daily-cleaning-inspection', docRevisionStart: 4, href: 'daily-cleaning-inspection.html' },
+    { docCode: 'REC 7.6.1.1', title: 'Deep Cleaning Record Weekly', recordKey: 'deep-cleaning-record-weekly', docRevisionStart: 1, href: 'deep-cleaning-record-weekly.html' },
+    { docCode: 'REC 7.6.2', title: 'Weekly Cleaning Record', recordKey: 'weekly-cleaning-record', docRevisionStart: 3, href: 'weekly-cleaning-record.html' },
+    { docCode: 'REC 7.6.2.2', title: 'Dispatch Cleaning Inspection', recordKey: 'dispatch-cleaning-inspection', docRevisionStart: 1, href: 'dispatch-cleaning-inspection.html' },
+    { docCode: 'REC 7.6.3', title: 'Facility Inspection', recordKey: 'facility-inspection', docRevisionStart: 7, href: 'facility-inspection.html' },
+    { docCode: 'REC 7.6.3.1', title: 'Facility Inspection NC Report', recordKey: 'facility-inspection-nc-report', docRevisionStart: 4, href: 'facility-inspection-nc-report.html' },
+    { docCode: 'REC 7.6.4', title: 'Chemical Stock & Issue Register', recordKey: 'chemical-stock-issue-register', docRevisionStart: 1, href: 'chemical-stock-issue-register.html' },
+    { docCode: 'REC 7.6.5', title: 'Internal Pest Sightings Log', recordKey: 'internal-pest-sightings-log', docRevisionStart: 1, href: 'internal-pest-sightings-log.html' },
+    { docCode: 'REC 7.6.6', title: 'Pest Inspection Record', recordKey: 'pest-inspection-record', docRevisionStart: 7, href: 'pest-inspection-record.html' },
+    { docCode: 'REC 7.6.7', title: 'Staff Hygiene Inspection', recordKey: 'staff-hygiene-inspection', docRevisionStart: 1, href: 'staff-hygiene-inspection.html' },
+    { docCode: 'REC 7.6.7a', title: 'Staff Hygiene Inspection - Weekends', recordKey: 'staff-hygiene-inspection-weekends', docRevisionStart: 2, href: 'staff-hygiene-inspection-weekends.html' },
+    { docCode: 'REC 7.6.8', title: 'Allergen Cleaning Verification', recordKey: 'allergen-cleaning-verification', docRevisionStart: 1, href: 'allergen-cleaning-verification.html' },
+    { docCode: 'Master Cleaning Plan', title: 'Master Cleaning Plan', recordKey: 'master-cleaning-plan', docRevisionStart: 2, href: 'master-cleaning-plan.html' },
+    { docCode: 'Master Cleaning Checklist', title: 'Master Cleaning Checklist (New Plant)', recordKey: 'master-cleaning-checklist', docRevisionStart: 1, href: 'master-cleaning-checklist.html' },
+    { docCode: 'REC 7.7.1', title: 'Daily Equipment Checklist', recordKey: 'daily-equipment-checklist', docRevisionStart: 6, href: 'daily-equipment-checklist.html' },
+    { docCode: 'REC 7.7.2', title: 'Glass, Plastic & Equipment Inspection', recordKey: 'glass-plastic-equipment-inspection', docRevisionStart: 5, href: 'glass-plastic-equipment-inspection.html' },
+    { docCode: 'REC 7.7.3', title: 'Glass Breakage Clearance Certificate', recordKey: 'glass-breakage-clearance-certificate', docRevisionStart: 1, href: 'glass-breakage-clearance-certificate.html' },
+    { docCode: 'REC 7.7.4', title: 'Utensil Issue Record', recordKey: 'utensil-issue-record', docRevisionStart: 6, href: 'utensil-issue-record.html' },
+    { docCode: 'REC 7.7.4c', title: 'Knife Register', recordKey: 'knife-register', docRevisionStart: 2, href: 'knife-register.html' },
+    { docCode: 'REC 7.7.4.1a', title: 'Safety Glass Register', recordKey: 'safety-glass-register', docRevisionStart: 1, href: 'safety-glass-register.html' },
+    { docCode: 'REC 7.7.4.1b', title: 'Goggles Register', recordKey: 'goggles-register', docRevisionStart: 1, href: 'goggles-register.html' },
+    { docCode: 'REC 7.7.5', title: 'Glove Issuing Register', recordKey: 'glove-issuing-register', docRevisionStart: 9, href: 'glove-issuing-register.html' },
+    { docCode: 'REC 7.7.6', title: 'Plaster Issuing / Dressing Inspection', recordKey: 'plaster-dressing-inspection', docRevisionStart: 3, href: 'plaster-dressing-inspection.html' },
+    { docCode: 'REC 7.7.7', title: 'Salt Issuing Register', recordKey: 'salt-issuing-register', docRevisionStart: 1, href: 'salt-issuing-register.html' },
+    { docCode: 'REC 7.8.1', title: 'Chiller Batch Control (Canning)', recordKey: 'chiller-batch-control', docRevisionStart: 4, href: 'chiller-batch-control.html' },
+    { docCode: 'REC 7.8.1', title: 'Dry Chiller Batch Control', recordKey: 'dry-chiller-batch-control', docRevisionStart: 3, href: 'dry-chiller-batch-control.html' },
+    { docCode: 'REC 7.8.2', title: 'Daily Waste Removal', recordKey: 'daily-waste-removal', docRevisionStart: 1, href: 'daily-waste-removal.html' },
+    { docCode: 'REC 7.8.3', title: 'Boiler Inspection Report', recordKey: 'boiler-inspection-report', docRevisionStart: 4, href: 'boiler-inspection-report.html' },
+    { docCode: 'REC 7.8.4', title: 'Seamer Inspection Report', recordKey: 'seamer-inspection-report', docRevisionStart: 7, href: 'seamer-inspection-report.html' },
+    { docCode: 'REC 7.8.5', title: 'Incoming PPE Inspection', recordKey: 'incoming-ppe-inspection', docRevisionStart: 4, href: 'incoming-ppe-inspection.html' },
+    { docCode: 'REC 7.8.5.1', title: 'Incoming Goods Inspection (Log)', recordKey: 'incoming-goods-inspection-log', docRevisionStart: 1, href: 'incoming-goods-inspection-log.html' },
+    { docCode: 'REC 7.8.6', title: 'Cans Incoming Inspection', recordKey: 'cans-incoming-inspection', docRevisionStart: 1, href: 'cans-incoming-inspection.html' },
+    { docCode: 'REC 7.8.6.1', title: 'Lids Incoming Inspection', recordKey: 'lids-incoming-inspection', docRevisionStart: 1, href: 'lids-incoming-inspection.html' },
+    { docCode: 'REC 7.8.6.2', title: 'Lids Incoming Inspection (Internal)', recordKey: 'lids-incoming-inspection-internal', docRevisionStart: 1, href: 'lids-incoming-inspection-internal.html' },
+    { docCode: 'REC 7.8.7', title: 'Incoming Goods Inspection', recordKey: 'incoming-goods-inspection', docRevisionStart: 5, href: 'incoming-goods-inspection.html' },
+    { docCode: 'REC 7.8.8', title: 'Dispatch Loading Inspection Checklist', recordKey: 'dispatch-loading-inspection-checklist', docRevisionStart: 1, href: 'dispatch-loading-inspection-checklist.html' },
+    { docCode: 'REC 7.8.8.1', title: 'Dispatch Receiving Checklist', recordKey: 'dispatch-receiving-checklist', docRevisionStart: 1, href: 'dispatch-receiving-checklist.html' },
+    { docCode: 'REC 7.8.9.1', title: 'LHA Water Monitoring', recordKey: 'lha-water-monitoring', docRevisionStart: 4, href: 'lha-water-monitoring.html' },
+    { docCode: 'REC 7.8.10', title: 'Maintenance Job Card', recordKey: 'maintenance-job-card', docRevisionStart: 1, href: 'maintenance-job-card.html' },
+    { docCode: 'REC 7.8.11', title: 'Water Tank Inspection', recordKey: 'water-tank-inspection', docRevisionStart: 1, href: 'water-tank-inspection.html' },
+    { docCode: 'REC 7.8.12', title: 'Factory Maintenance Inspection', recordKey: 'factory-maintenance-inspection', docRevisionStart: 7, href: 'factory-maintenance-inspection.html' },
+    { docCode: 'REC 7.8.12.1', title: 'Equipment Checklist - Roof', recordKey: 'equipment-checklist-roof', docRevisionStart: 1, href: 'equipment-checklist-roof.html' },
+    { docCode: 'REC 8.1.1.a', title: 'Internal CAR', recordKey: 'internal-car', docRevisionStart: 1, href: 'internal-car.html' },
+    { docCode: 'REC 8.1.3', title: 'Disposition Investigation Record', recordKey: 'disposition-investigation-record', docRevisionStart: 1, href: 'disposition-investigation-record.html' },
+    { docCode: 'REC 8.1.4', title: 'Withdrawal (Mock Recall) Record', recordKey: 'withdrawal-mock-recall-record', docRevisionStart: 1, href: 'withdrawal-mock-recall-record.html' },
+    { docCode: 'REC 8.1.5', title: 'Traceability Exercise', recordKey: 'traceability', docRevisionStart: 1, href: 'traceability.html' },
+    { docCode: 'REC 8.1.6', title: 'Traceability & Mock Recall — Canned Abalone', recordKey: 'traceability-mock-recall-canned-abalone', docRevisionStart: 2, href: 'traceability-mock-recall-canned-abalone.html' },
+    { docCode: 'REC 8.1.6a', title: 'Traceability & Mock Recall — Canned Braised Abalone', recordKey: 'traceability-mock-recall-canned-braised-abalone', docRevisionStart: 5, href: 'traceability-mock-recall-canned-braised-abalone.html' },
+    { docCode: 'REC 8.1.6b', title: 'Traceability & Mock Recall — Canned Minced Abalone', recordKey: 'traceability-mock-recall-canned-minced-abalone', docRevisionStart: 1, href: 'traceability-mock-recall-canned-minced-abalone.html' },
+    { docCode: 'REC 8.1.7', title: 'Traceability & Mock Recall — Dried Abalone', recordKey: 'traceability-mock-recall-dried-abalone', docRevisionStart: 4, href: 'traceability-mock-recall-dried-abalone.html' },
+    { docCode: 'REC 8.1.8', title: 'Traceability & Mock Recall — Live Abalone', recordKey: 'traceability-mock-recall-live-abalone', docRevisionStart: 4, href: 'traceability-mock-recall-live-abalone.html' },
+    { docCode: 'REC 8.2.1', title: 'Supplier Questionnaire', recordKey: 'supplier-questionnaire', docRevisionStart: 6, href: 'supplier-questionnaire.html' },
+    { docCode: 'REC 8.2.2', title: 'Supplier Approval Record', recordKey: 'supplier-approval-record', docRevisionStart: 1, href: 'supplier-approval-record.html' },
+    { docCode: 'REC 8.2.8', title: 'Rapid Food Handler Medicals', recordKey: 'rapid-food-handler-medicals', docRevisionStart: 3, href: 'rapid-food-handler-medicals.html' },
+    { docCode: 'REC 8.2.8.1', title: 'RFH Medical Result', recordKey: 'rfh-medical-result', docRevisionStart: 1, href: 'rfh-medical-result.html' },
+    { docCode: 'RTW Medical Questionnaire', title: 'Return to Work Medical Questionnaire', recordKey: 'rtw-medical-questionnaire', docRevisionStart: 1, href: 'rtw-medical-questionnaire.html' },
+    { docCode: 'REC 7.7.6a', title: 'First Aid Checklist Record', recordKey: 'first-aid-checklist-record', docRevisionStart: 1, href: 'first-aid-checklist-record.html' },
+    { docCode: 'REC 8.4.a', title: 'Emergency Evacuation Attendance Register', recordKey: 'emergency-evacuation-attendance-register', docRevisionStart: 1, href: 'emergency-evacuation-attendance-register.html' },
+    { docCode: 'REC 8.4.b', title: 'Handling of Emergencies and Incidences', recordKey: 'handling-of-emergencies-and-incidences', docRevisionStart: 2, href: 'handling-of-emergencies-and-incidences.html' },
+    { docCode: 'REC 9.2', title: 'Daily Factory Feedback Meeting', recordKey: 'daily-factory-feedback-meeting', docRevisionStart: 1, href: 'daily-factory-feedback-meeting.html' },
+    { docCode: 'REC 6.1.2', title: 'Training Register', recordKey: 'training-register', docRevisionStart: 1, href: 'training-register.html' }
   ];
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
+  const searchInput = document.getElementById('searchInput');
+  const tableBody = document.getElementById('tableBody');
+  const totalCount = document.getElementById('totalCount');
+  const resultCount = document.getElementById('resultCount');
+  const noResults = document.getElementById('noResults');
+
+  totalCount.textContent = RECORDS.length;
+
   async function render() {
-    const container = document.getElementById('sections');
     let html = '';
-    for (const section of SECTIONS) {
-      html += `<div class="mri-section"><h2>${esc(section.title)}</h2>
-        <table class="mri-table"><thead><tr><th>Doc code</th><th>Title</th><th>Current revision</th></tr></thead><tbody>`;
-      for (const r of section.records) {
-        const rev = await DocumentRevision.getCurrent(r.recordKey, r.docRevisionStart);
-        html += `<tr><td>${esc(r.docCode)}</td><td><a href="${esc(r.href)}" target="_blank">${esc(r.title)}</a></td><td class="rev">Rev ${rev}</td></tr>`;
-      }
-      html += `</tbody></table></div>`;
+    for (const r of RECORDS) {
+      const rev = await DocumentRevision.getCurrent(r.recordKey, r.docRevisionStart);
+      html += `<tr><td class="doc-code">${esc(r.docCode)}</td><td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.title)}</a></td><td class="revision">Rev ${rev}</td></tr>`;
     }
-    container.innerHTML = html;
+    tableBody.innerHTML = html;
+    filterRecords();
   }
+
+  function filterRecords() {
+    const query = searchInput.value.toLowerCase();
+    const rows = tableBody.querySelectorAll('tr');
+    let shown = 0;
+    rows.forEach(row => {
+      const docCode = row.cells[0].textContent.toLowerCase();
+      const title = row.cells[1].textContent.toLowerCase();
+      if (docCode.includes(query) || title.includes(query)) {
+        row.classList.remove('hidden');
+        shown++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+    resultCount.textContent = shown;
+    noResults.style.display = shown === 0 ? 'block' : 'none';
+  }
+
+  searchInput.addEventListener('input', filterRecords);
+
   render();
 })();
 </script>

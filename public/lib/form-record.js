@@ -343,6 +343,14 @@
         if (f.required && !String(values[f.key] || '').trim()) missingRequired = f.label;
       });
       if (missingRequired) { toast(`"${missingRequired}" is required.`); return; }
+      // Validate batch number format if this record has a batchField
+      if (config.batchField && window.BatchValidation) {
+        const batchValue = values[config.batchField];
+        if (batchValue && !window.BatchValidation.isValid(batchValue)) {
+          toast(window.BatchValidation.formatError());
+          return;
+        }
+      }
       const rosterRows = hasRoster ? el('fr_rosterRows')._getRows() : undefined;
 
       let savedSub;
