@@ -9,6 +9,7 @@
 <div id="mlRoot"></div>
 
 <script src="../lib/data-store.js?v=2"></script>
+<script src="../lib/traceability.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=1"></script>
 <script src="../lib/monitoring-log.js?v=1"></script>
@@ -17,6 +18,7 @@
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'retorting-control-sheet',
+    batchField: 'jobNumber', stage: 'retorting',
     docCode: 'REC 7.2.8',
     title: 'Retorting Control Sheet',
     docRevisionStart: 4,

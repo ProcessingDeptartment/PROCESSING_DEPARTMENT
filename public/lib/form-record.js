@@ -345,6 +345,7 @@
       if (missingRequired) { toast(`"${missingRequired}" is required.`); return; }
       const rosterRows = hasRoster ? el('fr_rosterRows')._getRows() : undefined;
 
+      let savedSub;
       if (editingId) {
         const existing = submissions.find(s => s.id === editingId);
         existing.history = existing.history || [];
@@ -352,6 +353,7 @@
         existing.values = values;
         if (hasRoster) existing.roster = rosterRows;
         existing.updatedAt = Date.now();
+        savedSub = existing;
       } else {
         const sub = {
           id: uid('sub'),
@@ -363,9 +365,12 @@
         };
         if (hasRoster) sub.roster = rosterRows;
         submissions.push(sub);
+        savedSub = sub;
       }
       const ok = await persist();
       if (!ok) { toast('Save failed — please retry.'); return; }
+      // Best-effort batch traceability index (only if this record declares a batchField).
+      if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       closeForm();
       renderTable();
       toast(editingId ? 'Submission updated.' : 'Submission saved.');

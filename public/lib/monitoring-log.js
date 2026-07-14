@@ -307,6 +307,7 @@
       const values = computeAll(raw);
       const inSpec = evaluateEntry(values);
 
+      let savedEntry;
       if (editingId) {
         const existing = entries.find(e => e.id === editingId);
         existing.history = existing.history || [];
@@ -314,8 +315,9 @@
         existing.values = values;
         existing.inSpec = inSpec;
         existing.updatedAt = Date.now();
+        savedEntry = existing;
       } else {
-        entries.push({
+        savedEntry = {
           id: uid('entry'),
           values,
           inSpec,
@@ -323,10 +325,13 @@
           createdAt: Date.now(),
           updatedAt: Date.now(),
           history: []
-        });
+        };
+        entries.push(savedEntry);
       }
       const ok = await persist();
       if (!ok) { toast('Save failed — please retry.'); return; }
+      // Best-effort batch traceability index (only if this record declares a batchField).
+      if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedEntry);
       closeForm();
       renderTable();
       toast(editingId ? 'Entry updated.' : 'Entry added.');
