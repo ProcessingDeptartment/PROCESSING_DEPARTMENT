@@ -7,20 +7,23 @@
   const STYLE = `
   .login-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; }
   .login-modal.hidden { display:none; }
-  .login-box { background:#fff; border-radius:8px; padding:32px; max-width:360px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
-  .login-box h1 { margin:0 0 8px; font-size:20px; font-weight:600; color:#1b2330; }
-  .login-box .subtitle { margin:0 0 24px; font-size:13px; color:#6b7280; }
+  .login-box { background:#fff; border-radius:8px; padding:0; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden; }
+  .login-box-header { background:#1d2b38; color:#f4f1e8; padding:24px 32px; }
+  .login-box-header h1 { margin:0 0 4px; font-size:18px; font-weight:600; }
+  .login-box-header p { margin:0; font-size:12px; color:#b9c3cc; }
+  .login-box-content { padding:32px; }
   .login-box label { display:block; margin-bottom:16px; }
-  .login-box label .label-text { font-size:12px; font-weight:600; color:#374151; margin-bottom:4px; display:block; }
-  .login-box input { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-family:'IBM Plex Mono',monospace; }
-  .login-box input:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
-  .login-box .error { background:#fee; border:1px solid #fca5a5; color:#991b1b; padding:10px 12px; border-radius:4px; font-size:12px; margin-bottom:16px; }
-  .login-box .user-list { margin:24px 0; }
-  .login-box .user-list label { margin-bottom:8px; display:flex; align-items:center; gap:8px; cursor:pointer; }
+  .login-box label .label-text { font-size:12px; font-weight:600; color:#1b2330; margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:0.02em; }
+  .login-box input { width:100%; padding:10px 12px; border:1px solid #d0d5db; border-radius:6px; font-size:14px; font-family:'Segoe UI',system-ui,sans-serif; box-sizing:border-box; }
+  .login-box input:focus { outline:none; border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
+  .login-box .error { background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; padding:10px 12px; border-radius:4px; font-size:12px; margin-bottom:16px; }
+  .login-box .user-list { margin:24px 0; padding:16px; background:#f9fafb; border-radius:6px; border:1px solid #e2e8f0; }
+  .login-box .user-list label { margin-bottom:8px; display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; }
+  .login-box .user-list label:last-child { margin-bottom:0; }
   .login-box .user-list input[type=radio] { margin:0; width:auto; }
-  .login-box button { width:100%; padding:10px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; }
-  .login-box button:hover { background:#1d4ed8; }
-  .login-box button:disabled { background:#d1d5db; cursor:default; }
+  .login-box button { width:100%; padding:12px; background:#1d4ed8; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; margin-top:8px; }
+  .login-box button:hover { background:#1d3a9e; }
+  .login-box button:disabled { background:#cbd5e1; cursor:default; }
   `;
 
   function injectStyle() {
@@ -54,22 +57,26 @@
     const users = window.Auth ? window.Auth.getAvailableUsers() : [];
 
     box.innerHTML = `
-      <h1>Processing Department</h1>
-      <p class="subtitle">Sign in to access records</p>
-      <div id="loginError" class="error" style="display:none;"></div>
-      <div class="user-list">
-        ${users.map((u, i) => `
-          <label>
-            <input type="radio" name="user" value="${u.username}" ${i === 0 ? 'checked' : ''}>
-            <span>${u.displayName}</span>
-          </label>
-        `).join('')}
+      <div class="login-box-header">
+        <h1>Processing Department</h1>
+        <p>Sign in to access records</p>
       </div>
-      <label>
-        <span class="label-text">Password</span>
-        <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
-      </label>
-      <button id="loginBtn">Sign In</button>
+      <div class="login-box-content">
+        <div id="loginError" class="error" style="display:none;"></div>
+        <div class="user-list">
+          ${users.map((u, i) => `
+            <label>
+              <input type="radio" name="user" value="${u.username}" ${i === 0 ? 'checked' : ''}>
+              <span>${u.displayName}</span>
+            </label>
+          `).join('')}
+        </div>
+        <label>
+          <span class="label-text">User Password</span>
+          <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
+        </label>
+        <button id="loginBtn">Sign In</button>
+      </div>
     `;
 
     modal.appendChild(box);

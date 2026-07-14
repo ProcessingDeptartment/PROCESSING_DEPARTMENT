@@ -235,7 +235,14 @@
 
   searchInput.addEventListener('input', filterRecords);
 
-  render();
+  // Ensure authentication before showing records
+  if (window.LoginUI && !window.Auth?.isAuthenticated?.()) {
+    window.LoginUI.ensureAuthenticated().then(() => {
+      render();
+    });
+  } else {
+    render();
+  }
 })();
 </script>
 </body>
