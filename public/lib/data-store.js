@@ -146,4 +146,9 @@
   }
 
   window.storage = { get, set, remove };
+
+  // Shared low-level handle for libs that need real relational queries (e.g.
+  // traceability.js talking to the batch_link table) rather than the key/value shim.
+  // supabaseClient() resolves to the one cached client, or null in local-only mode.
+  window.storage.supabaseClient = configured ? getClient : null;
 })();
