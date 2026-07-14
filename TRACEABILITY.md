@@ -1,8 +1,9 @@
 # Batch traceability
 
 Trace a product batch/lot forwards and backwards across every record that touched it.
-In this facility the traceable identifier is the **job number**, so that's what the trace
-follows.
+The traceable identifier is the **job number** (format enforced: `3CP`, `3DP`, `CPR`, or `DPR`
+followed by digits), so that's what the trace follows. The trace includes production,
+quality, testing, and recall initiation records.
 
 ## One-time setup
 
@@ -10,6 +11,17 @@ follows.
    (Same as you did for `schema.sql` — creates the `batch_link` index table + policies.)
 
 That's it. From then on, every save of an opted-in record writes a link row automatically.
+
+## Batch number format
+
+All job/batch numbers must match one of these **required formats**:
+- `3CP` — Canned Product (e.g., `3CP000001`)
+- `3DP` — Dried Product (e.g., `3DP000001`)
+- `CPR` — Canned Product Rework (e.g., `CPR000001`)
+- `DPR` — Dried Product Rework (e.g., `DPR000001`)
+
+When filling in a `jobNumber` or batch field, the system validates the format on save
+and rejects invalid entries with a helpful error message.
 
 ## How it works
 
@@ -30,11 +42,15 @@ That's it. From then on, every save of an opted-in record writes a link row auto
 
 | Record | Stage |
 |--------|-------|
-| Precooking Check Sheet | precooking |
-| Retorting Control Sheet | retorting |
-| Cans Produced | canning |
-| QC Report | quality |
-| Dried Abalone Transfer | dry-transfer |
+| Precooking Check Sheet (7.2.3) | precooking |
+| Retorting Control Sheet (7.2.8) | retorting |
+| Cans Produced (7.2.7) | canning |
+| QC Report (7.2.11) | quality |
+| Dried Abalone Transfer (7.4.10) | dry-transfer |
+| Traceability & Mock Recall — Canned Abalone (8.1.6) | recall-canned |
+| Traceability & Mock Recall — Canned Braised Abalone (8.1.6a) | recall-braised |
+| Traceability & Mock Recall — Canned Minced Abalone (8.1.6b) | recall-minced |
+| Traceability & Mock Recall — Dried Abalone (8.1.7) | recall-dried |
 
 ## Adding more records
 
