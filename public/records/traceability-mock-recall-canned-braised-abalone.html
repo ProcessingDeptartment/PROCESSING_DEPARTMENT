@@ -10,6 +10,8 @@
 
 <script src="../lib/data-store.js?v=2"></script>
 <script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/traceability.js?v=1"></script>
+<script src="../lib/batch-validation.js?v=1"></script>
 <script src="../lib/form-record.js?v=1"></script>
 <script>
 (function () {
@@ -19,6 +21,8 @@
     docCode: 'REC 8.1.6a',
     title: 'Traceability & Mock Recall Checklist for Canned Braised Abalone',
     docRevisionStart: 5,
+    batchField: 'jobNo',
+    stage: 'recall-braised',
     listColumns: ['date', 'agCode', 'jobNo'],
     instructions: [
       { label: 'Note', text: 'Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
