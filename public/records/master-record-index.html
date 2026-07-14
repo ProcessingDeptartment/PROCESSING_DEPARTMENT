@@ -204,11 +204,10 @@
 
   totalCount.textContent = RECORDS.length;
 
-  async function render() {
+  function render() {
     let html = '';
     for (const r of RECORDS) {
-      const rev = await DocumentRevision.getCurrent(r.recordKey, r.docRevisionStart);
-      html += `<tr><td class="doc-code">${esc(r.docCode)}</td><td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.title)}</a></td><td class="revision">Rev ${rev}</td></tr>`;
+      html += `<tr><td class="doc-code">${esc(r.docCode)}</td><td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.title)}</a></td><td class="revision">Rev ${r.docRevisionStart}</td></tr>`;
     }
     tableBody.innerHTML = html;
     filterRecords();
