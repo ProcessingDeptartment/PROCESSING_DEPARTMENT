@@ -236,13 +236,12 @@
   searchInput.addEventListener('input', filterRecords);
 
   // Ensure authentication before showing records
-  if (window.LoginUI && !window.Auth?.isAuthenticated?.()) {
-    window.LoginUI.ensureAuthenticated().then(() => {
-      render();
-    });
-  } else {
+  (async function() {
+    if (window.LoginUI && window.Auth && !window.Auth.isAuthenticated()) {
+      await window.LoginUI.ensureAuthenticated();
+    }
     render();
-  }
+  })();
 })();
 </script>
 </body>
