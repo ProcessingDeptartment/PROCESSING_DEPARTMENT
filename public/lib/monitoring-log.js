@@ -632,9 +632,6 @@
     await primary.load();
     primary.renderTable();
     if (secondary) { await secondary.load(); secondary.renderTable(); }
-    if (config.autoOpenForm) {
-      primary.openForm(null);
-    }
   }
 
   window.MonitoringLog = { init };
