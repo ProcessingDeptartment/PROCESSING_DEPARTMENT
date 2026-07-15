@@ -12,7 +12,6 @@
  * Auth.logout() on auth failure and Auth.setCurrentUser() on successful login.
  */
 (function () {
-  const SESSION_KEY = 'auth_session';
 
   // Users list: each role gets one user with username = role slug, password = username
   // Future: these come from an auth provider (LDAP, Okta, etc.)
@@ -29,20 +28,10 @@
 
   let currentUser = null;
 
-  // Load session from localStorage on init
+  // Session is kept in memory only (not persisted to localStorage)
+  // User must login on each new page/tab for security
   function restoreSession() {
-    try {
-      const stored = window.localStorage.getItem(SESSION_KEY);
-      if (stored) {
-        const data = JSON.parse(stored);
-        currentUser = USERS.find(u => u.username === data.username);
-        if (currentUser && window.PermissionRules) {
-          window.PermissionRules.setCurrentRole(currentUser.role);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to restore session:', e);
-    }
+    // No longer restoring from localStorage
   }
 
   function login(username, password) {
@@ -55,22 +44,12 @@
     if (window.PermissionRules) {
       window.PermissionRules.setCurrentRole(user.role);
     }
-    // Persist session
-    try {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username }));
-    } catch (e) {
-      console.error('Failed to save session:', e);
-    }
+    // Session kept in memory only (not persisted to localStorage)
     return { ok: true, user };
   }
 
   function logout() {
     currentUser = null;
-    try {
-      window.localStorage.removeItem(SESSION_KEY);
-    } catch (e) {
-      console.error('Failed to clear session:', e);
-    }
   }
 
   function getCurrentUser() {
