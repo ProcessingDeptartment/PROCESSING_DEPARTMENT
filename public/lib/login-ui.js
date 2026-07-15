@@ -58,8 +58,11 @@
 
     box.innerHTML = `
       <div class="login-box-header">
-        <h1>Processing Department</h1>
-        <p>Sign in to access records</p>
+        <div>
+          <div class="doc-code">PROCESSING</div>
+          <h1>Department Records</h1>
+        </div>
+        <p style="margin:0; color:#b9c3cc; font-size:12px;">Sign in to access records</p>
       </div>
       <div class="login-box-content">
         <div id="loginError" class="error" style="display:none;"></div>

@@ -4,48 +4,279 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.8 Retorting Control Sheet</title>
+<style>
+  :root{
+    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
+    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
+    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  }
+  #rcs-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }
+  #rcs-root *{ box-sizing:border-box; }
+  #rcs-root h1,#rcs-root h2,#rcs-root h3{ margin:0; font-weight:700; }
+  #rcs-root input, #rcs-root select, #rcs-root textarea{
+    font-family:var(--mono); font-size:12.5px; border:1px solid var(--line); border-radius:3px;
+    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
+  }
+  #rcs-root input:focus, #rcs-root select:focus, #rcs-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
+  #rcs-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .rcs-top{ background:var(--steel-dk); color:#f4f1e8; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .rcs-top .doc-code{ font-family:var(--mono); font-size:10px; color:#b9c3cc; letter-spacing:.03em; }
+  .rcs-top h1{ font-size:15px; letter-spacing:.01em; margin:0; }
+  .rcs-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .rcs-topline label.role-label{ font-size:9.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
+  .rcs-topline input{ width:120px; padding:3px 5px; font-size:11px; }
+  .btn{ padding:5px 11px; font-size:11.5px; }
+  .btn-primary{ background:var(--accent); color:#241a0a; }
+  .btn-primary:hover{ background:#dd9536; }
+  .btn-ghost{ background:transparent; color:#f4f1e8; border:1px solid #55636e !important; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-flat:hover{ background:#d5d8d6; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .rcs-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
+  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:#fbfbfa; border-radius:5px 5px 0 0; }
+  .panel-head h2{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
+  .panel-body{ padding:11px; }
+
+  .grid{ display:grid; gap:8px; }
+  .grid-6{ grid-template-columns:repeat(6,1fr); }
+  .grid-4{ grid-template-columns:repeat(4,1fr); }
+  .grid-3{ grid-template-columns:repeat(3,1fr); }
+  .grid-2{ grid-template-columns:repeat(2,1fr); }
+  label.field{ display:flex; flex-direction:column; gap:2px; font-size:10.5px; color:#54606b; font-weight:600; }
+  label.field input, label.field select, label.field textarea{ font-size:11.5px; padding:3px 5px; }
+
+  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
+  .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
+  .record-status{ font-size:10px; color:#54606b; font-weight:600; padding:4px 8px; background:#e2e4e3; border-radius:3px; }
+  .muted{ color:#8a939b; }
+  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:11px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .toast.show{ opacity:1; }
+
+  @media (max-width:900px){
+    .grid-6{grid-template-columns:repeat(3,1fr);}
+    .grid-4{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
 </head>
 <body>
-<div id="mlRoot"></div>
+<div id="rcs-root">
+  <div class="rcs-top">
+    <div>
+      <div class="doc-code">REC 7.2.8</div>
+      <h1>Retorting Control Sheet</h1>
+    </div>
+    <div class="rcs-topline no-print">
+      <label class="role-label">Your name
+        <input id="actingNameInput" placeholder="Name">
+      </label>
+      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
+      <button class="btn btn-primary" id="submitBtn">Submit</button>
+    </div>
+  </div>
+
+  <div class="rcs-body">
+
+    <div class="panel">
+      <div class="panel-head"><h2>Batch & Production Info</h2></div>
+      <div class="panel-body">
+        <div class="grid grid-6" style="margin-bottom:8px;">
+          <label class="field">Date<input id="h_date" type="date"></label>
+          <label class="field">Time<input id="h_time" placeholder="HH:MM"></label>
+          <label class="field">Production code<input id="h_productionCode" placeholder="Code"></label>
+          <label class="field">Job number<input id="h_jobNumber" placeholder="Job"></label>
+          <label class="field">Product recipe<input id="h_productRecipe" placeholder="Recipe"></label>
+          <label class="field">Time trolley in<input id="h_timeTrolleyIn" placeholder="HH:MM"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Retort Information</h2></div>
+      <div class="panel-body">
+        <div class="grid grid-4" style="margin-bottom:8px;">
+          <label class="field">Retort no.<input id="h_retortNo" placeholder="No."></label>
+          <label class="field">Pressure on gauge<input id="h_pressureOnGauge" type="number" step="0.1"></label>
+          <label class="field">Temp on gauge (°C)<input id="h_tempOnGauge" type="number" step="0.1"></label>
+          <label class="field">Pressure on screen<input id="h_pressureOnScreen" type="number" step="0.1"></label>
+        </div>
+        <div class="grid grid-4">
+          <label class="field">Temp on screen (°C)<input id="h_tempOnScreen" type="number" step="0.1"></label>
+          <label class="field">Start sterilization<input id="h_startSterilization" placeholder="HH:MM"></label>
+          <label class="field">Start cooling<input id="h_startCooling" placeholder="HH:MM"></label>
+          <label class="field">Time trolley out<input id="h_timeTrolleyOut" placeholder="HH:MM"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Process Notes</h2></div>
+      <div class="panel-body">
+        <label class="field">Process deviation<textarea id="h_processDeviation" rows="3" placeholder="Any deviations or notes…"></textarea></label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Sign-off</h2></div>
+      <div class="panel-body">
+        <div class="grid grid-2">
+          <label class="field">Checked & completed by<input id="f_checkedBy"></label>
+          <label class="field">Date<input id="f_checkedByDate" type="date"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions no-print">
+      <span class="record-status" id="recordStatus"></span>
+      <span class="status-line" id="statusLine"></span>
+      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
+      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
+    </div>
+  </div>
+
+  <div class="toast no-print" id="toast"></div>
+</div>
 
 <script src="../lib/data-store.js?v=2"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/traceability.js?v=1"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/document-revision.js?v=1"></script>
-<script src="../lib/monitoring-log.js?v=1"></script>
 <script>
-(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'retorting-control-sheet',
-    batchField: 'jobNumber', stage: 'retorting',
-    docCode: 'REC 7.2.8',
-    title: 'Retorting Control Sheet',
-    docRevisionStart: 4,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'time', label: 'Time', type: 'text' },
-      { key: 'productionCode', label: 'Production code', type: 'text' },
-      { key: 'jobNumber', label: 'Job number', type: 'text' },
-      { key: 'productRecipe', label: 'Product recipe', type: 'text' },
-      { key: 'timeTrolleyIn', label: 'Time trolley in', type: 'text' },
-      { key: 'retortNo', label: 'Retort no.', type: 'text' },
-      { key: 'pressureOnGauge', label: 'Pressure on gauge', type: 'number' },
-      { key: 'tempOnGauge', label: 'Temp on gauge', type: 'number', unit: '°C' },
-      { key: 'pressureOnScreen', label: 'Pressure on screen', type: 'number' },
-      { key: 'tempOnScreen', label: 'Temp on screen', type: 'number', unit: '°C' },
-      { key: 'startSterilization', label: 'Start sterilization', type: 'text' },
-      { key: 'startCooling', label: 'Start cooling', type: 'text' },
-      { key: 'timeTrolleyOut', label: 'Time trolley out', type: 'text' },
-      { key: 'processDeviation', label: 'Process deviation', type: 'textarea' },
-      { key: 'checkedBy', label: 'Checked & completed by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+(async function(){
+  const $ = id => document.getElementById(id);
+
+  if (window.LoginUI && window.Auth && !window.Auth.isAuthenticated()) {
+    await window.LoginUI.ensureAuthenticated();
+  }
+
+  function newRecord(){
+    return {
+      id: null, revision: 1, status:'draft',
+      date:'', time:'', productionCode:'', jobNumber:'', productRecipe:'', timeTrolleyIn:'',
+      retortNo:'', pressureOnGauge:'', tempOnGauge:'', pressureOnScreen:'', tempOnScreen:'',
+      startSterilization:'', startCooling:'', timeTrolleyOut:'', processDeviation:'',
+      checkedBy:'', checkedByDate:'',
+      createdAt: null, updatedAt: null
+    };
+  }
+
+  let state = newRecord();
+  const ACTING_NAME_KEY = 'acting_as_name_retorting';
+  let actingName = window.localStorage.getItem(ACTING_NAME_KEY) || '';
+
+  function toast(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2000);
+  }
+  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
+
+  async function storeGet(key, shared){
+    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  async function storeSet(key, value, shared){
+    try{ await window.storage.set(key, value, shared); return true; }
+    catch(e){ return false; }
+  }
+
+  function renderForm(){
+    $('h_date').value = state.date;
+    $('h_time').value = state.time;
+    $('h_productionCode').value = state.productionCode;
+    $('h_jobNumber').value = state.jobNumber;
+    $('h_productRecipe').value = state.productRecipe;
+    $('h_timeTrolleyIn').value = state.timeTrolleyIn;
+    $('h_retortNo').value = state.retortNo;
+    $('h_pressureOnGauge').value = state.pressureOnGauge;
+    $('h_tempOnGauge').value = state.tempOnGauge;
+    $('h_pressureOnScreen').value = state.pressureOnScreen;
+    $('h_tempOnScreen').value = state.tempOnScreen;
+    $('h_startSterilization').value = state.startSterilization;
+    $('h_startCooling').value = state.startCooling;
+    $('h_timeTrolleyOut').value = state.timeTrolleyOut;
+    $('h_processDeviation').value = state.processDeviation;
+    $('f_checkedBy').value = state.checkedBy;
+    $('f_checkedByDate').value = state.checkedByDate;
+  }
+
+  function bindInputs(){
+    const fields = ['date','time','productionCode','jobNumber','productRecipe','timeTrolleyIn',
+      'retortNo','pressureOnGauge','tempOnGauge','pressureOnScreen','tempOnScreen',
+      'startSterilization','startCooling','timeTrolleyOut','processDeviation','checkedBy','checkedByDate'];
+    fields.forEach(f=>{
+      const id = f.startsWith('checkedBy') ? 'f_'+f : 'h_'+f;
+      const el = $(id);
+      if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
+    });
+  }
+
+  function updateRecordStatus(){
+    const dateStr = state.date ? state.date : 'No date';
+    const submitted = state.status === 'submitted';
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+  }
+
+  function renderAll(){
+    renderForm();
+    updateRecordStatus();
+    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
+  }
+
+  async function saveRecord(finalize){
+    const now = Date.now();
+    if(!state.id){
+      const jobId = state.jobNumber ? state.jobNumber : 'NOJOB';
+      state.id = `retorting_${safeKey(jobId)}_${now}`;
+      state.createdAt = now;
+    }
+    state.updatedAt = now;
+    state.status = finalize ? 'submitted' : 'draft';
+
+    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
+    if(!ok){ toast('Save failed.'); return; }
+
+    if (window.Traceability) {
+      window.Traceability.indexSubmission({recordKey:'retorting-control-sheet', batchField:'jobNumber', stage:'retorting'}, {values:state});
+    }
+
+    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
+    renderAll();
+  }
+
+  function generatePdf(){
+    const jobStr = state.jobNumber ? state.jobNumber : 'record';
+    document.title = `REC_7.2.8_RETORTING_${safeKey(jobStr)}_${state.date||''}`;
+    window.print();
+  }
+
+  function wireActingName(){
+    const inp = $('actingNameInput');
+    inp.value = actingName;
+    inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
+  }
+
+  function wire(){
+    wireActingName();
+    bindInputs();
+    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
+    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
+    $('exportBtn').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const jobStr = state.jobNumber ? state.jobNumber : 'retorting_draft';
+      a.download = `retorting_${safeKey(jobStr)}.json`;
+      a.click();
+    });
+    $('generatePdfBtn').addEventListener('click', generatePdf);
+  }
+
+  wire();
+  renderAll();
 })();
 </script>
 </body>
