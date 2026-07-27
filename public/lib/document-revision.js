@@ -29,6 +29,17 @@
     return history[history.length - 1].revisionNumber;
   }
 
+  // Date the current revision took effect, as YYYY-MM-DD. Null when the record has
+  // never been bumped here -- the baseline revision came off paper, so its date is
+  // only known if the caller supplies `baselineDate`. Never guess one: an invented
+  // revision date on a printed record is a document-control failure.
+  async function getCurrentDate(recordKey, baselineDate) {
+    const history = await loadHistory(recordKey);
+    if (!history.length) return baselineDate || null;
+    const at = history[history.length - 1].changedAt;
+    return at ? new Date(at).toISOString().slice(0, 10) : (baselineDate || null);
+  }
+
   async function history(recordKey) {
     return (await loadHistory(recordKey)).slice().reverse();
   }
@@ -59,5 +70,5 @@
     return entry;
   }
 
-  window.DocumentRevision = { getCurrent, history, bump };
+  window.DocumentRevision = { getCurrent, getCurrentDate, history, bump };
 })();

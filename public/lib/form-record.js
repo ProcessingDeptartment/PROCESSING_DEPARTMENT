@@ -45,6 +45,8 @@
   .fr-app button{ font-family:'Segoe UI',system-ui,sans-serif; cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .fr-top{ background:#1d2b38; color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
   .fr-top .doc-code{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .fr-top .doc-rev{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .fr-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
   .fr-top h1{ font-size:17px; letter-spacing:.01em; }
   .fr-btn{ padding:7px 13px; font-size:12.5px; }
   .fr-btn-primary{ background:#c9832b; color:#241a0a; }
@@ -84,12 +86,52 @@
   .fr-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap; align-items:center; }
   .fr-toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#1d2b38; color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .fr-toast.show{ opacity:1; }
+  /* Submission list can carry more columns than a phone is wide -- scroll it
+     inside the panel rather than letting it stretch the page. */
+  .fr-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  @media (max-width:1024px){
+    .fr-grid-3{ grid-template-columns:repeat(2,1fr); }
+    .fr-body{ padding:14px 14px 60px; }
+  }
   @media (max-width:900px){ .fr-grid-2,.fr-grid-3{grid-template-columns:1fr;} }
+  @media (max-width:768px){
+    .fr-top{ padding:10px 12px; gap:10px; }
+    .fr-top h1{ font-size:15px; }
+    .fr-body{ padding:10px 12px 60px; }
+    .fr-panel-head{ padding:8px 10px; }
+    .fr-panel-body{ padding:10px; }
+    /* >=16px stops iOS Safari zooming the page on focus. Inputs inside the
+       submissions table stay compact -- that table scrolls instead. */
+    .fr-app input,.fr-app select,.fr-app textarea{ font-size:16px; padding:8px; }
+    .fr-app table.fr-table input,.fr-app table.fr-table select,.fr-app table.fr-table textarea{ font-size:13px; padding:4px; }
+    .fr-btn{ min-height:40px; }
+    .fr-btn-sm{ min-height:32px; padding:6px 10px; font-size:11.5px; }
+    .fr-filters{ gap:6px; }
+    .fr-filters label,.fr-filters input[type=text]{ flex:1 1 140px; max-width:none; }
+    .fr-filters input[type=date]{ width:100%; }
+    /* Roster rows are a horizontal strip of inputs on desktop; on a phone they
+       stack, with the remove button on its own full-width line. */
+    .fr-roster-row{ flex-direction:column; align-items:stretch; gap:6px; padding:8px; border:1px solid #e2e4e3; border-radius:4px; margin-bottom:8px; }
+    .fr-roster-row .fr-btn-sm{ align-self:flex-end; }
+    .fr-modal-inner{ width:100vw; max-width:100vw; min-height:100vh; max-height:100vh; border-radius:0; padding:14px; }
+    .fr-actions{ justify-content:flex-start; }
+    .fr-actions .fr-btn{ flex:1 1 auto; }
+  }
+  @media (max-width:480px){
+    .fr-top{ padding:8px 10px; }
+    .fr-top h1{ font-size:14px; }
+    .fr-body{ padding:8px 10px 60px; }
+    .fr-panel-body{ padding:8px; }
+    .fr-filters label,.fr-filters input[type=text]{ flex:1 1 100%; }
+    .fr-actions .fr-btn{ flex:1 1 100%; }
+    .fr-actions .fr-btn-sm{ flex:0 1 auto; }
+  }
   @media print{
     @page{ size:A4; margin:12mm; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
     .fr-app{ font-size:10px; }
+    .fr-table-wrap{ overflow:visible !important; }
   }`;
 
   function injectStyleOnce() {
@@ -155,7 +197,8 @@
 
     async function renderDocBadge() {
       const rev = await DocumentRevision.getCurrent(config.recordKey, config.docRevisionStart || 1);
-      el('fr_docCode').textContent = `${config.docCode} · Rev ${rev}`;
+      const date = await DocumentRevision.getCurrentDate(config.recordKey, config.docRevisionDate);
+      el('fr_docRev').textContent = `Rev ${rev} · Rev date ${date || 'not set'}`;
     }
 
     const instructionsHtml = (config.instructions || []).length ? `
@@ -177,9 +220,10 @@
 
     mount.innerHTML = `
       <div class="fr-top">
-        <div>
-          <div class="doc-code" id="fr_docCode">${esc(config.docCode)}</div>
+        <div class="doc-line">
+          <span class="doc-code">${esc(config.docCode)}</span>
           <h1>${esc(config.title)}</h1>
+          <span class="doc-rev" id="fr_docRev"></span>
         </div>
       </div>
       <div class="fr-body">
@@ -197,7 +241,7 @@
               <input type="text" id="fr_filterSearch" placeholder="Search submissions…">
               <button class="fr-btn fr-btn-flat fr-btn-sm" id="fr_printBtn">Print</button>
             </div>
-            <div id="fr_table"></div>
+            <div id="fr_table" class="fr-table-wrap"></div>
           </div>
         </div>
       </div>

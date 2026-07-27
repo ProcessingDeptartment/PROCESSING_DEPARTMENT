@@ -23,6 +23,8 @@
   #dsir-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .dsir-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
   .dsir-top .doc-code{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .dsir-top .doc-rev{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .dsir-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
   .dsir-top h1{ font-size:17px; letter-spacing:.01em; }
   .dsir-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .dsir-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
@@ -126,17 +128,19 @@
       background:#fff !important; padding:8px 18px;
       border-bottom:1.5px solid #000;
     }
-    .dsir-top .doc-code{ color:#333 !important; }
+    .dsir-top .doc-code, .dsir-top .doc-rev{ color:#333 !important; }
     .dsir-top h1{ color:#000 !important; font-size:13px; }
   }
 </style>
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="dsir-root">
   <div class="dsir-top">
-    <div>
-      <div class="doc-code" id="docCodeBadge">REC 7.2.12</div>
+    <div class="doc-line">
+      <span class="doc-code">REC 7.2.12</span>
       <h1>Double Seam Inspection Report</h1>
+      <span class="doc-rev" id="docCodeBadge"></span>
     </div>
     <div class="dsir-topline no-print">
       <label class="role-label">Your name
@@ -296,7 +300,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=2"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/document-revision.js?v=1"></script>
+<script src="../lib/document-revision.js?v=2"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -407,7 +411,8 @@
   // ---------- document revision (record-template level, not per-inspection) ----------
   async function renderDocRevBadge(){
     docRevisionNumber = await DocumentRevision.getCurrent(DOC_REVISION_KEY, DOC_REVISION_START);
-    $('docCodeBadge').textContent = `REC 7.2.12 · Rev ${docRevisionNumber}`;
+    const docRevisionDate = await DocumentRevision.getCurrentDate(DOC_REVISION_KEY);
+    $('docCodeBadge').textContent = `Rev ${docRevisionNumber} · Rev date ${docRevisionDate || 'not set'}`;
     const modalTag = $('docRevInModal');
     if(modalTag) modalTag.textContent = `Rev ${docRevisionNumber}`;
   }

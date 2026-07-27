@@ -1,0 +1,209 @@
+/*
+ * Shared responsive layer for every page in public/.
+ *
+ * Loaded LAST in <head> on all pages (after each page's own inline <style> and
+ * after production-handover.css / rec-7-6-x.css / rec-8-1-x.css), so plain class
+ * rules here win on source order. Rules that have to beat an ID-scoped selector
+ * -- the record pages style their inputs as `#xx-root input` -- carry !important;
+ * that is deliberate and confined to the breakpoints below.
+ *
+ * The two shared engines (public/lib/monitoring-log.js, public/lib/form-record.js)
+ * carry their own breakpoints inside their injected STYLE blocks, since they own
+ * markup this file never sees. The .ml-* / .fr-* rules here only cover the pieces
+ * that need the same treatment as the hand-written pages.
+ *
+ * Breakpoints:
+ *   <= 1024px  tablet landscape / small laptop
+ *   <=  768px  tablet portrait / large phone
+ *   <=  480px  phone
+ *
+ * Two rules drive most of what follows:
+ *   - dense multi-column field grids collapse progressively, never all at once;
+ *   - form controls go to >=16px on phones, because iOS Safari zooms the page
+ *     when a focused input is smaller than that and the operator then has to
+ *     pinch back out mid-record.
+ */
+
+/* ------------------------------------------------------------------ base -- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+img, svg, video, canvas {
+  max-width: 100%;
+}
+
+/* Batch numbers and doc codes are long and unbreakable; let them wrap rather
+   than push the page wider than the viewport. */
+body {
+  overflow-wrap: break-word;
+}
+
+/* Wide reading tables scroll inside their own box at every width. */
+.rs-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* -------------------------------------------------------------- <=1024px -- */
+
+@media (max-width: 1024px) {
+  /* Record tables are wider than a tablet; keep them inside the panel. */
+  .panel-body,
+  .ml-panel-body,
+  .fr-panel-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid-6 { grid-template-columns: repeat(3, 1fr) !important; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Hub link rows: left-align once they wrap onto several lines, centred
+     ragged rows read badly. */
+  .report-list { justify-content: flex-start; }
+}
+
+/* --------------------------------------------------------------- <=768px -- */
+
+@media (max-width: 768px) {
+  /* --- record page chrome --- */
+  .cp-top, .dc-top, .dsir-top, .gbt-top, .rcs-top, .so-top {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .cp-top h1, .dc-top h1, .dsir-top h1, .gbt-top h1, .rcs-top h1, .so-top h1 {
+    font-size: 14px;
+  }
+  .cp-topline, .dc-topline, .dsir-topline, .gbt-topline, .rcs-topline, .so-topline {
+    width: 100%;
+    gap: 6px;
+  }
+  .cp-topline input, .dc-topline input, .dsir-topline input,
+  .gbt-topline input, .rcs-topline input, .so-topline input {
+    width: 100%;
+    font-size: 16px !important;
+    padding: 8px !important;
+  }
+  .cp-body, .dc-body, .dsir-body, .gbt-body, .rcs-body, .so-body {
+    padding: 10px 12px 40px;
+  }
+
+  .panel-head { padding: 8px 10px; }
+  .panel-body { padding: 10px; }
+
+  /* --- field grids --- */
+  .grid-6 { grid-template-columns: repeat(2, 1fr) !important; }
+  .grid-4 { grid-template-columns: 1fr !important; }
+  .grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
+  .grid-2 { grid-template-columns: 1fr !important; }
+  .signoff-grid,
+  .footer-grid { grid-template-columns: 1fr !important; }
+
+  /* --- controls: touch targets and no iOS zoom-on-focus --- */
+  input, select, textarea,
+  label.field input, label.field select, label.field textarea {
+    font-size: 16px !important;
+    padding: 8px !important;
+  }
+  /* Grid cells inside data tables stay compact -- a 16px input in a 12-column
+     readings table would make the row unusable. Those tables scroll instead. */
+  table input, table select, table textarea {
+    font-size: 13px !important;
+    padding: 4px !important;
+  }
+
+  /* Measurement tables (double-seam and friends) have a text label column plus
+     numeric points. Squashed to 375px the label truncates, so hold a floor and
+     let the surrounding .panel-body scroll instead. */
+  table.meas { min-width: 420px; }
+
+  .btn, .ml-btn, .fr-btn, button {
+    min-height: 40px;
+    font-size: 13px;
+  }
+  .btn-sm, .ml-btn-sm, .fr-btn-sm {
+    min-height: 32px;
+    font-size: 12px;
+  }
+  table .btn, table .ml-btn, table .fr-btn, table button {
+    min-height: 28px;
+  }
+
+  /* Action rows read better full-width than right-aligned on a phone. */
+  .actions, .ml-actions, .fr-actions {
+    justify-content: flex-start;
+  }
+  .status-line { width: 100%; margin-right: 0; }
+
+  /* --- hub pages ---
+     Scoped to `.container > .card` because batch-trace.html uses a bare `.card`
+     for its timeline entries and must keep its own padding. */
+  .container > .card { padding: 16px; border-radius: 12px; }
+  .report-list { gap: 8px; }
+  .report-link {
+    display: block;
+    padding: 12px 16px;
+    font-size: 14px;
+    text-align: center;
+  }
+  .report-list li { flex: 1 1 200px; }
+}
+
+/* --------------------------------------------------------------- <=480px -- */
+
+@media (max-width: 480px) {
+  .cp-top, .dc-top, .dsir-top, .gbt-top, .rcs-top, .so-top {
+    padding: 8px 10px;
+  }
+  .cp-top h1, .dc-top h1, .dsir-top h1, .gbt-top h1, .rcs-top h1, .so-top h1 {
+    font-size: 13px;
+  }
+  .cp-topline, .dc-topline, .dsir-topline, .gbt-topline, .rcs-topline, .so-topline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cp-body, .dc-body, .dsir-body, .gbt-body, .rcs-body, .so-body {
+    padding: 8px 10px 40px;
+  }
+  .panel-body { padding: 8px; }
+
+  /* Everything to one column -- two columns of 11px labels on a 320px screen
+     truncates the labels, which is worse than scrolling. */
+  .grid-6, .grid-4, .grid-3, .grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 6px;
+  }
+
+  /* Buttons in an action row stack full-width so they are unmissable. */
+  .actions .btn,
+  .ml-actions .ml-btn,
+  .fr-actions .fr-btn {
+    flex: 1 1 100%;
+  }
+  .actions .btn-sm,
+  .ml-actions .ml-btn-sm,
+  .fr-actions .fr-btn-sm {
+    flex: 0 1 auto;
+  }
+
+  .report-list li { flex: 1 1 100%; }
+  .report-link { padding: 14px 16px; }
+  .container > .card { padding: 14px; }
+}
+
+/* ------------------------------------------------------------------ print --
+ * Each page already owns its print rules; only make sure nothing this file
+ * added leaks into the printed record.
+ */
+
+@media print {
+  .rs-scroll,
+  .panel-body,
+  .ml-panel-body,
+  .fr-panel-body {
+    overflow: visible !important;
+  }
+}

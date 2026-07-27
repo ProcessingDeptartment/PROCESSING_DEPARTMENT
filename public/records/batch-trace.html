@@ -34,7 +34,32 @@
   .card a.open { display: inline-block; margin-top: 9px; font-size: 13px; color: var(--orange); text-decoration: none; }
   .card a.open:hover { text-decoration: underline; }
   a.back { color: #b9c6d1; font-size: 13px; text-decoration: none; }
+
+  @media (max-width: 768px) {
+    header { padding: 14px 16px; }
+    header h1 { font-size: 18px; }
+    .wrap { padding: 16px; }
+    /* The search row is input + button side by side on desktop; on a phone the
+       240px input alone is wider than the viewport, so both go full width. */
+    .search { padding: 14px; gap: 8px; }
+    .search > div { flex: 1 1 100%; }
+    .search input { min-width: 0; width: 100%; font-size: 16px; }
+    .search button { flex: 1 1 100%; padding: 12px 18px; }
+    li.tp { padding-left: 34px; }
+    .card .date { white-space: normal; }
+  }
+  @media (max-width: 480px) {
+    header { padding: 12px 14px; }
+    header h1 { font-size: 17px; }
+    .wrap { padding: 12px; }
+    ol.timeline::before { left: 10px; }
+    li.tp { padding-left: 28px; }
+    li.tp::before { left: 4px; }
+    .card { padding: 10px 12px; }
+    .card .summary { font-size: 13px; }
+  }
 </style>
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <header>

@@ -93,6 +93,34 @@
         .print-only { display: none; }
         .status-icon { display: none; }
 
+        /* Tailwind handles the section grids (grid-cols-2 md:grid-cols-4 etc.);
+           what it cannot reach is the hand-written CSS above. */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .section-card { padding: 14px; border-radius: 10px; }
+            .section-title { font-size: 15px; margin-bottom: 12px; }
+            /* The report header is a flex row of title + GENERATE PDF; it must
+               wrap instead of squashing the button off-screen. */
+            .report-header { flex-wrap: wrap; gap: 12px; }
+            .report-header > * { flex: 1 1 100%; }
+            .report-header h1 { font-size: 22px; }
+            .report-header button { width: 100%; padding: 14px 16px; }
+            .bubble-block { max-width: none; }
+            /* Below 16px iOS zooms the page when the operator taps a value field. */
+            .bubble-val-input { font-size: 16px !important; }
+            .bubble-btn { padding: 12px; font-size: 13px; }
+            .compliance-row { padding: 10px; }
+            .compliance-row label { padding: 8px 12px; font-size: 12px; }
+            /* Compliance rows are label + Yes/No on one line. Two of those per
+               row leaves ~150px for the label, so give each its own row. */
+            .grid.grid-cols-2:has(> .compliance-row) { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .section-card { padding: 12px; }
+            .section-title { font-size: 14px; }
+        }
+
         @media print {
             @page { size: A4 portrait; margin: 0.6cm; }
             body { background: white; padding: 0; color: black; font-size: 11px; line-height: 1.2; }
@@ -126,6 +154,7 @@
             .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
         }
     </style>
+  <link rel="stylesheet" href="responsive.css?v=1">
 </head>
 <body onload="init()">
 
@@ -135,7 +164,7 @@
             <h2 id="dynamicPrintName" class="text-lg" style="margin-top: 5px;">COMPLETED BY:</h2>
         </div>
 
-        <div class="flex justify-between items-center mb-6 no-print">
+        <div class="report-header flex justify-between items-center mb-6 no-print">
             <h1 class="text-3xl font-black text-slate-900">REC 9.9.2 Quality Handover</h1>
             <div class="flex gap-4 items-center">
                 <span id="printWarning" class="text-[10px] text-red-500 font-bold uppercase">Complete footer to print</span>

@@ -61,15 +61,15 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+  .cp-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .cp-top .doc-rev{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-size:10px; color:#b9c3cc; letter-spacing:.03em; }
 </style>
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="cp-root">
   <div class="cp-top">
-    <div>
-      <div class="doc-code">REC 7.2.7</div>
-      <h1>Cans Produced</h1>
-    </div>
+    <div class="doc-line"><span class="doc-code">REC 7.2.7</span><h1>Cans Produced</h1><span class="doc-rev">Rev 6 &middot; Rev date not set</span></div>
     <div class="cp-topline no-print">
       <label class="role-label">Your name
         <input id="actingNameInput" placeholder="Name">

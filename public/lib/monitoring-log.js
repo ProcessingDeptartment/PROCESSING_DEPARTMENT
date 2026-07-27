@@ -47,6 +47,8 @@
   .ml-app button{ font-family:'Segoe UI',system-ui,sans-serif; cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .ml-top{ background:#1d2b38; color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
   .ml-top .doc-code{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .ml-top .doc-rev{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .ml-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
   .ml-top h1{ font-size:17px; letter-spacing:.01em; }
   .ml-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .ml-btn{ padding:7px 13px; font-size:12.5px; }
@@ -98,12 +100,51 @@
   .ml-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap; align-items:center; }
   .ml-toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#1d2b38; color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .ml-toast.show{ opacity:1; }
+  /* Entries table is wider than any tablet -- scroll it inside the panel rather
+     than letting it stretch the page. Applies at every width. */
+  .ml-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  @media (max-width:1024px){
+    .ml-grid-3{ grid-template-columns:repeat(2,1fr); }
+    .ml-body{ padding:14px 14px 60px; }
+  }
   @media (max-width:900px){ .ml-grid-2,.ml-grid-3{grid-template-columns:1fr;} }
+  @media (max-width:768px){
+    .ml-top{ padding:10px 12px; gap:10px; }
+    .ml-top h1{ font-size:15px; }
+    .ml-topline{ width:100%; }
+    .ml-topline .ml-btn{ flex:1 1 auto; }
+    .ml-body{ padding:10px 12px 60px; }
+    .ml-panel-head{ padding:8px 10px; }
+    .ml-panel-body{ padding:10px; }
+    /* >=16px stops iOS Safari zooming the page on focus. Inputs inside the
+       entries table stay compact -- that table scrolls instead. */
+    .ml-app input,.ml-app select,.ml-app textarea{ font-size:16px; padding:8px; }
+    .ml-app table.ml-table input,.ml-app table.ml-table select,.ml-app table.ml-table textarea{ font-size:13px; padding:4px; }
+    .ml-btn{ min-height:40px; }
+    .ml-btn-sm{ min-height:32px; padding:6px 10px; font-size:11.5px; }
+    .ml-filters{ gap:6px; }
+    .ml-filters label,.ml-filters input[type=text]{ flex:1 1 140px; max-width:none; }
+    .ml-filters input[type=date]{ width:100%; }
+    .ml-modal-inner{ width:100vw; max-width:100vw; min-height:100vh; max-height:100vh; border-radius:0; padding:14px; }
+    .ml-actions{ justify-content:flex-start; }
+    .ml-actions .ml-btn{ flex:1 1 auto; }
+  }
+  @media (max-width:480px){
+    .ml-top{ padding:8px 10px; }
+    .ml-top h1{ font-size:14px; }
+    .ml-topline{ flex-direction:column; align-items:stretch; }
+    .ml-body{ padding:8px 10px 60px; }
+    .ml-panel-body{ padding:8px; }
+    .ml-filters label,.ml-filters input[type=text]{ flex:1 1 100%; }
+    .ml-actions .ml-btn{ flex:1 1 100%; }
+    .ml-actions .ml-btn-sm{ flex:0 1 auto; }
+  }
   @media print{
     @page{ size:A4 landscape; margin:9mm; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
     .ml-app{ font-size:10px; }
+    .ml-table-wrap{ overflow:visible !important; }
     table.ml-table th,table.ml-table td{ border:1px solid #000; padding:3px 5px; }
   }`;
 
@@ -393,7 +434,8 @@
 
     async function renderDocRevBadge() {
       const rev = await DocumentRevision.getCurrent(docRevisionKey, config.docRevisionStart || 1);
-      el('ml_docCode').textContent = `${config.docCode} · Rev ${rev}`;
+      const date = await DocumentRevision.getCurrentDate(docRevisionKey, config.docRevisionDate);
+      el('ml_docRev').textContent = `Rev ${rev} · Rev date ${date || 'not set'}`;
       const modalTag = el('ml_docRevInModal');
       if (modalTag) modalTag.textContent = `Rev ${rev}`;
     }
@@ -433,7 +475,7 @@
             <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_exportCsvBtn">Export CSV</button>
             <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_printBtn">Print</button>
           </div>
-          <div id="${ns}_table"></div>
+          <div id="${ns}_table" class="ml-table-wrap"></div>
         </div>
       </div>
       <div id="${ns}_modal" class="ml-modal-overlay no-print" style="display:none;">
@@ -468,9 +510,10 @@
 
     mount.innerHTML = `
       <div class="ml-top">
-        <div>
-          <div class="doc-code" id="ml_docCode">${esc(config.docCode)}</div>
+        <div class="doc-line">
+          <span class="doc-code">${esc(config.docCode)}</span>
           <h1>${esc(config.title)}</h1>
+          <span class="doc-rev" id="ml_docRev"></span>
         </div>
         <div class="ml-topline no-print">
           <button class="ml-btn ml-btn-ghost" id="ml_thresholdsBtn">Thresholds</button>
