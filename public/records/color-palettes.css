@@ -1,0 +1,159 @@
+/* ========================================================================
+   ABAGOLD RECORD PALETTES
+
+   Centralized color system for all online records (REC 7.3.x, 7.6.x, 8.1.x)
+   Muted, professional palette hierarchy for facility documentation.
+   ======================================================================== */
+
+/* ========================================================================
+   REC 7.3.x — SAUCE RECORDS (Warm Brown)
+   ======================================================================== */
+:root {
+  /* Primary colors */
+  --rec-7-3-x-dark: #4a3428;
+  --rec-7-3-x-primary: #8b7355;
+  --rec-7-3-x-primary-hover: #7a614a;
+  --rec-7-3-x-light: #b9956e;
+  --rec-7-3-x-bg-light: #dcc9b8;
+  --rec-7-3-x-paper: #f8f6f3;
+
+  /* Status colors */
+  --rec-7-3-x-ok: #7b9b7f;
+  --rec-7-3-x-ok-bg: #e8f0e9;
+  --rec-7-3-x-warn: #c9a158;
+  --rec-7-3-x-warn-bg: #faf5eb;
+  --rec-7-3-x-fail: #9d6f5f;
+  --rec-7-3-x-fail-bg: #faf5f3;
+  --rec-7-3-x-error: #ef4444;
+  --rec-7-3-x-error-bg: #fef2f2;
+  --rec-7-3-x-error-text: #b91c1c;
+}
+
+/* ========================================================================
+   REC 7.6.x — CLEANING RECORDS (Muted Teal)
+   ======================================================================== */
+:root {
+  /* Primary colors */
+  --rec-7-6-x-dark: #3a4f4e;
+  --rec-7-6-x-primary: #6b8c8f;
+  --rec-7-6-x-primary-hover: #5a7a7d;
+  --rec-7-6-x-light: #b5c3bf;
+  --rec-7-6-x-bg-light: #cdd9d8;
+  --rec-7-6-x-paper: #f8f8f8;
+
+  /* Status colors */
+  --rec-7-6-x-ok: #6b8c8f;
+  --rec-7-6-x-ok-bg: #e8f3ec;
+  --rec-7-6-x-warn: #b8791c;
+  --rec-7-6-x-warn-bg: #fbf0dc;
+  --rec-7-6-x-fail: #a3352d;
+  --rec-7-6-x-fail-bg: #fbe8e6;
+  --rec-7-6-x-error: #ef4444;
+  --rec-7-6-x-error-bg: #fef2f2;
+  --rec-7-6-x-error-text: #b91c1c;
+}
+
+/* ========================================================================
+   REC 8.1.x — TRACEABILITY RECORDS (Muted Mauve)
+   ======================================================================== */
+:root {
+  /* Primary colors */
+  --rec-8-1-x-dark: #4a2a5a;
+  --rec-8-1-x-primary: #8b6f9e;
+  --rec-8-1-x-primary-hover: #7a5d8c;
+  --rec-8-1-x-light: #c9b3c5;
+  --rec-8-1-x-bg-light: #dcc9d9;
+  --rec-8-1-x-paper: #f8f8f8;
+
+  /* Status colors */
+  --rec-8-1-x-ok: #7b9e89;
+  --rec-8-1-x-ok-bg: #e8f3ec;
+  --rec-8-1-x-warn: #b8791c;
+  --rec-8-1-x-warn-bg: #fbf0dc;
+  --rec-8-1-x-fail: #a3352d;
+  --rec-8-1-x-fail-bg: #fbe8e6;
+  --rec-8-1-x-error: #ef4444;
+  --rec-8-1-x-error-bg: #fef2f2;
+  --rec-8-1-x-error-text: #b91c1c;
+}
+
+/* ========================================================================
+   SHARED SEMANTIC VARIABLES (map to specific palettes)
+   ======================================================================== */
+
+/* Sauce records use warm brown */
+:root[data-palette="sauce"],
+:root.sauce-palette {
+  --palette-dark: var(--rec-7-3-x-dark);
+  --palette-primary: var(--rec-7-3-x-primary);
+  --palette-primary-hover: var(--rec-7-3-x-primary-hover);
+  --palette-light: var(--rec-7-3-x-light);
+  --palette-bg-light: var(--rec-7-3-x-bg-light);
+  --palette-paper: var(--rec-7-3-x-paper);
+  --palette-ok: var(--rec-7-3-x-ok);
+  --palette-ok-bg: var(--rec-7-3-x-ok-bg);
+  --palette-warn: var(--rec-7-3-x-warn);
+  --palette-warn-bg: var(--rec-7-3-x-warn-bg);
+  --palette-fail: var(--rec-7-3-x-fail);
+  --palette-fail-bg: var(--rec-7-3-x-fail-bg);
+}
+
+/* Cleaning records use teal */
+:root[data-palette="cleaning"],
+:root.cleaning-palette {
+  --palette-dark: var(--rec-7-6-x-dark);
+  --palette-primary: var(--rec-7-6-x-primary);
+  --palette-primary-hover: var(--rec-7-6-x-primary-hover);
+  --palette-light: var(--rec-7-6-x-light);
+  --palette-bg-light: var(--rec-7-6-x-bg-light);
+  --palette-paper: var(--rec-7-6-x-paper);
+  --palette-ok: var(--rec-7-6-x-ok);
+  --palette-ok-bg: var(--rec-7-6-x-ok-bg);
+  --palette-warn: var(--rec-7-6-x-warn);
+  --palette-warn-bg: var(--rec-7-6-x-warn-bg);
+  --palette-fail: var(--rec-7-6-x-fail);
+  --palette-fail-bg: var(--rec-7-6-x-fail-bg);
+}
+
+/* Traceability records use mauve */
+:root[data-palette="traceability"],
+:root.traceability-palette {
+  --palette-dark: var(--rec-8-1-x-dark);
+  --palette-primary: var(--rec-8-1-x-primary);
+  --palette-primary-hover: var(--rec-8-1-x-primary-hover);
+  --palette-light: var(--rec-8-1-x-light);
+  --palette-bg-light: var(--rec-8-1-x-bg-light);
+  --palette-paper: var(--rec-8-1-x-paper);
+  --palette-ok: var(--rec-8-1-x-ok);
+  --palette-ok-bg: var(--rec-8-1-x-ok-bg);
+  --palette-warn: var(--rec-8-1-x-warn);
+  --palette-warn-bg: var(--rec-8-1-x-warn-bg);
+  --palette-fail: var(--rec-8-1-x-fail);
+  --palette-fail-bg: var(--rec-8-1-x-fail-bg);
+}
+
+/* ========================================================================
+   PALETTE DOCUMENTATION
+
+   To use in your records:
+
+   1. Link this file in your HTML:
+      <link rel="stylesheet" href="color-palettes.css">
+
+   2. Set data attribute on root element:
+      <html data-palette="sauce">    <!-- for REC 7.3.x records -->
+      <html data-palette="cleaning">  <!-- for REC 7.6.x records -->
+      <html data-palette="traceability"> <!-- for REC 8.1.x records -->
+
+   3. Use in your CSS:
+      .header { background: var(--palette-primary); }
+      .button { background: var(--palette-primary); }
+      .button:hover { background: var(--palette-primary-hover); }
+      .status-ok { background: var(--palette-ok-bg); color: var(--palette-ok); }
+
+   To reference specific palette directly (without data attribute):
+      --rec-7-3-x-primary
+      --rec-7-6-x-primary
+      --rec-8-1-x-primary
+
+   ======================================================================== */

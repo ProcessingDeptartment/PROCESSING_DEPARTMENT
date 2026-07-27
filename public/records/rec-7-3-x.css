@@ -1,0 +1,82 @@
+/* REC 7.3.x Classification — Warm Brown Color Palette */
+
+/* Override form-record.js defaults with Warm Brown theme for sauce records */
+:root {
+  --rec-7-3-x-primary: #8b7355;
+  --rec-7-3-x-primary-light: #c9a892;
+  --rec-7-3-x-conforming-bg: #dcc9b8;
+  --rec-7-3-x-conforming-border: #b9956e;
+  --rec-7-3-x-conforming-text: #4a3428;
+  --rec-7-3-x-error: #ef4444;
+  --rec-7-3-x-error-bg: #fef2f2;
+  --rec-7-3-x-error-text: #b91c1c;
+}
+
+/* Top header bar accent */
+.fr-top {
+  background: #4a3428 !important;
+}
+
+/* Primary button */
+.fr-btn-primary {
+  background: #8b7355 !important;
+  color: #dcc9b8 !important;
+}
+
+.fr-btn-primary:hover {
+  background: #7a614a !important;
+}
+
+/* Panel headers */
+.fr-panel-head {
+  background: #dcc9b8 !important;
+  border-bottom-color: #b9956e !important;
+}
+
+.fr-panel-head h2 {
+  color: #4a3428 !important;
+}
+
+/* Panel borders */
+.fr-panel {
+  border-color: #b9956e !important;
+}
+
+/* Form labels and field labels */
+.fr-field {
+  color: #4a3428 !important;
+}
+
+/* Table headers */
+table.fr-table th {
+  background: #dcc9b8 !important;
+  color: #4a3428 !important;
+  border-color: #b9956e !important;
+}
+
+/* Table cells */
+table.fr-table td {
+  border-color: #b9956e !important;
+}
+
+/* Input/select/textarea focus states */
+.fr-app input:focus,
+.fr-app select:focus,
+.fr-app textarea:focus {
+  outline-color: #8b7355 !important;
+}
+
+/* Instruction items */
+.fr-instructions .instr-item {
+  border-color: #b9956e !important;
+  background: #dcc9b8 !important;
+}
+
+.fr-instructions .instr-item strong {
+  color: #4a3428 !important;
+}
+
+/* Section titles */
+.fr-section-title {
+  color: #4a3428 !important;
+}
