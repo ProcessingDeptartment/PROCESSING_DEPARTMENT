@@ -122,13 +122,9 @@
   }
 
   function ensureAuthenticated() {
+    // Login interface disabled - code preserved
     return new Promise((resolve) => {
-      if (window.Auth && window.Auth.isAuthenticated()) {
-        resolve();
-      } else {
-        showLoginModal();
-        document.addEventListener('authSuccess', () => resolve(), { once: true });
-      }
+      resolve();
     });
   }
 
