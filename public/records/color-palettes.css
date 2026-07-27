@@ -1,201 +1,136 @@
 /* ========================================================================
    ABAGOLD RECORD PALETTES
 
-   Centralized color system for all online records (REC 7.3.x, 7.6.x, 8.1.x)
-   Muted, professional palette hierarchy for facility documentation.
+   The single theme file for all online records. The shared engines
+   (form-record.js, monitoring-log.js) consume the --palette-* tokens below,
+   so a record is themed purely by setting data-palette on <html>:
+
+     <html lang="en" data-palette="dry">
+
+   No per-classification override stylesheets, no !important.
    ======================================================================== */
 
-/* ========================================================================
-   SAUCE RECORDS (Warm Brown)
-   ======================================================================== */
+/* ---- Default (slate / amber) — used when no data-palette is set ---- */
 :root {
-  /* Primary colors */
-  --sauce-dark: #4a3428;
-  --sauce-primary: #8b7355;
-  --sauce-primary-hover: #7a614a;
-  --sauce-light: #b9956e;
-  --sauce-bg-light: #dcc9b8;
-  --sauce-paper: #f8f6f3;
+  --palette-paper: #f4f5f3;
+  --palette-ink: #1b2330;
 
-  /* Status colors */
-  --sauce-ok: #7b9b7f;
-  --sauce-ok-bg: #e8f0e9;
-  --sauce-warn: #c9a158;
-  --sauce-warn-bg: #faf5eb;
-  --sauce-fail: #9d6f5f;
-  --sauce-fail-bg: #faf5f3;
-  --sauce-error: #ef4444;
-  --sauce-error-bg: #fef2f2;
-  --sauce-error-text: #b91c1c;
+  --palette-dark: #1d2b38;
+  --palette-dark-text: #f4f1e8;
+  --palette-dark-muted: #b9c3cc;
+
+  --palette-primary: #c9832b;
+  --palette-primary-hover: #dd9536;
+  --palette-primary-text: #241a0a;
+
+  --palette-border: #e2e4e3;
+  --palette-head-bg: #fbfbfa;
+  --palette-heading: #2f4356;
+  --palette-label: #54606b;
+  --palette-focus: #2f4356;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
 }
 
-/* ========================================================================
-   CLEANING RECORDS (Muted Teal)
-   ======================================================================== */
-:root {
-  /* Primary colors */
-  --cleaning-dark: #3a4f4e;
-  --cleaning-primary: #6b8c8f;
-  --cleaning-primary-hover: #5a7a7d;
-  --cleaning-light: #b5c3bf;
-  --cleaning-bg-light: #cdd9d8;
-  --cleaning-paper: #f8f8f8;
+/* ---- Sauce records, REC 7.3.x (warm brown) ---- */
+:root[data-palette="sauce"] {
+  --palette-paper: #f8f6f3;
+  --palette-ink: #4a3428;
 
-  /* Status colors */
-  --cleaning-ok: #6b8c8f;
-  --cleaning-ok-bg: #e8f3ec;
-  --cleaning-warn: #b8791c;
-  --cleaning-warn-bg: #fbf0dc;
-  --cleaning-fail: #a3352d;
-  --cleaning-fail-bg: #fbe8e6;
-  --cleaning-error: #ef4444;
-  --cleaning-error-bg: #fef2f2;
-  --cleaning-error-text: #b91c1c;
+  --palette-dark: #4a3428;
+  --palette-dark-text: #f8f6f3;
+  --palette-dark-muted: #c9a892;
+
+  --palette-primary: #8b7355;
+  --palette-primary-hover: #7a614a;
+  --palette-primary-text: #dcc9b8;
+
+  --palette-border: #b9956e;
+  --palette-head-bg: #dcc9b8;
+  --palette-heading: #4a3428;
+  --palette-label: #4a3428;
+  --palette-focus: #8b7355;
+
+  --palette-ok: #7b9b7f;
+  --palette-ok-bg: #e8f0e9;
+  --palette-fail: #9d6f5f;
+  --palette-fail-bg: #faf5f3;
 }
 
-/* ========================================================================
-   TRACEABILITY RECORDS (Muted Mauve)
-   ======================================================================== */
-:root {
-  /* Primary colors */
-  --traceability-dark: #4a2a5a;
-  --traceability-primary: #8b6f9e;
-  --traceability-primary-hover: #7a5d8c;
-  --traceability-light: #c9b3c5;
-  --traceability-bg-light: #dcc9d9;
-  --traceability-paper: #f8f8f8;
+/* ---- Dry records, REC 7.4.x (muted sage green) ---- */
+:root[data-palette="dry"] {
+  --palette-paper: #f8f9f8;
+  --palette-ink: #3a4a40;
 
-  /* Status colors */
-  --traceability-ok: #7b9e89;
-  --traceability-ok-bg: #e8f3ec;
-  --traceability-warn: #b8791c;
-  --traceability-warn-bg: #fbf0dc;
-  --traceability-fail: #a3352d;
-  --traceability-fail-bg: #fbe8e6;
-  --traceability-error: #ef4444;
-  --traceability-error-bg: #fef2f2;
-  --traceability-error-text: #b91c1c;
+  --palette-dark: #3a4a40;
+  --palette-dark-text: #f8f9f8;
+  --palette-dark-muted: #b3c9bf;
+
+  --palette-primary: #7a9b88;
+  --palette-primary-hover: #6a8977;
+  --palette-primary-text: #f8f9f8;
+
+  --palette-border: #b3c9bf;
+  --palette-head-bg: #d0dcd8;
+  --palette-heading: #3a4a40;
+  --palette-label: #3a4a40;
+  --palette-focus: #7a9b88;
+
+  --palette-ok: #7a9b88;
+  --palette-ok-bg: #e8f3ed;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
 }
 
-/* ========================================================================
-   DRY RECORDS (Muted Sage Green)
-   ======================================================================== */
-:root {
-  /* Primary colors */
-  --dry-dark: #3a4a40;
-  --dry-primary: #7a9b88;
-  --dry-primary-hover: #6a8977;
-  --dry-light: #b3c9bf;
-  --dry-bg-light: #d0dcd8;
-  --dry-paper: #f8f9f8;
+/* ---- Cleaning records, REC 7.6.x (muted teal) ---- */
+:root[data-palette="cleaning"] {
+  --palette-paper: #f8f8f8;
+  --palette-ink: #3a4f4e;
 
-  /* Status colors */
-  --dry-ok: #7a9b88;
-  --dry-ok-bg: #e8f3ed;
-  --dry-warn: #b8791c;
-  --dry-warn-bg: #fbf0dc;
-  --dry-fail: #a3352d;
-  --dry-fail-bg: #fbe8e6;
-  --dry-error: #ef4444;
-  --dry-error-bg: #fef2f2;
-  --dry-error-text: #b91c1c;
+  --palette-dark: #3a4f4e;
+  --palette-dark-text: #f8f8f8;
+  --palette-dark-muted: #b5c3bf;
+
+  --palette-primary: #6b8c8f;
+  --palette-primary-hover: #5a7a7d;
+  --palette-primary-text: #cdd9d8;
+
+  --palette-border: #b5c3bf;
+  --palette-head-bg: #cdd9d8;
+  --palette-heading: #3a4f4e;
+  --palette-label: #3a4f4e;
+  --palette-focus: #6b8c8f;
+
+  --palette-ok: #6b8c8f;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
 }
 
-/* ========================================================================
-   SHARED SEMANTIC VARIABLES (map to specific palettes)
-   ======================================================================== */
+/* ---- Traceability records, REC 8.1.x (muted mauve) ---- */
+:root[data-palette="traceability"] {
+  --palette-paper: #f8f8f8;
+  --palette-ink: #4a2a5a;
 
-/* Sauce records use warm brown */
-:root[data-palette="sauce"],
-:root.sauce-palette {
-  --palette-dark: var(--sauce-dark);
-  --palette-primary: var(--sauce-primary);
-  --palette-primary-hover: var(--sauce-primary-hover);
-  --palette-light: var(--sauce-light);
-  --palette-bg-light: var(--sauce-bg-light);
-  --palette-paper: var(--sauce-paper);
-  --palette-ok: var(--sauce-ok);
-  --palette-ok-bg: var(--sauce-ok-bg);
-  --palette-warn: var(--sauce-warn);
-  --palette-warn-bg: var(--sauce-warn-bg);
-  --palette-fail: var(--sauce-fail);
-  --palette-fail-bg: var(--sauce-fail-bg);
+  --palette-dark: #4a2a5a;
+  --palette-dark-text: #f8f8f8;
+  --palette-dark-muted: #c9b3c5;
+
+  --palette-primary: #8b6f9e;
+  --palette-primary-hover: #7a5d8c;
+  --palette-primary-text: #dcc9d9;
+
+  --palette-border: #c9b3c5;
+  --palette-head-bg: #dcc9d9;
+  --palette-heading: #4a2a5a;
+  --palette-label: #4a2a5a;
+  --palette-focus: #8b6f9e;
+
+  --palette-ok: #7b9e89;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
 }
-
-/* Cleaning records use teal */
-:root[data-palette="cleaning"],
-:root.cleaning-palette {
-  --palette-dark: var(--cleaning-dark);
-  --palette-primary: var(--cleaning-primary);
-  --palette-primary-hover: var(--cleaning-primary-hover);
-  --palette-light: var(--cleaning-light);
-  --palette-bg-light: var(--cleaning-bg-light);
-  --palette-paper: var(--cleaning-paper);
-  --palette-ok: var(--cleaning-ok);
-  --palette-ok-bg: var(--cleaning-ok-bg);
-  --palette-warn: var(--cleaning-warn);
-  --palette-warn-bg: var(--cleaning-warn-bg);
-  --palette-fail: var(--cleaning-fail);
-  --palette-fail-bg: var(--cleaning-fail-bg);
-}
-
-/* Traceability records use mauve */
-:root[data-palette="traceability"],
-:root.traceability-palette {
-  --palette-dark: var(--traceability-dark);
-  --palette-primary: var(--traceability-primary);
-  --palette-primary-hover: var(--traceability-primary-hover);
-  --palette-light: var(--traceability-light);
-  --palette-bg-light: var(--traceability-bg-light);
-  --palette-paper: var(--traceability-paper);
-  --palette-ok: var(--traceability-ok);
-  --palette-ok-bg: var(--traceability-ok-bg);
-  --palette-warn: var(--traceability-warn);
-  --palette-warn-bg: var(--traceability-warn-bg);
-  --palette-fail: var(--traceability-fail);
-  --palette-fail-bg: var(--traceability-fail-bg);
-}
-
-/* Dry records use sage green */
-:root[data-palette="dry"],
-:root.dry-palette {
-  --palette-dark: var(--dry-dark);
-  --palette-primary: var(--dry-primary);
-  --palette-primary-hover: var(--dry-primary-hover);
-  --palette-light: var(--dry-light);
-  --palette-bg-light: var(--dry-bg-light);
-  --palette-paper: var(--dry-paper);
-  --palette-ok: var(--dry-ok);
-  --palette-ok-bg: var(--dry-ok-bg);
-  --palette-warn: var(--dry-warn);
-  --palette-warn-bg: var(--dry-warn-bg);
-  --palette-fail: var(--dry-fail);
-  --palette-fail-bg: var(--dry-fail-bg);
-}
-
-/* ========================================================================
-   PALETTE DOCUMENTATION
-
-   To use in your records:
-
-   1. Link this file in your HTML:
-      <link rel="stylesheet" href="color-palettes.css">
-
-   2. Set data attribute on root element:
-      <html data-palette="sauce">    <!-- for REC 7.3.x records -->
-      <html data-palette="cleaning">  <!-- for REC 7.6.x records -->
-      <html data-palette="traceability"> <!-- for REC 8.1.x records -->
-      <html data-palette="dry">     <!-- for REC 7.4.x records -->
-
-   3. Use in your CSS:
-      .header { background: var(--palette-primary); }
-      .button { background: var(--palette-primary); }
-      .button:hover { background: var(--palette-primary-hover); }
-      .status-ok { background: var(--palette-ok-bg); color: var(--palette-ok); }
-
-   To reference specific palette directly (without data attribute):
-      --sauce-primary
-      --cleaning-primary
-      --traceability-primary
-
-   ======================================================================== */

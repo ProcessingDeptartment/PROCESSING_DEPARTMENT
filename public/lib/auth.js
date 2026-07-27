@@ -1,10 +1,7 @@
-/*
- * User authentication and session management for the online records system.
- *
- * Each user has a role (from PermissionRules) and a password (currently = username).
- * Login is required to save records. Sign-off and verification track who took action
- * and when, automatically populated from the authenticated session.
- *
+/**
+ * User authentication and session management for the online records system
+ * Each user has set permissions and access levels and a password (currently = username).
+ * Login is required to edit records etc.
  * === LOCAL SESSION ONLY ===
  * Session is stored in localStorage (sessionKey); users exist in memory. A future
  * backend auth (OAuth, LDAP, or a real auth API) would replace the hardcoded

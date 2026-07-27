@@ -1,13 +1,11 @@
 /*
  * Tracks the document control revision of a RECORD TEMPLATE itself (e.g. "REC 7.2.12 ·
- * Rev 11") -- separate from any individual filled-out inspection's own revision count.
- *
- * This bumps whenever the record's configuration changes in a way that affects every
- * user of it -- e.g. a specification is added or its tolerances edited. Every bump
- * requires a reason, the name of who made the change, and their title, per the system
- * overview's change-management rules ("every new publish requires a reason... and must
- * indicate who made the change").
- *
+ * Rev 11") 
+ * Not the count of no. of records submitted.
+ * Revision bumps are required when the record template changes, a specification is updated, or tolerances are changed. This is a document control requirement for the Abagold Processing Facility. (FSSC) 
+ * Every bump requires a reason, the name of who made the change, and their title, per the system overview's change-management rules ("every new publish requires a reason... and must indicate who made the change").  
+ * Will automatically increment the revision number and record the date of the bump.
+ * Will push to master index.html and the record template's HTML file, so the next user will see the new revision number and date.
  * Backed by window.storage (see data-store.js), keyed by an arbitrary recordKey so any
  * record in this system can use it (e.g. 'double-seam-inspection-report').
  */

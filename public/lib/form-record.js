@@ -34,57 +34,57 @@
   function uid(prefix) { return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
 
   const STYLE = `
-  .fr-app{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; }
+  .fr-app{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--palette-ink,#1b2330); background:var(--palette-paper,#f4f5f3); font-size:13px; line-height:1.4; }
   .fr-app *{ box-sizing:border-box; }
   .fr-app h1,.fr-app h2,.fr-app h3{ margin:0; font-weight:700; }
   .fr-app input,.fr-app select,.fr-app textarea{
     font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-size:12.5px; border:1px solid #c9cdd1; border-radius:3px;
-    padding:5px 7px; background:#fff; color:#1b2330; width:100%;
+    padding:5px 7px; background:#fff; color:var(--palette-ink,#1b2330); width:100%;
   }
-  .fr-app input:focus,.fr-app select:focus,.fr-app textarea:focus{ outline:2px solid #2f4356; outline-offset:-1px; }
+  .fr-app input:focus,.fr-app select:focus,.fr-app textarea:focus{ outline:2px solid var(--palette-focus,#2f4356); outline-offset:-1px; }
   .fr-app button{ font-family:'Segoe UI',system-ui,sans-serif; cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .fr-top{ background:#1d2b38; color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
-  .fr-top .doc-code{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
-  .fr-top .doc-rev{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
+  .fr-top{ background:var(--palette-dark,#1d2b38); color:var(--palette-dark-text,#f4f1e8); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .fr-top .doc-code{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--palette-dark-muted,#b9c3cc); letter-spacing:.03em; }
+  .fr-top .doc-rev{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--palette-dark-muted,#b9c3cc); letter-spacing:.03em; }
   .fr-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
   .fr-top h1{ font-size:17px; letter-spacing:.01em; }
   .fr-btn{ padding:7px 13px; font-size:12.5px; }
-  .fr-btn-primary{ background:#c9832b; color:#241a0a; }
-  .fr-btn-primary:hover{ background:#dd9536; }
+  .fr-btn-primary{ background:var(--palette-primary,#c9832b); color:var(--palette-primary-text,#241a0a); }
+  .fr-btn-primary:hover{ background:var(--palette-primary-hover,#dd9536); }
   .fr-btn-flat{ background:#e2e4e3; color:#1b2330; }
   .fr-btn-flat:hover{ background:#d5d8d6; }
   .fr-btn:disabled{ opacity:.45; cursor:not-allowed; }
   .fr-btn-sm{ padding:4px 10px; font-size:10.5px; }
   .fr-body{ padding:16px 18px 60px; max-width:1400px; margin:0 auto; }
-  .fr-panel{ background:#fff; border:1px solid #e2e4e3; border-radius:6px; margin-bottom:14px; }
-  .fr-panel-head{ padding:9px 14px; border-bottom:1px solid #e2e4e3; display:flex; justify-content:space-between; align-items:center; background:#fbfbfa; border-radius:6px 6px 0 0; gap:10px; flex-wrap:wrap; }
-  .fr-panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:#2f4356; }
+  .fr-panel{ background:#fff; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; margin-bottom:14px; }
+  .fr-panel-head{ padding:9px 14px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; background:var(--palette-head-bg,#fbfbfa); border-radius:6px 6px 0 0; gap:10px; flex-wrap:wrap; }
+  .fr-panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--palette-heading,#2f4356); }
   .fr-panel-body{ padding:14px; }
   .fr-instructions{ display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
-  .fr-instructions .instr-item{ background:#fbfbfa; border:1px solid #e2e4e3; border-radius:4px; padding:8px 10px; }
-  .fr-instructions .instr-item strong{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#54606b; margin-bottom:3px; }
+  .fr-instructions .instr-item{ background:var(--palette-head-bg,#fbfbfa); border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; padding:8px 10px; }
+  .fr-instructions .instr-item strong{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--palette-label,#54606b); margin-bottom:3px; }
   .fr-grid{ display:grid; gap:10px; }
   .fr-grid-2{ grid-template-columns:repeat(2,1fr); }
   .fr-grid-3{ grid-template-columns:repeat(3,1fr); }
-  .fr-field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:#54606b; font-weight:600; }
+  .fr-field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--palette-label,#54606b); font-weight:600; }
   .fr-field.wide{ grid-column:1/-1; }
   .fr-filters{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
   .fr-filters input[type=date]{ width:auto; }
   .fr-filters input[type=text]{ max-width:220px; }
   table.fr-table{ width:100%; border-collapse:collapse; }
-  table.fr-table th,table.fr-table td{ border:1px solid #e2e4e3; padding:5px 7px; text-align:left; vertical-align:middle; font-size:11.5px; }
-  table.fr-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; white-space:nowrap; }
+  table.fr-table th,table.fr-table td{ border:1px solid var(--palette-border,#e2e4e3); padding:5px 7px; text-align:left; vertical-align:middle; font-size:11.5px; }
+  table.fr-table th{ background:var(--palette-head-bg,#fbfbfa); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--palette-label,#54606b); font-weight:700; white-space:nowrap; }
   .fr-muted{ color:#8a939b; }
   .fr-empty{ padding:18px; text-align:center; color:#8a939b; }
-  .fr-section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#5c6771; margin:14px 0 8px; }
+  .fr-section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-label,#54606b); margin:14px 0 8px; }
   .fr-section-title:first-child{ margin-top:0; }
   .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; }
   .fr-roster-row .fr-field{ flex:1; }
   .fr-modal-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center; }
   .fr-modal-inner{ background:#fff; border-radius:8px; width:min(880px,94vw); max-height:90vh; overflow:auto; padding:16px; }
-  .fr-modal-inner h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; margin-bottom:10px; }
+  .fr-modal-inner h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356); margin-bottom:10px; }
   .fr-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap; align-items:center; }
-  .fr-toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#1d2b38; color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .fr-toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--palette-dark,#1d2b38); color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .fr-toast.show{ opacity:1; }
   /* Submission list can carry more columns than a phone is wide -- scroll it
      inside the panel rather than letting it stretch the page. */
@@ -111,7 +111,7 @@
     .fr-filters input[type=date]{ width:100%; }
     /* Roster rows are a horizontal strip of inputs on desktop; on a phone they
        stack, with the remove button on its own full-width line. */
-    .fr-roster-row{ flex-direction:column; align-items:stretch; gap:6px; padding:8px; border:1px solid #e2e4e3; border-radius:4px; margin-bottom:8px; }
+    .fr-roster-row{ flex-direction:column; align-items:stretch; gap:6px; padding:8px; border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; margin-bottom:8px; }
     .fr-roster-row .fr-btn-sm{ align-self:flex-end; }
     .fr-modal-inner{ width:100vw; max-width:100vw; min-height:100vh; max-height:100vh; border-radius:0; padding:14px; }
     .fr-actions{ justify-content:flex-start; }

@@ -4,8 +4,9 @@
  * Enforces that batch numbers match one of the facility's four product codes:
  *   3CP  Canned Product
  *   3DP  Dried Product
- *   CPR  Canned Product (Rework)
- *   DPR  Dried Product (Rework)
+ *   CPR  Canned Product (third party)
+ *   DPR  Dried Product (third party)
+ * Each code is followed by a string of digits (4-8 digits).
  *
  * Use in a record's form config to validate the batchField on blur/save.
  */
@@ -13,8 +14,8 @@
   const BATCH_PATTERNS = {
     '3CP': { regex: /^3CP\d{4,8}$/, label: 'Canned Product (3CP + digits)' },
     '3DP': { regex: /^3DP\d{4,8}$/, label: 'Dried Product (3DP + digits)' },
-    'CPR': { regex: /^CPR\d{4,8}$/, label: 'Canned Rework (CPR + digits)' },
-    'DPR': { regex: /^DPR\d{4,8}$/, label: 'Dried Rework (DPR + digits)' }
+    'CPR': { regex: /^CPR\d{4,8}$/, label: 'Canned Product (Third party) (CPR + digits)' },
+    'DPR': { regex: /^DPR\d{4,8}$/, label: 'Dried Product (Third party) (DPR + digits)' }
   };
 
   function isValidBatchNumber(value) {
