@@ -9,8 +9,8 @@
 
   .brand-bar{ background:#ffffff; border-bottom:3px solid #a9763a; padding:14px 20px; }
   .brand-inner{ max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
-  .brand-logo{ height:44px; width:auto; display:block; }
-  .brand-mark{ height:56px; width:auto; display:block; }
+  .brand-logo{ height:40px; width:auto; display:block; }
+  .brand-mark{ height:52px; width:auto; display:block; }
 
   .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
   .header-inner{ max-width:1100px; margin:0 auto; }
@@ -18,35 +18,27 @@
   .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
 
   .container{ max-width:1100px; margin:0 auto; padding:20px; }
-
   .section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#5c6771; font-weight:700; margin:0 0 10px; }
 
-  table.nav-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; margin-bottom:20px; }
+  table.nav-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; }
   table.nav-table th,table.nav-table td{ border-bottom:1px solid #e2e4e3; padding:14px 16px; text-align:left; font-size:12px; vertical-align:middle; }
   table.nav-table th{ background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; padding:10px 16px; }
   table.nav-table tbody tr:last-child td{ border-bottom:none; }
   table.nav-table tbody tr{ cursor:pointer; transition:background .15s ease; }
   table.nav-table tbody tr:hover{ background:#f9fafb; }
-  td.category{ white-space:nowrap; width:210px; border-left:4px solid transparent; }
-  td.category a{ font-size:14px; font-weight:600; color:#1d2b38; text-decoration:none; }
-  tbody tr:hover td.category a{ text-decoration:underline; }
-  tr.production td.category{ border-left-color:#15803d; }
-  tr.quality td.category{ border-left-color:#7c3aed; }
-  tr.other td.category{ border-left-color:#1d2b38; }
+  td.document{ white-space:nowrap; width:260px; border-left:4px solid transparent; }
+  td.document a{ font-size:14px; font-weight:600; color:#1d2b38; text-decoration:none; }
+  tbody tr:hover td.document a{ text-decoration:underline; }
+  tr.production td.document{ border-left-color:#15803d; }
+  tr.quality td.document{ border-left-color:#7c3aed; }
+  tr.index td.document{ border-left-color:#a9763a; }
   td.description{ color:#5c6771; }
-
-  .quick-links{ background:#fff; border:1px solid #e2e4e3; border-radius:6px; padding:16px; }
-  .quick-links ul{ list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:24px; }
-  .quick-links a{ color:#1d4ed8; text-decoration:none; font-weight:500; font-size:12px; }
-  .quick-links a:hover{ text-decoration:underline; }
-  .info-bar{ background:#eff6ff; border-left:4px solid #3b82f6; padding:12px 16px; border-radius:4px; margin-top:16px; font-size:12px; color:#1e40af; }
 
   @media (max-width:640px){
     .brand-inner{ flex-direction:column; align-items:flex-start; gap:12px; }
-    td.category{ width:auto; white-space:normal; }
+    td.document{ width:auto; white-space:normal; }
   }
 </style>
-<link rel="stylesheet" href="responsive.css?v=1">
 </head>
 <body>
 
@@ -70,35 +62,25 @@
   <table class="nav-table">
     <thead>
       <tr>
-        <th>Category</th>
+        <th>Document</th>
         <th>Contents</th>
       </tr>
     </thead>
     <tbody>
-      <tr class="production" onclick="location.href='production.html'">
-        <td class="category"><a href="production.html">Production</a></td>
-        <td class="description">Handover reporting, live intake &amp; handling, canning, dry processing and live product records</td>
+      <tr class="production" onclick="window.open('production-handover-report.html','_blank')">
+        <td class="document"><a href="production-handover-report.html" target="_blank">Production Handover Report</a></td>
+        <td class="description">Shift handover reporting for Production</td>
       </tr>
-      <tr class="quality" onclick="location.href='quality.html'">
-        <td class="category"><a href="quality.html">Quality</a></td>
-        <td class="description">Handover reporting, monitoring logs, cleaning, PPE &amp; utensils, incoming goods, HR and traceability records</td>
+      <tr class="quality" onclick="window.open('quality-handover-report.html','_blank')">
+        <td class="document"><a href="quality-handover-report.html" target="_blank">Quality Handover Report</a></td>
+        <td class="description">Shift handover reporting for Quality</td>
       </tr>
-      <tr class="other" onclick="location.href='other.html'">
-        <td class="category"><a href="other.html">Other Documents</a></td>
-        <td class="description">Batch traceability and records not yet owned by Quality or Production</td>
+      <tr class="index" onclick="window.open('records/master-record-index.html','_blank')">
+        <td class="document"><a href="records/master-record-index.html" target="_blank">Master Record Index</a></td>
+        <td class="description">Every digitised record with its current document-control revision</td>
       </tr>
     </tbody>
   </table>
-
-  <h2 class="section-title">Quick Links</h2>
-  <div class="quick-links">
-    <ul>
-      <li><a href="production-handover-report.html" target="_blank">Production Handover Report</a></li>
-      <li><a href="quality-handover-report.html" target="_blank">Quality Handover Report</a></li>
-      <li><a href="records/master-record-index.html" target="_blank">Master Record Index</a></li>
-    </ul>
-    <div class="info-bar">The Master Record Index lists every digitised record across both departments with its current document-control revision.</div>
-  </div>
 
 </div>
 
