@@ -1,13 +1,23 @@
 /* ========================================================================
-   ABAGOLD RECORD PALETTES
+   ABAGOLD RECORD THEME
 
-   The single theme file for all online records. The shared engines
-   (form-record.js, monitoring-log.js) consume the --palette-* tokens below,
-   so a record is themed purely by setting data-palette on <html>:
+   The single theme file for all online records. Two sections:
 
-     <html lang="en" data-palette="dry">
+     1. COLOUR PALETTES  — the --palette-* tokens. The shared engines
+        (form-record.js, monitoring-log.js) and the bespoke record pages
+        all read these, so a record is themed purely by setting
+        data-palette on <html>:
+
+          <html lang="en" data-palette="dry">
+
+     2. HEADER TYPOGRAPHY — the one place the REC code / title / revision
+        line is sized and weighted, for every record in the system.
 
    No per-classification override stylesheets, no !important.
+   ======================================================================== */
+
+/* ========================================================================
+   1. COLOUR PALETTES
    ======================================================================== */
 
 /* ---- Default (slate / amber) — used when no data-palette is set ---- */
@@ -85,27 +95,34 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Cleaning records, REC 7.6.x (muted teal) ---- */
+/* ---- Cleaning records, REC 7.6.x (muted light blue) ----
+   Sits at hue ~203. The previous teal was only 40 degrees off the dry sage
+   and the two were indistinguishable on a tablet; blue puts real daylight
+   between them. Every pair here clears WCAG AA, so the primary carries a
+   little more saturation than the other palettes deliberately -- at the
+   old muted level, white button text would not have been legible. */
 :root[data-palette="cleaning"] {
-  --palette-paper: #f8f8f8;
-  --palette-ink: #3a4f4e;
+  --palette-paper: #f7f9fa;
+  --palette-ink: #2b4257;
 
-  --palette-dark: #3a4f4e;
-  --palette-dark-text: #f8f8f8;
-  --palette-dark-muted: #b5c3bf;
+  --palette-dark: #33546b;
+  --palette-dark-text: #f7fafc;
+  --palette-dark-muted: #b9cede;
 
-  --palette-primary: #6b8c8f;
-  --palette-primary-hover: #5a7a7d;
-  --palette-primary-text: #cdd9d8;
+  --palette-primary: #41789b;
+  --palette-primary-hover: #386a8a;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #b5c3bf;
-  --palette-head-bg: #cdd9d8;
-  --palette-heading: #3a4f4e;
-  --palette-label: #3a4f4e;
-  --palette-focus: #6b8c8f;
+  --palette-border: #b9cede;
+  --palette-head-bg: #d9e6ee;
+  --palette-heading: #2b4257;
+  --palette-label: #2b4257;
+  --palette-focus: #41789b;
 
-  --palette-ok: #6b8c8f;
-  --palette-ok-bg: #e8f3ec;
+  /* Distinct from the primary, unlike the old teal where OK and primary were
+     the same hex and a pass badge read as ordinary page furniture. */
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e6f2ea;
   --palette-fail: #a3352d;
   --palette-fail-bg: #fbe8e6;
 }
@@ -133,4 +150,71 @@
   --palette-ok-bg: #e8f3ec;
   --palette-fail: #a3352d;
   --palette-fail-bg: #fbe8e6;
+}
+
+/* ========================================================================
+   2. HEADER TYPOGRAPHY
+
+   Every record header is the same three-part line:
+
+     <div class="doc-line">
+       <span class="doc-code">REC 7.4.2</span>
+       <h1>Dry Monitoring</h1>
+       <span class="doc-rev">Rev 3 · Rev date 2026-01-14</span>
+     </div>
+
+   Sized once here so the engines and the bespoke pages cannot drift apart.
+   Do not re-declare these sizes in a page or in an engine's STYLE block.
+   ======================================================================== */
+
+.doc-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Document code — the record's identifier, so it carries some weight. */
+.doc-line .doc-code {
+  font-family: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--palette-dark-muted, #b9c3cc);
+}
+
+/* Record title — the one bold element in the bar. */
+.doc-line h1 {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  margin: 0;
+}
+
+/* Revision + revision date — metadata, deliberately the quietest of the three. */
+.doc-line .doc-rev {
+  font-family: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .03em;
+  color: var(--palette-dark-muted, #b9c3cc);
+}
+
+@media (max-width: 768px) {
+  .doc-line { gap: 8px; }
+  .doc-line .doc-code { font-size: 11.5px; }
+  .doc-line h1 { font-size: 15px; }
+  .doc-line .doc-rev { font-size: 10.5px; }
+}
+
+@media (max-width: 480px) {
+  .doc-line h1 { font-size: 14px; }
+}
+
+/* On paper the bar loses its dark background, so the muted greys need to darken. */
+@media print {
+  .doc-line .doc-code,
+  .doc-line .doc-rev { color: #333 !important; }
+  .doc-line h1 { color: #000 !important; font-size: 13px; }
 }

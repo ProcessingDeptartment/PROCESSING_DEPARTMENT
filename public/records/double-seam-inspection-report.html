@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.12 Double Seam Inspection Report</title>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
 <style>
   :root{
     --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
@@ -22,10 +24,6 @@
   #dsir-root input:focus, #dsir-root select:focus, #dsir-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #dsir-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .dsir-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
-  .dsir-top .doc-code{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
-  .dsir-top .doc-rev{ font-family:var(--mono); font-size:11px; color:#b9c3cc; letter-spacing:.03em; }
-  .dsir-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-  .dsir-top h1{ font-size:17px; letter-spacing:.01em; }
   .dsir-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .dsir-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
   .dsir-topline input{ width:150px; }
@@ -128,8 +126,6 @@
       background:#fff !important; padding:8px 18px;
       border-bottom:1.5px solid #000;
     }
-    .dsir-top .doc-code, .dsir-top .doc-rev{ color:#333 !important; }
-    .dsir-top h1{ color:#000 !important; font-size:13px; }
   }
 </style>
   <link rel="stylesheet" href="../responsive.css?v=1">

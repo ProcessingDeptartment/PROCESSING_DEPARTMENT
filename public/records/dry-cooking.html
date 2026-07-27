@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-palette="dry">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.4.0 Dry Cooking</title>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
 <style>
   :root{
     --ink:#3a4a40; --steel:#7a9b88; --steel-dk:#556966; --paper:#f8f9f8;
@@ -22,8 +24,6 @@
   #dc-root input:focus, #dc-root select:focus, #dc-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #dc-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .dc-top{ background:var(--steel-dk); color:#f4f1e8; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .dc-top .doc-code{ font-family:var(--mono); font-size:10px; color:#b9c3cc; letter-spacing:.03em; }
-  .dc-top h1{ font-size:15px; letter-spacing:.01em; margin:0; }
   .dc-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .dc-topline label.role-label{ font-size:9.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
   .dc-topline input{ width:120px; padding:3px 5px; font-size:11px; }
@@ -61,8 +61,6 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
-  .dc-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-  .dc-top .doc-rev{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-size:10px; color:#b9c3cc; letter-spacing:.03em; }
 </style>
   <link rel="stylesheet" href="../responsive.css?v=1">
 </head>

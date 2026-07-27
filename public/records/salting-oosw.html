@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.1.5 Salting (OOSW)</title>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
 <style>
   :root{
     --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
@@ -22,8 +24,6 @@
   #so-root input:focus, #so-root select:focus, #so-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #so-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .so-top{ background:var(--steel-dk); color:#f4f1e8; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .so-top .doc-code{ font-family:var(--mono); font-size:10px; color:#b9c3cc; letter-spacing:.03em; }
-  .so-top h1{ font-size:15px; letter-spacing:.01em; margin:0; }
   .so-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .so-topline label.role-label{ font-size:9.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
   .so-topline input{ width:120px; padding:3px 5px; font-size:11px; }
@@ -91,7 +91,6 @@
   @media (max-width:768px){
     #so-root{ font-size:14px; }
     .so-top{ padding:10px 12px; }
-    .so-top h1{ font-size:14px; }
     .so-topline{ gap:6px; }
     .so-topline input{ width:100px; font-size:12px; }
     .btn{ padding:6px 12px; font-size:12px; }
@@ -117,7 +116,6 @@
   @media (max-width:480px){
     #so-root{ font-size:12px; }
     .so-top{ padding:8px 10px; gap:8px; }
-    .so-top h1{ font-size:13px; }
     .so-topline{ gap:4px; flex-direction:column; }
     .so-topline label.role-label{ font-size:8.5px; }
     .so-topline input{ width:100%; font-size:11px; }
@@ -150,7 +148,6 @@
     .no-print{ display:none !important; }
     #so-root{ font-size:9px; background:#fff; }
     .so-top{ padding:4px 8px; }
-    .so-top h1{ font-size:12px; }
     .so-body{ padding:6px 8px 0; }
     .panel{ margin-bottom:6px; break-inside:avoid; }
     .panel-head{ padding:4px 8px; }
@@ -171,8 +168,6 @@
     .actions{ display:none; }
     .record-status{ display:none; }
   }
-  .so-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-  .so-top .doc-rev{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-size:10px; color:#b9c3cc; letter-spacing:.03em; }
 </style>
   <link rel="stylesheet" href="../responsive.css?v=1">
 </head>

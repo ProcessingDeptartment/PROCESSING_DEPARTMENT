@@ -46,10 +46,6 @@
   .ml-app input:focus,.ml-app select:focus,.ml-app textarea:focus{ outline:2px solid var(--palette-focus,#2f4356); outline-offset:-1px; }
   .ml-app button{ font-family:'Segoe UI',system-ui,sans-serif; cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .ml-top{ background:var(--palette-dark,#1d2b38); color:var(--palette-dark-text,#f4f1e8); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
-  .ml-top .doc-code{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--palette-dark-muted,#b9c3cc); letter-spacing:.03em; }
-  .ml-top .doc-rev{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--palette-dark-muted,#b9c3cc); letter-spacing:.03em; }
-  .ml-top .doc-line{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-  .ml-top h1{ font-size:17px; letter-spacing:.01em; }
   .ml-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .ml-btn{ padding:7px 13px; font-size:12.5px; }
   .ml-btn-primary{ background:var(--palette-primary,#c9832b); color:var(--palette-primary-text,#241a0a); }
@@ -110,7 +106,6 @@
   @media (max-width:900px){ .ml-grid-2,.ml-grid-3{grid-template-columns:1fr;} }
   @media (max-width:768px){
     .ml-top{ padding:10px 12px; gap:10px; }
-    .ml-top h1{ font-size:15px; }
     .ml-topline{ width:100%; }
     .ml-topline .ml-btn{ flex:1 1 auto; }
     .ml-body{ padding:10px 12px 60px; }
@@ -131,7 +126,6 @@
   }
   @media (max-width:480px){
     .ml-top{ padding:8px 10px; }
-    .ml-top h1{ font-size:14px; }
     .ml-topline{ flex-direction:column; align-items:stretch; }
     .ml-body{ padding:8px 10px 60px; }
     .ml-panel-body{ padding:8px; }

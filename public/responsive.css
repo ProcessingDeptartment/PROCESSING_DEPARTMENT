@@ -2,7 +2,7 @@
  * Shared responsive layer for every page in public/.
  *
  * Loaded LAST in <head> on all pages (after each page's own inline <style> and
- * after color-palettes.css), so plain class
+ * after record-theme.css), so plain class
  * rules here win on source order. Rules that have to beat an ID-scoped selector
  * -- the record pages style their inputs as `#xx-root input` -- carry !important;
  * that is deliberate and confined to the breakpoints below.
