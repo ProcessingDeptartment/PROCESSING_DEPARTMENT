@@ -1,0 +1,82 @@
+/* REC 8.1.x Classification — Mauve Color Palette */
+
+/* Override form-record.js defaults with Mauve theme */
+:root {
+  --rec-8-1-x-primary: #a855f7;
+  --rec-8-1-x-primary-light: #e9d5ff;
+  --rec-8-1-x-conforming-bg: #f5e6ff;
+  --rec-8-1-x-conforming-border: #e9d5ff;
+  --rec-8-1-x-conforming-text: #6b21a8;
+  --rec-8-1-x-error: #ef4444;
+  --rec-8-1-x-error-bg: #fef2f2;
+  --rec-8-1-x-error-text: #b91c1c;
+}
+
+/* Top header bar accent */
+.fr-top {
+  background: #6b21a8;
+}
+
+/* Primary button */
+.fr-btn-primary {
+  background: #a855f7;
+  color: #f5e6ff;
+}
+
+.fr-btn-primary:hover {
+  background: #9333ea;
+}
+
+/* Panel headers */
+.fr-panel-head {
+  background: #f5e6ff;
+  border-bottom-color: #e9d5ff;
+}
+
+.fr-panel-head h2 {
+  color: #6b21a8;
+}
+
+/* Panel borders */
+.fr-panel {
+  border-color: #e9d5ff;
+}
+
+/* Form labels and field labels */
+.fr-field {
+  color: #6b21a8;
+}
+
+/* Table headers */
+table.fr-table th {
+  background: #f5e6ff;
+  color: #6b21a8;
+  border-color: #e9d5ff;
+}
+
+/* Table cells */
+table.fr-table td {
+  border-color: #e9d5ff;
+}
+
+/* Input/select/textarea focus states */
+.fr-app input:focus,
+.fr-app select:focus,
+.fr-app textarea:focus {
+  outline-color: #a855f7;
+}
+
+/* Instruction items */
+.fr-instructions .instr-item {
+  border-color: #e9d5ff;
+  background: #f5e6ff;
+}
+
+.fr-instructions .instr-item strong {
+  color: #6b21a8;
+}
+
+/* Section titles */
+.fr-section-title {
+  color: #6b21a8;
+}
