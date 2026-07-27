@@ -14,69 +14,69 @@
 
 /* Top header bar accent */
 .fr-top {
-  background: #0d5e5e;
+  background: #0d5e5e !important;
 }
 
 /* Primary button */
 .fr-btn-primary {
-  background: #0891b2;
-  color: #ecfdf5;
+  background: #0891b2 !important;
+  color: #ecfdf5 !important;
 }
 
 .fr-btn-primary:hover {
-  background: #0e7490;
+  background: #0e7490 !important;
 }
 
 /* Panel headers */
 .fr-panel-head {
-  background: #ecfdf5;
-  border-bottom-color: #a7f3d0;
+  background: #ecfdf5 !important;
+  border-bottom-color: #a7f3d0 !important;
 }
 
 .fr-panel-head h2 {
-  color: #0d5e5e;
+  color: #0d5e5e !important;
 }
 
 /* Panel borders */
 .fr-panel {
-  border-color: #a7f3d0;
+  border-color: #a7f3d0 !important;
 }
 
 /* Form labels and field labels */
 .fr-field {
-  color: #0d5e5e;
+  color: #0d5e5e !important;
 }
 
 /* Table headers */
 table.fr-table th {
-  background: #ecfdf5;
-  color: #0d5e5e;
-  border-color: #a7f3d0;
+  background: #ecfdf5 !important;
+  color: #0d5e5e !important;
+  border-color: #a7f3d0 !important;
 }
 
 /* Table cells */
 table.fr-table td {
-  border-color: #a7f3d0;
+  border-color: #a7f3d0 !important;
 }
 
 /* Input/select/textarea focus states */
 .fr-app input:focus,
 .fr-app select:focus,
 .fr-app textarea:focus {
-  outline-color: #0891b2;
+  outline-color: #0891b2 !important;
 }
 
 /* Instruction items */
 .fr-instructions .instr-item {
-  border-color: #a7f3d0;
-  background: #ecfdf5;
+  border-color: #a7f3d0 !important;
+  background: #ecfdf5 !important;
 }
 
 .fr-instructions .instr-item strong {
-  color: #0d5e5e;
+  color: #0d5e5e !important;
 }
 
 /* Section titles */
 .fr-section-title {
-  color: #0d5e5e;
+  color: #0d5e5e !important;
 }
