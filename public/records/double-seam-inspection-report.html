@@ -146,6 +146,7 @@
         <select id="actingRoleSelect" style="width:190px;"></select>
       </label>
       <select id="specProfileSelect" style="width:220px;"></select>
+      <button class="btn btn-ghost" id="quickCalcBtn" title="Standalone seam calculator — nothing is saved to this record">Quick calculator</button>
       <button class="btn btn-ghost" id="manageSpecsBtn">Specs</button>
       <button class="btn btn-ghost" id="newRecordBtn">New</button>
       <button class="btn btn-primary" id="saveDraftBtn">Save draft</button>
@@ -1099,6 +1100,10 @@
       state.specProfileId = $('specProfileSelect').value;
       state.specVersionAtSave = null;
       renderAll();
+    });
+    $('quickCalcBtn').addEventListener('click', ()=>{
+      // standalone working tool -- opened in a new tab so an in-progress record is never lost
+      window.open('seam-quick-calculator.html', '_blank');
     });
     $('manageSpecsBtn').addEventListener('click', openSpecManager);
     $('specCloseBtn').addEventListener('click', ()=>$('specModal').style.display='none');

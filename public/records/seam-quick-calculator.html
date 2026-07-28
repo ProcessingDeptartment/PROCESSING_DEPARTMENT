@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Seam Calculator</title>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+<style>
+  :root{
+    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
+    --line-soft:#e2e4e3; --accent:#c9832b;
+    --ok:#2f7a52; --ok-bg:#e8f3ec; --fail:#a3352d; --fail-bg:#fbe8e6;
+    --mono: ui-monospace,'Cascadia Mono','Consolas',monospace;
+    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:var(--sans); background:var(--paper); color:var(--ink); font-size:13px; }
+  input{ font-family:var(--mono); font-size:14px; border:1px solid var(--line-soft);
+    border-radius:3px; padding:7px 9px; width:100%; background:#fff; color:var(--ink); text-align:right; }
+  input:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
+  button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600;
+    padding:8px 15px; font-size:12.5px; }
+  .btn-ghost{ background:transparent; color:#f4f1e8; border:1px solid #55636e; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-flat:hover{ background:#d5d8d6; }
+
+  .top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px;
+    display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .top h1{ font-size:15px; font-weight:600; letter-spacing:.01em; }
+  .top .sub{ font-size:11px; color:#b9c3cc; margin-top:2px; }
+
+  .wrap{ padding:18px; max-width:820px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; }
+  .panel-head{ padding:9px 14px; border-bottom:1px solid var(--line-soft); background:#fbfbfa; border-radius:6px 6px 0 0; }
+  .panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--steel); font-weight:700; }
+  .panel-body{ padding:14px; }
+
+  .inputs{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px 18px; }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field span{ font-size:11.5px; font-weight:600; color:#54606b; }
+  .field .sym{ font-family:var(--mono); color:#8a939b; font-weight:400; }
+
+  .results{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  .result{ border:1px solid var(--line-soft); border-radius:5px; padding:11px 13px; background:#fbfbfa; }
+  .result .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#5c6771; font-weight:700; }
+  .result .val{ font-family:var(--mono); font-size:22px; font-weight:700; margin-top:4px; color:var(--ink); }
+  .result .lim{ font-size:10.5px; color:#8a939b; margin-top:2px; }
+  .result.pass{ background:var(--ok-bg); border-color:#bcd9c8; }
+  .result.pass .val{ color:var(--ok); }
+  .result.fail{ background:var(--fail-bg); border-color:#e8bdb8; }
+  .result.fail .val{ color:var(--fail); }
+
+  .formulas{ font-family:var(--mono); font-size:11px; color:#6b757e; line-height:1.7; white-space:pre; overflow-x:auto; }
+  .note{ font-size:11px; color:#8a939b; margin-top:10px; line-height:1.5; }
+  .actions{ display:flex; gap:10px; justify-content:flex-end; }
+
+  @media (max-width:620px){ .inputs, .results{ grid-template-columns:1fr; } }
+</style>
+<link rel="stylesheet" href="../responsive.css?v=1">
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <h1>Quick Seam Calculator</h1>
+    <div class="sub">Standalone working tool — nothing typed here is saved or linked to a record.</div>
+  </div>
+  <button class="btn-ghost" id="backBtn">Back to REC 7.2.12</button>
+</div>
+
+<div class="wrap">
+
+  <div class="panel">
+    <div class="panel-head"><h2>Measurements (mm)</h2></div>
+    <div class="panel-body">
+      <div class="inputs">
+        <label class="field"><span>Seam length / height <em class="sym">SL</em></span>
+          <input type="number" step="0.001" id="in_seamLength" autofocus></label>
+        <label class="field"><span>Seam thickness <em class="sym">ST</em></span>
+          <input type="number" step="0.001" id="in_seamThickness"></label>
+        <label class="field"><span>Body hook <em class="sym">BH</em></span>
+          <input type="number" step="0.001" id="in_bodyHook"></label>
+        <label class="field"><span>Cover hook <em class="sym">CH</em></span>
+          <input type="number" step="0.001" id="in_coverHook"></label>
+        <label class="field"><span>Plate thickness — tin end / cover <em class="sym">Te</em></span>
+          <input type="number" step="0.001" id="in_plateEnd" value="0.22"></label>
+        <label class="field"><span>Plate thickness — tin body <em class="sym">Tb</em></span>
+          <input type="number" step="0.001" id="in_plateBody" value="0.20"></label>
+      </div>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn-flat" id="clearBtn">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Results</h2></div>
+    <div class="panel-body">
+      <div class="results">
+        <div class="result" id="res_overlap">
+          <div class="lbl">Actual overlap</div>
+          <div class="val" id="val_overlap">—</div>
+          <div class="lim">min 1.00 mm</div>
+        </div>
+        <div class="result" id="res_overlapPct">
+          <div class="lbl">% Overlap</div>
+          <div class="val" id="val_overlapPct">—</div>
+          <div class="lim">min 45%</div>
+        </div>
+        <div class="result" id="res_bhb">
+          <div class="lbl">% Body hook butting</div>
+          <div class="val" id="val_bhb">—</div>
+          <div class="lim">min 70%</div>
+        </div>
+        <div class="result" id="res_freespace">
+          <div class="lbl">Free space</div>
+          <div class="val" id="val_freespace">—</div>
+          <div class="lim">0.03 – 0.19 mm</div>
+        </div>
+      </div>
+      <div class="note">Limits shown are the standard Fujian 73×119mm figures held in REC 7.2.12. They are a
+        guide only — this page does not read the live specification, and pass/fail here is not a record.</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Formulas used</h2></div>
+    <div class="panel-body">
+      <div class="formulas">Overlap        = BH + CH + 1.1·Te − SL
+% Overlap      = Overlap ÷ (SL − 2.2·Te − 1.1·Tb)
+% B.H. butting = (BH − 1.1·Tb) ÷ (SL − 2.2·Te − 1.1·Tb)
+Free space     = ST − 3·Te − 2·Tb</div>
+      <div class="note">Identical to the formulas used by REC 7.2.12 and by the seamschool.com seam calculator.
+        The 1.1 factors compensate for plate compression within the seam.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const num = v => { if(v===null||v===undefined||v==='') return null;
+    const n = parseFloat(v); return isNaN(n) ? null : n; };
+
+  const INPUTS = ['in_seamLength','in_seamThickness','in_bodyHook','in_coverHook','in_plateEnd','in_plateBody'];
+
+  function overlapDenom(SL, Te, Tb){ return SL - (2.2*Te) - (1.1*Tb); }
+
+  function compute(){
+    const SL = num($('in_seamLength').value), ST = num($('in_seamThickness').value),
+          BH = num($('in_bodyHook').value),   CH = num($('in_coverHook').value),
+          Te = num($('in_plateEnd').value),   Tb = num($('in_plateBody').value);
+
+    let overlap = null, overlapPct = null, bhb = null, freespace = null;
+    const denom = (SL!==null && Te!==null && Tb!==null) ? overlapDenom(SL, Te, Tb) : null;
+
+    if(BH!==null && CH!==null && Te!==null && SL!==null)
+      overlap = Math.round((BH + CH + 1.1*Te - SL) * 1000) / 1000;
+    if(overlap!==null && denom!==null && denom!==0)
+      overlapPct = Math.round((100 * overlap / denom) * 10) / 10;
+    if(BH!==null && Tb!==null && denom!==null && denom!==0)
+      bhb = Math.round((100 * (BH - 1.1*Tb) / denom) * 10) / 10;
+    if(ST!==null && Te!==null && Tb!==null)
+      freespace = Math.round((ST - 3*Te - 2*Tb) * 1000) / 1000;
+
+    show('overlap',    overlap,    v => v.toFixed(3) + ' mm', v => v >= 1);
+    show('overlapPct', overlapPct, v => v.toFixed(1) + '%',   v => v >= 45);
+    show('bhb',        bhb,        v => v.toFixed(1) + '%',   v => v >= 70);
+    show('freespace',  freespace,  v => v.toFixed(3) + ' mm', v => v >= 0.03 && v <= 0.19);
+  }
+
+  function show(key, value, fmt, isPass){
+    const box = $('res_' + key), val = $('val_' + key);
+    box.classList.remove('pass','fail');
+    if(value===null || !isFinite(value)){ val.textContent = '—'; return; }
+    val.textContent = fmt(value);
+    box.classList.add(isPass(value) ? 'pass' : 'fail');
+  }
+
+  INPUTS.forEach(id => $(id).addEventListener('input', compute));
+
+  $('clearBtn').addEventListener('click', ()=>{
+    $('in_seamLength').value = ''; $('in_seamThickness').value = '';
+    $('in_bodyHook').value = '';   $('in_coverHook').value = '';
+    $('in_plateEnd').value = '0.22'; $('in_plateBody').value = '0.20';
+    compute(); $('in_seamLength').focus();
+  });
+
+  $('backBtn').addEventListener('click', ()=>{
+    if(history.length > 1) history.back();
+    else location.href = 'double-seam-inspection-report.html';
+  });
+
+  compute();
+})();
+</script>
+</body>
+</html>
