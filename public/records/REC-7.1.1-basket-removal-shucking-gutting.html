@@ -185,7 +185,7 @@
   function renderForm(){
     $('h_intakeDate').value = state.intakeDate;
     $('h_time').value = state.time;
-    $('h_harvestFarm').value = state.harvestFarm;
+    window.Lookups.setValue('h_harvestFarm', 'farms', state.harvestFarm);
     window.Lookups.fill('h_processingFor', 'processingFor', { selected: state.processingFor });
     $('h_canJobNo').value = state.canJobNo;
     $('h_dryJobNo').value = state.dryJobNo;
@@ -247,6 +247,7 @@
   }
 
   function wire(){
+    window.Lookups.upgrade('h_harvestFarm', 'farms');
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));

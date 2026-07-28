@@ -10,12 +10,13 @@
  * Usage
  *   <script src="../lib/lookups.js?v=1"></script>
  *
- *   // form-record.js configs:
- *   { key: 'harvestFarm', label: 'Harvest farm', type: 'select',
- *     options: window.Lookups.get('farms') }
+ *   // form-record.js / monitoring-log.js configs:
+ *   window.Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' })
  *
  *   // hand-rolled record pages:
  *   Lookups.fill('h_sizeRange', 'sizeRanges', { selected: state.sizeRange });
+ *   Lookups.upgrade('h_harvestFarm', 'farms');   // in wire(), before bindInputs()
+ *   Lookups.setValue('h_harvestFarm', 'farms', state.harvestFarm);  // in render
  *
  *   // validation:
  *   Lookups.batch.isValid('3CP000123')   -> true
@@ -43,9 +44,11 @@
       '450g+'
     ],
 
-    // TODO: replace with the facility's actual harvest farms / suppliers.
-    // While this list is empty, Lookups.fill() leaves the field alone so
-    // farm inputs stay free text instead of turning into an empty dropdown.
+    // Harvest farms / suppliers. Add the names here — every record's farm
+    // field is already wired to this list and switches from a free-text box
+    // to a dropdown the moment there is at least one entry. Nothing else to
+    // edit. Farms already captured on old records stay readable even if you
+    // later remove the name from this list.
     farms: [],
 
     processingFor: ['Can', 'Dried', 'Live sorting', 'Other'],
@@ -147,6 +150,70 @@
     return true;
   }
 
+  /*
+   * Field descriptor for the config-driven engines (form-record.js /
+   * monitoring-log.js). Renders as a dropdown once the list has entries and
+   * as a plain text box while it is still empty, so a half-populated list
+   * never traps the operator in a dropdown with nothing to pick.
+   *
+   *   Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' })
+   *
+   * Any extra keys (required, width, ...) are passed straight through.
+   */
+  function field(spec) {
+    const out = {};
+    for (const k in spec) if (k !== 'list') out[k] = spec[k];
+    if (has(spec.list)) {
+      out.type = 'select';
+      out.options = get(spec.list);
+    } else {
+      out.type = spec.fallbackType || 'text';
+    }
+    return out;
+  }
+
+  /*
+   * Turn a plain <input> into a <select> once the list has entries; no-op
+   * while the list is empty, so the field stays free text until then.
+   * Call BEFORE binding change listeners — the element is replaced, and a
+   * <select> fires the same 'input'/'change' events the <input> did.
+   */
+  function upgrade(el, name) {
+    const node = typeof el === 'string' ? document.getElementById(el) : el;
+    if (!node || !has(name)) return false;
+    if (node.tagName === 'SELECT') { fill(node, name, { selected: node.value }); return true; }
+
+    const sel = document.createElement('select');
+    sel.id = node.id;
+    sel.className = node.className;
+    if (node.disabled) sel.disabled = true;
+    node.parentNode.replaceChild(sel, node);
+    fill(sel, name, { selected: node.value });
+    return true;
+  }
+
+  /*
+   * Write a stored value into a field that may be either the text box or the
+   * upgraded dropdown. On a <select> an unrecognised value (a farm since
+   * removed from the list) is added back so old records still read correctly.
+   */
+  function setValue(el, name, value) {
+    const node = typeof el === 'string' ? document.getElementById(el) : el;
+    if (!node) return false;
+    const v = value == null ? '' : value;
+    if (node.tagName === 'SELECT') {
+      const known = [...node.options].some(o => o.value === v);
+      if (v !== '' && !known) {
+        const o = document.createElement('option');
+        o.value = v;
+        o.textContent = v;
+        node.appendChild(o);
+      }
+    }
+    node.value = v;
+    return true;
+  }
+
   /* --------------------------------------------------------------- export */
 
   window.Lookups = {
@@ -155,6 +222,9 @@
     has: has,
     isValid: isValid,
     fill: fill,
+    field: field,
+    upgrade: upgrade,
+    setValue: setValue,
     batch: {
       isValid: isValidBatchNumber,
       getFormats: getValidBatchFormats,

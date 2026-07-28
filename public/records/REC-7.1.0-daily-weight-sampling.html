@@ -10,6 +10,7 @@
 </head>
 <body>
 <div id="mlRoot"></div>
+<script src="../lib/lookups.js?v=1"></script>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
@@ -32,7 +33,7 @@
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'basketNumber', label: 'Basket number', type: 'number' },
       { key: 'sizeRange', label: 'Size range', type: 'text' },
-      { key: 'farm', label: 'Farm', type: 'text' },
+      window.Lookups.field({ key: 'farm', label: 'Farm', list: 'farms' }),
       { key: 'weight', label: 'Weight', type: 'number', unit: 'kg' },
       { key: 'comments', label: 'Comments', type: 'textarea' }
     ],

@@ -31,7 +31,7 @@
     ],
     entryFields: [
       { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      window.Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingFor', label: 'Processing for', type: 'select', options: window.Lookups.get('processingFor') },
       { key: 'jobNo', label: 'Job no.', type: 'text' },
       { key: 'abaloneSize', label: 'Abalone size', type: 'number', unit: 'g' },

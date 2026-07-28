@@ -363,7 +363,7 @@
 
   function renderHeader(){
     $('h_intakeDate').value = state.header.intakeDate;
-    $('h_harvestFarm').value = state.header.harvestFarm;
+    window.Lookups.setValue('h_harvestFarm', 'farms', state.header.harvestFarm);
     $('h_trackingNo').value = state.header.trackingNo;
     window.Lookups.fill('h_processingFor', 'processingFor', { selected: state.header.processingFor });
     window.Lookups.fill('h_sizeRange', 'sizeRanges', { selected: state.header.sizeRange });
@@ -431,6 +431,7 @@
   }
 
   function wire(){
+    window.Lookups.upgrade('h_harvestFarm', 'farms');
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));

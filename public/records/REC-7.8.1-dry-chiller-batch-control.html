@@ -27,7 +27,7 @@
     title: 'Dry Chiller Batch Control',
     docRevisionStart: 4,
     entryFields: [
-      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      window.Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingFor', label: 'Processing for', type: 'select', options: window.Lookups.get('processingFor') },
       { key: 'processingStep', label: 'Processing step', type: 'select', options: ['After first wash', 'After cooking'] },
       { key: 'jobNo', label: 'Job no.', type: 'text', required: true },

@@ -10,6 +10,7 @@
 </head>
 <body>
 <div id="mlRoot"></div>
+<script src="../lib/lookups.js?v=1"></script>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
@@ -26,7 +27,7 @@
     title: 'Chiller Batch Control (Canning)',
     docRevisionStart: 4,
     entryFields: [
-      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      window.Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingStep', label: 'Processing step', type: 'select', options: ['After first wash', 'After second wash', 'After scrubbing'] },
       { key: 'trackingNo', label: 'Tracking no.', type: 'text', required: true },
       { key: 'date', label: 'Date', type: 'date', required: true },

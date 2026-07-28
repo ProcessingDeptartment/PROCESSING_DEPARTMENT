@@ -158,6 +158,7 @@
 
   <div class="toast no-print" id="toast"></div>
 </div>
+<script src="../lib/lookups.js?v=1"></script>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
@@ -202,7 +203,7 @@
 
   function renderForm(){
     $('h_date').value = state.date;
-    $('h_harvestFarm').value = state.harvestFarm;
+    window.Lookups.setValue('h_harvestFarm', 'farms', state.harvestFarm);
     $('h_productionCode').value = state.productionCode;
     $('h_productDescription').value = state.productDescription;
     $('h_jobNumber').value = state.jobNumber;
@@ -276,6 +277,7 @@
   }
 
   function wire(){
+    window.Lookups.upgrade('h_harvestFarm', 'farms');
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
