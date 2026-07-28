@@ -135,6 +135,37 @@
     }
   }
 
+  // Every key sharing a prefix, in ONE round trip: { key: value, ... }.
+  // Pages that need the current state of many records at once (the Master Record Index
+  // reads ~130 document_revision:* keys) must use this -- looping get() issues one
+  // request per record and stalls the page.
+  async function getByPrefix(prefix, shared) {
+    if (!configured || shared === false) {
+      const out = {};
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const k = window.localStorage.key(i);
+        if (k && k.startsWith(PREFIX + prefix)) {
+          out[k.slice(PREFIX.length)] = window.localStorage.getItem(k);
+        }
+      }
+      return out;
+    }
+    try {
+      const supabase = await getClient();
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('key,value')
+        .like('key', prefix.replace(/[%_]/g, '\\$&') + '%');
+      if (error) throw error;
+      const out = {};
+      (data || []).forEach(function (r) { out[r.key] = r.value; });
+      return out;
+    } catch (e) {
+      console.error('storage getByPrefix failed (supabase)', e);
+      return {};
+    }
+  }
+
   async function remove(key, shared) {
     if (!configured || shared === false) return localRemove(key);
     try {
@@ -145,7 +176,7 @@
     }
   }
 
-  window.storage = { get, set, remove };
+  window.storage = { get, set, remove, getByPrefix };
 
   // Shared low-level handle for libs that need real relational queries (e.g.
   // traceability.js talking to the batch_link table) rather than the key/value shim.

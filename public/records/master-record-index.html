@@ -3,264 +3,400 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Master Record Index</title>
+<title>REC 01 Master Record Index</title>
+<link rel="stylesheet" href="record-theme.css">
 <style>
-  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
-  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
-  .header h1{ margin:0; font-size:18px; font-weight:600; }
-  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
-  .container{ max-width:1100px; margin:0 auto; padding:20px; }
-  .search-box{ background:#fff; border:1px solid #d0d5db; border-radius:8px; padding:16px; margin-bottom:20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-  .search-input{ width:100%; padding:10px 12px; border:1px solid #d0d5db; border-radius:6px; font-size:14px; }
-  .search-input::placeholder{ color:#9ca3af; }
-  .search-input:focus{ outline:none; border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
-  table.records-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; }
-  table.records-table th,table.records-table td{ border-bottom:1px solid #e2e4e3; padding:10px 12px; text-align:left; font-size:12px; }
-  table.records-table th{ background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; padding:10px 12px; }
-  table.records-table td.doc-code{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:#2f4356; white-space:nowrap; }
-  table.records-table td.title a{ color:#1d4ed8; text-decoration:none; font-weight:500; }
-  table.records-table td.title a:hover{ text-decoration:underline; }
-  table.records-table td.revision{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:#2f4356; }
-  table.records-table tbody tr:hover{ background:#f9fafb; }
-  table.records-table tbody tr.hidden{ display:none; }
-  .no-results{ text-align:center; color:#6b7280; padding:40px 20px; }
-  .back-link{ display:inline-block; margin-top:16px; color:#1d4ed8; text-decoration:none; font-size:0.9rem; }
-  .back-link:hover{ text-decoration:underline; }
-  .search-hint{ font-size:11px; color:#9ca3af; margin-top:8px; }
-  .info-bar{ background:#eff6ff; border-left:4px solid #3b82f6; padding:12px 16px; border-radius:4px; margin-bottom:16px; font-size:12px; color:#1e40af; }
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--palette-ink); background:var(--palette-paper);
+        font-size:13px; line-height:1.4; margin:0; }
+  *{ box-sizing:border-box; }
 
-  /* The three-column index is narrow enough to stay a table on a phone; only
-     the doc-code column needs to stop forcing the page wide. */
-  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:6px; }
+  /* ---- Document control header, mirroring the paper REC 01 title block ---- */
+  .dc-top{ background:var(--palette-dark); color:var(--palette-dark-text); padding:12px 16px; }
+  .doc-line{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .doc-code{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.04em;
+             background:rgba(255,255,255,.12); padding:2px 8px; border-radius:3px; }
+  .doc-line h1{ margin:0; font-size:17px; font-weight:600; }
+  .doc-rev{ font-size:11.5px; color:var(--palette-dark-muted); }
+  .dc-meta{ display:flex; gap:22px; flex-wrap:wrap; margin-top:10px; font-size:11px;
+            color:var(--palette-dark-muted); }
+  .dc-meta b{ color:var(--palette-dark-text); font-weight:600; display:block; font-size:11.5px; }
+  .dc-actions{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .btn{ padding:5px 11px; font-size:11.5px; border:none; border-radius:3px; cursor:pointer;
+        font-weight:600; font-family:inherit; }
+  .btn-primary{ background:var(--palette-primary); color:var(--palette-primary-text); }
+  .btn-primary:hover{ background:var(--palette-primary-hover); }
+  .btn-ghost{ background:rgba(255,255,255,.14); color:var(--palette-dark-text); }
+  .btn-ghost:hover{ background:rgba(255,255,255,.24); }
+
+  .container{ max-width:1500px; margin:0 auto; padding:16px 20px 40px; }
+
+  .toolbar{ background:#fff; border:1px solid var(--palette-border); border-radius:6px;
+            padding:12px 14px; margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap;
+            align-items:flex-end; }
+  .toolbar label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
+                  color:var(--palette-label); font-weight:700; display:block; margin-bottom:3px; }
+  .toolbar input[type=text], .toolbar select{ padding:7px 9px; border:1px solid #d0d5db;
+            border-radius:4px; font-size:13px; font-family:inherit; background:#fff;
+            color:var(--palette-ink); }
+  .toolbar input[type=text]{ min-width:280px; }
+  .grow{ flex:1; }
+  .counts{ font-size:11.5px; color:var(--palette-label); }
+  .counts b{ color:var(--palette-heading); }
+
+  .notice{ background:var(--palette-head-bg); border-left:3px solid var(--palette-primary);
+           padding:10px 14px; border-radius:3px; margin-bottom:14px; font-size:11.5px;
+           color:var(--palette-label); }
+  .notice a{ color:var(--palette-heading); font-weight:600; }
+
+  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch;
+                 border:1px solid var(--palette-border); border-radius:6px; background:#fff; }
+  table.mi{ width:100%; border-collapse:collapse; min-width:1180px; }
+  table.mi th, table.mi td{ border-bottom:1px solid var(--palette-border); padding:8px 10px;
+            text-align:left; font-size:12px; vertical-align:top; }
+  table.mi thead th{ background:var(--palette-head-bg); font-size:10px; text-transform:uppercase;
+            letter-spacing:.04em; color:var(--palette-label); font-weight:700; position:sticky;
+            top:0; z-index:2; border-bottom:2px solid var(--palette-border); }
+  table.mi tbody tr:hover{ background:var(--palette-head-bg); }
+  table.mi tbody tr.hidden{ display:none; }
+
+  td.c-code{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--palette-heading);
+             white-space:nowrap; }
+  td.c-name a{ color:var(--palette-heading); font-weight:600; text-decoration:none; }
+  td.c-name a:hover{ text-decoration:underline; }
+  td.c-details{ color:var(--palette-label); max-width:340px; }
+  td.c-rev{ font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--palette-heading);
+            white-space:nowrap; text-align:center; }
+  td.c-date{ font-family:'IBM Plex Mono',monospace; white-space:nowrap; color:var(--palette-label); }
+  td.c-yn{ text-align:center; }
+  td.c-yn select{ font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;
+            padding:3px 4px; border:1px solid #d0d5db; border-radius:3px; background:#fff;
+            color:var(--palette-ink); min-width:62px; }
+  td.c-yn select:disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
+  td.c-yn select.dirty{ border-color:var(--palette-primary); box-shadow:0 0 0 2px rgba(201,131,43,.15); }
+
+  .tag{ display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.04em;
+        text-transform:uppercase; padding:1px 6px; border-radius:9px; white-space:nowrap; }
+  .tag-online{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .tag-paper{ background:#f1f2f4; color:#6b7280; }
+  .tag-unlisted{ background:#fdf3e3; color:#9a6516; }
+  .tag-bumped{ background:#fdf3e3; color:#9a6516; }
+  .sub{ display:block; font-size:10.5px; color:var(--palette-label); font-weight:400;
+        font-family:'Segoe UI',system-ui,sans-serif; margin-top:2px; }
+
+  tr.not-digitised td.c-code, tr.not-digitised td.c-name{ color:#6b7280; }
+  .no-results{ text-align:center; color:var(--palette-label); padding:40px 20px; }
+  .back-link{ display:inline-block; margin-top:16px; color:var(--palette-heading);
+              text-decoration:none; font-size:12.5px; font-weight:600; }
+  .back-link:hover{ text-decoration:underline; }
+  .save-state{ font-size:11.5px; color:var(--palette-ok); font-weight:600; }
+
   @media (max-width:768px){
-    .header{ padding:12px 14px; }
-    .header h1{ font-size:16px; }
-    .container{ padding:14px; }
-    .search-box{ padding:12px; margin-bottom:14px; }
-    .search-input{ font-size:16px; }
-    table.records-table th,table.records-table td{ padding:8px; font-size:12px; }
-    table.records-table td.doc-code{ white-space:normal; }
+    .container{ padding:12px; }
+    .doc-line h1{ font-size:15px; }
+    .toolbar input[type=text]{ min-width:0; width:100%; }
+    .toolbar .grow{ flex-basis:100%; }
   }
-  @media (max-width:480px){
-    .container{ padding:10px; }
-    table.records-table th,table.records-table td{ padding:6px; font-size:11px; }
+
+  @media print{
+    .dc-actions, .toolbar, .back-link, .notice{ display:none; }
+    body{ background:#fff; font-size:9.5px; }
+    .container{ max-width:none; padding:0; }
+    .table-scroll{ overflow:visible; border:none; }
+    table.mi{ min-width:0; }
+    table.mi thead th{ position:static; }
+    td.c-yn select{ border:none; background:none; -webkit-appearance:none; appearance:none; }
+    tr.hidden{ display:none; }
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
-<div class="header">
-  <h1>Master Record Index</h1>
-  <p>All digitised records with current document-control revision</p>
-</div>
-<div class="container">
-  <div class="search-box">
-    <input type="text" id="searchInput" class="search-input" placeholder="Filter by name, doc code, or record key..." autocomplete="off">
-    <div class="search-hint">Showing <span id="resultCount">0</span> of <span id="totalCount">0</span> records</div>
+
+<div class="dc-top">
+  <div class="doc-line">
+    <span class="doc-code" id="hdrCode">REC 01</span>
+    <h1>Master Record Index</h1>
+    <span class="doc-rev" id="hdrRev"></span>
   </div>
+  <div class="dc-meta">
+    <div><b id="hdrReviewed">-</b>Reviewed by</div>
+    <div><b id="hdrApproved">-</b>Approved by</div>
+    <div><b id="hdrRevDate">-</b>Revision date</div>
+    <div><b id="hdrCounts">-</b>Records listed</div>
+  </div>
+  <div class="dc-actions">
+    <button class="btn btn-primary" id="printBtn">Print / PDF</button>
+    <button class="btn btn-ghost" id="csvBtn">Export CSV</button>
+    <a class="btn btn-ghost" href="record-list.html" style="text-decoration:none;display:inline-block;">Open a record &rarr;</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="notice">
+    This is the controlled document-control register (REC 01). The <b>Current revision</b>
+    column is live: when a record's revision is changed inside the record itself, it updates
+    here automatically. To fill in a record, use the <a href="record-list.html">Record List</a>.
+  </div>
+
+  <div class="toolbar">
+    <div class="grow">
+      <label for="searchInput">Search</label>
+      <input type="text" id="searchInput" placeholder="Document number, name, or reason for change..." autocomplete="off">
+    </div>
+    <div>
+      <label for="statusFilter">Status</label>
+      <select id="statusFilter">
+        <option value="all">All records</option>
+        <option value="online">Online records only</option>
+        <option value="paper">Not yet digitised</option>
+        <option value="bumped">Revised since the index was issued</option>
+        <option value="unlisted">Not on the index list</option>
+      </select>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <span class="counts">Showing <b id="resultCount">0</b> of <b id="totalCount">0</b></span>
+      <span class="save-state" id="saveState"></span>
+    </div>
+  </div>
+
   <div class="table-scroll">
-    <table class="records-table">
+    <table class="mi">
       <thead>
         <tr>
-          <th>Doc Code</th>
-          <th>Title</th>
-          <th>Current Rev</th>
+          <th style="width:90px;">Document No.</th>
+          <th style="width:250px;">Document Name</th>
+          <th>Details for change</th>
+          <th style="width:70px;">Current<br>revision</th>
+          <th style="width:96px;">Obsolete revision<br>retrieved? Y/N</th>
+          <th style="width:96px;">New revision<br>distributed? Y/N</th>
+          <th style="width:96px;">New date<br>of issue</th>
         </tr>
       </thead>
-      <tbody id="tableBody">
-      </tbody>
+      <tbody id="tableBody"></tbody>
     </table>
   </div>
-  <div class="no-results" id="noResults" style="display:none;">No records found. Try a different search.</div>
+  <div class="no-results" id="noResults" style="display:none;">No records match this filter.</div>
+
   <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
 </div>
 
-<script src="../lib/data-store.js?v=2"></script>
+<script src="../lib/data-store.js?v=3"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/document-revision.js?v=2"></script>
+<script src="../lib/permission-rules.js?v=4"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/master-index-data.js?v=1"></script>
 <script>
 (function () {
-  const RECORDS = [
-    { docCode: 'REC 7.2.12', title: 'Double Seam Inspection Report', recordKey: 'double-seam-inspection-report', docRevisionStart: 11, href: 'double-seam-inspection-report.html' },
-    { docCode: 'REC 7.9.1', title: 'Chiller Temperature Monitoring', recordKey: 'chiller-temperature-monitoring', docRevisionStart: 9, href: 'chiller-temperature-monitoring.html' },
-    { docCode: 'REC 7.9.2', title: 'Daily Incubator Temperature Check', recordKey: 'incubator-temperature-check', docRevisionStart: 6, href: 'incubator-temperature-check.html' },
-    { docCode: 'REC 7.9.3.1', title: 'Dry Room Temp & Humidity Log', recordKey: 'dry-room-temp-humidity-log', docRevisionStart: 6, href: 'dry-room-temp-humidity-log.html' },
-    { docCode: 'REC 7.9.3.2', title: 'Grading Room Temp & Humidity Log', recordKey: 'grading-room-temp-humidity-log', docRevisionStart: 1, href: 'grading-room-temp-humidity-log.html' },
-    { docCode: 'REC 7.10.2', title: 'pH Verification', recordKey: 'ph-verification', docRevisionStart: 8, href: 'ph-verification.html' },
-    { docCode: 'REC 7.10.3', title: 'Thermometer Verification', recordKey: 'thermometer-verification', docRevisionStart: 5, href: 'thermometer-verification.html' },
-    { docCode: 'REC 7.10.4', title: 'Thermometer Correction Factors', recordKey: 'thermometer-correction-factors', docRevisionStart: 1, href: 'thermometer-correction-factors.html' },
-    { docCode: 'REC 7.8.9', title: 'Water Monitoring', recordKey: 'water-monitoring', docRevisionStart: 1, href: 'water-monitoring.html' },
-    { docCode: 'REC 7.1.2', title: 'Abalone Receiving', recordKey: 'abalone-receiving', docRevisionStart: 1, href: 'abalone-receiving.html' },
-    { docCode: 'REC 7.1.0', title: 'Daily Weight Sampling', recordKey: 'daily-weight-sampling', docRevisionStart: 1, href: 'daily-weight-sampling.html' },
-    { docCode: 'REC 1', title: 'Gonad Inspection Report', recordKey: 'gonad-inspection-report', docRevisionStart: 1, href: 'gonad-inspection-report.html' },
-    { docCode: 'REC 7.1.00', title: 'Fixed Reader Checks', recordKey: 'fixed-reader-checks', docRevisionStart: 1, href: 'fixed-reader-checks.html' },
-    { docCode: 'REC 7.1.1', title: 'Basket Removal, Shucking & Gutting', recordKey: 'basket-removal-shucking-gutting', docRevisionStart: 1, href: 'basket-removal-shucking-gutting.html' },
-    { docCode: 'REC 7.1.3.1', title: 'Bleeding and Salting', recordKey: 'bleeding-and-salting', docRevisionStart: 6, href: 'bleeding-and-salting.html' },
-    { docCode: 'REC 7.1.3', title: 'Salting and Tumbling', recordKey: 'salting-and-tumbling', docRevisionStart: 9, href: 'salting-and-tumbling.html' },
-    { docCode: 'REC 7.1.5', title: 'Salting (OOSW)', recordKey: 'salting-oosw', docRevisionStart: 1, href: 'salting-oosw.html' },
-    { docCode: 'REC 7.1.4', title: 'Washing Control Sheet', recordKey: 'washing-control-sheet', docRevisionStart: 9, href: 'washing-control-sheet.html' },
-    { docCode: 'REC 7.1.6', title: 'Scrubbing Check - Supervisor', recordKey: 'scrubbing-check-supervisor', docRevisionStart: 5, href: 'scrubbing-check-supervisor.html' },
-    { docCode: 'REC 7.1', title: 'Incubator Cans Log', recordKey: 'incubator-cans-log', docRevisionStart: 1, href: 'incubator-cans-log.html' },
-    { docCode: 'REC 01', title: 'Cans Released Form (Awaiting NRCS Releases)', recordKey: 'cans-released-form', docRevisionStart: 1, href: 'cans-released-form.html' },
-    { docCode: 'REC 7.2', title: 'Sampling Log', recordKey: 'sampling-log', docRevisionStart: 1, href: 'sampling-log.html' },
-    { docCode: 'REC 7.2.2', title: 'Scrubbing Checklist', recordKey: 'scrubbing-checklist-qc', docRevisionStart: 1, href: 'scrubbing-checklist-qc.html' },
-    { docCode: 'REC 7.2.3', title: 'Precooking Check Sheet', recordKey: 'precooking-check-sheet', docRevisionStart: 5, href: 'precooking-check-sheet.html' },
-    { docCode: 'REC 7.2.4', title: 'Abalone Packing Specification', recordKey: 'abalone-packing-specification', docRevisionStart: 3, href: 'abalone-packing-specification.html' },
-    { docCode: 'REC 7.2.5', title: 'Can Packing Control Sheet', recordKey: 'can-packing-control-sheet', docRevisionStart: 1, href: 'can-packing-control-sheet.html' },
-    { docCode: 'REC 7.2.6', title: 'Can Filling and Printing', recordKey: 'can-filling-and-printing', docRevisionStart: 5, href: 'can-filling-and-printing.html' },
-    { docCode: 'REC 7.2.6.1', title: 'Printing Control Sheet', recordKey: 'printing-control-sheet', docRevisionStart: 1, href: 'printing-control-sheet.html' },
-    { docCode: 'REC 7.2.7', title: 'Cans Produced', recordKey: 'cans-produced', docRevisionStart: 6, href: 'cans-produced.html' },
-    { docCode: 'REC 7.2.8', title: 'Retorting Control Sheet', recordKey: 'retorting-control-sheet', docRevisionStart: 4, href: 'retorting-control-sheet.html' },
-    { docCode: 'REC 7.2.9', title: 'Retort Inspection Report', recordKey: 'retort-inspection-report', docRevisionStart: 7, href: 'retort-inspection-report.html' },
-    { docCode: 'REC 7.2.10', title: 'Stock Loading', recordKey: 'stock-loading', docRevisionStart: 1, href: 'stock-loading.html' },
-    { docCode: 'REC 7.2.11', title: 'QC Report', recordKey: 'qc-report', docRevisionStart: 4, href: 'qc-report.html' },
-    { docCode: 'REC 7.2.13', title: 'Rework Log', recordKey: 'rework-log', docRevisionStart: 1, href: 'rework-log.html' },
-    { docCode: 'REC 7.2.14', title: 'Product Label Checklist', recordKey: 'product-label-checklist', docRevisionStart: 1, href: 'product-label-checklist.html' },
-    { docCode: 'REC 7.2.15', title: 'Labelling of Cans', recordKey: 'labelling-of-cans', docRevisionStart: 1, href: 'labelling-of-cans.html' },
-    { docCode: 'REC 7.2.16', title: 'Stock Transfers', recordKey: 'stock-transfers', docRevisionStart: 2, href: 'stock-transfers.html' },
-    { docCode: 'REC 7.3.1', title: 'Broth Cooking', recordKey: 'broth-cooking', docRevisionStart: 5, href: 'broth-cooking.html' },
-    { docCode: 'REC 7.3.2', title: 'Ingredient Weighing', recordKey: 'ingredient-weighing', docRevisionStart: 2, href: 'ingredient-weighing.html' },
-    { docCode: 'REC 7.3.3', title: 'Sauce Mixing', recordKey: 'sauce-mixing', docRevisionStart: 3, href: 'sauce-mixing.html' },
-    { docCode: 'REC 7.3.4', title: 'Final Sauce Mix', recordKey: 'final-sauce-mix', docRevisionStart: 3, href: 'final-sauce-mix.html' },
-    { docCode: 'REC 7.3.5', title: 'Sauce Batch Coding', recordKey: 'sauce-batch-coding', docRevisionStart: 1, href: 'sauce-batch-coding.html' },
-    { docCode: 'REC 7.3.6', title: 'Brine Mixing Report', recordKey: 'brine-mixing-report', docRevisionStart: 2, href: 'brine-mixing-report.html' },
-    { docCode: 'QA1', title: 'QA1 Damaged Cans and Lids', recordKey: 'qa1-damaged-cans-and-lids', docRevisionStart: 1, href: 'qa1-damaged-cans-and-lids.html' },
-    { docCode: 'Production Information NRCS (Canning)', title: 'Production Information NRCS', recordKey: 'production-information-nrcs', docRevisionStart: 1, href: 'production-information-nrcs.html' },
-    { docCode: 'Production Information NRCS (Rework)', title: 'Production Information NRCS (Rework)', recordKey: 'production-information-nrcs-rework', docRevisionStart: 1, href: 'production-information-nrcs-rework.html' },
-    { docCode: 'REC 7.4.0', title: 'Dry Cooking', recordKey: 'dry-cooking', docRevisionStart: 7, href: 'dry-cooking.html' },
-    { docCode: 'REC 7.4.1', title: 'Drying Process', recordKey: 'drying-process', docRevisionStart: 1, href: 'drying-process.html' },
-    { docCode: 'REC 7.4.2', title: 'Dry Monitoring', recordKey: 'dry-monitoring', docRevisionStart: 3, href: 'dry-monitoring.html' },
-    { docCode: 'REC 7.4.3.1', title: 'Grading Production Log (Cultivated)', recordKey: 'grading-production-log-cultivated', docRevisionStart: 6, href: 'grading-production-log-cultivated.html' },
-    { docCode: 'REC 7.4.3.2', title: 'Grading Production Log (Ranched)', recordKey: 'grading-production-log-ranched', docRevisionStart: 6, href: 'grading-production-log-ranched.html' },
-    { docCode: 'REC 7.4.4', title: 'Grading & Boxing Traceability', recordKey: 'grading-boxing-traceability', docRevisionStart: 1, href: 'grading-boxing-traceability.html' },
-    { docCode: 'REC 7.4.5', title: 'Boxing & Labelling', recordKey: 'boxing-and-labelling', docRevisionStart: 4, href: 'boxing-and-labelling.html' },
-    { docCode: 'REC 7.4.6', title: 'Dry Stock Control', recordKey: 'dry-stock-control', docRevisionStart: 3, href: 'dry-stock-control.html' },
-    { docCode: 'REC 7.4.7', title: 'Labelling of Dry Boxes', recordKey: 'labelling-of-dry-boxes', docRevisionStart: 2, href: 'labelling-of-dry-boxes.html' },
-    { docCode: 'REC 7.4.8', title: 'Dry Labelling List', recordKey: 'dry-labelling-list', docRevisionStart: 2, href: 'dry-labelling-list.html' },
-    { docCode: 'REC 7.4.9', title: 'Dry Stock Transfers', recordKey: 'dry-stock-transfers', docRevisionStart: 2, href: 'dry-stock-transfers.html' },
-    { docCode: 'REC 7.4.10', title: 'Dried Abalone Transfer', recordKey: 'dried-abalone-transfer', docRevisionStart: 2, href: 'dried-abalone-transfer.html' },
-    { docCode: 'Dry Export Pack Front Page', title: 'Dry Export Pack Front Page', recordKey: 'dry-export-pack-front-page', docRevisionStart: 1, href: 'dry-export-pack-front-page.html' },
-    { docCode: 'Production Information NRCS (Dry)', title: 'Dry NRCS Packs', recordKey: 'dry-nrcs-packs', docRevisionStart: 1, href: 'dry-nrcs-packs.html' },
-    { docCode: 'REC 7.5.1', title: 'Live Production Pack', recordKey: 'live-production-pack', docRevisionStart: 4, href: 'live-production-pack.html' },
-    { docCode: 'REC 7.5.2', title: 'Live Pack Checklist', recordKey: 'live-pack-checklist', docRevisionStart: 6, href: 'live-pack-checklist.html' },
-    { docCode: 'REC 7.5.3', title: 'Live Packing - Bag Quality Check', recordKey: 'live-packing-bag-quality-check', docRevisionStart: 3, href: 'live-packing-bag-quality-check.html' },
-    { docCode: 'REC 7.5.4', title: 'Individual Abalone Weight Checks - Quality', recordKey: 'individual-abalone-weight-checks', docRevisionStart: 2, href: 'individual-abalone-weight-checks.html' },
-    { docCode: 'REC 7.5.5', title: 'Receiving Live Returns', recordKey: 'receiving-live-returns', docRevisionStart: 2, href: 'receiving-live-returns.html' },
-    { docCode: 'Live Leftovers Log', title: 'Live Leftovers Log', recordKey: 'live-leftovers-log', docRevisionStart: 1, href: 'live-leftovers-log.html' },
-    { docCode: 'Mortalities Log', title: 'Mortalities Log', recordKey: 'mortalities-log', docRevisionStart: 1, href: 'mortalities-log.html' },
-    { docCode: 'Mortality Counts by Customer', title: 'Mortality Counts by Customer', recordKey: 'mortality-counts-by-customer', docRevisionStart: 1, href: 'mortality-counts-by-customer.html' },
-    { docCode: 'REC 7.6.0a', title: 'Production Areas Cleaning Record', recordKey: 'production-areas-cleaning-record', docRevisionStart: 1, href: 'production-areas-cleaning-record.html' },
-    { docCode: 'REC 7.6.0b', title: 'Live Product Areas Cleaning Record', recordKey: 'live-product-areas-cleaning-record', docRevisionStart: 1, href: 'live-product-areas-cleaning-record.html' },
-    { docCode: 'REC 7.6.0c', title: 'Personnel Facilities Cleaning Record', recordKey: 'personnel-facilities-cleaning-record', docRevisionStart: 1, href: 'personnel-facilities-cleaning-record.html' },
-    { docCode: 'REC 7.6.1', title: 'Daily Cleaning Inspection', recordKey: 'daily-cleaning-inspection', docRevisionStart: 4, href: 'daily-cleaning-inspection.html' },
-    { docCode: 'REC 7.6.1.1', title: 'Deep Cleaning Record Weekly', recordKey: 'deep-cleaning-record-weekly', docRevisionStart: 1, href: 'deep-cleaning-record-weekly.html' },
-    { docCode: 'REC 7.6.2', title: 'Weekly Cleaning Record', recordKey: 'weekly-cleaning-record', docRevisionStart: 3, href: 'weekly-cleaning-record.html' },
-    { docCode: 'REC 7.6.2.2', title: 'Dispatch Cleaning Inspection', recordKey: 'dispatch-cleaning-inspection', docRevisionStart: 1, href: 'dispatch-cleaning-inspection.html' },
-    { docCode: 'REC 7.6.3', title: 'Facility Inspection', recordKey: 'facility-inspection', docRevisionStart: 7, href: 'facility-inspection.html' },
-    { docCode: 'REC 7.6.3.1', title: 'Facility Inspection NC Report', recordKey: 'facility-inspection-nc-report', docRevisionStart: 4, href: 'facility-inspection-nc-report.html' },
-    { docCode: 'REC 7.6.4', title: 'Chemical Stock & Issue Register', recordKey: 'chemical-stock-issue-register', docRevisionStart: 1, href: 'chemical-stock-issue-register.html' },
-    { docCode: 'REC 7.6.5', title: 'Internal Pest Sightings Log', recordKey: 'internal-pest-sightings-log', docRevisionStart: 1, href: 'internal-pest-sightings-log.html' },
-    { docCode: 'REC 7.6.6', title: 'Pest Inspection Record', recordKey: 'pest-inspection-record', docRevisionStart: 7, href: 'pest-inspection-record.html' },
-    { docCode: 'REC 7.6.7', title: 'Staff Hygiene Inspection', recordKey: 'staff-hygiene-inspection', docRevisionStart: 1, href: 'staff-hygiene-inspection.html' },
-    { docCode: 'REC 7.6.7a', title: 'Staff Hygiene Inspection - Weekends', recordKey: 'staff-hygiene-inspection-weekends', docRevisionStart: 2, href: 'staff-hygiene-inspection-weekends.html' },
-    { docCode: 'REC 7.6.8', title: 'Allergen Cleaning Verification', recordKey: 'allergen-cleaning-verification', docRevisionStart: 1, href: 'allergen-cleaning-verification.html' },
-    { docCode: 'Master Cleaning Plan', title: 'Master Cleaning Plan', recordKey: 'master-cleaning-plan', docRevisionStart: 2, href: 'master-cleaning-plan.html' },
-    { docCode: 'Master Cleaning Checklist', title: 'Master Cleaning Checklist (New Plant)', recordKey: 'master-cleaning-checklist', docRevisionStart: 1, href: 'master-cleaning-checklist.html' },
-    { docCode: 'REC 7.7.1', title: 'Daily Equipment Checklist', recordKey: 'daily-equipment-checklist', docRevisionStart: 6, href: 'daily-equipment-checklist.html' },
-    { docCode: 'REC 7.7.2', title: 'Glass, Plastic & Equipment Inspection', recordKey: 'glass-plastic-equipment-inspection', docRevisionStart: 5, href: 'glass-plastic-equipment-inspection.html' },
-    { docCode: 'REC 7.7.3', title: 'Glass Breakage Clearance Certificate', recordKey: 'glass-breakage-clearance-certificate', docRevisionStart: 1, href: 'glass-breakage-clearance-certificate.html' },
-    { docCode: 'REC 7.7.4', title: 'Utensil Issue Record', recordKey: 'utensil-issue-record', docRevisionStart: 6, href: 'utensil-issue-record.html' },
-    { docCode: 'REC 7.7.4c', title: 'Knife Register', recordKey: 'knife-register', docRevisionStart: 2, href: 'knife-register.html' },
-    { docCode: 'REC 7.7.4.1a', title: 'Safety Glass Register', recordKey: 'safety-glass-register', docRevisionStart: 1, href: 'safety-glass-register.html' },
-    { docCode: 'REC 7.7.4.1b', title: 'Goggles Register', recordKey: 'goggles-register', docRevisionStart: 1, href: 'goggles-register.html' },
-    { docCode: 'REC 7.7.5', title: 'Glove Issuing Register', recordKey: 'glove-issuing-register', docRevisionStart: 9, href: 'glove-issuing-register.html' },
-    { docCode: 'REC 7.7.6', title: 'Plaster Issuing / Dressing Inspection', recordKey: 'plaster-dressing-inspection', docRevisionStart: 3, href: 'plaster-dressing-inspection.html' },
-    { docCode: 'REC 7.7.7', title: 'Salt Issuing Register', recordKey: 'salt-issuing-register', docRevisionStart: 1, href: 'salt-issuing-register.html' },
-    { docCode: 'REC 7.8.1', title: 'Chiller Batch Control (Canning)', recordKey: 'chiller-batch-control', docRevisionStart: 4, href: 'chiller-batch-control.html' },
-    { docCode: 'REC 7.8.1', title: 'Dry Chiller Batch Control', recordKey: 'dry-chiller-batch-control', docRevisionStart: 3, href: 'dry-chiller-batch-control.html' },
-    { docCode: 'REC 7.8.2', title: 'Daily Waste Removal', recordKey: 'daily-waste-removal', docRevisionStart: 1, href: 'daily-waste-removal.html' },
-    { docCode: 'REC 7.8.3', title: 'Boiler Inspection Report', recordKey: 'boiler-inspection-report', docRevisionStart: 4, href: 'boiler-inspection-report.html' },
-    { docCode: 'REC 7.8.4', title: 'Seamer Inspection Report', recordKey: 'seamer-inspection-report', docRevisionStart: 7, href: 'seamer-inspection-report.html' },
-    { docCode: 'REC 7.8.5', title: 'Incoming PPE Inspection', recordKey: 'incoming-ppe-inspection', docRevisionStart: 4, href: 'incoming-ppe-inspection.html' },
-    { docCode: 'REC 7.8.5.1', title: 'Incoming Goods Inspection (Log)', recordKey: 'incoming-goods-inspection-log', docRevisionStart: 1, href: 'incoming-goods-inspection-log.html' },
-    { docCode: 'REC 7.8.6', title: 'Cans Incoming Inspection', recordKey: 'cans-incoming-inspection', docRevisionStart: 1, href: 'cans-incoming-inspection.html' },
-    { docCode: 'REC 7.8.6.1', title: 'Lids Incoming Inspection', recordKey: 'lids-incoming-inspection', docRevisionStart: 1, href: 'lids-incoming-inspection.html' },
-    { docCode: 'REC 7.8.6.2', title: 'Lids Incoming Inspection (Internal)', recordKey: 'lids-incoming-inspection-internal', docRevisionStart: 1, href: 'lids-incoming-inspection-internal.html' },
-    { docCode: 'REC 7.8.7', title: 'Incoming Goods Inspection', recordKey: 'incoming-goods-inspection', docRevisionStart: 5, href: 'incoming-goods-inspection.html' },
-    { docCode: 'REC 7.8.8', title: 'Dispatch Loading Inspection Checklist', recordKey: 'dispatch-loading-inspection-checklist', docRevisionStart: 1, href: 'dispatch-loading-inspection-checklist.html' },
-    { docCode: 'REC 7.8.8.1', title: 'Dispatch Receiving Checklist', recordKey: 'dispatch-receiving-checklist', docRevisionStart: 1, href: 'dispatch-receiving-checklist.html' },
-    { docCode: 'REC 7.8.9.1', title: 'LHA Water Monitoring', recordKey: 'lha-water-monitoring', docRevisionStart: 4, href: 'lha-water-monitoring.html' },
-    { docCode: 'REC 7.8.10', title: 'Maintenance Job Card', recordKey: 'maintenance-job-card', docRevisionStart: 1, href: 'maintenance-job-card.html' },
-    { docCode: 'REC 7.8.11', title: 'Water Tank Inspection', recordKey: 'water-tank-inspection', docRevisionStart: 1, href: 'water-tank-inspection.html' },
-    { docCode: 'REC 7.8.12', title: 'Factory Maintenance Inspection', recordKey: 'factory-maintenance-inspection', docRevisionStart: 7, href: 'factory-maintenance-inspection.html' },
-    { docCode: 'REC 7.8.12.1', title: 'Equipment Checklist - Roof', recordKey: 'equipment-checklist-roof', docRevisionStart: 1, href: 'equipment-checklist-roof.html' },
-    { docCode: 'REC 8.1.1.a', title: 'Internal CAR', recordKey: 'internal-car', docRevisionStart: 1, href: 'internal-car.html' },
-    { docCode: 'REC 8.1.3', title: 'Disposition Investigation Record', recordKey: 'disposition-investigation-record', docRevisionStart: 1, href: 'disposition-investigation-record.html' },
-    { docCode: 'REC 8.1.4', title: 'Withdrawal (Mock Recall) Record', recordKey: 'withdrawal-mock-recall-record', docRevisionStart: 1, href: 'withdrawal-mock-recall-record.html' },
-    { docCode: 'REC 8.1.5', title: 'Traceability Exercise', recordKey: 'traceability', docRevisionStart: 1, href: 'traceability.html' },
-    { docCode: 'REC 8.1.6', title: 'Traceability & Mock Recall — Canned Abalone', recordKey: 'traceability-mock-recall-canned-abalone', docRevisionStart: 2, href: 'traceability-mock-recall-canned-abalone.html' },
-    { docCode: 'REC 8.1.6a', title: 'Traceability & Mock Recall — Canned Braised Abalone', recordKey: 'traceability-mock-recall-canned-braised-abalone', docRevisionStart: 5, href: 'traceability-mock-recall-canned-braised-abalone.html' },
-    { docCode: 'REC 8.1.6b', title: 'Traceability & Mock Recall — Canned Minced Abalone', recordKey: 'traceability-mock-recall-canned-minced-abalone', docRevisionStart: 1, href: 'traceability-mock-recall-canned-minced-abalone.html' },
-    { docCode: 'REC 8.1.7', title: 'Traceability & Mock Recall — Dried Abalone', recordKey: 'traceability-mock-recall-dried-abalone', docRevisionStart: 4, href: 'traceability-mock-recall-dried-abalone.html' },
-    { docCode: 'REC 8.1.8', title: 'Traceability & Mock Recall — Live Abalone', recordKey: 'traceability-mock-recall-live-abalone', docRevisionStart: 4, href: 'traceability-mock-recall-live-abalone.html' },
-    { docCode: 'REC 8.2.1', title: 'Supplier Questionnaire', recordKey: 'supplier-questionnaire', docRevisionStart: 6, href: 'supplier-questionnaire.html' },
-    { docCode: 'REC 8.2.2', title: 'Supplier Approval Record', recordKey: 'supplier-approval-record', docRevisionStart: 1, href: 'supplier-approval-record.html' },
-    { docCode: 'REC 8.2.8', title: 'Rapid Food Handler Medicals', recordKey: 'rapid-food-handler-medicals', docRevisionStart: 3, href: 'rapid-food-handler-medicals.html' },
-    { docCode: 'REC 8.2.8.1', title: 'RFH Medical Result', recordKey: 'rfh-medical-result', docRevisionStart: 1, href: 'rfh-medical-result.html' },
-    { docCode: 'RTW Medical Questionnaire', title: 'Return to Work Medical Questionnaire', recordKey: 'rtw-medical-questionnaire', docRevisionStart: 1, href: 'rtw-medical-questionnaire.html' },
-    { docCode: 'REC 7.7.6a', title: 'First Aid Checklist Record', recordKey: 'first-aid-checklist-record', docRevisionStart: 1, href: 'first-aid-checklist-record.html' },
-    { docCode: 'REC 8.4.a', title: 'Emergency Evacuation Attendance Register', recordKey: 'emergency-evacuation-attendance-register', docRevisionStart: 1, href: 'emergency-evacuation-attendance-register.html' },
-    { docCode: 'REC 8.4.b', title: 'Handling of Emergencies and Incidences', recordKey: 'handling-of-emergencies-and-incidences', docRevisionStart: 2, href: 'handling-of-emergencies-and-incidences.html' },
-    { docCode: 'REC 9.2', title: 'Daily Factory Feedback Meeting', recordKey: 'daily-factory-feedback-meeting', docRevisionStart: 1, href: 'daily-factory-feedback-meeting.html' },
-    { docCode: 'REC 6.1.2', title: 'Training Register', recordKey: 'training-register', docRevisionStart: 1, href: 'training-register.html' }
-  ];
+  const DATA = window.MasterIndexData;
+  const ROWS = DATA.rows;
+
+  // Distribution control (the two Y/N columns) is captured here rather than in each
+  // record, because retrieving and distributing controlled copies is a document-control
+  // action performed against the index itself. One shared blob keeps it to one write.
+  const CONTROL_KEY = 'master_index_control';
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function rowId(r) { return r.recordKey || ('doc:' + r.docNo); }
+  function fmtDate(ms) {
+    const d = new Date(ms);
+    return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  }
 
-  const searchInput = document.getElementById('searchInput');
-  const tableBody = document.getElementById('tableBody');
-  const totalCount = document.getElementById('totalCount');
-  const resultCount = document.getElementById('resultCount');
-  const noResults = document.getElementById('noResults');
+  const $ = id => document.getElementById(id);
+  const tableBody = $('tableBody');
+  const searchInput = $('searchInput');
+  const statusFilter = $('statusFilter');
+  const noResults = $('noResults');
 
-  totalCount.textContent = RECORDS.length;
+  let control = {};     // rowId -> { obsoleteRetrieved, distributed, updatedAt, updatedBy }
+  let live = {};        // rowId -> { revision, reason, dateOfIssue, bumped }
+  let canEdit = false;
+
+  async function loadControl() {
+    try {
+      const raw = await window.storage.get(CONTROL_KEY, true);
+      control = raw ? JSON.parse(raw.value) : {};
+    } catch (e) { control = {}; }
+  }
+
+  async function saveControl() {
+    await window.storage.set(CONTROL_KEY, JSON.stringify(control), true);
+    $('saveState').textContent = 'Saved';
+    setTimeout(() => { $('saveState').textContent = ''; }, 1800);
+  }
+
+  // Overlay the paper baseline with anything that has been revised inside the app.
+  // A record bumped online is the authority for its own current revision -- the
+  // spreadsheet baseline is only the starting point.
+  async function loadLive() {
+    let latest = {};
+    try { latest = await window.DocumentRevision.latestAll(); } catch (e) { latest = {}; }
+    ROWS.forEach(r => {
+      const id = rowId(r);
+      const baseline = r.revision;
+      const l = r.recordKey ? latest[r.recordKey] : null;
+      if (!l) { live[id] = { revision: baseline, bumped: false }; return; }
+      live[id] = {
+        revision: l.revisionNumber,
+        reason: l.reason,
+        dateOfIssue: l.changedAt ? fmtDate(l.changedAt) : '',
+        changedBy: l.changedBy,
+        changedByTitle: l.changedByTitle,
+        bumped: true
+      };
+    });
+  }
+
+  function ynSelect(id, field, value) {
+    const opts = ['', 'Y', 'N', 'N/A'];
+    const cur = value == null ? '' : String(value).toUpperCase();
+    const options = opts.map(o =>
+      `<option value="${o}"${o === cur ? ' selected' : ''}>${o === '' ? '—' : o}</option>`
+    ).join('');
+    return `<select data-row="${esc(id)}" data-field="${field}"${canEdit ? '' : ' disabled'}>${options}</select>`;
+  }
 
   function render() {
     let html = '';
-    for (const r of RECORDS) {
-      html += `<tr><td class="doc-code">${esc(r.docCode)}</td><td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.title)}</a></td><td class="revision">Rev ${r.docRevisionStart}</td></tr>`;
+    for (const r of ROWS) {
+      const id = rowId(r);
+      const l = live[id] || {};
+      const c = control[id] || {};
+      const online = !!r.href;
+      // Before the live overlay arrives, `live` is empty -- fall back to the issued
+      // baseline rather than rendering an empty revision column.
+      const rev = l.revision != null ? l.revision : r.revision;
+
+      // A bump inside the record supersedes the spreadsheet's reason and issue date.
+      const details = l.bumped ? l.reason : r.details;
+      const detailSub = l.bumped
+        ? `<span class="sub">Changed by ${esc(l.changedBy || '')}${l.changedByTitle ? ', ' + esc(l.changedByTitle) : ''} &middot; was: ${esc(r.details || '—')}</span>`
+        : '';
+      const issued = l.bumped ? l.dateOfIssue : r.dateOfIssue;
+
+      const nameCell = online
+        ? `<a href="${esc(r.href)}" target="_blank">${esc(r.name)}</a>`
+        : esc(r.name);
+      let tag = '';
+      if (r.notOnIndexList) tag = '<span class="tag tag-unlisted">not on index list</span>';
+      else if (!online) tag = '<span class="tag tag-paper">not digitised</span>';
+      if (l.bumped) tag += ' <span class="tag tag-bumped">revised online</span>';
+
+      const obs = c.obsoleteRetrieved != null ? c.obsoleteRetrieved : r.obsoleteRetrieved;
+      const dist = c.distributed != null ? c.distributed : r.distributed;
+
+      html += `<tr class="${online ? '' : 'not-digitised'}" data-id="${esc(id)}"`
+        + ` data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}">`
+        + `<td class="c-code">${esc(r.docNo)}</td>`
+        + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}</td>`
+        + `<td class="c-details">${esc(details || '')}${detailSub}</td>`
+        + `<td class="c-rev">${rev == null ? '—' : 'Rev ' + rev}</td>`
+        + `<td class="c-yn">${ynSelect(id, 'obsoleteRetrieved', obs)}</td>`
+        + `<td class="c-yn">${ynSelect(id, 'distributed', dist)}</td>`
+        + `<td class="c-date">${esc(issued || '')}</td>`
+        + `</tr>`;
     }
     tableBody.innerHTML = html;
-    filterRecords();
+    $('totalCount').textContent = ROWS.length;
+    filter();
   }
 
-  function filterRecords() {
-    const query = searchInput.value.toLowerCase();
-    const rows = tableBody.querySelectorAll('tr');
+  function filter() {
+    const q = searchInput.value.toLowerCase().trim();
+    const status = statusFilter.value;
     let shown = 0;
-    rows.forEach(row => {
-      const docCode = row.cells[0].textContent.toLowerCase();
-      const title = row.cells[1].textContent.toLowerCase();
-      if (docCode.includes(query) || title.includes(query)) {
-        row.classList.remove('hidden');
-        shown++;
-      } else {
-        row.classList.add('hidden');
+    tableBody.querySelectorAll('tr').forEach(row => {
+      const online = row.dataset.online === 'true';
+      const bumped = row.dataset.bumped === 'true';
+      const unlisted = row.dataset.unlisted === 'true';
+      let ok = true;
+      if (status === 'online') ok = online;
+      else if (status === 'paper') ok = !online;
+      else if (status === 'bumped') ok = bumped;
+      else if (status === 'unlisted') ok = unlisted;
+      if (ok && q) {
+        ok = row.textContent.toLowerCase().includes(q);
       }
+      row.classList.toggle('hidden', !ok);
+      if (ok) shown++;
     });
-    resultCount.textContent = shown;
+    $('resultCount').textContent = shown;
     noResults.style.display = shown === 0 ? 'block' : 'none';
   }
 
-  searchInput.addEventListener('input', filterRecords);
+  tableBody.addEventListener('change', async (e) => {
+    const sel = e.target.closest('select[data-row]');
+    if (!sel || !canEdit) return;
+    const id = sel.dataset.row;
+    control[id] = control[id] || {};
+    control[id][sel.dataset.field] = sel.value;
+    control[id].updatedAt = Date.now();
+    control[id].updatedBy = (window.Auth && window.Auth.getDisplayName && window.Auth.getDisplayName()) || '';
+    sel.classList.add('dirty');
+    await saveControl();
+  });
 
-  // Ensure authentication before showing records
-  (async function() {
+  searchInput.addEventListener('input', filter);
+  statusFilter.addEventListener('change', filter);
+  $('printBtn').addEventListener('click', () => window.print());
+
+  $('csvBtn').addEventListener('click', () => {
+    const head = ['Document No.', 'Document Name', 'Details for change', 'Current revision',
+                  'Obsolete revision retrieved? Y/N', 'New revision distributed? Y/N', 'New date of issue'];
+    const q = row => '"' + String(row == null ? '' : row).replace(/"/g, '""') + '"';
+    const lines = [head.map(q).join(',')];
+    tableBody.querySelectorAll('tr:not(.hidden)').forEach(row => {
+      const cells = [...row.cells].map((td, i) => {
+        const sel = td.querySelector('select');
+        if (sel) return sel.value;
+        return td.querySelector('.sub') ? td.firstChild.textContent : td.textContent;
+      });
+      lines.push(cells.map(q).join(','));
+    });
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'REC-01-master-record-index.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  (async function init() {
     if (window.LoginUI && window.Auth && !window.Auth.isAuthenticated()) {
       await window.LoginUI.ensureAuthenticated();
     }
+    canEdit = !window.PermissionRules || window.PermissionRules.can('manageMasterIndex');
+
+    $('hdrCode').textContent = DATA.header.docNumber || 'REC 01';
+    $('hdrRev').textContent = 'Rev ' + (DATA.header.revision || '?')
+      + ' · Rev date ' + (DATA.header.revisionDate || 'not set');
+    $('hdrReviewed').textContent = DATA.header.reviewedBy || '—';
+    $('hdrApproved').textContent = DATA.header.approvedBy || '—';
+    $('hdrRevDate').textContent = DATA.header.revisionDate || '—';
+    $('hdrCounts').textContent = ROWS.length + ' (' + ROWS.filter(r => r.href).length + ' online)';
+
+    // Draw the paper baseline first so the register is readable even if shared storage
+    // is slow or unreachable, then overlay the live revision/distribution state.
     render();
+    // A read that never settles must not leave the register blank forever, so the
+    // overlay is bounded -- worst case the page stays on the issued baseline.
+    const withTimeout = p => Promise.race([
+      p, new Promise((_, rej) => setTimeout(() => rej(new Error('storage timeout')), 15000))
+    ]);
+    try {
+      await withTimeout(Promise.all([loadControl(), loadLive()]));
+    } catch (e) {
+      $('saveState').textContent = 'Live revision data unavailable — showing the issued baseline';
+      $('saveState').style.color = 'var(--palette-fail)';
+    }
+    render();
+
+    if (!canEdit) {
+      $('saveState').textContent = 'Read-only — document control roles may edit the Y/N columns';
+      $('saveState').style.color = 'var(--palette-label)';
+    }
   })();
 })();
 </script>

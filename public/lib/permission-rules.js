@@ -13,7 +13,11 @@
  * every record calls PermissionRules.can(action), so that is the only change needed.
  */
 (function () {
-  const ROLES = ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA MANAGER', 'PRODUCTION MANAGER', 'OPERATOR' , 'ADMINISTRATOR'];
+  // Underscored throughout: auth.js issues these exact strings on login and RULES keys
+  // off them. 'QA MANAGER'/'PRODUCTION MANAGER' with spaces used to be listed here, so
+  // setCurrentRole() silently rejected those two logins and left them on the default
+  // role -- every QA/Production Manager silently held Production Supervisor rights.
+  const ROLES = ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'OPERATOR', 'ADMINISTRATOR'];
 
   const ROLE_LABELS = {
     PRODUCTION_SUPERVISOR: 'Production Supervisor',
@@ -37,6 +41,9 @@
     verifyRecord: ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'],
     acknowledgeSpecChange: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER'],
     manageSpecs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'ADMINISTRATOR'],
+    // REC 01 Master Index List is a document-control record -- only the roles that own
+    // document control tick off obsolete-retrieved / new-revision-distributed.
+    manageMasterIndex: ['QA_MANAGER', 'QUALITY_SUPERVISOR', 'ADMINISTRATOR'],
   };
 
   const ROLE_KEY = 'acting_as_role';

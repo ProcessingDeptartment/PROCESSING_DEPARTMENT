@@ -68,5 +68,21 @@
     return entry;
   }
 
-  window.DocumentRevision = { getCurrent, getCurrentDate, history, bump };
+  // Latest revision entry for EVERY record that has ever been bumped, in one round trip.
+  // Returns { recordKey: { revisionNumber, reason, changedBy, changedByTitle, changedAt } }.
+  // Index-style pages must use this instead of calling getCurrent() per record.
+  async function latestAll() {
+    const raw = await window.storage.getByPrefix('document_revision:', true);
+    const out = {};
+    Object.keys(raw || {}).forEach(function (key) {
+      const recordKey = key.slice('document_revision:'.length);
+      try {
+        const hist = JSON.parse(raw[key]);
+        if (Array.isArray(hist) && hist.length) out[recordKey] = hist[hist.length - 1];
+      } catch (e) { /* a corrupt entry must not hide every other record */ }
+    });
+    return out;
+  }
+
+  window.DocumentRevision = { getCurrent, getCurrentDate, history, bump, latestAll };
 })();
