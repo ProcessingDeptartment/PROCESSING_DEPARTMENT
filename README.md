@@ -7,8 +7,14 @@ A universal Node.js + TypeScript backend for document-driven facility control, b
 - **Database-agnostic** using Prisma
 - Supports **PostgreSQL, MySQL, SQL Server, SQLite**
 - Starts simple with **SQLite local dev**
-- Can later connect to **Supabase / PostgreSQL** with the same schema
+- Targets **PostgreSQL** in production — the application's own database, kept separate from
+  but synchronised with SYSPRO by way of Microsoft Dataverse
 - Includes basic document/template/version design and a publish workflow
+
+> **The forms in `public/` are not connected to this backend yet, and that is deliberate.**
+> They store data in the browser while form design and ease-of-input are being worked through.
+> See [BACKEND_INTEGRATION.md](BACKEND_INTEGRATION.md) for the single seam where the connection
+> gets made.
 
 ## Getting started
 

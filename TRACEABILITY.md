@@ -5,12 +5,12 @@ The traceable identifier is the **job number** (format enforced: `3CP`, `3DP`, `
 followed by digits), so that's what the trace follows. The trace includes production,
 quality, testing, and recall initiation records.
 
-## One-time setup
+## Setup
 
-1. In Supabase, open **SQL Editor → New query**, paste [supabase/traceability.sql](supabase/traceability.sql), **Run**.
-   (Same as you did for `schema.sql` — creates the `batch_link` index table + policies.)
-
-That's it. From then on, every save of an opted-in record writes a link row automatically.
+None. The index rides on the shared storage adapter, so every save of an opted-in record writes
+its link entries automatically. Today that means this device's browser storage; when the backend
+is connected (see [BACKEND_INTEGRATION.md](BACKEND_INTEGRATION.md)) traceability moves with it,
+with no separate wiring.
 
 ## Batch number format
 
@@ -25,15 +25,16 @@ and rejects invalid entries with a helpful error message.
 
 ## How it works
 
-- Record bodies still live in `kv_store` unchanged. `batch_link` is a thin **index**: one row
-  per (job number × record × submission).
+- Record bodies are stored by the record engines unchanged. The batch index is thin: one entry
+  per (job number × record × submission), stored through `window.storage` under
+  `batch_link:<job>:<record>:<submission>`.
 - A record participates **only** if its config declares a batch field — no guessing. This avoids
   false links from the ~40 differently-named ingredient/consumable "batch" fields (sugar, salt,
   xanthan gum, chemicals) that are *not* the product batch.
 - The shared engines ([form-record.js](public/lib/form-record.js),
   [monitoring-log.js](public/lib/monitoring-log.js)) call
-  `Traceability.indexSubmission()` after each save. Indexing is best-effort: if Supabase is down
-  or the table is missing, the record still saves normally.
+  `Traceability.indexSubmission()` after each save. Indexing is best-effort: if it fails, the
+  record still saves normally.
 - [records/batch-trace.html](public/records/batch-trace.html) is the lookup page (linked from the
   records hub). Enter a job number → a date-ordered timeline of every touchpoint, each linking to
   the record. Deep-link with `batch-trace.html?batch=JOB123`.
@@ -64,7 +65,7 @@ Any record with a job-number (or other batch) field can join. Two edits:
    ```
 2. Load the lib — after the `data-store.js` script tag add:
    ```html
-   <script src="../lib/traceability.js?v=1"></script>
+   <script src="../lib/traceability.js?v=2"></script>
    ```
 
 Other records carrying `jobNumber` not yet wired: brine-mixing-report, dispatch-receiving-checklist,

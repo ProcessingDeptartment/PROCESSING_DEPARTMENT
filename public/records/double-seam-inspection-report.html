@@ -291,7 +291,7 @@
   <div class="toast no-print" id="toast"></div>
 </div>
 
-<script src="../lib/data-store.js?v=3"></script>
+<script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=4"></script>
@@ -487,8 +487,47 @@
   }
 
   // ---------- calculations ----------
-  // Overlap % = 100 x (BH + CH + T - SH) / (SH - (2T + BPT))
-  // worst-case across the 3 points: min BH, min CH, min T(end), min BPT(body), max SH
+  // Standard double-seam formulae, as used by the seamschool.com seam calculator and by
+  // the historic "Seam concerns 0924 - 1024" workbook (verified against 162 sample sets):
+  //   Overlap        = BH + CH + 1.1*Te - SL
+  //   Overlap %      = Overlap / (SL - 2.2*Te - 1.1*Tb)
+  //   % B.H. butting = (BH - 1.1*Tb) / (SL - 2.2*Te - 1.1*Tb)
+  //   Free space     = ST - 3*Te - 2*Tb
+  // Te = tin-end (cover) plate thickness, Tb = tin-body plate thickness.
+  // The 1.1 factors compensate for plate compression in the seam -- omitting them
+  // understates overlap by ~0.1*Te and % overlap by ~2 percentage points.
+  function overlapDenom(SL, Te, Tb){ return SL - (2.2*Te) - (1.1*Tb); }
+
+  // Per-point derived values (% B.H.B. and free space) -- these are calculated, not keyed in.
+  const DERIVED_ROWS = ['bhbPct','freespace'];
+  function calcPoint(p){
+    const SL = num(p.seamLength), ST = num(p.seamThickness), BH = num(p.bodyHook),
+          Te = num(p.plateThicknessEnd), Tb = num(p.plateThicknessBody);
+    let bhbPct = null, freespace = null;
+    if(BH!==null && SL!==null && Te!==null && Tb!==null){
+      const d = overlapDenom(SL, Te, Tb);
+      if(d !== 0) bhbPct = Math.round((100 * (BH - 1.1*Tb) / d) * 10) / 10;
+    }
+    if(ST!==null && Te!==null && Tb!==null)
+      freespace = Math.round((ST - 3*Te - 2*Tb) * 1000) / 1000;
+    return { bhbPct, freespace };
+  }
+
+  // Write the derived values back into state so saved records, exports and printouts
+  // carry the same numbers that are shown on screen.
+  function syncDerived(){
+    for(const stage of STAGES){
+      for(const canKey of CANS){
+        state.stages[stage.key][canKey].points.forEach(p=>{
+          const d = calcPoint(p);
+          p.bhbPct = d.bhbPct===null ? '' : String(d.bhbPct);
+          p.freespace = d.freespace===null ? '' : String(d.freespace);
+        });
+      }
+    }
+  }
+
+  // worst-case across the 3 points: min BH, min CH, min Te, min Tb, max SL
   function calcOverlapForCan(can){
     const pts = can.points;
     const bh = pts.map(p=>num(p.bodyHook)).filter(v=>v!==null);
@@ -498,8 +537,8 @@
     const tb = pts.map(p=>num(p.plateThicknessBody)).filter(v=>v!==null);
     if(!bh.length || !ch.length || !sl.length || !te.length || !tb.length) return {overlapPct:null, actualOverlap:null};
     const BH = Math.min(...bh), CH = Math.min(...ch), SH = Math.max(...sl), T = Math.min(...te), BPT = Math.min(...tb);
-    const actualOverlap = BH + CH + T - SH;
-    const denom = SH - (2*T + BPT);
+    const actualOverlap = BH + CH + 1.1*T - SH;
+    const denom = overlapDenom(SH, T, BPT);
     const overlapPct = denom !== 0 ? (100 * actualOverlap / denom) : null;
     return { overlapPct: overlapPct!==null ? Math.round(overlapPct*10)/10 : null,
              actualOverlap: Math.round(actualOverlap*1000)/1000 };
@@ -516,8 +555,9 @@
     return val >= min ? 'ok' : 'fail';
   }
 
-  // returns list of issue strings, and mutates nothing
+  // returns list of issue strings; refreshes the derived (calculated) point values first
   function evaluateRecord(){
+    syncDerived();
     const spec = currentSpec();
     const issues = [];
     // gauges
@@ -591,6 +631,7 @@
   }
 
   function renderCanTable(stageKey, canKey){
+    syncDerived();
     const spec = currentSpec();
     const can = state.stages[stageKey][canKey];
     const {overlapPct, actualOverlap} = calcOverlapForCan(can);
@@ -608,11 +649,16 @@
       <table class="meas"><thead><tr><th style="text-align:left;">Measurement</th><th>Point 1</th><th>Point 2</th><th>Point 3</th></tr></thead><tbody>`;
 
     for(const row of ROWS){
-      html += `<tr><td class="row-label">${row.label}<span class="spec">${specLabelFor(row.key, spec)}</span></td>`;
+      const derived = DERIVED_ROWS.includes(row.key);
+      html += `<tr><td class="row-label">${row.label}<span class="spec">${specLabelFor(row.key, spec)}${derived?' · calculated':''}</span></td>`;
       for(const i of POINTS){
         const val = can.points[i][row.key];
         const cls = cellClass(row.key, val, spec);
-        html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
+        if(derived){
+          html += `<td class="${cls==='oor'?'oor':''}" style="font-family:var(--mono);font-weight:600;background:#f7f9f8;">${val===''?'—':val}</td>`;
+        } else {
+          html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
+        }
       }
       html += `</tr>`;
     }
