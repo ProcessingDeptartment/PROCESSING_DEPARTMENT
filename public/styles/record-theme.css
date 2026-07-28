@@ -111,7 +111,7 @@
 
   --palette-primary: #41789b;
   --palette-primary-hover: #386a8a;
-  --palette-primary-text: #ffffff;
+  --palette-primary-text: #000000;
 
   --palette-border: #b9cede;
   --palette-head-bg: #d9e6ee;
@@ -138,7 +138,7 @@
 
   --palette-primary: #8b6f9e;
   --palette-primary-hover: #7a5d8c;
-  --palette-primary-text: #000000;
+  --palette-primary-text: #000000
 
   --palette-border: #c9b3c5;
   --palette-head-bg: #dcc9d9;
@@ -177,24 +177,24 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Microbiology records (lab testing — teal) ---- */
-:root[data-palette="microbiology"] {
-  --palette-paper: #f4f9fa;
-  --palette-ink: #1b4a56;
+/* ---- Unknown1 (lab testing — teal) ---- */
+:root[data-palette="canning"] {
+  --palette-paper: #fcfbf7;
+  --palette-ink: #4a421b;
 
-  --palette-dark: #1b4a56;
-  --palette-dark-text: #f4f9fa;
-  --palette-dark-muted: #6eb3c7;
+  --palette-dark: #4a421b;
+  --palette-dark-text: #fcfbf7;
+  --palette-dark-muted: #c7b96e;
 
-  --palette-primary: #2b7a92;
-  --palette-primary-hover: #1f6478;
-  --palette-primary-text: #ffffff;
+  --palette-primary: #d4b53b;
+  --palette-primary-hover: #b89a2b;
+  --palette-primary-text: #000000;
 
-  --palette-border: #9dd4e1;
-  --palette-head-bg: #c4dfe6;
-  --palette-heading: #1b4a56;
-  --palette-label: #1b4a56;
-  --palette-focus: #2b7a92;
+  --palette-border: #e6dfb0;
+  --palette-head-bg: #f3edd0;
+  --palette-heading: #4a421b;
+  --palette-label: #4a421b;
+  --palette-focus: #d4b53b;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -202,8 +202,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Packaging records (labelling & coding — coral) ---- */
-:root[data-palette="packaging"] {
+/* ---- Unknown2 (packaging — coral) ---- */
+:root[data-palette="unknown2"] {
   --palette-paper: #fef8f6;
   --palette-ink: #7a3a2a;
 
@@ -213,7 +213,7 @@
 
   --palette-primary: #d97a52;
   --palette-primary-hover: #c5684a;
-  --palette-primary-text: #000000;
+  --palette-primary-text: #000000
 
   --palette-border: #e8b8a3;
   --palette-head-bg: #f4d4c3;
@@ -227,8 +227,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Ingredients records (raw material intake — olive/khaki) ---- */
-:root[data-palette="ingredients"] {
+/* ---- Unknown3 (raw material intake — olive/khaki) ---- */
+:root[data-palette="unknown3"] {
   --palette-paper: #faf9f3;
   --palette-ink: #5a5a3a;
 
@@ -252,8 +252,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Storage records (conditions & handling — slate) ---- */
-:root[data-palette="storage"] {
+/* ---- Unknown4 (conditions & handling — slate) ---- */
+:root[data-palette="unknown4"] {
   --palette-paper: #f5f6f7;
   --palette-ink: #3a454d;
 
@@ -263,7 +263,7 @@
 
   --palette-primary: #526b7a;
   --palette-primary-hover: #455a67;
-  --palette-primary-text: #ffffff;
+  --palette-primary-text: #000000
 
   --palette-border: #b3c5d1;
   --palette-head-bg: #d4dce3;
@@ -277,8 +277,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Allergen records (cross-contamination control — burgundy) ---- */
-:root[data-palette="allergen"] {
+/* ---- Unknown5 (cross-contamination control — burgundy) ---- */
+:root[data-palette="unknown5"] {
   --palette-paper: #faf7f9;
   --palette-ink: #6a2a52;
 
@@ -288,7 +288,7 @@
 
   --palette-primary: #a83a6f;
   --palette-primary-hover: #8f2959;
-  --palette-primary-text: #ffffff;
+  --palette-primary-text: #000000
 
   --palette-border: #d9b3d4;
   --palette-head-bg: #e8cce3;
@@ -302,8 +302,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Shelf-life records (expiration & dating — golden) ---- */
-:root[data-palette="shelf-life"] {
+/* ---- Unknown6 (expiration & dating — golden) ---- */
+:root[data-palette="unknown6"] {
   --palette-paper: #fffef8;
   --palette-ink: #7a5a1a;
 

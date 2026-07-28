@@ -81,26 +81,8 @@
        and moving an existing record between palettes changes what colour
        staff associate with it. ---- */
 
-    /* ---- Microbiology records (lab testing — teal) ---- */
-    microbiology: [],
-
-    /* ---- Packaging records (labelling & coding — coral) ---- */
-    packaging: [],
-
-    /* ---- Ingredients records (raw material intake — olive/khaki) ---- */
-    ingredients: [],
-
-    /* ---- Storage records (conditions & handling — slate) ---- */
-    storage: [],
-
-    /* ---- Allergen records (cross-contamination control — burgundy) ---- */
-    allergen: [],
-
-    /* ---- Shelf-life records (expiration & dating — golden) ---- */
-    'shelf-life': [],
-
-  };
-
+  
+  
   var root = document.documentElement;
 
   /* An explicit data-palette on the page wins — the escape hatch for a
