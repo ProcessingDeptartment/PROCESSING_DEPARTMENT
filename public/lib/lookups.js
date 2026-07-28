@@ -49,9 +49,9 @@
     // to a dropdown the moment there is at least one entry. Nothing else to
     // edit. Farms already captured on old records stay readable even if you
     // later remove the name from this list.
-    farms: [],
+    farms: ['Bergsig', 'Sulamanzi', 'Seaview', 'Third Party'],
 
-    processingFor: ['Can', 'Dried', 'Live sorting', 'Other'],
+    processingFor: ['Can', 'Dried', 'Live', 'Other'],
 
     jobPrefixes: ['3CP', '3DP', 'CPR', 'DPR']
   };
