@@ -111,7 +111,7 @@
 
   --palette-primary: #41789b;
   --palette-primary-hover: #386a8a;
-  --palette-primary-text: #000000;
+  --palette-primary-text: #ffffff;
 
   --palette-border: #b9cede;
   --palette-head-bg: #d9e6ee;
@@ -138,7 +138,7 @@
 
   --palette-primary: #8b6f9e;
   --palette-primary-hover: #7a5d8c;
-  --palette-primary-text: #dcc9d9;
+  --palette-primary-text: #000000;
 
   --palette-border: #c9b3c5;
   --palette-head-bg: #dcc9d9;
@@ -177,8 +177,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown1 (lab testing — teal) ---- */
-:root[data-palette="unknown1"] {
+/* ---- Microbiology records (lab testing — teal) ---- */
+:root[data-palette="microbiology"] {
   --palette-paper: #f4f9fa;
   --palette-ink: #1b4a56;
 
@@ -202,8 +202,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown2 (packaging — coral) ---- */
-:root[data-palette="unknown2"] {
+/* ---- Packaging records (labelling & coding — coral) ---- */
+:root[data-palette="packaging"] {
   --palette-paper: #fef8f6;
   --palette-ink: #7a3a2a;
 
@@ -213,7 +213,7 @@
 
   --palette-primary: #d97a52;
   --palette-primary-hover: #c5684a;
-  --palette-primary-text: #ffffff;
+  --palette-primary-text: #000000;
 
   --palette-border: #e8b8a3;
   --palette-head-bg: #f4d4c3;
@@ -227,8 +227,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown3 (raw material intake — olive/khaki) ---- */
-:root[data-palette="unknown3"] {
+/* ---- Ingredients records (raw material intake — olive/khaki) ---- */
+:root[data-palette="ingredients"] {
   --palette-paper: #faf9f3;
   --palette-ink: #5a5a3a;
 
@@ -238,7 +238,7 @@
 
   --palette-primary: #8a8a5a;
   --palette-primary-hover: #73735a;
-  --palette-primary-text: #ffffff;
+  --palette-primary-text: #000000;
 
   --palette-border: #c9c9a8;
   --palette-head-bg: #dcdcc4;
@@ -252,8 +252,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown4 (conditions & handling — slate) ---- */
-:root[data-palette="unknown4"] {
+/* ---- Storage records (conditions & handling — slate) ---- */
+:root[data-palette="storage"] {
   --palette-paper: #f5f6f7;
   --palette-ink: #3a454d;
 
@@ -277,8 +277,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown5 (cross-contamination control — burgundy) ---- */
-:root[data-palette="unknown5"] {
+/* ---- Allergen records (cross-contamination control — burgundy) ---- */
+:root[data-palette="allergen"] {
   --palette-paper: #faf7f9;
   --palette-ink: #6a2a52;
 
@@ -302,8 +302,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown6 (expiration & dating — golden) ---- */
-:root[data-palette="unknown6"] {
+/* ---- Shelf-life records (expiration & dating — golden) ---- */
+:root[data-palette="shelf-life"] {
   --palette-paper: #fffef8;
   --palette-ink: #7a5a1a;
 

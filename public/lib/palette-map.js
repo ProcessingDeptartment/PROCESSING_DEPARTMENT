@@ -22,9 +22,9 @@
     /* ---- Sauce records,(warm brown) ---- */
     sauce: [
       'REC-7.3.1-broth-cooking.html',
-      'REC-7.3.2-ingriedient-weighing.html',
+      'REC-7.3.2-ingredient-weighing.html',
       'REC-7.3.3-sauce-mixing.html',
-      'REC-7.3.4-final-sauce-mixing.html',
+      'REC-7.3.4-final-sauce-mix.html',
       'REC-7.3.5-sauce-batch-coding.html',
       'REC-7.3.6-brine-mixing-report.html',
     ],
@@ -72,8 +72,32 @@
       'REC-7.2.8-retorting-control-sheet.html',
       'REC-7.2.11-qc-report.html',
       'REC-7.4.5-boxing-and-labelling.html',
-    ]
+    ],
 
+    /* ---- The six palettes below are designed and registered but not yet
+       assigned. Add a file name to a list to theme that record; nothing else
+       is needed. Left empty deliberately — the records these were drawn up
+       for either don't exist yet or already carry another classification,
+       and moving an existing record between palettes changes what colour
+       staff associate with it. ---- */
+
+    /* ---- Microbiology records (lab testing — teal) ---- */
+    microbiology: [],
+
+    /* ---- Packaging records (labelling & coding — coral) ---- */
+    packaging: [],
+
+    /* ---- Ingredients records (raw material intake — olive/khaki) ---- */
+    ingredients: [],
+
+    /* ---- Storage records (conditions & handling — slate) ---- */
+    storage: [],
+
+    /* ---- Allergen records (cross-contamination control — burgundy) ---- */
+    allergen: [],
+
+    /* ---- Shelf-life records (expiration & dating — golden) ---- */
+    'shelf-life': [],
 
   };
 
