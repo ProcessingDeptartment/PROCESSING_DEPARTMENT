@@ -19,25 +19,26 @@
 (function () {
   var PALETTES = {
 
-    /* ---- Sauce records, REC 7.3.x (warm brown) ---- */
+    /* ---- Sauce records,(warm brown) ---- */
     sauce: [
-      /* Nothing yet — the REC 7.3.x pages still carry their own colours
-         inline. Add them here as they move onto the palette tokens. */
+      'REC-7.3.1-broth-cooking.html',
+      'REC-7.3.2-ingriedient-weighing.html',
+      'REC-7.3.3-sauce-mixing.html',
+      'REC-7.3.4-final-sauce-mixing.html',
+      'REC-7.3.5-sauce-batch-coding.html',
+      'REC-7.3.6-brine-mixing-report.html',
     ],
 
-    /* ---- Dry records, REC 7.4.x (muted sage green) ---- */
+    /* ---- Dry records, (muted sage green) ---- */
     dry: [
-      'REC-7.8.1-dry-chiller-batch-control.html',
       'REC-7.4.0-dry-cooking.html',
-      'Dry-Export-Pack-Front-Page-dry-export-pack-front-page.html',
-      'REC-7.4.8-dry-labelling-list.html',
-      'REC-7.4.2-dry-monitoring.html',
-      'Production-Information-NRCS-(Dry)-dry-nrcs-packs.html',
-      'REC-7.9.3.1-dry-room-temp-humidity-log.html',
-      'REC-7.4.6-dry-stock-control.html',
-      'REC-7.4.9-dry-stock-transfers.html',
       'REC-7.4.1-drying-process.html',
-      'REC-7.4.7-labelling-of-dry-boxes.html',
+      'REC-7.4.2-dry-monitoring.html',
+      'REC-7.4.3.1-grading-production-log-cultivated.html',
+      'REC-7.4.3.2-grading-production-log-ranched.html',
+      'REC-7.4.4-grading-boxing-traceability.html',
+      'REC-7.4.6-dry-stock-control.html',
+      'REC-7.4.10-dried-abalone-transfer.html',
     ],
 
     /* ---- Cleaning records, REC 7.6.x (muted teal) ---- */
@@ -46,11 +47,6 @@
       'REC-7.6.1-daily-cleaning-inspection.html',
       'REC-7.6.1.1-deep-cleaning-record-weekly.html',
       'REC-7.6.2.2-dispatch-cleaning-inspection.html',
-      'REC-7.6.0b-live-product-areas-cleaning-record.html',
-      'Master-Cleaning-Checklist-master-cleaning-checklist.html',
-      'Master-Cleaning-Plan-master-cleaning-plan.html',
-      'REC-7.6.0c-personnel-facilities-cleaning-record.html',
-      'REC-7.6.0a-production-areas-cleaning-record.html',
       'REC-7.6.2-weekly-cleaning-record.html',
     ],
 
@@ -60,7 +56,6 @@
       'REC-8.1.5-traceability.html',
       'REC-8.1.6-traceability-mock-recall-canned-abalone.html',
       'REC-8.1.6-a-traceability-mock-recall-canned-braised-abalone.html',
-      'REC-8.1.6b-traceability-mock-recall-canned-minced-abalone.html',
       'REC-8.1.7-traceability-mock-recall-dried-abalone.html',
       'REC-8.1.8-traceability-mock-recall-live-abalone.html',
       'REC-8.1.4-withdrawal-mock-recall-record.html',
@@ -76,6 +71,7 @@
       'REC-7.2.6-can-filling-and-printing.html',
       'REC-7.2.8-retorting-control-sheet.html',
       'REC-7.2.11-qc-report.html',
+      'REC-7.4.5-boxing-and-labelling.html',
     ]
 
 
