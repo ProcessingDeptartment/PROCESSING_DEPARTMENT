@@ -6,7 +6,7 @@
  *
  * A page calls MonitoringLog.init(config) once. Everything (entries table, add/edit
  * modal, thresholds modal, verification strip) is generated from that one config object
- * -- see any file in public/records/ for a real config, e.g. chiller-temperature-monitoring.html.
+ * -- see any file in public/records/ for a real config, e.g. REC-7.9.1-chiller-temperature-monitoring.html.
  *
  * Reuses the existing shared libs exactly like the Double Seam Inspection Report does:
  *  - data-store.js     window.storage.get/set(key, shared) -- the localStorage-now /
@@ -673,3 +673,4 @@
 
   window.MonitoringLog = { init };
 })();
+
