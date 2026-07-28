@@ -152,27 +152,27 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Muted burnt orange — not yet tied to a REC section ---- */
-:root[data-palette="quality"] {
-  --palette-paper: #faf7f4;
-  --palette-ink: #4a2f22;
+/* ---- Burnt orange records — warm orange throughout ---- */
+:root[data-palette="burnt-orange"] {
+  --palette-paper: #fffcf9;
+  --palette-ink: #6b3d2e;
 
-  --palette-dark: #4a2f22;
-  --palette-dark-text: #faf7f4;
-  --palette-dark-muted: #d0ab94;
+  --palette-dark: #6b3d2e;
+  --palette-dark-text: #fffcf9;
+  --palette-dark-muted: #d9a876;
 
-  --palette-primary: #a05e38;
-  --palette-primary-hover: #8c4f2d;
-  --palette-primary-text: #fdf6f1;
+  --palette-primary: #d97a30;
+  --palette-primary-hover: #c56820;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #d0ab94;
-  --palette-head-bg: #e8d3c3;
-  --palette-heading: #4a2f22;
-  --palette-label: #4a2f22;
-  --palette-focus: #a05e38;
+  --palette-border: #d9a876;
+  --palette-head-bg: #f0d4be;
+  --palette-heading: #6b3d2e;
+  --palette-label: #6b3d2e;
+  --palette-focus: #d97a30;
 
-  --palette-ok: #7b9b7f;
-  --palette-ok-bg: #e8f0e9;
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
   --palette-fail: #a3352d;
   --palette-fail-bg: #fbe8e6;
 }
