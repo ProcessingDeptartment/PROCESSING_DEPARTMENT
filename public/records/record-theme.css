@@ -152,8 +152,8 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Burnt orange records — warm orange throughout ---- */
-:root[data-palette="burnt-orange"] {
+/* ---- Quality records, REC 8.2.x (warm burnt orange) ---- */
+:root[data-palette="quality"] {
   --palette-paper: #fffcf9;
   --palette-ink: #6b3d2e;
 

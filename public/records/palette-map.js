@@ -65,9 +65,17 @@
       'traceability-mock-recall-live-abalone.html',
       'withdrawal-mock-recall-record.html',
     ],
-    /* ---- Burnt orange records — warm orange palette ---- */
-    'burnt-orange': [
-      /* Nothing yet — add page file names here as needed */
+    /* ---- Quality records, REC 8.2.x (warm burnt orange) ---- */
+    quality: [
+      'REC-7.1.1-basket-removal-shucking-gutting.html',
+      'REC-7.1.3-salting-tumbling.html',
+      'REC-7.1.3.1-bleeding-and-salting.html',
+      'REC-7.1.4-washing-control-sheet.html',
+      'REC-7.2.2-scrubbing-checklist-qc.html',
+      'REC-7.2.5-can-packing-control-sheet.html',
+      'REC-7.2.6-can-filling-and-printing.html',
+      'REC-7.2.8-retorting-control-sheet.html',
+      'REC-7.2.11-qc-report.html',
     ]
 
 
