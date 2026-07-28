@@ -177,6 +177,156 @@
   --palette-fail-bg: #fbe8e6;
 }
 
+/* ---- Unknown1 (lab testing — teal) ---- */
+:root[data-palette="unknown1"] {
+  --palette-paper: #f4f9fa;
+  --palette-ink: #1b4a56;
+
+  --palette-dark: #1b4a56;
+  --palette-dark-text: #f4f9fa;
+  --palette-dark-muted: #6eb3c7;
+
+  --palette-primary: #2b7a92;
+  --palette-primary-hover: #1f6478;
+  --palette-primary-text: #ffffff;
+
+  --palette-border: #9dd4e1;
+  --palette-head-bg: #c4dfe6;
+  --palette-heading: #1b4a56;
+  --palette-label: #1b4a56;
+  --palette-focus: #2b7a92;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Unknown2 (packaging — coral) ---- */
+:root[data-palette="unknown2"] {
+  --palette-paper: #fef8f6;
+  --palette-ink: #7a3a2a;
+
+  --palette-dark: #7a3a2a;
+  --palette-dark-text: #fef8f6;
+  --palette-dark-muted: #d9947f;
+
+  --palette-primary: #d97a52;
+  --palette-primary-hover: #c5684a;
+  --palette-primary-text: #ffffff;
+
+  --palette-border: #e8b8a3;
+  --palette-head-bg: #f4d4c3;
+  --palette-heading: #7a3a2a;
+  --palette-label: #7a3a2a;
+  --palette-focus: #d97a52;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Unknown3 (raw material intake — olive/khaki) ---- */
+:root[data-palette="unknown3"] {
+  --palette-paper: #faf9f3;
+  --palette-ink: #5a5a3a;
+
+  --palette-dark: #5a5a3a;
+  --palette-dark-text: #faf9f3;
+  --palette-dark-muted: #b8b894;
+
+  --palette-primary: #8a8a5a;
+  --palette-primary-hover: #73735a;
+  --palette-primary-text: #ffffff;
+
+  --palette-border: #c9c9a8;
+  --palette-head-bg: #dcdcc4;
+  --palette-heading: #5a5a3a;
+  --palette-label: #5a5a3a;
+  --palette-focus: #8a8a5a;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Unknown4 (conditions & handling — slate) ---- */
+:root[data-palette="unknown4"] {
+  --palette-paper: #f5f6f7;
+  --palette-ink: #3a454d;
+
+  --palette-dark: #3a454d;
+  --palette-dark-text: #f5f6f7;
+  --palette-dark-muted: #8da4b0;
+
+  --palette-primary: #526b7a;
+  --palette-primary-hover: #455a67;
+  --palette-primary-text: #ffffff;
+
+  --palette-border: #b3c5d1;
+  --palette-head-bg: #d4dce3;
+  --palette-heading: #3a454d;
+  --palette-label: #3a454d;
+  --palette-focus: #526b7a;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Unknown5 (cross-contamination control — burgundy) ---- */
+:root[data-palette="unknown5"] {
+  --palette-paper: #faf7f9;
+  --palette-ink: #6a2a52;
+
+  --palette-dark: #6a2a52;
+  --palette-dark-text: #faf7f9;
+  --palette-dark-muted: #c995b8;
+
+  --palette-primary: #a83a6f;
+  --palette-primary-hover: #8f2959;
+  --palette-primary-text: #ffffff;
+
+  --palette-border: #d9b3d4;
+  --palette-head-bg: #e8cce3;
+  --palette-heading: #6a2a52;
+  --palette-label: #6a2a52;
+  --palette-focus: #a83a6f;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Unknown6 (expiration & dating — golden) ---- */
+:root[data-palette="unknown6"] {
+  --palette-paper: #fffef8;
+  --palette-ink: #7a5a1a;
+
+  --palette-dark: #7a5a1a;
+  --palette-dark-text: #fffef8;
+  --palette-dark-muted: #d9c176;
+
+  --palette-primary: #ca8d20;
+  --palette-primary-hover: #b87a18;
+  --palette-primary-text: #000000;
+
+  --palette-border: #e3c999;
+  --palette-head-bg: #f0ddb3;
+  --palette-heading: #7a5a1a;
+  --palette-label: #7a5a1a;
+  --palette-focus: #ca8d20;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
 /* ========================================================================
    2. HEADER TYPOGRAPHY
 
