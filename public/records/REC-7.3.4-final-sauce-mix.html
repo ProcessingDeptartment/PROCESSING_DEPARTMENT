@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.3.4 Final Sauce Mix</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="fsm-root">
@@ -191,7 +191,7 @@
   function updateRecordStatus(){
     const potStr = state.potNo ? `Pot ${state.potNo}` : 'No pot';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${potStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${potStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -243,3 +243,4 @@
 </script>
 </body>
 </html>
+

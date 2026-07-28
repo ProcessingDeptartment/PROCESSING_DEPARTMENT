@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.3 Retort Inspection Report</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="rir-root">
@@ -95,12 +95,12 @@
         </div>
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Can size<input id="h_canSize" placeholder="Size"></label>
-          <label class="field">Retort door rubber sprayed?<select id="h_retortDoorRubberSprayed"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Pre-heat cycle done?<select id="h_preHeatCycleDone"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Air filter OK?<select id="h_airFilterOk"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Retort door rubber sprayed?<select id="h_retortDoorRubberSprayed"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Pre-heat cycle done?<select id="h_preHeatCycleDone"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Air filter OK?<select id="h_airFilterOk"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Stacking pattern correct?<select id="h_stackingPatternCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Stacking pattern correct?<select id="h_stackingPatternCorrect"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -110,11 +110,11 @@
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
           <label class="field">Recipe used<input id="h_recipeUsed" placeholder="Recipe"></label>
-          <label class="field">Autoclave tape on trolley?<select id="h_autoclaveTapeOnTrolley"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Autoclave tape on trolley?<select id="h_autoclaveTapeOnTrolley"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Correct temperature on recipe?<select id="h_correctTempOnRecipe"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Correct pressure on recipe?<select id="h_correctPressureOnRecipe"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Correct temperature on recipe?<select id="h_correctTempOnRecipe"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Correct pressure on recipe?<select id="h_correctPressureOnRecipe"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -225,7 +225,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNo ? `Job ${state.jobNo}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -278,3 +278,4 @@
 </script>
 </body>
 </html>
+

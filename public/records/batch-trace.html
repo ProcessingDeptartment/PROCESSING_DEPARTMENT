@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Batch Traceability</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root { --steel: var(--palette-primary); --steel2: #263a4c; --orange: #e07a2c; --line: var(--palette-border); --ink: var(--palette-ink); --muted: #5b6b78; }
   * { box-sizing: border-box; }
@@ -61,11 +61,11 @@
     .card .summary { font-size: 13px; }
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <header>
-  <a class="back" href="../other.html">← Records home</a>
+  <a class="back" href="../other.html">â† Records home</a>
   <h1>Batch Traceability</h1>
   <div class="sub">Enter a product batch / lot number to see every record that touched it, front to back.</div>
 </header>
@@ -104,7 +104,7 @@
       $('batchList').innerHTML = list.map(b => `<option value="${esc(b)}">`).join('');
       $('hint').textContent = list.length
         ? `${list.length} batch number${list.length === 1 ? '' : 's'} indexed so far.`
-        : 'No batches indexed yet — save a record that declares a batch field to populate this.';
+        : 'No batches indexed yet â€” save a record that declares a batch field to populate this.';
     } catch (e) {
       $('hint').textContent = '';
     }
@@ -113,17 +113,17 @@
   function render(rows, batchNo) {
     const tl = $('timeline');
     $('count').hidden = false;
-    $('count').textContent = `${rows.length} touchpoint${rows.length === 1 ? '' : 's'} for batch “${batchNo}”`;
+    $('count').textContent = `${rows.length} touchpoint${rows.length === 1 ? '' : 's'} for batch â€œ${batchNo}â€`;
     tl.innerHTML = rows.map(r => `
       <li class="tp">
         <div class="card">
           <div class="top">
             <span class="title">${esc(r.record_title || r.record_key)}</span>
-            <span class="date">${esc(r.occurred_on || '—')}</span>
+            <span class="date">${esc(r.occurred_on || 'â€”')}</span>
           </div>
           ${r.stage ? `<span class="stage">${esc(r.stage)}</span>` : ''}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
-          ${r.href ? `<a class="open" href="${esc(r.href)}">Open record →</a>` : ''}
+          ${r.href ? `<a class="open" href="${esc(r.href)}">Open record â†’</a>` : ''}
         </div>
       </li>`).join('');
   }
@@ -133,11 +133,11 @@
     $('timeline').innerHTML = '';
     $('count').hidden = true;
     if (!batchNo) { setStatus('Enter a batch number to trace.'); return; }
-    setStatus('Tracing…');
+    setStatus('Tracingâ€¦');
     $('traceBtn').disabled = true;
     try {
       const rows = await window.Traceability.trace(batchNo);
-      if (!rows.length) { setStatus(`No records reference batch “${batchNo}” yet.`); return; }
+      if (!rows.length) { setStatus(`No records reference batch â€œ${batchNo}â€ yet.`); return; }
       setStatus('');
       render(rows, batchNo);
     } catch (e) {
@@ -157,3 +157,5 @@
 </script>
 </body>
 </html>
+
+

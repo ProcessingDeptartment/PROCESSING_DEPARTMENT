@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.1.2 Abalone Receiving</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="ar-root">
@@ -75,7 +75,7 @@
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Receiving date<input id="h_receivingDate" type="date"></label>
           <label class="field">Abalone received from<input id="h_receivedFrom" placeholder="From"></label>
-          <label class="field">To be processed for<select id="h_toBeProcessedFor"><option value="">—</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
+          <label class="field">To be processed for<select id="h_toBeProcessedFor"><option value="">â€”</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
           <label class="field">Size range<input id="h_sizeRange" placeholder="Range"></label>
         </div>
       </div>
@@ -183,7 +183,7 @@
   function updateRecordStatus(){
     const basketStr = state.basketNr ? `Basket ${state.basketNr}` : 'No basket';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${basketStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${basketStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -235,3 +235,5 @@
 </script>
 </body>
 </html>
+
+

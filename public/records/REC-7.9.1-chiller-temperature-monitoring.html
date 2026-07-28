@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.9.1 Chiller Temperature Monitoring</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
@@ -26,26 +26,26 @@
     title: 'Chiller Temperature Monitoring',
     docRevisionStart: 9,
     instructions: [
-      { label: 'Temperature parameters', text: '0°C to +10°C. Defrost temperature not above +20°C.' },
+      { label: 'Temperature parameters', text: '0Â°C to +10Â°C. Defrost temperature not above +20Â°C.' },
       { label: 'Frequency of monitoring', text: 'Start of shift, lunch break and end of shift.' },
-      { label: 'If out of spec', text: 'If the temperature varies by more than 0.5°C from the accepted parameters, corrective action must be recorded and the temperature checked again within 1 hour.' }
+      { label: 'If out of spec', text: 'If the temperature varies by more than 0.5Â°C from the accepted parameters, corrective action must be recorded and the temperature checked again within 1 hour.' }
     ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
       { key: 'timeOfCheck', label: 'Time', type: 'select', options: ['Start of shift', 'Lunch break', 'End of shift'] },
       { key: 'productCovered', label: 'Product covered', type: 'yesno' },
-      { key: 'chiller1DialTemp', label: 'Chiller 1 — dial temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'chiller1ProductTemp', label: 'Chiller 1 — product temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'chiller2DialTemp', label: 'Chiller 2 — dial temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'chiller2ProductTemp', label: 'Chiller 2 — product temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'freezerDialTemp', label: 'Freezer — dial temp', type: 'number', unit: '°C', specKey: 'freezerTemp' },
+      { key: 'chiller1DialTemp', label: 'Chiller 1 â€” dial temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
+      { key: 'chiller1ProductTemp', label: 'Chiller 1 â€” product temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
+      { key: 'chiller2DialTemp', label: 'Chiller 2 â€” dial temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
+      { key: 'chiller2ProductTemp', label: 'Chiller 2 â€” product temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
+      { key: 'freezerDialTemp', label: 'Freezer â€” dial temp', type: 'number', unit: 'Â°C', specKey: 'freezerTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
       { key: 'correctiveAction', label: 'Reason for temp being out of spec & corrective action', type: 'textarea' }
     ],
     specFields: [
-      { key: 'chillerTemp', label: 'Chiller / product temperature', unit: '°C', min: 0, max: 10 },
-      { key: 'freezerTemp', label: 'Freezer dial temperature', unit: '°C', min: null, max: null }
+      { key: 'chillerTemp', label: 'Chiller / product temperature', unit: 'Â°C', min: 0, max: 10 },
+      { key: 'freezerTemp', label: 'Freezer dial temperature', unit: 'Â°C', min: null, max: null }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'
@@ -54,3 +54,5 @@
 </script>
 </body>
 </html>
+
+

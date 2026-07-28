@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.2 Scrubbing Checklist</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
@@ -26,7 +26,7 @@
     title: 'Scrubbing Checklist',
     docRevisionStart: 2,
     instructions: [
-      { label: 'Purpose', text: 'QC check of scrubbing quality — crates inspected, damage, and whether abalone is scrubbed clean.' }
+      { label: 'Purpose', text: 'QC check of scrubbing quality â€” crates inspected, damage, and whether abalone is scrubbed clean.' }
     ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
@@ -38,7 +38,7 @@
       { key: 'allScrubbedClean', label: 'All abalone scrubbed clean?', type: 'yesno' },
       { key: 'acceptableDamageTrimmed', label: 'Acceptable damaged abalone trimmed?', type: 'yesno' },
       { key: 'processDeviation', label: 'Process deviation', type: 'textarea' },
-      { key: 'checkedBy', label: 'QC online — checked by', type: 'text', required: true }
+      { key: 'checkedBy', label: 'QC online â€” checked by', type: 'text', required: true }
     ],
     specFields: [],
     deviationLabel: 'Deviation',
@@ -48,3 +48,5 @@
 </script>
 </body>
 </html>
+
+

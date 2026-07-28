@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.1.5 Salting (OOSW)</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -169,7 +169,7 @@
     .record-status{ display:none; }
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="so-root">
@@ -189,12 +189,12 @@
           <label class="field">Intake date<input id="h_intakeDate" type="date"></label>
           <label class="field">Harvest farm<input id="h_harvestFarm" placeholder="Farm"></label>
           <label class="field">Tracking no.<input id="h_trackingNo" placeholder="Track"></label>
-          <label class="field">Processing for<select id="h_processingFor"><option value="">—</option></select></label>
-          <label class="field">Size range<select id="h_sizeRange"><option value="">—</option></select></label>
+          <label class="field">Processing for<select id="h_processingFor"><option value="">â€”</option></select></label>
+          <label class="field">Size range<select id="h_sizeRange"><option value="">â€”</option></select></label>
           <label class="field" style="grid-column:span 1;">Whole weight (kg)<input id="h_wholeWeight" type="number" step="0.01" placeholder="0.00" style="margin-top:auto;"></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Job number<div class="job-number-row"><select id="h_jobPrefix"><option value="">—</option><option value="CPR">CPR</option><option value="DPR">DPR</option><option value="3CP">3CP</option><option value="3DP">3DP</option></select><input id="h_jobNumber" placeholder="Number" type="text"></div></label>
+          <label class="field">Job number<div class="job-number-row"><select id="h_jobPrefix"><option value="">â€”</option><option value="CPR">CPR</option><option value="DPR">DPR</option><option value="3CP">3CP</option><option value="3DP">3DP</option></select><input id="h_jobNumber" placeholder="Number" type="text"></div></label>
         </div>
       </div>
     </div>
@@ -240,7 +240,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">
-        <textarea id="commentsBox" rows="2" placeholder="Notes, deviations…" style="font-size:11px;"></textarea>
+        <textarea id="commentsBox" rows="2" placeholder="Notes, deviationsâ€¦" style="font-size:11px;"></textarea>
       </div>
     </div>
 
@@ -339,7 +339,7 @@
       for(let j = 0; j < 6; j++){
         const w = rowWeights[j];
         const idx = i + j;
-        html += `<td style="position:relative;"><input type="number" step="0.01" data-idx="${idx}" value="${w || ''}" style="width:100%; padding-right:20px;"><button class="clear-btn" data-clear="${idx}" title="Clear this cell" style="position:absolute; right:2px; top:2px;">✕</button></td>`;
+        html += `<td style="position:relative;"><input type="number" step="0.01" data-idx="${idx}" value="${w || ''}" style="width:100%; padding-right:20px;"><button class="clear-btn" data-clear="${idx}" title="Clear this cell" style="position:absolute; right:2px; top:2px;">âœ•</button></td>`;
       }
       html += '</tr>';
     }
@@ -398,7 +398,7 @@
   function updateRecordStatus(){
     const jobStr = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -471,3 +471,4 @@
 </script>
 </body>
 </html>
+

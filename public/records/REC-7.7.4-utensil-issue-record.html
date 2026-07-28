@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.7.4 Utensil Issue Record</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
@@ -26,7 +26,7 @@
     docRevisionStart: 6,
     listColumns: ['date', 'shift', 'checkedBy'],
     instructions: [
-      { label: 'Work instruction', text: 'Knives remove gut & beak; scrapers remove flesh from shell (shucking); scrubbing brushes scrub abalone; needles for stringing dry, scissors for destringing dry. Record quantity issued. Condition: ✓ = good condition, X = faulty/damaged. Faulty/damaged utensils returned to supervisor and discarded, with type & number recorded. Utensils go into Dynacide solution when not in use.' }
+      { label: 'Work instruction', text: 'Knives remove gut & beak; scrapers remove flesh from shell (shucking); scrubbing brushes scrub abalone; needles for stringing dry, scissors for destringing dry. Record quantity issued. Condition: âœ“ = good condition, X = faulty/damaged. Faulty/damaged utensils returned to supervisor and discarded, with type & number recorded. Utensils go into Dynacide solution when not in use.' }
     ],
     sections: [
       { title: 'Shift details', fields: [
@@ -40,13 +40,13 @@
       ]}
     ],
     roster: {
-      title: 'Utensils issued — Scrapers, Scrub brushes, Needles, Scissors, Holding cups, String roll',
+      title: 'Utensils issued â€” Scrapers, Scrub brushes, Needles, Scissors, Holding cups, String roll',
       columns: [
         { key: 'utensilType', label: 'Utensil type', type: 'text' },
         { key: 'qtyIssued', label: 'Qty issued', type: 'number' },
-        { key: 'conditionBefore', label: 'Condition before (✓/X)', type: 'select', options: ['✓', 'X'] },
+        { key: 'conditionBefore', label: 'Condition before (âœ“/X)', type: 'select', options: ['âœ“', 'X'] },
         { key: 'qtyReturned', label: 'Qty returned', type: 'number' },
-        { key: 'conditionAfter', label: 'Condition after (✓/X)', type: 'select', options: ['✓', 'X'] },
+        { key: 'conditionAfter', label: 'Condition after (âœ“/X)', type: 'select', options: ['âœ“', 'X'] },
         { key: 'unsatisfactoryDetail', label: 'Utensil type & number if unsatisfactory', type: 'text' }
       ]
     }
@@ -55,3 +55,5 @@
 </script>
 </body>
 </html>
+
+

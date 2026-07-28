@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.7.1 Daily Equipment Checklist</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
@@ -26,7 +26,7 @@
     docRevisionStart: 5,
     listColumns: ['weekOf', 'checkedBy'],
     instructions: [
-      { label: 'Inspection', text: 'Inspect all equipment and devices daily. ✓ = Good condition/working, X = Faulty/damaged.' }
+      { label: 'Inspection', text: 'Inspect all equipment and devices daily. âœ“ = Good condition/working, X = Faulty/damaged.' }
     ],
     sections: [
       { title: 'Week', fields: [
@@ -39,11 +39,11 @@
       ]}
     ],
     roster: {
-      title: 'Equipment / device checks — covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
+      title: 'Equipment / device checks â€” covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
       columns: [
         { key: 'equipmentOrDevice', label: 'Equipment / device', type: 'text' },
         { key: 'date', label: 'Date', type: 'date' },
-        { key: 'condition', label: 'Condition (✓ good / X faulty)', type: 'select', options: ['✓', 'X'] },
+        { key: 'condition', label: 'Condition (âœ“ good / X faulty)', type: 'select', options: ['âœ“', 'X'] },
         { key: 'comments', label: 'Comments', type: 'text' }
       ]
     }
@@ -52,3 +52,5 @@
 </script>
 </body>
 </html>
+
+

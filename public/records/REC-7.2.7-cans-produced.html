@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.7 Cans Produced</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="cp-root">
@@ -93,7 +93,7 @@
           <label class="field">Drain weight (g)<input id="h_drainWeight" type="number" step="0.1"></label>
         </div>
         <div class="grid grid-4">
-          <label class="field">Brine / Braised<select id="h_brineOrBraised"><option value="">—</option><option value="Brine">Brine</option><option value="Braised">Braised</option></select></label>
+          <label class="field">Brine / Braised<select id="h_brineOrBraised"><option value="">â€”</option><option value="Brine">Brine</option><option value="Braised">Braised</option></select></label>
           <label class="field">Sauce batch<input id="h_sauceBatch" placeholder="Batch"></label>
           <label class="field">Number of cans<input id="h_numberOfCans" type="number" step="1"></label>
           <label class="field">Damaged cans<input id="h_damagedCans" type="number" step="1"></label>
@@ -211,7 +211,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNumber ? `${state.jobNumber}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -268,3 +268,5 @@
 </script>
 </body>
 </html>
+
+

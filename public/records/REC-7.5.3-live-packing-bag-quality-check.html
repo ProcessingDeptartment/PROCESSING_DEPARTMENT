@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.5.3 Live Packing - Bag Quality Check</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
@@ -34,14 +34,14 @@
         { key: 'dateOfPacking', label: 'Date of packing', type: 'date' },
         { key: 'noOfBagsScheduled', label: 'No. of bags scheduled for pack', type: 'number' },
         { key: 'noOfBagsToBeChecked', label: 'No. of bags to be checked', type: 'number' },
-        { key: 'waterTemperature', label: 'Water temperature at time of checking', type: 'number', unit: '°C' }
+        { key: 'waterTemperature', label: 'Water temperature at time of checking', type: 'number', unit: 'Â°C' }
       ]},
       { title: 'Totals & sign-off', fields: [
         { key: 'totalMortalityWeight', label: 'Total mortality weight', type: 'number' },
         { key: 'additionalComments', label: 'Additional comments', type: 'textarea', wide: true },
-        { key: 'supervisorFarm', label: 'Supervisor — Farm', type: 'text' },
-        { key: 'supervisorProcessing', label: 'Supervisor — Processing', type: 'text', required: true },
-        { key: 'qcProcessing', label: 'QC — Processing', type: 'text' },
+        { key: 'supervisorFarm', label: 'Supervisor â€” Farm', type: 'text' },
+        { key: 'supervisorProcessing', label: 'Supervisor â€” Processing', type: 'text', required: true },
+        { key: 'qcProcessing', label: 'QC â€” Processing', type: 'text' },
         { key: 'verifiedBy', label: 'Verified by', type: 'text' }
       ]}
     ],
@@ -63,3 +63,5 @@
 </script>
 </body>
 </html>
+
+

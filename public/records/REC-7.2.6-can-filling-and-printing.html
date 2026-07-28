@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.1 Can Filling and Printing</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="cfp-root">
@@ -88,7 +88,7 @@
       <div class="panel-head"><h2>Printing Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
-          <label class="field">Product temp (°C)<input id="h_productTemp" type="number" step="0.1"></label>
+          <label class="field">Product temp (Â°C)<input id="h_productTemp" type="number" step="0.1"></label>
           <label class="field">Nett weight spec (g)<input id="h_nettWeightSpec" type="number"></label>
           <label class="field">Actual nett weight (g)<input id="h_actualNettWeight" type="number"></label>
           <label class="field">Printed AG code<input id="h_printedAgCode" placeholder="Code"></label>
@@ -103,8 +103,8 @@
       <div class="panel-head"><h2>Process & Verification</h2></div>
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
-          <label class="field">Verified before printing<select id="h_verifiedBeforePrinting"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Verified after printing<select id="h_verifiedAfterPrinting"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Verified before printing<select id="h_verifiedBeforePrinting"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Verified after printing<select id="h_verifiedAfterPrinting"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-6">
           <label class="field">Process deviations<textarea id="h_processDeviations" rows="3"></textarea></label>
@@ -201,7 +201,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNo ? `Job ${state.jobNo}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -253,3 +253,5 @@
 </script>
 </body>
 </html>
+
+

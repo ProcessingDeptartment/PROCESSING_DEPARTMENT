@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.12 Double Seam Inspection Report</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -128,7 +128,7 @@
     }
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="dsir-root">
@@ -143,7 +143,7 @@
         <select id="actingRoleSelect" style="width:190px;"></select>
       </label>
       <select id="specProfileSelect" style="width:220px;"></select>
-      <button class="btn btn-ghost" id="quickCalcBtn" title="Standalone seam calculator — nothing is saved to this record">Quick calculator</button>
+      <button class="btn btn-ghost" id="quickCalcBtn" title="Standalone seam calculator â€” nothing is saved to this record">Quick calculator</button>
       <button class="btn btn-ghost" id="manageSpecsBtn">Specs</button>
       <button class="btn btn-ghost" id="newRecordBtn">New</button>
     </div>
@@ -155,14 +155,14 @@
       <div class="panel-head"><h2>Batch lookup &amp; traceability</h2><span class="muted" id="recordIdTag" style="font-family:var(--mono);font-size:10.5px;"></span></div>
       <div class="panel-body">
         <div class="search-row" style="margin-bottom:10px;">
-          <input id="batchSearchInput" placeholder="Enter Fujian batch code (cans) to recall history…" />
+          <input id="batchSearchInput" placeholder="Enter Fujian batch code (cans) to recall historyâ€¦" />
           <button class="btn btn-flat" id="batchSearchBtn">Search</button>
         </div>
         <div id="historyWrap" style="display:none;">
           <div class="muted" style="margin-bottom:6px;">Previous submissions for this batch:</div>
           <div class="history-list" id="historyList"></div>
         </div>
-        <div class="share-note">Batch and inspection data is stored as shared data — visible to everyone using this record system, so it can support cross-record traceability.</div>
+        <div class="share-note">Batch and inspection data is stored as shared data â€” visible to everyone using this record system, so it can support cross-record traceability.</div>
       </div>
     </div>
 
@@ -181,11 +181,11 @@
         </div>
         <div class="grid grid-4">
           <label class="field">Micrometer serial number<input id="h_microSerial"></label>
-          <label class="field">Micrometer verified (±0.02mm)
-            <select id="h_microVerified"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+          <label class="field">Micrometer verified (Â±0.02mm)
+            <select id="h_microVerified"><option value="">â€”</option><option value="yes">Yes</option><option value="no">No</option></select>
           </label>
-          <label class="field">Size 1.21mm — actual reading<span class="hint">tol ±0.02mm</span><input id="h_gauge121" type="number" step="0.001"></label>
-          <label class="field">Size 3.00mm — actual reading<span class="hint">tol ±0.02mm</span><input id="h_gauge300" type="number" step="0.001"></label>
+          <label class="field">Size 1.21mm â€” actual reading<span class="hint">tol Â±0.02mm</span><input id="h_gauge121" type="number" step="0.001"></label>
+          <label class="field">Size 3.00mm â€” actual reading<span class="hint">tol Â±0.02mm</span><input id="h_gauge300" type="number" step="0.001"></label>
         </div>
       </div>
     </div>
@@ -201,7 +201,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">
-        <textarea id="commentsBox" rows="3" placeholder="Notes, deviations, corrective actions…"></textarea>
+        <textarea id="commentsBox" rows="3" placeholder="Notes, deviations, corrective actionsâ€¦"></textarea>
       </div>
     </div>
 
@@ -238,7 +238,7 @@
         <div class="history-list" id="specListing"></div>
         <h3>Document revision history</h3>
         <div class="history-list" id="docRevHistoryList"></div>
-        <div class="share-note">Specifications are per can type (e.g. Fujian 73x119mm EOA vs NEO) and exist side by side — adding or editing one does not obsolete the others, but it does bump the record's own document revision above, with a required reason, name and title.</div>
+        <div class="share-note">Specifications are per can type (e.g. Fujian 73x119mm EOA vs NEO) and exist side by side â€” adding or editing one does not obsolete the others, but it does bump the record's own document revision above, with a required reason, name and title.</div>
         <div class="actions" style="margin-top:10px;">
           <button class="btn btn-flat" id="specCloseBtn">Close</button>
         </div>
@@ -258,7 +258,7 @@
           <label class="field">1.21mm gauge target<input id="specForm_gauge121" type="number" step="0.001"></label>
           <label class="field">3.00mm gauge target<input id="specForm_gauge300" type="number" step="0.001"></label>
         </div>
-        <label class="field" style="max-width:220px; margin-top:8px;">Gauge tolerance (±mm)<input id="specForm_gaugeTol" type="number" step="0.001"></label>
+        <label class="field" style="max-width:220px; margin-top:8px;">Gauge tolerance (Â±mm)<input id="specForm_gaugeTol" type="number" step="0.001"></label>
 
         <h3>Measurement points <span class="hint">(leave blank = record only, no pass/fail check)</span></h3>
         <div id="specFormRowsContainer"></div>
@@ -404,7 +404,7 @@
   async function renderDocRevBadge(){
     docRevisionNumber = await DocumentRevision.getCurrent(DOC_REVISION_KEY, DOC_REVISION_START);
     const docRevisionDate = await DocumentRevision.getCurrentDate(DOC_REVISION_KEY);
-    $('docCodeBadge').textContent = `Rev ${docRevisionNumber} · Rev date ${docRevisionDate || 'not set'}`;
+    $('docCodeBadge').textContent = `Rev ${docRevisionNumber} Â· Rev date ${docRevisionDate || 'not set'}`;
     const modalTag = $('docRevInModal');
     if(modalTag) modalTag.textContent = `Rev ${docRevisionNumber}`;
   }
@@ -414,7 +414,7 @@
     if(!hist.length){ el.innerHTML = `<div class="history-item muted">No revisions logged yet (currently Rev ${DOC_REVISION_START}).</div>`; return; }
     el.innerHTML = hist.map(h=>`
       <div class="history-item">
-        <span>Rev ${h.revisionNumber} · ${new Date(h.changedAt).toLocaleString()} · ${h.changedBy} (${h.changedByTitle})<br><span class="muted">${h.reason}</span></span>
+        <span>Rev ${h.revisionNumber} Â· ${new Date(h.changedAt).toLocaleString()} Â· ${h.changedBy} (${h.changedByTitle})<br><span class="muted">${h.reason}</span></span>
       </div>`).join('');
   }
 
@@ -559,9 +559,9 @@
     // gauges
     const g121 = num(state.header.gauge121), g300 = num(state.header.gauge300);
     if(g121!==null && Math.abs(g121 - spec.gauge121Target) > spec.gaugeTolerance)
-      issues.push('1.21mm gauge block reading out of tolerance (±'+spec.gaugeTolerance+'mm).');
+      issues.push('1.21mm gauge block reading out of tolerance (Â±'+spec.gaugeTolerance+'mm).');
     if(g300!==null && Math.abs(g300 - spec.gauge300Target) > spec.gaugeTolerance)
-      issues.push('3.00mm gauge block reading out of tolerance (±'+spec.gaugeTolerance+'mm).');
+      issues.push('3.00mm gauge block reading out of tolerance (Â±'+spec.gaugeTolerance+'mm).');
     if(state.header.microVerified === 'no')
       issues.push('Micrometer verification marked NO.');
 
@@ -579,7 +579,7 @@
             const range = spec[row.key];
             if(v!==null && range){
               const r = checkRange(v, range);
-              if(r==='fail') issues.push(`${pointLabel}: ${row.label} ${v} out of spec (${range.min ?? '—'}–${range.max ?? '—'}).`);
+              if(r==='fail') issues.push(`${pointLabel}: ${row.label} ${v} out of spec (${range.min ?? 'â€”'}â€“${range.max ?? 'â€”'}).`);
             }
           });
           const tp = num(p.tightnessPct);
@@ -623,7 +623,7 @@
     const row = ROWS.find(r=>r.key===rowKey);
     const range = spec[rowKey];
     if(!range) return 'record only';
-    return `${range.min ?? '—'}–${range.max ?? '—'}${row.unit}`;
+    return `${range.min ?? 'â€”'}â€“${range.max ?? 'â€”'}${row.unit}`;
   }
 
   function renderCanTable(stageKey, canKey){
@@ -646,12 +646,12 @@
 
     for(const row of ROWS){
       const derived = DERIVED_ROWS.includes(row.key);
-      html += `<tr><td class="row-label">${row.label}<span class="spec">${specLabelFor(row.key, spec)}${derived?' · calculated':''}</span></td>`;
+      html += `<tr><td class="row-label">${row.label}<span class="spec">${specLabelFor(row.key, spec)}${derived?' Â· calculated':''}</span></td>`;
       for(const i of POINTS){
         const val = can.points[i][row.key];
         const cls = cellClass(row.key, val, spec);
         if(derived){
-          html += `<td class="${cls==='oor'?'oor':''}" style="font-family:var(--mono);font-weight:600;background:#f7f9f8;">${val===''?'—':val}</td>`;
+          html += `<td class="${cls==='oor'?'oor':''}" style="font-family:var(--mono);font-weight:600;background:#f7f9f8;">${val===''?'â€”':val}</td>`;
         } else {
           html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
         }
@@ -660,11 +660,11 @@
     }
     html += `<tr class="calc-row">
         <td class="row-label">Calculated % overlap<span class="spec">min ${spec.overlapPctMin}%, worst-case of points</span></td>
-        <td colspan="3" class="${overlapFail?'fail-calc':'ok-calc'}">${overlapPct===null?'—':overlapPct+'%'}</td>
+        <td colspan="3" class="${overlapFail?'fail-calc':'ok-calc'}">${overlapPct===null?'â€”':overlapPct+'%'}</td>
       </tr>
       <tr class="calc-row">
         <td class="row-label">Calculated actual overlap<span class="spec">min ${spec.actualOverlapMin}mm</span></td>
-        <td colspan="3" class="${actualFail?'fail-calc':'ok-calc'}">${actualOverlap===null?'—':actualOverlap+'mm'}</td>
+        <td colspan="3" class="${actualFail?'fail-calc':'ok-calc'}">${actualOverlap===null?'â€”':actualOverlap+'mm'}</td>
       </tr>
       </tbody></table></div>`;
     return html;
@@ -672,7 +672,7 @@
 
   function renderStageContent(){
     const stageKey = activeStage;
-    let html = `<div class="panel"><div class="panel-head"><h2>${STAGES.find(s=>s.key===stageKey).label} — 2 cans × 3 points each</h2></div><div class="panel-body">`;
+    let html = `<div class="panel"><div class="panel-head"><h2>${STAGES.find(s=>s.key===stageKey).label} â€” 2 cans Ã— 3 points each</h2></div><div class="panel-body">`;
     html += renderCanTable(stageKey,'can1');
     html += renderCanTable(stageKey,'can2');
     html += `</div></div>`;
@@ -716,17 +716,17 @@
     let html = '';
     if(mismatch){
       html += `<div class="issues warn">
-        <h3>Specification updated — re-validation required</h3>
+        <h3>Specification updated â€” re-validation required</h3>
         <div>Profile "${currentProfileName()}" was published as <strong>version ${mismatch.versionNumber}</strong> on ${new Date(mismatch.publishedAt).toLocaleString()} by ${mismatch.publishedBy}.<br>
         Reason: ${mismatch.changeReason}<br>
-        This record was last validated against version ${state.specVersionAtSave ?? '—'} and must be re-validated before it can be completed.</div>
+        This record was last validated against version ${state.specVersionAtSave ?? 'â€”'} and must be re-validated before it can be completed.</div>
         <div style="margin-top:8px;"><button class="btn btn-primary small-btn" id="ackSpecBtn" ${PermissionRules.can('acknowledgeSpecChange')?'':'disabled'}>Acknowledge &amp; re-validate against v${mismatch.versionNumber}</button></div>
       </div>`;
     }
     if(!issues.length){
       html += `<div class="issues ok"><h3>No spec breaches detected</h3></div>`;
     } else {
-      html += `<div class="issues"><h3>${issues.length} item(s) out of spec — must be resolved before this record can be submitted as complete</h3><ul>${issues.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+      html += `<div class="issues"><h3>${issues.length} item(s) out of spec â€” must be resolved before this record can be submitted as complete</h3><ul>${issues.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
     }
     panel.innerHTML = html;
     const ackBtn = $('ackSpecBtn');
@@ -753,7 +753,7 @@
     $('f_verifiedBy').value = state.verifiedBy;
     $('f_verifiedSig').value = state.verifiedSig;
     $('f_verifiedDate').value = state.verifiedDate;
-    $('recordIdTag').textContent = state.id ? `${state.id} · rev ${state.revision} · ${state.status}` : 'unsaved draft';
+    $('recordIdTag').textContent = state.id ? `${state.id} Â· rev ${state.revision} Â· ${state.status}` : 'unsaved draft';
   }
 
   function bindHeaderInputs(){
@@ -798,11 +798,11 @@
     }
     const issues = renderIssues();
     if(finalize && issues.length){
-      toast('Cannot submit — resolve spec breaches first.');
+      toast('Cannot submit â€” resolve spec breaches first.');
       return;
     }
     if(finalize && specMismatchInfo()){
-      toast('Cannot submit — acknowledge the updated specification first.');
+      toast('Cannot submit â€” acknowledge the updated specification first.');
       return;
     }
     const batchCode = safeKey(state.header.batchCans || 'UNSPECIFIED');
@@ -820,7 +820,7 @@
     }
 
     const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
-    if(!ok){ toast('Save failed — please retry.'); return; }
+    if(!ok){ toast('Save failed â€” please retry.'); return; }
 
     // update batch index
     let idxRaw = await storeGet('batch_index:'+batchCode, true);
@@ -853,7 +853,7 @@
     wrap.style.display='block';
     list.innerHTML = idx.map(r=>`
       <div class="history-item" data-record="${r.recordId}">
-        <span>${r.reportDate||'(no date)'} · rev ${r.revision} · <span class="badge ${r.status==='complete'?'badge-ok':'badge-draft'}">${r.status}</span> ${r.completedBy?(' · '+r.completedBy):''}</span>
+        <span>${r.reportDate||'(no date)'} Â· rev ${r.revision} Â· <span class="badge ${r.status==='complete'?'badge-ok':'badge-draft'}">${r.status}</span> ${r.completedBy?(' Â· '+r.completedBy):''}</span>
         <button class="btn btn-flat small-btn" data-load="${r.recordId}">Load</button>
       </div>`).join('');
     list.querySelectorAll('[data-load]').forEach(btn=>{
@@ -871,8 +871,8 @@
     const spec = currentSpec();
     const pairs = [
       ['Vacuum', spec.vacuum && spec.vacuum.label ? spec.vacuum.label : 'record only'],
-      ['1.21mm gauge target', `${spec.gauge121Target ?? '—'} ± ${spec.gaugeTolerance ?? '—'}mm`],
-      ['3.00mm gauge target', `${spec.gauge300Target ?? '—'} ± ${spec.gaugeTolerance ?? '—'}mm`]
+      ['1.21mm gauge target', `${spec.gauge121Target ?? 'â€”'} Â± ${spec.gaugeTolerance ?? 'â€”'}mm`],
+      ['3.00mm gauge target', `${spec.gauge300Target ?? 'â€”'} Â± ${spec.gaugeTolerance ?? 'â€”'}mm`]
     ];
     RANGE_ROWS.forEach(row=>pairs.push([row.label, specLabelFor(row.key, spec)]));
     pairs.push(['Tightness / wrinkle min', spec.tightnessPctMin!=null?spec.tightnessPctMin+'%':'record only']);
@@ -885,7 +885,7 @@
       const second = pairs[i+1];
       rowsHtml += `<tr><td class="row-label">${l1}</td><td>${v1}</td><td class="row-label">${second?second[0]:''}</td><td>${second?second[1]:''}</td></tr>`;
     }
-    return `<div class="panel" id="printSpecSummary"><div class="panel-head"><h2>Specification used — ${currentProfileName()} (v${spec.versionNumber ?? '—'})</h2></div>
+    return `<div class="panel" id="printSpecSummary"><div class="panel-head"><h2>Specification used â€” ${currentProfileName()} (v${spec.versionNumber ?? 'â€”'})</h2></div>
       <div class="panel-body">
         <table class="meas"><tbody>${rowsHtml}</tbody></table>
       </div></div>`;
@@ -893,22 +893,22 @@
 
   function buildCommentsSignoffHtml(){
     return `<div class="panel"><div class="panel-head"><h2>Comments</h2></div>
-      <div class="panel-body">${(state.comments||'—').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>
+      <div class="panel-body">${(state.comments||'â€”').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>
       <div class="panel"><div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body footer-grid">
-        <label class="field">Completed by<span>${state.completedBy||'—'}</span></label>
-        <label class="field">Verified by<span>${state.verifiedBy||'—'}</span></label>
-        <label class="field">Signature<span>${state.completedSig||'—'}</span></label>
-        <label class="field">Signature<span>${state.verifiedSig||'—'}</span></label>
-        <label class="field">Date<span>${state.completedDate||'—'}</span></label>
-        <label class="field">Date<span>${state.verifiedDate||'—'}</span></label>
+        <label class="field">Completed by<span>${state.completedBy||'â€”'}</span></label>
+        <label class="field">Verified by<span>${state.verifiedBy||'â€”'}</span></label>
+        <label class="field">Signature<span>${state.completedSig||'â€”'}</span></label>
+        <label class="field">Signature<span>${state.verifiedSig||'â€”'}</span></label>
+        <label class="field">Date<span>${state.completedDate||'â€”'}</span></label>
+        <label class="field">Date<span>${state.verifiedDate||'â€”'}</span></label>
       </div></div>`;
   }
 
   function generatePdf(){
     $('printPage1Extra').innerHTML = buildSpecSummaryHtml() + buildCommentsSignoffHtml();
     const parts = STAGES.map(s=>
-      `<div class="panel print-page-break"><div class="panel-head"><h2>${s.label} — 2 cans × 3 points each</h2></div><div class="panel-body">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div>`
+      `<div class="panel print-page-break"><div class="panel-head"><h2>${s.label} â€” 2 cans Ã— 3 points each</h2></div><div class="panel-body">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div>`
     );
     $('printOnlyStages').innerHTML = parts.join('');
     document.title = `REC_7.2.12_Double_Seam_${safeKey(state.header.batchCans||'record')}_${state.header.reportDate||''}`;
@@ -923,7 +923,7 @@
       const spec = specProfiles[s.id] || {};
       const pdfLink = spec.pdfDataUrl ? `<a href="#" class="spec-view-pdf" data-id="${s.id}">View original</a>` : '<span class="muted">No PDF attached</span>';
       return `<div class="history-item">
-        <span>${s.name} · v${spec.versionNumber ?? '—'}<br><span class="muted">${pdfLink}</span></span>
+        <span>${s.name} Â· v${spec.versionNumber ?? 'â€”'}<br><span class="muted">${pdfLink}</span></span>
         <button class="btn btn-flat small-btn" data-edit="${s.id}" ${canManage?'':'disabled'}>Edit</button>
       </div>`;
     }).join('');
@@ -965,7 +965,7 @@
     $('specForm_actualOverlapMin').value = spec?.actualOverlapMin ?? '';
     $('specForm_tightnessPctMin').value = spec?.tightnessPctMin ?? '';
     specFormPdfDataUrl = spec?.pdfDataUrl || null;
-    $('specForm_pdfStatus').textContent = specFormPdfDataUrl ? 'PDF attached — choose a file to replace it' : 'No PDF attached yet';
+    $('specForm_pdfStatus').textContent = specFormPdfDataUrl ? 'PDF attached â€” choose a file to replace it' : 'No PDF attached yet';
     $('specForm_reason').value = '';
     $('specForm_changedBy').value = '';
     $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules.getCurrentRole()] || '';
@@ -996,7 +996,7 @@
     if(!PermissionRules.can('manageSpecs')){ toast('You do not have permission to manage specifications.'); return; }
     specFormEditingId = specId || null;
     const spec = specId ? specProfiles[specId] : null;
-    $('specFormTitle').textContent = specId ? `Edit specification — ${spec?.name||''}` : 'Add new specification';
+    $('specFormTitle').textContent = specId ? `Edit specification â€” ${spec?.name||''}` : 'Add new specification';
     fillSpecForm(spec);
     $('specListView').style.display='none';
     $('specFormView').style.display='block';
@@ -1031,7 +1031,7 @@
       await renderSpecListing();
       await renderDocRevHistory();
       closeSpecForm();
-      toast(`Specification saved — document is now Rev ${docRevisionNumber}.`);
+      toast(`Specification saved â€” document is now Rev ${docRevisionNumber}.`);
       renderAll();
     }catch(e){ toast(e.message); }
   }
@@ -1118,3 +1118,5 @@
 </script>
 </body>
 </html>
+
+

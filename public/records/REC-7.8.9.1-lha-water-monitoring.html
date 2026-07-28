@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.8.9.1 LHA Water Monitoring</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
@@ -26,9 +26,9 @@
     title: 'LHA Water Monitoring',
     docRevisionStart: 3,
     instructions: [
-      { label: 'Scope', text: 'Live Holding Area chiller unit — separate from the general Water Monitoring record (REC 7.8.9), which covers a different water source.' },
+      { label: 'Scope', text: 'Live Holding Area chiller unit â€” separate from the general Water Monitoring record (REC 7.8.9), which covers a different water source.' },
       { label: 'Frequency', text: 'Complete record twice per shift.' },
-      { label: 'Parameter', text: 'Temperature 12-18°C.' }
+      { label: 'Parameter', text: 'Temperature 12-18Â°C.' }
     ],
     entryFields: [
       { key: 'month', label: 'Month', type: 'month', required: true },
@@ -36,11 +36,11 @@
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
       { key: 'timeOfCheck', label: 'Time of check', type: 'text' },
       { key: 'chillerUnitOperating', label: 'Chiller unit operating', type: 'yesno' },
-      { key: 'temperature', label: 'Temperature', type: 'number', unit: '°C', specKey: 'lhaTemp' },
+      { key: 'temperature', label: 'Temperature', type: 'number', unit: 'Â°C', specKey: 'lhaTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: '°C', min: 12, max: 18 }
+      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: 'Â°C', min: 12, max: 18 }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'
@@ -49,3 +49,5 @@
 </script>
 </body>
 </html>
+
+

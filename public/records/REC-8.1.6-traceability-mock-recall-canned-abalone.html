@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 8.1.6 Traceability &amp; Mock Recall Checklist for Canned Abalone</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
@@ -30,7 +30,7 @@
     stage: 'recall-canned',
     listColumns: ['date', 'agCode', 'jobNo'],
     instructions: [
-      { label: 'Note', text: 'Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
+      { label: 'Note', text: 'Static reference checklist â€” each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
     ],
     sections: [
       { title: 'Batch details', fields: [
@@ -40,7 +40,7 @@
       ]}
     ],
     roster: {
-      title: 'Records — covers Stock on hold, Customer letter response, Recall communication, Shipment docs, Customer invoice, Abalone Receiving (7.1.2), Shucking & Gutting (7.1.1), Bleeding & Salting (7.1.3), Washing (7.1.4), OOSW (7.1.5), Chiller Monitoring (7.9.1), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Pre-cook Sheet (7.2.3), Retort Inspection (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming records & COA (7.8.6/7.8.7), Double Seam (7.2.12), Retort control sheet, Scale verification (7.10.5), Cans Printing & Filling (7.2.6), NRCS Clearance, QC Report, Dispatch (7.8.8), Glass & Plastic (7.7.2), Staff Hygiene (7.6.7), Utensil Record (7.7.4), Daily/Weekly Cleaning Inspection (7.6.1/7.6.2)',
+      title: 'Records â€” covers Stock on hold, Customer letter response, Recall communication, Shipment docs, Customer invoice, Abalone Receiving (7.1.2), Shucking & Gutting (7.1.1), Bleeding & Salting (7.1.3), Washing (7.1.4), OOSW (7.1.5), Chiller Monitoring (7.9.1), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Pre-cook Sheet (7.2.3), Retort Inspection (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming records & COA (7.8.6/7.8.7), Double Seam (7.2.12), Retort control sheet, Scale verification (7.10.5), Cans Printing & Filling (7.2.6), NRCS Clearance, QC Report, Dispatch (7.8.8), Glass & Plastic (7.7.2), Staff Hygiene (7.6.7), Utensil Record (7.7.4), Daily/Weekly Cleaning Inspection (7.6.1/7.6.2)',
       columns: [
         { key: 'recordName', label: 'Record', type: 'text' },
         { key: 'recordCode', label: 'REC code', type: 'text' },
@@ -53,3 +53,5 @@
 </script>
 </body>
 </html>
+
+

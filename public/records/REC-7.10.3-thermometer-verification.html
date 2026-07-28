@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.10.3 Thermometer Verification</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
@@ -28,32 +28,32 @@
     title: 'Thermometer Verification',
     docRevisionStart: 6,
     instructions: [
-      { label: 'Verify thermometer accuracy', text: 'Verification must be done using a standard reference thermometer and a test thermometer. Deviation should not be larger than 0.5°C — if it is, complete REC 7.10.4 to add a correction factor.' },
-      { label: 'Cold verification (0–5°C)', text: 'Crush ice, fill half a jar, top up with water and stir. Insert reference probe and test thermometer, wait to stabilise, then record.' },
-      { label: 'Hot verification (85–95°C)', text: 'Boil water, insert reference probe and test thermometer, wait to stabilise and record. If the reading exceeds the specified limits, a corrective action must be recorded.' },
+      { label: 'Verify thermometer accuracy', text: 'Verification must be done using a standard reference thermometer and a test thermometer. Deviation should not be larger than 0.5Â°C â€” if it is, complete REC 7.10.4 to add a correction factor.' },
+      { label: 'Cold verification (0â€“5Â°C)', text: 'Crush ice, fill half a jar, top up with water and stir. Insert reference probe and test thermometer, wait to stabilise, then record.' },
+      { label: 'Hot verification (85â€“95Â°C)', text: 'Boil water, insert reference probe and test thermometer, wait to stabilise and record. If the reading exceeds the specified limits, a corrective action must be recorded.' },
       { label: 'Frequency', text: 'Weekly.' }
     ],
     relatedLinks: [
-      { label: 'If deviation exceeds 0.5°C, complete Thermometer Correction Factors to add a correction factor.', href: 'REC-7.10.4-thermometer-correction-factors.html' }
+      { label: 'If deviation exceeds 0.5Â°C, complete Thermometer Correction Factors to add a correction factor.', href: 'REC-7.10.4-thermometer-correction-factors.html' }
     ],
     showVerificationStrip: false,
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'referenceThermoSerial', label: 'Reference thermometer serial', type: 'text' },
       { key: 'testThermoSerial', label: 'Test thermometer serial', type: 'text' },
-      { key: 'coldReferenceReading', label: 'Cold water — reference reading', type: 'number', unit: '°C', specKey: 'coldRange' },
-      { key: 'coldTestReading', label: 'Cold water — test reading', type: 'number', unit: '°C', specKey: 'coldRange' },
+      { key: 'coldReferenceReading', label: 'Cold water â€” reference reading', type: 'number', unit: 'Â°C', specKey: 'coldRange' },
+      { key: 'coldTestReading', label: 'Cold water â€” test reading', type: 'number', unit: 'Â°C', specKey: 'coldRange' },
       {
-        key: 'coldDeviation', label: 'Cold water — deviation', type: 'computed', unit: '°C', specKey: 'diffTolerance',
+        key: 'coldDeviation', label: 'Cold water â€” deviation', type: 'computed', unit: 'Â°C', specKey: 'diffTolerance',
         compute: (v) => {
           const r = num(v.coldReferenceReading), t = num(v.coldTestReading);
           return (r === null || t === null) ? '' : Math.round((t - r) * 100) / 100;
         }
       },
-      { key: 'hotReferenceReading', label: 'Hot water — reference reading', type: 'number', unit: '°C', specKey: 'hotRange' },
-      { key: 'hotTestReading', label: 'Hot water — test reading', type: 'number', unit: '°C', specKey: 'hotRange' },
+      { key: 'hotReferenceReading', label: 'Hot water â€” reference reading', type: 'number', unit: 'Â°C', specKey: 'hotRange' },
+      { key: 'hotTestReading', label: 'Hot water â€” test reading', type: 'number', unit: 'Â°C', specKey: 'hotRange' },
       {
-        key: 'hotDeviation', label: 'Hot water — deviation', type: 'computed', unit: '°C', specKey: 'diffTolerance',
+        key: 'hotDeviation', label: 'Hot water â€” deviation', type: 'computed', unit: 'Â°C', specKey: 'diffTolerance',
         compute: (v) => {
           const r = num(v.hotReferenceReading), t = num(v.hotTestReading);
           return (r === null || t === null) ? '' : Math.round((t - r) * 100) / 100;
@@ -64,9 +64,9 @@
       { key: 'verifiedDate', label: 'Verified date', type: 'date' }
     ],
     specFields: [
-      { key: 'coldRange', label: 'Cold water reference/test reading', unit: '°C', min: 0, max: 5 },
-      { key: 'hotRange', label: 'Hot water reference/test reading', unit: '°C', min: 85, max: 95 },
-      { key: 'diffTolerance', label: 'Reference vs test deviation', unit: '°C', min: -0.5, max: 0.5 }
+      { key: 'coldRange', label: 'Cold water reference/test reading', unit: 'Â°C', min: 0, max: 5 },
+      { key: 'hotRange', label: 'Hot water reference/test reading', unit: 'Â°C', min: 85, max: 95 },
+      { key: 'diffTolerance', label: 'Reference vs test deviation', unit: 'Â°C', min: -0.5, max: 0.5 }
     ],
     deviationLabel: 'Equipment accurate',
     deviationPolarity: 'accurate'
@@ -75,4 +75,6 @@
 </script>
 </body>
 </html>
+
+
 

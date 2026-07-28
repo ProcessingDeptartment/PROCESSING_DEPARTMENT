@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.5 Can Packing Control Sheet</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{--ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper); --line:var(--palette-border); --line-soft:var(--palette-head-bg); --accent:var(--palette-primary); --mono:'IBM Plex Mono','SF Mono',Consolas,monospace; --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;}
   #cpc-root{font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4;}
@@ -39,7 +39,7 @@
   .toast.show{opacity:1;}
   @media(max-width:900px){.grid-6{grid-template-columns:repeat(3,1fr);}.grid-4{grid-template-columns:repeat(2,1fr);}}
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="cpc-root">
@@ -72,7 +72,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Deviations</h2></div>
       <div class="panel-body">
-        <textarea id="h_processDeviation" rows="2" placeholder="Deviations…" style="font-size:11px;"></textarea>
+        <textarea id="h_processDeviation" rows="2" placeholder="Deviationsâ€¦" style="font-size:11px;"></textarea>
       </div>
     </div>
     <div class="panel">
@@ -113,7 +113,7 @@
   async function storeSet(key,value,shared){try{await window.storage.set(key,value,shared);return true;}catch(e){return false;}}
   function renderForm(){$('h_date').value=state.date;$('h_time').value=state.time;$('h_trackingOrJobNo').value=state.trackingOrJobNo;$('h_sizeRange').value=state.sizeRange;$('h_qualityOfAbalone').value=state.qualityOfAbalone;$('h_piecesSizes').value=state.piecesSizes;$('h_ingoWeightSpec').value=state.ingoWeightSpec;$('h_actualIngoWeight').value=state.actualIngoWeight;$('h_processDeviation').value=state.processDeviation;$('f_packer').value=state.packer;$('f_qcOnline').value=state.qcOnline;$('f_packerDate').value=state.packerDate;}
   function bindInputs(){const fields=['date','time','trackingOrJobNo','sizeRange','qualityOfAbalone','piecesSizes','ingoWeightSpec','actualIngoWeight','processDeviation','packer','qcOnline','packerDate'];fields.forEach(f=>{const id=f.startsWith('packer')||f.startsWith('qcOnline')?'f_'+f:'h_'+f;const el=$(id);if(el)el.addEventListener('input',()=>{state[f]=el.value;});});}
-  function updateRecordStatus(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'No job';const submitted=state.status==='submitted';$('recordStatus').textContent=`${submitted?'✓ Submitted':'Draft'} · ${jobStr} · ${state.id?'ID: '+state.id.slice(-8):'Unsaved'}`;}
+  function updateRecordStatus(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'No job';const submitted=state.status==='submitted';$('recordStatus').textContent=`${submitted?'âœ“ Submitted':'Draft'} Â· ${jobStr} Â· ${state.id?'ID: '+state.id.slice(-8):'Unsaved'}`;}
   function renderAll(){renderForm();updateRecordStatus();$('statusLine').textContent=state.updatedAt?`Last saved ${new Date(state.updatedAt).toLocaleString()}`:'Not yet saved';}
   async function saveRecord(finalize){const now=Date.now();if(!state.id){const jobId=state.trackingOrJobNo?state.trackingOrJobNo:'NOJOB';state.id=`can_packing_${safeKey(jobId)}_${now}`;state.createdAt=now;}state.updatedAt=now;state.status=finalize?'submitted':'draft';const ok=await storeSet('record:'+state.id,JSON.stringify(state),true);if(!ok){toast('Save failed.');return;}toast(finalize?'Submitted for verification.':'Draft saved.');renderAll();}
   function generatePdf(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'record';document.title=`REC_7.2.5_CAN_PACKING_${safeKey(jobStr)}_${state.date||''}`;window.print();}
@@ -123,3 +123,5 @@
 </script>
 </body>
 </html>
+
+

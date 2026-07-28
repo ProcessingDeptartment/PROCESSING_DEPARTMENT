@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.6 Product Label Checklist</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="plc-root">
@@ -92,8 +92,8 @@
       <div class="panel-head"><h2>Label Verification</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
-          <label class="field">General condition at receiving?<select id="h_generalConditionAtReceiving"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Label dimensions correct?<select id="h_labelDimensionsCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">General condition at receiving?<select id="h_generalConditionAtReceiving"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Label dimensions correct?<select id="h_labelDimensionsCorrect"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -102,12 +102,12 @@
       <div class="panel-head"><h2>Compliance</h2></div>
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
-          <label class="field">Artwork correct?<select id="h_artworkCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Ingredient statement correct?<select id="h_ingredientStatementCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Artwork correct?<select id="h_artworkCorrect"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Ingredient statement correct?<select id="h_ingredientStatementCorrect"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Allergen declaration complies?<select id="h_allergenDeclarationComplies"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Label complies and approved?<select id="h_labelCompliesApproved"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Allergen declaration complies?<select id="h_allergenDeclarationComplies"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Label complies and approved?<select id="h_labelCompliesApproved"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -205,7 +205,7 @@
   function updateRecordStatus(){
     const supStr = state.supplier ? state.supplier : 'No supplier';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${supStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${supStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -254,3 +254,4 @@
 </script>
 </body>
 </html>
+

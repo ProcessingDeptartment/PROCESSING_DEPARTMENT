@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.3.6 Brine Mixing Report</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="bmr-root">
@@ -105,7 +105,7 @@
         <div class="grid grid-3">
           <label class="field">Salt (g)<input id="h_saltG" type="number"></label>
           <label class="field">Salt batch no.<input id="h_saltBatchNo" placeholder="Batch no."></label>
-          <label class="field">Salt @25°C (%)<input id="h_saltPercent" type="number" step="0.1"></label>
+          <label class="field">Salt @25Â°C (%)<input id="h_saltPercent" type="number" step="0.1"></label>
         </div>
       </div>
     </div>
@@ -116,7 +116,7 @@
         <div class="grid grid-3">
           <label class="field">Sugar (g)<input id="h_sugarG" type="number"></label>
           <label class="field">Sugar batch no.<input id="h_sugarBatchNo" placeholder="Batch no."></label>
-          <label class="field">Sugar @25°C (%)<input id="h_sugarPercent" type="number" step="0.1"></label>
+          <label class="field">Sugar @25Â°C (%)<input id="h_sugarPercent" type="number" step="0.1"></label>
         </div>
       </div>
     </div>
@@ -229,7 +229,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNumber ? `Job ${state.jobNumber}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -281,3 +281,4 @@
 </script>
 </body>
 </html>
+

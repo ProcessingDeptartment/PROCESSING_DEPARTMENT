@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.1.4 Washing Control Sheet</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="wc-root">
@@ -76,7 +76,7 @@
           <label class="field">Date<input id="h_date" type="date"></label>
           <label class="field">Time started<input id="h_timeStarted" placeholder="HH:MM"></label>
           <label class="field">Job no.<input id="h_jobNo" placeholder="Job"></label>
-          <label class="field">First or second wash<select id="h_washNumber"><option value="">—</option><option value="First">First</option><option value="Second">Second</option></select></label>
+          <label class="field">First or second wash<select id="h_washNumber"><option value="">â€”</option><option value="First">First</option><option value="Second">Second</option></select></label>
           <label class="field">Size range<input id="h_sizeRange" placeholder="Range"></label>
           <label class="field">Machine no. (ex WW1/T1)<input id="h_machineNo" placeholder="Machine"></label>
         </div>
@@ -89,7 +89,7 @@
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Bins/trays/kg per wash<input id="h_binsTraysPerWash" placeholder="Amount"></label>
           <label class="field">Total washing time<input id="h_totalWashingTime" placeholder="HHhMMm"></label>
-          <label class="field">Abalone clean after wash?<select id="h_abaloneCleanAfterWash"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Abalone clean after wash?<select id="h_abaloneCleanAfterWash"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -97,7 +97,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Process Deviation</h2></div>
       <div class="panel-body">
-        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviations…" style="font-size:11px;"></textarea>
+        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviationsâ€¦" style="font-size:11px;"></textarea>
       </div>
     </div>
 
@@ -193,7 +193,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNo ? state.jobNo : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -245,3 +245,5 @@
 </script>
 </body>
 </html>
+
+

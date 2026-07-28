@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.8.4 Seamer Inspection Report</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
@@ -28,27 +28,27 @@
     entryFields: [
       { key: 'equipmentName', label: 'Equipment name', type: 'text', required: true },
       { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'preCleaningDone', label: 'Before production — pre-cleaning of seamer done?', type: 'yesno' },
+      { key: 'preCleaningDone', label: 'Before production â€” pre-cleaning of seamer done?', type: 'yesno' },
       { key: 'compressorPressureChecked', label: 'Compressor started and pressure gauge checked?', type: 'yesno' },
       { key: 'steamValveChecked', label: 'Steam valve opened and steam gauge checked?', type: 'yesno' },
       { key: 'seamerMainRunDone', label: 'Seamer main run done?', type: 'yesno' },
-      { key: 'seamsChecked', label: 'Seams checked — REC 7.2.12?', type: 'yesno' },
+      { key: 'seamsChecked', label: 'Seams checked â€” REC 7.2.12?', type: 'yesno' },
       { key: 'chutesClean', label: 'Chutes clean?', type: 'yesno' },
       { key: 'noCansLidsFromPreviousShift', label: 'No cans and lids from previous shift?', type: 'yesno' },
-      { key: 'beforeDeficiency', label: 'Before production — deficiency & corrective action', type: 'textarea' },
-      { key: 'checkedByBefore', label: 'Before production — checked by', type: 'text' },
-      { key: 'verifiedByBefore', label: 'Before production — verified by', type: 'text' },
-      { key: 'managementBefore', label: 'Before production — management', type: 'text' },
-      { key: 'cleaningOfSeamerDone', label: 'End of day — cleaning of seamer done?', type: 'yesno' },
+      { key: 'beforeDeficiency', label: 'Before production â€” deficiency & corrective action', type: 'textarea' },
+      { key: 'checkedByBefore', label: 'Before production â€” checked by', type: 'text' },
+      { key: 'verifiedByBefore', label: 'Before production â€” verified by', type: 'text' },
+      { key: 'managementBefore', label: 'Before production â€” management', type: 'text' },
+      { key: 'cleaningOfSeamerDone', label: 'End of day â€” cleaning of seamer done?', type: 'yesno' },
       { key: 'rollersLubricated', label: 'Rollers and bearings lubricated/greased?', type: 'yesno' },
       { key: 'seamerCoverRemoved', label: 'Seamer cover removed and cleaned?', type: 'yesno' },
       { key: 'oilLevelChecked', label: 'Oil level gauge checked?', type: 'yesno' },
       { key: 'lidsEmptiedFromChute', label: 'Lids emptied from chute?', type: 'yesno' },
       { key: 'cansLidsTakenToFG02', label: 'Cans and lids taken back to FG02?', type: 'yesno' },
-      { key: 'endDeficiency', label: 'End of day — deficiency & corrective action', type: 'textarea' },
-      { key: 'checkedByEnd', label: 'End of day — checked by', type: 'text', required: true },
-      { key: 'verifiedByEnd', label: 'End of day — verified by', type: 'text' },
-      { key: 'managementEnd', label: 'End of day — management', type: 'text' }
+      { key: 'endDeficiency', label: 'End of day â€” deficiency & corrective action', type: 'textarea' },
+      { key: 'checkedByEnd', label: 'End of day â€” checked by', type: 'text', required: true },
+      { key: 'verifiedByEnd', label: 'End of day â€” verified by', type: 'text' },
+      { key: 'managementEnd', label: 'End of day â€” management', type: 'text' }
     ],
     specFields: [],
     deviationLabel: 'Deviation',
@@ -58,3 +58,5 @@
 </script>
 </body>
 </html>
+
+

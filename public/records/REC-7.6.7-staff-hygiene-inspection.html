@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.6.7 Staff Hygiene Inspection</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
@@ -26,7 +26,7 @@
     docRevisionStart: 4,
     listColumns: ['weekStarting', 'shift'],
     instructions: [
-      { label: 'Work instruction', text: 'Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Key: ✓ = Compliance, x = Non-compliance, A = Absent.' }
+      { label: 'Work instruction', text: 'Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Key: âœ“ = Compliance, x = Non-compliance, A = Absent.' }
     ],
     sections: [
       { title: 'Week details', fields: [
@@ -38,7 +38,7 @@
       ]}
     ],
     roster: {
-      title: 'Staff members — one row per staff member per day (Mon-Fri)',
+      title: 'Staff members â€” one row per staff member per day (Mon-Fri)',
       columns: [
         { key: 'staffMember', label: 'Staff member', type: 'text' },
         { key: 'day', label: 'Day', type: 'select', options: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
@@ -58,3 +58,5 @@
 </script>
 </body>
 </html>
+
+

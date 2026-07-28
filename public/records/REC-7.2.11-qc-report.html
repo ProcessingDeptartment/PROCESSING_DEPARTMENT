@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.4 QC Report</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="qcr-root">
@@ -103,21 +103,21 @@
       <div class="panel-head"><h2>Physical Tests</h2></div>
       <div class="panel-body">
         <div class="grid grid-4" style="margin-bottom:8px;">
-          <label class="field">pH @25°C<input id="h_ph" type="number" step="0.1"></label>
-          <label class="field">Brix @25°C<input id="h_brix" type="number" step="0.1"></label>
+          <label class="field">pH @25Â°C<input id="h_ph" type="number" step="0.1"></label>
+          <label class="field">Brix @25Â°C<input id="h_brix" type="number" step="0.1"></label>
           <label class="field">Water reading<input id="h_waterReading" type="number" step="0.1"></label>
-          <label class="field">Salt % @25°C<input id="h_saltPercent" type="number" step="0.1"></label>
+          <label class="field">Salt % @25Â°C<input id="h_saltPercent" type="number" step="0.1"></label>
         </div>
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Vacuum (kPa)<input id="h_vacuum" type="number" step="0.1"></label>
-          <label class="field">Rust on cans?<select id="h_rustOnCans"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Rust on lids?<select id="h_rustOnLids"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Dents on batch?<select id="h_dentsOnBatch"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Rust on cans?<select id="h_rustOnCans"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Rust on lids?<select id="h_rustOnLids"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Dents on batch?<select id="h_dentsOnBatch"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-4">
-          <label class="field">Odours on opening?<select id="h_oddOursOnOpening"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Damaged pcs in cans?<select id="h_damagedPcsInCans"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Bluing/black spots?<select id="h_bluingBlackSpots"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Odours on opening?<select id="h_oddOursOnOpening"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Damaged pcs in cans?<select id="h_damagedPcsInCans"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Bluing/black spots?<select id="h_bluingBlackSpots"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -126,10 +126,10 @@
       <div class="panel-head"><h2>Sensory Tests</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
-          <label class="field">Sauce colour OK?<select id="h_sauceColour"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Visual appearance OK?<select id="h_visualAppearance"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Texture of abalone OK?<select id="h_textureOfAbalone"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Taste of product OK?<select id="h_tasteOfProduct"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Sauce colour OK?<select id="h_sauceColour"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Visual appearance OK?<select id="h_visualAppearance"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Texture of abalone OK?<select id="h_textureOfAbalone"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Taste of product OK?<select id="h_tasteOfProduct"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -242,7 +242,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNumber ? `Job ${state.jobNumber}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -298,3 +298,4 @@
 </script>
 </body>
 </html>
+

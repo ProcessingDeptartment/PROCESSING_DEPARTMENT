@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.1.3 Salting and Tumbling</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="st-root">
@@ -116,7 +116,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Process Deviation</h2></div>
       <div class="panel-body">
-        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviations…" style="font-size:11px;"></textarea>
+        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviationsâ€¦" style="font-size:11px;"></textarea>
       </div>
     </div>
 
@@ -224,7 +224,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNo ? state.jobNo : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -277,3 +277,5 @@
 </script>
 </body>
 </html>
+
+

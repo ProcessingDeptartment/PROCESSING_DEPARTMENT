@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.1.3.1 Bleeding and Salting</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +59,7 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="bs-root">
@@ -86,9 +86,9 @@
       <div class="panel-head"><h2>Bleeding</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
-          <label class="field">Bleeding — start time<input id="h_bleedingStartTime" placeholder="HH:MM"></label>
-          <label class="field">Bleeding — finish time<input id="h_bleedingFinishTime" placeholder="HH:MM"></label>
-          <label class="field">Bleeding — total time<input id="h_bleedingTotalTime" placeholder="HHhMMm"></label>
+          <label class="field">Bleeding â€” start time<input id="h_bleedingStartTime" placeholder="HH:MM"></label>
+          <label class="field">Bleeding â€” finish time<input id="h_bleedingFinishTime" placeholder="HH:MM"></label>
+          <label class="field">Bleeding â€” total time<input id="h_bleedingTotalTime" placeholder="HHhMMm"></label>
           <label class="field">Standard salting time<input id="h_standardSaltingTime" placeholder="Time"></label>
         </div>
       </div>
@@ -98,8 +98,8 @@
       <div class="panel-head"><h2>Salting</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
-          <label class="field">Salting — start time<input id="h_saltingStartTime" placeholder="HH:MM"></label>
-          <label class="field">Salting — finish time<input id="h_saltingFinishTime" placeholder="HH:MM"></label>
+          <label class="field">Salting â€” start time<input id="h_saltingStartTime" placeholder="HH:MM"></label>
+          <label class="field">Salting â€” finish time<input id="h_saltingFinishTime" placeholder="HH:MM"></label>
           <label class="field">Shuck weight (kg)<input id="h_shuckWeight" type="number" step="0.01"></label>
           <label class="field">Salt (kg)<input id="h_saltKg" type="number" step="0.01"></label>
           <label class="field">Salt (%)<input id="h_saltPercent" type="number" step="0.1"></label>
@@ -108,7 +108,7 @@
         <div class="grid grid-4">
           <label class="field">Baking soda (g)<input id="h_bakingSodaG" type="number"></label>
           <label class="field">Baking soda batch code<input id="h_bakingSodaBatchCode" placeholder="Code"></label>
-          <label class="field">Salting — total time<input id="h_saltingTotalTime" placeholder="HHhMMm"></label>
+          <label class="field">Salting â€” total time<input id="h_saltingTotalTime" placeholder="HHhMMm"></label>
         </div>
       </div>
     </div>
@@ -116,7 +116,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Process Deviation</h2></div>
       <div class="panel-body">
-        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviations…" style="font-size:11px;"></textarea>
+        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviationsâ€¦" style="font-size:11px;"></textarea>
       </div>
     </div>
 
@@ -224,7 +224,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNo ? state.jobNo : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
@@ -277,3 +277,5 @@
 </script>
 </body>
 </html>
+
+

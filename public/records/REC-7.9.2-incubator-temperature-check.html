@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.9.2 Daily Incubator Temperature Check</title>
-<script src="palette-map.js"></script>
-<link rel="stylesheet" href="record-theme.css">
-  <link rel="stylesheet" href="../responsive.css?v=1">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
@@ -26,18 +26,18 @@
     title: 'Daily Incubator Temperature Check',
     docRevisionStart: 6,
     instructions: [
-      { label: 'Target range', text: '36.1°C – 37.8°C, recorded at start of shift, lunch and end of shift.' }
+      { label: 'Target range', text: '36.1Â°C â€“ 37.8Â°C, recorded at start of shift, lunch and end of shift.' }
     ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
+      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
+      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
+      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'incubatorTemp', label: 'Incubator temperature', unit: '°C', min: 36.1, max: 37.8 }
+      { key: 'incubatorTemp', label: 'Incubator temperature', unit: 'Â°C', min: 36.1, max: 37.8 }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'
@@ -46,3 +46,5 @@
 </script>
 </body>
 </html>
+
+
