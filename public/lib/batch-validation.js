@@ -12,10 +12,10 @@
  */
 (function () {
   const BATCH_PATTERNS = {
-    '3CP': { regex: /^3CP\d{4,8}$/, label: 'Canned Product (3CP + digits)' },
-    '3DP': { regex: /^3DP\d{4,8}$/, label: 'Dried Product (3DP + digits)' },
-    'CPR': { regex: /^CPR\d{4,8}$/, label: 'Canned Product (Third party) (CPR + digits)' },
-    'DPR': { regex: /^DPR\d{4,8}$/, label: 'Dried Product (Third party) (DPR + digits)' }
+    '3CP': { regex: /^3CP\d{4,8}$/, label: 'Canned Product ( Third party : 3CP + digits)' },
+    '3DP': { regex: /^3DP\d{4,8}$/, label: 'Dried Product ( Third party : : 3DP + digits)' },
+    'CPR': { regex: /^CPR\d{4,8}$/, label: 'Canned Product (CPR + digits)' },
+    'DPR': { regex: /^DPR\d{4,8}$/, label: 'Dried Product (DPR + digits)' }
   };
 
   function isValidBatchNumber(value) {
