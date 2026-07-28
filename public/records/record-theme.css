@@ -152,6 +152,31 @@
   --palette-fail-bg: #fbe8e6;
 }
 
+/* ---- Muted burnt orange — not yet tied to a REC section ---- */
+:root[data-palette="burnt-orange"] {
+  --palette-paper: #faf7f4;
+  --palette-ink: #4a2f22;
+
+  --palette-dark: #4a2f22;
+  --palette-dark-text: #faf7f4;
+  --palette-dark-muted: #d0ab94;
+
+  --palette-primary: #a05e38;
+  --palette-primary-hover: #8c4f2d;
+  --palette-primary-text: #fdf6f1;
+
+  --palette-border: #d0ab94;
+  --palette-head-bg: #e8d3c3;
+  --palette-heading: #4a2f22;
+  --palette-label: #4a2f22;
+  --palette-focus: #a05e38;
+
+  --palette-ok: #7b9b7f;
+  --palette-ok-bg: #e8f0e9;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
 /* ========================================================================
    2. HEADER TYPOGRAPHY
 
