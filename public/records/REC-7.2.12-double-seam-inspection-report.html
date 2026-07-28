@@ -8,10 +8,10 @@
 <link rel="stylesheet" href="record-theme.css">
 <style>
   :root{
-    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
-    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
-    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:var(--palette-border); --line-soft:var(--palette-head-bg); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
+    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
     --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
   }
   #dsir-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }

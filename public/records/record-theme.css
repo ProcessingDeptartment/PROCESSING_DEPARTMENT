@@ -31,7 +31,7 @@
 
   --palette-primary: #c9832b;
   --palette-primary-hover: #dd9536;
-  --palette-primary-text: #241a0a;
+  --palette-primary-text: #000000;
 
   --palette-border: #e2e4e3;
   --palette-head-bg: #fbfbfa;
@@ -56,7 +56,7 @@
 
   --palette-primary: #8b7355;
   --palette-primary-hover: #7a614a;
-  --palette-primary-text: #dcc9b8;
+  --palette-primary-text: #000000;
 
   --palette-border: #b9956e;
   --palette-head-bg: #dcc9b8;
@@ -81,7 +81,7 @@
 
   --palette-primary: #7a9b88;
   --palette-primary-hover: #6a8977;
-  --palette-primary-text: #f8f9f8;
+  --palette-primary-text: #000000;
 
   --palette-border: #b3c9bf;
   --palette-head-bg: #d0dcd8;
@@ -111,7 +111,7 @@
 
   --palette-primary: #41789b;
   --palette-primary-hover: #386a8a;
-  --palette-primary-text: #ffffff;
+  --palette-primary-text: #000000;
 
   --palette-border: #b9cede;
   --palette-head-bg: #d9e6ee;
@@ -163,13 +163,13 @@
 
   --palette-primary: #d97a30;
   --palette-primary-hover: #c56820;
-  --palette-primary-text: #ffffff;
+  --palette-primary-text: #000000;
 
   --palette-border: #d9a876;
   --palette-head-bg: #f0d4be;
   --palette-heading: #6b3d2e;
   --palette-label: #6b3d2e;
-  --palette-focus: #d97a30;
+  --palette-focus: #8a664a;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
