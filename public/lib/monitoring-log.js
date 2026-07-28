@@ -162,6 +162,9 @@
     const v = value == null ? '' : value;
     if (field.type === 'select' || field.type === 'yesno') {
       const opts = field.type === 'yesno' ? ['', 'Yes', 'No'] : ['', ...(field.options || [])];
+      // Keep a stored value that is no longer an option (e.g. an option list
+      // that was since renamed) so old records still show what was captured.
+      if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
       return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
     }
     if (field.type === 'textarea') {

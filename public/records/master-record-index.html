@@ -11,12 +11,11 @@
   *{ box-sizing:border-box; }
 
   /* ---- Document control header, mirroring the paper REC 01 title block ---- */
-  .dc-top{ background:var(--palette-dark); color:var(--palette-dark-text); padding:12px 16px; }
-  .doc-line{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
-  .doc-code{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.04em;
-             background:rgba(255,255,255,.12); padding:2px 8px; border-radius:3px; }
-  .doc-line h1{ margin:0; font-size:17px; font-weight:600; }
-  .doc-rev{ font-size:11.5px; color:var(--palette-dark-muted); }
+  /* Typography for .doc-code / h1 / .doc-rev comes from record-theme.css so this
+     index reads at the same weight as the records it lists -- only the code chip's
+     background is local. */
+  .dc-top{ background:var(--palette-dark); color:var(--palette-dark-text); padding:14px 18px; }
+  .doc-line .doc-code{ background:rgba(255,255,255,.12); padding:2px 8px; border-radius:3px; }
   .dc-meta{ display:flex; gap:22px; flex-wrap:wrap; margin-top:10px; font-size:11px;
             color:var(--palette-dark-muted); }
   .dc-meta b{ color:var(--palette-dark-text); font-weight:600; display:block; font-size:11.5px; }
@@ -92,7 +91,6 @@
 
   @media (max-width:768px){
     .container{ padding:12px; }
-    .doc-line h1{ font-size:15px; }
     .toolbar input[type=text]{ min-width:0; width:100%; }
     .toolbar .grow{ flex-basis:100%; }
   }

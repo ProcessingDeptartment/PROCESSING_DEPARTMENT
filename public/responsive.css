@@ -74,15 +74,15 @@ body {
     padding: 10px 12px;
     gap: 10px;
   }
-  .cp-top h1, .dc-top h1, .dsir-top h1, .gbt-top h1, .rcs-top h1, .so-top h1 {
-    font-size: 14px;
-  }
-  .cp-topline, .dc-topline, .dsir-topline, .gbt-topline, .rcs-topline, .so-topline {
+  /* Header title sizing is NOT set here. `.doc-line h1` in records/record-theme.css
+     owns it for every record, hand-written and engine-rendered alike; a `.xx-top h1`
+     rule at this breakpoint has equal specificity and would win on source order,
+     shrinking only the hand-written pages. */
+  .dsir-topline, .so-topline {
     width: 100%;
     gap: 6px;
   }
-  .cp-topline input, .dc-topline input, .dsir-topline input,
-  .gbt-topline input, .rcs-topline input, .so-topline input {
+  .dsir-topline input, .so-topline input {
     width: 100%;
     font-size: 16px !important;
     padding: 8px !important;
@@ -158,10 +158,8 @@ body {
   .cp-top, .dc-top, .dsir-top, .gbt-top, .rcs-top, .so-top {
     padding: 8px 10px;
   }
-  .cp-top h1, .dc-top h1, .dsir-top h1, .gbt-top h1, .rcs-top h1, .so-top h1 {
-    font-size: 13px;
-  }
-  .cp-topline, .dc-topline, .dsir-topline, .gbt-topline, .rcs-topline, .so-topline {
+  /* Title sizing: see the note at the 768px breakpoint. */
+  .dsir-topline, .so-topline {
     flex-direction: column;
     align-items: stretch;
   }

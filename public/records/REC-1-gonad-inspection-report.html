@@ -11,6 +11,7 @@
 <body>
 <div id="mlRoot"></div>
 
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -34,7 +35,7 @@
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'jobNo', label: 'Job no.', type: 'text' },
-      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dry', 'Live sorting'] },
+      { key: 'processingFor', label: 'Processing for', type: 'select', options: window.Lookups.get('processingFor') },
       { key: 'stage', label: 'Stage', type: 'select', options: ['0', '1', '2', '3'] },
       { key: 'sizeRange', label: 'Size range', type: 'text' },
       { key: 'sex', label: 'Sex', type: 'select', options: ['Male', 'Female'] },

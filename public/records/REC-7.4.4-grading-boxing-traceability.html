@@ -23,10 +23,7 @@
   }
   #gbt-root input:focus, #gbt-root select:focus, #gbt-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #gbt-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .gbt-top{ background:var(--steel-dk); color:#f4f1e8; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .gbt-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .gbt-topline label.role-label{ font-size:9.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
-  .gbt-topline input{ width:120px; padding:3px 5px; font-size:11px; }
+  .gbt-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
   .btn{ padding:5px 11px; font-size:11.5px; }
   .btn-primary{ background:var(--accent); color:#241a0a; }
   .btn-primary:hover{ background:#dd9536; }
@@ -68,13 +65,6 @@
 <div id="gbt-root">
   <div class="gbt-top">
     <div class="doc-line"><span class="doc-code">REC 7.4.4</span><h1>Grading & Boxing Traceability</h1><span class="doc-rev">Rev 1 &middot; Rev date not set</span></div>
-    <div class="gbt-topline no-print">
-      <label class="role-label">Your name
-        <input id="actingNameInput" placeholder="Name">
-      </label>
-      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
-    </div>
   </div>
 
   <div class="gbt-body">
@@ -115,6 +105,8 @@
       <span class="status-line" id="statusLine"></span>
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
+      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
+      <button class="btn btn-primary" id="submitBtn">Submit</button>
     </div>
   </div>
 
@@ -143,8 +135,6 @@
   }
 
   let state = newRecord();
-  const ACTING_NAME_KEY = 'acting_as_name_grading_boxing';
-  let actingName = window.localStorage.getItem(ACTING_NAME_KEY) || '';
 
   function toast(msg){
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
@@ -218,14 +208,7 @@
     window.print();
   }
 
-  function wireActingName(){
-    const inp = $('actingNameInput');
-    inp.value = actingName;
-    inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
-  }
-
   function wire(){
-    wireActingName();
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));

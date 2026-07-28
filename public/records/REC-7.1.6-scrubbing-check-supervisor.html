@@ -11,6 +11,7 @@
 <body>
 <div id="mlRoot"></div>
 
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -31,7 +32,7 @@
     entryFields: [
       { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
       { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
+      { key: 'processingFor', label: 'Processing for', type: 'select', options: window.Lookups.get('processingFor') },
       { key: 'jobNo', label: 'Job no.', type: 'text' },
       { key: 'abaloneSize', label: 'Abalone size', type: 'number', unit: 'g' },
       { key: 'date', label: 'Date', type: 'date' },
