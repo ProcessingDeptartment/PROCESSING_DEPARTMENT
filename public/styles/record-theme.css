@@ -56,10 +56,10 @@
 
   --palette-primary: #8b7355;
   --palette-primary-hover: #7a614a;
-  --palette-primary-text: #000000;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #b9956e;
-  --palette-head-bg: #dcc9b8;
+  --palette-border: #d4c2b0;
+  --palette-head-bg: #ede4dc;
   --palette-heading: #4a3428;
   --palette-label: #4a3428;
   --palette-focus: #8b7355;
@@ -72,55 +72,48 @@
 
 /* ---- Dry records, REC 7.4.x (muted sage green) ---- */
 :root[data-palette="dry"] {
-  --palette-paper: #f8f9f8;
-  --palette-ink: #3a4a40;
+  --palette-paper: #f6f8f7;
+  --palette-ink: #2c3e35;
 
-  --palette-dark: #3a4a40;
-  --palette-dark-text: #f8f9f8;
-  --palette-dark-muted: #b3c9bf;
+  --palette-dark: #2c3e35;
+  --palette-dark-text: #f6f8f7;
+  --palette-dark-muted: #a3beb2;
 
-  --palette-primary: #7a9b88;
-  --palette-primary-hover: #6a8977;
-  --palette-primary-text: #000000;
+  --palette-primary: #658c79;
+  --palette-primary-hover: #567868;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #b3c9bf;
-  --palette-head-bg: #d0dcd8;
-  --palette-heading: #3a4a40;
-  --palette-label: #3a4a40;
-  --palette-focus: #7a9b88;
+  --palette-border: #b8ccbf;
+  --palette-head-bg: #d7e4dc;
+  --palette-heading: #2c3e35;
+  --palette-label: #2c3e35;
+  --palette-focus: #658c79;
 
-  --palette-ok: #7a9b88;
-  --palette-ok-bg: #e8f3ed;
+  --palette-ok: #658c79;
+  --palette-ok-bg: #e5f0ea;
   --palette-fail: #a3352d;
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Cleaning records, REC 7.6.x (muted light blue) ----
-   Sits at hue ~203. The previous teal was only 40 degrees off the dry sage
-   and the two were indistinguishable on a tablet; blue puts real daylight
-   between them. Every pair here clears WCAG AA, so the primary carries a
-   little more saturation than the other palettes deliberately -- at the
-   old muted level, white button text would not have been legible. */
+/* ---- Cleaning records, REC 7.6.x (muted light blue) ---- */
 :root[data-palette="cleaning"] {
-  --palette-paper: #f7f9fa;
-  --palette-ink: #2b4257;
+  --palette-paper: #f4f7f9;
+  --palette-ink: #2b3d4f;
 
-  --palette-dark: #33546b;
-  --palette-dark-text: #f7fafc;
-  --palette-dark-muted: #b9cede;
+  --palette-dark: #2b3d4f;
+  --palette-dark-text: #f4f7f9;
+  --palette-dark-muted: #9fb8cc;
 
-  --palette-primary: #41789b;
-  --palette-primary-hover: #386a8a;
-  --palette-primary-text: #000000;
+  --palette-primary: #527d9e;
+  --palette-primary-hover: #456c8c;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #b9cede;
-  --palette-head-bg: #d9e6ee;
-  --palette-heading: #2b4257;
-  --palette-label: #2b4257;
-  --palette-focus: #41789b;
+  --palette-border: #bcd0e0;
+  --palette-head-bg: #d8e4ee;
+  --palette-heading: #2b3d4f;
+  --palette-label: #2b3d4f;
+  --palette-focus: #527d9e;
 
-  /* Distinct from the primary, unlike the old teal where OK and primary were
-     the same hex and a pass badge read as ordinary page furniture. */
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e6f2ea;
   --palette-fail: #a3352d;
@@ -129,22 +122,22 @@
 
 /* ---- Traceability records, REC 8.1.x (muted mauve) ---- */
 :root[data-palette="traceability"] {
-  --palette-paper: #f8f8f8;
-  --palette-ink: #4a2a5a;
+  --palette-paper: #f8f6f8;
+  --palette-ink: #4a2f54;
 
-  --palette-dark: #4a2a5a;
-  --palette-dark-text: #f8f8f8;
+  --palette-dark: #4a2f54;
+  --palette-dark-text: #f8f6f8;
   --palette-dark-muted: #c9b3c5;
 
-  --palette-primary: #8b6f9e;
-  --palette-primary-hover: #7a5d8c;
-  --palette-primary-text: #000000
+  --palette-primary: #856196;
+  --palette-primary-hover: #735084;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #c9b3c5;
-  --palette-head-bg: #dcc9d9;
-  --palette-heading: #4a2a5a;
-  --palette-label: #4a2a5a;
-  --palette-focus: #8b6f9e;
+  --palette-border: #d4c2d0;
+  --palette-head-bg: #eae0e6;
+  --palette-heading: #4a2f54;
+  --palette-label: #4a2f54;
+  --palette-focus: #856196;
 
   --palette-ok: #7b9e89;
   --palette-ok-bg: #e8f3ec;
@@ -154,22 +147,22 @@
 
 /* ---- Quality records, REC 8.2.x (warm burnt orange) ---- */
 :root[data-palette="quality"] {
-  --palette-paper: #fffcf9;
-  --palette-ink: #6b3d2e;
+  --palette-paper: #faf7f4;
+  --palette-ink: #5e3728;
 
-  --palette-dark: #6b3d2e;
-  --palette-dark-text: #fffcf9;
-  --palette-dark-muted: #d9a876;
+  --palette-dark: #5e3728;
+  --palette-dark-text: #faf7f4;
+  --palette-dark-muted: #d4ab93;
 
-  --palette-primary: #d97a30;
-  --palette-primary-hover: #c56820;
-  --palette-primary-text: #000000;
+  --palette-primary: #c26c30;
+  --palette-primary-hover: #ab5d28;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #d9a876;
-  --palette-head-bg: #f0d4be;
-  --palette-heading: #6b3d2e;
-  --palette-label: #6b3d2e;
-  --palette-focus: #8a664a;
+  --palette-border: #e0c4b2;
+  --palette-head-bg: #f2e3d9;
+  --palette-heading: #5e3728;
+  --palette-label: #5e3728;
+  --palette-focus: #c26c30;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -177,24 +170,24 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Canning (lab testing — teal) ---- */
+/* ---- Canning (lab testing — soft parchment/olive) ---- */
 :root[data-palette="canning"] {
-  --palette-paper: #fcfbe3;
-  --palette-ink: #524e18;
+  --palette-paper: #fbfaf2;
+  --palette-ink: #4a4515;
 
-  --palette-dark: #524e18;
-  --palette-dark-text: #fcfbe3;
-  --palette-dark-muted: #d4cc6a;
+  --palette-dark: #4a4515;
+  --palette-dark-text: #fbfaf2;
+  --palette-dark-muted: #bdae6b;
 
-  --palette-primary: #e6dc45;
-  --palette-primary-hover: #cfc534;
-  --palette-primary-text: #000000;
+  --palette-primary: #a69932;
+  --palette-primary-hover: #918428;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #ded787;
-  --palette-head-bg: #f4f0a9;
-  --palette-heading: #524e18;
-  --palette-label: #524e18;
-  --palette-focus: #e6dc45;
+  --palette-border: #ded8a3;
+  --palette-head-bg: #f0ecce;
+  --palette-heading: #4a4515;
+  --palette-label: #4a4515;
+  --palette-focus: #a69932;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -202,24 +195,24 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown2 (packaging — coral) ---- */
+/* ---- Unknown2 (packaging — muted coral) ---- */
 :root[data-palette="unknown2"] {
-  --palette-paper: #fef8f6;
-  --palette-ink: #7a3a2a;
+  --palette-paper: #fcf6f4;
+  --palette-ink: #6b3528;
 
-  --palette-dark: #7a3a2a;
-  --palette-dark-text: #fef8f6;
-  --palette-dark-muted: #d9947f;
+  --palette-dark: #6b3528;
+  --palette-dark-text: #fcf6f4;
+  --palette-dark-muted: #d9a091;
 
-  --palette-primary: #d97a52;
-  --palette-primary-hover: #c5684a;
-  --palette-primary-text: #000000
+  --palette-primary: #bd684a;
+  --palette-primary-hover: #a8583c;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #e8b8a3;
-  --palette-head-bg: #f4d4c3;
-  --palette-heading: #7a3a2a;
-  --palette-label: #7a3a2a;
-  --palette-focus: #d97a52;
+  --palette-border: #e8c4b8;
+  --palette-head-bg: #f4e2db;
+  --palette-heading: #6b3528;
+  --palette-label: #6b3528;
+  --palette-focus: #bd684a;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -227,24 +220,24 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown3 (raw material intake — olive/khaki) ---- */
+/* ---- Unknown3 (raw material intake — warm straw/khaki) ---- */
 :root[data-palette="unknown3"] {
-  --palette-paper: #faf9f3;
-  --palette-ink: #5a5a3a;
+  --palette-paper: #f8f7f2;
+  --palette-ink: #4e4a30;
 
-  --palette-dark: #5a5a3a;
-  --palette-dark-text: #faf9f3;
-  --palette-dark-muted: #b8b894;
+  --palette-dark: #4e4a30;
+  --palette-dark-text: #f8f7f2;
+  --palette-dark-muted: #b5b08c;
 
-  --palette-primary: #8a8a5a;
-  --palette-primary-hover: #73735a;
-  --palette-primary-text: #000000;
+  --palette-primary: #7d7950;
+  --palette-primary-hover: #696541;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #c9c9a8;
-  --palette-head-bg: #dcdcc4;
-  --palette-heading: #5a5a3a;
-  --palette-label: #5a5a3a;
-  --palette-focus: #8a8a5a;
+  --palette-border: #d4d0b8;
+  --palette-head-bg: #eae7d7;
+  --palette-heading: #4e4a30;
+  --palette-label: #4e4a30;
+  --palette-focus: #7d7950;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -252,24 +245,24 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown4 (conditions & handling — slate) ---- */
+/* ---- Unknown4 (conditions & handling — industrial steel) ---- */
 :root[data-palette="unknown4"] {
-  --palette-paper: #f5f6f7;
-  --palette-ink: #3a454d;
+  --palette-paper: #f4f6f8;
+  --palette-ink: #2c363f;
 
-  --palette-dark: #3a454d;
-  --palette-dark-text: #f5f6f7;
-  --palette-dark-muted: #8da4b0;
+  --palette-dark: #2c363f;
+  --palette-dark-text: #f4f6f8;
+  --palette-dark-muted: #96a6b3;
 
-  --palette-primary: #526b7a;
-  --palette-primary-hover: #455a67;
-  --palette-primary-text: #000000
+  --palette-primary: #4a6070;
+  --palette-primary-hover: #3d515f;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #b3c5d1;
-  --palette-head-bg: #d4dce3;
-  --palette-heading: #3a454d;
-  --palette-label: #3a454d;
-  --palette-focus: #526b7a;
+  --palette-border: #bcc9d4;
+  --palette-head-bg: #d7e0e6;
+  --palette-heading: #2c363f;
+  --palette-label: #2c363f;
+  --palette-focus: #4a6070;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -277,24 +270,24 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown5 (cross-contamination control — burgundy) ---- */
+/* ---- Unknown5 (cross-contamination control — soft wine/burgundy) ---- */
 :root[data-palette="unknown5"] {
-  --palette-paper: #faf7f9;
-  --palette-ink: #6a2a52;
+  --palette-paper: #faf5f8;
+  --palette-ink: #5e2848;
 
-  --palette-dark: #6a2a52;
-  --palette-dark-text: #faf7f9;
-  --palette-dark-muted: #c995b8;
+  --palette-dark: #5e2848;
+  --palette-dark-text: #faf5f8;
+  --palette-dark-muted: #d19bb8;
 
-  --palette-primary: #a83a6f;
-  --palette-primary-hover: #8f2959;
-  --palette-primary-text: #000000
+  --palette-primary: #8f325c;
+  --palette-primary-hover: #7a284c;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #d9b3d4;
-  --palette-head-bg: #e8cce3;
-  --palette-heading: #6a2a52;
-  --palette-label: #6a2a52;
-  --palette-focus: #a83a6f;
+  --palette-border: #e0b8cc;
+  --palette-head-bg: #f0dbe5;
+  --palette-heading: #5e2848;
+  --palette-label: #5e2848;
+  --palette-focus: #8f325c;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -302,24 +295,24 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown6 (expiration & dating — golden) ---- */
+/* ---- Unknown6 (expiration & dating — muted amber) ---- */
 :root[data-palette="unknown6"] {
-  --palette-paper: #fffef8;
-  --palette-ink: #7a5a1a;
+  --palette-paper: #fcfaf3;
+  --palette-ink: #664d14;
 
-  --palette-dark: #7a5a1a;
-  --palette-dark-text: #fffef8;
-  --palette-dark-muted: #d9c176;
+  --palette-dark: #664d14;
+  --palette-dark-text: #fcfaf3;
+  --palette-dark-muted: #d9bd7b;
 
-  --palette-primary: #ca8d20;
-  --palette-primary-hover: #b87a18;
-  --palette-primary-text: #000000;
+  --palette-primary: #b87d18;
+  --palette-primary-hover: #9e6912;
+  --palette-primary-text: #ffffff;
 
-  --palette-border: #e3c999;
-  --palette-head-bg: #f0ddb3;
-  --palette-heading: #7a5a1a;
-  --palette-label: #7a5a1a;
-  --palette-focus: #ca8d20;
+  --palette-border: #e3cca0;
+  --palette-head-bg: #f0e2be;
+  --palette-heading: #664d14;
+  --palette-label: #664d14;
+  --palette-focus: #b87d18;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;
@@ -332,11 +325,11 @@
 
    Every record header is the same three-part line:
 
-     <div class="doc-line">
-       <span class="doc-code">REC 7.4.2</span>
-       <h1>Dry Monitoring</h1>
-       <span class="doc-rev">Rev 3 · Rev date 2026-01-14</span>
-     </div>
+      <div class="doc-line">
+        <span class="doc-code">REC 7.4.2</span>
+        <h1>Dry Monitoring</h1>
+        <span class="doc-rev">Rev 3 · Rev date 2026-01-14</span>
+      </div>
 
    Sized once here so the engines and the bespoke pages cannot drift apart.
    Do not re-declare these sizes in a page or in an engine's STYLE block.
