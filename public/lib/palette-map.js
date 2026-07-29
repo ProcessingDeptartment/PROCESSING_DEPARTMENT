@@ -42,7 +42,7 @@
     ],
 
     /*Cleaning records*/
-    cleaning: [
+    'cleaning/hygiene': [
       'REC-7.6.8-allergen-cleaning-verification.html',
       'REC-7.6.1-daily-cleaning-inspection.html',
       'REC-7.6.1.1-deep-cleaning-record-weekly.html',
@@ -61,7 +61,7 @@
       'REC-8.1.4-withdrawal-mock-recall-record.html',
     ],
     /*General Quality records */
-    quality_general: [
+    'quality_general': [
       'REC-7.1.1-basket-removal-shucking-gutting.html',
       'REC-7.1.3-salting-and-tumbling.html',
       'REC-7.1.3.1-bleeding-and-salting.html',

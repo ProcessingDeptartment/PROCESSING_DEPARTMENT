@@ -59,6 +59,7 @@
   table.meas td.row-label{ text-align:left; font-size:11.5px; font-weight:600; color:#33404a; background:#fcfcfb; white-space:nowrap; }
   table.meas td.row-label span.spec{ display:block; font-weight:400; color:#8a939b; font-family:var(--mono); font-size:10px; }
   table.meas input{ text-align:center; padding:3px 2px; }
+  td.oor{ background:var(--fail-bg); color:var(--fail); font-weight:700; }
   td.oor input{ background:var(--fail-bg); border-color:var(--fail); color:var(--fail); font-weight:700; }
   td.warn-cell input{ background:var(--warn-bg); border-color:var(--warn); }
   .calc-row td{ background:#f2f6f4; font-family:var(--mono); font-weight:700; }
@@ -115,6 +116,11 @@
     table.meas{ font-size:9.5px; }
     #printOnlyStages .can-block{ margin-bottom:8px; page-break-inside:avoid; break-inside:avoid; }
     #printOnlyStages table.meas td.row-label span.spec{ display:none; }
+    .grid-3{ grid-template-columns:repeat(3,1fr) !important; }
+    .print-cans-row{ display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:start; }
+    .print-cans-row table.meas{ font-size:8px; }
+    .print-cans-row table.meas td.row-label{ white-space:normal; }
+    .print-cans-row table.meas th, .print-cans-row table.meas td{ padding:1px 2px; }
     .footer-grid{ grid-template-columns:1fr 1fr !important; gap:6px; }
     #printPage1Extra label.field span{ display:block; font-size:12px; font-weight:400; color:#1b2330; margin-top:2px; }
     #printSpecSummary table.meas td.row-label{ white-space:normal; width:auto; }
@@ -165,9 +171,8 @@
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h2>Header</h2></div>
       <div class="panel-body">
-        <div class="grid grid-4" style="margin-bottom:10px;">
+        <div class="grid grid-3" style="margin-bottom:10px;">
           <label class="field">AG Code<input id="h_agCode"></label>
           <label class="field">Date<input id="h_reportDate" type="date"></label>
           <label class="field">Can size<input id="h_canSize"></label>
@@ -177,7 +182,7 @@
           <label class="field">Fujian batch code (cans)<input id="h_batchCans"></label>
           <label class="field">Fujian batch code (can ends)<input id="h_batchEnds"></label>
         </div>
-        <div class="grid grid-4">
+        <div class="grid grid-3">
           <label class="field">Micrometer serial number<input id="h_microSerial"></label>
           <label class="field">Micrometer verified (±0.02mm)
             <select id="h_microVerified"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
@@ -633,12 +638,10 @@
     const actualFail = actualOverlap!==null && checkMin(actualOverlap, spec.actualOverlapMin)==='fail';
 
     let html = `<div class="can-block">
-      <h3>${canKey==='can1'?'Can 1':'Can 2'}
-        <span class="badge ${overlapFail||actualFail?'badge-fail':'badge-ok'}">${overlapFail||actualFail?'Check overlap':'Overlap OK'}</span>
-      </h3>
+      <h3>${canKey==='can1'?'Can 1':'Can 2'}</h3>
       <div class="vac-row">
         <label>Vacuum KPa (${spec.vacuum ? spec.vacuum.label : ''})</label>
-        <input type="number" step="0.1" data-path="${stageKey}.${canKey}.vacuum" value="${can.vacuum}">
+        <input type="number" step="0.1" data-path="stages.${stageKey}.${canKey}.vacuum" value="${can.vacuum}">
       </div>
       <table class="meas"><thead><tr><th style="text-align:left;">Measurement</th><th>Point 1</th><th>Point 2</th><th>Point 3</th></tr></thead><tbody>`;
 
@@ -651,7 +654,7 @@
         if(derived){
           html += `<td class="${cls==='oor'?'oor':''}" style="font-family:var(--mono);font-weight:600;background:#f7f9f8;">${val===''?'—':val}</td>`;
         } else {
-          html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
+          html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="stages.${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
         }
       }
       html += `</tr>`;
@@ -905,9 +908,11 @@
 
   function generatePdf(){
     $('printPage1Extra').innerHTML = buildSpecSummaryHtml() + buildCommentsSignoffHtml();
-    const parts = STAGES.map(s=>
-      `<div class="panel print-page-break"><div class="panel-head"><h2>${s.label} — 2 cans × 3 points each</h2></div><div class="panel-body">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div>`
-    );
+    const parts = STAGES.map((s,i)=>{
+      const heading = s.key==='before' ? `${s.label} — Start-up cans` : s.label;
+      const breakCls = i < STAGES.length-1 ? ' print-page-break' : '';
+      return `<div class="panel${breakCls}"><div class="panel-head"><h2>${heading} — 2 cans × 3 points each</h2></div><div class="panel-body"><div class="print-cans-row">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div></div>`;
+    });
     $('printOnlyStages').innerHTML = parts.join('');
     document.title = `REC_7.2.12_Double_Seam_${safeKey(state.header.batchCans||'record')}_${state.header.reportDate||''}`;
     window.print();

@@ -74,7 +74,7 @@
 }
 
 /* ---- Cleaning records, REC 7.6.x (muted light blue) ---- */
-:root[data-palette="cleaning"] {
+:root[data-palette="cleaning/hygiene"] {
   --palette-paper: #f4f7f9;
   --palette-ink: #2b3d4f;
 
