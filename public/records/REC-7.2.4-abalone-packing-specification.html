@@ -82,7 +82,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">
-        <textarea id="h_comments" rows="2" placeholder="Commentsâ€¦" style="font-size:11px;"></textarea>
+        <textarea id="h_comments" rows="2" placeholder="Comments…" style="font-size:11px;"></textarea>
       </div>
     </div>
 
@@ -169,7 +169,7 @@
   function updateRecordStatus(){
     const dateStr = state.effectiveDate ? state.effectiveDate : 'No date';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${dateStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

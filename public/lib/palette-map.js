@@ -19,7 +19,7 @@
 (function () {
   var PALETTES = {
 
-    /* ---- Sauce records,(warm brown) ---- */
+    /*Sauce records*/
     sauce: [
       'REC-7.3.1-broth-cooking.html',
       'REC-7.3.2-ingredient-weighing.html',
@@ -29,7 +29,7 @@
       'REC-7.3.6-brine-mixing-report.html',
     ],
 
-    /* ---- Dry records, (muted sage green) ---- */
+    /*Dry records*/
     dry: [
       'REC-7.4.0-dry-cooking.html',
       'REC-7.4.1-drying-process.html',
@@ -41,7 +41,7 @@
       'REC-7.4.10-dried-abalone-transfer.html',
     ],
 
-    /* ---- Cleaning records, REC 7.6.x (muted teal) ---- */
+    /*Cleaning records*/
     cleaning: [
       'REC-7.6.8-allergen-cleaning-verification.html',
       'REC-7.6.1-daily-cleaning-inspection.html',
@@ -50,7 +50,7 @@
       'REC-7.6.2-weekly-cleaning-record.html',
     ],
 
-    /* ---- Traceability records, REC 8.1.x (muted mauve) ---- */
+    /*Traceability records */
     traceability: [
       'REC-8.1.3-disposition-investigation-record.html',
       'REC-8.1.5-traceability.html',
@@ -60,8 +60,8 @@
       'REC-8.1.8-traceability-mock-recall-live-abalone.html',
       'REC-8.1.4-withdrawal-mock-recall-record.html',
     ],
-    /* ---- Quality records, REC 8.2.x (warm burnt orange) ---- */
-    quality: [
+    /*General Quality records */
+    quality_general: [
       'REC-7.1.1-basket-removal-shucking-gutting.html',
       'REC-7.1.3-salting-and-tumbling.html',
       'REC-7.1.3.1-bleeding-and-salting.html',

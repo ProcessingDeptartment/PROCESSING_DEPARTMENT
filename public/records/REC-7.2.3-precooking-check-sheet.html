@@ -91,7 +91,7 @@
           <label class="field">Sugar used per cook (kg)<input id="h_sugarKgUsed" type="number" step="0.01"></label>
           <label class="field">Sugar batch code<input id="h_sugarBatchCode" placeholder="Code"></label>
           <label class="field">Precooking start time<input id="h_precookingStartTime" placeholder="HH:MM"></label>
-          <label class="field">Temperature (Â°C)<input id="h_temperature" type="number" step="0.1"></label>
+          <label class="field">Temperature (°C)<input id="h_temperature" type="number" step="0.1"></label>
         </div>
       </div>
     </div>
@@ -100,10 +100,10 @@
       <div class="panel-head"><h2>Water &amp; Abalone Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-4" style="margin-bottom:8px;">
-          <label class="field">Water in pot changed?<select id="h_waterInPotChanged"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Rinse water changed?<select id="h_rinseWaterChanged"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Abalone per cook â€” clean weight (kg)<input id="h_cleanWeight" type="number" step="0.01"></label>
-          <label class="field">Abalone per cook â€” precook weight (kg)<input id="h_precookWeight" type="number" step="0.01"></label>
+          <label class="field">Water in pot changed?<select id="h_waterInPotChanged"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Rinse water changed?<select id="h_rinseWaterChanged"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Abalone per cook — clean weight (kg)<input id="h_cleanWeight" type="number" step="0.01"></label>
+          <label class="field">Abalone per cook — precook weight (kg)<input id="h_precookWeight" type="number" step="0.01"></label>
         </div>
       </div>
     </div>
@@ -223,7 +223,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNumber ? state.jobNumber : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

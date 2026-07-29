@@ -88,8 +88,8 @@
       <div class="panel-head"><h2>Pre-Labelling Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
-          <label class="field">Boxes full?<select id="h_boxesFull"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Cans checked before labelling?<select id="h_cansCheckedBeforeLabelling"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Boxes full?<select id="h_boxesFull"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Cans checked before labelling?<select id="h_cansCheckedBeforeLabelling"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -98,12 +98,12 @@
       <div class="panel-head"><h2>Labelling Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
-          <label class="field">Cans checked after labelling?<select id="h_cansCheckedAfterLabelling"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Correct label used?<select id="h_correctLabelUsed"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Cans checked after labelling?<select id="h_cansCheckedAfterLabelling"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Correct label used?<select id="h_correctLabelUsed"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Labelling requirement correct?<select id="h_labellingRequirementCorrect"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Carton labels correspond?<select id="h_cartonLabelsCorrespond"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Labelling requirement correct?<select id="h_labellingRequirementCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Carton labels correspond?<select id="h_cartonLabelsCorrespond"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -207,7 +207,7 @@
   function updateRecordStatus(){
     const dateStr = state.date ? state.date : 'No date';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${dateStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

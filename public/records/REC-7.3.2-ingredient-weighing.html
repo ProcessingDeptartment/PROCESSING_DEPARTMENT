@@ -75,28 +75,28 @@
           <label class="field">Date<input id="h_date" type="date"></label>
         </div>
         <div class="grid grid-4" style="margin-bottom:8px;">
-          <label class="field">Chicken flavour â€” weight (g)<input id="h_chickenFlavourWeight" type="number"></label>
-          <label class="field">Chicken flavour â€” batch code<input id="h_chickenFlavourBatchCode" placeholder="Code"></label>
-          <label class="field">Vegetable base â€” weight (g)<input id="h_vegetableBaseWeight" type="number"></label>
-          <label class="field">Vegetable base â€” batch code<input id="h_vegetableBaseBatchCode" placeholder="Code"></label>
+          <label class="field">Chicken flavour — weight (g)<input id="h_chickenFlavourWeight" type="number"></label>
+          <label class="field">Chicken flavour — batch code<input id="h_chickenFlavourBatchCode" placeholder="Code"></label>
+          <label class="field">Vegetable base — weight (g)<input id="h_vegetableBaseWeight" type="number"></label>
+          <label class="field">Vegetable base — batch code<input id="h_vegetableBaseBatchCode" placeholder="Code"></label>
         </div>
         <div class="grid grid-4" style="margin-bottom:8px;">
-          <label class="field">Gelatine â€” weight (g)<input id="h_gelatineWeight" type="number"></label>
-          <label class="field">Gelatine â€” batch code<input id="h_gelatineBatchCode" placeholder="Code"></label>
-          <label class="field">Xanthan gum â€” weight (g)<input id="h_xanthanGumWeight" type="number"></label>
-          <label class="field">Xanthan gum â€” batch code<input id="h_xanthanGumBatchCode" placeholder="Code"></label>
+          <label class="field">Gelatine — weight (g)<input id="h_gelatineWeight" type="number"></label>
+          <label class="field">Gelatine — batch code<input id="h_gelatineBatchCode" placeholder="Code"></label>
+          <label class="field">Xanthan gum — weight (g)<input id="h_xanthanGumWeight" type="number"></label>
+          <label class="field">Xanthan gum — batch code<input id="h_xanthanGumBatchCode" placeholder="Code"></label>
         </div>
         <div class="grid grid-4" style="margin-bottom:8px;">
-          <label class="field">Malt sugar â€” weight (g)<input id="h_maltSugarWeight" type="number"></label>
-          <label class="field">Malt sugar â€” batch code<input id="h_maltSugarBatchCode" placeholder="Code"></label>
-          <label class="field">Tapioca starch â€” weight (g)<input id="h_tapiocaStarchWeight" type="number"></label>
-          <label class="field">Tapioca starch â€” batch code<input id="h_tapiocaStarchBatchCode" placeholder="Code"></label>
+          <label class="field">Malt sugar — weight (g)<input id="h_maltSugarWeight" type="number"></label>
+          <label class="field">Malt sugar — batch code<input id="h_maltSugarBatchCode" placeholder="Code"></label>
+          <label class="field">Tapioca starch — weight (g)<input id="h_tapiocaStarchWeight" type="number"></label>
+          <label class="field">Tapioca starch — batch code<input id="h_tapiocaStarchBatchCode" placeholder="Code"></label>
         </div>
         <div class="grid grid-4">
-          <label class="field">Brown sugar â€” weight (g)<input id="h_brownSugarWeight" type="number"></label>
-          <label class="field">Brown sugar â€” batch code<input id="h_brownSugarBatchCode" placeholder="Code"></label>
-          <label class="field">Sherlone sauce â€” weight (g)<input id="h_sherloneSauceWeight" type="number"></label>
-          <label class="field">Sherlone sauce â€” batch code<input id="h_sherloneSauceBatchCode" placeholder="Code"></label>
+          <label class="field">Brown sugar — weight (g)<input id="h_brownSugarWeight" type="number"></label>
+          <label class="field">Brown sugar — batch code<input id="h_brownSugarBatchCode" placeholder="Code"></label>
+          <label class="field">Sherlone sauce — weight (g)<input id="h_sherloneSauceWeight" type="number"></label>
+          <label class="field">Sherlone sauce — batch code<input id="h_sherloneSauceBatchCode" placeholder="Code"></label>
         </div>
       </div>
     </div>
@@ -200,7 +200,7 @@
   function updateRecordStatus(){
     const dateStr = state.date ? state.date : 'No date';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${dateStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

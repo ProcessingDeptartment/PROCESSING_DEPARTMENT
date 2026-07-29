@@ -1,26 +1,4 @@
-/* ========================================================================
-   ABAGOLD RECORD THEME
 
-   The single theme file for all online records. Two sections:
-
-     1. COLOUR PALETTES  — the --palette-* tokens. The shared engines
-        (form-record.js, monitoring-log.js) and the bespoke record pages
-        all read these, so a record is themed purely by setting
-        data-palette on <html>:
-
-          <html lang="en" data-palette="dry">
-
-     2. HEADER TYPOGRAPHY — the one place the REC code / title / revision
-        line is sized and weighted, for every record in the system.
-
-   No per-classification override stylesheets, no !important.
-   ======================================================================== */
-
-/* ========================================================================
-   1. COLOUR PALETTES
-   ======================================================================== */
-
-/* ---- Default (slate / amber) — used when no data-palette is set ---- */
 :root {
   --palette-paper: #f4f5f3;
   --palette-ink: #1b2330;
@@ -146,7 +124,7 @@
 }
 
 /* ---- Quality records, REC 8.2.x (warm burnt orange) ---- */
-:root[data-palette="quality"] {
+:root[data-palette="quality_general"] {
   --palette-paper: #faf7f4;
   --palette-ink: #5e3728;
 
@@ -196,7 +174,7 @@
 }
 
 /* ---- Unknown2 (packaging — muted coral) ---- */
-:root[data-palette="unknown2"] {
+:root[data-palette="live"] {
   --palette-paper: #fcf6f4;
   --palette-ink: #6b3528;
 
@@ -221,7 +199,7 @@
 }
 
 /* ---- Unknown3 (raw material intake — warm straw/khaki) ---- */
-:root[data-palette="unknown3"] {
+:root[data-palette="technical/maintenance"] {
   --palette-paper: #f8f7f2;
   --palette-ink: #4e4a30;
 
@@ -246,7 +224,7 @@
 }
 
 /* ---- Unknown4 (conditions & handling — industrial steel) ---- */
-:root[data-palette="unknown4"] {
+:root[data-palette="warehouse/stock_management"] {
   --palette-paper: #f4f6f8;
   --palette-ink: #2c363f;
 

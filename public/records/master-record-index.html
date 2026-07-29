@@ -251,7 +251,7 @@
     const opts = ['', 'Y', 'N', 'N/A'];
     const cur = value == null ? '' : String(value).toUpperCase();
     const options = opts.map(o =>
-      `<option value="${o}"${o === cur ? ' selected' : ''}>${o === '' ? 'â€”' : o}</option>`
+      `<option value="${o}"${o === cur ? ' selected' : ''}>${o === '' ? '—' : o}</option>`
     ).join('');
     return `<select data-row="${esc(id)}" data-field="${field}"${canEdit ? '' : ' disabled'}>${options}</select>`;
   }
@@ -270,7 +270,7 @@
       // A bump inside the record supersedes the spreadsheet's reason and issue date.
       const details = l.bumped ? l.reason : r.details;
       const detailSub = l.bumped
-        ? `<span class="sub">Changed by ${esc(l.changedBy || '')}${l.changedByTitle ? ', ' + esc(l.changedByTitle) : ''} &middot; was: ${esc(r.details || 'â€”')}</span>`
+        ? `<span class="sub">Changed by ${esc(l.changedBy || '')}${l.changedByTitle ? ', ' + esc(l.changedByTitle) : ''} &middot; was: ${esc(r.details || '—')}</span>`
         : '';
       const issued = l.bumped ? l.dateOfIssue : r.dateOfIssue;
 
@@ -290,7 +290,7 @@
         + `<td class="c-code">${esc(r.docNo)}</td>`
         + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}</td>`
         + `<td class="c-details">${esc(details || '')}${detailSub}</td>`
-        + `<td class="c-rev">${rev == null ? 'â€”' : 'Rev ' + rev}</td>`
+        + `<td class="c-rev">${rev == null ? '—' : 'Rev ' + rev}</td>`
         + `<td class="c-yn">${ynSelect(id, 'obsoleteRetrieved', obs)}</td>`
         + `<td class="c-yn">${ynSelect(id, 'distributed', dist)}</td>`
         + `<td class="c-date">${esc(issued || '')}</td>`
@@ -369,10 +369,10 @@
 
     $('hdrCode').textContent = DATA.header.docNumber || 'REC 01';
     $('hdrRev').textContent = 'Rev ' + (DATA.header.revision || '?')
-      + ' Â· Rev date ' + (DATA.header.revisionDate || 'not set');
-    $('hdrReviewed').textContent = DATA.header.reviewedBy || 'â€”';
-    $('hdrApproved').textContent = DATA.header.approvedBy || 'â€”';
-    $('hdrRevDate').textContent = DATA.header.revisionDate || 'â€”';
+      + ' · Rev date ' + (DATA.header.revisionDate || 'not set');
+    $('hdrReviewed').textContent = DATA.header.reviewedBy || '—';
+    $('hdrApproved').textContent = DATA.header.approvedBy || '—';
+    $('hdrRevDate').textContent = DATA.header.revisionDate || '—';
     $('hdrCounts').textContent = ROWS.length + ' (' + ROWS.filter(r => r.href).length + ' online)';
 
     // Draw the paper baseline first so the register is readable even if shared storage
@@ -386,13 +386,13 @@
     try {
       await withTimeout(Promise.all([loadControl(), loadLive()]));
     } catch (e) {
-      $('saveState').textContent = 'Live revision data unavailable â€” showing the issued baseline';
+      $('saveState').textContent = 'Live revision data unavailable — showing the issued baseline';
       $('saveState').style.color = 'var(--palette-fail)';
     }
     render();
 
     if (!canEdit) {
-      $('saveState').textContent = 'Read-only â€” document control roles may edit the Y/N columns';
+      $('saveState').textContent = 'Read-only — document control roles may edit the Y/N columns';
       $('saveState').style.color = 'var(--palette-label)';
     }
   })();

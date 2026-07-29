@@ -116,7 +116,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Process Deviation</h2></div>
       <div class="panel-body">
-        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviationsâ€¦" style="font-size:11px;"></textarea>
+        <textarea id="h_processDeviation" rows="2" placeholder="Record any deviations…" style="font-size:11px;"></textarea>
       </div>
     </div>
 
@@ -224,7 +224,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNo ? state.jobNo : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

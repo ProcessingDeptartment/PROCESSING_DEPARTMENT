@@ -89,12 +89,12 @@
       <div class="panel-head"><h2>Liquids Added</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
-          <label class="field">Chicken liquid â€” weight (kg)<input id="h_chickenLiquidWeight" type="number" step="0.01"></label>
-          <label class="field">Chicken liquid â€” batch code<input id="h_chickenLiquidBatchCode" placeholder="Code"></label>
+          <label class="field">Chicken liquid — weight (kg)<input id="h_chickenLiquidWeight" type="number" step="0.01"></label>
+          <label class="field">Chicken liquid — batch code<input id="h_chickenLiquidBatchCode" placeholder="Code"></label>
         </div>
         <div class="grid grid-2" style="margin-top:8px;">
-          <label class="field">Smokey flavour â€” weight (kg)<input id="h_smokeyFlavourWeight" type="number" step="0.01"></label>
-          <label class="field">Smokey flavour â€” batch code<input id="h_smokeyFlavourBatchCode" placeholder="Code"></label>
+          <label class="field">Smokey flavour — weight (kg)<input id="h_smokeyFlavourWeight" type="number" step="0.01"></label>
+          <label class="field">Smokey flavour — batch code<input id="h_smokeyFlavourBatchCode" placeholder="Code"></label>
         </div>
       </div>
     </div>
@@ -103,17 +103,17 @@
       <div class="panel-head"><h2>Batch Codes</h2></div>
       <div class="panel-body">
         <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">CVG mix â€” batch code<input id="h_cvgMixBatchCode" placeholder="Code"></label>
-          <label class="field">XG-1 â€” batch code<input id="h_xg1BatchCode" placeholder="Code"></label>
-          <label class="field">XG-2 â€” batch code<input id="h_xg2BatchCode" placeholder="Code"></label>
+          <label class="field">CVG mix — batch code<input id="h_cvgMixBatchCode" placeholder="Code"></label>
+          <label class="field">XG-1 — batch code<input id="h_xg1BatchCode" placeholder="Code"></label>
+          <label class="field">XG-2 — batch code<input id="h_xg2BatchCode" placeholder="Code"></label>
         </div>
         <div class="grid grid-3">
-          <label class="field">XG-3 â€” batch code<input id="h_xg3BatchCode" placeholder="Code"></label>
-          <label class="field">MD mix â€” batch code<input id="h_mdMixBatchCode" placeholder="Code"></label>
-          <label class="field">TS mix â€” batch code<input id="h_tsMixBatchCode" placeholder="Code"></label>
+          <label class="field">XG-3 — batch code<input id="h_xg3BatchCode" placeholder="Code"></label>
+          <label class="field">MD mix — batch code<input id="h_mdMixBatchCode" placeholder="Code"></label>
+          <label class="field">TS mix — batch code<input id="h_tsMixBatchCode" placeholder="Code"></label>
         </div>
         <div class="grid grid-1" style="margin-top:8px;">
-          <label class="field">SO mix â€” batch code<input id="h_soMixBatchCode" placeholder="Code"></label>
+          <label class="field">SO mix — batch code<input id="h_soMixBatchCode" placeholder="Code"></label>
         </div>
       </div>
     </div>
@@ -213,7 +213,7 @@
   function updateRecordStatus(){
     const potStr = state.potNo ? `Pot ${state.potNo}` : 'No pot';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${potStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${potStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

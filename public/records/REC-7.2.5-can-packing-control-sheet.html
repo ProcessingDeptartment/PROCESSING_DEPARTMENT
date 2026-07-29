@@ -72,7 +72,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Deviations</h2></div>
       <div class="panel-body">
-        <textarea id="h_processDeviation" rows="2" placeholder="Deviationsâ€¦" style="font-size:11px;"></textarea>
+        <textarea id="h_processDeviation" rows="2" placeholder="Deviations…" style="font-size:11px;"></textarea>
       </div>
     </div>
     <div class="panel">
@@ -113,7 +113,7 @@
   async function storeSet(key,value,shared){try{await window.storage.set(key,value,shared);return true;}catch(e){return false;}}
   function renderForm(){$('h_date').value=state.date;$('h_time').value=state.time;$('h_trackingOrJobNo').value=state.trackingOrJobNo;$('h_sizeRange').value=state.sizeRange;$('h_qualityOfAbalone').value=state.qualityOfAbalone;$('h_piecesSizes').value=state.piecesSizes;$('h_ingoWeightSpec').value=state.ingoWeightSpec;$('h_actualIngoWeight').value=state.actualIngoWeight;$('h_processDeviation').value=state.processDeviation;$('f_packer').value=state.packer;$('f_qcOnline').value=state.qcOnline;$('f_packerDate').value=state.packerDate;}
   function bindInputs(){const fields=['date','time','trackingOrJobNo','sizeRange','qualityOfAbalone','piecesSizes','ingoWeightSpec','actualIngoWeight','processDeviation','packer','qcOnline','packerDate'];fields.forEach(f=>{const id=f.startsWith('packer')||f.startsWith('qcOnline')?'f_'+f:'h_'+f;const el=$(id);if(el)el.addEventListener('input',()=>{state[f]=el.value;});});}
-  function updateRecordStatus(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'No job';const submitted=state.status==='submitted';$('recordStatus').textContent=`${submitted?'âœ“ Submitted':'Draft'} Â· ${jobStr} Â· ${state.id?'ID: '+state.id.slice(-8):'Unsaved'}`;}
+  function updateRecordStatus(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'No job';const submitted=state.status==='submitted';$('recordStatus').textContent=`${submitted?'✓ Submitted':'Draft'} · ${jobStr} · ${state.id?'ID: '+state.id.slice(-8):'Unsaved'}`;}
   function renderAll(){renderForm();updateRecordStatus();$('statusLine').textContent=state.updatedAt?`Last saved ${new Date(state.updatedAt).toLocaleString()}`:'Not yet saved';}
   async function saveRecord(finalize){const now=Date.now();if(!state.id){const jobId=state.trackingOrJobNo?state.trackingOrJobNo:'NOJOB';state.id=`can_packing_${safeKey(jobId)}_${now}`;state.createdAt=now;}state.updatedAt=now;state.status=finalize?'submitted':'draft';const ok=await storeSet('record:'+state.id,JSON.stringify(state),true);if(!ok){toast('Save failed.');return;}toast(finalize?'Submitted for verification.':'Draft saved.');renderAll();}
   function generatePdf(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'record';document.title=`REC_7.2.5_CAN_PACKING_${safeKey(jobStr)}_${state.date||''}`;window.print();}

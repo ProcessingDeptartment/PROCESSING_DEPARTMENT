@@ -82,9 +82,9 @@
           <input type="number" step="0.001" id="in_bodyHook"></label>
         <label class="field"><span>Cover hook <em class="sym">CH</em></span>
           <input type="number" step="0.001" id="in_coverHook"></label>
-        <label class="field"><span>Plate thickness â€” tin end / cover <em class="sym">Te</em></span>
+        <label class="field"><span>Plate thickness — tin end / cover <em class="sym">Te</em></span>
           <input type="number" step="0.001" id="in_plateEnd" value="0.22"></label>
-        <label class="field"><span>Plate thickness â€” tin body <em class="sym">Tb</em></span>
+        <label class="field"><span>Plate thickness — tin body <em class="sym">Tb</em></span>
           <input type="number" step="0.001" id="in_plateBody" value="0.20"></label>
       </div>
       <div class="actions" style="margin-top:14px;">
@@ -99,23 +99,23 @@
       <div class="results">
         <div class="result" id="res_overlap">
           <div class="lbl">Actual overlap</div>
-          <div class="val" id="val_overlap">â€”</div>
+          <div class="val" id="val_overlap">—</div>
           <div class="lim">min 1.00 mm</div>
         </div>
         <div class="result" id="res_overlapPct">
           <div class="lbl">% Overlap</div>
-          <div class="val" id="val_overlapPct">â€”</div>
+          <div class="val" id="val_overlapPct">—</div>
           <div class="lim">min 45%</div>
         </div>
         <div class="result" id="res_bhb">
           <div class="lbl">% Body hook butting</div>
-          <div class="val" id="val_bhb">â€”</div>
+          <div class="val" id="val_bhb">—</div>
           <div class="lim">min 70%</div>
         </div>
         <div class="result" id="res_freespace">
           <div class="lbl">Free space</div>
-          <div class="val" id="val_freespace">â€”</div>
-          <div class="lim">0.03 â€“ 0.19 mm</div>
+          <div class="val" id="val_freespace">—</div>
+          <div class="lim">0.03 – 0.19 mm</div>
         </div>
       </div>
       <div class="note">This page does not read the live specification, and pass/fail here is not a record.</div>
@@ -125,10 +125,10 @@
   <div class="panel">
     <div class="panel-head"><h2>Formulas used</h2></div>
     <div class="panel-body">
-      <div class="formulas">Overlap        = BH + CH + 1.1Â·Te âˆ’ SL
-% Overlap      = Overlap Ã· (SL âˆ’ 2.2Â·Te âˆ’ 1.1Â·Tb)
-% B.H. butting = (BH âˆ’ 1.1Â·Tb) Ã· (SL âˆ’ 2.2Â·Te âˆ’ 1.1Â·Tb)
-Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
+      <div class="formulas">Overlap        = BH + CH + 1.1·Te − SL
+% Overlap      = Overlap ÷ (SL − 2.2·Te − 1.1·Tb)
+% B.H. butting = (BH − 1.1·Tb) ÷ (SL − 2.2·Te − 1.1·Tb)
+Free space     = ST − 3·Te − 2·Tb</div>
       </div>
   </div>
 
@@ -170,7 +170,7 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
   function show(key, value, fmt, isPass){
     const box = $('res_' + key), val = $('val_' + key);
     box.classList.remove('pass','fail');
-    if(value===null || !isFinite(value)){ val.textContent = 'â€”'; return; }
+    if(value===null || !isFinite(value)){ val.textContent = '—'; return; }
     val.textContent = fmt(value);
     box.classList.add(isPass(value) ? 'pass' : 'fail');
   }

@@ -90,7 +90,7 @@
           <label class="field">Sea water (L)<input id="h_blanchSeaWater" type="number" step="0.01"></label>
           <label class="field">pH<input id="h_blanchPh" type="number" step="0.01"></label>
           <label class="field">Salt (kg)<input id="h_blanchSaltKg" type="number" step="0.01"></label>
-          <label class="field">Temperature (Â°C)<input id="h_blanchTemp" type="number" step="0.1"></label>
+          <label class="field">Temperature (°C)<input id="h_blanchTemp" type="number" step="0.1"></label>
           <label class="field">Cooking time<input id="h_cookingTime" placeholder="e.g. 2h 30m"></label>
           <label class="field">Batch number<input id="h_blanchBatchNumber" placeholder="Batch"></label>
         </div>
@@ -102,9 +102,9 @@
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:10px;">
           <label class="field">Start time<input id="h_startTime" placeholder="HH:MM"></label>
-          <label class="field">Starting temp (Â°C)<input id="h_startingTemp" type="number" step="0.1"></label>
-          <label class="field">20 min after reach (Â°C)<input id="h_temp20MinAfter" type="number" step="0.1"></label>
-          <label class="field">End of cycle (Â°C)<input id="h_endOfCookingTemp" type="number" step="0.1"></label>
+          <label class="field">Starting temp (°C)<input id="h_startingTemp" type="number" step="0.1"></label>
+          <label class="field">20 min after reach (°C)<input id="h_temp20MinAfter" type="number" step="0.1"></label>
+          <label class="field">End of cycle (°C)<input id="h_endOfCookingTemp" type="number" step="0.1"></label>
           <label class="field">Time out<input id="h_timeOut" placeholder="HH:MM"></label>
           <label class="field">Total cooking time<input id="h_totalCookingTime" placeholder="e.g. 3h 15m"></label>
         </div>
@@ -136,7 +136,7 @@
     <div class="panel no-print">
       <div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">
-        <textarea id="commentsBox" rows="2" placeholder="Notes, deviationsâ€¦" style="font-size:11px;"></textarea>
+        <textarea id="commentsBox" rows="2" placeholder="Notes, deviations…" style="font-size:11px;"></textarea>
       </div>
     </div>
 
@@ -256,7 +256,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNumber ? `${state.jobNumber}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

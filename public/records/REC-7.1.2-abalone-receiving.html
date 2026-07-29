@@ -75,7 +75,7 @@
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Receiving date<input id="h_receivingDate" type="date"></label>
           <label class="field">Abalone received from<input id="h_receivedFrom" placeholder="From"></label>
-          <label class="field">To be processed for<select id="h_toBeProcessedFor"><option value="">â€”</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
+          <label class="field">To be processed for<select id="h_toBeProcessedFor"><option value="">—</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
           <label class="field">Size range<input id="h_sizeRange" placeholder="Range"></label>
         </div>
       </div>
@@ -183,7 +183,7 @@
   function updateRecordStatus(){
     const basketStr = state.basketNr ? `Basket ${state.basketNr}` : 'No basket';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${basketStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${basketStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

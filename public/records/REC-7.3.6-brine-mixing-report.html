@@ -105,7 +105,7 @@
         <div class="grid grid-3">
           <label class="field">Salt (g)<input id="h_saltG" type="number"></label>
           <label class="field">Salt batch no.<input id="h_saltBatchNo" placeholder="Batch no."></label>
-          <label class="field">Salt @25Â°C (%)<input id="h_saltPercent" type="number" step="0.1"></label>
+          <label class="field">Salt @25°C (%)<input id="h_saltPercent" type="number" step="0.1"></label>
         </div>
       </div>
     </div>
@@ -116,7 +116,7 @@
         <div class="grid grid-3">
           <label class="field">Sugar (g)<input id="h_sugarG" type="number"></label>
           <label class="field">Sugar batch no.<input id="h_sugarBatchNo" placeholder="Batch no."></label>
-          <label class="field">Sugar @25Â°C (%)<input id="h_sugarPercent" type="number" step="0.1"></label>
+          <label class="field">Sugar @25°C (%)<input id="h_sugarPercent" type="number" step="0.1"></label>
         </div>
       </div>
     </div>
@@ -229,7 +229,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNumber ? `Job ${state.jobNumber}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

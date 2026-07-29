@@ -26,24 +26,24 @@
     title: 'Grading Room Temp & Humidity Log',
     docRevisionStart: 1,
     instructions: [
-      { label: 'Check', text: 'Check temperature & relative humidity on the dial inside the grading room. Temperature should be 25â€“32Â°C; any deviation must be reported.' }
+      { label: 'Check', text: 'Check temperature & relative humidity on the dial inside the grading room. Temperature should be 25–32°C; any deviation must be reported.' }
     ],
     entryFields: [
       { key: 'week', label: 'Week', type: 'text' },
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'room', label: 'Room', type: 'text', default: 'Grading Room' },
-      { key: 'startShiftTemp', label: 'Start shift â€” temp', type: 'number', unit: 'Â°C', specKey: 'roomTemp' },
-      { key: 'startShiftHumidity', label: 'Start shift â€” humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'duringProdTemp', label: 'During production â€” temp', type: 'number', unit: 'Â°C', specKey: 'roomTemp' },
-      { key: 'duringProdHumidity', label: 'During production â€” humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'endShiftTemp', label: 'End shift â€” temp', type: 'number', unit: 'Â°C', specKey: 'roomTemp' },
-      { key: 'endShiftHumidity', label: 'End shift â€” humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
+      { key: 'startShiftTemp', label: 'Start shift — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
+      { key: 'startShiftHumidity', label: 'Start shift — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
+      { key: 'duringProdTemp', label: 'During production — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
+      { key: 'duringProdHumidity', label: 'During production — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
+      { key: 'endShiftTemp', label: 'End shift — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
+      { key: 'endShiftHumidity', label: 'End shift — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
       { key: 'correctiveAction', label: 'Corrective action', type: 'textarea' }
     ],
     specFields: [
-      { key: 'roomTemp', label: 'Room temperature', unit: 'Â°C', min: 25, max: 32 },
+      { key: 'roomTemp', label: 'Room temperature', unit: '°C', min: 25, max: 32 },
       { key: 'roomHumidity', label: 'Relative humidity', unit: '% rH', min: null, max: null }
     ],
     deviationLabel: 'Deviation',

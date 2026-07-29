@@ -79,7 +79,7 @@
           <label class="field">Date<input id="h_date" type="date"></label>
           <label class="field">Production date<input id="h_productionDate" type="date"></label>
           <label class="field">Time<input id="h_time" type="time"></label>
-          <label class="field">Code correct?<select id="h_codeCorrect"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Code correct?<select id="h_codeCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -88,7 +88,7 @@
       <div class="panel-head"><h2>Verification</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
-          <label class="field">Can position<select id="h_canPosition"><option value="">â€”</option><option value="First can">First can</option><option value="Last can">Last can</option></select></label>
+          <label class="field">Can position<select id="h_canPosition"><option value="">—</option><option value="First can">First can</option><option value="Last can">Last can</option></select></label>
           <label class="field">Actual can pieces<input id="h_actualCanPieces" type="number"></label>
           <label class="field">Pieces on can<input id="h_piecesOnCan" type="number"></label>
         </div>
@@ -187,7 +187,7 @@
   function updateRecordStatus(){
     const dateStr = state.date ? state.date : 'No date';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${dateStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

@@ -95,12 +95,12 @@
         </div>
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Can size<input id="h_canSize" placeholder="Size"></label>
-          <label class="field">Retort door rubber sprayed?<select id="h_retortDoorRubberSprayed"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Pre-heat cycle done?<select id="h_preHeatCycleDone"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Air filter OK?<select id="h_airFilterOk"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Retort door rubber sprayed?<select id="h_retortDoorRubberSprayed"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Pre-heat cycle done?<select id="h_preHeatCycleDone"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Air filter OK?<select id="h_airFilterOk"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Stacking pattern correct?<select id="h_stackingPatternCorrect"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Stacking pattern correct?<select id="h_stackingPatternCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -110,11 +110,11 @@
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
           <label class="field">Recipe used<input id="h_recipeUsed" placeholder="Recipe"></label>
-          <label class="field">Autoclave tape on trolley?<select id="h_autoclaveTapeOnTrolley"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Autoclave tape on trolley?<select id="h_autoclaveTapeOnTrolley"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
         <div class="grid grid-2">
-          <label class="field">Correct temperature on recipe?<select id="h_correctTempOnRecipe"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Correct pressure on recipe?<select id="h_correctPressureOnRecipe"><option value="">â€”</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Correct temperature on recipe?<select id="h_correctTempOnRecipe"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Correct pressure on recipe?<select id="h_correctPressureOnRecipe"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -225,7 +225,7 @@
   function updateRecordStatus(){
     const jobStr = state.jobNo ? `Job ${state.jobNo}` : 'No job';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${jobStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){

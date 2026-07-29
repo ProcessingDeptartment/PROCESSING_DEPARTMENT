@@ -30,18 +30,18 @@
     instructions: [
       { label: 'Verify thermometer accuracy', text: 'Verification must be done using a standard reference thermometer or master thermometer calibrated by a SANAS accredited authority.' },
       { label: 'How to establish correction factors', text: 'Place the probes in one container filled with water and allow the thermometer to read for 2 minutes, then record the findings.' },
-      { label: 'Tolerance', text: 'Readings should not exceed a difference of 0.5Â°C. If exceeded, report the thermometer and add the correction factor.' },
+      { label: 'Tolerance', text: 'Readings should not exceed a difference of 0.5°C. If exceeded, report the thermometer and add the correction factor.' },
       { label: 'Frequency', text: 'Weekly.' }
     ],
     entryFields: [
       { key: 'month', label: 'Month', type: 'month' },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'referenceThermoSerial', label: 'Reference thermometer serial/internal number', type: 'text' },
-      { key: 'referenceReading', label: 'Reference thermometer reading', type: 'number', unit: 'Â°C' },
+      { key: 'referenceReading', label: 'Reference thermometer reading', type: 'number', unit: '°C' },
       { key: 'testThermoSerial', label: 'Test thermometer serial/internal number', type: 'text' },
-      { key: 'testReading', label: 'Test thermometer reading', type: 'number', unit: 'Â°C' },
+      { key: 'testReading', label: 'Test thermometer reading', type: 'number', unit: '°C' },
       {
-        key: 'difference', label: 'Difference / correction factor', type: 'computed', unit: 'Â°C', specKey: 'diffTolerance',
+        key: 'difference', label: 'Difference / correction factor', type: 'computed', unit: '°C', specKey: 'diffTolerance',
         compute: (v) => {
           const r = num(v.referenceReading), t = num(v.testReading);
           return (r === null || t === null) ? '' : Math.round((t - r) * 100) / 100;
@@ -51,7 +51,7 @@
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'diffTolerance', label: 'Reference vs test difference', unit: 'Â°C', min: -0.5, max: 0.5 }
+      { key: 'diffTolerance', label: 'Reference vs test difference', unit: '°C', min: -0.5, max: 0.5 }
     ],
     deviationLabel: 'Within tolerance',
     deviationPolarity: 'accurate'

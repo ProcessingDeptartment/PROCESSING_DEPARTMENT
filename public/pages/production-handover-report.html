@@ -226,7 +226,7 @@ body {
 
         <!-- 2. Staffing & Attendance -->
         <div class="section-card" id="sec-2">
-            <div class="section-title"><span id="status-2" class="status-icon">âšª</span>1. Staffing & Attendance</div>
+            <div class="section-title"><span id="status-2" class="status-icon">⚪</span>1. Staffing & Attendance</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
                 <div class="flex flex-col gap-2">
                     <button type="button" class="bubble-btn" data-name="Staff absent" onclick="toggleStaffingSelection(this, 'staff-absent-fields')">Staff absent</button>
@@ -251,7 +251,7 @@ body {
 
         <!-- 1. Processes on shift -->
         <div class="section-card" id="sec-1">
-            <div class="section-title"><span id="status-1" class="status-icon">âšª</span>2. Processes on shift</div>
+            <div class="section-title"><span id="status-1" class="status-icon">⚪</span>2. Processes on shift</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
                 <div class="bubble-btn" data-name="Live sorting" onclick="cycleStatus(this, 'sec-1')">Live sorting</div>
                 <div class="bubble-btn" data-name="Live packing" onclick="cycleStatus(this, 'sec-1')">Live packing</div>
@@ -268,7 +268,7 @@ body {
 
         <!-- 3. Harvesting -->
         <div class="section-card" id="sec-3">
-            <div class="section-title"><span id="status-3" class="status-icon">âšª</span>3. Harvesting</div>
+            <div class="section-title"><span id="status-3" class="status-icon">⚪</span>3. Harvesting</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
                 <div class="bubble-btn" data-name="Can" onclick="toggleField(this, 'harvest-can', 'sec-3')">Can</div>
                 <div class="bubble-btn" data-name="Dry" onclick="toggleField(this, 'harvest-dry', 'sec-3')">Dry</div>
@@ -349,7 +349,7 @@ body {
 
         <!-- 4. Live -->
         <div class="section-card" id="sec-4">
-            <div class="section-title"><span id="status-4" class="status-icon">âšª</span>4. Live</div>
+            <div class="section-title"><span id="status-4" class="status-icon">⚪</span>4. Live</div>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
                 <div class="bubble-btn" data-name="Live sorting" onclick="toggleField(this, 'live-sorting-fields', 'sec-4')">Live sorting</div>
                 <div class="bubble-btn" data-name="Frozen sorting" onclick="toggleField(this, 'frozen-sorting-fields', 'sec-4')">Frozen sorting</div>
@@ -393,7 +393,7 @@ body {
 
         <!-- 5. Canning -->
         <div class="section-card" id="sec-5">
-            <div class="section-title"><span id="status-5" class="status-icon">âšª</span>5. Canning</div>
+            <div class="section-title"><span id="status-5" class="status-icon">⚪</span>5. Canning</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
                 <div class="bubble-btn" data-name="Cultivated abalone" onclick="toggleField(this, 'cultivated-fields', 'sec-5')">Cultivated abalone</div>
                 <div class="bubble-btn" data-name="Third party abalone" onclick="toggleField(this, 'thirdparty-fields', 'sec-5')">Third party abalone</div>
@@ -465,7 +465,7 @@ body {
 
         <!-- 6. Drying -->
         <div class="section-card" id="sec-6">
-            <div class="section-title"><span id="status-6" class="status-icon">âšª</span>6. Drying</div>
+            <div class="section-title"><span id="status-6" class="status-icon">⚪</span>6. Drying</div>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
                 <div class="bubble-btn" data-name="Dry processing" onclick="toggleField(this, 'dry-processing-fields', 'sec-6')">Dry processing</div>
                 <div class="bubble-btn" data-name="Grading" onclick="toggleField(this, 'dry-grading-fields', 'sec-6')">Grading</div>
@@ -952,7 +952,7 @@ function buildSectionSummary(sectionId, labels) {
     // For section 1 (Processes on shift) render active items inline rather than each on its own line
     if (sectionId === 'sec-1') {
         if (!activeItems.length) return '<div class="print-empty">No processes entered.</div>';
-        const content = activeItems.join(' â€¢ ');
+        const content = activeItems.join(' • ');
         return `<div class="print-summary-list"><div class="print-summary-item" style="display:inline-block; white-space:nowrap;">${content}</div></div>`;
     }
     return renderPrintList(activeItems);

@@ -26,18 +26,18 @@
     title: 'Daily Incubator Temperature Check',
     docRevisionStart: 6,
     instructions: [
-      { label: 'Target range', text: '36.1Â°C â€“ 37.8Â°C, recorded at start of shift, lunch and end of shift.' }
+      { label: 'Target range', text: '36.1°C – 37.8°C, recorded at start of shift, lunch and end of shift.' }
     ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
-      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
-      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
+      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
+      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
+      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'incubatorTemp', label: 'Incubator temperature', unit: 'Â°C', min: 36.1, max: 37.8 }
+      { key: 'incubatorTemp', label: 'Incubator temperature', unit: '°C', min: 36.1, max: 37.8 }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'

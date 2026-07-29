@@ -75,7 +75,7 @@
           <label class="field">Date<input id="h_date" type="date"></label>
           <label class="field">Pot no.<input id="h_potNo" placeholder="Pot number"></label>
           <label class="field">Water (L)<input id="h_waterLitres" type="number" step="0.1"></label>
-          <label class="field">Abalone shells â€” intake date<input id="h_abaloneShellsIntakeDate" type="date"></label>
+          <label class="field">Abalone shells — intake date<input id="h_abaloneShellsIntakeDate" type="date"></label>
         </div>
       </div>
     </div>
@@ -194,7 +194,7 @@
   function updateRecordStatus(){
     const potStr = state.potNo ? `Pot ${state.potNo}` : 'No pot';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? 'âœ“ Submitted' : 'Draft'} Â· ${potStr} Â· ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${potStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
