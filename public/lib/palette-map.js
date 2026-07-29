@@ -81,8 +81,8 @@
        and moving an existing record between palettes changes what colour
        staff associate with it. ---- */
 
-  
-  
+  };
+
   var root = document.documentElement;
 
   /* An explicit data-palette on the page wins — the escape hatch for a
