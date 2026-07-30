@@ -1723,7 +1723,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "master-cleaning-checklist",
-        "href": "Master-Cleaning-Checklist-Master-Cleaning-Checklist-master-cleaning-checklist.html",
+        "href": "Master-Cleaning-Checklist-master-cleaning-checklist.html",
         "notOnIndexList": true
     },
     {
@@ -1735,7 +1735,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "master-cleaning-plan",
-        "href": "Master-Cleaning-Plan-Master-Cleaning-Plan-master-cleaning-plan.html",
+        "href": "Master-Cleaning-Plan-master-cleaning-plan.html",
         "notOnIndexList": true
     },
     {
@@ -1771,7 +1771,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "personnel-facilities-cleaning-record",
-        "href": "REC-7.6.0c-REC-7.6.0c-personnel-facilities-cleaning-record.html",
+        "href": "REC-7.6.0c-personnel-facilities-cleaning-record.html",
         "notOnIndexList": true
     },
     {

@@ -17,6 +17,13 @@
   // off them. 'QA MANAGER'/'PRODUCTION MANAGER' with spaces used to be listed here, so
   // setCurrentRole() silently rejected those two logins and left them on the default
   // role -- every QA/Production Manager silently held Production Supervisor rights.
+  //
+  // Same class of bug, second instance (fixed 2026-07-30): ROLE_LABELS and every RULES
+  // entry keyed off 'PRODUCTION_AND_EXPORT_MANAGER' while ROLES and auth.js said
+  // 'PRODUCTION_MANAGER'. can() therefore returned false for a logged-in Production
+  // Manager on every gated action -- they could not fill, save, complete or verify
+  // anything. auth.js is the authority for these strings; if a title changes, change it
+  // there first, then grep this file for the OLD key before adding the new one.
   const ROLES = ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'OPERATOR', 'ADMINISTRATOR'];
 
   const ROLE_LABELS = {
@@ -25,7 +32,7 @@
     QUALITY_SUPERVISOR: 'Quality Supervisor',
     QUALITY_CONTROLLER: 'Quality Controller',
     QA_MANAGER: 'QA Manager',
-    PRODUCTION_AND_EXPORT_MANAGER: 'Production and export Manager',
+    PRODUCTION_MANAGER: 'Production Manager',
     OPERATOR: 'Operator',
     ADMINISTRATOR: 'Administrator'
   };
@@ -35,12 +42,12 @@
   // fill in and save but not complete/verify/change specs. Not yet confirmed against
   // real policy -- adjust freely, this is the only place that needs editing.
   const RULES = {
-    fillMeasurements: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_AND_EXPORT_MANAGER', 'OPERATOR', 'ADMINISTRATOR'],
-    saveDraft: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_AND_EXPORT_MANAGER', 'OPERATOR', 'ADMINISTRATOR'],
-    completeRecord: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_AND_EXPORT_MANAGER', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR', 'OPERATOR', 'ADMINISTRATOR'],
-    verifyRecord: ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_AND_EXPORT_MANAGER', 'SHIFT_MANAGER'],
-    acknowledgeSpecChange: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_AND_EXPORT_MANAGER'],
-    manageSpecs: ['QA_MANAGER', 'PRODUCTION_AND_EXPORT_MANAGER', 'SHIFT_MANAGER', 'ADMINISTRATOR'],
+    fillMeasurements: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'OPERATOR', 'ADMINISTRATOR'],
+    saveDraft: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'OPERATOR', 'ADMINISTRATOR'],
+    completeRecord: ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR', 'OPERATOR', 'ADMINISTRATOR'],
+    verifyRecord: ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'],
+    acknowledgeSpecChange: ['PRODUCTION_SUPERVISOR', 'SHIFT_MANAGER', 'QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER'],
+    manageSpecs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'ADMINISTRATOR'],
     // REC 01 Master Index List is a document-control record -- only the roles that own
     // document control tick off obsolete-retrieved / new-revision-distributed.
     manageMasterIndex: ['QA_MANAGER', 'QUALITY_SUPERVISOR', 'ADMINISTRATOR'],

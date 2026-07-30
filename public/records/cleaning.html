@@ -12,7 +12,8 @@
     h1 { margin-bottom: 0.5rem; font-size: clamp(1.375rem, 5vw, 2rem); }
     p { margin-top: 0; color: #475569; }
     .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; margin-top: 24px; box-shadow: 0 10px 30px rgba(15,23,42,0.05); }
-    .card h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: .04em; color: #64748b; margin: 0 0 14px; }
+    .card h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: .04em; color: #64748b; margin: 0 0 6px; }
+    .card-note { font-size: 0.8rem; color: #64748b; margin: 0 0 14px; }
     .report-list { list-style: none; padding: 0; margin: 0; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
     .report-list li { margin: 0; }
     .report-link { display: inline-block; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 999px; font-weight: 700; transition: background 0.2s ease; box-shadow: 0 2px 6px rgba(16,24,40,0.08); background: #1d2b38; }
@@ -28,11 +29,19 @@
     <p>Cleaning inspections, facility/pest inspections, staff hygiene and allergen verification (REC 7.6.x)</p>
 
     <div class="card">
-      <h2>Daily &amp; Weekly Cleaning</h2>
+      <h2>Cleaning done — recorded by the cleaner</h2>
+      <p class="card-note">One shift record across all three zones. Each document below shows its own zone.</p>
       <ul class="report-list">
         <li><a class="report-link" href="REC-7.6.0a-production-areas-cleaning-record.html" target="_blank">Production Areas Cleaning Record</a></li>
         <li><a class="report-link" href="REC-7.6.0b-live-product-areas-cleaning-record.html" target="_blank">Live Product Areas Cleaning Record</a></li>
         <li><a class="report-link" href="REC-7.6.0c-personnel-facilities-cleaning-record.html" target="_blank">Personnel Facilities Cleaning Record</a></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Cleaning inspected — recorded by QC</h2>
+      <p class="card-note">The three weekly records below share one weekly submission — fill an item on any of them and it is filled on the others.</p>
+      <ul class="report-list">
         <li><a class="report-link" href="REC-7.6.1-daily-cleaning-inspection.html" target="_blank">Daily Cleaning Inspection</a></li>
         <li><a class="report-link" href="REC-7.6.1.1-deep-cleaning-record-weekly.html" target="_blank">Deep Cleaning Record Weekly</a></li>
         <li><a class="report-link" href="REC-7.6.2-weekly-cleaning-record.html" target="_blank">Weekly Cleaning Record</a></li>
@@ -61,10 +70,12 @@
 
     <div class="card">
       <h2>Chemicals &amp; Reference Plans</h2>
+      <p class="card-note">The Master Cleaning Plan is the item master every 7.6.x record renders from. The Master Cleaning Checklist covers the feed mill, not processing.</p>
       <ul class="report-list">
+        <li><a class="report-link" href="Master-Cleaning-Plan-master-cleaning-plan.html" target="_blank">Master Cleaning Plan (item master)</a></li>
         <li><a class="report-link" href="REC-7.6.4-chemical-stock-issue-register.html" target="_blank">Chemical Stock &amp; Issue Register</a></li>
-        <li><a class="report-link" href="Master-Cleaning-Plan-master-cleaning-plan.html" target="_blank">Master Cleaning Plan</a></li>
-        <li><a class="report-link" href="Master-Cleaning-Checklist-master-cleaning-checklist.html" target="_blank">Master Cleaning Checklist (New Plant)</a></li>
+        <li><a class="report-link" href="cleaning-system-reference.html" target="_blank">Restructure reference — what changed &amp; why</a></li>
+        <li><a class="report-link" href="Master-Cleaning-Checklist-master-cleaning-checklist.html" target="_blank">Master Cleaning Checklist (Feed Mill)</a></li>
       </ul>
     </div>
 

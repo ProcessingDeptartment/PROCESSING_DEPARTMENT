@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,46 +9,39 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="frRoot"></div>
+<div id="crRoot"></div>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/form-record.js?v=2"></script>
+<script src="../lib/cleaning-master-data.js?v=1"></script>
+<script src="../lib/cleaning-register.js?v=1"></script>
 <script>
 (function () {
-  FormRecord.init({
-    mount: '#frRoot',
+  // Weekly deep clean. Family 'weekly' is SHARED with REC 7.6.2 (weekly summary) and
+  // REC 7.6.2.2 (dispatch): all three open the same dated submission and each renders its
+  // own slice. On paper the same week's retort, drains, chemical room and staff facilities
+  // were written out on two or three forms; here they are one item, answered once.
+  CleaningRegister.init({
+    mount: '#crRoot',
     recordKey: 'deep-cleaning-record-weekly',
     docCode: 'REC 7.6.1.1',
     title: 'Deep Cleaning Record Weekly',
     docRevisionStart: 1,
-    listColumns: ['date', 'shift'],
+    docRevisionDate: '2023-06-01',
+    family: 'weekly',
+    scope: 'weekly',
+    performLabel: 'inspected',
+    performAction: 'inspected',
+    viewNote: 'REC 7.6.2 and REC 7.6.2.2 open the same weekly record — items answered here are already answered there.',
     instructions: [
-      { label: 'Cleaning instruction', text: 'Perform cleaning per the master cleaning schedule. Raise a corrective action immediately on visual inspection failure at end of shift. Open a CAR for areas non-conforming more than once a week. Tick C if cleaning is done, NC if not.' }
-    ],
-    sections: [
-      { title: 'Shift details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
-      ]}
-    ],
-    roster: {
-      title: 'Checklist items — covers Entrance, Dry Cooking, Dry Entrance, Dry Storage & Passage, Shucking, Scrubbing, Washing, Canning areas, etc.',
-      columns: [
-        { key: 'area', label: 'Area', type: 'text' },
-        { key: 'item', label: 'Item / equipment', type: 'text' },
-        { key: 'status', label: 'C / NC', type: 'select', options: ['C', 'NC'] },
-        { key: 'finding', label: 'Finding', type: 'text' },
-        { key: 'correction', label: 'Correction', type: 'text' },
-        { key: 'signOff', label: 'Sign off', type: 'text' }
-      ]
-    }
+      'Deep cleaning is performed according to the Master Cleaning Plan. This record covers the weekly items only; daily items are on REC 7.6.1.',
+      'A correction is put in place immediately after failure of the visual inspection. Open a CAR (REC 8.1.1.a) for any area non-conforming more than once in a week.',
+      'Mark C if clean, NC if not, N/A if not applicable. Every NC needs a finding and a correction before the record can be verified.'
+    ]
   });
 })();
 </script>
 </body>
 </html>
-
-

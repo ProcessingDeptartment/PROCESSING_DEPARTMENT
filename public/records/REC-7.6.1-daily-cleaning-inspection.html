@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,45 +9,40 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="frRoot"></div>
+<div id="crRoot"></div>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/form-record.js?v=2"></script>
+<script src="../lib/cleaning-master-data.js?v=1"></script>
+<script src="../lib/cleaning-register.js?v=1"></script>
 <script>
 (function () {
-  FormRecord.init({
-    mount: '#frRoot',
+  // QC daily visual inspection. The paper form wrote out ~175 lines, of which ~110 were
+  // the same 12 generic checks repeated per area. Those 12 now live once in the item
+  // master and expand only for an area marked NC -- so a clean shift is ~15 taps, and a
+  // shift with a problem still captures the exact failing check, its finding and its
+  // correction. The standard-check list version is stamped onto every saved record.
+  CleaningRegister.init({
+    mount: '#crRoot',
     recordKey: 'daily-cleaning-inspection',
     docCode: 'REC 7.6.1',
     title: 'Daily Cleaning Inspection',
     docRevisionStart: 4,
-    listColumns: ['date', 'shift'],
+    docRevisionDate: '2026-06-17',
+    family: 'daily',
+    scope: 'daily',
+    performLabel: 'inspected',
+    performAction: 'inspected',
+    viewNote: 'Areas marked C need no further entry. Marking an area NC expands the 12 standard checks so the failing one can be named.',
     instructions: [
-      { label: 'Cleaning instruction', text: 'Perform cleaning per the master cleaning schedule. Food contact surfaces cleaned at start of shift, between jobs and at end of shift. Sanitise work surfaces at end of shift. Raise a corrective action immediately on visual inspection failure at end of shift. Open a CAR for areas non-conforming more than once a week. Tick C if cleaning is done, NC if not.' }
-    ],
-    sections: [
-      { title: 'Shift details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
-      ]}
-    ],
-    roster: {
-      title: 'Checklist items — covers Entrance to Shucking, Shucking, Sorting, Live Holding, Live Packing/Packaging, Dry Grading/Raw Material store, Canteen/Change rooms/Toilets/Chemical room, etc.',
-      columns: [
-        { key: 'area', label: 'Area', type: 'text' },
-        { key: 'item', label: 'Item / equipment', type: 'text' },
-        { key: 'status', label: 'C / NC', type: 'select', options: ['C', 'NC'] },
-        { key: 'nonConformance', label: 'Non-conformance', type: 'text' },
-        { key: 'correctionSignOff', label: 'Correction and sign off', type: 'text' }
-      ]
-    }
+      'Cleaning is performed according to the Master Cleaning Plan. Food contact surfaces are cleaned at the start of shift, between different jobs and at the end of shift. Work surfaces are sanitised at the end of shift.',
+      'A correction is put in place immediately after failure of the visual inspection at end of shift. Open a CAR (REC 8.1.1.a) for any area non-conforming more than once in a week and record the CAR reference against the item.',
+      'Mark C if the area or item is clean, NC if not, N/A if not applicable. Every NC needs a finding and a correction before the record can be verified.'
+    ]
   });
 })();
 </script>
 </body>
 </html>
-
-

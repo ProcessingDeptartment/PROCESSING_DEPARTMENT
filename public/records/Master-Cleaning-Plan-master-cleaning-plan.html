@@ -1,54 +1,190 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Master Cleaning Plan</title>
+<title>Master Cleaning Plan — Cleaning Item Master</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; background:var(--palette-paper,#f4f5f3); color:var(--palette-ink,#1b2330); margin:0; font-size:13px; line-height:1.45; }
+  .top{ background:var(--palette-dark,#1d2b38); color:var(--palette-dark-text,#f4f1e8); padding:14px 18px; }
+  .top h1{ margin:0; font-size:19px; }
+  .top .sub{ font-size:11.5px; opacity:.8; margin-top:3px; }
+  .body{ padding:16px 18px 60px; max-width:1400px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; margin-bottom:14px; }
+  .panel-head{ padding:9px 14px; border-bottom:1px solid var(--palette-border,#e2e4e3); background:var(--palette-head-bg,#fbfbfa); border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--palette-heading,#2f4356); }
+  .panel-body{ padding:14px; }
+  .note{ background:var(--palette-head-bg,#fbfbfa); border:1px solid var(--palette-border,#e2e4e3); border-left:3px solid var(--palette-heading,#2f4356); border-radius:4px; padding:10px 12px; font-size:11.5px; color:#54606b; margin-bottom:14px; }
+  .stats{ display:flex; gap:20px; flex-wrap:wrap; }
+  .stats span{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#54606b; }
+  .stats b{ display:block; font-size:22px; color:var(--palette-heading,#2f4356); }
+  .filters{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .filters input,.filters select{ font-family:'IBM Plex Mono',Consolas,monospace; font-size:12.5px; padding:6px 8px; border:1px solid #c9cdd1; border-radius:3px; background:#fff; }
+  .filters input{ flex:1 1 200px; }
+  table{ width:100%; border-collapse:collapse; }
+  th,td{ border:1px solid var(--palette-border,#e2e4e3); padding:5px 7px; text-align:left; font-size:11.5px; vertical-align:top; }
+  th{ background:var(--palette-head-bg,#fbfbfa); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#54606b; font-weight:700; position:sticky; top:0; }
+  .wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .area-row td{ background:#eef1f0; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:10.5px; color:var(--palette-heading,#2f4356); }
+  .tag{ display:inline-block; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; padding:1px 5px; border-radius:3px; margin-right:3px; }
+  .t-fcs{ background:#2f4356; color:#fff; }
+  .t-swab{ background:#c9832b; color:#241a0a; }
+  .t-scope{ background:#eceeed; color:#54606b; }
+  .gap{ color:#c0392b; font-weight:600; }
+  a{ color:#1d4ed8; }
+  .back{ display:inline-block; margin-top:16px; font-size:12px; }
+  @media print{ @page{size:A4 landscape; margin:10mm;} .no-print{display:none!important;} body{background:#fff;} th{position:static;} }
+</style>
 </head>
 <body>
-<div id="frRoot"></div>
+<div class="top">
+  <h1>Master Cleaning Plan</h1>
+  <div class="sub">Cleaning item master — the controlled source that every REC 7.6.x record renders from</div>
+</div>
+<div class="body">
+  <div class="note">
+    This replaces the free-text plan table. Frequency, chemical, method, responsible role and the
+    records an item appears on are stated <strong>here once</strong>; REC 7.6.0 a/b/c, REC 7.6.1,
+    REC 7.6.1.1, REC 7.6.2 and REC 7.6.2.2 all read from this array, so nothing can drift between
+    forms. Editing an item changes every record that shows it, which is why a change here needs a
+    document revision bump.
+    <a href="cleaning-system-reference.html">What changed and why →</a>
+  </div>
 
-<script src="../lib/data-store.js?v=4"></script>
-<script src="../lib/auth.js?v=1"></script>
-<script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/form-record.js?v=2"></script>
+  <div class="panel"><div class="panel-head"><h2>Coverage</h2></div>
+    <div class="panel-body"><div class="stats" id="stats"></div></div></div>
+
+  <div class="panel"><div class="panel-head"><h2>Standard checks — applied to every area</h2>
+      <span style="font-size:11px;color:#8a939b" id="scVer"></span></div>
+    <div class="panel-body">
+      <div class="note" style="margin:0 0 10px">
+        These 12 lines were written out separately in nearly every area block of the paper
+        REC 7.6.1 and REC 7.6.1.1 — roughly 110 of REC 7.6.1's 175 rows. They are declared once
+        here and expand on a record only when an area is marked NC. The version number below is
+        stamped onto every saved record so an auditor can reconstruct exactly what was checked.
+      </div>
+      <ol id="stdChecks" style="margin:0; padding-left:20px; font-size:12px"></ol>
+    </div></div>
+
+  <div class="panel"><div class="panel-head"><h2>Cleaning items</h2></div>
+    <div class="panel-body">
+      <div class="filters no-print">
+        <input type="text" id="q" placeholder="Search item, area, chemical…">
+        <select id="zone"><option value="">All zones</option></select>
+        <select id="scope">
+          <option value="">All records</option>
+          <option value="exec">REC 7.6.0 — cleaning done</option>
+          <option value="daily">REC 7.6.1 — daily inspection</option>
+          <option value="weekly">REC 7.6.1.1 — weekly deep clean</option>
+          <option value="summary">REC 7.6.2 — weekly summary</option>
+          <option value="dispatch">REC 7.6.2.2 — dispatch</option>
+        </select>
+      </div>
+      <div class="wrap"><table>
+        <thead><tr>
+          <th>Item</th><th>Frequency</th><th>Chemical</th><th>Concentration</th>
+          <th>Contact time</th><th>Method</th><th>Role</th><th>Appears on</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </div></div>
+
+  <div class="panel" id="gapPanel"><div class="panel-head"><h2>Open gaps — required for FSSC</h2></div>
+    <div class="panel-body"><div id="gaps"></div></div></div>
+
+  <a class="back no-print" href="cleaning.html">&larr; Back to Cleaning</a>
+</div>
+
+<script src="../lib/cleaning-master-data.js?v=1"></script>
 <script>
 (function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'master-cleaning-plan',
-    docCode: 'Master Cleaning Plan',
-    title: 'Master Cleaning Plan',
-    docRevisionStart: 2,
-    listColumns: ['effectiveDate', 'approvedBy'],
-    instructions: [
-      { label: 'Purpose', text: 'The reference cleaning schedule that REC 7.6.1 (Daily Cleaning Inspection), REC 7.6.1.1 (Deep Cleaning Record Weekly) and REC 7.6.2 (Weekly Cleaning Record) point to. Update this when the cleaning method, frequency or responsible party for any part/area changes.' }
-    ],
-    sections: [
-      { title: 'Plan details', fields: [
-        { key: 'effectiveDate', label: 'Effective date', type: 'date', required: true },
-        { key: 'approvedBy', label: 'Approved by', type: 'text', required: true }
-      ]}
-    ],
-    roster: {
-      title: 'Cleaning tasks',
-      columns: [
-        { key: 'partToBeCleaned', label: 'Part to be cleaned', type: 'text' },
-        { key: 'where', label: 'Where', type: 'text' },
-        { key: 'frequency', label: 'When / frequency', type: 'text' },
-        { key: 'cleaningSupplies', label: 'Cleaning supplies', type: 'text' },
-        { key: 'how', label: 'How', type: 'textarea' },
-        { key: 'who', label: 'Who', type: 'text' }
-      ]
-    }
+  var M = window.CleaningMaster;
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var SCOPE_DOC = { exec:'7.6.0', daily:'7.6.1', weekly:'7.6.1.1', summary:'7.6.2', dispatch:'7.6.2.2' };
+
+  var c = M.counts();
+  var fcsCount = 0;
+  M.AREAS.forEach(function (ar) { ar.items.forEach(function (it) { if (it.fcs) fcsCount += 1; }); });
+  document.getElementById('stats').innerHTML =
+    '<span>Areas<b>' + c.areas + '</b></span>' +
+    '<span>Items<b>' + c.items + '</b></span>' +
+    '<span>Standard checks<b>' + c.standardChecks + '</b></span>' +
+    '<span>Food contact items<b>' + fcsCount + '</b></span>' +
+    '<span>Swab-verified<b>' + M.swabItems().length + '</b></span>' +
+    '<span>Source documents<b>' + M.meta.sourceDocs.length + '</b></span>';
+
+  document.getElementById('scVer').textContent = 'Standard check list v' + M.STANDARD_CHECKS_VERSION;
+  document.getElementById('stdChecks').innerHTML =
+    M.STANDARD_CHECKS.map(function (x) { return '<li>' + esc(x.label) + '</li>'; }).join('');
+
+  var zoneSel = document.getElementById('zone');
+  M.ZONES.forEach(function (z) {
+    var o = document.createElement('option'); o.value = z.id; o.textContent = z.label; zoneSel.appendChild(o);
   });
+
+  function render() {
+    var q = document.getElementById('q').value.trim().toLowerCase();
+    var zone = zoneSel.value;
+    var scope = document.getElementById('scope').value;
+    var html = '';
+    M.AREAS.forEach(function (ar) {
+      if (zone && ar.zone !== zone) return;
+      var items = ar.items.filter(function (it) {
+        if (scope && it.scope.indexOf(scope) === -1) return false;
+        if (!q) return true;
+        var hay = (it.label + ' ' + ar.label + ' ' + (it.chemical || '') + ' ' + (it.method || '')).toLowerCase();
+        return hay.indexOf(q) !== -1;
+      });
+      if (!items.length) return;
+      html += '<tr class="area-row"><td colspan="8">' + esc(ar.label) +
+              ' — ' + esc((M.ZONES.find(function (z) { return z.id === ar.zone; }) || {}).label || ar.zone) +
+              (ar.standardChecks ? ' · standard checks apply' : ' · items only') + '</td></tr>';
+      items.forEach(function (it) {
+        html += '<tr>' +
+          '<td>' + esc(it.label) +
+            (it.fcs ? ' <span class="tag t-fcs">Food contact</span>' : '') +
+            (it.verify === 'swab' ? ' <span class="tag t-swab">Swab</span>' : '') +
+            (it.note ? '<br><span style="color:#8a939b">' + esc(it.note) + '</span>' : '') + '</td>' +
+          '<td>' + esc(it.freq) + '</td>' +
+          '<td>' + (it.chemical ? esc(it.chemical) : '<span class="gap">not stated</span>') + '</td>' +
+          '<td>' + (it.concentration ? esc(it.concentration) : '<span class="gap">not stated</span>') + '</td>' +
+          '<td>' + (it.contactTime ? esc(it.contactTime) : '<span class="gap">not stated</span>') + '</td>' +
+          '<td>' + (it.method ? esc(it.method) : '—') + '</td>' +
+          '<td>' + esc(ar.role) + '</td>' +
+          '<td>' + it.scope.map(function (s) { return '<span class="tag t-scope">' + esc(SCOPE_DOC[s] || s) + '</span>'; }).join('') + '</td>' +
+        '</tr>';
+      });
+    });
+    document.getElementById('rows').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:#8a939b;padding:18px">No items match.</td></tr>';
+  }
+
+  ['q', 'zone', 'scope'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', render);
+    document.getElementById(id).addEventListener('change', render);
+  });
+  render();
+
+  // Gaps are COMPUTED from the master, not typed — they cannot go stale.
+  var missing = M.itemsMissingChemical();
+  document.getElementById('gaps').innerHTML =
+    '<div class="note" style="margin:0 0 10px">The source documents (Master Cleaning Plan Rev 2 and the ' +
+    'REC 7.6.x forms) name only "soap" and "dynacide" and state no concentration or contact time ' +
+    'anywhere. Those fields are left blank rather than guessed — an invented concentration on a ' +
+    'controlled cleaning record is worse than a blank one. ISO/TS 22002-1 §11.2 expects cleaning ' +
+    'agents and their conditions of use to be documented, so these must be filled in before the ' +
+    'FSSC audit.</div>' +
+    '<p style="font-size:12px;margin:0 0 6px"><strong>' + missing.length + '</strong> food contact item(s) have no cleaning chemical on file:</p>' +
+    (missing.length
+      ? '<ul style="font-size:12px;margin:0;padding-left:20px">' + missing.map(function (m) {
+          return '<li>' + esc(m.area) + ' — ' + esc(m.item) + '</li>'; }).join('') + '</ul>'
+      : '<p style="font-size:12px;color:#4a8f5b;margin:0">None.</p>') +
+    '<p style="font-size:12px;margin:10px 0 0"><strong>' + M.counts().items + '</strong> items have no concentration or contact time recorded, ' +
+    'and no item has a cleaning-equipment colour code. Both are required entries for FSSC V7.</p>';
 })();
 </script>
 </body>
 </html>
-
-

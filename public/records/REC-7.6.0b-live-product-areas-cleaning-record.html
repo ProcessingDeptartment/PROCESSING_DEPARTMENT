@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,46 +9,37 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="frRoot"></div>
+<div id="crRoot"></div>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/form-record.js?v=2"></script>
+<script src="../lib/cleaning-master-data.js?v=1"></script>
+<script src="../lib/cleaning-register.js?v=1"></script>
 <script>
 (function () {
-  FormRecord.init({
-    mount: '#frRoot',
+  // Live zone view of the shared 'exec' shift record. See REC 7.6.0a for the pattern.
+  CleaningRegister.init({
+    mount: '#crRoot',
     recordKey: 'live-product-areas-cleaning-record',
     docCode: 'REC 7.6.0b',
     title: 'Live Product Areas Cleaning Record',
     docRevisionStart: 1,
-    listColumns: ['date', 'shift'],
-    sections: [
-      { title: 'Shift details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'inspectedBy', label: 'Inspected by', type: 'text', required: true },
-        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
-      ]}
-    ],
-    roster: {
-      title: 'Checklist items (one row per area/equipment item checked)',
-      columns: [
-        { key: 'area', label: 'Area', type: 'text' },
-        { key: 'item', label: 'Item / equipment', type: 'text' },
-        { key: 'status', label: 'C / NC', type: 'select', options: ['C', 'NC'] },
-        { key: 'nonConformance', label: 'Non-conformance', type: 'text' },
-        { key: 'correctionSignOff', label: 'Correction and sign off', type: 'text' }
-      ]
-    }
+    docRevisionDate: '2026-06-24',
+    family: 'exec',
+    scope: 'exec',
+    zones: ['live'],
+    performLabel: 'cleaned',
+    performAction: 'cleaned',
+    viewNote: 'This page shows the live product zone. REC 7.6.0a (production) and REC 7.6.0c (personnel) write into the same shift record.',
+    instructions: [
+      'Clean according to the Master Cleaning Plan. Food contact surfaces are cleaned at the start of shift, between different jobs and at the end of shift.',
+      'Mark each area C when cleaning is complete, NC if it could not be done, N/A if not applicable. An NC must carry a finding and a correction before the supervisor can verify.',
+      'Sign as "cleaned" when you finish. Your supervisor verifies — the same person cannot do both.'
+    ]
   });
 })();
 </script>
 </body>
 </html>
-
-

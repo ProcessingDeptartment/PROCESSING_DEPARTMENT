@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,43 +9,39 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="frRoot"></div>
+<div id="crRoot"></div>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/form-record.js?v=2"></script>
+<script src="../lib/cleaning-master-data.js?v=1"></script>
+<script src="../lib/cleaning-register.js?v=1"></script>
 <script>
 (function () {
-  FormRecord.init({
-    mount: '#frRoot',
+  // Weekly plant-wide summary. Every one of its 27 paper lines was a coarser restatement
+  // of an item already on REC 7.6.1.1, so this is the SAME weekly submission (family
+  // 'weekly') rendered through the 'summary' slice. Fill it here or there — not both.
+  // No shift split: the paper form was a single weekly check, not day/night.
+  CleaningRegister.init({
+    mount: '#crRoot',
     recordKey: 'weekly-cleaning-record',
     docCode: 'REC 7.6.2',
     title: 'Weekly Cleaning Record',
     docRevisionStart: 4,
-    listColumns: ['weekOf', 'checkedBy'],
-    sections: [
-      { title: 'Week', fields: [
-        { key: 'weekOf', label: 'Week of', type: 'date', required: true }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
-        { key: 'supervisor', label: 'Supervisor', type: 'text' }
-      ]}
-    ],
-    roster: {
-      title: 'Checklist items — covers floors/doors/walls, humidifiers, drains, ceilings, tanks, chillers, seamer, retort, motors, roof, outside areas, etc.',
-      columns: [
-        { key: 'areaEquipment', label: 'Area / equipment', type: 'text' },
-        { key: 'done', label: 'Yes / No', type: 'yesno' },
-        { key: 'comments', label: 'Comments', type: 'text' }
-      ]
-    }
+    docRevisionDate: '2022-09-22',
+    family: 'weekly',
+    scope: 'summary',
+    shift: false,
+    performLabel: 'checked',
+    performAction: 'checked',
+    viewNote: 'Same weekly record as REC 7.6.1.1 and REC 7.6.2.2 — items answered on either page show as answered here.',
+    instructions: [
+      'Weekly plant-wide cleaning check, including the tanks, ozone system, roof and building exterior.',
+      'Mark C if clean, NC if not, N/A if not applicable. Every NC needs a finding and a correction before a supervisor can verify.'
+    ]
   });
 })();
 </script>
 </body>
 </html>
-
-

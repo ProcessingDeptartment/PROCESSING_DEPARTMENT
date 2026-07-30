@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,43 +9,39 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="mlRoot"></div>
+<div id="crRoot"></div>
 
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/monitoring-log.js?v=2"></script>
+<script src="../lib/cleaning-master-data.js?v=1"></script>
+<script src="../lib/cleaning-register.js?v=1"></script>
 <script>
 (function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
+  // Dispatch / loading bay. Moved off monitoring-log.js (a periodic numeric-reading
+  // engine, the wrong shape for a C/NC checklist with corrective actions) onto the
+  // cleaning register, and onto the shared 'weekly' family so the dispatch area is not
+  // inspected separately from the rest of the weekly walk.
+  CleaningRegister.init({
+    mount: '#crRoot',
     recordKey: 'dispatch-cleaning-inspection',
     docCode: 'REC 7.6.2.2',
     title: 'Dispatch Cleaning Inspection',
     docRevisionStart: 2,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'entranceDoorClosed', label: 'Entrance area door closed', type: 'yesno' },
-      { key: 'damagedDirtyBoxesPallets', label: 'Evidence of damaged & dirty boxes, pallets', type: 'yesno' },
-      { key: 'evidenceOfDust', label: 'Evidence of dust', type: 'yesno' },
-      { key: 'palletsStackedOnEachOther', label: 'Pallets stacked on each other', type: 'yesno' },
-      { key: 'loadingSpaceClean', label: 'Loading space clean, free from odours and mould growth', type: 'yesno' },
-      { key: 'noCansOnFloor', label: 'No cans on the floor', type: 'yesno' },
-      { key: 'ventilationOk', label: 'Ventilation in the area', type: 'yesno' },
-      { key: 'floorsWallsClean', label: 'Floors and walls clean', type: 'yesno' },
-      { key: 'cleaningEquipmentStoredCorrectly', label: 'Cleaning equipment stored correctly', type: 'yesno' },
-      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
+    docRevisionDate: '2023-09-13',
+    family: 'weekly',
+    scope: 'dispatch',
+    shift: false,
+    performLabel: 'checked',
+    performAction: 'checked',
+    viewNote: 'Part of the same weekly record as REC 7.6.1.1 and REC 7.6.2.',
+    instructions: [
+      'Inspect the dispatch and loading bay area before loading. Product must not be loaded into a space showing odours, mould growth or dust.',
+      'Mark C if conforming, NC if not, N/A if not applicable. Every NC needs a finding and a correction before the record can be verified.'
+    ]
   });
 })();
 </script>
 </body>
 </html>
-
-
