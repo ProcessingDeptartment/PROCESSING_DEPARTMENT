@@ -204,4 +204,18 @@ body {
   .fr-panel-body {
     overflow: visible !important;
   }
+
+  /* A4 content width (210mm - 2x9mm margin) is ~726px, so the tablet block
+     above matches while printing. Its touch-target sizing and the 420px table
+     floor are meaningless on paper and push side-by-side tables past the page
+     edge, so hand sizing back to each record's own print rules. */
+  table.meas { min-width: 0 !important; }
+
+  input, select, textarea,
+  label.field input, label.field select, label.field textarea,
+  table input, table select, table textarea {
+    font-size: inherit !important;
+    padding: 1px 3px !important;
+    min-height: 0 !important;
+  }
 }
