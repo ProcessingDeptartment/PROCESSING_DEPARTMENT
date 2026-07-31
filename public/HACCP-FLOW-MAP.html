@@ -1482,16 +1482,18 @@ $("#hdOk").onclick = () => {
 /* ---- build the one-page print plot -------------------------- */
 function buildPrintPlot(){
   const d = active();
-  const svg = document.createElementNS(NS,"svg");
-  svg.setAttribute("viewBox", "0 0 " + PLAN_W + " " + PLAN_H);   // CSS sizes it; aspect is preserved
 
-  svg.appendChild(el("rect",{ width:PLAN_W, height:PLAN_H, fill:"#fff" }));
-  svg.appendChild(el("image",{ href:PLAN_SRC, x:0, y:0, width:PLAN_W, height:PLAN_H }));
+  // build the drawing at its native PLAN_W x PLAN_H, then rotate 90deg CW into the
+  // print sheet by swapping the outer viewBox — no runtime measurement needed, and
+  // it scales correctly under print's own layout pass.
+  const inner = document.createElementNS(NS,"g");
+  inner.appendChild(el("rect",{ width:PLAN_W, height:PLAN_H, fill:"#fff" }));
+  inner.appendChild(el("image",{ href:PLAN_SRC, x:0, y:0, width:PLAN_W, height:PLAN_H }));
 
   const wasSel = sel, savedPlanG = gPlanEdit, savedItemsG = gItems;
   sel = null;
-  gPlanEdit = document.createElementNS(NS,"g"); renderPlanEdits(); svg.appendChild(gPlanEdit);
-  gItems = document.createElementNS(NS,"g"); renderItems(); svg.appendChild(gItems);
+  gPlanEdit = document.createElementNS(NS,"g"); renderPlanEdits(); inner.appendChild(gPlanEdit);
+  gItems = document.createElementNS(NS,"g"); renderItems(); inner.appendChild(gItems);
   gPlanEdit = savedPlanG; gItems = savedItemsG; sel = wasSel;
 
   const cap = document.createElementNS(NS,"text");
@@ -1499,7 +1501,14 @@ function buildPrintPlot(){
   cap.setAttribute("text-anchor","middle"); cap.setAttribute("font-family","Arial,Helvetica,sans-serif");
   cap.setAttribute("font-size","46"); cap.setAttribute("font-weight","700"); cap.setAttribute("fill","#22252a");
   cap.textContent = d.name + (d.rev ? " — Rev " + d.rev : "");
-  svg.appendChild(cap);
+  inner.appendChild(cap);
+
+  const rot = el("g",{ transform:"translate(" + PLAN_H + " 0) rotate(90)" });
+  rot.appendChild(inner);
+
+  const svg = document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox", "0 0 " + PLAN_H + " " + PLAN_W);   // dimensions swapped for the turn
+  svg.appendChild(rot);
   return svg;
 }
 function preparePrint(){
