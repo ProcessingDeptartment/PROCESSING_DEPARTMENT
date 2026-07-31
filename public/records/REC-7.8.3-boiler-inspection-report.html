@@ -16,7 +16,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/monitoring-log.js?v=2"></script>
+<script src="../lib/monitoring-log.js?v=3"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -45,7 +45,21 @@
     ],
     specFields: [],
     deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
+    deviationPolarity: 'deviation',
+    // Start-up/shut-down checklist, not a numeric reading log -- no tolerances to set.
+    showThresholds: false,
+    // Lead with the action; the log itself sits under the verification strip.
+    topAddEntry: true,
+    entriesPosition: 'bottom',
+    // Operator saves a draft mid-shift, submits it once the shift is closed off;
+    // submitted entries lock and are what the verification strip counts.
+    entryWorkflow: 'draft-submit',
+    // Notification transport is not built yet. This declares who/when; delivery starts
+    // the moment window.RecordNotifications.send() exists (see notify() in monitoring-log.js).
+    verificationNotify: {
+      intervalDays: 30,
+      recipients: []
+    }
   });
 })();
 </script>

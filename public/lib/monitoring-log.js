@@ -85,6 +85,9 @@
   .ml-badge-fail{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); }
   .ml-badge-muted{ background:#eee; color:#777; }
   .ml-muted{ color:#8a939b; }
+  .ml-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
+  .ml-notice.show{ display:block; }
+  .ml-notice-due{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); border:1px solid #e8b8b3; }
   .ml-empty{ padding:18px; text-align:center; color:#8a939b; }
   .ml-history-list{ max-height:220px; overflow:auto; border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; }
   .ml-history-item{ padding:7px 10px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:11.5px; }
@@ -157,6 +160,23 @@
     try { await window.storage.set(key, value, shared); return true; } catch (e) { console.error('storage set failed', e); return false; }
   }
 
+  /* === SWAP POINT for notifications ===
+   * No notification transport exists yet (no backend, no mail relay). Everything that
+   * would notify someone routes through notify() so wiring it up later is a one-liner:
+   * define window.RecordNotifications.send(payload) -> Promise, and every call site
+   * below starts delivering. Until then payloads are logged and dropped.
+   * payload = { type, recordKey, docCode, title, message, recipients, dueSince, meta }
+   */
+  function notify(payload) {
+    try {
+      if (window.RecordNotifications && typeof window.RecordNotifications.send === 'function') {
+        return Promise.resolve(window.RecordNotifications.send(payload));
+      }
+    } catch (e) { console.error('notification send failed', e); }
+    console.info('[notification not delivered — no transport configured]', payload);
+    return Promise.resolve(false);
+  }
+
   function fieldInputHtml(ns, field, value) {
     const id = `${ns}_f_${field.key}`;
     const v = value == null ? '' : value;
@@ -191,9 +211,13 @@
 
   // ---- one controller per log (primary + optional secondary share this factory) ----
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity } = opts;
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow } = opts;
     let entries = [];
     let editingId = null;
+
+    // Entries predating the draft/submit lifecycle have no status; treat them as drafts
+    // so nothing that was editable yesterday is locked today.
+    function isSubmitted(entryRow) { return submitFlow && entryRow.status === 'submitted'; }
 
     function specFor(key) {
       const spec = specGetter();
@@ -275,7 +299,7 @@
         return;
       }
       const cols = entryFields.filter(f => f.showInTable !== false);
-      let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}<th>Status</th><th></th></tr></thead><tbody>`;
+      let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}${submitFlow ? '<th>Submission</th>' : ''}<th>Status</th><th></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
         html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
         cols.forEach(f => {
@@ -284,8 +308,13 @@
           else if (v === '' || v == null) v = '—';
           html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${esc(v)}</td>`;
         });
+        if (submitFlow) {
+          html += isSubmitted(entryRow)
+            ? `<td><span class="ml-badge ml-badge-ok">✓ Submitted</span></td>`
+            : `<td><span class="ml-badge ml-badge-muted">Draft</span></td>`;
+        }
         html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
-        html += `<td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">Edit</button></td>`;
+        html += `<td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">${isSubmitted(entryRow) ? 'View' : 'Edit'}</button></td>`;
         html += `</tr>`;
       });
       html += `</tbody></table>`;
@@ -315,7 +344,8 @@
     function openForm(id) {
       editingId = id || null;
       const existing = id ? entries.find(e => e.id === id) : null;
-      el(modalIds.title).textContent = id ? 'Edit entry' : 'Add entry';
+      const locked = existing ? isSubmitted(existing) : false;
+      el(modalIds.title).textContent = !id ? 'Add entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
       const container = el(modalIds.fields);
       container.innerHTML = entryFields.map(f => `
         <label class="ml-field">${fieldLabel(f)}
@@ -326,13 +356,19 @@
         inp.addEventListener('change', recalcComputedInModal);
       });
       recalcComputedInModal();
+      if (submitFlow) {
+        container.querySelectorAll('input,select,textarea').forEach(inp => { inp.disabled = locked; });
+        const saveBtn = el(`${ns}_saveBtn`), submitBtn = el(`${ns}_submitBtn`);
+        if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
+        if (submitBtn) submitBtn.style.display = locked ? 'none' : '';
+      }
       el(modalIds.overlay).style.display = 'flex';
     }
     function closeForm() {
       el(modalIds.overlay).style.display = 'none';
     }
 
-    async function saveForm() {
+    async function saveForm(finalize) {
       const raw = {};
       let missingRequired = null;
       entryFields.forEach(f => {
@@ -341,24 +377,30 @@
         raw[f.key] = inp ? inp.value : '';
         if (f.required && !String(raw[f.key] || '').trim()) missingRequired = f.label;
       });
-      if (missingRequired) { toast(`"${missingRequired}" is required.`); return; }
+      // A draft may be incomplete; a submission may not.
+      if (missingRequired && (finalize || !submitFlow)) { toast(`"${missingRequired}" is required.`); return; }
       const values = computeAll(raw);
       const inSpec = evaluateEntry(values);
 
+      const status = submitFlow ? (finalize ? 'submitted' : 'draft') : undefined;
       let savedEntry;
       if (editingId) {
         const existing = entries.find(e => e.id === editingId);
+        if (isSubmitted(existing)) { toast('This entry is submitted and can no longer be changed.'); return; }
         existing.history = existing.history || [];
         existing.history.push({ ts: Date.now(), previousValues: existing.values });
         existing.values = values;
         existing.inSpec = inSpec;
         existing.updatedAt = Date.now();
+        if (submitFlow) { existing.status = status; if (finalize) existing.submittedAt = Date.now(); }
         savedEntry = existing;
       } else {
         savedEntry = {
           id: uid('entry'),
           values,
           inSpec,
+          status,
+          submittedAt: finalize ? Date.now() : undefined,
           source: 'manual', // future device/AI feeds set 'device' + a deviceId here
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -372,24 +414,53 @@
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedEntry);
       closeForm();
       renderTable();
-      toast(editingId ? 'Entry updated.' : 'Entry added.');
+      if (submitFlow) toast(finalize ? 'Entry submitted.' : 'Draft saved.');
+      else toast(editingId ? 'Entry updated.' : 'Entry added.');
+    }
+
+    function download(blob, filename) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 0);
     }
 
     function exportCsv() {
       const cols = entryFields.filter(f => f.showInTable !== false);
-      const rows = [cols.map(f => f.label).concat('Status')];
+      const rows = [cols.map(f => f.label).concat(submitFlow ? ['Submission', 'Status'] : ['Status'])];
       filteredEntries().forEach(e => {
-        rows.push(cols.map(f => e.values[f.key] == null ? '' : String(e.values[f.key])).concat(e.inSpec === null || e.inSpec === undefined ? '' : (e.inSpec ? 'OK' : 'DEVIATION')));
+        const tail = e.inSpec === null || e.inSpec === undefined ? '' : (e.inSpec ? 'OK' : 'DEVIATION');
+        rows.push(cols.map(f => e.values[f.key] == null ? '' : String(e.values[f.key]))
+          .concat(submitFlow ? [isSubmitted(e) ? 'Submitted' : 'Draft', tail] : [tail]));
       });
       const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = safeKey(title) + '.csv';
-      a.click();
+      download(new Blob([csv], { type: 'text/csv' }), safeKey(title) + '.csv');
     }
 
-    return { load, renderTable, openForm, closeForm, saveForm, exportCsv };
+    // Full-fidelity export -- unlike the CSV this keeps hidden columns, edit history
+    // and submission timestamps, so it round-trips into the future backend.
+    function exportJson() {
+      const payload = {
+        record: title,
+        storageKey,
+        exportedAt: new Date().toISOString(),
+        entryCount: filteredEntries().length,
+        entries: filteredEntries()
+      };
+      download(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), safeKey(title) + '.json');
+    }
+
+    function printPdf() {
+      const previousTitle = document.title;
+      document.title = safeKey(title) + '_' + new Date().toISOString().slice(0, 10);
+      window.print();
+      document.title = previousTitle;
+    }
+
+    return { load, renderTable, openForm, closeForm, saveForm, exportCsv, exportJson, printPdf,
+      // Drafts aren't finished work, so they don't make a verification due.
+      verifiableCount: () => submitFlow ? entries.filter(isSubmitted).length : entries.length };
   }
 
   async function init(config) {
@@ -437,8 +508,9 @@
       if (modalTag) modalTag.textContent = `Rev ${rev}`;
     }
     async function renderDocRevHistory() {
-      const hist = await DocumentRevision.history(docRevisionKey);
       const target = el('ml_docRevHistoryList');
+      if (!target) return; // thresholds modal (its only home) is switched off
+      const hist = await DocumentRevision.history(docRevisionKey);
       if (!hist.length) { target.innerHTML = `<div class="ml-history-item ml-muted">No revisions logged yet (currently Rev ${config.docRevisionStart || 1}).</div>`; return; }
       target.innerHTML = hist.map(h => `
         <div class="ml-history-item"><span>Rev ${h.revisionNumber} · ${new Date(h.changedAt).toLocaleString()} · ${esc(h.changedBy)} (${esc(h.changedByTitle)})<br><span class="ml-muted">${esc(h.reason)}</span></span></div>`).join('');
@@ -456,6 +528,9 @@
         ${config.relatedLinks.map(l => `<a href="${esc(l.href)}">→ ${esc(l.label)}</a>`).join('<br>')}
       </div></div>` : '';
 
+    // Opt-in per-entry lifecycle: entries save as 'draft' and are locked once submitted.
+    const submitFlow = config.entryWorkflow === 'draft-submit';
+
     function logBlockHtml(ns, blockTitle) {
       return `
       <div class="ml-panel no-print">
@@ -470,7 +545,8 @@
             <input type="text" id="${ns}_filterSearch" placeholder="Search entries…">
             <label><input type="checkbox" id="${ns}_filterDevOnly"> Deviations only</label>
             <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_exportCsvBtn">Export CSV</button>
-            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_printBtn">Print</button>
+            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_exportJsonBtn">Export JSON</button>
+            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_printBtn">Print PDF</button>
           </div>
           <div id="${ns}_table" class="ml-table-wrap"></div>
         </div>
@@ -481,7 +557,8 @@
           <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>
           <div class="ml-actions">
             <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">Cancel</button>
-            <button class="ml-btn ml-btn-primary" id="${ns}_saveBtn">Save entry</button>
+            <button class="ml-btn ${submitFlow ? 'ml-btn-flat' : 'ml-btn-primary'}" id="${ns}_saveBtn">${submitFlow ? 'Save draft' : 'Save entry'}</button>
+            ${submitFlow ? `<button class="ml-btn ml-btn-primary" id="${ns}_submitBtn">Submit</button>` : ''}
           </div>
         </div>
       </div>`;
@@ -492,6 +569,7 @@
       <div class="ml-panel no-print">
         <div class="ml-panel-head"><h2>Verification</h2></div>
         <div class="ml-panel-body">
+          <div class="ml-notice ml-notice-due" id="ml_verifyNotice"></div>
           <div class="ml-grid ml-grid-3" style="margin-bottom:10px;">
             <label class="ml-field">Verified by<input id="ml_verifiedBy"></label>
             <label class="ml-field">Signature (type name to sign)<input id="ml_verifiedSig"></label>
@@ -505,6 +583,18 @@
         </div>
       </div>` : '';
 
+    // Thresholds are meaningless for a log with no numeric spec fields (e.g. an
+    // all-checklist record), so the button can be switched off per record.
+    const showThresholds = config.showThresholds !== false;
+    // Records that lead with the action rather than the log put "+ Add entry" in the
+    // header and push the entries panel below the verification strip.
+    const topAddEntry = config.topAddEntry === true;
+    const entriesAtBottom = config.entriesPosition === 'bottom';
+
+    const logsHtml = `
+        ${logBlockHtml('ml_p', config.secondaryLog ? (config.primaryLogTitle || 'Entries') : 'Entries')}
+        ${config.secondaryLog ? logBlockHtml('ml_s', config.secondaryLog.title) : ''}`;
+
     mount.innerHTML = `
       <div class="ml-top">
         <div class="doc-line">
@@ -513,15 +603,14 @@
           <span class="doc-rev" id="ml_docRev"></span>
         </div>
         <div class="ml-topline no-print">
-          <button class="ml-btn ml-btn-ghost" id="ml_thresholdsBtn">Thresholds</button>
+          ${topAddEntry ? `<button class="ml-btn ml-btn-ghost" id="ml_topAddEntryBtn">+ Add entry</button>` : ''}
+          ${showThresholds ? `<button class="ml-btn ml-btn-ghost" id="ml_thresholdsBtn">Thresholds</button>` : ''}
         </div>
       </div>
       <div class="ml-body">
         ${instructionsHtml}
         ${relatedHtml}
-        ${logBlockHtml('ml_p', config.secondaryLog ? (config.primaryLogTitle || 'Entries') : 'Entries')}
-        ${config.secondaryLog ? logBlockHtml('ml_s', config.secondaryLog.title) : ''}
-        ${verificationHtml}
+        ${entriesAtBottom ? verificationHtml + logsHtml : logsHtml + verificationHtml}
       </div>
       <div id="ml_thresholdsModal" class="ml-modal-overlay no-print" style="display:none;">
         <div class="ml-modal-inner">
@@ -556,7 +645,8 @@
       tableWrap: el('ml_p_table'),
       modalIds: { overlay: 'ml_p_modal', title: 'ml_p_modalTitle', fields: 'ml_p_modalFields' },
       deviationLabel: config.deviationLabel || 'Deviation',
-      deviationPolarity: config.deviationPolarity || 'deviation'
+      deviationPolarity: config.deviationPolarity || 'deviation',
+      submitFlow
     });
     let secondary = null;
     if (config.secondaryLog) {
@@ -570,16 +660,19 @@
         tableWrap: el('ml_s_table'),
         modalIds: { overlay: 'ml_s_modal', title: 'ml_s_modalTitle', fields: 'ml_s_modalFields' },
         deviationLabel: config.secondaryLog.deviationLabel || 'Deviation',
-        deviationPolarity: config.secondaryLog.deviationPolarity || 'deviation'
+        deviationPolarity: config.secondaryLog.deviationPolarity || 'deviation',
+        submitFlow
       });
     }
 
     function wireLog(ctrl, ns) {
       el(`${ns}_addEntryBtn`).addEventListener('click', () => ctrl.openForm(null));
       el(`${ns}_cancelBtn`).addEventListener('click', () => ctrl.closeForm());
-      el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm());
+      el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm(!submitFlow));
+      if (submitFlow) el(`${ns}_submitBtn`).addEventListener('click', () => ctrl.saveForm(true));
       el(`${ns}_exportCsvBtn`).addEventListener('click', () => ctrl.exportCsv());
-      el(`${ns}_printBtn`).addEventListener('click', () => window.print());
+      el(`${ns}_exportJsonBtn`).addEventListener('click', () => ctrl.exportJson());
+      el(`${ns}_printBtn`).addEventListener('click', () => ctrl.printPdf());
       ['filterFrom', 'filterTo', 'filterSearch', 'filterDevOnly'].forEach(suffix => {
         const inp = el(`${ns}_${suffix}`);
         inp.addEventListener('input', () => ctrl.renderTable());
@@ -587,6 +680,7 @@
     }
     wireLog(primary, 'ml_p');
     if (secondary) wireLog(secondary, 'ml_s');
+    if (topAddEntry) el('ml_topAddEntryBtn').addEventListener('click', () => primary.openForm(null));
 
     // ---------- thresholds modal ----------
     function buildThresholdsTable() {
@@ -634,17 +728,72 @@
         el('ml_thresholdsModal').style.display = 'none';
       } catch (e) { toast(e.message); }
     }
-    el('ml_thresholdsBtn').addEventListener('click', openThresholds);
-    el('ml_thCancelBtn').addEventListener('click', () => { el('ml_thresholdsModal').style.display = 'none'; });
-    el('ml_thSaveBtn').addEventListener('click', saveThresholds);
+    if (showThresholds) {
+      el('ml_thresholdsBtn').addEventListener('click', openThresholds);
+      el('ml_thCancelBtn').addEventListener('click', () => { el('ml_thresholdsModal').style.display = 'none'; });
+      el('ml_thSaveBtn').addEventListener('click', saveThresholds);
+    } else {
+      el('ml_thresholdsModal').remove();
+    }
 
     // ---------- verification strip ----------
+    let refreshVerification = () => {};
     if (showVerification) {
+      // config.verificationNotify = { intervalDays, recipients:[], message }
+      // Opt-in: without it the strip behaves exactly as before.
+      const notifyCfg = config.verificationNotify || null;
+
+      // Flags a log that has entries but no (or a stale) verification, shows the banner
+      // and fires one notification per page load. Delivery is a no-op until a transport
+      // is registered -- see notify() at the top of this file.
+      function checkVerificationDue(hist) {
+        if (!notifyCfg) return;
+        const notice = el('ml_verifyNotice');
+        const last = hist.length ? hist[hist.length - 1] : null;
+        const intervalDays = notifyCfg.intervalDays || 30;
+        const lastMs = last ? (Date.parse(last.verifiedDate) || last.loggedAt) : null;
+        const dueMs = lastMs == null ? null : lastMs + intervalDays * 86400000;
+        const hasEntries = entryCountForVerification() > 0;
+
+        let due = false, message = '';
+        if (!hasEntries) due = false;
+        else if (lastMs == null) {
+          const n = entryCountForVerification();
+          due = true;
+          message = `Never verified — ${n} ${n === 1 ? 'entry is' : 'entries are'} awaiting verification.`;
+        }
+        else if (Date.now() > dueMs) {
+          const daysOver = Math.floor((Date.now() - dueMs) / 86400000);
+          due = true;
+          message = `Verification overdue by ${daysOver} day${daysOver === 1 ? '' : 's'} (last verified ${esc(last.verifiedDate || '—')}, every ${intervalDays} days).`;
+        }
+
+        notice.innerHTML = due ? message : '';
+        notice.classList.toggle('show', due);
+        if (!due) return;
+
+        notify({
+          type: 'verification-due',
+          recordKey: config.recordKey,
+          docCode: config.docCode,
+          title: config.title,
+          message: notifyCfg.message || message,
+          recipients: notifyCfg.recipients || [],
+          dueSince: dueMs,
+          meta: { lastVerifiedAt: lastMs, intervalDays, unverifiedEntries: entryCountForVerification() }
+        });
+      }
+
+      function entryCountForVerification() {
+        return primary.verifiableCount() + (secondary ? secondary.verifiableCount() : 0);
+      }
+
       async function renderVerificationHistory() {
         const raw = await storeGet('verification_log:' + config.recordKey, true);
         let hist = [];
         try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
         const target = el('ml_verificationHistory');
+        checkVerificationDue(hist);
         if (!hist.length) { target.innerHTML = `<div class="ml-history-item ml-muted">No verification logged yet.</div>`; return; }
         target.innerHTML = hist.slice().reverse().map(v => `
           <div class="ml-history-item"><span>${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} <span class="ml-muted">(signed: ${esc(v.verifiedSig)})</span></span></div>`).join('');
@@ -663,7 +812,9 @@
         el('ml_verifiedBy').value = ''; el('ml_verifiedSig').value = ''; el('ml_verifiedDate').value = '';
         renderVerificationHistory();
       });
-      renderVerificationHistory();
+      // Deliberately not called here -- the due check counts entries, so it runs at the
+      // end of boot once the logs have loaded.
+      refreshVerification = renderVerificationHistory;
     }
 
     // ---------- boot ----------
@@ -672,6 +823,7 @@
     await primary.load();
     primary.renderTable();
     if (secondary) { await secondary.load(); secondary.renderTable(); }
+    refreshVerification();
   }
 
   window.MonitoringLog = { init };
