@@ -131,12 +131,16 @@
     #printPage1Extra label.field span{ display:block; font-size:12px; font-weight:400; color:#1b2330; margin-top:2px; }
     #printSpecSummary table.meas td.row-label{ white-space:normal; width:auto; }
     #printSpecSummary table.meas td{ text-align:left; }
-    #dsir-root{ padding-top:56px; }
-    .dsir-top{
-      position:fixed; top:0; left:0; right:0;
-      background:#fff !important; padding:8px 18px;
-      border-bottom:1.5px solid #000;
-    }
+    #printSignoff table.meas td{ text-align:left; padding:3px 5px; }
+    #printSignoff table.meas td.row-label{ width:14%; white-space:nowrap; }
+    /* The controlled-copy title block carries the doc code, revision and page number on
+       every page now, so the on-screen banner would only repeat it -- and a fixed banner
+       reserves its height on all pages, which is what a page-per-stage layout cannot
+       spare. Each .print-page opens with its own block instead. */
+    .dsir-top{ display:none !important; }
+    /* Page 1 is the record's own body; every group after it opens a fresh page, and the
+       title block is the first thing on it. */
+    #printOnlyStages .print-page{ page-break-before:always; break-before:page; }
   }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
@@ -160,6 +164,8 @@
   </div>
 
   <div class="dsir-body">
+
+    <div id="printHeaderPage1" class="print-only"></div>
 
     <div class="panel no-print">
       <div class="panel-head"><h2>Batch lookup &amp; traceability</h2><span class="muted" id="recordIdTag" style="font-family:var(--mono);font-size:10.5px;"></span></div>
@@ -304,6 +310,7 @@
 <script src="../lib/permission-rules.js?v=5"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/doc-header.js?v=1"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -898,28 +905,65 @@
       </div></div>`;
   }
 
+  // Sign-off prints as a compact 4-column table rather than stacked label/value fields:
+  // the stacked form cost ~310px of page 1, which the per-page title block cannot spare.
   function buildCommentsSignoffHtml(){
+    const esc = v => String(v||'—').replace(/</g,'&lt;');
     return `<div class="panel"><div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">${(state.comments||'—').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>
-      <div class="panel"><div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body footer-grid">
-        <label class="field">Completed by<span>${state.completedBy||'—'}</span></label>
-        <label class="field">Verified by<span>${state.verifiedBy||'—'}</span></label>
-        <label class="field">Signature<span>${state.completedSig||'—'}</span></label>
-        <label class="field">Signature<span>${state.verifiedSig||'—'}</span></label>
-        <label class="field">Date<span>${state.completedDate||'—'}</span></label>
-        <label class="field">Date<span>${state.verifiedDate||'—'}</span></label>
+      <div class="panel" id="printSignoff"><div class="panel-head"><h2>Sign-off</h2></div>
+      <div class="panel-body">
+        <table class="meas"><tbody>
+          <tr><td class="row-label">Completed by</td><td>${esc(state.completedBy)}</td>
+              <td class="row-label">Verified by</td><td>${esc(state.verifiedBy)}</td></tr>
+          <tr><td class="row-label">Signature</td><td>${esc(state.completedSig)}</td>
+              <td class="row-label">Signature</td><td>${esc(state.verifiedSig)}</td></tr>
+          <tr><td class="row-label">Date</td><td>${esc(state.completedDate)}</td>
+              <td class="row-label">Date</td><td>${esc(state.verifiedDate)}</td></tr>
+        </tbody></table>
       </div></div>`;
   }
 
-  function generatePdf(){
+  // Which stages share a printed page. "Before" gets its own so the start-up cans read
+  // as a distinct check; "during" and "after" pair up to hold the record to 3 pages.
+  const PRINT_PAGE_GROUPS = [['before'], ['during','after']];
+  const TOTAL_PRINT_PAGES = 1 + PRINT_PAGE_GROUPS.length;
+
+  function stagePanelHtml(stageKey){
+    const s = STAGES.find(x=>x.key===stageKey);
+    const heading = s.key==='before' ? `${s.label} — Start-up cans` : s.label;
+    return `<div class="panel"><div class="panel-head"><h2>${heading} — 2 cans × 3 points each</h2></div>`
+      + `<div class="panel-body"><div class="print-cans-row">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div></div>`;
+  }
+
+  async function generatePdf(){
+    // Resolve the title block before printing: revision, revision date and effective date
+    // are read live, so a printed copy can never carry a stale one.
+    let headerHtmlFor = () => '';
+    try{
+      // Paper baseline from the issued REC 01 Master Index List, used only until
+      // someone edits the header in master-record-index.html.
+      const h = await DocHeader.resolve(DOC_REVISION_KEY, {
+        document: 'Double Seam Inspection Report',
+        docNumber: 'REC 7.2.12',
+        reviewedBy: 'Nicolene Mylrea',
+        approvedBy: 'Rowan Timmer',
+        revisionDate: '08/06/2026'
+      }, DOC_REVISION_START);
+      DocHeader.injectStyles();
+      headerHtmlFor = (page) => DocHeader.blockHtml(h, page, TOTAL_PRINT_PAGES, '../assets/abagold-logo.png');
+    }catch(e){
+      console.error('title block unavailable', e);
+      toast('Could not load the document header — printing without it.');
+    }
+
+    $('printHeaderPage1').innerHTML = headerHtmlFor(1);
     $('printPage1Extra').innerHTML = buildSpecSummaryHtml() + buildCommentsSignoffHtml();
-    const parts = STAGES.map((s,i)=>{
-      const heading = s.key==='before' ? `${s.label} — Start-up cans` : s.label;
-      const breakCls = i < STAGES.length-1 ? ' print-page-break' : '';
-      return `<div class="panel${breakCls}"><div class="panel-head"><h2>${heading} — 2 cans × 3 points each</h2></div><div class="panel-body"><div class="print-cans-row">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div></div>`;
-    });
-    $('printOnlyStages').innerHTML = parts.join('');
+
+    $('printOnlyStages').innerHTML = PRINT_PAGE_GROUPS.map((group, i)=>
+      `<div class="print-page">${headerHtmlFor(i+2)}${group.map(stagePanelHtml).join('')}</div>`
+    ).join('');
+
     document.title = `REC_7.2.12_Double_Seam_${safeKey(state.header.batchCans||'record')}_${state.header.reportDate||''}`;
     window.print();
   }
@@ -1113,6 +1157,10 @@
   (async function init(){
     wire();
     await renderDocRevBadge();
+    // "Effective date" is the first date anyone worked with this document, so it is
+    // claimed on open rather than at print time. Never blocks opening the record.
+    DocHeader.ensureEffectiveDate(DOC_REVISION_KEY)
+      .catch(e=>console.error('could not set effective date', e));
     await loadSpecProfiles();
     renderAll();
   })();

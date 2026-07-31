@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 01 Master Record Index</title>
+<script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   body{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--palette-ink); background:var(--palette-paper);
@@ -73,6 +74,12 @@
   td.c-yn select:disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
   td.c-yn select.dirty{ border-color:var(--palette-primary); box-shadow:0 0 0 2px rgba(201,131,43,.15); }
 
+  td.c-cat select{ font-size:11.5px; font-weight:600; padding:3px 4px; border:1px solid #d0d5db;
+            border-radius:3px; background:#fff; color:var(--palette-ink); width:100%; min-width:132px; }
+  td.c-cat select:disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
+  td.c-cat select.dirty{ border-color:var(--palette-primary); box-shadow:0 0 0 2px rgba(201,131,43,.15); }
+  td.c-cat .cat-none{ color:var(--palette-label); }
+
   .tag{ display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.04em;
         text-transform:uppercase; padding:1px 6px; border-radius:9px; white-space:nowrap; }
   .tag-online{ background:var(--palette-ok-bg); color:var(--palette-ok); }
@@ -89,6 +96,38 @@
   .back-link:hover{ text-decoration:underline; }
   .save-state{ font-size:11.5px; color:var(--palette-ok); font-weight:600; }
 
+  /* ---- document header editor ---- */
+  .dh-modal{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:600;
+             align-items:center; justify-content:center; }
+  .dh-modal.open{ display:flex !important; }
+  .dh-modal-inner{ background:#fff; border-radius:8px; width:min(880px,94vw); max-height:92vh;
+             overflow:auto; padding:18px; }
+  .dh-modal-inner h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em;
+             color:var(--palette-heading); margin:0 0 6px; }
+  .dh-hint{ font-size:11.5px; color:var(--palette-label); margin:0 0 14px; }
+  .dh-f{ display:flex; flex-direction:column; gap:3px; font-size:11px; font-weight:700;
+             text-transform:uppercase; letter-spacing:.04em; color:var(--palette-label);
+             margin-bottom:10px; }
+  .dh-f input, .dh-f select{ padding:7px 9px; border:1px solid #d0d5db; border-radius:4px;
+             font-size:13px; font-family:inherit; background:#fff; color:var(--palette-ink);
+             font-weight:400; text-transform:none; letter-spacing:0; }
+  .dh-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  .dh-auto{ display:flex; gap:26px; flex-wrap:wrap; background:var(--palette-head-bg);
+             border-radius:4px; padding:10px 14px; margin-bottom:14px; }
+  .dh-auto b{ display:block; font-size:13px; color:var(--palette-heading);
+             font-family:'IBM Plex Mono',monospace; }
+  .dh-auto span{ font-size:10.5px; color:var(--palette-label); }
+  .dh-auto em{ font-style:normal; color:#9aa2a9; }
+  .dh-preview-wrap{ border:1px dashed var(--palette-border); border-radius:4px; padding:12px;
+             margin-bottom:14px; background:#fcfcfb; }
+  .dh-preview-label{ font-size:10px; text-transform:uppercase; letter-spacing:.05em;
+             color:var(--palette-label); font-weight:700; margin-bottom:8px; }
+  .dh-actions{ display:flex; gap:10px; justify-content:flex-end; align-items:center; }
+  .dh-state{ margin-right:auto; font-size:11.5px; font-weight:600; }
+  .dh-modal .btn-ghost{ background:#eceeef; color:var(--palette-ink); }
+  .dh-modal .btn-ghost:hover{ background:#dfe2e4; }
+  @media (max-width:768px){ .dh-grid{ grid-template-columns:1fr; } }
+
   @media (max-width:768px){
     .container{ padding:12px; }
     .toolbar input[type=text]{ min-width:0; width:100%; }
@@ -102,7 +141,7 @@
     .table-scroll{ overflow:visible; border:none; }
     table.mi{ min-width:0; }
     table.mi thead th{ position:static; }
-    td.c-yn select{ border:none; background:none; -webkit-appearance:none; appearance:none; }
+    td.c-yn select, td.c-cat select{ border:none; background:none; -webkit-appearance:none; appearance:none; }
     tr.hidden{ display:none; }
   }
 </style>
@@ -124,6 +163,7 @@
   </div>
   <div class="dc-actions">
     <button class="btn btn-primary" id="printBtn">Print / PDF</button>
+    <button class="btn btn-ghost" id="headersBtn">Edit document headers</button>
     <button class="btn btn-ghost" id="csvBtn">Export CSV</button>
     <a class="btn btn-ghost" href="record-list.html" style="text-decoration:none;display:inline-block;">Open a record &rarr;</a>
   </div>
@@ -164,6 +204,7 @@
         <tr>
           <th style="width:90px;">Document No.</th>
           <th style="width:250px;">Document Name</th>
+          <th style="width:140px;">Category</th>
           <th>Details for change</th>
           <th style="width:70px;">Current<br>revision</th>
           <th style="width:96px;">Obsolete revision<br>retrieved? Y/N</th>
@@ -179,11 +220,53 @@
   <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
 </div>
 
+<!-- Controlled-copy title block editor. The block prints on every page of a record, so
+     it is edited here in one place rather than inside each record. -->
+<div id="dhModal" class="dh-modal" style="display:none;">
+  <div class="dh-modal-inner">
+    <h2>Document header — printed title block</h2>
+    <p class="dh-hint">These fields print in the ABAGOLD title block at the top of every
+      page of the record's PDF. Revision, revision date and effective date are set
+      automatically and cannot be typed.</p>
+
+    <label class="dh-f">Record
+      <select id="dhRecordSelect"></select>
+    </label>
+
+    <div id="dhFormWrap">
+      <div class="dh-grid">
+        <label class="dh-f">Document<input id="dhDocument" type="text"></label>
+        <label class="dh-f">Doc number<input id="dhDocNumber" type="text"></label>
+        <label class="dh-f">Reviewed by<input id="dhReviewedBy" type="text"></label>
+        <label class="dh-f">Approved by<input id="dhApprovedBy" type="text"></label>
+      </div>
+
+      <div class="dh-auto">
+        <div><b id="dhRevision">—</b><span>Revision <em>(auto)</em></span></div>
+        <div><b id="dhRevisionDate">—</b><span>Revision date <em>(auto)</em></span></div>
+        <div><b id="dhEffectiveDate">—</b><span>Effective date <em>(auto, first use)</em></span></div>
+      </div>
+
+      <div class="dh-preview-wrap">
+        <div class="dh-preview-label">Preview</div>
+        <div id="dhPreview"></div>
+      </div>
+    </div>
+
+    <div class="dh-actions">
+      <span class="dh-state" id="dhState"></span>
+      <button class="btn btn-ghost" id="dhCancel">Close</button>
+      <button class="btn btn-primary" id="dhSave">Save header</button>
+    </div>
+  </div>
+</div>
+
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=5"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/doc-header.js?v=1"></script>
 <script src="../lib/master-index-data.js?v=1"></script>
 <script>
 (function () {
@@ -194,6 +277,27 @@
   // record, because retrieving and distributing controlled copies is a document-control
   // action performed against the index itself. One shared blob keeps it to one write.
   const CONTROL_KEY = 'master_index_control';
+
+  // The colour palette a record's page is themed with. Stored one key per file name
+  // (not per row/recordKey) because that's what public/lib/palette-map.js matches
+  // against at render time -- see the comment at the top of that file. '' means
+  // "explicitly set to Default"; a row with no key at all falls back to whatever
+  // palette-map.js's static list already assigns it (see CATEGORIES below).
+  const CATEGORY_PREFIX = 'record_category:';
+  const CATEGORIES = [
+    ['', 'Default'],
+    ['sauce', 'Sauce'],
+    ['dry', 'Dry'],
+    ['cleaning/hygiene', 'Cleaning / Hygiene'],
+    ['traceability', 'Traceability'],
+    ['quality_general', 'Quality (general)'],
+    ['canning', 'Canning (lab testing)'],
+    ['live', 'Live production'],
+    ['technical/maintenance', 'Technical / Maintenance'],
+    ['warehouse/stock_management', 'Warehouse / Stock management'],
+    ['unknown5', 'Cross-contamination control'],
+    ['unknown6', 'Expiration & dating'],
+  ];
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function rowId(r) { return r.recordKey || ('doc:' + r.docNo); }
@@ -210,6 +314,7 @@
 
   let control = {};     // rowId -> { obsoleteRetrieved, distributed, updatedAt, updatedBy }
   let live = {};        // rowId -> { revision, reason, dateOfIssue, bumped }
+  let categories = {};  // file name (lower-case) -> category override, '' included
   let canEdit = false;
 
   async function loadControl() {
@@ -221,6 +326,23 @@
 
   async function saveControl() {
     await window.storage.set(CONTROL_KEY, JSON.stringify(control), true);
+    $('saveState').textContent = 'Saved';
+    setTimeout(() => { $('saveState').textContent = ''; }, 1800);
+  }
+
+  // One round trip for every category override, keyed by file name -- matches how
+  // palette-map.js reads them back on the record's own page.
+  async function loadCategories() {
+    categories = {};
+    try {
+      const raw = await window.storage.getByPrefix(CATEGORY_PREFIX, true);
+      for (const k in raw) categories[k.slice(CATEGORY_PREFIX.length)] = raw[k];
+    } catch (e) { categories = {}; }
+  }
+
+  async function saveCategory(file, value) {
+    categories[file] = value;
+    await window.storage.set(CATEGORY_PREFIX + file, value, true);
     $('saveState').textContent = 'Saved';
     setTimeout(() => { $('saveState').textContent = ''; }, 1800);
   }
@@ -245,6 +367,21 @@
         bumped: true
       };
     });
+  }
+
+  // The record's current effective category: an override this page has loaded wins,
+  // otherwise fall back to whatever palette-map.js's static list already assigns the
+  // file (so a record nobody has touched via this dropdown still shows its real palette).
+  function currentCategory(file) {
+    if (Object.prototype.hasOwnProperty.call(categories, file)) return categories[file];
+    return (window.PaletteMap && window.PaletteMap.categoryFor(file)) || '';
+  }
+
+  function categorySelect(file, value) {
+    const options = CATEGORIES.map(([v, label]) =>
+      `<option value="${esc(v)}"${v === value ? ' selected' : ''}>${esc(label)}</option>`
+    ).join('');
+    return `<select data-file="${esc(file)}"${canEdit ? '' : ' disabled'}>${options}</select>`;
   }
 
   function ynSelect(id, field, value) {
@@ -285,10 +422,16 @@
       const obs = c.obsoleteRetrieved != null ? c.obsoleteRetrieved : r.obsoleteRetrieved;
       const dist = c.distributed != null ? c.distributed : r.distributed;
 
+      const file = online ? String(r.href).toLowerCase() : '';
+      const catCell = online
+        ? categorySelect(file, currentCategory(file))
+        : '<span class="cat-none">—</span>';
+
       html += `<tr class="${online ? '' : 'not-digitised'}" data-id="${esc(id)}"`
         + ` data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}">`
         + `<td class="c-code">${esc(r.docNo)}</td>`
         + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}</td>`
+        + `<td class="c-cat">${catCell}</td>`
         + `<td class="c-details">${esc(details || '')}${detailSub}</td>`
         + `<td class="c-rev">${rev == null ? '—' : 'Rev ' + rev}</td>`
         + `<td class="c-yn">${ynSelect(id, 'obsoleteRetrieved', obs)}</td>`
@@ -336,19 +479,29 @@
     await saveControl();
   });
 
+  tableBody.addEventListener('change', async (e) => {
+    const sel = e.target.closest('select[data-file]');
+    if (!sel || !canEdit) return;
+    sel.classList.add('dirty');
+    await saveCategory(sel.dataset.file, sel.value);
+  });
+
   searchInput.addEventListener('input', filter);
   statusFilter.addEventListener('change', filter);
   $('printBtn').addEventListener('click', () => window.print());
 
   $('csvBtn').addEventListener('click', () => {
-    const head = ['Document No.', 'Document Name', 'Details for change', 'Current revision',
+    const head = ['Document No.', 'Document Name', 'Category', 'Details for change', 'Current revision',
                   'Obsolete revision retrieved? Y/N', 'New revision distributed? Y/N', 'New date of issue'];
     const q = row => '"' + String(row == null ? '' : row).replace(/"/g, '""') + '"';
     const lines = [head.map(q).join(',')];
     tableBody.querySelectorAll('tr:not(.hidden)').forEach(row => {
       const cells = [...row.cells].map((td, i) => {
         const sel = td.querySelector('select');
-        if (sel) return sel.value;
+        if (sel) {
+          if (sel.dataset.file) return sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : sel.value;
+          return sel.value;
+        }
         return td.querySelector('.sub') ? td.firstChild.textContent : td.textContent;
       });
       lines.push(cells.map(q).join(','));
@@ -359,6 +512,97 @@
     a.download = 'REC-01-master-record-index.csv';
     a.click();
     URL.revokeObjectURL(a.href);
+  });
+
+  /* ---- controlled-copy title block editor ------------------------------------
+   * Only rows with a recordKey can have one: the block is printed by a digitised
+   * record, and recordKey is what both DocHeader and DocumentRevision key off. */
+  const dhModal = $('dhModal');
+  let dhCurrentKey = null;
+
+  function dhRow(key) { return ROWS.find(r => r.recordKey === key); }
+
+  function dhSetState(msg, kind) {
+    const el = $('dhState');
+    el.textContent = msg || '';
+    el.style.color = kind === 'error' ? 'var(--palette-fail)'
+                   : kind === 'ok' ? 'var(--palette-ok)' : 'var(--palette-label)';
+  }
+
+  function dhRenderPreview() {
+    const r = dhRow(dhCurrentKey) || {};
+    window.DocHeader.injectStyles();
+    $('dhPreview').innerHTML = window.DocHeader.blockHtml({
+      document: $('dhDocument').value,
+      docNumber: $('dhDocNumber').value,
+      reviewedBy: $('dhReviewedBy').value,
+      approvedBy: $('dhApprovedBy').value,
+      revision: $('dhRevision').textContent === '—' ? '' : $('dhRevision').textContent,
+      revisionDate: $('dhRevisionDate').dataset.raw || '',
+      effectiveDate: $('dhEffectiveDate').dataset.raw || ''
+    }, 1, 3, '../assets/abagold-logo.png');
+  }
+
+  async function dhLoad(key) {
+    dhCurrentKey = key;
+    const r = dhRow(key) || {};
+    dhSetState('Loading…');
+    // Same resolve the record itself uses, so the preview is what will actually print.
+    const h = await window.DocHeader.resolve(key, {
+      document: r.name || '',
+      docNumber: r.docNo || '',
+      reviewedBy: DATA.header.reviewedBy || '',
+      approvedBy: DATA.header.approvedBy || '',
+      revisionDate: r.dateOfIssue || ''
+    }, r.revision);
+
+    $('dhDocument').value = h.document;
+    $('dhDocNumber').value = h.docNumber;
+    $('dhReviewedBy').value = h.reviewedBy;
+    $('dhApprovedBy').value = h.approvedBy;
+    $('dhRevision').textContent = h.revision === '' ? '—' : h.revision;
+    $('dhRevisionDate').dataset.raw = h.revisionDate || '';
+    $('dhRevisionDate').textContent = window.DocHeader.fmtDate(h.revisionDate) || '—';
+    $('dhEffectiveDate').dataset.raw = h.effectiveDate || '';
+    $('dhEffectiveDate').textContent = window.DocHeader.fmtDate(h.effectiveDate) || 'not yet opened';
+    dhRenderPreview();
+    dhSetState(canEdit ? '' : 'Read-only — document control roles may edit this.');
+  }
+
+  async function dhOpen() {
+    const online = ROWS.filter(r => r.recordKey);
+    $('dhRecordSelect').innerHTML = online
+      .map(r => `<option value="${esc(r.recordKey)}">${esc(r.docNo)} — ${esc(r.name)}</option>`).join('');
+    ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy'].forEach(id => { $(id).disabled = !canEdit; });
+    $('dhSave').disabled = !canEdit;
+    dhModal.classList.add('open');
+    dhModal.style.display = 'flex';
+    if (online.length) await dhLoad(online[0].recordKey);
+  }
+
+  function dhClose() { dhModal.classList.remove('open'); dhModal.style.display = 'none'; }
+
+  $('headersBtn').addEventListener('click', () => { dhOpen().catch(e => dhSetState(e.message, 'error')); });
+  $('dhCancel').addEventListener('click', dhClose);
+  dhModal.addEventListener('click', e => { if (e.target === dhModal) dhClose(); });
+  $('dhRecordSelect').addEventListener('change', e => {
+    dhLoad(e.target.value).catch(err => dhSetState(err.message, 'error'));
+  });
+  ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy']
+    .forEach(id => $(id).addEventListener('input', dhRenderPreview));
+
+  $('dhSave').addEventListener('click', async () => {
+    if (!canEdit) { dhSetState('You do not have permission to edit document headers.', 'error'); return; }
+    try {
+      dhSetState('Saving…');
+      await window.DocHeader.saveFields(dhCurrentKey, {
+        document: $('dhDocument').value,
+        docNumber: $('dhDocNumber').value,
+        reviewedBy: $('dhReviewedBy').value,
+        approvedBy: $('dhApprovedBy').value
+      });
+      dhSetState('Saved — records will print this block.', 'ok');
+    } catch (e) { dhSetState(e.message, 'error'); }
   });
 
   (async function init() {
@@ -384,7 +628,7 @@
       p, new Promise((_, rej) => setTimeout(() => rej(new Error('storage timeout')), 15000))
     ]);
     try {
-      await withTimeout(Promise.all([loadControl(), loadLive()]));
+      await withTimeout(Promise.all([loadControl(), loadLive(), loadCategories()]));
     } catch (e) {
       $('saveState').textContent = 'Live revision data unavailable — showing the issued baseline';
       $('saveState').style.color = 'var(--palette-fail)';
