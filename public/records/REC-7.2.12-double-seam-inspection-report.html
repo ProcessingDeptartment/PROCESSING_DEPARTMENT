@@ -117,10 +117,15 @@
     #printOnlyStages .can-block{ margin-bottom:8px; page-break-inside:avoid; break-inside:avoid; }
     #printOnlyStages table.meas td.row-label span.spec{ display:none; }
     .grid-3{ grid-template-columns:repeat(3,1fr) !important; }
-    .print-cans-row{ display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:start; }
-    .print-cans-row table.meas{ font-size:8px; }
-    .print-cans-row table.meas td.row-label{ white-space:normal; }
-    .print-cans-row table.meas th, .print-cans-row table.meas td{ padding:1px 2px; }
+    .print-cans-row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px; align-items:start; }
+    .print-cans-row .can-block{ min-width:0; overflow:hidden; }
+    .print-cans-row table.meas{ font-size:8px; table-layout:fixed; width:100%; }
+    .print-cans-row table.meas td.row-label{ white-space:normal; width:34%; overflow-wrap:break-word; }
+    .print-cans-row table.meas th:not(:first-child), .print-cans-row table.meas td:not(.row-label){ width:22%; }
+    .print-cans-row table.meas th, .print-cans-row table.meas td{ padding:1px 2px; overflow:hidden; }
+    .print-cans-row table.meas input{ min-width:0; width:100%; padding:1px; font-size:8px; }
+    .print-cans-row .vac-row{ flex-wrap:wrap; }
+    .print-cans-row .vac-row input{ min-width:0; max-width:80px; }
     .footer-grid{ grid-template-columns:1fr 1fr !important; gap:6px; }
     #printPage1Extra label.field span{ display:block; font-size:12px; font-weight:400; color:#1b2330; margin-top:2px; }
     #printSpecSummary table.meas td.row-label{ white-space:normal; width:auto; }
