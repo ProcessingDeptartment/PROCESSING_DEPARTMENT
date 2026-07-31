@@ -3,9 +3,21 @@
 
    The one place a record page is assigned a colour palette.
 
-   To theme a record: find the palette below and add the page's file name
-   to its list. Nothing else — no attribute on the page, no new stylesheet.
-   A page that appears in no list gets the default slate/amber palette.
+   Two ways a record gets themed, in priority order:
+
+   1. A per-record override chosen in the Category column on the Master
+      Record Index (REC 01). That page writes it to shared storage under
+      the key `record_category:<file-name.html>` (lower-cased), which lands
+      in localStorage under data-store.js's `facility_records:` prefix.
+      This ALWAYS wins over the static list below, including an explicit
+      choice of "Default" (stored as an empty string) — that is how the
+      index un-assigns a record that used to be hard-coded here.
+
+   2. The static PALETTES list below, unchanged from before the Category
+      column existed. Add the page's file name to a list here and nothing
+      else is needed — no attribute on the page, no new stylesheet. A page
+      that matches neither an override nor an entry here gets the default
+      slate/amber palette.
 
    The palettes themselves (the --palette-* tokens) live in record-theme.css.
    Adding a name here that has no matching palette there does nothing, so
@@ -13,7 +25,15 @@
 
    This file is loaded from <head>, before the page renders, so the theme is
    in place on first paint — there is no flash of the default colours. Keep
-   it that way: don't move the <script> tag into <body> or defer it.
+   it that way: don't move the <script> tag into <body> or defer it. Because
+   of that, the override lookup reads localStorage directly and synchronously
+   rather than going through the async window.storage API (which isn't even
+   guaranteed to exist yet this early) — fine today since localStorage IS the
+   backend. Once a real backend is registered (see data-store.js), a page
+   opened on a device that has never synced that record's override will fall
+   through to the static list until something repopulates this device's
+   localStorage cache -- there is no seam for that yet, so re-check this if a
+   backend ever lands.
    ======================================================================== */
 
 (function () {
@@ -83,6 +103,40 @@
 
   };
 
+  // The record-category override written by the Master Record Index, if any, for the
+  // given file name. Returns null when nobody has ever touched the Category selector
+  // for this record -- distinct from '', which means "explicitly set to Default".
+  function overrideFor(file) {
+    try {
+      return window.localStorage.getItem('facility_records:record_category:' + file);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Static-list lookup only (the pre-Category-column behaviour). '' if no match.
+  function staticCategoryFor(file) {
+    for (var name in PALETTES) {
+      if (!Object.prototype.hasOwnProperty.call(PALETTES, name)) continue;
+      for (var i = 0; i < PALETTES[name].length; i++) {
+        if (PALETTES[name][i].toLowerCase() === file) return name;
+      }
+    }
+    return '';
+  }
+
+  // The effective category for a file name: override wins (even an explicit ''),
+  // otherwise fall back to the static list. Exposed so the Master Record Index can
+  // show the record's current palette in its Category dropdown.
+  function categoryFor(file) {
+    file = String(file || '').toLowerCase();
+    if (!file) return '';
+    var override = overrideFor(file);
+    return override !== null ? override : staticCategoryFor(file);
+  }
+
+  window.PaletteMap = { PALETTES: PALETTES, categoryFor: categoryFor };
+
   var root = document.documentElement;
 
   /* An explicit data-palette on the page wins — the escape hatch for a
@@ -92,13 +146,6 @@
   var file = (location.pathname.split('/').pop() || '').toLowerCase();
   if (!file) return;
 
-  for (var name in PALETTES) {
-    if (!Object.prototype.hasOwnProperty.call(PALETTES, name)) continue;
-    for (var i = 0; i < PALETTES[name].length; i++) {
-      if (PALETTES[name][i].toLowerCase() === file) {
-        root.setAttribute('data-palette', name);
-        return;
-      }
-    }
-  }
+  var cat = categoryFor(file);
+  if (cat) root.setAttribute('data-palette', cat);
 })();
