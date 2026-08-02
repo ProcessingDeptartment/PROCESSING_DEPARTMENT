@@ -85,6 +85,15 @@
   .ml-badge-fail{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); }
   .ml-badge-muted{ background:#eee; color:#777; }
   .ml-muted{ color:#8a939b; }
+  .ml-yesno{ display:flex; gap:6px; }
+  .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
+  .ml-yesno button:hover:not(:disabled){ border-color:#8a939b !important; }
+  .ml-yesno button.on[data-v="Yes"]{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
+  .ml-yesno button.on[data-v="No"]{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); }
+  .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
+  .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
+    font-weight:700; border-bottom:1px solid var(--palette-border,#e2e4e3); padding-bottom:4px; margin:12px 0 2px; }
+  .ml-grouphead:first-child{ margin-top:0; }
   .ml-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
   .ml-notice.show{ display:block; }
   .ml-notice-due{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); border:1px solid #e8b8b3; }
@@ -136,14 +145,38 @@
     .ml-actions .ml-btn{ flex:1 1 100%; }
     .ml-actions .ml-btn-sm{ flex:0 1 auto; }
   }
+  /* Single-entry printout -- a screen-hidden replica of the paper form, so one entry
+     prints as the controlled document rather than as a row of a web table. */
+  .ml-sheet{ display:none; color:#000; font-family:'Segoe UI',system-ui,sans-serif; font-size:10.5px; }
+  .ml-sheet table{ width:100%; border-collapse:collapse; margin-bottom:8px; }
+  .ml-sheet td,.ml-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; }
+  .ml-sheet .sheet-logo{ width:78px; text-align:center; font-weight:700; font-size:12px; vertical-align:middle; }
+  .ml-sheet .sheet-lbl{ font-weight:700; white-space:nowrap; width:88px; }
+  .ml-sheet .sheet-head td{ font-size:9.5px; }
+  .ml-sheet .sheet-body th{ background:#eee; font-weight:700; }
+  .ml-sheet .sheet-body td.sheet-item{ width:46%; }
+  .ml-sheet .sheet-body td.sheet-rec{ width:14%; text-align:center; font-weight:700; }
+  .ml-sheet .sheet-sign td{ height:30px; }
+  .ml-sheet .sheet-title{ font-weight:700; font-size:12px; text-align:center; padding:4px; }
   @media print{
-    @page{ size:A4 landscape; margin:9mm; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
     .ml-app{ font-size:10px; }
     .ml-table-wrap{ overflow:visible !important; }
     table.ml-table th,table.ml-table td{ border:1px solid #000; padding:3px 5px; }
+    /* Printing one entry hides the whole app and shows only that entry's sheet. */
+    body.ml-printing-entry .ml-top,
+    body.ml-printing-entry .ml-body{ display:none !important; }
+    body.ml-printing-entry .ml-sheet{ display:block; }
   }`;
+
+  // @page can't be toggled by a class, so the rule is swapped before each print:
+  // the entries log wants landscape, a single-entry sheet wants portrait like the Word form.
+  function setPageOrientation(orientation) {
+    let s = document.getElementById('ml-page-style');
+    if (!s) { s = document.createElement('style'); s.id = 'ml-page-style'; document.head.appendChild(s); }
+    s.textContent = `@page{ size:A4 ${orientation}; margin:${orientation === 'portrait' ? '10mm' : '9mm'}; }`;
+  }
 
   function injectStyleOnce() {
     if (document.getElementById('ml-style')) return;
@@ -180,8 +213,18 @@
   function fieldInputHtml(ns, field, value) {
     const id = `${ns}_f_${field.key}`;
     const v = value == null ? '' : value;
-    if (field.type === 'select' || field.type === 'yesno') {
-      const opts = field.type === 'yesno' ? ['', 'Yes', 'No'] : ['', ...(field.options || [])];
+    // Yes/No is a two-button toggle rather than a dropdown -- one tap on the floor
+    // instead of open-scroll-pick. The real value still lives in a hidden input under
+    // the same id, so every reader (saveForm, computed fields) is unchanged.
+    if (field.type === 'yesno') {
+      return `<span class="ml-yesno" data-yesno-for="${id}">
+        <button type="button" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}">Yes</button>
+        <button type="button" data-v="No" class="${v === 'No' ? 'on' : ''}">No</button>
+        <input type="hidden" id="${id}" value="${esc(v)}">
+      </span>`;
+    }
+    if (field.type === 'select') {
+      const opts = ['', ...(field.options || [])];
       // Keep a stored value that is no longer an option (e.g. an option list
       // that was since renamed) so old records still show what was captured.
       if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
@@ -199,6 +242,9 @@
     if (field.type === 'date') {
       return `<input type="date" id="${id}" value="${esc(v)}">`;
     }
+    if (field.type === 'time') {
+      return `<input type="time" id="${id}" value="${esc(v)}">`;
+    }
     if (field.type === 'month') {
       return `<input type="month" id="${id}" value="${esc(v)}">`;
     }
@@ -209,9 +255,44 @@
     return field.label + (field.unit ? ` <span class="hint">(${esc(field.unit)})</span>` : '');
   }
 
+  // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
+  // listening for a normal field change (computed fields) still sees it. Clicking the
+  // active choice again clears it -- there is no other way back to "not answered".
+  function wireYesNo(container) {
+    container.querySelectorAll('.ml-yesno').forEach(group => {
+      const hidden = group.querySelector('input[type=hidden]');
+      group.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          const next = btn.classList.contains('on') ? '' : btn.dataset.v;
+          hidden.value = next;
+          group.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === next && next !== ''));
+          hidden.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      });
+    });
+  }
+
+  /* The paper forms put a Comments column beside every checklist line. A field marked
+   * withComment gets a synthetic sibling field here, so the modal, save, CSV and JSON
+   * paths all handle it as an ordinary field -- only the printed sheet treats it
+   * specially, pulling it into the third column where the paper has it. */
+  function expandCommentFields(fields) {
+    const out = [];
+    (fields || []).forEach(f => {
+      out.push(f);
+      if (!f.withComment) return;
+      out.push({
+        key: f.key + '__comment', label: 'Comment — ' + f.label, type: 'text',
+        isComment: true, showInTable: false, group: f.group
+      });
+    });
+    return out;
+  }
+
   // ---- one controller per log (primary + optional secondary share this factory) ----
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow } = opts;
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged } = opts;
     let entries = [];
     let editingId = null;
 
@@ -309,18 +390,28 @@
           html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${esc(v)}</td>`;
         });
         if (submitFlow) {
-          html += isSubmitted(entryRow)
-            ? `<td><span class="ml-badge ml-badge-ok">✓ Submitted</span></td>`
-            : `<td><span class="ml-badge ml-badge-muted">Draft</span></td>`;
+          if (entryRow.verification) html += `<td><span class="ml-badge ml-badge-ok">✓ Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
+          else if (isSubmitted(entryRow)) html += `<td><span class="ml-badge ml-badge-ok">✓ Submitted</span></td>`;
+          else html += `<td><span class="ml-badge ml-badge-muted">Draft</span></td>`;
         }
         html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
-        html += `<td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">${isSubmitted(entryRow) ? 'View' : 'Edit'}</button></td>`;
+        html += `<td style="white-space:nowrap;">
+          <button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">${isSubmitted(entryRow) ? 'View' : 'Edit'}</button>
+          <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${entryRow.id}" title="Print this entry as the paper form">PDF</button>
+          <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${entryRow.id}" title="Export this entry as JSON">JSON</button>
+        </td>`;
         html += `</tr>`;
       });
       html += `</tbody></table>`;
       table.innerHTML = html;
       table.querySelectorAll('[data-edit]').forEach(btn => {
         btn.addEventListener('click', () => openForm(btn.dataset.edit));
+      });
+      table.querySelectorAll('[data-pdf]').forEach(btn => {
+        btn.addEventListener('click', () => printEntry(btn.dataset.pdf));
+      });
+      table.querySelectorAll('[data-json]').forEach(btn => {
+        btn.addEventListener('click', () => exportEntryJson(btn.dataset.json));
       });
     }
 
@@ -347,17 +438,25 @@
       const locked = existing ? isSubmitted(existing) : false;
       el(modalIds.title).textContent = !id ? 'Add entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
       const container = el(modalIds.fields);
-      container.innerHTML = entryFields.map(f => `
+      // Fields carrying a `group` get a heading when the group changes, so near-identical
+      // start-up and shut-down questions read as distinct steps rather than duplicates.
+      let lastGroup = null;
+      container.innerHTML = entryFields.map(f => {
+        let head = '';
+        if (f.group && f.group !== lastGroup) { head = `<div class="ml-grouphead">${esc(f.group)}</div>`; lastGroup = f.group; }
+        return head + `
         <label class="ml-field">${fieldLabel(f)}
           ${fieldInputHtml(ns, f, existing ? existing.values[f.key] : (f.default || ''))}
-        </label>`).join('');
+        </label>`;
+      }).join('');
+      wireYesNo(container);
       container.querySelectorAll('input,select,textarea').forEach(inp => {
         inp.addEventListener('input', recalcComputedInModal);
         inp.addEventListener('change', recalcComputedInModal);
       });
       recalcComputedInModal();
       if (submitFlow) {
-        container.querySelectorAll('input,select,textarea').forEach(inp => { inp.disabled = locked; });
+        container.querySelectorAll('input,select,textarea,.ml-yesno button').forEach(inp => { inp.disabled = locked; });
         const saveBtn = el(`${ns}_saveBtn`), submitBtn = el(`${ns}_submitBtn`);
         if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
         if (submitBtn) submitBtn.style.display = locked ? 'none' : '';
@@ -414,6 +513,8 @@
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedEntry);
       closeForm();
       renderTable();
+      // Submitting an entry adds it to the verifier's pick list, so that has to redraw too.
+      if (onEntriesChanged) onEntriesChanged();
       if (submitFlow) toast(finalize ? 'Entry submitted.' : 'Draft saved.');
       else toast(editingId ? 'Entry updated.' : 'Entry added.');
     }
@@ -452,15 +553,105 @@
     }
 
     function printPdf() {
+      setPageOrientation('landscape');
+      withPrintTitle(safeKey(title) + '_' + new Date().toISOString().slice(0, 10), () => window.print());
+    }
+
+    function withPrintTitle(name, fn) {
       const previousTitle = document.title;
-      document.title = safeKey(title) + '_' + new Date().toISOString().slice(0, 10);
-      window.print();
+      document.title = name; // browsers use the document title as the PDF filename
+      fn();
       document.title = previousTitle;
     }
 
+    // ---- single-entry outputs: one entry = one sheet of the paper record ----
+    function roleField(role) { return entryFields.find(f => f.role === role) || null; }
+
+    function sheetRowFields() {
+      // Everything that is a checklist line on the paper: not the date header, not the
+      // operator signature block, and not a comment companion (that's the third column).
+      return entryFields.filter(f => !f.role && !f.isComment);
+    }
+
+    function buildEntrySheet(entryRow) {
+      const v = entryRow.values || {};
+      const dateF = roleField('date'), opF = roleField('operator');
+      const m = sheetMeta || {};
+      const rows = sheetRowFields().map(f => {
+        const raw = v[f.key];
+        const shown = (raw === '' || raw == null) ? '' : String(raw);
+        const comment = v[f.key + '__comment'] || '';
+        return `<tr><td class="sheet-item">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</td>
+          <td class="sheet-rec">${esc(shown)}</td><td>${esc(comment)}</td></tr>`;
+      }).join('');
+      const verified = entryRow.verification || null;
+      return `
+      <table class="sheet-head">
+        <tr><td class="sheet-logo" rowspan="4">${esc(m.logoText || 'ABAGOLD')}</td>
+            <td class="sheet-lbl">Document:</td><td>${esc(docTitle)}</td>
+            <td class="sheet-lbl">Doc number:</td><td>${esc(docCode)}</td></tr>
+        <tr><td class="sheet-lbl">Prepared by:</td><td>${esc(m.preparedBy || '')}</td>
+            <td class="sheet-lbl">Revision:</td><td>${esc(m.revision || '')}</td></tr>
+        <tr><td class="sheet-lbl">Approved by:</td><td>${esc(m.approvedBy || '')}</td>
+            <td class="sheet-lbl">Page:</td><td>1 of 1</td></tr>
+        <tr><td class="sheet-lbl">Effective Date:</td><td>${esc(m.effectiveDate || '')}</td>
+            <td class="sheet-lbl">Revision Date:</td><td>${esc(m.revisionDate || '')}</td></tr>
+        <tr><td colspan="5">Distribution approved as controlled copy:</td></tr>
+      </table>
+      <table class="sheet-body">
+        <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : '')}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
+        ${rows}
+      </table>
+      <table class="sheet-sign">
+        <tr><td class="sheet-lbl">Boiler Operator:</td><td>${esc(opF ? (v[opF.key] || '') : '')}</td>
+            <td class="sheet-lbl">Signature:</td><td>${esc(entryRow.status === 'submitted' && opF ? (v[opF.key] || '') : '')}</td>
+            <td class="sheet-lbl">Date:</td><td>${esc(entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : '')}</td></tr>
+        <tr><td class="sheet-lbl">Verified by:</td><td>${esc(verified ? verified.verifiedBy : '')}</td>
+            <td class="sheet-lbl">Signature:</td><td>${esc(verified ? verified.verifiedSig : '')}</td>
+            <td class="sheet-lbl">Date:</td><td>${esc(verified ? verified.verifiedDate : '')}</td></tr>
+      </table>`;
+    }
+
+    function printEntry(id) {
+      const entryRow = entries.find(e => e.id === id);
+      if (!entryRow) return;
+      const dateF = roleField('date');
+      const sheet = el('ml_printSheet');
+      sheet.innerHTML = buildEntrySheet(entryRow);
+      setPageOrientation('portrait');
+      document.body.classList.add('ml-printing-entry');
+      const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);
+      withPrintTitle(safeKey(docCode) + '_' + safeKey(title) + '_' + stamp, () => window.print());
+      document.body.classList.remove('ml-printing-entry');
+    }
+
+    function exportEntryJson(id) {
+      const entryRow = entries.find(e => e.id === id);
+      if (!entryRow) return;
+      const dateF = roleField('date');
+      const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);
+      const payload = {
+        docCode, record: docTitle, log: title,
+        exportedAt: new Date().toISOString(),
+        entry: entryRow
+      };
+      download(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+        safeKey(docCode) + '_' + stamp + '.json');
+    }
+
     return { load, renderTable, openForm, closeForm, saveForm, exportCsv, exportJson, printPdf,
-      // Drafts aren't finished work, so they don't make a verification due.
-      verifiableCount: () => submitFlow ? entries.filter(isSubmitted).length : entries.length };
+      printEntry, exportEntryJson,
+      submittedEntries: () => entries.filter(isSubmitted).slice()
+        .sort((a, b) => (b.values.date || '').localeCompare(a.values.date || '')),
+      applyVerification: async (ids, record) => {
+        const set = new Set(ids);
+        entries.forEach(e => { if (set.has(e.id)) e.verification = record; });
+        await persist();
+        renderTable();
+      },
+      // Drafts aren't finished work and already-verified entries are done, so neither
+      // makes a verification due.
+      verifiableCount: () => submitFlow ? entries.filter(e => isSubmitted(e) && !e.verification).length : entries.length };
   }
 
   async function init(config) {
@@ -570,6 +761,9 @@
         <div class="ml-panel-head"><h2>Verification</h2></div>
         <div class="ml-panel-body">
           <div class="ml-notice ml-notice-due" id="ml_verifyNotice"></div>
+          ${submitFlow ? `
+          <h3 style="margin-top:0;">Entries to verify</h3>
+          <div class="ml-history-list" id="ml_verifySelect" style="margin-bottom:10px;"></div>` : ''}
           <div class="ml-grid ml-grid-3" style="margin-bottom:10px;">
             <label class="ml-field">Verified by<input id="ml_verifiedBy"></label>
             <label class="ml-field">Signature (type name to sign)<input id="ml_verifiedSig"></label>
@@ -632,14 +826,17 @@
         </div>
       </div>
       <div class="ml-toast no-print" id="ml_toast"></div>
+      <div class="ml-sheet" id="ml_printSheet"></div>
     `;
 
     // ---------- primary + optional secondary log controllers ----------
     const primary = makeLogController({
       ns: 'ml_p',
       title: config.title,
-      entryFields: config.entryFields,
+      entryFields: expandCommentFields(config.entryFields),
       storageKey: 'monitoring_log:' + config.recordKey,
+      sheetMeta: config.docMeta, docCode: config.docCode, docTitle: config.title,
+      onEntriesChanged: () => refreshVerification(),
       specGetter: () => currentSpec,
       toast,
       tableWrap: el('ml_p_table'),
@@ -653,8 +850,10 @@
       secondary = makeLogController({
         ns: 'ml_s',
         title: config.secondaryLog.title,
-        entryFields: config.secondaryLog.entryFields,
+        entryFields: expandCommentFields(config.secondaryLog.entryFields),
         storageKey: 'monitoring_log:' + config.recordKey + '__' + config.secondaryLog.key,
+        sheetMeta: config.docMeta, docCode: config.docCode, docTitle: config.title,
+      onEntriesChanged: () => refreshVerification(),
         specGetter: () => currentSpec,
         toast,
         tableWrap: el('ml_s_table'),
@@ -742,6 +941,7 @@
       // config.verificationNotify = { intervalDays, recipients:[], message }
       // Opt-in: without it the strip behaves exactly as before.
       const notifyCfg = config.verificationNotify || null;
+      const operatorField = (config.entryFields || []).find(f => f.role === 'operator') || null;
 
       // Flags a log that has entries but no (or a stale) verification, shows the banner
       // and fires one notification per page load. Delivery is a no-op until a transport
@@ -788,27 +988,75 @@
         return primary.verifiableCount() + (secondary ? secondary.verifiableCount() : 0);
       }
 
+      // The verifier signs off named entries, not "the log" in the abstract -- so they
+      // pick exactly which submitted entries this signature covers.
+      function pendingForVerification() {
+        const tag = (ctrl, which) => ctrl.submittedEntries()
+          .filter(e => !e.verification)
+          .map(e => ({ which, entry: e }));
+        return tag(primary, 'primary').concat(secondary ? tag(secondary, 'secondary') : []);
+      }
+
+      function renderVerifySelect() {
+        const target = el('ml_verifySelect');
+        if (!target) return;
+        const pending = pendingForVerification();
+        if (!pending.length) {
+          target.innerHTML = `<div class="ml-history-item ml-muted">No submitted entries are waiting to be verified.</div>`;
+          return;
+        }
+        target.innerHTML = `<div class="ml-history-item"><label style="font-weight:700;">
+            <input type="checkbox" id="ml_verifyAll"> Select all (${pending.length})</label></div>` +
+          pending.map(p => `<div class="ml-history-item"><label>
+            <input type="checkbox" class="ml-verify-pick" data-which="${p.which}" value="${esc(p.entry.id)}">
+            ${esc(p.entry.values.date || '(no date)')}
+            <span class="ml-muted">· ${esc(operatorField ? (p.entry.values[operatorField.key] || '—') : '')}</span></label>
+            ${p.entry.inSpec === false ? '<span class="ml-badge ml-badge-fail">Deviation</span>' : ''}</div>`).join('');
+        el('ml_verifyAll').addEventListener('change', ev => {
+          target.querySelectorAll('.ml-verify-pick').forEach(cb => { cb.checked = ev.target.checked; });
+        });
+      }
+
       async function renderVerificationHistory() {
         const raw = await storeGet('verification_log:' + config.recordKey, true);
         let hist = [];
         try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
         const target = el('ml_verificationHistory');
+        renderVerifySelect();
         checkVerificationDue(hist);
         if (!hist.length) { target.innerHTML = `<div class="ml-history-item ml-muted">No verification logged yet.</div>`; return; }
         target.innerHTML = hist.slice().reverse().map(v => `
-          <div class="ml-history-item"><span>${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} <span class="ml-muted">(signed: ${esc(v.verifiedSig)})</span></span></div>`).join('');
+          <div class="ml-history-item"><span>${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} <span class="ml-muted">(signed: ${esc(v.verifiedSig)}${v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : ''})</span></span></div>`).join('');
       }
       el('ml_saveVerificationBtn').addEventListener('click', async () => {
         const verifiedBy = el('ml_verifiedBy').value.trim();
         const verifiedSig = el('ml_verifiedSig').value.trim();
         const verifiedDate = el('ml_verifiedDate').value;
         if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, signature and date are all required.'); return; }
+
+        // With the draft/submit flow the signature is attached to the entries the
+        // verifier ticked, so each printed sheet carries its own verifier line.
+        let picked = [];
+        if (submitFlow) {
+          picked = [...document.querySelectorAll('.ml-verify-pick:checked')]
+            .map(cb => ({ which: cb.dataset.which, id: cb.value }));
+          if (pendingForVerification().length && !picked.length) {
+            toast('Tick at least one entry to verify.'); return;
+          }
+        }
+
+        const record = { verifiedBy, verifiedSig, verifiedDate, loggedAt: Date.now() };
         const raw = await storeGet('verification_log:' + config.recordKey, true);
         let hist = [];
         try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
-        hist.push({ verifiedBy, verifiedSig, verifiedDate, loggedAt: Date.now() });
+        hist.push(Object.assign({ entryIds: picked.map(p => p.id) }, record));
         await storeSet('verification_log:' + config.recordKey, JSON.stringify(hist), true);
-        toast('Verification logged.');
+
+        if (picked.length) {
+          await primary.applyVerification(picked.filter(p => p.which === 'primary').map(p => p.id), record);
+          if (secondary) await secondary.applyVerification(picked.filter(p => p.which === 'secondary').map(p => p.id), record);
+        }
+        toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');
         el('ml_verifiedBy').value = ''; el('ml_verifiedSig').value = ''; el('ml_verifiedDate').value = '';
         renderVerificationHistory();
       });

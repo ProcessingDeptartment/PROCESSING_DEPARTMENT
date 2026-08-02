@@ -25,24 +25,38 @@
     docCode: 'REC 7.8.3',
     title: 'Boiler Inspection Report',
     docRevisionStart: 4,
+    // Order and wording follow the paper form (rev 4) row for row. The two burner-fire
+    // rows and the two power-failure rows are NOT duplicates -- one of each belongs to
+    // start-up and the other to shut-down, which is what the `group` headings make clear.
     entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'timeBoilerStarted', label: 'Time boiler started', type: 'text' },
-      { key: 'waterLevelChecked', label: 'Water level checked and adjusted', type: 'yesno' },
-      { key: 'airReleaseValveOpened', label: 'Air release valve opened', type: 'yesno' },
-      { key: 'burnerSwitchedOn', label: 'Burner switched on', type: 'yesno' },
-      { key: 'burnerLowFire', label: 'Burner set to "low fire"', type: 'yesno' },
-      { key: 'pressureChecked', label: 'Pressure checked', type: 'yesno' },
-      { key: 'mowbreyOpened', label: 'Single & dual Mowbrey opened', type: 'yesno' },
-      { key: 'mainSteamValveOpened', label: 'Main steam valve opened', type: 'yesno' },
-      { key: 'timeBoilerTurnedOff', label: 'Time boiler turned off', type: 'text' },
-      { key: 'burnerAdjustedHighToLow', label: 'Burner adjusted from high fire to low fire', type: 'yesno' },
-      { key: 'powerFailure', label: 'Power failure', type: 'yesno' },
-      { key: 'boilerRestarted', label: 'Boiler restarted if there was power failure', type: 'yesno' },
-      { key: 'dieselReading', label: 'Diesel reading', type: 'number', unit: 'L' },
-      { key: 'comments', label: 'Comments', type: 'textarea' },
-      { key: 'boilerOperator', label: 'Boiler operator', type: 'text', required: true }
+      { key: 'date', label: 'Date', type: 'date', required: true, role: 'date', group: 'Start-up' },
+      { key: 'timeBoilerStarted', label: 'Time boiler started', type: 'time', group: 'Start-up', withComment: true },
+      { key: 'waterLevelChecked', label: 'Water level checked and adjusted', type: 'yesno', group: 'Start-up', withComment: true },
+      { key: 'airReleaseValveOpened', label: 'Air release valve opened', type: 'yesno', group: 'Start-up', withComment: true },
+      { key: 'burnerSwitchedOn', label: 'Burner switched on', type: 'yesno', group: 'Start-up', withComment: true },
+      { key: 'burnerLowFire', label: 'Burner set to "LOW FIRE"', type: 'yesno', group: 'Start-up', withComment: true },
+      { key: 'pressureChecked', label: 'Pressure checked', type: 'yesno', group: 'Start-up', withComment: true },
+      { key: 'mowbreyOpened', label: 'Single & Dual Mowbrey opened', type: 'yesno', group: 'Start-up', withComment: true },
+      { key: 'mainSteamValveOpened', label: 'Main steam valve opened', type: 'yesno', group: 'Start-up', withComment: true },
+
+      { key: 'timeBoilerTurnedOff', label: 'Time boiler turned off', type: 'time', group: 'Shut-down', withComment: true },
+      { key: 'burnerAdjustedHighToLow', label: 'Adjust burner from high "FIRE" to low "FIRE"', type: 'yesno', group: 'Shut-down', withComment: true },
+
+      { key: 'powerFailure', label: 'Power failure', type: 'yesno', group: 'Interruptions & readings', withComment: true },
+      { key: 'boilerRestarted', label: 'Boiler restarted if there is power failure', type: 'yesno', group: 'Interruptions & readings', withComment: true },
+      { key: 'dieselReading', label: 'Diesel reading', type: 'number', unit: 'litres', group: 'Interruptions & readings', withComment: true },
+
+      { key: 'boilerOperator', label: 'Boiler operator', type: 'text', required: true, role: 'operator', group: 'Sign-off' }
     ],
+    // Reproduced on the single-entry printout, which mirrors the Word form's header block.
+    docMeta: {
+      logoText: 'ABAGOLD',
+      preparedBy: 'Novuyo Mashabane',
+      approvedBy: 'Werner Piek',
+      revision: '4',
+      effectiveDate: '06/08/2018',
+      revisionDate: '06/09/2022'
+    },
     specFields: [],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation',
