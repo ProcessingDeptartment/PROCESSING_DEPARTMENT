@@ -255,10 +255,6 @@
             <label class="field">Supervisor<input id="f_supervisor"></label>
             <label class="field">Date<input id="f_supervisorDate" type="date"></label>
           </div>
-          <div class="signoff-item no-print">
-            <label class="field">Verified by (QA)<input id="f_verifiedBy"></label>
-            <label class="field">Date<input id="f_verifiedDate" type="date"></label>
-          </div>
         </div>
       </div>
     </div>
@@ -292,7 +288,6 @@
       comments:'',
       operator:'', operatorDate:'',
       supervisor:'', supervisorDate:'',
-      verifiedBy:'', verifiedDate:'',
       createdAt: null, updatedAt: null
     };
   }
@@ -374,8 +369,6 @@
     $('f_operatorDate').value = state.operatorDate;
     $('f_supervisor').value = state.supervisor;
     $('f_supervisorDate').value = state.supervisorDate;
-    $('f_verifiedBy').value = state.verifiedBy;
-    $('f_verifiedDate').value = state.verifiedDate;
   }
 
   function bindInputs(){
@@ -388,7 +381,7 @@
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; updateResults(); });
     });
     $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['operator','operatorDate','supervisor','supervisorDate','verifiedBy','verifiedDate'].forEach(key=>{
+    ['operator','operatorDate','supervisor','supervisorDate'].forEach(key=>{
       const id = 'f_' + key;
       $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
     });

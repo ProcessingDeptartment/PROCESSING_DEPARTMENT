@@ -224,11 +224,8 @@
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body footer-grid">
         <label class="field">Completed by<input id="f_completedBy"></label>
-        <label class="field">Verified by<input id="f_verifiedBy"></label>
         <label class="field">Signature (type name to sign)<input id="f_completedSig"></label>
-        <label class="field">Signature (type name to sign)<input id="f_verifiedSig"></label>
         <label class="field">Date<input id="f_completedDate" type="date"></label>
-        <label class="field">Date<input id="f_verifiedDate" type="date"></label>
       </div>
     </div>
 
@@ -385,7 +382,6 @@
       stages:{ before: blankStage(), during: blankStage(), after: blankStage() },
       comments:'',
       completedBy:'', completedSig:'', completedDate:'',
-      verifiedBy:'', verifiedSig:'', verifiedDate:'',
       createdAt: null, updatedAt: null
     };
   }
@@ -764,9 +760,6 @@
     $('f_completedBy').value = state.completedBy;
     $('f_completedSig').value = state.completedSig;
     $('f_completedDate').value = state.completedDate;
-    $('f_verifiedBy').value = state.verifiedBy;
-    $('f_verifiedSig').value = state.verifiedSig;
-    $('f_verifiedDate').value = state.verifiedDate;
     $('recordIdTag').textContent = state.id ? `${state.id} · rev ${state.revision} · ${state.status}` : 'unsaved draft';
   }
 
@@ -780,7 +773,7 @@
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; renderIssues(); });
     });
     $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['f_completedBy','f_completedSig','f_completedDate','f_verifiedBy','f_verifiedSig','f_verifiedDate'].forEach(id=>{
+    ['f_completedBy','f_completedSig','f_completedDate'].forEach(id=>{
       const key = id.replace('f_','');
       $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
     });
@@ -905,7 +898,7 @@
       </div></div>`;
   }
 
-  // Sign-off prints as a compact 4-column table rather than stacked label/value fields:
+  // Sign-off prints as a compact single-row table rather than stacked label/value fields:
   // the stacked form cost ~310px of page 1, which the per-page title block cannot spare.
   function buildCommentsSignoffHtml(){
     const esc = v => String(v||'—').replace(/</g,'&lt;');
@@ -915,11 +908,8 @@
       <div class="panel-body">
         <table class="meas"><tbody>
           <tr><td class="row-label">Completed by</td><td>${esc(state.completedBy)}</td>
-              <td class="row-label">Verified by</td><td>${esc(state.verifiedBy)}</td></tr>
-          <tr><td class="row-label">Signature</td><td>${esc(state.completedSig)}</td>
-              <td class="row-label">Signature</td><td>${esc(state.verifiedSig)}</td></tr>
-          <tr><td class="row-label">Date</td><td>${esc(state.completedDate)}</td>
-              <td class="row-label">Date</td><td>${esc(state.verifiedDate)}</td></tr>
+              <td class="row-label">Signature</td><td>${esc(state.completedSig)}</td>
+              <td class="row-label">Date</td><td>${esc(state.completedDate)}</td></tr>
         </tbody></table>
       </div></div>`;
   }
