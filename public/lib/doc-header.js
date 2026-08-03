@@ -21,6 +21,12 @@
 
   const FIELDS = ['document', 'docNumber', 'reviewedBy', 'approvedBy'];
 
+  /* Last resolved block per record. An on-screen revision badge must state exactly what
+   * the printed copy states, so it reads the resolved block rather than resolving the
+   * revision a second time down a slightly different path -- which is how the badge came
+   * to print "Rev date not set" beside a block carrying the real date. */
+  const RESOLVED = {};
+
   /* Height of the printed-page strip the repeating title block lives in. Anything that
    * writes its own @page margins has to reserve the same strip -- see monitoring-log.js. */
   const PRINT_HEADER_HEIGHT = '26mm';
@@ -193,7 +199,20 @@
       document.body.insertBefore(host, document.body.firstChild);
     }
     host.innerHTML = blockHtml(h, null, null, opts.logoSrc || '../assets/abagold-logo.png');
+    RESOLVED[opts.recordKey] = h;
     return h;
+  }
+
+  /* The resolved block for a record, or null before it has mounted. Anything displaying
+   * a revision on screen reads this instead of resolving its own. */
+  function current(recordKey) { return RESOLVED[recordKey] || null; }
+
+  /* "Rev 2 · Rev date 20/04/2020" -- the one wording, so every engine's badge matches. */
+  function badgeText(recordKey, fallbackRev) {
+    const h = current(recordKey);
+    const rev = h && h.revision !== '' && h.revision != null ? h.revision : (fallbackRev || 1);
+    const date = h && h.revisionDate ? fmtDate(h.revisionDate) : null;
+    return 'Rev ' + rev + ' · Rev date ' + (date || 'not set');
   }
 
   // Persist only the typed fields; the automatic three are never accepted from a form.
@@ -272,6 +291,7 @@
   window.DocHeader = {
     FIELDS, resolve, saveFields, ensureEffectiveDate, blockHtml, injectStyles, fmtDate,
     defaultsFor, mountPrintHeader, PRINT_HEADER_HEIGHT, PAGE_SIDE_MARGIN,
+    current, badgeText,
     load: loadStored
   };
 })();

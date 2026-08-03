@@ -37,7 +37,7 @@
 (function () {
   /* Bump this when ANY file in lib/ or styles/ changes. It is the whole estate's
    * cache key -- see the header comment. */
-  const LIB_VERSION = '1';
+  const LIB_VERSION = '2';
 
   // Where lib/ lives, derived from this script's own src.
   const SELF = document.currentScript && document.currentScript.src;
@@ -104,21 +104,20 @@
    * shell before running its own script. */
   async function boot(config) {
     config = config || {};
-    STYLES.forEach(addStyle);
-
     const engine = config.engine ? ENGINES[config.engine] : null;
     if (config.engine && !engine) {
       throw new Error('shell: unknown engine "' + config.engine + '"');
     }
 
-    let libs = CORE.slice();
+    await corePromise; // started at parse time, not here -- see the bottom of this file
+    let libs = [];
     (config.uses || []).forEach(function (name) {
       if (OPTIONAL[name]) libs.push(OPTIONAL[name]);
       else console.warn('shell: unknown optional lib "' + name + '"');
     });
     if (engine) libs = libs.concat(engine.libs);
 
-    await Promise.all(libs.map(addScript));
+    if (libs.length) await Promise.all(libs.map(addScript));
     await domReady();
 
     /* An engine mounts the controlled-copy title block itself as part of init.
@@ -148,6 +147,13 @@
       return Promise.reject(e);
     });
   }
+
+  /* Stylesheets and the core libraries start loading the instant this file parses, in
+   * <head>, rather than waiting for the Shell.record() call at the end of <body>.
+   * Deferring them was a visible flash of unstyled record on every page, and it cost a
+   * round trip -- the core does not depend on the config, so it need not wait for it. */
+  STYLES.forEach(addStyle);
+  const corePromise = Promise.all(CORE.map(addScript));
 
   window.Shell = { record: record, LIB_VERSION: LIB_VERSION, ROOT: ROOT };
 })();

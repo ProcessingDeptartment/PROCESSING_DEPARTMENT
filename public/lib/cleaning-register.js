@@ -651,11 +651,11 @@
       if (dirty) { e.preventDefault(); e.returnValue = ''; }
     });
 
-    const rev = await DocumentRevision.getCurrent(config.recordKey, config.docRevisionStart || 1);
-    const revDate = await DocumentRevision.getCurrentDate(config.recordKey, config.docRevisionDate);
-    el('cr_docRev').textContent = `Rev ${rev} · Rev date ${revDate || 'not set'}`;
-
+    /* Header first, then the badge reads the block it resolved -- one revision, stated
+     * the same on screen and on the printed copy. See doc-header.js. */
     await mountDocHeader(config);
+    el('cr_docRev').textContent =
+      window.DocHeader.badgeText(config.recordKey, config.docRevisionStart);
 
     await load();
     renderList();

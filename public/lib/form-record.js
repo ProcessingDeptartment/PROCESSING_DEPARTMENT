@@ -195,10 +195,12 @@
     }
     async function persist() { return storeSet(storageKey, JSON.stringify(submissions), true); }
 
-    async function renderDocBadge() {
-      const rev = await DocumentRevision.getCurrent(config.recordKey, config.docRevisionStart || 1);
-      const date = await DocumentRevision.getCurrentDate(config.recordKey, config.docRevisionDate);
-      el('fr_docRev').textContent = `Rev ${rev} · Rev date ${date || 'not set'}`;
+    /* Reads the resolved title block rather than resolving the revision a second time --
+     * it used to pass a baseline date no record sets, so it always said "not set" while
+     * the block beside it printed the real date off the Master Index. */
+    function renderDocBadge() {
+      el('fr_docRev').textContent =
+        window.DocHeader.badgeText(config.recordKey, config.docRevisionStart);
     }
 
     const instructionsHtml = (config.instructions || []).length ? `
@@ -449,8 +451,10 @@
       el(`fr_${suffix}`).addEventListener('input', renderTable);
     });
 
-    await renderDocBadge();
+    /* Header first, then the badge FROM it: the on-screen badge and the printed block
+     * state the same revision, so they can never disagree. */
     await mountDocHeader(config);
+    renderDocBadge();
     await load();
     renderTable();
   }
@@ -460,9 +464,9 @@
    * row the index doesn't carry. Non-fatal by design -- a record that can't resolve its
    * header still prints, it just prints without the block. */
   async function mountDocHeader(config) {
-    if (!window.DocHeader) return;
+    if (!window.DocHeader) return null;
     try {
-      await window.DocHeader.mountPrintHeader({
+      return await window.DocHeader.mountPrintHeader({
         recordKey: config.recordKey,
         defaults: {
           document: config.title,
@@ -471,7 +475,7 @@
         },
         revisionStart: config.docRevisionStart || 1
       });
-    } catch (e) { console.error('title block unavailable', e); }
+    } catch (e) { console.error('title block unavailable', e); return null; }
   }
 
   window.FormRecord = { init };

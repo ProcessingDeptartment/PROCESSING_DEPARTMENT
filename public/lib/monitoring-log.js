@@ -697,12 +697,19 @@
       currentSpec = published;
     }
 
+    /* Reads the resolved title block rather than resolving the revision a second time,
+     * so the badge and the printed copy can never disagree. See doc-header.js. */
     async function renderDocRevBadge() {
-      const rev = await DocumentRevision.getCurrent(docRevisionKey, config.docRevisionStart || 1);
-      const date = await DocumentRevision.getCurrentDate(docRevisionKey, config.docRevisionDate);
-      el('ml_docRev').textContent = `Rev ${rev} · Rev date ${date || 'not set'}`;
+      el('ml_docRev').textContent =
+        window.DocHeader.badgeText(docRevisionKey, config.docRevisionStart);
       const modalTag = el('ml_docRevInModal');
-      if (modalTag) modalTag.textContent = `Rev ${rev}`;
+      if (modalTag) {
+        const h = window.DocHeader.current(docRevisionKey);
+        const rev = h && h.revision !== '' && h.revision != null
+          ? h.revision
+          : await DocumentRevision.getCurrent(docRevisionKey, config.docRevisionStart || 1);
+        modalTag.textContent = `Rev ${rev}`;
+      }
     }
     async function renderDocRevHistory() {
       const target = el('ml_docRevHistoryList');
@@ -1072,8 +1079,9 @@
     }
 
     // ---------- boot ----------
-    await renderDocRevBadge();
+    // Header first: the badge reads the block it resolves.
     await mountDocHeader(config);
+    await renderDocRevBadge();
     await loadSpec();
     await primary.load();
     primary.renderTable();
