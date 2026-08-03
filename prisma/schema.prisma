@@ -3,49 +3,34 @@ generator client {
 }
 
 datasource db {
-  provider = env("DATABASE_PROVIDER")
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  EDITOR
-  VIEWER
-}
-
-enum DocumentStatus {
-  DRAFT
-  PUBLISHED
-  OBSOLETE
-}
-
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum StandaloneReportType {
-  QUALITY_HANDOVER
-  PRODUCTION_HANDOVER
-}
+// SQLite has no native enum type, so these are documentation of the allowed
+// values rather than a connector-enforced type. Values match the originals:
+//   Role: ADMIN | EDITOR | VIEWER
+//   DocumentStatus: DRAFT | PUBLISHED | OBSOLETE
+//   ApprovalStatus: PENDING | APPROVED | REJECTED
+//   StandaloneReportType: QUALITY_HANDOVER | PRODUCTION_HANDOVER
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String?
-  role      Role      @default(VIEWER)
-  createdAt DateTime  @default(now())
-  documents DocumentRecord[]
-  approvals Approval[]
-  reports    StandaloneReport[]
+  id                String            @id @default(uuid())
+  email             String            @unique
+  name              String?
+  role              String            @default("VIEWER")
+  createdAt         DateTime          @default(now())
+  documents         DocumentRecord[]
+  approvals         Approval[]
+  reports           StandaloneReport[]
+  publishedVersions DocumentVersion[]
 }
 
 model DocumentTemplate {
   id          String            @id @default(uuid())
   name        String
   description String?
-  schema      Json
+  schema      String            // JSON, stored as text -- SQLite has no native Json type
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   versions    DocumentVersion[]
@@ -53,60 +38,61 @@ model DocumentTemplate {
 }
 
 model DocumentVersion {
-  id             String          @id @default(uuid())
+  id             String           @id @default(uuid())
   template       DocumentTemplate @relation(fields: [templateId], references: [id])
   templateId     String
   versionNumber  Int
-  status         DocumentStatus  @default(DRAFT)
+  status         String           @default("DRAFT")
   changeReason   String?
-  publishedBy    User?           @relation(fields: [publishedById], references: [id])
+  publishedBy    User?            @relation(fields: [publishedById], references: [id])
   publishedById  String?
   publishedAt    DateTime?
-  data           Json
-  createdAt      DateTime        @default(now())
+  data           String           // JSON, stored as text -- SQLite has no native Json type
+  createdAt      DateTime         @default(now())
   approvals      Approval[]
+  records        DocumentRecord[]
 
   @@unique([templateId, versionNumber])
 }
 
 model DocumentRecord {
-  id            String          @id @default(uuid())
+  id            String           @id @default(uuid())
   template      DocumentTemplate @relation(fields: [templateId], references: [id])
   templateId    String
   version       DocumentVersion? @relation(fields: [versionId], references: [id])
   versionId     String?
-  data          Json
-  createdBy     User?           @relation(fields: [createdById], references: [id])
+  data          String           // JSON, stored as text -- SQLite has no native Json type
+  createdBy     User?            @relation(fields: [createdById], references: [id])
   createdById   String?
-  createdAt     DateTime        @default(now())
+  createdAt     DateTime         @default(now())
   submittedAt   DateTime?
 }
 
 model Approval {
-  id               String          @id @default(uuid())
-  documentVersion  DocumentVersion @relation(fields: [documentVersionId], references: [id])
+  id                String          @id @default(uuid())
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id])
   documentVersionId String
-  approver         User            @relation(fields: [approverId], references: [id])
-  approverId       String
-  status           ApprovalStatus  @default(PENDING)
-  comment          String?
-  reviewedAt       DateTime?
-  createdAt        DateTime        @default(now())
+  approver          User            @relation(fields: [approverId], references: [id])
+  approverId        String
+  status            String          @default("PENDING")
+  comment           String?
+  reviewedAt        DateTime?
+  createdAt         DateTime        @default(now())
 }
 
 model StandaloneReport {
-  id              String               @id @default(uuid())
-  reportType      StandaloneReportType
+  id              String    @id @default(uuid())
+  reportType      String
   name            String
   description     String?
-  status          DocumentStatus       @default(DRAFT)
-  versionNumber   Int                  @default(1)
+  status          String    @default("DRAFT")
+  versionNumber   Int       @default(1)
   changeReason    String?
-  publishedBy     User?                @relation(fields: [publishedById], references: [id])
+  publishedBy     User?     @relation(fields: [publishedById], references: [id])
   publishedById   String?
   publishedAt     DateTime?
-  traceability    Json?
+  traceability    String?   // JSON, stored as text -- SQLite has no native Json type
   fileReference   String?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
