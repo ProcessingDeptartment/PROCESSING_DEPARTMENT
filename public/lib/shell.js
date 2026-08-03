@@ -70,7 +70,12 @@
   };
 
   /* Optional libs a document opts into by name, so the common case stays lean. */
-  const OPTIONAL = { lookups: 'lib/lookups.js', traceability: 'lib/traceability.js' };
+  const OPTIONAL = {
+    lookups: 'lib/lookups.js',
+    traceability: 'lib/traceability.js',
+    'cleaning-master': 'lib/cleaning-master-data.js',
+    'permission-rules': 'lib/permission-rules.js'
+  };
 
   function addStyle(rel) {
     const l = document.createElement('link');
@@ -118,6 +123,15 @@
     if (engine) libs = libs.concat(engine.libs);
 
     if (libs.length) await Promise.all(libs.map(addScript));
+
+    /* A record whose fields are BUILT by an optional lib -- Lookups.field(), say --
+     * cannot state them in a literal, because the literal is evaluated before this
+     * shell has loaded anything. Such a record passes config() instead, and it is
+     * called here, once its libs are in. */
+    if (typeof config.config === 'function') {
+      config = Object.assign({}, config, config.config());
+    }
+
     await domReady();
 
     /* An engine mounts the controlled-copy title block itself as part of init.

@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.12 Double Seam Inspection Report</title>
-<script src="../lib/palette-map.js"></script>
-<link rel="stylesheet" href="../styles/record-theme.css">
+<script src="../lib/shell.js?v=1"></script>
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -143,7 +142,6 @@
     #printOnlyStages .print-page{ page-break-before:always; break-before:page; }
   }
 </style>
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="dsir-root">
@@ -301,14 +299,8 @@
   <div class="toast no-print" id="toast"></div>
 </div>
 
-<script src="../lib/data-store.js?v=4"></script>
-<script src="../lib/auth.js?v=1"></script>
-<script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/permission-rules.js?v=5"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/doc-header.js?v=4"></script>
 <script>
+Shell.record({ uses: ['permission-rules'] }).then(function () {
 (function(){
   const $ = id => document.getElementById(id);
   const STAGES = [
@@ -1155,6 +1147,7 @@
     renderAll();
   })();
 })();
+});
 </script>
 </body>
 </html>

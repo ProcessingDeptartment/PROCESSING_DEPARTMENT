@@ -4,24 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.7.6 Plaster Issuing / Dressing Inspection</title>
-<script src="../lib/palette-map.js"></script>
-<link rel="stylesheet" href="../styles/record-theme.css">
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+<script src="../lib/shell.js?v=1"></script>
 </head>
 <body>
 <div id="mlRoot"></div>
 
-<script src="../lib/data-store.js?v=4"></script>
-<script src="../lib/auth.js?v=1"></script>
-<script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/master-index-data.js?v=1"></script>
-<script src="../lib/doc-header.js?v=4"></script>
-<script src="../lib/monitoring-log.js?v=5"></script>
 <script>
 (function () {
-  MonitoringLog.init({
+  Shell.record({
+    engine: 'monitoring-log',
     mount: '#mlRoot',
     recordKey: 'plaster-dressing-inspection',
     docCode: 'REC 7.7.6',

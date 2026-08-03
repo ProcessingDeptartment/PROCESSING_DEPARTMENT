@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.7 Cans Produced</title>
-<script src="../lib/palette-map.js"></script>
-<link rel="stylesheet" href="../styles/record-theme.css">
+<script src="../lib/shell.js?v=1"></script>
 <style>
   :root{
     --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
@@ -59,7 +58,6 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <div id="cp-root">
@@ -134,13 +132,8 @@
   <div class="toast no-print" id="toast"></div>
 </div>
 
-<script src="../lib/master-index-data.js?v=1"></script>
-<script src="../lib/doc-header.js?v=4"></script>
-<script src="../lib/data-store.js?v=4"></script>
-<script src="../lib/auth.js?v=1"></script>
-<script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/traceability.js?v=2"></script>
 <script>
+Shell.record({ recordKey: 'cans-produced', uses: ['traceability'] }).then(function () {
 (async function(){
   const $ = id => document.getElementById(id);
 
@@ -267,22 +260,7 @@
   wire();
   renderAll();
 })();
-</script>
-<script>
-/* Controlled-copy title block, repeated on every printed page. Mounted on load rather
-   than from this record's print handler, so it is there however the page is printed --
-   the PDF button or the browser's own Ctrl+P. Document name, number, reviewer, approver
-   and the paper revision all come from the Master Index List; revision, revision date and
-   effective date resolve live, so a printed copy can never carry a stale one. */
-(function () {
-  function mount() {
-    if (!window.DocHeader) return;
-    window.DocHeader.mountPrintHeader({ recordKey: 'cans-produced' })
-      .catch(function (e) { console.error('title block unavailable', e); });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
-  else mount();
-})();
+});
 </script>
 </body>
 </html>

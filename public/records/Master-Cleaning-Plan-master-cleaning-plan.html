@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Master Cleaning Plan — Cleaning Item Master</title>
-<script src="../lib/palette-map.js"></script>
-<link rel="stylesheet" href="../styles/record-theme.css">
-<link rel="stylesheet" href="../styles/responsive.css?v=1">
+<script src="../lib/shell.js?v=1"></script>
 <style>
   body{ font-family:'Segoe UI',system-ui,sans-serif; background:var(--palette-paper,#f4f5f3); color:var(--palette-ink,#1b2330); margin:0; font-size:13px; line-height:1.45; }
   .top{ background:var(--palette-dark,#1d2b38); color:var(--palette-dark-text,#f4f1e8); padding:14px 18px; }
@@ -98,8 +96,8 @@
   <a class="back no-print" href="cleaning.html">&larr; Back to Cleaning</a>
 </div>
 
-<script src="../lib/cleaning-master-data.js?v=1"></script>
 <script>
+Shell.record({ uses: ['cleaning-master'] }).then(function () {
 (function () {
   var M = window.CleaningMaster;
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -185,6 +183,7 @@
     '<p style="font-size:12px;margin:10px 0 0"><strong>' + M.counts().items + '</strong> items have no concentration or contact time recorded, ' +
     'and no item has a cleaning-equipment colour code. Both are required entries for FSSC V7.</p>';
 })();
+});
 </script>
 </body>
 </html>

@@ -4,23 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 8.1.3 Disposition Investigation Record</title>
-<script src="../lib/palette-map.js"></script>
-<link rel="stylesheet" href="../styles/record-theme.css">
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+<script src="../lib/shell.js?v=1"></script>
 </head>
 <body>
 <div id="frRoot"></div>
 
-<script src="../lib/data-store.js?v=4"></script>
-<script src="../lib/auth.js?v=1"></script>
-<script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/master-index-data.js?v=1"></script>
-<script src="../lib/doc-header.js?v=4"></script>
-<script src="../lib/form-record.js?v=5"></script>
 <script>
 (function () {
-  FormRecord.init({
+  Shell.record({
+    engine: 'form-record',
     mount: '#frRoot',
     recordKey: 'disposition-investigation-record',
     docCode: 'REC 8.1.3',
