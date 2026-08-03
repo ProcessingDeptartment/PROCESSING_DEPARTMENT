@@ -79,6 +79,7 @@
       'REC-8.1.7-traceability-mock-recall-dried-abalone.html',
       'REC-8.1.8-traceability-mock-recall-live-abalone.html',
       'REC-8.1.4-withdrawal-mock-recall-record.html',
+      'batch-trace.html',
     ],
     /*General Quality records */
     'quality_general': [
@@ -93,19 +94,22 @@
       'REC-7.2.11-qc-report.html',
       'REC-7.4.5-boxing-and-labelling.html',
     ],
+    /*canning*/
+    'canning': [
+      'canning.html',
+      'QA-01-qa1-damaged-cans-and-lids.html',
+      'REC-01-cans-released-form.html',
+      'REC-7.2.4-abalone-packing-specification.html',
+      'REC-7.2.6.1-printing-control-sheet.html',
+      'REC-7.2.7-cans-produced.html',
+      'REC-7.2.8-retorting-control-sheet.html',
+      'REC-7.2.9-retort-inspection-report.html',
+      'REC-7.2.12-double-seam-inspection-report.html',
+      'REC-7.2.13-rework-log.html',
 
-    /* ---- The six palettes below are designed and registered but not yet
-       assigned. Add a file name to a list to theme that record; nothing else
-       is needed. Left empty deliberately — the records these were drawn up
-       for either don't exist yet or already carry another classification,
-       and moving an existing record between palettes changes what colour
-       staff associate with it. ---- */
-
+    ],
   };
 
-  // The record-category override written by the Master Record Index, if any, for the
-  // given file name. Returns null when nobody has ever touched the Category selector
-  // for this record -- distinct from '', which means "explicitly set to Default".
   function overrideFor(file) {
     try {
       return window.localStorage.getItem('facility_records:record_category:' + file);

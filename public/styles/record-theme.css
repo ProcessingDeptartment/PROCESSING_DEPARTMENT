@@ -4,7 +4,7 @@
   --palette-ink: #1b2330;
 
   --palette-dark: #1d2b38;
-  --palette-dark-text: #f4f1e8;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #b9c3cc;
 
   --palette-primary: #c9832b;
@@ -23,13 +23,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Sauce records, REC 7.3.x (warm brown) ---- */
 :root[data-palette="sauce"] {
-  --palette-paper: #f8f6f3;
+  --palette-paper: #f4f5f3;
   --palette-ink: #4a3428;
 
   --palette-dark: #4a3428;
-  --palette-dark-text: #f8f6f3;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #c9a892;
 
   --palette-primary: #8b7355;
@@ -48,13 +47,12 @@
   --palette-fail-bg: #faf5f3;
 }
 
-/* ---- Dry records, REC 7.4.x (muted sage green) ---- */
 :root[data-palette="dry"] {
-  --palette-paper: #f6f8f7;
+  --palette-paper: #f4f5f3;
   --palette-ink: #2c3e35;
 
   --palette-dark: #2c3e35;
-  --palette-dark-text: #f6f8f7;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #a3beb2;
 
   --palette-primary: #658c79;
@@ -73,13 +71,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Cleaning records, REC 7.6.x (muted light blue) ---- */
 :root[data-palette="cleaning/hygiene"] {
-  --palette-paper: #f4f7f9;
+  --palette-paper: #f4f5f3;
   --palette-ink: #2b3d4f;
 
   --palette-dark: #2b3d4f;
-  --palette-dark-text: #f4f7f9;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #9fb8cc;
 
   --palette-primary: #527d9e;
@@ -98,13 +95,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Traceability records, REC 8.1.x (muted mauve) ---- */
 :root[data-palette="traceability"] {
-  --palette-paper: #f8f6f8;
+  --palette-paper: #f4f5f3;
   --palette-ink: #4a2f54;
 
   --palette-dark: #4a2f54;
-  --palette-dark-text: #f8f6f8;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #c9b3c5;
 
   --palette-primary: #856196;
@@ -123,13 +119,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Quality records, REC 8.2.x (warm burnt orange) ---- */
 :root[data-palette="quality_general"] {
-  --palette-paper: #faf7f4;
+  --palette-paper: #f4f5f3;
   --palette-ink: #5e3728;
 
   --palette-dark: #5e3728;
-  --palette-dark-text: #faf7f4;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #d4ab93;
 
   --palette-primary: #c26c30;
@@ -148,13 +143,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Canning (lab testing — soft parchment/olive) ---- */
 :root[data-palette="canning"] {
-  --palette-paper: #fbfaf2;
+  --palette-paper: #f4f5f3;
   --palette-ink: #4a4515;
 
   --palette-dark: #4a4515;
-  --palette-dark-text: #fbfaf2;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #bdae6b;
 
   --palette-primary: #a69932;
@@ -173,13 +167,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown2 (packaging — muted coral) ---- */
 :root[data-palette="live"] {
-  --palette-paper: #fcf6f4;
+  --palette-paper: #f4f5f3;
   --palette-ink: #6b3528;
 
   --palette-dark: #6b3528;
-  --palette-dark-text: #fcf6f4;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #d9a091;
 
   --palette-primary: #bd684a;
@@ -198,13 +191,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown3 (raw material intake — warm straw/khaki) ---- */
 :root[data-palette="technical/maintenance"] {
-  --palette-paper: #f8f7f2;
+  --palette-paper: #f4f5f3;
   --palette-ink: #4e4a30;
 
   --palette-dark: #4e4a30;
-  --palette-dark-text: #f8f7f2;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #b5b08c;
 
   --palette-primary: #7d7950;
@@ -223,13 +215,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown4 (conditions & handling — industrial steel) ---- */
 :root[data-palette="warehouse/stock_management"] {
-  --palette-paper: #f4f6f8;
+  --palette-paper: #f4f5f3;
   --palette-ink: #2c363f;
 
   --palette-dark: #2c363f;
-  --palette-dark-text: #f4f6f8;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #96a6b3;
 
   --palette-primary: #4a6070;
@@ -248,13 +239,12 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown5 (cross-contamination control — soft wine/burgundy) ---- */
-:root[data-palette="unknown5"] {
-  --palette-paper: #faf5f8;
+:root[data-palette="SOP's"] {
+  --palette-paper: #f4f5f3;
   --palette-ink: #5e2848;
 
   --palette-dark: #5e2848;
-  --palette-dark-text: #faf5f8;
+  --palette-dark-text: #f4f5f3;
   --palette-dark-muted: #d19bb8;
 
   --palette-primary: #8f325c;
@@ -273,24 +263,249 @@
   --palette-fail-bg: #fbe8e6;
 }
 
-/* ---- Unknown6 (expiration & dating — muted amber) ---- */
-:root[data-palette="unknown6"] {
-  --palette-paper: #fcfaf3;
-  --palette-ink: #664d14;
+/* ---- Powder Blue Palette ---- */
+:root[data-palette="SOP's"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #1e293b;
 
-  --palette-dark: #664d14;
-  --palette-dark-text: #fcfaf3;
-  --palette-dark-muted: #d9bd7b;
+  --palette-dark: #1e293b;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #94a3b8;
 
-  --palette-primary: #b87d18;
-  --palette-primary-hover: #9e6912;
+  --palette-primary: #b0e0e6;
+  --palette-primary-hover: #93c4cb;
+  --palette-primary-text: #1e293b;
+
+  --palette-border: #cbd5e1;
+  --palette-head-bg: #e2e8f0;
+  --palette-heading: #1e293b;
+  --palette-label: #334155;
+  --palette-focus: #b0e0e6;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Periwinkle Palette ---- */
+:root[data-palette="periwinkle"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #232733;
+
+  --palette-dark: #232733;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #9aa0b4;
+
+  --palette-primary: #ccccff;
+  --palette-primary-hover: #b3b3e6;
+  --palette-primary-text: #232733;
+
+  --palette-border: #d0d2de;
+  --palette-head-bg: #e2e4f0;
+  --palette-heading: #232733;
+  --palette-label: #363b4d;
+  --palette-focus: #ccccff;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Lilac Palette ---- */
+:root[data-palette="lilac"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #322538;
+
+  --palette-dark: #322538;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #b49ebc;
+
+  --palette-primary: #d8bfd8;
+  --palette-primary-hover: #c4aac4;
+  --palette-primary-text: #322538;
+
+  --palette-border: #ded0e2;
+  --palette-head-bg: #ece2f0;
+  --palette-heading: #322538;
+  --palette-label: #473550;
+  --palette-focus: #d8bfd8;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Seafoam Green Palette ---- */
+:root[data-palette="seafoam-green"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #1f332b;
+
+  --palette-dark: #1f332b;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #9abfb1;
+
+  --palette-primary: #9fe2bf;
+  --palette-primary-hover: #86c9a7;
+  --palette-primary-text: #1f332b;
+
+  --palette-border: #c6d9d0;
+  --palette-head-bg: #dcece5;
+  --palette-heading: #1f332b;
+  --palette-label: #2e4a3f;
+  --palette-focus: #9fe2bf;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Buttercream Palette ---- */
+:root[data-palette="buttercream"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #3b3520;
+
+  --palette-dark: #3b3520;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #c4b996;
+
+  --palette-primary: #fffdd0;
+  --palette-primary-hover: #e6e4b8;
+  --palette-primary-text: #3b3520;
+
+  --palette-border: #e2dec8;
+  --palette-head-bg: #f2efe0;
+  --palette-heading: #3b3520;
+  --palette-label: #524a2d;
+  --palette-focus: #fffdd0;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Apricot Palette ---- */
+:root[data-palette="apricot"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #3b2820;
+
+  --palette-dark: #3b2820;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #c4a496;
+
+  --palette-primary: #fbceb1;
+  --palette-primary-hover: #e2b79a;
+  --palette-primary-text: #3b2820;
+
+  --palette-border: #e2cfc4;
+  --palette-head-bg: #f2e3da;
+  --palette-heading: #3b2820;
+  --palette-label: #52392e;
+  --palette-focus: #fbceb1;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Coral Palette ---- */
+:root[data-palette="coral"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #3d2422;
+
+  --palette-dark: #3d2422;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #c99c98;
+
+  --palette-primary: #f88379;
+  --palette-primary-hover: #df6e64;
   --palette-primary-text: #ffffff;
 
-  --palette-border: #e3cca0;
-  --palette-head-bg: #f0e2be;
-  --palette-heading: #664d14;
-  --palette-label: #664d14;
-  --palette-focus: #b87d18;
+  --palette-border: #e6cbca;
+  --palette-head-bg: #f2dedd;
+  --palette-heading: #3d2422;
+  --palette-label: #573432;
+  --palette-focus: #f88379;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Cherry Blossom Pink Palette ---- */
+:root[data-palette="cherry-blossom-pink"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #3d222a;
+
+  --palette-dark: #3d222a;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #c99ca9;
+
+  --palette-primary: #ffb7c5;
+  --palette-primary-hover: #e6a2af;
+  --palette-primary-text: #3d222a;
+
+  --palette-border: #e6cbd2;
+  --palette-head-bg: #f2dedf;
+  --palette-heading: #3d222a;
+  --palette-label: #57313c;
+  --palette-focus: #ffb7c5;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Pale Violet Palette ---- */
+:root[data-palette="pale-violet"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #352331;
+
+  --palette-dark: #352331;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #bd9bb6;
+
+  --palette-primary: #db7093;
+  --palette-primary-hover: #c25c7e;
+  --palette-primary-text: #ffffff;
+
+  --palette-border: #e2c8d5;
+  --palette-head-bg: #f0dfe7;
+  --palette-heading: #352331;
+  --palette-label: #4c3246;
+  --palette-focus: #db7093;
+
+  --palette-ok: #2f7a52;
+  --palette-ok-bg: #e8f3ec;
+  --palette-fail: #a3352d;
+  --palette-fail-bg: #fbe8e6;
+}
+
+/* ---- Terracotta Palette ---- */
+:root[data-palette="terracotta"] {
+  --palette-paper: #f4f5f3;
+  --palette-ink: #3b2822;
+
+  --palette-dark: #3b2822;
+  --palette-dark-text: #f4f5f3;
+  --palette-dark-muted: #c4a196;
+
+  --palette-primary: #e3967e;
+  --palette-primary-hover: #cb8068;
+  --palette-primary-text: #ffffff;
+
+  --palette-border: #e2cdc4;
+  --palette-head-bg: #f2e1da;
+  --palette-heading: #3b2822;
+  --palette-label: #543930;
+  --palette-focus: #e3967e;
 
   --palette-ok: #2f7a52;
   --palette-ok-bg: #e8f3ec;

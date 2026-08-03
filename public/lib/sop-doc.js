@@ -142,6 +142,23 @@
       .dc-actions, .save-bar, .back-link, .row-add, .row-rm{ display:none !important; }
       [contenteditable]{ outline:none; background:none; }
     }
+    @media (max-width: 768px){
+      .dc-top{ padding:10px 12px; }
+      .doc-line{ gap:8px; font-size:14px; }
+      .doc-code{ font-size:11.5px; }
+      .dc-meta{ gap:14px; font-size:10.5px; margin-top:8px; }
+      .dc-actions{ margin-top:8px; }
+      .doc-body{ padding:12px; }
+      .doc-body table.refs, .doc-body table.hist{ display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      .save-bar{ flex-direction:column; align-items:stretch; }
+      .save-bar .msg{ order:2; }
+    }
+    @media (max-width: 480px){
+      .doc-line{ font-size:13px; }
+      .dc-meta{ flex-direction:column; gap:6px; }
+      .doc-body{ padding:10px; }
+      .dh-modal-inner{ width:min(340px,92vw); padding:14px; }
+    }
   `;
 
   function injectStyles() {
