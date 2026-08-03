@@ -121,7 +121,9 @@
     .fr-actions .fr-btn-sm{ flex:0 1 auto; }
   }
   @media print{
-    @page{ size:A4; margin:12mm; }
+    /* The top margin is not ours to choose -- that strip is reserved for the repeating
+     * controlled-copy title block. See doc-header.js. */
+    @page{ size:A4; margin:12mm; margin-top:26mm; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
     .fr-app{ font-size:10px; }
