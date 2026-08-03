@@ -57,15 +57,29 @@
   }
 
   const STYLES = `
+    /* Every token below reads var(--palette-*, fallback) first -- pages include
+     * palette-map.js + record-theme.css in <head> (same as records), so once a SOP's
+     * file name is added to a palette in palette-map.js, that palette's colours take
+     * over automatically. Until then, the fallback after the comma is what renders --
+     * the same neutral look these pages had before palettes were wired in. */
     :root{
-      --ink:#1b2330; --paper:#f4f5f3; --border:#e2e4e3; --label:#5c6771;
-      --dark:#1d2b38; --dark-text:#f4f1e8; --dark-muted:#b9c3cc;
-      --primary:#a9763a; --primary-hover:#96682f; --heading:#1d2b38; --head-bg:#f7f4ee;
+      --ink: var(--palette-ink, #1b2330); --paper: var(--palette-paper, #f4f5f3);
+      --border: var(--palette-border, #e2e4e3); --label: var(--palette-label, #5c6771);
+      --dark: var(--palette-dark, #1d2b38); --dark-text: var(--palette-dark-text, #f4f1e8);
+      --dark-muted: var(--palette-dark-muted, #b9c3cc);
+      --primary: var(--palette-primary, #a9763a); --primary-hover: var(--palette-primary-hover, #96682f);
+      --heading: var(--palette-heading, #1d2b38); --head-bg: var(--palette-head-bg, #f7f4ee);
     }
+    /* No palette assigned yet -- fall back to a dark-mode-aware neutral look instead
+     * of the flat palette default, same as before palettes existed. Once a page's file
+     * name is added to a PALETTES list this block no longer applies (the palette
+     * variables above are set unconditionally on :root, so they win either way). */
     @media (prefers-color-scheme: dark){
-      :root{ --ink:#e5e7eb; --paper:#14181d; --border:#2a2f36; --label:#9aa4ad;
-             --dark:#0f151b; --dark-text:#f4f1e8; --dark-muted:#8a95a1;
-             --primary:#c9832b; --primary-hover:#d99640; --heading:#e8c99a; --head-bg:#1c232b; }
+      :root:not([data-palette]){
+        --ink:#e5e7eb; --paper:#14181d; --border:#2a2f36; --label:#9aa4ad;
+        --dark:#0f151b; --dark-text:#f4f1e8; --dark-muted:#8a95a1;
+        --primary:#c9832b; --primary-hover:#d99640; --heading:#e8c99a; --head-bg:#1c232b;
+      }
     }
     body{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--ink); background:var(--paper);
           font-size:13px; line-height:1.5; margin:0; }
