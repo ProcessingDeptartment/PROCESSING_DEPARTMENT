@@ -302,9 +302,14 @@
     let entries = [];
     let editingId = null;
 
-    // Entries predating the draft/submit lifecycle have no status; treat them as drafts
-    // so nothing that was editable yesterday is locked today.
-    function isSubmitted(entryRow) { return submitFlow && entryRow.status === 'submitted'; }
+    /* Entries predating the draft/submit lifecycle have no status. They are read as
+     * SUBMITTED: they were saved through a single "Save entry" button with no draft to
+     * come back to, so they are finished records, and reading them as drafts would drop
+     * every one of them out of the verifier's pick list. They lock like any other
+     * submitted entry -- a correction is a new entry, not a silent edit. */
+    function isSubmitted(entryRow) {
+      return submitFlow && (entryRow.status == null || entryRow.status === 'submitted');
+    }
 
     function specFor(key) {
       const spec = specGetter();
@@ -732,8 +737,10 @@
         ${config.relatedLinks.map(l => `<a href="${esc(l.href)}">→ ${esc(l.label)}</a>`).join('<br>')}
       </div></div>` : '';
 
-    // Opt-in per-entry lifecycle: entries save as 'draft' and are locked once submitted.
-    const submitFlow = config.entryWorkflow === 'draft-submit';
+    /* Per-entry lifecycle: entries save as 'draft' and lock once submitted. On by default
+     * -- every controlled record needs the submit step -- so a log opts OUT with
+     * entryWorkflow:'save-only' rather than opting in. */
+    const submitFlow = config.entryWorkflow !== 'save-only';
 
     function logBlockHtml(ns, blockTitle) {
       return `

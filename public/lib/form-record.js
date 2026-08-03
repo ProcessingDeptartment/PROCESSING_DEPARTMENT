@@ -32,6 +32,15 @@
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function uid(prefix) { return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+  function safeKey(s) { return String(s || '').trim().replace(/[\s\/\\'"]+/g, '_'); }
+
+  function download(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+  }
 
   const STYLE = `
   .fr-app{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--palette-ink,#1b2330); background:var(--palette-paper,#f4f5f3); font-size:13px; line-height:1.4; }
@@ -72,6 +81,9 @@
   table.fr-table th{ background:var(--palette-head-bg,#fbfbfa); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--palette-label,#54606b); font-weight:700; white-space:nowrap; }
   .fr-muted{ color:#8a939b; }
   .fr-empty{ padding:18px; text-align:center; color:#8a939b; }
+  .fr-badge{ display:inline-block; padding:1px 7px; border-radius:9px; font-size:10px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; background:#eceeef; color:#54606b; white-space:nowrap; }
+  .fr-badge-ok{ background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); }
+  .fr-locked{ padding:8px 11px; margin-bottom:10px; border-left:3px solid var(--palette-ok,#2f6b3a); background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); font-size:11.5px; font-weight:600; }
   .fr-section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-label,#54606b); margin:14px 0 8px; }
   .fr-section-title:first-child{ margin-top:0; }
   .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; }
@@ -241,6 +253,7 @@
               <label>From <input type="date" id="fr_filterFrom"></label>
               <label>To <input type="date" id="fr_filterTo"></label>
               <input type="text" id="fr_filterSearch" placeholder="Search submissions…">
+              <button class="fr-btn fr-btn-flat fr-btn-sm" id="fr_exportJsonBtn">Export JSON</button>
               <button class="fr-btn fr-btn-flat fr-btn-sm" id="fr_printBtn">Print</button>
             </div>
             <div id="fr_table" class="fr-table-wrap"></div>
@@ -253,12 +266,20 @@
           <div id="fr_modalSections"></div>
           <div class="fr-actions">
             <button class="fr-btn fr-btn-flat" id="fr_cancelBtn">Cancel</button>
-            <button class="fr-btn fr-btn-primary" id="fr_saveBtn">Save</button>
+            <button class="fr-btn fr-btn-flat" id="fr_saveBtn">Save draft</button>
+            <button class="fr-btn fr-btn-primary" id="fr_submitBtn">Submit</button>
           </div>
         </div>
       </div>
       <div class="fr-toast no-print" id="fr_toast"></div>
     `;
+
+    /* Submissions saved before the draft/submit lifecycle existed carry no `status`.
+     * They are read as SUBMITTED -- the same call monitoring-log.js makes -- because they
+     * were saved through a single "Save" button with no draft to come back to, and the
+     * old code signed each one off as 'submitted'. They lock like any other submitted
+     * record; a correction is a new submission, not a silent edit. */
+    function isSubmitted(sub) { return !!sub && (sub.status == null || sub.status === 'submitted'); }
 
     function dateOf(values) {
       const dateField = allFields(config).find(f => f.type === 'date');
@@ -289,7 +310,7 @@
         return;
       }
       const cols = listCols.length ? listCols : allFields(config).slice(0, 4).map(f => f.key);
-      let html = `<table class="fr-table"><thead><tr>${cols.map(k => `<th>${esc(labelFor(k))}</th>`).join('')}<th></th></tr></thead><tbody>`;
+      let html = `<table class="fr-table"><thead><tr>${cols.map(k => `<th>${esc(labelFor(k))}</th>`).join('')}<th>Status</th><th></th></tr></thead><tbody>`;
       list.forEach(sub => {
         html += `<tr>`;
         cols.forEach(k => {
@@ -297,7 +318,10 @@
           if (v === '' || v == null) v = '—';
           html += `<td>${esc(v)}</td>`;
         });
-        html += `<td><button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">Open</button></td>`;
+        html += `<td>${isSubmitted(sub)
+          ? '<span class="fr-badge fr-badge-ok">✓ Submitted</span>'
+          : '<span class="fr-badge">Draft</span>'}</td>`;
+        html += `<td><button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">${isSubmitted(sub) ? 'View' : 'Open'}</button></td>`;
         html += `</tr>`;
       });
       html += `</tbody></table>`;
@@ -361,9 +385,15 @@
     function openForm(id) {
       editingId = id || null;
       const existing = id ? submissions.find(s => s.id === id) : null;
-      el('fr_modalTitle').textContent = id ? 'Edit submission' : 'New submission';
+      const locked = isSubmitted(existing);
+      el('fr_modalTitle').textContent = !id ? 'New submission'
+        : (locked ? 'Submitted submission (read-only)' : 'Edit submission');
       const container = el('fr_modalSections');
-      let html = (config.sections || []).map(sec => `
+      let html = locked
+        ? `<div class="fr-locked">Submitted${existing.submittedAt
+            ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.</div>`
+        : '';
+      html += (config.sections || []).map(sec => `
         <div class="fr-section-title">${esc(sec.title)}</div>
         <div class="fr-grid fr-grid-2">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
@@ -381,11 +411,19 @@
         renderRosterEditor(existing ? existing.roster : null);
         el('fr_addRosterRowBtn').addEventListener('click', () => container.querySelector('#fr_rosterRows')._addRow());
       }
+      // A submitted record is evidence -- it opens to be read, never to be re-typed.
+      container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked; });
+      el('fr_saveBtn').style.display = locked ? 'none' : '';
+      el('fr_submitBtn').style.display = locked ? 'none' : '';
+      el('fr_cancelBtn').textContent = locked ? 'Close' : 'Cancel';
       el('fr_modal').style.display = 'flex';
     }
     function closeForm() { el('fr_modal').style.display = 'none'; }
 
-    async function saveForm() {
+    /* finalize=false saves a draft, finalize=true submits. A draft is a part-filled shift
+     * that someone comes back to, so required fields are only enforced on submit -- the
+     * same rule monitoring-log.js applies. */
+    async function saveForm(finalize) {
       const values = {};
       let missingRequired = null;
       allFields(config).forEach(f => {
@@ -393,7 +431,7 @@
         values[f.key] = inp ? inp.value : '';
         if (f.required && !String(values[f.key] || '').trim()) missingRequired = f.label;
       });
-      if (missingRequired) { toast(`"${missingRequired}" is required.`); return; }
+      if (missingRequired && finalize) { toast(`"${missingRequired}" is required.`); return; }
       // Validate batch number format if this record has a batchField
       if (config.batchField && window.BatchValidation) {
         const batchValue = values[config.batchField];
@@ -404,32 +442,39 @@
       }
       const rosterRows = hasRoster ? el('fr_rosterRows')._getRows() : undefined;
 
+      const status = finalize ? 'submitted' : 'draft';
       let savedSub;
       if (editingId) {
         const existing = submissions.find(s => s.id === editingId);
+        if (isSubmitted(existing)) { toast('This submission is submitted and can no longer be changed.'); return; }
         existing.history = existing.history || [];
         existing.history.push({ ts: Date.now(), previousValues: existing.values, previousRoster: existing.roster });
         existing.values = values;
         if (hasRoster) existing.roster = rosterRows;
         existing.updatedAt = Date.now();
+        existing.status = status;
+        if (finalize) existing.submittedAt = Date.now();
         savedSub = existing;
       } else {
         const sub = {
           id: uid('sub'),
           values,
+          status,
           source: 'manual', // future automated feeds set 'device' here
           createdAt: Date.now(),
           updatedAt: Date.now(),
           history: [],
           signOffs: []
         };
+        if (finalize) sub.submittedAt = Date.now();
         if (hasRoster) sub.roster = rosterRows;
         submissions.push(sub);
         savedSub = sub;
       }
-      // Add sign-off from current authenticated user
+      // Sign-off records the action that was actually taken. It used to log 'submitted'
+      // on every save, back when a save was the only action there was.
       if (window.Auth && window.Auth.isAuthenticated()) {
-        const signOff = window.Auth.createSignOff('submitted');
+        const signOff = window.Auth.createSignOff(status);
         if (signOff && savedSub.signOffs) {
           savedSub.signOffs.push(signOff);
         }
@@ -440,12 +485,31 @@
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       closeForm();
       renderTable();
-      toast(editingId ? 'Submission updated.' : 'Submission saved.');
+      toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
+    }
+
+    /* Full-fidelity export: keeps edit history, sign-offs and timestamps that the printed
+     * form drops, so a submission round-trips into the future backend. Exports what the
+     * filters currently show, which is what the person is looking at. */
+    function exportJson() {
+      const list = filtered();
+      const payload = {
+        record: config.title,
+        docCode: config.docCode,
+        recordKey: config.recordKey,
+        exportedAt: new Date().toISOString(),
+        submissionCount: list.length,
+        submissions: list
+      };
+      download(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+        safeKey(config.title) + '_' + new Date().toISOString().slice(0, 10) + '.json');
     }
 
     el('fr_addBtn').addEventListener('click', () => openForm(null));
     el('fr_cancelBtn').addEventListener('click', closeForm);
-    el('fr_saveBtn').addEventListener('click', saveForm);
+    el('fr_saveBtn').addEventListener('click', () => saveForm(false));
+    el('fr_submitBtn').addEventListener('click', () => saveForm(true));
+    el('fr_exportJsonBtn').addEventListener('click', exportJson);
     el('fr_printBtn').addEventListener('click', () => window.print());
     ['filterFrom', 'filterTo', 'filterSearch'].forEach(suffix => {
       el(`fr_${suffix}`).addEventListener('input', renderTable);
