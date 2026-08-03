@@ -122,8 +122,8 @@
   }
   @media print{
     /* The top margin is not ours to choose -- that strip is reserved for the repeating
-     * controlled-copy title block. Stated as the shorthand because Chrome drops
-     * `margin-top` inside @page. See doc-header.js. */
+     * controlled-copy title block. Stated as the margin shorthand because Chrome
+     * drops the individual margin longhands inside @page. See doc-header.js. */
     @page{ size:A4; margin:26mm 12mm 12mm; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
