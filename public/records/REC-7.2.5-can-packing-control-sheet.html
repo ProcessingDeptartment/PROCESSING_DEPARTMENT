@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -98,6 +98,8 @@
   </div>
   <div class="toast no-print" id="toast"></div>
 </div>
+<script src="../lib/master-index-data.js?v=1"></script>
+<script src="../lib/doc-header.js?v=2"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -119,6 +121,22 @@
   function generatePdf(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'record';document.title=`REC_7.2.5_CAN_PACKING_${safeKey(jobStr)}_${state.date||''}`;window.print();}
   function wire(){bindInputs();$('saveDraftBtn').addEventListener('click',()=>saveRecord(false));$('submitBtn').addEventListener('click',()=>saveRecord(true));$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'can_packing_draft';a.download=`can_packing_${safeKey(jobStr)}.json`;a.click();});$('generatePdfBtn').addEventListener('click',generatePdf);}
   wire();renderAll();
+})();
+</script>
+<script>
+/* Controlled-copy title block, repeated on every printed page. Mounted on load rather
+   than from this record's print handler, so it is there however the page is printed --
+   the PDF button or the browser's own Ctrl+P. Document name, number, reviewer, approver
+   and the paper revision all come from the Master Index List; revision, revision date and
+   effective date resolve live, so a printed copy can never carry a stale one. */
+(function () {
+  function mount() {
+    if (!window.DocHeader) return;
+    window.DocHeader.mountPrintHeader({ recordKey: 'can-packing-control-sheet' })
+      .catch(function (e) { console.error('title block unavailable', e); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
+  else mount();
 })();
 </script>
 </body>

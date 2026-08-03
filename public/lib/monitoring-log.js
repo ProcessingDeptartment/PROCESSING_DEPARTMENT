@@ -172,10 +172,16 @@
 
   // @page can't be toggled by a class, so the rule is swapped before each print:
   // the entries log wants landscape, a single-entry sheet wants portrait like the Word form.
+  // The top margin is not ours to choose while a title block is mounted -- that strip is
+  // where the block prints, so it has to be re-declared here or this rule would reclaim it.
   function setPageOrientation(orientation) {
     let s = document.getElementById('ml-page-style');
     if (!s) { s = document.createElement('style'); s.id = 'ml-page-style'; document.head.appendChild(s); }
-    s.textContent = `@page{ size:A4 ${orientation}; margin:${orientation === 'portrait' ? '10mm' : '9mm'}; }`;
+    const side = orientation === 'portrait' ? '10mm' : '9mm';
+    const top = document.getElementById('dh-print-header')
+      ? (window.DocHeader && window.DocHeader.PRINT_HEADER_HEIGHT) || '26mm'
+      : side;
+    s.textContent = `@page{ size:A4 ${orientation}; margin:${top} ${side} ${side} ${side}; }`;
   }
 
   function injectStyleOnce() {
@@ -1067,11 +1073,33 @@
 
     // ---------- boot ----------
     await renderDocRevBadge();
+    await mountDocHeader(config);
     await loadSpec();
     await primary.load();
     primary.renderTable();
     if (secondary) { await secondary.load(); secondary.renderTable(); }
     refreshVerification();
+  }
+
+  /* Controlled-copy title block on every printed page -- both the whole-log printout and
+   * the single-entry paper replica, which is why it is mounted outside .ml-top/.ml-body
+   * and survives the printing-entry class swap. The paper baseline comes from the Master
+   * Index List via DocHeader; what the record declares is only the fallback for a row the
+   * index doesn't carry. Non-fatal by design -- a record that can't resolve its header
+   * still prints, it just prints without the block. */
+  async function mountDocHeader(config) {
+    if (!window.DocHeader) return;
+    try {
+      await window.DocHeader.mountPrintHeader({
+        recordKey: config.recordKey,
+        defaults: {
+          document: config.title,
+          docNumber: config.docCode,
+          revisionDate: config.docRevisionDate
+        },
+        revisionStart: config.docRevisionStart || 1
+      });
+    } catch (e) { console.error('title block unavailable', e); }
   }
 
   window.MonitoringLog = { init };

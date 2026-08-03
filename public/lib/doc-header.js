@@ -21,6 +21,10 @@
 
   const FIELDS = ['document', 'docNumber', 'reviewedBy', 'approvedBy'];
 
+  /* Height of the printed-page strip the repeating title block lives in. Anything that
+   * writes its own @page margins has to reserve the same strip -- see monitoring-log.js. */
+  const PRINT_HEADER_HEIGHT = '26mm';
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -101,6 +105,87 @@
     return out;
   }
 
+  /* The paper baseline for a record, read from the issued Master Index List instead of
+   * being hand-copied into each of the 140-odd record pages -- one transcription, one
+   * place to correct. `fallback` wins where the index has nothing, so a record can still
+   * name itself before it earns a row. Reviewed/approved by are document-control roles
+   * carried once on the index header, identical for every row. */
+  function defaultsFor(recordKey, fallback) {
+    const out = Object.assign({}, fallback || {});
+    const mi = window.MasterIndexData;
+    if (!mi) return out;
+    const row = indexRow(recordKey);
+    if (row) {
+      if (!out.document) out.document = row.name || '';
+      if (!out.docNumber) out.docNumber = row.docNo || '';
+      if (!out.revisionDate) out.revisionDate = row.dateOfIssue || '';
+    }
+    const hdr = mi.header || {};
+    if (!out.reviewedBy) out.reviewedBy = hdr.reviewedBy || '';
+    if (!out.approvedBy) out.approvedBy = hdr.approvedBy || '';
+    return out;
+  }
+
+  function indexRow(recordKey) {
+    const mi = window.MasterIndexData;
+    if (!mi) return null;
+    return (mi.rows || []).filter(r => r.recordKey === recordKey)[0] || null;
+  }
+
+  function indexRevision(recordKey) {
+    const row = indexRow(recordKey);
+    return row && row.revision != null ? row.revision : 1;
+  }
+
+  /* Reserve a strip in the printed page margin and park the block in it. A position:fixed
+   * element is painted once per page by the print engine, which is the only way to repeat
+   * a block above a table whose length isn't known until it prints. Re-appended on every
+   * call so it stays last in the head and its @page margin beats the engine's. */
+  function injectPrintHeaderStyles(height) {
+    let s = document.getElementById('dh-print-header-styles');
+    if (!s) {
+      s = document.createElement('style');
+      s.id = 'dh-print-header-styles';
+    }
+    s.textContent = `
+      #dh-print-header{ display:none; }
+      @media print{
+        @page{ margin-top:${height}; }
+        #dh-print-header{ display:block; position:fixed; left:0; right:0;
+          top:-${height}; height:${height}; overflow:hidden; }
+      }
+    `;
+    document.head.appendChild(s); // moves it to the end if it was already there
+  }
+
+  /* Put the controlled-copy block on every printed page of the calling record.
+   * Records that lay out their own print pages (and can therefore number them) build the
+   * block themselves with blockHtml instead -- see REC 7.2.12.
+   *
+   * The Page cell is left blank here on purpose: CSS exposes no page count to an element
+   * outside the @page margin boxes, and a wrong page number on a controlled copy is worse
+   * than an empty one. */
+  async function mountPrintHeader(opts) {
+    opts = opts || {};
+    const height = opts.height || PRINT_HEADER_HEIGHT;
+    // A caller that doesn't state its paper revision gets the one off the index row, so
+    // records without their own baseline constant still fall back to paper, not to 1.
+    const revisionStart = opts.revisionStart != null
+      ? opts.revisionStart : indexRevision(opts.recordKey);
+    const h = await resolve(opts.recordKey,
+      defaultsFor(opts.recordKey, opts.defaults), revisionStart);
+    injectStyles();
+    injectPrintHeaderStyles(height);
+    let host = document.getElementById('dh-print-header');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'dh-print-header';
+      document.body.insertBefore(host, document.body.firstChild);
+    }
+    host.innerHTML = blockHtml(h, null, null, opts.logoSrc || '../assets/abagold-logo.png');
+    return h;
+  }
+
   // Persist only the typed fields; the automatic three are never accepted from a form.
   async function saveFields(recordKey, fields) {
     const stored = await loadStored(recordKey);
@@ -176,6 +261,7 @@
 
   window.DocHeader = {
     FIELDS, resolve, saveFields, ensureEffectiveDate, blockHtml, injectStyles, fmtDate,
+    defaultsFor, mountPrintHeader, PRINT_HEADER_HEIGHT,
     load: loadStored
   };
 })();

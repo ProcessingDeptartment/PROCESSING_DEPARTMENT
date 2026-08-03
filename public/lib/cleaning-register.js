@@ -652,9 +652,30 @@
     const revDate = await DocumentRevision.getCurrentDate(config.recordKey, config.docRevisionDate);
     el('cr_docRev').textContent = `Rev ${rev} · Rev date ${revDate || 'not set'}`;
 
+    await mountDocHeader(config);
+
     await load();
     renderList();
     renderEditor();
+  }
+
+  /* Controlled-copy title block on every printed page. The paper baseline comes from the
+   * Master Index List via DocHeader; what the record declares is only the fallback for a
+   * row the index doesn't carry. Non-fatal by design -- a record that can't resolve its
+   * header still prints, it just prints without the block. */
+  async function mountDocHeader(config) {
+    if (!window.DocHeader) return;
+    try {
+      await window.DocHeader.mountPrintHeader({
+        recordKey: config.recordKey,
+        defaults: {
+          document: config.title,
+          docNumber: config.docCode,
+          revisionDate: config.docRevisionDate
+        },
+        revisionStart: config.docRevisionStart || 1
+      });
+    } catch (e) { console.error('title block unavailable', e); }
   }
 
   window.CleaningRegister = { init: init };
