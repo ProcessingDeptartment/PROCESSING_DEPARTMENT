@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Baseline data for REC 01 Master Index List, transcribed from
  * "6. RECORDS/FINAL/_____REC 01 Master Index List_06.2026.xlsx" (sheet REC,
  * Rev 16, revision date 19/06/2026).
@@ -635,7 +635,7 @@ window.MasterIndexData = {
         "distributed": "Y",
         "dateOfIssue": "27/04/2026",
         "recordKey": "grading-boxing-traceability",
-        "href": "REC-7.4.4-grading-boxing-REC-8.1.5-traceability.html"
+        "href": "REC-7.4.4-grading-boxing-traceability.html"
     },
     {
         "docNo": "REC 7.4.5",
@@ -690,7 +690,7 @@ window.MasterIndexData = {
         "distributed": "Y",
         "dateOfIssue": "28/04/2026",
         "recordKey": "dry-stock-transfers",
-        "href": "REC-7.4.9-dry-REC-7.2.16-stock-transfers.html"
+        "href": "REC-7.4.9-dry-stock-transfers.html"
     },
     {
         "docNo": "REC 7.4.10",
@@ -877,7 +877,7 @@ window.MasterIndexData = {
         "distributed": "Y",
         "dateOfIssue": "23/07/2020",
         "recordKey": "staff-hygiene-inspection-weekends",
-        "href": "REC-7.6.7-a-REC-7.6.7-a-staff-hygiene-inspection-weekends.html"
+        "href": "REC-7.6.7-a-staff-hygiene-inspection-weekends.html"
     },
     {
         "docNo": "REC 7.6.8",
@@ -976,7 +976,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "31/12/2025",
         "recordKey": "knife-register",
-        "href": "REC-7.7.4.1.c-REC-7.7.4.1.c-knife-register.html"
+        "href": "REC-7.7.4.1.c-knife-register.html"
     },
     {
         "docNo": "REC 7.7.5",
@@ -1163,7 +1163,7 @@ window.MasterIndexData = {
         "distributed": "Y",
         "dateOfIssue": "15/06/2023",
         "recordKey": "lha-water-monitoring",
-        "href": "REC-7.8.9.1-lha-REC-7.8.9-water-monitoring.html"
+        "href": "REC-7.8.9.1-lha-water-monitoring.html"
     },
     {
         "docNo": "REC 7.8.11",
@@ -1372,7 +1372,7 @@ window.MasterIndexData = {
         "distributed": "Y",
         "dateOfIssue": "19/05/2024",
         "recordKey": "traceability-mock-recall-canned-braised-abalone",
-        "href": "REC-8.1.6-a-REC-8.1.6-a-traceability-mock-recall-canned-braised-abalone.html"
+        "href": "REC-8.1.6-a-traceability-mock-recall-canned-braised-abalone.html"
     },
     {
         "docNo": "REC 8.1.6",
@@ -1581,7 +1581,7 @@ window.MasterIndexData = {
         "distributed": "Y",
         "dateOfIssue": "01/02/2022",
         "recordKey": "qa1-damaged-cans-and-lids",
-        "href": "QA-01-QA-01-qa1-damaged-cans-and-lids.html"
+        "href": "QA-01-qa1-damaged-cans-and-lids.html"
     },
     {
         "docNo": "Live Pack",
@@ -1615,7 +1615,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "dry-chiller-batch-control",
-        "href": "REC-7.8.1-dry-REC-7.8.1-chiller-batch-control.html",
+        "href": "REC-7.8.1-dry-chiller-batch-control.html",
         "notOnIndexList": true
     },
     {
@@ -1627,7 +1627,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "dry-export-pack-front-page",
-        "href": "Dry-Export-Pack-Front-Page-Dry-Export-Pack-Front-Page-dry-export-pack-front-page.html",
+        "href": "Dry-Export-Pack-Front-Page-dry-export-pack-front-page.html",
         "notOnIndexList": true
     },
     {
@@ -1639,7 +1639,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "dry-nrcs-packs",
-        "href": "Production-Information-NRCS-(Dry)-Production-Information-NRCS-(Dry)-dry-nrcs-packs.html",
+        "href": "Production-Information-NRCS-(Dry)-dry-nrcs-packs.html",
         "notOnIndexList": true
     },
     {
@@ -1687,7 +1687,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "live-leftovers-log",
-        "href": "Live-Leftovers-Log-Live-Leftovers-Log-live-leftovers-log.html",
+        "href": "Live-Leftovers-Log-live-leftovers-log.html",
         "notOnIndexList": true
     },
     {
@@ -1747,7 +1747,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "mortalities-log",
-        "href": "Mortalities-Log-Mortalities-Log-mortalities-log.html",
+        "href": "Mortalities-Log-mortalities-log.html",
         "notOnIndexList": true
     },
     {
@@ -1759,7 +1759,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "mortality-counts-by-customer",
-        "href": "Mortality-Counts-by-Customer-Mortality-Counts-by-Customer-mortality-counts-by-customer.html",
+        "href": "Mortality-Counts-by-Customer-mortality-counts-by-customer.html",
         "notOnIndexList": true
     },
     {
@@ -1795,7 +1795,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "production-information-nrcs",
-        "href": "Production-Information-NRCS-(Canning)-Production-Information-NRCS-(Canning)-production-information-nrcs.html",
+        "href": "Production-Information-NRCS-(Canning)-production-information-nrcs.html",
         "notOnIndexList": true
     },
     {
@@ -1807,7 +1807,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "production-information-nrcs-rework",
-        "href": "Production-Information-NRCS-(Rework)-Production-Information-NRCS-(Rework)-production-information-nrcs-rework.html",
+        "href": "Production-Information-NRCS-(Rework)-production-information-nrcs-rework.html",
         "notOnIndexList": true
     },
     {
@@ -1819,7 +1819,7 @@ window.MasterIndexData = {
         "distributed": "",
         "dateOfIssue": "",
         "recordKey": "rtw-medical-questionnaire",
-        "href": "RTW-Medical-Questionnaire-RTW-Medical-Questionnaire-rtw-medical-questionnaire.html",
+        "href": "RTW-Medical-Questionnaire-rtw-medical-questionnaire.html",
         "notOnIndexList": true
     },
     {
@@ -1836,6 +1836,3 @@ window.MasterIndexData = {
     }
 ]
 };
-
-
-

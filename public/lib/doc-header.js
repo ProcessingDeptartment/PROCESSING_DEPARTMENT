@@ -175,8 +175,11 @@
   }
 
   /* Put the controlled-copy block on every printed page of the calling record.
-   * Records that lay out their own print pages (and can therefore number them) build the
-   * block themselves with blockHtml instead -- see REC 7.2.12.
+   * Every record reaches the block through here -- the two shared engines (form-record.js,
+   * monitoring-log.js) call it for the records they drive, and the hand-built records call
+   * it themselves. blockHtml is only for a caller that lays out its own print pages and can
+   * therefore number them; nothing does that today, so a record that skips this call simply
+   * prints no title block at all.
    *
    * The Page cell is left blank here on purpose: CSS exposes no page count to an element
    * outside the @page margin boxes, and a wrong page number on a controlled copy is worse

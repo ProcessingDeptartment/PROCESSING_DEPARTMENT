@@ -286,7 +286,7 @@
 <script src="../lib/permission-rules.js?v=5"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/doc-header.js?v=4"></script>
-<script src="../lib/master-index-data.js?v=1"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
 <script>
 (function () {
   const DATA = window.MasterIndexData;
@@ -302,7 +302,7 @@
   // against at render time -- see the comment at the top of that file. '' means
   // "explicitly set to Default"; a row with no key at all falls back to whatever
   // palette-map.js's static list already assigns it (see CATEGORIES below).
-  // A record's document number as issued on paper (r.docNo, from master-index-data.js)
+  // A record's document number as issued on paper (r.docNo, from master-index-data.js?v=2)
   // occasionally needs correcting or renumbering online -- e.g. a REC gets folded under
   // a new section. Stored per recordKey rather than edited in the spreadsheet import, so
   // the override survives the next sync from tools/build-master-index-data.py.
