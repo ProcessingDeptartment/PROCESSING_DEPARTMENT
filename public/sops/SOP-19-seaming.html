@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 19 Seaming</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-19-seaming',
+  sopNo: 'SOP 19',
+  name: 'Seaming',
+  area: 'Precook & Grading',
+  startRev: 3,
+  baselineDate: '30/01/2025',
+  sections: {
+    objective: 'The procedure outlines the process of operating the seamer.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Startup boiler and compressor</li><li>Clean seamer</li><li>Check that there is a supply of compressed air on the seamers gauge</li><li>Check for steam supply on pressure gauge</li><li>Check that the steam supply is open to the seamer on the PLC</li><li>Load new lids into the seamer</li><li>Switch on the seamer by pressing the start button</li><li>Allow machine to run for 20 -30 minutes</li><li>Close 4 cans</li><li>Wait for 2 -5 minutes</li><li>Close 4 cans for seam testing</li><li>Check the seams of the test run.</li><li>Complete REC 7.2.12</li><li>Once checked and signed off proceed with seaming.</li><li>At the end of the day or end of production ensure that the seamer is cleaned, the rollers &amp; bearings are lubricated as per the manual and the oil level gauge checked.</li><li>Ensure lids and cans are taken back to FG02.</li><li>Chutes and trolleys must be emptied.</li></ol>',
+    review: 'This procedure is reviewed on an annual basis to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "02/09/2020"}, {"rev": 2, "reason": "Document review", "date": "23/09/2021"}, {"rev": 3, "reason": "Document review", "date": "30/01/2025"}]
+});
+</script>
+</body>
+</html>

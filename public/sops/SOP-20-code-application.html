@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 20 Code Application</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-20-code-application',
+  sopNo: 'SOP 20',
+  name: 'Code Application',
+  area: 'Canning',
+  startRev: 3,
+  baselineDate: '23/06/2026',
+  sections: {
+    objective: 'The procedure outlines the process of coding of cans.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Insert the cartridge to print head</li><li>Switch the code applicator with switch under the screen.</li><li>Select the alarm button</li><li>Click print options</li><li>Select clean all.</li><li>Move back to home page</li><li>Select message for coding</li><li>Press green play button</li><li>Print cans.</li><li>Press red stop button</li><li>Select edit</li><li>Edit message and save</li><li>Press green play button and resume printing</li><li>Switch off printer after coding</li><li>Remove cartridge, store with cartridge cap in an upright position, in dry environment until next use.</li><li>Refer to User manual for further instructions.</li></ol>',
+    review: 'This procedure is reviewed on an annual basis to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "06/04/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}, {"rev": 3, "reason": "Equipment change", "date": "23/06/2026"}]
+});
+</script>
+</body>
+</html>

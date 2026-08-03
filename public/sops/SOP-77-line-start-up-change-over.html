@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 77 Line Start Up &amp; Change Over</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-77-line-start-up-change-over',
+  sopNo: 'SOP 77',
+  name: 'Line Start Up & Change Over',
+  area: 'Canning',
+  startRev: 1,
+  baselineDate: '',
+  sections: {
+    objective: 'To ensure that (a) production lines, equipment, utilities, and work areas are correctly cleaned, inspected, and verified before production begins, and (b) the line can switch safely from one product to another without cross-contamination, mislabelling or food-safety risk -- especially changeovers involving allergen-containing products.',
+    roles: '<ul>'
+      + '<li>Production Manager or Shift Manager: coordinates all start-up and changeover tasks and seam checks.</li>'
+      + '<li>Operators: cleaning and preparation of equipment and workstations.</li>'
+      + '<li>Quality Controller (QC): verification of cleanliness, equipment condition, and allergen clearance.</li>'
+      + '<li>Maintenance: adjusts machinery, confirms safety devices, fixes identified faults.</li>'
+      + '<li>Warehouse: supplies new materials, removes unused or obsolete stock.</li>'
+      + '</ul>',
+    process: '<p><strong>Scope:</strong> applies to all abalone processing lines, including production areas, seamer(s) (standard and jumbo cans), retorts, boiler and compressor, ancillary equipment, and allergen-containing product areas (e.g. braised/sauce products).</p>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">4.1 Pre-Start Hygiene and Area Inspection</h3>'
+      + '<ol>'
+      + '<li>Put on required PPE.</li>'
+      + '<li>Perform a full walk-through of all production areas.</li>'
+      + '<li>Confirm all surfaces, tables, floors, drains, and equipment are clean and free of previous materials.</li>'
+      + '<li>Any area not worked on during the previous shift must be cleaned thoroughly before start-up.</li>'
+      + '<li>Supervisor and QC must inspect and approve the area together before production may begin.</li>'
+      + '<li>If cleaning is not satisfactory, repeat cleaning until the required standard is met.</li>'
+      + '</ol>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">4.2 Equipment Preparation and Inspection</h3>'
+      + '<ol>'
+      + '<li>Check all scales, probes and sensors have in-date calibration stickers.</li>'
+      + '<li>Inspect all machinery: correct cleaning performed, no visible damage or safety risks, all reported faults from the previous shift resolved.</li>'
+      + '<li>Faults must be attended to immediately before line start-up. Safety is always prioritised during inspection and operation.</li>'
+      + '<li>Load correct AG codes; print a test sample and have QC confirm it.</li>'
+      + '</ol>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">4.3 Utility Start-Up</h3>'
+      + '<ol>'
+      + '<li>Start the boiler and compressor prior to production to ensure sufficient steam supply for cooking and adequate compressed air for the seamer and retort.</li>'
+      + '<li>Confirm operational stability before loading any product.</li>'
+      + '</ol>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">4.4 Seamer Preparation</h3>'
+      + '<ol>'
+      + '<li>Thoroughly clean and grease the seamer before production.</li>'
+      + '<li>Run two (2) empty cans for double-seam inspection (standard cans); one (1) empty can for jumbo/single-head seamer verification.</li>'
+      + '<li>Conduct a full teardown inspection according to the seaming SOP.</li>'
+      + '<li>Production may only start once the Production Manager or Shift Manager has verified seam measurements are within specification.</li>'
+      + '</ol>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">4.5 Retort Preparation</h3>'
+      + '<ol>'
+      + '<li>Before running a production cycle, perform a test cycle without product to verify heating profile, pressure control, sensor functionality, and leak-free operation. Fix any fault before loading product.</li>'
+      + '<li>Start the seamer 15 minutes before closing cans to ensure optimal functioning.</li>'
+      + '<li>After closing, load cans into the basket and place into the retort.</li>'
+      + '<li>Select the correct recipe/program for the product being processed.</li>'
+      + '<li>Monitor the retort continuously throughout the entire cooking cycle.</li>'
+      + '</ol>'
+      + '<p>4.6 Production Manager or Shift Manager signs the Line Start-Up Release. Full-rate production may begin.</p>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">5. Changeover</h3>'
+      + '<p><strong>5.1 General Changeover</strong> -- during product or size changeovers: stop the line and remove all previous product/ingredients from tables and equipment; clean to the required routine level and document in the cleaning log; Supervisor and QC must inspect the line before restarting.</p>'
+      + '<p><strong>5.2 Allergen Changeover (Sauce/Braised Products)</strong> -- when switching between allergen-containing and non-allergen products:</p>'
+      + '<ol>'
+      + '<li>Remove all sauce-related raw materials, utensils, and product residues from the area.</li>'
+      + '<li>Clean to the required allergen level (tables, utensils, seamer, retorts, cooking equipment); document in the cleaning log and allergen monitoring.</li>'
+      + '<li>QC performs visual inspection and takes allergen swabs at all required points. Production may only recommence once all allergen swabs pass -- re-clean and re-swab on any failure.</li>'
+      + '<li>Fit change parts or adjust guides; load the new recipe settings; load correct AG codes; print a test sample and have QC confirm it.</li>'
+      + '<li>Production Manager or Shift Manager sign the Change Over Clearance. Resume production.</li>'
+      + '</ol>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">6. End-of-Shift Clean-Down</h3>'
+      + '<ol>'
+      + '<li>30 minutes before shift end, begin clearing all tables and work surfaces.</li>'
+      + '<li>Remove all product and materials from equipment and working areas.</li>'
+      + '<li>Clean all machinery that is no longer in use, and conduct full cleaning of processing areas.</li>'
+      + '<li>Supervisor and QC must do a final walk-through and approve end-of-shift cleaning.</li>'
+      + '</ol>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">7. Deviation Handling</h3>'
+      + '<p>If first-off checks fail, stop the line, isolate affected product and investigate root cause. A failed swab requires re-cleaning and retesting; escalate to QA Manager on second failure.</p>'
+      + '<h3 style="font-size:12px; margin:14px 0 6px;">8. Records to Complete</h3>'
+      + '<ul>'
+      + '<li>Start-up and changeover checklist</li>'
+      + '<li>Cleaning verification records (routine or allergen)</li>'
+      + '<li>Allergen swab results</li>'
+      + '<li>Equipment verification log (scales, probes)</li>'
+      + '<li>Seamer double-seam verification</li>'
+      + '<li>Retort test cycle record</li>'
+      + '<li>Start-Up or Change-Over Release Sign-off</li>'
+      + '</ul>'
+      + '<p>All records must be completed and filed within the same shift.</p>',
+    review: 'All personnel must be trained on this SOP before unsupervised work. Refresher training is required annually or whenever the SOP is revised. Supervisors verify competency through observation and records.'
+  },
+  relatedDocs: [],
+  baselineHistory: [
+    { rev: 1, reason: 'New document', date: '' }
+  ]
+});
+</script>
+</body>
+</html>

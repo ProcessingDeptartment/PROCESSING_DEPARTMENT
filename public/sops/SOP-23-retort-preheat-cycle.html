@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 23 Retort Preheat Cycle</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-23-retort-preheat-cycle',
+  sopNo: 'SOP 23',
+  name: 'Retort Preheat Cycle',
+  area: 'Canning',
+  startRev: 2,
+  baselineDate: '10/03/2021',
+  sections: {
+    objective: 'The procedure outlines the process of starting the preheat cycle of the retort.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Turn on power using switch on the control panel of retort.</li><li>Enter personal password on screen</li><li>Close retort door and secure with red lock</li><li>Select recipe for preheat cycle.</li><li>Start the cycle</li><li>Once cycle has ended open door when green light appears.</li></ol>',
+    review: 'This procedure is reviewed on an annual basis to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "06/05/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}]
+});
+</script>
+</body>
+</html>

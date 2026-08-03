@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 9 Scrubbing</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-09-scrubbing',
+  sopNo: 'SOP 9',
+  name: 'Scrubbing',
+  area: 'Receiving & Sorting',
+  startRev: 2,
+  baselineDate: '10/03/2021',
+  sections: {
+    objective: 'The procedure outlines the process of scrubbing.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Place un-scrubbed product in gutter in middle of table.</li><li>Scrub the product</li><li>Use white brush</li><li>Pay attention to area between the foot and frill</li><li>Pay attention to back and front of abalone</li><li>Scrub frill thoroughly</li><li>Remove all abalone that is damaged from batch and placed in blue trays.</li><li>Place cleaned abalone in clean, labelled white trays</li><li>Place trays in trolley</li><li>Place trolley in back chiller or chiller designated for clean product.</li></ol>',
+    review: 'This procedure is reviewed to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [{"code": "REC 7.2.2", "name": ""}],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "02/05/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}]
+});
+</script>
+</body>
+</html>

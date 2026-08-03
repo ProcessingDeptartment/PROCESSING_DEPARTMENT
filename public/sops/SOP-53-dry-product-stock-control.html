@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 53 Dry Product Stock Control</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-53-dry-product-stock-control',
+  sopNo: 'SOP 53',
+  name: 'Dry Product Stock Control',
+  area: 'Dry',
+  startRev: 1,
+  baselineDate: '25/07/2022',
+  sections: {
+    objective: 'This procedure outlines the process for controlling stock of dry product during the drying, weighing, grading, and issuing phases to ensure traceability, accountability, and compliance with company and regulatory standards.',
+    roles: '<ul><li>Abagold Processing Management is responsible for overseeing the implementation of this SOP, investigating discrepancies, and enforcing compliance.</li><li>Finance Department is responsible for conducting verification counts, documenting weight records, and signing off on key stages of the process.</li><li>Factory Staff are responsible for initiating and supporting the drying process, performing physical counts, and cooperating during all verification stages.</li></ul>',
+    process: '<ol><li>a) Job Entry into Drying Room</li><li>A “Drying Document Control Sheet” must be completed for all jobs entering and exiting the drying room.</li><li>The factory is responsible for hanging the product and conducting the initial count.</li><li>Finance performs a second count within 24 weekday hours.</li><li>Both counts must be entered into the control sheet.</li><li>Any missed counts must be escalated to management within 24 weekday hours.</li><li>b) Job Removal from Drying Room</li><li>The factory Production/QC decides when a job is ready to be removed.</li><li>Finance and factory staff must be present during removal and conduct a joint count.</li><li>Discrepancies between entry and exit counts must be reported to management immediately.</li><li>c) Weighing with String On</li><li>After removal, the weight (with string on) is taken with both finance and factory present.</li><li>The weight must be recorded and confirmed on the drying document.</li><li>Both parties must sign to verify accuracy.</li><li>d) Weighing without String (Post De-stringing)</li><li>Finance presence is not required for de-stringing.</li><li>The factory records the weight without string.</li><li>Finance must check and confirm this weight before grading.</li><li>e) Pre-Grading Confirmation</li><li>Finance confirms the kilos to be graded and signs acceptance of the amount issued from FG01 (the safe).</li><li>f) Post-Grading Weight Recording</li><li>After grading, product returned to FG01 is weighed by finance.</li><li>The final graded weight is signed for by the factory.</li><li>g) Issuing for Rework or Darkening</li><li>Any product issued from FG01 for rework or darkening must be weighed and signed by both parties.</li><li>h) Weekly FG01 Stock Count</li><li>A weekly stock count of FG01 is conducted by finance together with the security manager.</li><li>i) Drying Room Inspection</li><li>The drying room must be inspected regularly by finance, security, or other managers.</li><li>FINANCE-SPECIFIC TASKS</li><li>Weekly dry stock take is mandatory.</li><li>Maintain packing list, Syspro invoice, and proof of payment for completeness verification.</li><li>Large differences between weight with string and without string require a recount.</li><li>Any breaches of this SOP must be reported immediately.</li></ol>',
+    review: 'This SOP is reviewed annually to ensure alignment with safety standards, customer requirements, and legislation.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "Initial Dry product stock controls added", "date": "25/07/2022"}]
+});
+</script>
+</body>
+</html>

@@ -51,6 +51,9 @@
     // REC 01 Master Index List is a document-control record -- only the roles that own
     // document control tick off obsolete-retrieved / new-revision-distributed.
     manageMasterIndex: ['QA_MANAGER', 'QUALITY_SUPERVISOR', 'ADMINISTRATOR'],
+    // SOPs are controlled procedure documents, not fill-in records -- editing the
+    // procedure text itself (not just filling in a form) is a document-control action.
+    manageSOPs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
   };
 
   const ROLE_KEY = 'acting_as_role';

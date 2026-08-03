@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 8 Salting and Tumbling</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-08-salting-and-tumbling',
+  sopNo: 'SOP 8',
+  name: 'Salting and Tumbling',
+  area: 'Receiving & Sorting',
+  startRev: 3,
+  baselineDate: '30/09/2024',
+  sections: {
+    objective: 'The procedure outlines the process salting of abalone.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Collect salt and baking soda bags from storeroom</li><li>Weigh right amount of salt needed</li><li>Add 15 kg of salt and 500g of baking soda into the abalone in tumbler.</li><li>Tumbling of the product for 2.5 hours at 20 -25 speed.</li></ol>',
+    review: 'This procedure is reviewed to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [{"code": "REC 7.1.3.", "name": ""}],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "02/05/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}, {"rev": 3, "reason": "Document review", "date": "30/09/2024"}]
+});
+</script>
+</body>
+</html>

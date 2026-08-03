@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 21 Basket Loading</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-21-basket-loading',
+  sopNo: 'SOP 21',
+  name: 'Basket Loading',
+  area: 'Canning',
+  startRev: 2,
+  baselineDate: '10/03/2021',
+  sections: {
+    objective: 'The procedure outlines the process of loading cans into retort baskets.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Position empty basket near end of conveyer</li><li>Place divider at the bottom of the basket</li><li>Use pick and place tool to lift 10 cans at once and place in basket</li><li>Repeat step 3 until 120 cans full one layer</li><li>Place divider on layer and repeat step 3 and 4.</li><li>Repeat until the basket contains 840 cans</li><li>Any dropped cans must be reopened and resealed.</li><li>Move full basket to retort.</li></ol>',
+    review: 'This procedure is reviewed on an annual basis to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "06/04/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}]
+});
+</script>
+</body>
+</html>

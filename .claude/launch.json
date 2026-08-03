@@ -84,6 +84,30 @@
         "public"
       ],
       "port": 8140
+    },
+    {
+      "name": "static-public-8150",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8150",
+        "--directory",
+        "public"
+      ],
+      "port": 8150
+    },
+    {
+      "name": "static-public-8199",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8199",
+        "--directory",
+        "public"
+      ],
+      "port": 8199
     }
   ]
 }

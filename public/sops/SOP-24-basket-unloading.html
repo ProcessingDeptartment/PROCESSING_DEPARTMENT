@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 24 Basket Unloading</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-24-basket-unloading',
+  sopNo: 'SOP 24',
+  name: 'Basket Unloading',
+  area: 'Canning',
+  startRev: 2,
+  baselineDate: '10/03/2021',
+  sections: {
+    objective: 'The procedure outlines the process of Basket unloading for cans.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Remove basket from retort</li><li>Unload basket using pick and place tool</li><li>Unload onto the dry can belt</li><li>Allow belt with air knives to dry cans</li><li>Pack cans into boxes with coded side up</li><li>Do not seal box</li></ol>',
+    review: 'This procedure is reviewed on an annual basis to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "06/04/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}]
+});
+</script>
+</body>
+</html>

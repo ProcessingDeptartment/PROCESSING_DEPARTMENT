@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 4 Remove Animals from Basket</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-04-remove-animals-from-basket',
+  sopNo: 'SOP 4',
+  name: 'Remove Animals from Basket',
+  area: 'Receiving & Sorting',
+  startRev: 3,
+  baselineDate: '13/06/2023',
+  sections: {
+    objective: 'The procedure outlines the process of removing animals from baskets.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Remove kelp from basket</li><li>Remove cover plate &amp; remove animals from cover plate and place back in basket</li><li>Cut all cable ties</li><li>Remove all animals from basket rack</li><li>Place all animals in 1 blue bin</li><li>Count animals and mortalities and record on REC 7.1.2</li><li>Place basket tag in blue bin.</li></ol>',
+    review: 'This procedure is reviewed to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [{"code": "Rec 7.1.1.", "name": ""}],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "31/01/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}, {"rev": 3, "reason": "Document review", "date": "13/06/2023"}]
+});
+</script>
+</body>
+</html>

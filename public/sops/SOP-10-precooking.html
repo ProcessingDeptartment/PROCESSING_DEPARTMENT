@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 10 Precooking</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-10-precooking',
+  sopNo: 'SOP 10',
+  name: 'Precooking',
+  area: 'Precook & Grading',
+  startRev: 3,
+  baselineDate: '28/04/2026',
+  sections: {
+    objective: 'The procedure outlines the process of precooking.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Fill 1 white bin with product for precook</li><li>Weigh bin on tared scale</li><li>Record weight under “Clean Weight” on REC 7.2.3</li><li>Fill precook pot with 100lt Sea water and heat up to 80 ̊C.</li><li>Mix in 1kg Brown sugar</li><li>Throw abalone from the white bin into pot when the temperature of water is 80 ̊C.</li><li>Stir for 2 - 3 minutes ensuring temperature stays between 70-80 ̊C</li><li>Remove abalone from pot into a crate</li><li>Dip full crate in cold freshwater</li><li>Allow excess water to drain</li><li>Weigh crate of tared scale</li><li>Record weight under “Precook weight” on REC 7.2.3</li><li>Place product in trays in chiller</li></ol>',
+    review: 'This procedure is reviewed to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [{"code": "REC 7.2.3", "name": ""}],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "06/05/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}, {"rev": 3, "reason": "Changed process no.4 to sea water", "date": "28/04/2026"}]
+});
+</script>
+</body>
+</html>

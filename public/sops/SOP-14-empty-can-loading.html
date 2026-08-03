@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 14 Empty Can Loading</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-14-empty-can-loading',
+  sopNo: 'SOP 14',
+  name: 'Empty Can Loading',
+  area: 'Precook & Grading',
+  startRev: 2,
+  baselineDate: '10/03/2021',
+  sections: {
+    objective: 'The procedure outlines the process of the empty can loading.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Press green button in factory to start can conveyer.</li><li>Press green button in FG02 to start magnetic conveyer.</li><li>Load magnetic conveyer</li><li>Fill can conveyer to filling station.</li><li>Switch magnetic conveyer.</li></ol>',
+    review: 'This procedure is reviewed on an annual basis to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "06/04/2020"}, {"rev": 2, "reason": "Document review", "date": "10/03/2021"}]
+});
+</script>
+</body>
+</html>

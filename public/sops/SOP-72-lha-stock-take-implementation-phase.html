@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 72 LHA - Stock Take Implementation Phase</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-72-lha-stock-take-implementation-phase',
+  sopNo: 'SOP 72',
+  name: 'LHA - Stock Take Implementation Phase',
+  area: 'Live',
+  startRev: 1,
+  baselineDate: '',
+  sections: {
+    objective: 'The procedure outlines the process of doing a thorough stock take to ensure proper stock control at the live holding area warehouse.',
+    roles: '<ul><li>Abagold Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Live Holding Area – Stock take</li><li>Confirm if all paperwork for the previous week is captured and invoiced.</li><li>Request a list of baskets sorted into LSH1 the previous week from BI.</li><li>Walk each tank to verify all the bags that are physically on the tanks against the list of baskets.</li><li>Verify the baskets by commenting “Live Area” in the comment space allocated.</li><li>If there are baskets on the list but not physically on the tanks, then go and check for these baskets on the Live Pack IDNs and Live to Farm paperwork.</li><li>Give the comment “Packed” on all baskets found on the Live Pack IDNs paperwork and the comment “Live to Farm” for those found on the Live to Farm paperwork.</li><li>When done all baskets on the list should have a comment showing that they were either packed or sent back to the farm if they are not physically on the tanks.</li><li>If there are baskets on the list that are not found on the tanks, Live Pack IDNs and Live to Farm paperwork, these could have been packed as extras and basket numbers where not written on IDNs.</li><li>Request tags from processing to verify this when the tags are found comment on these baskets “Packed”.</li><li>If there are baskets that are physically on the tanks but not on the list, write these baskets at the bottom of the list with their full information.</li><li>The date in of the baskets will be used to locate the sorting paperwork, check what went wrong and rectify the mistake.</li></ol>',
+    review: 'This procedure is reviewed on an annual basis to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": ""}]
+});
+</script>
+</body>
+</html>

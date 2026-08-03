@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 2 Basket Receiving</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>
+SopDoc.mount({
+  recordKey: 'sop-02-basket-receiving',
+  sopNo: 'SOP 2',
+  name: 'Basket Receiving',
+  area: 'Receiving & Sorting',
+  startRev: 3,
+  baselineDate: '13/06/2023',
+  sections: {
+    objective: 'The procedure outlines the process of receiving of Baskets from the farm allocated for harvest.',
+    roles: '<ul><li>Abagold Processing Management is responsible for the implementation and review of this procedure and linked work instructions and training of staff.</li><li>Abagold Processing Staff are responsible for working in accordance with documented procedures and work instructions and the reporting on unsafe equipment and conditions.</li></ul>',
+    process: '<ol><li>Tick baskets off from harvest list as received.</li><li>Place ticked off baskets into holding tanks.</li><li>Record general basket details per tank.</li></ol>',
+    review: 'This procedure is reviewed to ensure compliance with safety standards, customer as well as legislative requirements.'
+  },
+  relatedDocs: [{"code": "Rec 7.1.2", "name": "Basket receiving"}],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "11/05/2020"}, {"rev": 2, "reason": "Document review", "date": "11/05/2021"}, {"rev": 3, "reason": "Document review", "date": "13/06/2023"}]
+});
+</script>
+</body>
+</html>
