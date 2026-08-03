@@ -141,16 +141,21 @@
    * element is painted once per page by the print engine, which is the only way to repeat
    * a block above a table whose length isn't known until it prints. Re-appended on every
    * call so it stays last in the head and its @page margin beats the engine's. */
-  function injectPrintHeaderStyles(height) {
+  function injectPrintHeaderStyles(height, side) {
     let s = document.getElementById('dh-print-header-styles');
     if (!s) {
       s = document.createElement('style');
       s.id = 'dh-print-header-styles';
     }
+    /* The margin SHORTHAND, never `margin-top`. Chrome discards individual margin
+     * longhands inside @page, so a `margin-top` here is silently dropped and the strip
+     * is never reserved -- the block then prints outside the page box and vanishes.
+     * Because the shorthand also sets the sides, the caller states them: an engine that
+     * declares its own @page passes its side value so this rule doesn't change it. */
     s.textContent = `
       #dh-print-header{ display:none; }
       @media print{
-        @page{ margin-top:${height}; }
+        @page{ margin:${height} ${side} ${side}; }
         #dh-print-header{ display:block; position:fixed; left:0; right:0;
           top:-${height}; height:${height}; overflow:hidden; }
       }
@@ -175,7 +180,7 @@
     const h = await resolve(opts.recordKey,
       defaultsFor(opts.recordKey, opts.defaults), revisionStart);
     injectStyles();
-    injectPrintHeaderStyles(height);
+    injectPrintHeaderStyles(height, opts.pageSideMargin || '12mm');
     let host = document.getElementById('dh-print-header');
     if (!host) {
       host = document.createElement('div');

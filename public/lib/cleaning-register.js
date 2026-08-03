@@ -121,8 +121,9 @@
   }
   @media print{
     /* The top margin is not ours to choose -- that strip is reserved for the repeating
-     * controlled-copy title block. See doc-header.js. */
-    @page{ size:A4 portrait; margin:10mm; margin-top:26mm; }
+     * controlled-copy title block. Stated as the shorthand because Chrome drops
+     * `margin-top` inside @page. See doc-header.js. */
+    @page{ size:A4 portrait; margin:26mm 10mm 10mm; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
     .cr-app{ font-size:9.5px; }
@@ -670,6 +671,7 @@
     try {
       await window.DocHeader.mountPrintHeader({
         recordKey: config.recordKey,
+        pageSideMargin: '10mm', // must match this engine's own @page rule above
         defaults: {
           document: config.title,
           docNumber: config.docCode,
