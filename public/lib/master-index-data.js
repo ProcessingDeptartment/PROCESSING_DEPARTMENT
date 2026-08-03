@@ -436,8 +436,8 @@ window.MasterIndexData = {
         "obsoleteRetrieved": "N/A",
         "distributed": "Y",
         "dateOfIssue": "22/09/2022",
-        "recordKey": "stock-loading",
-        "href": "REC-7.2.10-stock-loading.html"
+        "recordKey": null,
+        "href": null
     },
     {
         "docNo": "REC 7.2.11",

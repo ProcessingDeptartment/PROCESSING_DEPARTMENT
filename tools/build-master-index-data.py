@@ -72,6 +72,11 @@ for r in ws.iter_rows(min_row=1, max_row=5, values_only=True):
 
 rows = []
 unlinked = []
+# Pages already spoken for. Two index rows can carry the same document number -- REC 7.2.10
+# is both "Stock Loading Control Sheet" and a superseded "Brine muixing report" (the live one
+# is REC 7.3.6). Matching is by document number, so without this the second row inherits the
+# first row's page and the index quietly links one record to a different controlled document.
+claimed = set()
 for r in ws.iter_rows(min_row=7, values_only=True):
     code, name, details, rev, obs, dist, issued = (list(r) + [None]*7)[:7]
     code, name = clean(code), clean(name)
@@ -86,6 +91,11 @@ for r in ws.iter_rows(min_row=7, values_only=True):
     # disambiguate the one duplicate docCode (REC 7.8.1 canning vs dry chiller)
     if hit and len(hit) > 1:
         hit = [h for h in hit if 'dry' not in h[0]] or hit
+    # An unlinked row is honest ("not digitised"); a wrongly linked one is not.
+    if hit and hit[0][0] in claimed:
+        hit = None
+    if hit:
+        claimed.add(hit[0][0])
     rows.append({
         'docNo': code,
         'name': name,

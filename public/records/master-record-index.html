@@ -226,8 +226,9 @@
   <div class="dh-modal-inner">
     <h2>Document header — printed title block</h2>
     <p class="dh-hint">These fields print in the ABAGOLD title block at the top of every
-      page of the record's PDF. Revision, revision date and effective date are set
-      automatically and cannot be typed.</p>
+      page of the record's PDF. Revision and revision date are set automatically and cannot
+      be typed. Effective date prints blank until the date on the paper record is known —
+      it is never guessed.</p>
 
     <label class="dh-f" style="flex-direction:row;align-items:center;gap:6px;font-weight:400;text-transform:none;letter-spacing:0;font-size:12.5px;">
       <input type="checkbox" id="dhApplyAll" style="width:auto;">
@@ -263,7 +264,7 @@
       <div class="dh-auto">
         <div><b id="dhRevision">—</b><span>Revision <em>(auto)</em></span></div>
         <div><b id="dhRevisionDate">—</b><span>Revision date <em>(auto)</em></span></div>
-        <div><b id="dhEffectiveDate">—</b><span>Effective date <em>(auto, first use)</em></span></div>
+        <div><b id="dhEffectiveDate">—</b><span>Effective date <em>(from the paper record)</em></span></div>
       </div>
 
       <div class="dh-preview-wrap">
@@ -285,7 +286,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=5"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/doc-header.js?v=4"></script>
+<script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script>
 (function () {
@@ -612,7 +613,7 @@
     $('dhRevisionDate').dataset.raw = h.revisionDate || '';
     $('dhRevisionDate').textContent = window.DocHeader.fmtDate(h.revisionDate) || '—';
     $('dhEffectiveDate').dataset.raw = h.effectiveDate || '';
-    $('dhEffectiveDate').textContent = window.DocHeader.fmtDate(h.effectiveDate) || 'not yet opened';
+    $('dhEffectiveDate').textContent = window.DocHeader.fmtDate(h.effectiveDate) || 'not recorded';
     dhRenderPreview();
     dhSetState(canEdit ? '' : 'Read-only — document control roles may edit this.');
   }

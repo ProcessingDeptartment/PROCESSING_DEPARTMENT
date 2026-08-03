@@ -54,12 +54,6 @@
            String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
   }
 
-  function todayIso() {
-    const d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
-           String(d.getDate()).padStart(2, '0');
-  }
-
   async function loadStored(recordKey) {
     try {
       const raw = await window.storage.get(KEY(recordKey), true);
@@ -74,14 +68,23 @@
     } catch (e) { console.error('doc header save failed', e); return false; }
   }
 
-  /* Effective date = first date a user worked with the document. Claimed once and then
-   * left alone; a later revision does not move it. Only the absence of a stored value
-   * is treated as "first use", so this never overwrites history. */
-  async function ensureEffectiveDate(recordKey, stored) {
+  /* Effective date = the date the document came into effect, which on these forms is
+   * years before the current revision. Nothing the app knows carries it: the Master Index
+   * List holds revision dates, not effective dates.
+   *
+   * So it is never invented. This used to stamp today's date on first view, which printed
+   * "Effective Date: 2026" on documents in effect since 2020 -- and because the value is
+   * claimed once and never moved, that wrong date would have stuck. The cell prints blank
+   * until someone records the real one, which is the same call document-revision.js makes
+   * about an unknown revision date.
+   *
+   * Clears what the old auto-stamp already wrote. Those are identifiable: effectiveDateSetAt
+   * was only ever set by the auto-stamp, so a value carrying it was invented, not recorded. */
+  async function clearAutoStampedEffectiveDate(recordKey, stored) {
     const s = stored || await loadStored(recordKey);
-    if (s.effectiveDate) return s;
-    s.effectiveDate = todayIso();
-    s.effectiveDateSetAt = Date.now();
+    if (!s.effectiveDateSetAt) return s;
+    delete s.effectiveDate;
+    delete s.effectiveDateSetAt;
     await saveStored(recordKey, s);
     return s;
   }
@@ -92,7 +95,7 @@
   async function resolve(recordKey, defaults, revisionStartAt) {
     defaults = defaults || {};
     let stored = await loadStored(recordKey);
-    stored = await ensureEffectiveDate(recordKey, stored);
+    stored = await clearAutoStampedEffectiveDate(recordKey, stored);
 
     let revision = revisionStartAt;
     let revisionDate = defaults.revisionDate || '';
@@ -306,7 +309,7 @@
   }
 
   window.DocHeader = {
-    FIELDS, resolve, saveFields, saveFieldsAll, ensureEffectiveDate, blockHtml, injectStyles, fmtDate,
+    FIELDS, resolve, saveFields, saveFieldsAll, clearAutoStampedEffectiveDate, blockHtml, injectStyles, fmtDate,
     defaultsFor, mountPrintHeader, PRINT_HEADER_HEIGHT, PAGE_SIDE_MARGIN,
     current, badgeText,
     load: loadStored
