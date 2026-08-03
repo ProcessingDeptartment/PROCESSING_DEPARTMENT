@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.3.2 Ingredient Weighing</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
 <style>
   :root{
-    --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:var(--palette-border); --line-soft:var(--palette-head-bg); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
+    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
+    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
     --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
   }
   #iw-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }
@@ -22,7 +23,10 @@
   }
   #iw-root input:focus, #iw-root select:focus, #iw-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #iw-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .dc-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .dc-top{ background:var(--steel-dk); color:#f4f1e8; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .dc-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .dc-topline label.role-label{ font-size:9.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
+  .dc-topline input{ width:120px; padding:3px 5px; font-size:11px; }
   .btn{ padding:5px 11px; font-size:11.5px; }
   .btn-primary{ background:var(--accent); color:#241a0a; }
   .btn-primary:hover{ background:#dd9536; }
@@ -58,11 +62,19 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="iw-root">
   <div class="dc-top">
     <div class="doc-line"><span class="doc-code">REC 7.3.2</span><h1>Ingredient Weighing</h1><span class="doc-rev">Rev 2 &middot; Rev date not set</span></div>
+    <div class="dc-topline no-print">
+      <label class="role-label">Your name
+        <input id="actingNameInput" placeholder="Name">
+      </label>
+      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
+      <button class="btn btn-primary" id="submitBtn">Submit</button>
+    </div>
   </div>
 
   <div class="dc-body">
@@ -116,16 +128,16 @@
       <span class="status-line" id="statusLine"></span>
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
     </div>
   </div>
 
   <div class="toast no-print" id="toast"></div>
 </div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
 <script>
-Shell.record({ recordKey: 'ingredient-weighing' }).then(function () {
 (async function(){
   const $ = id => document.getElementById(id);
 
@@ -146,6 +158,8 @@ Shell.record({ recordKey: 'ingredient-weighing' }).then(function () {
   }
 
   let state = newRecord();
+  const ACTING_NAME_KEY = 'acting_as_name_ingredient_weighing';
+  let actingName = window.localStorage.getItem(ACTING_NAME_KEY) || '';
 
   function toast(msg){
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
@@ -225,7 +239,14 @@ Shell.record({ recordKey: 'ingredient-weighing' }).then(function () {
     window.print();
   }
 
+  function wireActingName(){
+    const inp = $('actingNameInput');
+    inp.value = actingName;
+    inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
+  }
+
   function wire(){
+    wireActingName();
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
@@ -242,8 +263,6 @@ Shell.record({ recordKey: 'ingredient-weighing' }).then(function () {
   wire();
   renderAll();
 })();
-});
 </script>
 </body>
 </html>
-

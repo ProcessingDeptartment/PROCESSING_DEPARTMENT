@@ -4,15 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.7.4.1b Goggles Register</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/form-record.js?v=2"></script>
 <script>
 (function () {
-  Shell.record({
-    engine: 'form-record',
+  FormRecord.init({
     mount: '#frRoot',
     recordKey: 'goggles-register',
     docCode: 'REC 7.7.4.1b',
@@ -26,6 +32,9 @@
       { title: 'Week details', fields: [
         { key: 'weekStarting', label: 'Date (beginning of working week)', type: 'date', required: true },
         { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
       ]}
     ],
     roster: {
@@ -45,5 +54,3 @@
 </script>
 </body>
 </html>
-
-

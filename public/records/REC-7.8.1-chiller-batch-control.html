@@ -4,26 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.8.1 Chiller Batch Control</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/monitoring-log.js?v=2"></script>
 <script>
 (function () {
-  Shell.record({
-    engine: 'monitoring-log',
-    uses: ['lookups'],
-    /* Built rather than declared: the entry fields below call Lookups.field(), and
-     * lookups.js is loaded by the shell -- it is not there yet when this file parses. */
-    config: function () { return {
+  MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'chiller-batch-control',
     docCode: 'REC 7.8.1',
     title: 'Chiller Batch Control (Canning)',
     docRevisionStart: 4,
     entryFields: [
-      window.Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
+      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
       { key: 'processingStep', label: 'Processing step', type: 'select', options: ['After first wash', 'After second wash', 'After scrubbing'] },
       { key: 'trackingNo', label: 'Tracking no.', type: 'text', required: true },
       { key: 'date', label: 'Date', type: 'date', required: true },
@@ -38,11 +41,8 @@
     specFields: [],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'
-    }; }
   });
 })();
 </script>
 </body>
 </html>
-
-

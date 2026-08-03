@@ -4,16 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.4.10 Dried Abalone Transfer</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/traceability.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/form-record.js?v=2"></script>
 <script>
 (function () {
-  Shell.record({
-    engine: 'form-record',
-    uses: ['traceability'],
+  FormRecord.init({
     mount: '#frRoot',
     recordKey: 'dried-abalone-transfer',
     batchField: 'jobNumber', stage: 'dry-transfer',
@@ -31,7 +37,8 @@
       { title: 'Totals', fields: [
         { key: 'totalDriedWeight', label: 'Total dried weight', type: 'number' },
         { key: 'dryYield', label: 'Dry yield', type: 'number' },
-        { key: 'receivedBy', label: 'Received by', type: 'text', required: true }
+        { key: 'receivedBy', label: 'Received by', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
       ]}
     ],
     roster: {
@@ -46,5 +53,3 @@
 </script>
 </body>
 </html>
-
-

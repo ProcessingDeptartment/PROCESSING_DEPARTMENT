@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.2.12 Double Seam Inspection Report</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
 <style>
   :root{
-    --ink:var(--palette-ink); --steel:var(--palette-primary); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:var(--palette-border); --line-soft:var(--palette-head-bg); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
+    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
+    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
     --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
   }
   #dsir-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }
@@ -22,9 +23,10 @@
   }
   #dsir-root input:focus, #dsir-root select:focus, #dsir-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #dsir-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .dsir-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; }
-  .dsir-toolbar{ background:var(--paper); border-bottom:1px solid var(--line-soft); padding:9px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .dsir-toolbar input{ width:150px; }
+  .dsir-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .dsir-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .dsir-topline label.role-label{ font-size:10.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px; }
+  .dsir-topline input{ width:150px; }
   .btn{ padding:7px 13px; font-size:12.5px; }
   .btn-primary{ background:var(--accent); color:#241a0a; }
   .btn-primary:hover{ background:#dd9536; }
@@ -58,7 +60,6 @@
   table.meas td.row-label{ text-align:left; font-size:11.5px; font-weight:600; color:#33404a; background:#fcfcfb; white-space:nowrap; }
   table.meas td.row-label span.spec{ display:block; font-weight:400; color:#8a939b; font-family:var(--mono); font-size:10px; }
   table.meas input{ text-align:center; padding:3px 2px; }
-  td.oor{ background:var(--fail-bg); color:var(--fail); font-weight:700; }
   td.oor input{ background:var(--fail-bg); border-color:var(--fail); color:var(--fail); font-weight:700; }
   td.warn-cell input{ background:var(--warn-bg); border-color:var(--warn); }
   .calc-row td{ background:#f2f6f4; font-family:var(--mono); font-weight:700; }
@@ -115,33 +116,19 @@
     table.meas{ font-size:9.5px; }
     #printOnlyStages .can-block{ margin-bottom:8px; page-break-inside:avoid; break-inside:avoid; }
     #printOnlyStages table.meas td.row-label span.spec{ display:none; }
-    .grid-3{ grid-template-columns:repeat(3,1fr) !important; }
-    .print-cans-row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px; align-items:start; }
-    .print-cans-row .can-block{ min-width:0; overflow:hidden; margin-bottom:0; }
-    .print-cans-row .can-block h3{ margin-bottom:3px; }
-    .print-cans-row table.meas{ font-size:7.5px; table-layout:fixed; width:100%; line-height:1.1; }
-    .print-cans-row table.meas td.row-label{ white-space:normal; width:40%; overflow-wrap:break-word; }
-    .print-cans-row table.meas th:not(:first-child), .print-cans-row table.meas td:not(.row-label){ width:20%; }
-    .print-cans-row table.meas th, .print-cans-row table.meas td{ padding:0.5px 2px; overflow:hidden; }
-    .print-cans-row table.meas input{ min-width:0; width:100%; padding:0 1px; font-size:7.5px; height:12px; line-height:10px; }
-    .print-cans-row .vac-row{ flex-wrap:wrap; margin-bottom:3px; }
-    .print-cans-row .vac-row input{ min-width:0; max-width:80px; height:14px; padding:0 4px; }
     .footer-grid{ grid-template-columns:1fr 1fr !important; gap:6px; }
     #printPage1Extra label.field span{ display:block; font-size:12px; font-weight:400; color:#1b2330; margin-top:2px; }
     #printSpecSummary table.meas td.row-label{ white-space:normal; width:auto; }
     #printSpecSummary table.meas td{ text-align:left; }
-    #printSignoff table.meas td{ text-align:left; padding:3px 5px; }
-    #printSignoff table.meas td.row-label{ width:14%; white-space:nowrap; }
-    /* The controlled-copy title block carries the doc code, revision and page number on
-       every page now, so the on-screen banner would only repeat it -- and a fixed banner
-       reserves its height on all pages, which is what a page-per-stage layout cannot
-       spare. Each .print-page opens with its own block instead. */
-    .dsir-top{ display:none !important; }
-    /* Page 1 is the record's own body; every group after it opens a fresh page, and the
-       title block is the first thing on it. */
-    #printOnlyStages .print-page{ page-break-before:always; break-before:page; }
+    #dsir-root{ padding-top:56px; }
+    .dsir-top{
+      position:fixed; top:0; left:0; right:0;
+      background:#fff !important; padding:8px 18px;
+      border-bottom:1.5px solid #000;
+    }
   }
 </style>
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="dsir-root">
@@ -151,19 +138,23 @@
       <h1>Double Seam Inspection Report</h1>
       <span class="doc-rev" id="docCodeBadge"></span>
     </div>
-    <span class="doc-code" id="headerUserSlot"></span>
-  </div>
-
-  <div class="dsir-toolbar no-print">
-    <select id="specProfileSelect" style="width:220px;"></select>
-    <button class="btn btn-flat" id="quickCalcBtn" title="Standalone seam calculator — nothing is saved to this record">Quick calculator</button>
-    <button class="btn btn-flat" id="manageSpecsBtn">Specs</button>
-    <button class="btn btn-flat" id="newRecordBtn">New</button>
+    <div class="dsir-topline no-print">
+      <label class="role-label">Your name
+        <input id="actingNameInput" placeholder="Type your name">
+      </label>
+      <label class="role-label">Acting as (temporary stand-in for login)
+        <select id="actingRoleSelect" style="width:190px;"></select>
+      </label>
+      <select id="specProfileSelect" style="width:220px;"></select>
+      <button class="btn btn-ghost" id="quickCalcBtn" title="Standalone seam calculator — nothing is saved to this record">Quick calculator</button>
+      <button class="btn btn-ghost" id="manageSpecsBtn">Specs</button>
+      <button class="btn btn-ghost" id="newRecordBtn">New</button>
+      <button class="btn btn-primary" id="saveDraftBtn">Save draft</button>
+      <button class="btn btn-primary" id="submitBtn">Submit complete</button>
+    </div>
   </div>
 
   <div class="dsir-body">
-
-    <div id="printHeaderPage1" class="print-only"></div>
 
     <div class="panel no-print">
       <div class="panel-head"><h2>Batch lookup &amp; traceability</h2><span class="muted" id="recordIdTag" style="font-family:var(--mono);font-size:10.5px;"></span></div>
@@ -181,8 +172,9 @@
     </div>
 
     <div class="panel">
+      <div class="panel-head"><h2>Header</h2></div>
       <div class="panel-body">
-        <div class="grid grid-3" style="margin-bottom:10px;">
+        <div class="grid grid-4" style="margin-bottom:10px;">
           <label class="field">AG Code<input id="h_agCode"></label>
           <label class="field">Date<input id="h_reportDate" type="date"></label>
           <label class="field">Can size<input id="h_canSize"></label>
@@ -192,7 +184,7 @@
           <label class="field">Fujian batch code (cans)<input id="h_batchCans"></label>
           <label class="field">Fujian batch code (can ends)<input id="h_batchEnds"></label>
         </div>
-        <div class="grid grid-3">
+        <div class="grid grid-4">
           <label class="field">Micrometer serial number<input id="h_microSerial"></label>
           <label class="field">Micrometer verified (±0.02mm)
             <select id="h_microVerified"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
@@ -222,17 +214,18 @@
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body footer-grid">
         <label class="field">Completed by<input id="f_completedBy"></label>
+        <label class="field">Verified by<input id="f_verifiedBy"></label>
         <label class="field">Signature (type name to sign)<input id="f_completedSig"></label>
+        <label class="field">Signature (type name to sign)<input id="f_verifiedSig"></label>
         <label class="field">Date<input id="f_completedDate" type="date"></label>
+        <label class="field">Date<input id="f_verifiedDate" type="date"></label>
       </div>
     </div>
 
     <div class="actions no-print">
       <span class="status-line" id="statusLine"></span>
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
+      <button class="btn btn-flat" id="generatePdfBtn">Generate PDF</button>
     </div>
   </div>
 
@@ -299,8 +292,13 @@
   <div class="toast no-print" id="toast"></div>
 </div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=4"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
 <script>
-Shell.record({ uses: ['permission-rules'] }).then(function () {
 (function(){
   const $ = id => document.getElementById(id);
   const STAGES = [
@@ -374,6 +372,7 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
       stages:{ before: blankStage(), during: blankStage(), after: blankStage() },
       comments:'',
       completedBy:'', completedSig:'', completedDate:'',
+      verifiedBy:'', verifiedSig:'', verifiedDate:'',
       createdAt: null, updatedAt: null
     };
   }
@@ -386,6 +385,8 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
   let specFormEditingId = null;
   let specFormPdfDataUrl = null;
 
+  const ACTING_NAME_KEY = 'acting_as_name';
+  let actingName = window.localStorage.getItem(ACTING_NAME_KEY) || '';
 
   function toast(msg){
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
@@ -639,10 +640,12 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
     const actualFail = actualOverlap!==null && checkMin(actualOverlap, spec.actualOverlapMin)==='fail';
 
     let html = `<div class="can-block">
-      <h3>${canKey==='can1'?'Can 1':'Can 2'}</h3>
+      <h3>${canKey==='can1'?'Can 1':'Can 2'}
+        <span class="badge ${overlapFail||actualFail?'badge-fail':'badge-ok'}">${overlapFail||actualFail?'Check overlap':'Overlap OK'}</span>
+      </h3>
       <div class="vac-row">
         <label>Vacuum KPa (${spec.vacuum ? spec.vacuum.label : ''})</label>
-        <input type="number" step="0.1" data-path="stages.${stageKey}.${canKey}.vacuum" value="${can.vacuum}">
+        <input type="number" step="0.1" data-path="${stageKey}.${canKey}.vacuum" value="${can.vacuum}">
       </div>
       <table class="meas"><thead><tr><th style="text-align:left;">Measurement</th><th>Point 1</th><th>Point 2</th><th>Point 3</th></tr></thead><tbody>`;
 
@@ -655,7 +658,7 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
         if(derived){
           html += `<td class="${cls==='oor'?'oor':''}" style="font-family:var(--mono);font-weight:600;background:#f7f9f8;">${val===''?'—':val}</td>`;
         } else {
-          html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="stages.${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
+          html += `<td class="${cls==='oor'?'oor':''}"><input type="number" step="0.001" data-path="${stageKey}.${canKey}.points.${i}.${row.key}" value="${val}"></td>`;
         }
       }
       html += `</tr>`;
@@ -752,6 +755,9 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
     $('f_completedBy').value = state.completedBy;
     $('f_completedSig').value = state.completedSig;
     $('f_completedDate').value = state.completedDate;
+    $('f_verifiedBy').value = state.verifiedBy;
+    $('f_verifiedSig').value = state.verifiedSig;
+    $('f_verifiedDate').value = state.verifiedDate;
     $('recordIdTag').textContent = state.id ? `${state.id} · rev ${state.revision} · ${state.status}` : 'unsaved draft';
   }
 
@@ -765,7 +771,7 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; renderIssues(); });
     });
     $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['f_completedBy','f_completedSig','f_completedDate'].forEach(id=>{
+    ['f_completedBy','f_completedSig','f_completedDate','f_verifiedBy','f_verifiedSig','f_verifiedDate'].forEach(id=>{
       const key = id.replace('f_','');
       $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
     });
@@ -890,62 +896,26 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
       </div></div>`;
   }
 
-  // Sign-off prints as a compact single-row table rather than stacked label/value fields:
-  // the stacked form cost ~310px of page 1, which the per-page title block cannot spare.
   function buildCommentsSignoffHtml(){
-    const esc = v => String(v||'—').replace(/</g,'&lt;');
     return `<div class="panel"><div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">${(state.comments||'—').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>
-      <div class="panel" id="printSignoff"><div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body">
-        <table class="meas"><tbody>
-          <tr><td class="row-label">Completed by</td><td>${esc(state.completedBy)}</td>
-              <td class="row-label">Signature</td><td>${esc(state.completedSig)}</td>
-              <td class="row-label">Date</td><td>${esc(state.completedDate)}</td></tr>
-        </tbody></table>
+      <div class="panel"><div class="panel-head"><h2>Sign-off</h2></div>
+      <div class="panel-body footer-grid">
+        <label class="field">Completed by<span>${state.completedBy||'—'}</span></label>
+        <label class="field">Verified by<span>${state.verifiedBy||'—'}</span></label>
+        <label class="field">Signature<span>${state.completedSig||'—'}</span></label>
+        <label class="field">Signature<span>${state.verifiedSig||'—'}</span></label>
+        <label class="field">Date<span>${state.completedDate||'—'}</span></label>
+        <label class="field">Date<span>${state.verifiedDate||'—'}</span></label>
       </div></div>`;
   }
 
-  // Which stages share a printed page. "Before" gets its own so the start-up cans read
-  // as a distinct check; "during" and "after" pair up to hold the record to 3 pages.
-  const PRINT_PAGE_GROUPS = [['before'], ['during','after']];
-  const TOTAL_PRINT_PAGES = 1 + PRINT_PAGE_GROUPS.length;
-
-  function stagePanelHtml(stageKey){
-    const s = STAGES.find(x=>x.key===stageKey);
-    const heading = s.key==='before' ? `${s.label} — Start-up cans` : s.label;
-    return `<div class="panel"><div class="panel-head"><h2>${heading} — 2 cans × 3 points each</h2></div>`
-      + `<div class="panel-body"><div class="print-cans-row">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div></div>`;
-  }
-
-  async function generatePdf(){
-    // Resolve the title block before printing: revision, revision date and effective date
-    // are read live, so a printed copy can never carry a stale one.
-    let headerHtmlFor = () => '';
-    try{
-      // Paper baseline from the issued REC 01 Master Index List, used only until
-      // someone edits the header in master-record-index.html.
-      const h = await DocHeader.resolve(DOC_REVISION_KEY, {
-        document: 'Double Seam Inspection Report',
-        docNumber: 'REC 7.2.12',
-        reviewedBy: 'Nicolene Mylrea',
-        approvedBy: 'Rowan Timmer',
-        revisionDate: '08/06/2026'
-      }, DOC_REVISION_START);
-      DocHeader.injectStyles();
-      headerHtmlFor = (page) => DocHeader.blockHtml(h, page, TOTAL_PRINT_PAGES, '../assets/abagold-logo.png');
-    }catch(e){
-      console.error('title block unavailable', e);
-      toast('Could not load the document header — printing without it.');
-    }
-
-    $('printHeaderPage1').innerHTML = headerHtmlFor(1);
+  function generatePdf(){
     $('printPage1Extra').innerHTML = buildSpecSummaryHtml() + buildCommentsSignoffHtml();
-
-    $('printOnlyStages').innerHTML = PRINT_PAGE_GROUPS.map((group, i)=>
-      `<div class="print-page">${headerHtmlFor(i+2)}${group.map(stagePanelHtml).join('')}</div>`
-    ).join('');
-
+    const parts = STAGES.map(s=>
+      `<div class="panel print-page-break"><div class="panel-head"><h2>${s.label} — 2 cans × 3 points each</h2></div><div class="panel-body">${renderCanTable(s.key,'can1')}${renderCanTable(s.key,'can2')}</div></div>`
+    );
+    $('printOnlyStages').innerHTML = parts.join('');
     document.title = `REC_7.2.12_Double_Seam_${safeKey(state.header.batchCans||'record')}_${state.header.reportDate||''}`;
     window.print();
   }
@@ -1002,7 +972,7 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
     specFormPdfDataUrl = spec?.pdfDataUrl || null;
     $('specForm_pdfStatus').textContent = specFormPdfDataUrl ? 'PDF attached — choose a file to replace it' : 'No PDF attached yet';
     $('specForm_reason').value = '';
-    $('specForm_changedBy').value = '';
+    $('specForm_changedBy').value = actingName || '';
     $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules.getCurrentRole()] || '';
   }
 
@@ -1098,7 +1068,21 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
   }
 
   // ---------- wiring ----------
+  function wireActingRole(){
+    const sel = $('actingRoleSelect');
+    sel.innerHTML = PermissionRules.ROLES.map(r=>`<option value="${r}">${PermissionRules.ROLE_LABELS[r]}</option>`).join('');
+    sel.value = PermissionRules.getCurrentRole();
+    sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
+  }
+  function wireActingName(){
+    const inp = $('actingNameInput');
+    inp.value = actingName;
+    inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
+  }
+
   function wire(){
+    wireActingRole();
+    wireActingName();
     bindHeaderInputs();
     buildSpecFormRows();
     wireSpecPdfUpload();
@@ -1139,17 +1123,10 @@ Shell.record({ uses: ['permission-rules'] }).then(function () {
   (async function init(){
     wire();
     await renderDocRevBadge();
-    // "Effective date" is the first date anyone worked with this document, so it is
-    // claimed on open rather than at print time. Never blocks opening the record.
-    DocHeader.ensureEffectiveDate(DOC_REVISION_KEY)
-      .catch(e=>console.error('could not set effective date', e));
     await loadSpecProfiles();
     renderAll();
   })();
 })();
-});
 </script>
 </body>
 </html>
-
-

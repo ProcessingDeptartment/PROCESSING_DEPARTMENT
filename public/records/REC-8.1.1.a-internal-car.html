@@ -4,15 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 8.1.1.a Internal CAR</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="frRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/form-record.js?v=2"></script>
 <script>
 (function () {
-  Shell.record({
-    engine: 'form-record',
+  FormRecord.init({
     mount: '#frRoot',
     recordKey: 'internal-car',
     docCode: 'REC 8.1.1.a',
@@ -42,7 +48,9 @@
       ]},
       { title: 'Close-out', fields: [
         { key: 'closedBy', label: 'CAR closed out by', type: 'text' },
-        { key: 'closeDate', label: 'Close out date', type: 'date' }
+        { key: 'closeDate', label: 'Close out date', type: 'date' },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' },
+        { key: 'verifiedDate', label: 'Date', type: 'date' }
       ]}
     ]
   });
@@ -50,5 +58,3 @@
 </script>
 </body>
 </html>
-
-

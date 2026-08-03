@@ -4,33 +4,47 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.6.0c Personnel Facilities Cleaning Record</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
-<div id="crRoot"></div>
+<div id="frRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/form-record.js?v=2"></script>
 <script>
 (function () {
-  // Personnel facilities view of the shared 'exec' shift record. See REC 7.6.0a.
-  Shell.record({
-    engine: 'cleaning-register',
-    mount: '#crRoot',
+  FormRecord.init({
+    mount: '#frRoot',
     recordKey: 'personnel-facilities-cleaning-record',
     docCode: 'REC 7.6.0c',
     title: 'Personnel Facilities Cleaning Record',
     docRevisionStart: 1,
-    docRevisionDate: '2026-06-24',
-    family: 'exec',
-    scope: 'exec',
-    zones: ['personnel'],
-    performLabel: 'cleaned',
-    performAction: 'cleaned',
-    viewNote: 'This page shows personnel facilities. REC 7.6.0a (production) and REC 7.6.0b (live) write into the same shift record.',
-    instructions: [
-      'Clean according to the Master Cleaning Plan. Check that boot wash stations, soap dispensers and paper towel dispensers are filled, not just clean.',
-      'Mark each area C when cleaning is complete, NC if it could not be done, N/A if not applicable. An NC must carry a finding and a correction before the supervisor can verify.',
-      'Sign as "cleaned" when you finish. Your supervisor verifies — the same person cannot do both.'
-    ]
+    listColumns: ['date', 'shift'],
+    sections: [
+      { title: 'Shift details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'inspectedBy', label: 'Inspected by', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Checklist items (one row per area/equipment item checked)',
+      columns: [
+        { key: 'area', label: 'Area', type: 'text' },
+        { key: 'item', label: 'Item / equipment', type: 'text' },
+        { key: 'status', label: 'C / NC', type: 'select', options: ['C', 'NC'] },
+        { key: 'nonConformance', label: 'Non-conformance', type: 'text' },
+        { key: 'correctionSignOff', label: 'Correction and sign off', type: 'text' }
+      ]
+    }
   });
 })();
 </script>

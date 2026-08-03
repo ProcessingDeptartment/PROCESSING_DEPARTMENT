@@ -4,73 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.8.3 Boiler Inspection Report</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/monitoring-log.js?v=2"></script>
 <script>
 (function () {
-  Shell.record({
-    engine: 'monitoring-log',
+  MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'boiler-inspection-report',
     docCode: 'REC 7.8.3',
     title: 'Boiler Inspection Report',
     docRevisionStart: 4,
-    // Order and wording follow the paper form (rev 4) row for row. The two burner-fire
-    // rows and the two power-failure rows are NOT duplicates -- one of each belongs to
-    // start-up and the other to shut-down, which is what the `group` headings make clear.
     entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true, role: 'date', group: 'Start-up' },
-      { key: 'timeBoilerStarted', label: 'Time boiler started', type: 'time', group: 'Start-up', withComment: true },
-      { key: 'waterLevelChecked', label: 'Water level checked and adjusted', type: 'yesno', group: 'Start-up', withComment: true },
-      { key: 'airReleaseValveOpened', label: 'Air release valve opened', type: 'yesno', group: 'Start-up', withComment: true },
-      { key: 'burnerSwitchedOn', label: 'Burner switched on', type: 'yesno', group: 'Start-up', withComment: true },
-      { key: 'burnerLowFire', label: 'Burner set to "LOW FIRE"', type: 'yesno', group: 'Start-up', withComment: true },
-      { key: 'pressureChecked', label: 'Pressure checked', type: 'yesno', group: 'Start-up', withComment: true },
-      { key: 'mowbreyOpened', label: 'Single & Dual Mowbrey opened', type: 'yesno', group: 'Start-up', withComment: true },
-      { key: 'mainSteamValveOpened', label: 'Main steam valve opened', type: 'yesno', group: 'Start-up', withComment: true },
-
-      { key: 'timeBoilerTurnedOff', label: 'Time boiler turned off', type: 'time', group: 'Shut-down', withComment: true },
-      { key: 'burnerAdjustedHighToLow', label: 'Adjust burner from high "FIRE" to low "FIRE"', type: 'yesno', group: 'Shut-down', withComment: true },
-
-      { key: 'powerFailure', label: 'Power failure', type: 'yesno', group: 'Interruptions & readings', withComment: true },
-      { key: 'boilerRestarted', label: 'Boiler restarted if there is power failure', type: 'yesno', group: 'Interruptions & readings', withComment: true },
-      { key: 'dieselReading', label: 'Diesel reading', type: 'number', unit: 'litres', group: 'Interruptions & readings', withComment: true },
-
-      { key: 'boilerOperator', label: 'Boiler operator', type: 'text', required: true, role: 'operator', group: 'Sign-off' }
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'timeBoilerStarted', label: 'Time boiler started', type: 'text' },
+      { key: 'waterLevelChecked', label: 'Water level checked and adjusted', type: 'yesno' },
+      { key: 'airReleaseValveOpened', label: 'Air release valve opened', type: 'yesno' },
+      { key: 'burnerSwitchedOn', label: 'Burner switched on', type: 'yesno' },
+      { key: 'burnerLowFire', label: 'Burner set to "low fire"', type: 'yesno' },
+      { key: 'pressureChecked', label: 'Pressure checked', type: 'yesno' },
+      { key: 'mowbreyOpened', label: 'Single & dual Mowbrey opened', type: 'yesno' },
+      { key: 'mainSteamValveOpened', label: 'Main steam valve opened', type: 'yesno' },
+      { key: 'timeBoilerTurnedOff', label: 'Time boiler turned off', type: 'text' },
+      { key: 'burnerAdjustedHighToLow', label: 'Burner adjusted from high fire to low fire', type: 'yesno' },
+      { key: 'powerFailure', label: 'Power failure', type: 'yesno' },
+      { key: 'boilerRestarted', label: 'Boiler restarted if there was power failure', type: 'yesno' },
+      { key: 'dieselReading', label: 'Diesel reading', type: 'number', unit: 'L' },
+      { key: 'comments', label: 'Comments', type: 'textarea' },
+      { key: 'boilerOperator', label: 'Boiler operator', type: 'text', required: true }
     ],
-    // Reproduced on the single-entry printout, which mirrors the Word form's header block.
-    docMeta: {
-      logoText: 'ABAGOLD',
-      preparedBy: 'Novuyo Mashabane',
-      approvedBy: 'Werner Piek',
-      revision: '4',
-      effectiveDate: '06/08/2018',
-      revisionDate: '06/09/2022'
-    },
     specFields: [],
     deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation',
-    // Start-up/shut-down checklist, not a numeric reading log -- no tolerances to set.
-    showThresholds: false,
-    // Lead with the action; the log itself sits under the verification strip.
-    topAddEntry: true,
-    entriesPosition: 'bottom',
-    // Operator saves a draft mid-shift, submits it once the shift is closed off;
-    // submitted entries lock and are what the verification strip counts.
-    entryWorkflow: 'draft-submit',
-    // Notification transport is not built yet. This declares who/when; delivery starts
-    // the moment window.RecordNotifications.send() exists (see notify() in monitoring-log.js).
-    verificationNotify: {
-      intervalDays: 30,
-      recipients: []
-    }
+    deviationPolarity: 'deviation'
   });
 })();
 </script>
 </body>
 </html>
-
-

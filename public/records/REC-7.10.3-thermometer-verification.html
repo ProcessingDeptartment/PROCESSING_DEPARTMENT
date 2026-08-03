@@ -4,17 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.10.3 Thermometer Verification</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/monitoring-log.js?v=2"></script>
 <script>
 (function () {
   function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
 
-  Shell.record({
-    engine: 'monitoring-log',
+  MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'thermometer-verification',
     docCode: 'REC 7.10.3',
@@ -52,7 +59,9 @@
           return (r === null || t === null) ? '' : Math.round((t - r) * 100) / 100;
         }
       },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
+      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+      { key: 'verifiedBy', label: 'Verified by', type: 'text' },
+      { key: 'verifiedDate', label: 'Verified date', type: 'date' }
     ],
     specFields: [
       { key: 'coldRange', label: 'Cold water reference/test reading', unit: '°C', min: 0, max: 5 },
@@ -66,6 +75,4 @@
 </script>
 </body>
 </html>
-
-
 

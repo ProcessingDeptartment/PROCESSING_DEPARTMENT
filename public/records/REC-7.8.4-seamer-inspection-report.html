@@ -4,15 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.8.4 Seamer Inspection Report</title>
-<script src="../lib/shell.js?v=1"></script>
+<script src="palette-map.js"></script>
+<link rel="stylesheet" href="record-theme.css">
+  <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
 <body>
 <div id="mlRoot"></div>
 
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/monitoring-log.js?v=2"></script>
 <script>
 (function () {
-  Shell.record({
-    engine: 'monitoring-log',
+  MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'seamer-inspection-report',
     docCode: 'REC 7.8.4',
@@ -30,6 +37,7 @@
       { key: 'noCansLidsFromPreviousShift', label: 'No cans and lids from previous shift?', type: 'yesno' },
       { key: 'beforeDeficiency', label: 'Before production — deficiency & corrective action', type: 'textarea' },
       { key: 'checkedByBefore', label: 'Before production — checked by', type: 'text' },
+      { key: 'verifiedByBefore', label: 'Before production — verified by', type: 'text' },
       { key: 'managementBefore', label: 'Before production — management', type: 'text' },
       { key: 'cleaningOfSeamerDone', label: 'End of day — cleaning of seamer done?', type: 'yesno' },
       { key: 'rollersLubricated', label: 'Rollers and bearings lubricated/greased?', type: 'yesno' },
@@ -39,6 +47,7 @@
       { key: 'cansLidsTakenToFG02', label: 'Cans and lids taken back to FG02?', type: 'yesno' },
       { key: 'endDeficiency', label: 'End of day — deficiency & corrective action', type: 'textarea' },
       { key: 'checkedByEnd', label: 'End of day — checked by', type: 'text', required: true },
+      { key: 'verifiedByEnd', label: 'End of day — verified by', type: 'text' },
       { key: 'managementEnd', label: 'End of day — management', type: 'text' }
     ],
     specFields: [],
@@ -49,5 +58,3 @@
 </script>
 </body>
 </html>
-
-
