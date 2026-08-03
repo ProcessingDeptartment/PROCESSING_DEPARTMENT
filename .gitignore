@@ -25,6 +25,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Hidden artifacts the T: network share drops next to the record files.
-# Not project files -- byte copies of records, invisible to ls but visible to git.
+# Hidden artifacts the T: network share drops next to the record files --
+# byte copies of records, invisible to ls but visible to git. Existing ones are
+# relocated to junk/; this stays as a safety net in case the share drops more
+# directly into public/records/.
 public/records/.*
+junk/
