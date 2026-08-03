@@ -227,6 +227,20 @@
     return stored;
   }
 
+  /* Same fields, written to every record in `recordKeys`. Reviewed/approved by are
+   * document-control roles that usually change for the whole index at once (a new QA
+   * manager, say), not one record at a time -- this is the bulk path master-record-index
+   * uses instead of looping saveFields itself. Sequential, not Promise.all: each is a
+   * write to shared storage and a stray failure should stop at a known point, not fire
+   * every remaining write anyway. */
+  async function saveFieldsAll(recordKeys, fields) {
+    const out = [];
+    for (const key of recordKeys) {
+      out.push({ recordKey: key, stored: await saveFields(key, fields) });
+    }
+    return out;
+  }
+
   /* One page's title block. `page`/`pages` produce the "1 of 3" cell; omit them and the
    * cell is left blank rather than printing a wrong number. `logoSrc` is relative to the
    * calling page. */
@@ -289,7 +303,7 @@
   }
 
   window.DocHeader = {
-    FIELDS, resolve, saveFields, ensureEffectiveDate, blockHtml, injectStyles, fmtDate,
+    FIELDS, resolve, saveFields, saveFieldsAll, ensureEffectiveDate, blockHtml, injectStyles, fmtDate,
     defaultsFor, mountPrintHeader, PRINT_HEADER_HEIGHT, PAGE_SIDE_MARGIN,
     current, badgeText,
     load: loadStored

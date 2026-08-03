@@ -68,6 +68,19 @@
     return entry;
   }
 
+  // Bump every record in `items` ([{ recordKey, startAt }]) with the same reason/name/
+  // title -- the master index's "update all revisions" action, for when one document
+  // change (e.g. reissuing the whole index) legitimately moves every record's revision
+  // together rather than one at a time. Sequential for the same reason as saveFieldsAll:
+  // a shared-storage write failing partway through should stop, not race the rest.
+  async function bumpAll(items, meta) {
+    const out = {};
+    for (const item of items) {
+      out[item.recordKey] = await bump(item.recordKey, meta, item.startAt);
+    }
+    return out;
+  }
+
   // Latest revision entry for EVERY record that has ever been bumped, in one round trip.
   // Returns { recordKey: { revisionNumber, reason, changedBy, changedByTitle, changedAt } }.
   // Index-style pages must use this instead of calling getCurrent() per record.
@@ -84,5 +97,5 @@
     return out;
   }
 
-  window.DocumentRevision = { getCurrent, getCurrentDate, history, bump, latestAll };
+  window.DocumentRevision = { getCurrent, getCurrentDate, history, bump, bumpAll, latestAll };
 })();

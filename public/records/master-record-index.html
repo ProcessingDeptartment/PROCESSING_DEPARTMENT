@@ -229,14 +229,33 @@
       page of the record's PDF. Revision, revision date and effective date are set
       automatically and cannot be typed.</p>
 
-    <label class="dh-f">Record
+    <label class="dh-f" style="flex-direction:row;align-items:center;gap:6px;font-weight:400;text-transform:none;letter-spacing:0;font-size:12.5px;">
+      <input type="checkbox" id="dhApplyAll" style="width:auto;">
+      Apply to all records at once <em style="color:var(--palette-label);font-style:normal;">(reviewed by / approved by often change for everyone together)</em>
+    </label>
+
+    <label class="dh-f" id="dhRecordWrap">Record
       <select id="dhRecordSelect"></select>
     </label>
+
+    <div id="dhBumpWrap" style="display:none;background:var(--palette-head-bg);border-radius:4px;padding:10px 14px;margin-bottom:14px;">
+      <label class="dh-f" style="flex-direction:row;align-items:center;gap:6px;font-weight:400;text-transform:none;letter-spacing:0;font-size:12.5px;">
+        <input type="checkbox" id="dhBumpAll" style="width:auto;">
+        Also update all revisions (bump every record's revision number)
+      </label>
+      <div id="dhBumpFields" style="display:none;">
+        <div class="dh-grid">
+          <label class="dh-f">Reason for change<input id="dhBumpReason" type="text" placeholder="e.g. reissued document control header"></label>
+          <label class="dh-f">Changed by<input id="dhBumpChangedBy" type="text"></label>
+          <label class="dh-f">Their title<input id="dhBumpTitle" type="text"></label>
+        </div>
+      </div>
+    </div>
 
     <div id="dhFormWrap">
       <div class="dh-grid">
         <label class="dh-f">Document<input id="dhDocument" type="text"></label>
-        <label class="dh-f">Doc number<input id="dhDocNumber" type="text"></label>
+        <label class="dh-f">Doc number <em style="text-transform:none;font-style:normal;color:var(--palette-label);font-weight:400;">(also renumbers this row on the index)</em><input id="dhDocNumber" type="text"></label>
         <label class="dh-f">Reviewed by<input id="dhReviewedBy" type="text"></label>
         <label class="dh-f">Approved by<input id="dhApprovedBy" type="text"></label>
       </div>
@@ -283,6 +302,12 @@
   // against at render time -- see the comment at the top of that file. '' means
   // "explicitly set to Default"; a row with no key at all falls back to whatever
   // palette-map.js's static list already assigns it (see CATEGORIES below).
+  // A record's document number as issued on paper (r.docNo, from master-index-data.js)
+  // occasionally needs correcting or renumbering online -- e.g. a REC gets folded under
+  // a new section. Stored per recordKey rather than edited in the spreadsheet import, so
+  // the override survives the next sync from tools/build-master-index-data.py.
+  const RECORD_NUMBER_PREFIX = 'record_number_override:';
+
   const CATEGORY_PREFIX = 'record_category:';
   const CATEGORIES = [
     ['', 'Default'],
@@ -315,6 +340,7 @@
   let control = {};     // rowId -> { obsoleteRetrieved, distributed, updatedAt, updatedBy }
   let live = {};        // rowId -> { revision, reason, dateOfIssue, bumped }
   let categories = {};  // file name (lower-case) -> category override, '' included
+  let recordNumbers = {}; // recordKey -> overridden Document No.
   let canEdit = false;
 
   async function loadControl() {
@@ -345,6 +371,27 @@
     await window.storage.set(CATEGORY_PREFIX + file, value, true);
     $('saveState').textContent = 'Saved';
     setTimeout(() => { $('saveState').textContent = ''; }, 1800);
+  }
+
+  async function loadRecordNumbers() {
+    recordNumbers = {};
+    try {
+      const raw = await window.storage.getByPrefix(RECORD_NUMBER_PREFIX, true);
+      for (const k in raw) recordNumbers[k.slice(RECORD_NUMBER_PREFIX.length)] = raw[k];
+    } catch (e) { recordNumbers = {}; }
+  }
+
+  async function saveRecordNumber(recordKey, value) {
+    value = String(value || '').trim();
+    if (value) recordNumbers[recordKey] = value;
+    else delete recordNumbers[recordKey];
+    await window.storage.set(RECORD_NUMBER_PREFIX + recordKey, value, true);
+  }
+
+  // The docNo shown everywhere on this page: the online override if one has been saved,
+  // otherwise the paper baseline from the spreadsheet import.
+  function displayDocNo(r) {
+    return (r.recordKey && recordNumbers[r.recordKey]) || r.docNo;
   }
 
   // Overlay the paper baseline with anything that has been revised inside the app.
@@ -429,7 +476,7 @@
 
       html += `<tr class="${online ? '' : 'not-digitised'}" data-id="${esc(id)}"`
         + ` data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}">`
-        + `<td class="c-code">${esc(r.docNo)}</td>`
+        + `<td class="c-code">${esc(displayDocNo(r))}</td>`
         + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}</td>`
         + `<td class="c-cat">${catCell}</td>`
         + `<td class="c-details">${esc(details || '')}${detailSub}</td>`
@@ -550,7 +597,7 @@
     // Same resolve the record itself uses, so the preview is what will actually print.
     const h = await window.DocHeader.resolve(key, {
       document: r.name || '',
-      docNumber: r.docNo || '',
+      docNumber: displayDocNo(r) || '',
       reviewedBy: DATA.header.reviewedBy || '',
       approvedBy: DATA.header.approvedBy || '',
       revisionDate: r.dateOfIssue || ''
@@ -569,12 +616,34 @@
     dhSetState(canEdit ? '' : 'Read-only — document control roles may edit this.');
   }
 
+  function dhOnlineRows() { return ROWS.filter(r => r.recordKey); }
+
+  function dhApplyToggle() {
+    const all = $('dhApplyAll').checked;
+    $('dhRecordWrap').style.display = all ? 'none' : '';
+    $('dhBumpWrap').style.display = all ? '' : 'none';
+    // Document/doc number are per-record (each record names itself); bulk mode only
+    // makes sense for the document-control roles, which are the same for every row.
+    ['dhDocument', 'dhDocNumber'].forEach(id => { $(id).disabled = all || !canEdit; });
+    if (all) dhSetState(canEdit ? '' : 'Read-only — document control roles may edit this.');
+  }
+
+  function dhBumpToggle() {
+    $('dhBumpFields').style.display = $('dhBumpAll').checked ? '' : 'none';
+  }
+
   async function dhOpen() {
-    const online = ROWS.filter(r => r.recordKey);
+    const online = dhOnlineRows();
     $('dhRecordSelect').innerHTML = online
-      .map(r => `<option value="${esc(r.recordKey)}">${esc(r.docNo)} — ${esc(r.name)}</option>`).join('');
+      .map(r => `<option value="${esc(r.recordKey)}">${esc(displayDocNo(r))} — ${esc(r.name)}</option>`).join('');
     ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy'].forEach(id => { $(id).disabled = !canEdit; });
     $('dhSave').disabled = !canEdit;
+    $('dhApplyAll').checked = false;
+    $('dhApplyAll').disabled = !canEdit;
+    $('dhBumpAll').checked = false;
+    $('dhBumpReason').value = ''; $('dhBumpChangedBy').value = ''; $('dhBumpTitle').value = '';
+    dhApplyToggle();
+    dhBumpToggle();
     dhModal.classList.add('open');
     dhModal.style.display = 'flex';
     if (online.length) await dhLoad(online[0].recordKey);
@@ -588,20 +657,52 @@
   $('dhRecordSelect').addEventListener('change', e => {
     dhLoad(e.target.value).catch(err => dhSetState(err.message, 'error'));
   });
+  $('dhApplyAll').addEventListener('change', dhApplyToggle);
+  $('dhBumpAll').addEventListener('change', dhBumpToggle);
   ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy']
     .forEach(id => $(id).addEventListener('input', dhRenderPreview));
 
   $('dhSave').addEventListener('click', async () => {
     if (!canEdit) { dhSetState('You do not have permission to edit document headers.', 'error'); return; }
+    const applyAll = $('dhApplyAll').checked;
+    const bumpAll = applyAll && $('dhBumpAll').checked;
     try {
-      dhSetState('Saving…');
-      await window.DocHeader.saveFields(dhCurrentKey, {
-        document: $('dhDocument').value,
-        docNumber: $('dhDocNumber').value,
-        reviewedBy: $('dhReviewedBy').value,
-        approvedBy: $('dhApprovedBy').value
-      });
-      dhSetState('Saved — records will print this block.', 'ok');
+      if (applyAll) {
+        const online = dhOnlineRows();
+        dhSetState('Saving to ' + online.length + ' records…');
+        await window.DocHeader.saveFieldsAll(online.map(r => r.recordKey), {
+          reviewedBy: $('dhReviewedBy').value,
+          approvedBy: $('dhApprovedBy').value
+        });
+        if (bumpAll) {
+          const reason = $('dhBumpReason').value.trim();
+          const changedBy = $('dhBumpChangedBy').value.trim();
+          const changedByTitle = $('dhBumpTitle').value.trim();
+          if (!reason || !changedBy || !changedByTitle) {
+            throw new Error('Reason, changed by and title are all required to bump every revision.');
+          }
+          dhSetState('Bumping revisions on ' + online.length + ' records…');
+          await window.DocumentRevision.bumpAll(
+            online.map(r => ({ recordKey: r.recordKey, startAt: r.revision })),
+            { reason, changedBy, changedByTitle }
+          );
+        }
+        dhSetState('Saved to ' + online.length + ' records' + (bumpAll ? ' and bumped their revisions.' : '.'), 'ok');
+        await loadLive();
+        render();
+      } else {
+        dhSetState('Saving…');
+        const docNumber = $('dhDocNumber').value;
+        await window.DocHeader.saveFields(dhCurrentKey, {
+          document: $('dhDocument').value,
+          docNumber: docNumber,
+          reviewedBy: $('dhReviewedBy').value,
+          approvedBy: $('dhApprovedBy').value
+        });
+        await saveRecordNumber(dhCurrentKey, docNumber);
+        render();
+        dhSetState('Saved — records will print this block.', 'ok');
+      }
     } catch (e) { dhSetState(e.message, 'error'); }
   });
 
@@ -628,7 +729,7 @@
       p, new Promise((_, rej) => setTimeout(() => rej(new Error('storage timeout')), 15000))
     ]);
     try {
-      await withTimeout(Promise.all([loadControl(), loadLive(), loadCategories()]));
+      await withTimeout(Promise.all([loadControl(), loadLive(), loadCategories(), loadRecordNumbers()]));
     } catch (e) {
       $('saveState').textContent = 'Live revision data unavailable — showing the issued baseline';
       $('saveState').style.color = 'var(--palette-fail)';
