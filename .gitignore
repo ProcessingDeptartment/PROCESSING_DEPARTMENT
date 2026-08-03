@@ -23,3 +23,7 @@ prisma/dev.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Hidden artifacts the T: network share drops next to the record files.
+# Not project files -- byte copies of records, invisible to ls but visible to git.
+public/records/.*

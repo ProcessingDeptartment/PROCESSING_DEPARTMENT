@@ -25,6 +25,11 @@
    * writes its own @page margins has to reserve the same strip -- see monitoring-log.js. */
   const PRINT_HEADER_HEIGHT = '26mm';
 
+  /* The one side/bottom page margin every record prints at. Records used to each pick
+   * their own (6mm, 9mm, 10mm, 12mm), so no two printed forms lined up. Anything that
+   * writes its own @page uses this, and nothing overrides it per record. */
+  const PAGE_SIDE_MARGIN = '12mm';
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -150,8 +155,8 @@
     /* The margin SHORTHAND, never `margin-top`. Chrome discards individual margin
      * longhands inside @page, so a `margin-top` here is silently dropped and the strip
      * is never reserved -- the block then prints outside the page box and vanishes.
-     * Because the shorthand also sets the sides, the caller states them: an engine that
-     * declares its own @page passes its side value so this rule doesn't change it. */
+     * The shorthand also sets the sides, which is why PAGE_SIDE_MARGIN is shared rather
+     * than chosen per record -- this rule is the last word on page geometry. */
     s.textContent = `
       #dh-print-header{ display:none; }
       @media print{
@@ -180,7 +185,7 @@
     const h = await resolve(opts.recordKey,
       defaultsFor(opts.recordKey, opts.defaults), revisionStart);
     injectStyles();
-    injectPrintHeaderStyles(height, opts.pageSideMargin || '12mm');
+    injectPrintHeaderStyles(height, PAGE_SIDE_MARGIN);
     let host = document.getElementById('dh-print-header');
     if (!host) {
       host = document.createElement('div');
@@ -266,7 +271,7 @@
 
   window.DocHeader = {
     FIELDS, resolve, saveFields, ensureEffectiveDate, blockHtml, injectStyles, fmtDate,
-    defaultsFor, mountPrintHeader, PRINT_HEADER_HEIGHT,
+    defaultsFor, mountPrintHeader, PRINT_HEADER_HEIGHT, PAGE_SIDE_MARGIN,
     load: loadStored
   };
 })();

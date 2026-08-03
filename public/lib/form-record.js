@@ -464,7 +464,6 @@
     try {
       await window.DocHeader.mountPrintHeader({
         recordKey: config.recordKey,
-        pageSideMargin: '12mm', // must match this engine's own @page rule above
         defaults: {
           document: config.title,
           docNumber: config.docCode,

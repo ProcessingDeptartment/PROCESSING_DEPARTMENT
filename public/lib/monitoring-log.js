@@ -177,7 +177,7 @@
   function setPageOrientation(orientation) {
     let s = document.getElementById('ml-page-style');
     if (!s) { s = document.createElement('style'); s.id = 'ml-page-style'; document.head.appendChild(s); }
-    const side = orientation === 'portrait' ? '10mm' : '9mm';
+    const side = (window.DocHeader && window.DocHeader.PAGE_SIDE_MARGIN) || '12mm';
     const top = document.getElementById('dh-print-header')
       ? (window.DocHeader && window.DocHeader.PRINT_HEADER_HEIGHT) || '26mm'
       : side;
