@@ -138,11 +138,7 @@
       <h1>Double Seam Inspection Report</h1>
       <span class="doc-rev" id="docCodeBadge"></span>
     </div>
-    <div class="dsir-topline no-print">
-      <label class="role-label">Your name
-        <input id="actingNameInput" placeholder="Type your name">
-      </label>
-      <label class="role-label">Acting as (temporary stand-in for login)
+    <div class="dsir-topline no-print"><label class="role-label">Acting as (temporary stand-in for login)
         <select id="actingRoleSelect" style="width:190px;"></select>
       </label>
       <select id="specProfileSelect" style="width:220px;"></select>
@@ -401,10 +397,7 @@ document.addEventListener('DOMContentLoaded', function () {
   let specFormEditingId = null;
   let specFormPdfDataUrl = null;
 
-  const ACTING_NAME_KEY = 'acting_as_name';
-  let actingName = window.localStorage.getItem(ACTING_NAME_KEY) || '';
-
-  function toast(msg){
+function toast(msg){
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'), 2200);
   }
@@ -988,8 +981,7 @@ document.addEventListener('DOMContentLoaded', function () {
     specFormPdfDataUrl = spec?.pdfDataUrl || null;
     $('specForm_pdfStatus').textContent = specFormPdfDataUrl ? 'PDF attached — choose a file to replace it' : 'No PDF attached yet';
     $('specForm_reason').value = '';
-    $('specForm_changedBy').value = actingName || '';
-    $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules.getCurrentRole()] || '';
+$('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules.getCurrentRole()] || '';
   }
 
   function readSpecForm(){
@@ -1090,16 +1082,9 @@ document.addEventListener('DOMContentLoaded', function () {
     sel.value = PermissionRules.getCurrentRole();
     sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
   }
-  function wireActingName(){
-    const inp = $('actingNameInput');
-    inp.value = actingName;
-    inp.addEventListener('input', ()=>{ actingName = inp.value; window.localStorage.setItem(ACTING_NAME_KEY, actingName); });
-  }
-
-  function wire(){
+function wire(){
     wireActingRole();
-    wireActingName();
-    bindHeaderInputs();
+bindHeaderInputs();
     buildSpecFormRows();
     wireSpecPdfUpload();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));

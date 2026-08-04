@@ -16,7 +16,6 @@
   #cpc-root button{font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600;}
   .dc-top{background:var(--steel-dk); color:#f4f1e8; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;}
   .dc-topline{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
-  .dc-topline label.role-label{font-size:9.5px; color:#b9c3cc; display:flex; flex-direction:column; gap:2px;}
   .dc-topline input{width:120px; padding:3px 5px; font-size:11px;}
   .btn{padding:5px 11px; font-size:11.5px;}
   .btn-primary{background:var(--accent); color:#241a0a;}
@@ -48,9 +47,7 @@
 <div id="cpc-root">
   <div class="dc-top">
     <div class="doc-line"><span class="doc-code">REC 7.2.5</span><h1>Can Packing Control Sheet</h1><span class="doc-rev">Rev 2 &middot; Rev date not set</span></div>
-    <div class="dc-topline no-print">
-      <label class="role-label">Your name<input id="actingNameInput" placeholder="Name"></label>
-      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
+    <div class="dc-topline no-print"><button class="btn btn-flat" id="saveDraftBtn">Save</button>
       <button class="btn btn-primary" id="submitBtn">Submit</button>
     </div>
   </div>
@@ -128,8 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const $=id=>document.getElementById(id);
   function newRecord(){return{id:null,revision:1,status:'draft',date:'',time:'',trackingOrJobNo:'',sizeRange:'',qualityOfAbalone:'',piecesSizes:'',ingoWeightSpec:'',actualIngoWeight:'',processDeviation:'',packer:'',qcOnline:'',packerDate:'',createdAt:null,updatedAt:null};}
   let state=newRecord();
-  const ACTING_NAME_KEY='acting_as_name_can_packing';let actingName=window.localStorage.getItem(ACTING_NAME_KEY)||'';
-  function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
   function safeKey(s){return String(s).trim().replace(/[\s\/\\'"]+/g,'_');}
   async function storeGet(key,shared){try{const r=await window.storage.get(key,shared);return r?r.value:null;}catch(e){return null;}}
   async function storeSet(key,value,shared){try{await window.storage.set(key,value,shared);return true;}catch(e){return false;}}
@@ -139,8 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderAll(){renderForm();updateRecordStatus();$('statusLine').textContent=state.updatedAt?`Last saved ${new Date(state.updatedAt).toLocaleString()}`:'Not yet saved';}
   async function saveRecord(finalize){const now=Date.now();if(!state.id){const jobId=state.trackingOrJobNo?state.trackingOrJobNo:'NOJOB';state.id=`can_packing_${safeKey(jobId)}_${now}`;state.createdAt=now;}state.updatedAt=now;state.status=finalize?'submitted':'draft';const ok=await storeSet('record:'+state.id,JSON.stringify(state),true);if(!ok){toast('Save failed.');return;}toast(finalize?'Submitted for verification.':'Draft saved.');renderAll();}
   function generatePdf(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'record';document.title=`REC_7.2.5_CAN_PACKING_${safeKey(jobStr)}_${state.date||''}`;window.print();}
-  function wireActingName(){const inp=$('actingNameInput');inp.value=actingName;inp.addEventListener('input',()=>{actingName=inp.value;window.localStorage.setItem(ACTING_NAME_KEY,actingName);});}
-  function wire(){wireActingName();bindInputs();$('saveDraftBtn').addEventListener('click',()=>saveRecord(false));$('submitBtn').addEventListener('click',()=>saveRecord(true));$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'can_packing_draft';a.download=`can_packing_${safeKey(jobStr)}.json`;a.click();});$('generatePdfBtn').addEventListener('click',generatePdf);}
+function wire(){bindInputs();$('saveDraftBtn').addEventListener('click',()=>saveRecord(false));$('submitBtn').addEventListener('click',()=>saveRecord(true));$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'can_packing_draft';a.download=`can_packing_${safeKey(jobStr)}.json`;a.click();});$('generatePdfBtn').addEventListener('click',generatePdf);}
   wire();renderAll();
 })();
 </script>
