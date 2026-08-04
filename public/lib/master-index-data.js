@@ -315,8 +315,7 @@ window.MasterIndexData = {
         "obsoleteRetrieved": "Y",
         "distributed": "Y",
         "dateOfIssue": "21/08/2025",
-        "recordKey": "scrubbing-check-supervisor",
-        "href": "REC-7.1.6-scrubbing-check-supervisor.html"
+        "recordKey": "scrubbing-check-supervisor"
     },
     {
         "docNo": "REC 7.2.2",

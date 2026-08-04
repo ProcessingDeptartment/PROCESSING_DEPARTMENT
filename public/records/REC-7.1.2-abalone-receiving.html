@@ -43,6 +43,7 @@
 
   .grid{ display:grid; gap:8px; }
   .grid-6{ grid-template-columns:repeat(6,1fr); }
+  .grid-5{ grid-template-columns:repeat(5,1fr); }
   .grid-4{ grid-template-columns:repeat(4,1fr); }
   .grid-3{ grid-template-columns:repeat(3,1fr); }
   .grid-2{ grid-template-columns:repeat(2,1fr); }
@@ -77,11 +78,12 @@
     <div class="panel">
       <div class="panel-head"><h2>Receiving Info</h2></div>
       <div class="panel-body">
-        <div class="grid grid-4" style="margin-bottom:8px;">
+        <div class="grid grid-5" style="margin-bottom:8px;">
           <label class="field">Receiving date<input id="h_receivingDate" type="date"></label>
-          <label class="field">Abalone received from<input id="h_receivedFrom" placeholder="From"></label>
-          <label class="field">To be processed for<select id="h_toBeProcessedFor"><option value="">—</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
-          <label class="field">Size range<input id="h_sizeRange" placeholder="Range"></label>
+          <label class="field">Harvest farm<select id="h_receivedFrom"></select></label>
+          <label class="field">Processing for<select id="h_toBeProcessedFor"><option value="">—</option><option value="Can">Can</option><option value="Dried">Dried</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
+          <label class="field">Size range<select id="h_sizeRange"></select></label>
+          <label class="field">Job no.<input id="h_jobNo" placeholder="Job no."></label>
         </div>
       </div>
     </div>
@@ -156,6 +158,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script>
 /* Controlled-copy title block, repeated on every printed page.
  * docCode/recordKey are also what tools/build-master-index-data.py keys this page
@@ -180,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',
-      receivingDate:'', receivedFrom:'', toBeProcessedFor:'', sizeRange:'',
+      receivingDate:'', receivedFrom:'', toBeProcessedFor:'', sizeRange:'', jobNo:'',
       basketEntries: [],
       checkedBy:'', checkedByDate:'',
       createdAt: null, updatedAt: null
@@ -213,19 +216,30 @@ function toast(msg){
 
   function renderForm(){
     $('h_receivingDate').value = state.receivingDate;
-    $('h_receivedFrom').value = state.receivedFrom;
+    window.Lookups.setValue('h_receivedFrom', 'farms', state.receivedFrom);
     $('h_toBeProcessedFor').value = state.toBeProcessedFor;
-    $('h_sizeRange').value = state.sizeRange;
+    window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.sizeRange);
+    $('h_jobNo').value = state.jobNo;
     $('f_checkedBy').value = state.checkedBy;
     $('f_checkedByDate').value = state.checkedByDate;
   }
 
   function bindInputs(){
-    const fields = ['receivingDate','receivedFrom','toBeProcessedFor','sizeRange','checkedBy','checkedByDate'];
-    fields.forEach(f=>{
-      const id = f.startsWith('checkedBy') ? 'f_'+f : 'h_'+f;
+    const inputs = [
+      ['receivingDate', 'h_receivingDate'],
+      ['receivedFrom', 'h_receivedFrom'],
+      ['toBeProcessedFor', 'h_toBeProcessedFor'],
+      ['sizeRange', 'h_sizeRange'],
+      ['jobNo', 'h_jobNo'],
+      ['checkedBy', 'f_checkedBy'],
+      ['checkedByDate', 'f_checkedByDate']
+    ];
+    inputs.forEach(([stateKey, id])=>{
       const el = $(id);
-      if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
+      if(!el) return;
+      const sync = ()=>{ state[stateKey] = el.value; };
+      el.addEventListener('input', sync);
+      el.addEventListener('change', sync);
     });
   }
 
@@ -371,6 +385,8 @@ function toast(msg){
   }
 
   function wire(){
+    window.Lookups.upgrade('h_receivedFrom', 'farms');
+    window.Lookups.fill('h_sizeRange', 'sizeRanges', { selected: state.sizeRange });
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
