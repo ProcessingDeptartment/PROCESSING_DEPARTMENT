@@ -2,24 +2,25 @@
  * Controlled-copy title block -- the ABAGOLD document-control header that sits at the
  * top of every page of a printed record (see the paper REC forms).
  *
- * Three of its fields are NOT hand-typed, because a stale one on a printed controlled
+ * Two of its fields are NOT hand-typed, because a stale one on a printed controlled
  * copy is a document-control failure:
  *   Revision      -- live from document-revision.js
  *   Revision Date -- date that revision was published
- *   Effective Date-- the first date anyone worked with the document here. Written once,
- *                    on first use, then never moved. It is the date the document came
- *                    into effect, not the date of the latest revision -- on the paper
- *                    forms these two are years apart.
  *
- * The typed fields (document name, doc number, reviewed by, approved by) are edited in
- * ONE place: master-record-index.html. Records only ever read them.
+ * Effective Date is the date the document came into effect -- on the paper forms this
+ * is years before the latest revision date, and nothing the app knows can derive it, so
+ * it is hand-typed in the header editor like document/docNumber/reviewedBy/approvedBy
+ * rather than guessed. It prints blank until someone records the real one.
+ *
+ * The typed fields (document name, doc number, reviewed by, approved by, effective date)
+ * are edited in ONE place: master-record-index.html. Records only ever read them.
  *
  * Backed by window.storage (data-store.js), keyed per record so any record can use it.
  */
 (function () {
   const KEY = k => 'doc_header:' + k;
 
-  const FIELDS = ['document', 'docNumber', 'reviewedBy', 'approvedBy'];
+  const FIELDS = ['document', 'docNumber', 'reviewedBy', 'approvedBy', 'effectiveDate'];
 
   /* Last resolved block per record. An on-screen revision badge must state exactly what
    * the printed copy states, so it reads the resolved block rather than resolving the

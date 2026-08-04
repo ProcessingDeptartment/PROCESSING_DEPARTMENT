@@ -228,7 +228,7 @@
     <p class="dh-hint">These fields print in the ABAGOLD title block at the top of every
       page of the record's PDF. Revision and revision date are set automatically and cannot
       be typed. Effective date prints blank until the date on the paper record is known —
-      it is never guessed.</p>
+      it is never guessed, only recorded once someone has it.</p>
 
     <label class="dh-f" style="flex-direction:row;align-items:center;gap:6px;font-weight:400;text-transform:none;letter-spacing:0;font-size:12.5px;">
       <input type="checkbox" id="dhApplyAll" style="width:auto;">
@@ -259,12 +259,12 @@
         <label class="dh-f">Doc number <em style="text-transform:none;font-style:normal;color:var(--palette-label);font-weight:400;">(also renumbers this row on the index)</em><input id="dhDocNumber" type="text"></label>
         <label class="dh-f">Reviewed by<input id="dhReviewedBy" type="text"></label>
         <label class="dh-f">Approved by<input id="dhApprovedBy" type="text"></label>
+        <label class="dh-f">Effective date <em style="text-transform:none;font-style:normal;color:var(--palette-label);font-weight:400;">(from the paper record)</em><input id="dhEffectiveDate" type="date"></label>
       </div>
 
       <div class="dh-auto">
         <div><b id="dhRevision">—</b><span>Revision <em>(auto)</em></span></div>
         <div><b id="dhRevisionDate">—</b><span>Revision date <em>(auto)</em></span></div>
-        <div><b id="dhEffectiveDate">—</b><span>Effective date <em>(from the paper record)</em></span></div>
       </div>
 
       <div class="dh-preview-wrap">
@@ -571,6 +571,18 @@
 
   function dhRow(key) { return ROWS.find(r => r.recordKey === key); }
 
+  // The date input only accepts YYYY-MM-DD. A stored value already in that shape (every
+  // date saved through this input) passes through; a dd/mm/yyyy value from before this
+  // field was editable is converted so it still shows instead of silently blanking out
+  // (which would otherwise overwrite the real date with nothing on the next save).
+  function isoDate(v) {
+    if (!v) return '';
+    if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+    return '';
+  }
+
   function dhSetState(msg, kind) {
     const el = $('dhState');
     el.textContent = msg || '';
@@ -588,7 +600,7 @@
       approvedBy: $('dhApprovedBy').value,
       revision: $('dhRevision').textContent === '—' ? '' : $('dhRevision').textContent,
       revisionDate: $('dhRevisionDate').dataset.raw || '',
-      effectiveDate: $('dhEffectiveDate').dataset.raw || ''
+      effectiveDate: $('dhEffectiveDate').value || ''
     }, 1, 3, '../assets/abagold-logo.png');
   }
 
@@ -612,8 +624,7 @@
     $('dhRevision').textContent = h.revision === '' ? '—' : h.revision;
     $('dhRevisionDate').dataset.raw = h.revisionDate || '';
     $('dhRevisionDate').textContent = window.DocHeader.fmtDate(h.revisionDate) || '—';
-    $('dhEffectiveDate').dataset.raw = h.effectiveDate || '';
-    $('dhEffectiveDate').textContent = window.DocHeader.fmtDate(h.effectiveDate) || 'not recorded';
+    $('dhEffectiveDate').value = isoDate(h.effectiveDate);
     dhRenderPreview();
     dhSetState(canEdit ? '' : 'Read-only — document control roles may edit this.');
   }
@@ -626,7 +637,7 @@
     $('dhBumpWrap').style.display = all ? '' : 'none';
     // Document/doc number are per-record (each record names itself); bulk mode only
     // makes sense for the document-control roles, which are the same for every row.
-    ['dhDocument', 'dhDocNumber'].forEach(id => { $(id).disabled = all || !canEdit; });
+    ['dhDocument', 'dhDocNumber', 'dhEffectiveDate'].forEach(id => { $(id).disabled = all || !canEdit; });
     if (all) dhSetState(canEdit ? '' : 'Read-only — document control roles may edit this.');
   }
 
@@ -638,7 +649,7 @@
     const online = dhOnlineRows();
     $('dhRecordSelect').innerHTML = online
       .map(r => `<option value="${esc(r.recordKey)}">${esc(displayDocNo(r))} — ${esc(r.name)}</option>`).join('');
-    ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy'].forEach(id => { $(id).disabled = !canEdit; });
+    ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy', 'dhEffectiveDate'].forEach(id => { $(id).disabled = !canEdit; });
     $('dhSave').disabled = !canEdit;
     $('dhApplyAll').checked = false;
     $('dhApplyAll').disabled = !canEdit;
@@ -661,7 +672,7 @@
   });
   $('dhApplyAll').addEventListener('change', dhApplyToggle);
   $('dhBumpAll').addEventListener('change', dhBumpToggle);
-  ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy']
+  ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy', 'dhEffectiveDate']
     .forEach(id => $(id).addEventListener('input', dhRenderPreview));
 
   $('dhSave').addEventListener('click', async () => {
@@ -699,7 +710,8 @@
           document: $('dhDocument').value,
           docNumber: docNumber,
           reviewedBy: $('dhReviewedBy').value,
-          approvedBy: $('dhApprovedBy').value
+          approvedBy: $('dhApprovedBy').value,
+          effectiveDate: $('dhEffectiveDate').value
         });
         await saveRecordNumber(dhCurrentKey, docNumber);
         render();
