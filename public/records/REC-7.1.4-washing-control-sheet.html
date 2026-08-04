@@ -158,10 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
 (async function(){
   const $ = id => document.getElementById(id);
 
-  if (window.LoginUI && window.Auth && !window.Auth.isAuthenticated()) {
-    await window.LoginUI.ensureAuthenticated();
-  }
-
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',

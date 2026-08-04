@@ -70,7 +70,22 @@
     window.localStorage.setItem(ROLE_KEY, role);
   }
 
+  /* Role checks are OFF while login is disabled (see lib/login-ui.js, where
+   * ensureAuthenticated() resolves without prompting).
+   *
+   * Nobody can sign in, so nobody can hold a role: currentRole is whatever the fallback
+   * on line 61 happens to be. That fallback is PRODUCTION_SUPERVISOR, which is not on the
+   * manageMasterIndex, manageSpecs, manageSOPs or verifyRecord lists -- so the master
+   * index, the specification editor, every SOP and record verification were all read-only
+   * for every user, gated on a role nobody actually chose. That is not access control,
+   * it is an accident of the fallback.
+   *
+   * RULES below is intact and is still the intended policy. To restore enforcement, delete
+   * the next line -- that is the whole change. */
+  const ENFORCE_ROLES = false;
+
   function can(action) {
+    if (!ENFORCE_ROLES) return true;
     const allowed = RULES[action];
     if (!allowed) return true; // actions not listed are not gated
     return allowed.includes(currentRole);

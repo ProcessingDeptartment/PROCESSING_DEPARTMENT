@@ -148,9 +148,6 @@
   searchInput.addEventListener('input', filterRecords);
 
   (async function() {
-    if (window.LoginUI && window.Auth && !window.Auth.isAuthenticated()) {
-      await window.LoginUI.ensureAuthenticated();
-    }
     // Baseline first, so the list is usable even if shared storage is unreachable.
     render();
     try { latest = await window.DocumentRevision.latestAll(); } catch (e) { latest = {}; }

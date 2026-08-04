@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 (async function(){
   const $=id=>document.getElementById(id);
-  if(window.LoginUI&&window.Auth&&!window.Auth.isAuthenticated()){await window.LoginUI.ensureAuthenticated();}
   function newRecord(){return{id:null,revision:1,status:'draft',date:'',time:'',trackingOrJobNo:'',sizeRange:'',qualityOfAbalone:'',piecesSizes:'',ingoWeightSpec:'',actualIngoWeight:'',processDeviation:'',packer:'',qcOnline:'',packerDate:'',createdAt:null,updatedAt:null};}
   let state=newRecord();
   const ACTING_NAME_KEY='acting_as_name_can_packing';let actingName=window.localStorage.getItem(ACTING_NAME_KEY)||'';
