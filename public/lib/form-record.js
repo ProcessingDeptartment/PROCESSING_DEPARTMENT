@@ -132,6 +132,18 @@
     .fr-actions .fr-btn{ flex:1 1 100%; }
     .fr-actions .fr-btn-sm{ flex:0 1 auto; }
   }
+  /* Print sheet: one submission laid out as the paper form. Hidden on screen; the
+     whole on-screen app is swapped out for it while printing. */
+  .fr-sheet{ display:none; color:#000; font-family:'Segoe UI',system-ui,sans-serif; font-size:10.5px; }
+  .fr-sheet .fr-sheet-page{ page-break-after:always; }
+  .fr-sheet .fr-sheet-page:last-child{ page-break-after:auto; }
+  .fr-sheet h3{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; margin:9px 0 4px; font-weight:700; }
+  .fr-sheet h3:first-child{ margin-top:0; }
+  .fr-sheet table{ width:100%; border-collapse:collapse; margin-bottom:7px; }
+  .fr-sheet td,.fr-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; font-size:10px; }
+  .fr-sheet th{ background:#eee; font-weight:700; }
+  .fr-sheet td.fr-sheet-lbl{ font-weight:700; width:26%; }
+  .fr-sheet .fr-sheet-sign td{ height:26px; }
   @media print{
     @page{ size:A4; margin:12mm; }
     body{ background:#fff; }
@@ -139,6 +151,10 @@
     .fr-top{ display:none !important; }
     .fr-app{ font-size:10px; }
     .fr-table-wrap{ overflow:visible !important; }
+    /* Printing swaps the app for the filled sheets -- the on-screen body is a
+       submissions browser (filters, list, buttons), none of which is the record. */
+    body.fr-printing .fr-body{ display:none !important; }
+    body.fr-printing .fr-sheet{ display:block; }
   }`;
 
   function injectStyleOnce() {
@@ -258,6 +274,7 @@
           </div>
         </div>
       </div>
+      <div id="fr_printSheet" class="fr-sheet"></div>
       <div id="fr_modal" class="fr-modal-overlay no-print" style="display:none;">
         <div class="fr-modal-inner">
           <h2 id="fr_modalTitle">New submission</h2>
@@ -308,7 +325,10 @@
         return;
       }
       const cols = listCols.length ? listCols : allFields(config).slice(0, 4).map(f => f.key);
-      let html = `<table class="fr-table"><thead><tr>${cols.map(k => `<th>${esc(labelFor(k))}</th>`).join('')}<th>Status</th><th></th></tr></thead><tbody>`;
+      /* Status and the open button are screen-only affordances -- a printed controlled
+       * copy should carry the captured values, not the app's draft/submitted workflow
+       * state or a button. Header and cell are both tagged so columns stay aligned. */
+      let html = `<table class="fr-table"><thead><tr>${cols.map(k => `<th>${esc(labelFor(k))}</th>`).join('')}<th class="no-print">Status</th><th class="no-print"></th></tr></thead><tbody>`;
       list.forEach(sub => {
         html += `<tr>`;
         cols.forEach(k => {
@@ -316,15 +336,19 @@
           if (v === '' || v == null) v = '—';
           html += `<td>${esc(v)}</td>`;
         });
-        html += `<td>${isSubmitted(sub)
+        html += `<td class="no-print">${isSubmitted(sub)
           ? '<span class="fr-badge fr-badge-ok">✓ Submitted</span>'
           : '<span class="fr-badge">Draft</span>'}</td>`;
-        html += `<td><button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">${isSubmitted(sub) ? 'View' : 'Open'}</button></td>`;
+        html += `<td class="no-print" style="white-space:nowrap;">
+          <button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">${isSubmitted(sub) ? 'View' : 'Open'}</button>
+          <button class="fr-btn fr-btn-flat fr-btn-sm" data-pdf="${sub.id}" title="Print this submission as the paper form">PDF</button>
+        </td>`;
         html += `</tr>`;
       });
       html += `</tbody></table>`;
       wrap.innerHTML = html;
       wrap.querySelectorAll('[data-open]').forEach(btn => btn.addEventListener('click', () => openForm(btn.dataset.open)));
+      wrap.querySelectorAll('[data-pdf]').forEach(btn => btn.addEventListener('click', () => printSubmission(btn.dataset.pdf)));
     }
 
     function rosterRowHtml(ns, idx, row) {
@@ -503,12 +527,103 @@
         safeKey(config.title) + '_' + new Date().toISOString().slice(0, 10) + '.json');
     }
 
+    /* ---- printed output: one submission = one sheet of the paper form ----
+     *
+     * The on-screen body is a submissions BROWSER (filters, list, row buttons), so it is
+     * all no-print -- which left window.print() emitting a page carrying nothing but the
+     * controlled-copy header. The captured values were never on the printed page at all.
+     * These build the actual form, the same way monitoring-log.js builds ml-sheet.
+     *
+     * The sheet deliberately does not restate document name/number/revision: the
+     * controlled-copy block from doc-header.js already prints those at the top. */
+
+    function displayValue(field, raw) {
+      if (raw === '' || raw == null) return '';
+      if (field && field.type === 'date') return window.DocHeader.fmtDate(raw);
+      return String(raw);
+    }
+
+    function sheetSectionsHtml(sub) {
+      return (config.sections || []).map(sec => {
+        const rows = (sec.fields || []).map(f =>
+          `<tr><td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td>
+             <td>${esc(displayValue(f, sub.values[f.key]))}</td></tr>`).join('');
+        if (!rows) return '';
+        return `<h3>${esc(sec.title)}</h3><table><tbody>${rows}</tbody></table>`;
+      }).join('');
+    }
+
+    function sheetRosterHtml(sub) {
+      if (!hasRoster) return '';
+      const cols = config.roster.columns || [];
+      const rows = (sub.roster || []).filter(r =>
+        cols.some(c => String(r[c.key] || '').trim() !== ''));
+      // An empty roster still prints its ruled grid -- the paper form has blank lines to
+      // sign on, and a printed copy is often completed by hand.
+      const body = (rows.length ? rows : [{}, {}, {}]).map(r =>
+        `<tr>${cols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
+      return `<h3>${esc(config.roster.title)}</h3>
+        <table><thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
+        <tbody>${body}</tbody></table>`;
+    }
+
+    /* Signature line. A draft prints an empty one: an unsubmitted form is not evidence,
+     * and pre-printing a name beside "Signature" would assert a sign-off nobody made. */
+    function sheetSignHtml(sub) {
+      const done = isSubmitted(sub);
+      const signOff = (sub.signOffs || []).filter(s => s.action === 'submitted').slice(-1)[0];
+      const who = done && signOff ? (signOff.by || '') : '';
+      const when = done && sub.submittedAt
+        ? window.DocHeader.fmtDate(new Date(sub.submittedAt)) : '';
+      return `<table class="fr-sheet-sign"><tbody>
+        <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(who)}</td>
+            <td class="fr-sheet-lbl">Signature:</td><td></td>
+            <td class="fr-sheet-lbl">Date:</td><td>${esc(when)}</td></tr>
+        <tr><td class="fr-sheet-lbl">Verified by:</td><td></td>
+            <td class="fr-sheet-lbl">Signature:</td><td></td>
+            <td class="fr-sheet-lbl">Date:</td><td></td></tr>
+      </tbody></table>`;
+    }
+
+    function buildSheet(sub) {
+      return `<div class="fr-sheet-page">
+        ${sheetSectionsHtml(sub)}${sheetRosterHtml(sub)}${sheetSignHtml(sub)}
+      </div>`;
+    }
+
+    function withPrintTitle(name, fn) {
+      const previousTitle = document.title;
+      document.title = name; // browsers use the document title as the PDF filename
+      try { fn(); } finally { document.title = previousTitle; }
+    }
+
+    function printSheets(list, filename) {
+      if (!list.length) { toast('Nothing to print — no submissions match these filters.'); return; }
+      el('fr_printSheet').innerHTML = list.map(buildSheet).join('');
+      document.body.classList.add('fr-printing');
+      try { withPrintTitle(filename, () => window.print()); }
+      finally { document.body.classList.remove('fr-printing'); }
+    }
+
+    // The toolbar button prints what the filters currently show, matching Export JSON.
+    function printPdf() {
+      printSheets(filtered(),
+        safeKey(config.title) + '_' + new Date().toISOString().slice(0, 10));
+    }
+
+    function printSubmission(id) {
+      const sub = submissions.find(s => s.id === id);
+      if (!sub) return;
+      const stamp = dateOf(sub.values) || new Date(sub.createdAt).toISOString().slice(0, 10);
+      printSheets([sub], safeKey(config.docCode) + '_' + safeKey(config.title) + '_' + safeKey(stamp));
+    }
+
     el('fr_addBtn').addEventListener('click', () => openForm(null));
     el('fr_cancelBtn').addEventListener('click', closeForm);
     el('fr_saveBtn').addEventListener('click', () => saveForm(false));
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
     el('fr_exportJsonBtn').addEventListener('click', exportJson);
-    el('fr_printBtn').addEventListener('click', () => window.print());
+    el('fr_printBtn').addEventListener('click', printPdf);
     ['filterFrom', 'filterTo', 'filterSearch'].forEach(suffix => {
       el(`fr_${suffix}`).addEventListener('input', renderTable);
     });

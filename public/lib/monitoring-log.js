@@ -387,7 +387,11 @@
         return;
       }
       const cols = entryFields.filter(f => f.showInTable !== false);
-      let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}${submitFlow ? '<th>Submission</th>' : ''}<th>Status</th><th></th></tr></thead><tbody>`;
+      /* The Submission column (draft/submitted) and the row buttons are the app's own
+       * workflow furniture, not captured data, so they come off the printed controlled
+       * copy. The in-spec Status column stays -- that IS a recorded result. Header and
+       * cell carry the same class so the printed columns stay aligned. */
+      let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}${submitFlow ? '<th class="no-print">Submission</th>' : ''}<th>Status</th><th class="no-print"></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
         html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
         cols.forEach(f => {
@@ -397,12 +401,12 @@
           html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${esc(v)}</td>`;
         });
         if (submitFlow) {
-          if (entryRow.verification) html += `<td><span class="ml-badge ml-badge-ok">✓ Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
-          else if (isSubmitted(entryRow)) html += `<td><span class="ml-badge ml-badge-ok">✓ Submitted</span></td>`;
-          else html += `<td><span class="ml-badge ml-badge-muted">Draft</span></td>`;
+          if (entryRow.verification) html += `<td class="no-print"><span class="ml-badge ml-badge-ok">✓ Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
+          else if (isSubmitted(entryRow)) html += `<td class="no-print"><span class="ml-badge ml-badge-ok">✓ Submitted</span></td>`;
+          else html += `<td class="no-print"><span class="ml-badge ml-badge-muted">Draft</span></td>`;
         }
         html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
-        html += `<td style="white-space:nowrap;">
+        html += `<td class="no-print" style="white-space:nowrap;">
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">${isSubmitted(entryRow) ? 'View' : 'Edit'}</button>
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${entryRow.id}" title="Print this entry as the paper form">PDF</button>
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${entryRow.id}" title="Export this entry as JSON">JSON</button>

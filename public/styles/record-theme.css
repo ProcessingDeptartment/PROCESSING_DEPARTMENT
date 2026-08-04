@@ -573,9 +573,39 @@
   .doc-line h1 { font-size: 14px; }
 }
 
-/* On paper the bar loses its dark background, so the muted greys need to darken. */
+/* ========================================================================
+   PRINT / PDF
+
+   A printed record is a controlled copy. The only title block it may carry is
+   the one doc-header.js prints (document, doc number, revision, revision date,
+   approvals) -- so the app's own furniture comes off the page here.
+
+   `.no-print` is the class every record page and both engines already tag their
+   toolbars with (Save / Submit / Export JSON / Print PDF / New). It was being
+   used as markup but never actually declared anywhere that the bespoke record
+   pages load, so those buttons printed onto every generated PDF. Declaring it
+   here -- the one stylesheet all ~28 records include -- is what switches it off.
+   Do not re-declare it per page.
+
+   The on-screen title bar (.doc-line: "REC 7.1.5 | Salting (OOSW) | Rev 3 ·
+   Rev date ...") is hidden for the same reason: it restates, in a second and
+   sometimes staler voice, what the controlled-copy block already states. Its
+   dark parent strip goes with it, otherwise an empty coloured band prints in
+   its place; the parent is matched with :has() so a page can keep its own name
+   for that wrapper (.dc-top, .so-top, .cp-top, .fr-top, .ml-top, ...) without
+   having to be listed here.
+   ======================================================================== */
 @media print {
-  .doc-line .doc-code,
-  .doc-line .doc-rev { color: #333 !important; }
-  .doc-line h1 { color: #000 !important; font-size: 13px; }
+  .no-print { display: none !important; }
+
+  .doc-line { display: none !important; }
+
+  /* The wrappers as they are actually named today, so the bar still goes if the
+   * renderer is older than :has(). Verified: each of these contains only the
+   * title line and a no-print toolbar -- record content lives in the matching
+   * *-body, which is untouched. */
+  .dc-top, .so-top, .dsir-top, .cp-top, .rcs-top, .gbt-top,
+  .fr-top, .ml-top { display: none !important; }
+
+  *:has(> .doc-line) { display: none !important; }
 }
