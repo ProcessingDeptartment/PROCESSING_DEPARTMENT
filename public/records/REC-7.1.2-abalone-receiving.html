@@ -284,7 +284,17 @@ function toast(msg){
     $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
   }
 
+  function validateJobNo(){
+    if (!state.jobNo || !window.Lookups || !window.Lookups.batch || !window.Lookups.batch.isValid) return true;
+    const valid = window.Lookups.batch.isValid(state.jobNo);
+    if (valid) return true;
+    toast(window.Lookups.batch.formatError());
+    return false;
+  }
+
   async function saveRecord(finalize){
+    if (!validateJobNo()) return;
+
     const now = Date.now();
     if(!state.id){
       const basketId = state.basketEntries.length ? state.basketEntries[0].basketNr : 'NOBASKET';
