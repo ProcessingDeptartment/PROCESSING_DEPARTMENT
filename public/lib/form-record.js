@@ -136,6 +136,7 @@
     @page{ size:A4; margin:12mm; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
+    .fr-top{ display:none !important; }
     .fr-app{ font-size:10px; }
     .fr-table-wrap{ overflow:visible !important; }
   }`;

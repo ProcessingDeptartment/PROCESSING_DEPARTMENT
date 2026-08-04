@@ -161,6 +161,7 @@
   @media print{
     body{ background:#fff; }
     .no-print{ display:none !important; }
+    .ml-top{ display:none !important; }
     .ml-app{ font-size:10px; }
     .ml-table-wrap{ overflow:visible !important; }
     table.ml-table th,table.ml-table td{ border:1px solid #000; padding:3px 5px; }
