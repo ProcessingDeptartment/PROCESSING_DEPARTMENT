@@ -41,6 +41,11 @@
   .panel-head h2{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
   .panel-body{ padding:11px; }
 
+  .job-number-row{ display:grid; grid-template-columns:74px 1fr; gap:6px; }
+  .job-number-row select, .job-number-row input{ font-size:11.5px; padding:3px 5px; }
+  .field-hint{ font-size:9.5px; font-weight:500; color:#8a939b; font-family:var(--mono); }
+  .field-hint.bad{ color:var(--fail); }
+
   .grid{ display:grid; gap:8px; }
   .grid-6{ grid-template-columns:repeat(6,1fr); }
   .grid-5{ grid-template-columns:repeat(5,1fr); }
@@ -83,7 +88,7 @@
           <label class="field">Harvest farm<select id="h_receivedFrom"></select></label>
           <label class="field">Processing for<select id="h_toBeProcessedFor"><option value="">—</option><option value="Can">Can</option><option value="Dried">Dried</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
           <label class="field">Size range<select id="h_sizeRange"></select></label>
-          <label class="field">Job no.<input id="h_jobNo" placeholder="Job no."></label>
+          <label class="field">Job no.<div class="job-number-row"><select id="h_jobPrefix"></select><input id="h_jobDigits" placeholder="Digits" inputmode="numeric"></div><span class="field-hint" id="jobNoHint"></span></label>
         </div>
       </div>
     </div>
@@ -219,18 +224,51 @@ function toast(msg){
     window.Lookups.setValue('h_receivedFrom', 'farms', state.receivedFrom);
     $('h_toBeProcessedFor').value = state.toBeProcessedFor;
     window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.sizeRange);
-    $('h_jobNo').value = state.jobNo;
+    renderJobNo();
     $('f_checkedBy').value = state.checkedBy;
     $('f_checkedByDate').value = state.checkedByDate;
   }
 
+  // jobNo is stored as one string (e.g. "3CP000123") but entered as
+  // prefix + digits so the product code can't be mistyped.
+  function splitJobNo(value){
+    const m = String(value || '').trim().toUpperCase().match(/^(3CP|3DP|CPR|DPR)(\d*)$/);
+    return m ? { prefix: m[1], digits: m[2] } : { prefix: '', digits: '' };
+  }
+
+  function renderJobNo(){
+    const parts = splitJobNo(state.jobNo);
+    $('h_jobPrefix').value = parts.prefix;
+    $('h_jobDigits').value = parts.digits;
+    updateJobNoHint();
+  }
+
+  function updateJobNoHint(){
+    const hint = $('jobNoHint');
+    if(!state.jobNo){ hint.textContent = 'e.g. 3CP000001'; hint.classList.remove('bad'); return; }
+    const ok = window.Lookups.batch.isValid(state.jobNo);
+    hint.textContent = ok ? state.jobNo : '4–8 digits required';
+    hint.classList.toggle('bad', !ok);
+  }
+
+  function syncJobNo(){
+    const prefix = $('h_jobPrefix').value;
+    const digits = $('h_jobDigits').value.replace(/\D/g, '').slice(0, 8);
+    $('h_jobDigits').value = digits;
+    state.jobNo = (prefix && digits) ? prefix + digits : '';
+    updateJobNoHint();
+  }
+
   function bindInputs(){
+    ['h_jobPrefix','h_jobDigits'].forEach(id=>{
+      $(id).addEventListener('input', syncJobNo);
+      $(id).addEventListener('change', syncJobNo);
+    });
     const inputs = [
       ['receivingDate', 'h_receivingDate'],
       ['receivedFrom', 'h_receivedFrom'],
       ['toBeProcessedFor', 'h_toBeProcessedFor'],
       ['sizeRange', 'h_sizeRange'],
-      ['jobNo', 'h_jobNo'],
       ['checkedBy', 'f_checkedBy'],
       ['checkedByDate', 'f_checkedByDate']
     ];
@@ -397,6 +435,7 @@ function toast(msg){
   function wire(){
     window.Lookups.upgrade('h_receivedFrom', 'farms');
     window.Lookups.fill('h_sizeRange', 'sizeRanges', { selected: state.sizeRange });
+    window.Lookups.fill('h_jobPrefix', 'jobPrefixes', { selected: splitJobNo(state.jobNo).prefix });
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
