@@ -172,16 +172,11 @@
 
   // @page can't be toggled by a class, so the rule is swapped before each print:
   // the entries log wants landscape, a single-entry sheet wants portrait like the Word form.
-  // The top margin is not ours to choose while a title block is mounted -- that strip is
-  // where the block prints, so it has to be re-declared here or this rule would reclaim it.
   function setPageOrientation(orientation) {
     let s = document.getElementById('ml-page-style');
     if (!s) { s = document.createElement('style'); s.id = 'ml-page-style'; document.head.appendChild(s); }
     const side = (window.DocHeader && window.DocHeader.PAGE_SIDE_MARGIN) || '12mm';
-    const top = document.getElementById('dh-print-header')
-      ? (window.DocHeader && window.DocHeader.PRINT_HEADER_HEIGHT) || '26mm'
-      : side;
-    s.textContent = `@page{ size:A4 ${orientation}; margin:${top} ${side} ${side} ${side}; }`;
+    s.textContent = `@page{ size:A4 ${orientation}; margin:${side}; }`;
   }
 
   function injectStyleOnce() {

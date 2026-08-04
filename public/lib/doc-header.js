@@ -27,11 +27,7 @@
    * to print "Rev date not set" beside a block carrying the real date. */
   const RESOLVED = {};
 
-  /* Height of the printed-page strip the repeating title block lives in. Anything that
-   * writes its own @page margins has to reserve the same strip -- see monitoring-log.js. */
-  const PRINT_HEADER_HEIGHT = '26mm';
-
-  /* The one side/bottom page margin every record prints at. Records used to each pick
+  /* The one page margin every record prints at. Records used to each pick
    * their own (6mm, 9mm, 10mm, 12mm), so no two printed forms lined up. Anything that
    * writes its own @page uses this, and nothing overrides it per record. */
   const PAGE_SIDE_MARGIN = '12mm';
@@ -151,27 +147,28 @@
     return row && row.revision != null ? row.revision : 1;
   }
 
-  /* Reserve a strip in the printed page margin and park the block in it. A position:fixed
-   * element is painted once per page by the print engine, which is the only way to repeat
-   * a block above a table whose length isn't known until it prints. Re-appended on every
-   * call so it stays last in the head and its @page margin beats the engine's. */
-  function injectPrintHeaderStyles(height, side) {
+  /* Print the block once, in normal document flow, ahead of everything else on the page.
+   *
+   * This used to park the block in a position:fixed strip reserved by an @page top margin,
+   * repainted once per printed page. That's the textbook trick for a repeating print header
+   * and it works in a plain browser print dialog -- but the PDFs this app actually produces
+   * come out of a renderer where position:fixed does not repeat per page; it gets placed
+   * once using the *whole tall document's* flow coordinates, which is why the block was
+   * showing up mid-document (over the sign-off section on REC-7.1.2) instead of at the top
+   * of page 1. An in-flow block is the only placement every renderer agrees on, so that's
+   * the trade made here: it prints once at the very top of the document rather than
+   * repeating on every page. */
+  function injectPrintHeaderStyles(side) {
     let s = document.getElementById('dh-print-header-styles');
     if (!s) {
       s = document.createElement('style');
       s.id = 'dh-print-header-styles';
     }
-    /* The margin SHORTHAND, never `margin-top`. Chrome discards individual margin
-     * longhands inside @page, so a `margin-top` here is silently dropped and the strip
-     * is never reserved -- the block then prints outside the page box and vanishes.
-     * The shorthand also sets the sides, which is why PAGE_SIDE_MARGIN is shared rather
-     * than chosen per record -- this rule is the last word on page geometry. */
     s.textContent = `
       #dh-print-header{ display:none; }
       @media print{
-        @page{ margin:${height} ${side} ${side}; }
-        #dh-print-header{ display:block; position:fixed; left:0; right:0;
-          top:-${height}; height:${height}; overflow:hidden; }
+        @page{ margin:${side}; }
+        #dh-print-header{ display:block; }
       }
     `;
     document.head.appendChild(s); // moves it to the end if it was already there
@@ -189,7 +186,6 @@
    * than an empty one. */
   async function mountPrintHeader(opts) {
     opts = opts || {};
-    const height = opts.height || PRINT_HEADER_HEIGHT;
     // A caller that doesn't state its paper revision gets the one off the index row, so
     // records without their own baseline constant still fall back to paper, not to 1.
     const revisionStart = opts.revisionStart != null
@@ -197,7 +193,7 @@
     const h = await resolve(opts.recordKey,
       defaultsFor(opts.recordKey, opts.defaults), revisionStart);
     injectStyles();
-    injectPrintHeaderStyles(height, PAGE_SIDE_MARGIN);
+    injectPrintHeaderStyles(PAGE_SIDE_MARGIN);
     let host = document.getElementById('dh-print-header');
     if (!host) {
       host = document.createElement('div');
@@ -310,7 +306,7 @@
 
   window.DocHeader = {
     FIELDS, resolve, saveFields, saveFieldsAll, clearAutoStampedEffectiveDate, blockHtml, injectStyles, fmtDate,
-    defaultsFor, mountPrintHeader, PRINT_HEADER_HEIGHT, PAGE_SIDE_MARGIN,
+    defaultsFor, mountPrintHeader, PAGE_SIDE_MARGIN,
     current, badgeText,
     load: loadStored
   };
