@@ -66,6 +66,57 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  /* ---- PDF / print ----------------------------------------------------------
+   * The printed record is ordered differently to the screen: Receiving Info and
+   * Sign-off belong together on page 1, and Basket & Counts starts on page 2
+   * because it runs to ~200 rows. .dc-body becomes a flex column purely so the
+   * panels can be reordered without moving them in the DOM (the on-screen order
+   * is the data-capture order and must stay as it is). */
+  .print-only{ display:none; }
+  @media print{
+    .print-only{ display:grid; }
+    #basketTableEmpty{ display:none !important; }
+
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelReceiving{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelBaskets{ order:3; break-before:page; page-break-before:always; }
+
+    .panel{ border-color:#000; margin-bottom:6px; break-inside:avoid; }
+    .panel-head{ background:#fff; padding:4px 7px; }
+
+    /* Smaller block fields: keep the boxed look, tighten it.
+     * .field is matched bare here (not label.field) so the print-only
+     * verification row, which uses divs, picks up the same styling. */
+    #ar-root .field{ display:flex; flex-direction:column; font-size:8px; gap:1px;
+                     color:#54606b; font-weight:600; }
+    #ar-root .panel-body{ padding:7px; }
+    #ar-root .grid{ gap:5px; }
+    #ar-root input, #ar-root select{
+      font-size:9px; padding:2px 3px; border:1px solid #000; border-radius:2px;
+      -webkit-appearance:none; appearance:none; background:#fff;
+      text-overflow:clip; min-width:0;
+    }
+
+    /* Job no. must never clip: the prefix column shrinks to its content and the
+     * digits take the rest, instead of the fixed 74px screen column. */
+    .job-number-row{ grid-template-columns:auto 1fr; gap:3px; }
+    .job-number-row select, .job-number-row input{ font-size:9px; padding:2px 3px; }
+    #jobNoHint{ display:none; }
+
+    /* Signature ruled lines for the print-only verification row. */
+    .sig-line{ border-bottom:1px solid #000; height:14px; }
+
+    /* One compact row per basket, header repeated on each page, no split rows.
+     * !important because the table carries an inline font-size, which would
+     * otherwise beat this rule and keep the screen size in the PDF. */
+    #basketTable{ font-size:8.5px !important; }
+    #basketTable thead{ display:table-header-group; }
+    #basketTable tr{ break-inside:avoid; page-break-inside:avoid; }
+    #basketTable th, #basketTable td{ padding:1.5px 4px !important; border-bottom:1px solid #999; }
+    #basketTable th{ border-bottom:1px solid #000; }
+  }
 </style>
   <link rel="stylesheet" href="../responsive.css?v=1">
 </head>
@@ -80,7 +131,7 @@
 
   <div class="dc-body">
 
-    <div class="panel">
+    <div class="panel" id="panelReceiving">
       <div class="panel-head"><h2>Receiving Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-5" style="margin-bottom:8px;">
@@ -93,9 +144,12 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelBaskets">
       <div class="panel-head"><h2>Basket & Counts</h2></div>
       <div class="panel-body">
+        <!-- Capture widget only: the confirmed table below is the record, so this whole
+             block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
+        <div id="basketCapture" class="no-print">
         <div class="grid grid-4">
           <label class="field">Basket nr.<input id="h_basketNr" type="number"></label>
           <label class="field">Whole weight<input id="h_wholeWeight" type="number" step="0.01"></label>
@@ -104,6 +158,7 @@
         </div>
         <div class="grid grid-6" style="margin-top:8px;">
           <label class="field">Mortality count<input id="h_mortalityCount" type="number"></label>
+        </div>
         </div>
         <div class="actions no-print" style="margin-top:8px;">
           <span class="status-line" id="entryEditNotice"></span>
@@ -140,12 +195,18 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
           <label class="field">Checked & completed by<input id="f_checkedBy"></label>
           <label class="field">Date<input id="f_checkedByDate" type="date"></label>
+        </div>
+        <!-- Verification is done against the printed copy, so this row is deliberately
+             print-only: it must never be a capturable field on screen. -->
+        <div class="grid grid-2 print-only" style="margin-top:8px;">
+          <div class="field">Verified by<div class="sig-line"></div></div>
+          <div class="field">Date<div class="sig-line"></div></div>
         </div>
       </div>
     </div>
@@ -305,6 +366,27 @@ function toast(msg){
       `;
       body.appendChild(tr);
     });
+
+    /* Final totals close the table off. Rendered as the last body row rather than a
+     * <tfoot>, because a tfoot is repeated at the foot of every printed page and a
+     * running total on each page would read as if it were the final one. */
+    const sum = key => state.basketEntries
+      .reduce((t, e) => t + (parseFloat(e[key]) || 0), 0);
+    const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(2);
+    const totals = document.createElement('tr');
+    totals.id = 'basketTotalsRow';
+    totals.style.cssText = 'border-top:2px solid var(--steel); font-weight:700;';
+    totals.innerHTML = `
+      <td style="padding:5px 6px;">Final</td>
+      <td style="padding:5px 6px;">${fmt(sum('wholeWeight'))}</td>
+      <td style="padding:5px 6px;">${fmt(sum('farmCount'))}</td>
+      <td style="padding:5px 6px;">${fmt(sum('factoryCount'))}</td>
+      <td style="padding:5px 6px;">${fmt(sum('mortalityCount'))}</td>
+      <td style="padding:5px 6px;"></td>
+      <td class="no-print" style="padding:5px 6px;"></td>
+    `;
+    body.appendChild(totals);
+
     body.querySelectorAll('.editEntryBtn').forEach(btn=>{
       btn.addEventListener('click', ()=>openEditNameModal(btn.getAttribute('data-id')));
     });
