@@ -195,6 +195,20 @@
       </div>
     </div>
 
+    <!-- One CSV covers a whole day, which is usually several receiving records
+         (one per farm / processing stream / size range). This lets the importer
+         pick which one to load into the form. -->
+    <div class="modal-overlay no-print" id="importPickModal" style="display:none; position:fixed; inset:0; background:rgba(20,26,32,.5); z-index:1000; align-items:center; justify-content:center;">
+      <div class="modal-box" style="background:#fff; border-radius:6px; padding:16px; width:440px; max-height:80vh; overflow:auto; box-shadow:0 8px 30px rgba(0,0,0,.25);">
+        <h3 style="font-size:12.5px; margin-bottom:4px;">Choose the record to import</h3>
+        <p class="muted" style="font-size:10.5px; margin:0 0 10px;">Job no. is not in the file — enter it after importing.</p>
+        <div id="importPickList"></div>
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn btn-flat" id="importPickCancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
@@ -214,6 +228,8 @@
     <div class="actions no-print">
       <span class="record-status" id="recordStatus"></span>
       <span class="status-line" id="statusLine"></span>
+      <button class="btn btn-flat" id="importBtn">Import CSV</button>
+      <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
     </div>
@@ -514,6 +530,128 @@ function toast(msg){
     closeEditNameModal();
   }
 
+  /* ---------------------------------------------------------------- import
+   * Reads the CSV produced by export_receiving.py, which flattens a day's
+   * HAMIO baskets into one row each. The four Receiving Info fields repeat on
+   * every row of a record, so rows are grouped back into records on those.
+   * Job no. is intentionally absent from the file and stays for manual entry.
+   */
+  const IMPORT_HEADERS = ['receivingDate','harvestFarm','processingFor','sizeRange',
+                          'basketNr','wholeWeight','farmCount','factoryCount','mortalityCount'];
+
+  // Minimal RFC-4180 parse: handles quoted fields and embedded commas/newlines.
+  function parseCsv(text){
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for(let i = 0; i < text.length; i++){
+      const c = text[i];
+      if(inQuotes){
+        if(c === '"'){
+          if(text[i+1] === '"'){ field += '"'; i++; }
+          else inQuotes = false;
+        } else field += c;
+      } else if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+      else if(c !== '\r'){ field += c; }
+    }
+    if(field !== '' || row.length){ row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(v => String(v).trim() !== ''));
+  }
+
+  function groupImportRows(text){
+    const rows = parseCsv(text);
+    if(!rows.length) throw new Error('The file is empty.');
+
+    // strip a UTF-8 BOM so the first header name still matches
+    const header = rows[0].map(h => String(h).replace(/^﻿/, '').trim());
+    const col = {};
+    header.forEach((h, i) => { col[h] = i; });
+    const missing = IMPORT_HEADERS.filter(h => !(h in col));
+    if(missing.length) throw new Error('Missing column(s): ' + missing.join(', '));
+
+    const groups = new Map();
+    rows.slice(1).forEach(r => {
+      const get = name => String(r[col[name]] ?? '').trim();
+      const key = [get('receivingDate'), get('harvestFarm'), get('processingFor'), get('sizeRange')].join('|');
+      if(!groups.has(key)){
+        groups.set(key, {
+          receivingDate: get('receivingDate'),
+          receivedFrom: get('harvestFarm'),
+          toBeProcessedFor: get('processingFor'),
+          sizeRange: get('sizeRange'),
+          entries: []
+        });
+      }
+      groups.get(key).entries.push({
+        basketNr: get('basketNr'),
+        wholeWeight: get('wholeWeight'),
+        farmCount: get('farmCount'),
+        factoryCount: get('factoryCount'),
+        mortalityCount: get('mortalityCount')
+      });
+    });
+    return [...groups.values()];
+  }
+
+  function applyImport(group){
+    state.receivingDate = group.receivingDate;
+    state.receivedFrom = group.receivedFrom;
+    state.toBeProcessedFor = group.toBeProcessedFor;
+    state.sizeRange = group.sizeRange;
+    state.basketEntries = group.entries.map((e, n) => ({
+      id: 'entry_' + Date.now() + '_' + n + '_' + Math.random().toString(36).slice(2,7),
+      ...e
+    }));
+    editingEntryId = null;
+    emptyEntryInputs();
+    setEditNotice();
+    renderAll();
+    const unknownFarm = group.receivedFrom && !window.Lookups.isValid('farms', group.receivedFrom);
+    const unknownSize = group.sizeRange && !window.Lookups.isValid('sizeRanges', group.sizeRange);
+    if(unknownFarm || unknownSize){
+      toast('Imported — check the highlighted Receiving Info fields.');
+    } else {
+      toast(`Imported ${state.basketEntries.length} basket entries. Enter the job no.`);
+    }
+  }
+
+  function closeImportPick(){ $('importPickModal').style.display = 'none'; }
+
+  function openImportPick(groups){
+    const list = $('importPickList');
+    list.innerHTML = '';
+    groups.forEach((g, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-flat';
+      btn.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:6px; padding:8px 10px; font-size:11.5px;';
+      btn.textContent = `${g.receivingDate} · ${g.receivedFrom} · ${g.toBeProcessedFor} · ${g.sizeRange} — ${g.entries.length} basket${g.entries.length===1?'':'s'}`;
+      btn.addEventListener('click', ()=>{ closeImportPick(); applyImport(groups[i]); });
+      list.appendChild(btn);
+    });
+    $('importPickModal').style.display = 'flex';
+  }
+
+  function handleImportFile(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      let groups;
+      try { groups = groupImportRows(String(reader.result)); }
+      catch(err){ toast('Could not read file: ' + err.message); return; }
+      if(!groups.length){ toast('No rows found in the file.'); return; }
+      // Importing replaces what is on the form, so an in-progress record is
+      // never silently overwritten.
+      if(state.basketEntries.length &&
+         !confirm(`This will replace the ${state.basketEntries.length} basket entries currently on the form. Continue?`)){
+        return;
+      }
+      if(groups.length === 1) applyImport(groups[0]);
+      else openImportPick(groups);
+    };
+    reader.onerror = () => toast('Could not read that file.');
+    reader.readAsText(file);
+  }
+
   function wire(){
     window.Lookups.upgrade('h_receivedFrom', 'farms');
     window.Lookups.fill('h_sizeRange', 'sizeRanges', { selected: state.sizeRange });
@@ -526,6 +664,13 @@ function toast(msg){
     $('editNameOkBtn').addEventListener('click', confirmEditName);
     $('editNameCancelBtn').addEventListener('click', closeEditNameModal);
     $('editNameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') confirmEditName(); });
+    $('importBtn').addEventListener('click', ()=>$('importFile').click());
+    $('importPickCancelBtn').addEventListener('click', closeImportPick);
+    $('importFile').addEventListener('change', e=>{
+      const file = e.target.files && e.target.files[0];
+      if(file) handleImportFile(file);
+      e.target.value = ''; // let the same file be picked again after a fix
+    });
     $('exportBtn').addEventListener('click', ()=>{
       const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
       const a = document.createElement('a');

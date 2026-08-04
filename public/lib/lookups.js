@@ -49,7 +49,7 @@
     // to a dropdown the moment there is at least one entry. Nothing else to
     // edit. Farms already captured on old records stay readable even if you
     // later remove the name from this list.
-    farms: ['Bergsig', 'Sulamanzi', 'Seaview', 'Third Party'],
+    farms: ['Bergsig', 'Sulamanzi', 'Seaview', 'Third Party', 'FACTORY'],
 
     processingFor: ['Can', 'Dried', 'Live', 'Other'],
 
