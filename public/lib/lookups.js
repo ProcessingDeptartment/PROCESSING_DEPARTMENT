@@ -53,7 +53,30 @@
 
     processingFor: ['Can', 'Dried', 'Live', 'Other'],
 
-    jobPrefixes: ['3CP', '3DP', 'CPR', 'DPR']
+    jobPrefixes: ['3CP', '3DP', 'CPR', 'DPR'],
+
+    palettes: [
+      'sauce',
+      'dry',
+      'cleaning/hygiene',
+      'traceability',
+      'quality_general',
+      'canning',
+      'live',
+      'technical/maintenance',
+      'warehouse/stock_management',
+      "SOP's",
+      'unknowns',
+      'periwinkle',
+      'lilac',
+      'seafoam-green',
+      'buttercream',
+      'apricot',
+      'coral',
+      'cherry-blossom-pink',
+      'pale-violet',
+      'terracotta'
+    ]
   };
 
   /* ----------------------------------------------- batch/job number rules */
