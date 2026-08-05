@@ -134,11 +134,10 @@
     <div class="panel" id="panelReceiving">
       <div class="panel-head"><h2>Receiving Info</h2></div>
       <div class="panel-body">
-        <div class="grid grid-5" style="margin-bottom:8px;">
+        <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Receiving date<input id="h_receivingDate" type="date"></label>
           <label class="field">Harvest farm<select id="h_receivedFrom"></select></label>
           <label class="field">Processing for<select id="h_toBeProcessedFor"><option value="">—</option><option value="Can">Can</option><option value="Dried">Dried</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
-          <label class="field">Size range<select id="h_sizeRange"></select></label>
           <label class="field">Job no.<div class="job-number-row"><select id="h_jobPrefix"></select><input id="h_jobDigits" placeholder="Digits" inputmode="numeric"></div><span class="field-hint" id="jobNoHint"></span></label>
         </div>
       </div>
@@ -150,13 +149,14 @@
         <!-- Capture widget only: the confirmed table below is the record, so this whole
              block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
         <div id="basketCapture" class="no-print">
-        <div class="grid grid-4">
+        <div class="grid grid-3">
           <label class="field">Basket nr.<input id="h_basketNr" type="number"></label>
+          <label class="field">Size range<select id="h_sizeRange"></select></label>
           <label class="field">Whole weight<input id="h_wholeWeight" type="number" step="0.01"></label>
+        </div>
+        <div class="grid grid-3" style="margin-top:8px;">
           <label class="field">Farm count<input id="h_farmCount" type="number"></label>
           <label class="field">Factory count<input id="h_factoryCount" type="number"></label>
-        </div>
-        <div class="grid grid-6" style="margin-top:8px;">
           <label class="field">Mortality count<input id="h_mortalityCount" type="number"></label>
         </div>
         </div>
@@ -170,6 +170,7 @@
           <thead>
             <tr style="text-align:left; border-bottom:1px solid var(--line-soft); color:#54606b;">
               <th style="padding:5px 6px;">Basket nr.</th>
+              <th style="padding:5px 6px;">Size range</th>
               <th style="padding:5px 6px;">Whole weight</th>
               <th style="padding:5px 6px;">Farm count</th>
               <th style="padding:5px 6px;">Factory count</th>
@@ -265,7 +266,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',
-      receivingDate:'', receivedFrom:'', toBeProcessedFor:'', sizeRange:'', jobNo:'',
+      // sizeRange is per basket, not per record -- one receiving can hold mixed sizes.
+      receivingDate:'', receivedFrom:'', toBeProcessedFor:'', jobNo:'',
       basketEntries: [],
       checkedBy:'', checkedByDate:'',
       createdAt: null, updatedAt: null
@@ -290,17 +292,19 @@ function toast(msg){
     catch(e){ return false; }
   }
 
-  const ENTRY_FIELDS = ['basketNr','wholeWeight','farmCount','factoryCount','mortalityCount'];
+  const ENTRY_FIELDS = ['basketNr','sizeRange','wholeWeight','farmCount','factoryCount','mortalityCount'];
 
+  /* Size range is a lookup-backed <select>, so clearing it means re-selecting the
+   * blank option rather than blanking a free-text value. */
   function emptyEntryInputs(){
     ENTRY_FIELDS.forEach(f=>{ $('h_'+f).value = ''; });
+    window.Lookups.setValue('h_sizeRange', 'sizeRanges', '');
   }
 
   function renderForm(){
     $('h_receivingDate').value = state.receivingDate;
     window.Lookups.setValue('h_receivedFrom', 'farms', state.receivedFrom);
     $('h_toBeProcessedFor').value = state.toBeProcessedFor;
-    window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.sizeRange);
     renderJobNo();
     $('f_checkedBy').value = state.checkedBy;
     $('f_checkedByDate').value = state.checkedByDate;
@@ -345,7 +349,6 @@ function toast(msg){
       ['receivingDate', 'h_receivingDate'],
       ['receivedFrom', 'h_receivedFrom'],
       ['toBeProcessedFor', 'h_toBeProcessedFor'],
-      ['sizeRange', 'h_sizeRange'],
       ['checkedBy', 'f_checkedBy'],
       ['checkedByDate', 'f_checkedByDate']
     ];
@@ -373,6 +376,7 @@ function toast(msg){
       if(entry.id === editingEntryId) tr.style.background = '#fbf0dc';
       tr.innerHTML = `
         <td style="padding:5px 6px;">${entry.basketNr || ''}</td>
+        <td style="padding:5px 6px;">${entry.sizeRange || ''}</td>
         <td style="padding:5px 6px;">${entry.wholeWeight || ''}</td>
         <td style="padding:5px 6px;">${entry.farmCount || ''}</td>
         <td style="padding:5px 6px;">${entry.factoryCount || ''}</td>
@@ -394,6 +398,7 @@ function toast(msg){
     totals.style.cssText = 'border-top:2px solid var(--steel); font-weight:700;';
     totals.innerHTML = `
       <td style="padding:5px 6px;">Final</td>
+      <td style="padding:5px 6px;"></td>
       <td style="padding:5px 6px;">${fmt(sum('wholeWeight'))}</td>
       <td style="padding:5px 6px;">${fmt(sum('farmCount'))}</td>
       <td style="padding:5px 6px;">${fmt(sum('factoryCount'))}</td>
@@ -573,18 +578,20 @@ function toast(msg){
     const groups = new Map();
     rows.slice(1).forEach(r => {
       const get = name => String(r[col[name]] ?? '').trim();
-      const key = [get('receivingDate'), get('harvestFarm'), get('processingFor'), get('sizeRange')].join('|');
+      // Size range is deliberately NOT part of the key: it is a per-basket value now,
+      // so a day's baskets stay in one record instead of splitting once per size.
+      const key = [get('receivingDate'), get('harvestFarm'), get('processingFor')].join('|');
       if(!groups.has(key)){
         groups.set(key, {
           receivingDate: get('receivingDate'),
           receivedFrom: get('harvestFarm'),
           toBeProcessedFor: get('processingFor'),
-          sizeRange: get('sizeRange'),
           entries: []
         });
       }
       groups.get(key).entries.push({
         basketNr: get('basketNr'),
+        sizeRange: get('sizeRange'),
         wholeWeight: get('wholeWeight'),
         farmCount: get('farmCount'),
         factoryCount: get('factoryCount'),
@@ -598,7 +605,6 @@ function toast(msg){
     state.receivingDate = group.receivingDate;
     state.receivedFrom = group.receivedFrom;
     state.toBeProcessedFor = group.toBeProcessedFor;
-    state.sizeRange = group.sizeRange;
     state.basketEntries = group.entries.map((e, n) => ({
       id: 'entry_' + Date.now() + '_' + n + '_' + Math.random().toString(36).slice(2,7),
       ...e
@@ -608,9 +614,10 @@ function toast(msg){
     setEditNotice();
     renderAll();
     const unknownFarm = group.receivedFrom && !window.Lookups.isValid('farms', group.receivedFrom);
-    const unknownSize = group.sizeRange && !window.Lookups.isValid('sizeRanges', group.sizeRange);
+    const unknownSize = state.basketEntries.some(e =>
+      e.sizeRange && !window.Lookups.isValid('sizeRanges', e.sizeRange));
     if(unknownFarm || unknownSize){
-      toast('Imported — check the highlighted Receiving Info fields.');
+      toast('Imported — check the farm and the basket size ranges.');
     } else {
       toast(`Imported ${state.basketEntries.length} basket entries. Enter the job no.`);
     }
@@ -625,7 +632,7 @@ function toast(msg){
       const btn = document.createElement('button');
       btn.className = 'btn btn-flat';
       btn.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:6px; padding:8px 10px; font-size:11.5px;';
-      btn.textContent = `${g.receivingDate} · ${g.receivedFrom} · ${g.toBeProcessedFor} · ${g.sizeRange} — ${g.entries.length} basket${g.entries.length===1?'':'s'}`;
+      btn.textContent = `${g.receivingDate} · ${g.receivedFrom} · ${g.toBeProcessedFor} — ${g.entries.length} basket${g.entries.length===1?'':'s'}`;
       btn.addEventListener('click', ()=>{ closeImportPick(); applyImport(groups[i]); });
       list.appendChild(btn);
     });
@@ -654,7 +661,8 @@ function toast(msg){
 
   function wire(){
     window.Lookups.upgrade('h_receivedFrom', 'farms');
-    window.Lookups.fill('h_sizeRange', 'sizeRanges', { selected: state.sizeRange });
+    // Size range now belongs to the basket being captured, so it starts blank.
+    window.Lookups.fill('h_sizeRange', 'sizeRanges', { selected: '' });
     window.Lookups.fill('h_jobPrefix', 'jobPrefixes', { selected: splitJobNo(state.jobNo).prefix });
     bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
