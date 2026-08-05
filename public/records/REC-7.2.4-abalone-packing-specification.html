@@ -33,7 +33,7 @@
   .btn-flat:hover{ background:#d5d8d6; }
   .btn:disabled{ opacity:.45; cursor:not-allowed; }
 
-  .dc-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
+  .dc-body{ padding:12px 14px 40px; max-width:1000px; margin:0 auto; }
   .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
   .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:#fbfbfa; border-radius:5px 5px 0 0; }
   .panel-head h2{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
@@ -41,6 +41,7 @@
 
   .grid{ display:grid; gap:8px; }
   .grid-6{ grid-template-columns:repeat(6,1fr); }
+  .grid-5{ grid-template-columns:repeat(5,1fr); }
   .grid-4{ grid-template-columns:repeat(4,1fr); }
   .grid-3{ grid-template-columns:repeat(3,1fr); }
   .grid-2{ grid-template-columns:repeat(2,1fr); }
@@ -50,11 +51,19 @@
   .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
   .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
   .record-status{ font-size:10px; color:#54606b; font-weight:600; padding:4px 8px; background:#e2e4e3; border-radius:3px; }
+  .muted{ color:#8a939b; }
   .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:11px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .toast.show{ opacity:1; }
 
+  .entry-table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:11px; }
+  .entry-table th, .entry-table td{ padding:5px 6px; text-align:left; }
+  .entry-table thead tr{ border-bottom:1px solid var(--line-soft); color:#54606b; }
+  .entry-table tbody tr{ border-bottom:1px solid var(--line-soft); }
+  .entry-table .calc-col{ color:var(--steel); font-weight:600; }
+
   @media (max-width:900px){
     .grid-6{grid-template-columns:repeat(3,1fr);}
+    .grid-5{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 </style>
@@ -72,15 +81,76 @@
   <div class="dc-body">
 
     <div class="panel">
-      <div class="panel-head"><h2>Pack Specification</h2></div>
+      <div class="panel-head"><h2>Packing Specification</h2></div>
       <div class="panel-body">
-        <div class="grid grid-6" style="margin-bottom:8px;">
-          <label class="field">Effective date<input id="h_effectiveDate" type="date"></label>
-          <label class="field">Changed date<input id="h_changedDate" type="date"></label>
-          <label class="field">Pcs<input id="h_pcs" type="number"></label>
-          <label class="field">DW<input id="h_dw" placeholder="Drained weight"></label>
-          <label class="field">Ingo<input id="h_ingo" type="number"></label>
+        <!-- Capture widget only: the confirmed table below is the record, so this whole
+             block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
+        <div id="specRefCapture" class="no-print">
+          <div class="grid grid-4">
+            <label class="field">Pcs<input id="r_pcs" type="number"></label>
+            <label class="field">Drained weight<input id="r_drainedWeight" type="number" step="0.01"></label>
+            <label class="field">Ingo weight — min<input id="r_minIngo" type="number" step="0.01"></label>
+            <label class="field">Ingo weight — max<input id="r_maxIngo" type="number" step="0.01"></label>
+          </div>
         </div>
+        <div class="actions no-print" style="margin-top:8px;">
+          <span class="status-line" id="specRefEditNotice"></span>
+          <button class="btn btn-flat" id="cancelSpecRefBtn" style="display:none;">Cancel edit</button>
+          <button class="btn btn-primary" id="addSpecRefBtn">Add row</button>
+        </div>
+
+        <table class="entry-table" id="specRefTable">
+          <thead>
+            <tr>
+              <th>Pcs</th>
+              <th>Drained weight</th>
+              <th>Ingo weight (min-max)</th>
+              <th class="no-print"></th>
+            </tr>
+          </thead>
+          <tbody id="specRefTableBody"></tbody>
+        </table>
+        <div class="muted" id="specRefTableEmpty" style="padding:8px 2px; font-size:11px;">No rows added yet.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Packing Specification Calculation</h2></div>
+      <div class="panel-body">
+        <!-- Capture widget only: the confirmed table below is the record, so this whole
+             block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
+        <div id="rowCapture" class="no-print">
+          <div class="grid grid-5">
+            <label class="field">Pcs<input id="h_pcs" type="number"></label>
+            <label class="field">Drained weight (X)<input id="h_drainedWeight" type="number" step="0.01"></label>
+            <label class="field">Ingo weight (Y)<input id="h_ingoWeight" type="number" step="0.01"></label>
+            <label class="field">Min spec<input id="h_minSpec" type="number" step="0.01"></label>
+            <label class="field">Max spec<input id="h_maxSpec" type="number" step="0.01"></label>
+          </div>
+        </div>
+        <div class="actions no-print" style="margin-top:8px;">
+          <span class="status-line" id="entryEditNotice"></span>
+          <button class="btn btn-flat" id="cancelEntryBtn" style="display:none;">Cancel edit</button>
+          <button class="btn btn-primary" id="confirmEntryBtn">Confirm & add row</button>
+        </div>
+
+        <table class="entry-table" id="specTable">
+          <thead>
+            <tr>
+              <th>Pcs</th>
+              <th>Drained wt (X)</th>
+              <th>Ingo wt (Y)</th>
+              <th>Cookout %</th>
+              <th>Min spec</th>
+              <th>Max spec</th>
+              <th>New min ingo</th>
+              <th>New max ingo</th>
+              <th class="no-print"></th>
+            </tr>
+          </thead>
+          <tbody id="specTableBody"></tbody>
+        </table>
+        <div class="muted" id="specTableEmpty" style="padding:8px 2px; font-size:11px;">No rows added yet.</div>
       </div>
     </div>
 
@@ -138,14 +208,17 @@ document.addEventListener('DOMContentLoaded', function () {
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',
-      effectiveDate:'', changedDate:'', pcs:'', dw:'', ingo:'', comments:'',
+      specRefRows: [], rows: [], comments:'',
       checkedBy:'', checkedByDate:'',
       createdAt: null, updatedAt: null
     };
   }
 
   let state = newRecord();
-function toast(msg){
+  let editingRowId = null;
+  let editingSpecRefId = null;
+
+  function toast(msg){
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'), 2000);
   }
@@ -160,34 +233,187 @@ function toast(msg){
     catch(e){ return false; }
   }
 
+  const ROW_FIELDS = ['pcs','drainedWeight','ingoWeight','minSpec','maxSpec'];
+  const SPEC_REF_FIELDS = ['pcs','drainedWeight','minIngo','maxIngo'];
+
+  function emptyRowInputs(){
+    ROW_FIELDS.forEach(f=>{ $('h_'+f).value = ''; });
+  }
+
+  function emptySpecRefInputs(){
+    SPEC_REF_FIELDS.forEach(f=>{ $('r_'+f).value = ''; });
+  }
+
+  function fmt(n){
+    return (n === null || n === undefined || !isFinite(n)) ? '—' : n.toFixed(2);
+  }
+
+  /* Cookout % = drained weight (X) ÷ ingo weight (Y), taken on the can product
+   * as opened. It is then applied to the row's own min/max drained-weight spec
+   * to back out the equivalent ingo-weight range -- the range the packer should
+   * actually target so the finished can lands inside the drained-weight spec. */
+  function calcRow(entry){
+    const x = parseFloat(entry.drainedWeight);
+    const y = parseFloat(entry.ingoWeight);
+    const minSpec = parseFloat(entry.minSpec);
+    const maxSpec = parseFloat(entry.maxSpec);
+    const cookoutPct = (isFinite(x) && isFinite(y) && y !== 0) ? (x / y) * 100 : null;
+    const cookoutFrac = cookoutPct !== null ? cookoutPct / 100 : null;
+    const newMinIngo = (cookoutFrac && isFinite(minSpec)) ? minSpec / cookoutFrac : null;
+    const newMaxIngo = (cookoutFrac && isFinite(maxSpec)) ? maxSpec / cookoutFrac : null;
+    return { cookoutPct, newMinIngo, newMaxIngo };
+  }
+
   function renderForm(){
-    $('h_effectiveDate').value = state.effectiveDate;
-    $('h_changedDate').value = state.changedDate;
-    $('h_pcs').value = state.pcs;
-    $('h_dw').value = state.dw;
-    $('h_ingo').value = state.ingo;
     $('h_comments').value = state.comments;
     $('f_checkedBy').value = state.checkedBy;
     $('f_checkedByDate').value = state.checkedByDate;
   }
 
   function bindInputs(){
-    const fields = ['effectiveDate','changedDate','pcs','dw','ingo','comments','checkedBy','checkedByDate'];
-    fields.forEach(f=>{
-      const id = f.startsWith('checkedBy') ? 'f_'+f : 'h_'+f;
-      const el = $(id);
-      if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
+    $('h_comments').addEventListener('input', ()=>{ state.comments = $('h_comments').value; });
+    ['checkedBy','checkedByDate'].forEach(f=>{
+      const el = $('f_'+f);
+      el.addEventListener('input', ()=>{ state[f] = el.value; });
     });
   }
 
+  function renderRowTable(){
+    const body = $('specTableBody');
+    const empty = $('specTableEmpty');
+    body.innerHTML = '';
+    if(!state.rows.length){
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    state.rows.forEach(row=>{
+      const calc = calcRow(row);
+      const tr = document.createElement('tr');
+      if(row.id === editingRowId) tr.style.background = '#fbf0dc';
+      tr.innerHTML = `
+        <td>${row.pcs || ''}</td>
+        <td>${row.drainedWeight || ''}</td>
+        <td>${row.ingoWeight || ''}</td>
+        <td class="calc-col">${fmt(calc.cookoutPct)}</td>
+        <td>${row.minSpec || ''}</td>
+        <td>${row.maxSpec || ''}</td>
+        <td class="calc-col">${fmt(calc.newMinIngo)}</td>
+        <td class="calc-col">${fmt(calc.newMaxIngo)}</td>
+        <td class="no-print"><button class="btn btn-flat editRowBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Edit</button> <button class="btn btn-flat deleteRowBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Delete</button></td>
+      `;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll('.editRowBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>startEditRow(btn.getAttribute('data-id')));
+    });
+    body.querySelectorAll('.deleteRowBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>deleteRow(btn.getAttribute('data-id')));
+    });
+  }
+
+  function renderSpecRefTable(){
+    const body = $('specRefTableBody');
+    const empty = $('specRefTableEmpty');
+    body.innerHTML = '';
+    if(!state.specRefRows.length){
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    state.specRefRows.forEach(row=>{
+      const tr = document.createElement('tr');
+      if(row.id === editingSpecRefId) tr.style.background = '#fbf0dc';
+      const min = row.minIngo || '';
+      const max = row.maxIngo || '';
+      const range = (min || max) ? `${min}-${max}` : '';
+      tr.innerHTML = `
+        <td>${row.pcs || ''}</td>
+        <td>${row.drainedWeight || ''}</td>
+        <td>${range}</td>
+        <td class="no-print"><button class="btn btn-flat editSpecRefBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Edit</button> <button class="btn btn-flat deleteSpecRefBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Delete</button></td>
+      `;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll('.editSpecRefBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>startEditSpecRef(btn.getAttribute('data-id')));
+    });
+    body.querySelectorAll('.deleteSpecRefBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>deleteSpecRef(btn.getAttribute('data-id')));
+    });
+  }
+
+  function setSpecRefEditNotice(){
+    const notice = $('specRefEditNotice');
+    const cancelBtn = $('cancelSpecRefBtn');
+    const addBtn = $('addSpecRefBtn');
+    if(editingSpecRefId){
+      notice.textContent = `Editing row — updating will overwrite this line.`;
+      cancelBtn.style.display = '';
+      addBtn.textContent = 'Confirm edit';
+    } else {
+      notice.textContent = '';
+      cancelBtn.style.display = 'none';
+      addBtn.textContent = 'Add row';
+    }
+  }
+
+  function addSpecRef(){
+    const values = {};
+    SPEC_REF_FIELDS.forEach(f=>{ values[f] = $('r_'+f).value; });
+    if(!values.drainedWeight){ toast('Enter a drained weight first.'); return; }
+
+    if(editingSpecRefId){
+      const idx = state.specRefRows.findIndex(r=>r.id === editingSpecRefId);
+      if(idx === -1){ toast('Row no longer exists.'); }
+      else{
+        state.specRefRows[idx] = { ...state.specRefRows[idx], ...values };
+        toast('Row updated.');
+      }
+      editingSpecRefId = null;
+    } else {
+      state.specRefRows.push({ id: 'specref_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), ...values });
+      toast('Row added.');
+    }
+
+    emptySpecRefInputs();
+    setSpecRefEditNotice();
+    renderSpecRefTable();
+  }
+
+  function startEditSpecRef(rowId){
+    const row = state.specRefRows.find(r=>r.id === rowId);
+    if(!row) return;
+    editingSpecRefId = rowId;
+    SPEC_REF_FIELDS.forEach(f=>{ $('r_'+f).value = row[f] || ''; });
+    setSpecRefEditNotice();
+    renderSpecRefTable();
+  }
+
+  function cancelSpecRefEdit(){
+    editingSpecRefId = null;
+    emptySpecRefInputs();
+    setSpecRefEditNotice();
+    renderSpecRefTable();
+  }
+
+  function deleteSpecRef(rowId){
+    state.specRefRows = state.specRefRows.filter(r=>r.id !== rowId);
+    if(editingSpecRefId === rowId){ editingSpecRefId = null; emptySpecRefInputs(); setSpecRefEditNotice(); }
+    renderSpecRefTable();
+  }
+
   function updateRecordStatus(){
-    const dateStr = state.effectiveDate ? state.effectiveDate : 'No date';
     const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${state.rows.length} row${state.rows.length===1?'':'s'} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   function renderAll(){
     renderForm();
+    renderSpecRefTable();
+    renderRowTable();
     updateRecordStatus();
     $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
   }
@@ -208,19 +434,90 @@ function toast(msg){
   }
 
   function generatePdf(){
-    document.title = `REC_7.2.4_ABALONE_PACKING_${state.effectiveDate||''}`;
+    document.title = `REC_7.2.4_ABALONE_PACKING_${state.id||'draft'}`;
     window.print();
   }
 
-function wire(){
-bindInputs();
+  function readRowInputs(){
+    const entry = {};
+    ROW_FIELDS.forEach(f=>{ entry[f] = $('h_'+f).value; });
+    return entry;
+  }
+
+  function setEditNotice(){
+    const notice = $('entryEditNotice');
+    const cancelBtn = $('cancelEntryBtn');
+    const confirmBtn = $('confirmEntryBtn');
+    if(editingRowId){
+      notice.textContent = `Editing row — updating will overwrite this line.`;
+      cancelBtn.style.display = '';
+      confirmBtn.textContent = 'Confirm edit';
+    } else {
+      notice.textContent = '';
+      cancelBtn.style.display = 'none';
+      confirmBtn.textContent = 'Confirm & add row';
+    }
+  }
+
+  function confirmRow(){
+    const values = readRowInputs();
+    if(!values.drainedWeight || !values.ingoWeight){ toast('Enter drained weight and ingo weight first.'); return; }
+
+    if(editingRowId){
+      const idx = state.rows.findIndex(r=>r.id === editingRowId);
+      if(idx === -1){ toast('Row no longer exists.'); }
+      else{
+        state.rows[idx] = { ...state.rows[idx], ...values };
+        toast('Row updated.');
+      }
+      editingRowId = null;
+    } else {
+      state.rows.push({ id: 'row_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), ...values });
+      toast('Row added.');
+    }
+
+    emptyRowInputs();
+    setEditNotice();
+    renderRowTable();
+    updateRecordStatus();
+  }
+
+  function startEditRow(rowId){
+    const row = state.rows.find(r=>r.id === rowId);
+    if(!row) return;
+    editingRowId = rowId;
+    ROW_FIELDS.forEach(f=>{ $('h_'+f).value = row[f] || ''; });
+    setEditNotice();
+    renderRowTable();
+  }
+
+  function cancelRowEdit(){
+    editingRowId = null;
+    emptyRowInputs();
+    setEditNotice();
+    renderRowTable();
+  }
+
+  function deleteRow(rowId){
+    state.rows = state.rows.filter(r=>r.id !== rowId);
+    if(editingRowId === rowId){ editingRowId = null; emptyRowInputs(); setEditNotice(); }
+    renderRowTable();
+    updateRecordStatus();
+  }
+
+  function wire(){
+    bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
+    $('confirmEntryBtn').addEventListener('click', confirmRow);
+    $('cancelEntryBtn').addEventListener('click', cancelRowEdit);
+    $('addSpecRefBtn').addEventListener('click', addSpecRef);
+    $('cancelSpecRefBtn').addEventListener('click', cancelSpecRefEdit);
     $('exportBtn').addEventListener('click', ()=>{
       const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `abalone_packing_${state.effectiveDate||'draft'}.json`;
+      a.download = `abalone_packing_${state.id||'draft'}.json`;
       a.click();
     });
     $('generatePdfBtn').addEventListener('click', generatePdf);
