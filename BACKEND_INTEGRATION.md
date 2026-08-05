@@ -3,7 +3,7 @@
 **Nothing is connected yet, on purpose.** The forms currently save to the browser they are
 opened in. Form look, feel and ease-of-input come first; the backend comes after. This file
 describes the seam that was left open so connecting it later is a small, contained job rather
-than a rewrite of 144 pages.
+than a rewrite of 146 pages.
 
 ## The intended architecture
 
@@ -33,10 +33,10 @@ scheduled batches over a single controlled connection.
 
 Everything the forms save goes through `window.storage` in
 [public/lib/data-store.js](public/lib/data-store.js). No record page talks to storage directly —
-all 144 of them only ever call `window.storage`. That is the entire surface to reconnect.
+all of them only ever call `window.storage`. That is the entire surface to reconnect.
 
-To connect the API, **do not edit `data-store.js` and do not touch any record page.** Add one new
-file:
+To connect the API, **do not edit `data-store.js` and do not touch any record page.** Fill in
+[public/lib/api-backend.js](public/lib/api-backend.js), which already implements this shape:
 
 ```js
 // public/lib/api-backend.js
@@ -85,9 +85,6 @@ data starts flowing to it and per-device state correctly stays put.
   "Acting as" selector written straight to `localStorage`, deliberately bypassing the adapter.
   Real identity arrives with Entra ID login, and that is a separate change from this seam — the
   role names are already in place so it drops into a structure that has meaning.
-- **The server tier** ([src/index.ts](src/index.ts), [prisma/schema.prisma](prisma/schema.prisma))
-  is the app-owned PostgreSQL side of the diagram. It exists as a scaffold and is not yet what
-  the forms talk to.
 
 ## Not yet decided
 
@@ -108,4 +105,4 @@ assumption:
 Static JS in `public/lib/` is cached hard by browsers. When editing a lib file, bump its `?v=N` on
 **every** `<script src="../lib/....js?v=N">` tag that loads it, or a stale copy silently breaks the
 page — a missing export throws inside an async IIFE with no visible console error. Current
-versions: `data-store.js?v=4` (135 pages), `traceability.js?v=2` (11 pages).
+versions: `data-store.js?v=4`, `traceability.js?v=2`.
