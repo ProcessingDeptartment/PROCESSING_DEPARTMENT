@@ -16,10 +16,11 @@
   }
 
   const root = document.querySelector('.max-w-5xl') || document.body;
-  const statusEl = document.getElementById('handover-db-status');
-  const loadBtn = document.getElementById('handover-db-load-btn');
-  const saveBtn = document.getElementById('handover-db-save-btn');
-  const exportBtn = document.getElementById('handover-db-export-btn');
+  let statusEl = null;
+  let loadBtn = null;
+  let saveBtn = null;
+  let exportBtn = null;
+  let recordSelect = null;
 
   let debounceTimer = null;
 
@@ -49,6 +50,45 @@
     if (!statusEl) return;
     statusEl.textContent = message;
     statusEl.style.color = isError ? '#b91c1c' : '#0f172a';
+  }
+
+  function getSavedRecordsForSelect() {
+    return getAllSavedRecords().map(record => ({
+      id: record.id,
+      label: `${record.date} ${record.shift} (${record.status || 'draft'})`
+    })).sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  function populateRecordSelect() {
+    if (!recordSelect) return;
+    const records = getSavedRecordsForSelect();
+    recordSelect.innerHTML = '';
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = 'Select saved handover';
+    recordSelect.appendChild(emptyOption);
+    records.forEach(record => {
+      const opt = document.createElement('option');
+      opt.value = record.id;
+      opt.textContent = record.label;
+      recordSelect.appendChild(opt);
+    });
+  }
+
+  function selectSavedRecord(recordId) {
+    if (!recordId) return;
+    const record = getAllSavedRecords().find(r => r.id === recordId);
+    if (!record) {
+      updateStatus('Selected saved handover not found.', true);
+      return;
+    }
+    const [, date, shift] = recordId.split(':');
+    const dateEl = document.getElementById('hDate');
+    const shiftEl = document.getElementById('hShift');
+    if (dateEl) dateEl.value = date;
+    if (shiftEl) shiftEl.value = shift;
+    restoreFormState(record);
+    updateStatus(`Loaded saved handover ${recordId}.`);
   }
 
   function getIndex() {
@@ -397,6 +437,9 @@
     if (exportBtn) {
       exportBtn.addEventListener('click', exportSqlite);
     }
+    if (recordSelect) {
+      recordSelect.addEventListener('change', () => selectSavedRecord(recordSelect.value));
+    }
 
     const fieldElements = Array.from(root.querySelectorAll('input,textarea,select'));
     fieldElements.forEach(el => {
@@ -420,9 +463,14 @@
     panel.className = 'section-card no-print';
     panel.innerHTML = `
       <div class="section-title">Handover database</div>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
         <div class="text-sm text-slate-600 leading-6">
           This handover record is stored separately from other pages. Use the footer date + shift to identify the draft.
+        </div>
+        <div>
+          <select id="handover-db-record-select" class="bubble-btn w-full text-left" style="min-height:40px; font-size:12px;">
+            <option value="">Loading saved handovers...</option>
+          </select>
         </div>
         <div><button id="handover-db-load-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Load draft</button></div>
         <div><button id="handover-db-save-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Save now</button></div>
@@ -437,18 +485,22 @@
     } else {
       root.insertBefore(panel, root.firstChild);
     }
+
+    statusEl = document.getElementById('handover-db-status');
+    loadBtn = document.getElementById('handover-db-load-btn');
+    saveBtn = document.getElementById('handover-db-save-btn');
+    exportBtn = document.getElementById('handover-db-export-btn');
+    recordSelect = document.getElementById('handover-db-record-select');
+    populateRecordSelect();
   }
 
   function init() {
     insertStatusPanel();
     attachListeners();
-    if (loadBtn && saveBtn && exportBtn) {
-      // Refresh references now that the panel exists in the DOM.
-      window.requestAnimationFrame(() => {
-        updateStatus('Autosave is active. Choose date + shift to identify this handover.');
-        checkCurrentRecord();
-      });
-    }
+    window.requestAnimationFrame(() => {
+      updateStatus('Autosave is active. Choose date + shift to identify this handover.');
+      checkCurrentRecord();
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);
