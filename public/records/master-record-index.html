@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 01 Master Record Index</title>
 <script src="../lib/palette-map.js"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   body{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--palette-ink); background:var(--palette-paper);
@@ -310,21 +311,16 @@
   const RECORD_NUMBER_PREFIX = 'record_number_override:';
 
   const CATEGORY_PREFIX = 'record_category:';
-  const CATEGORIES = [
-    ['', 'Default'],
-    ['sauce', 'Sauce'],
-    ['dry', 'Dry'],
-    ['cleaning/hygiene', 'Cleaning / Hygiene'],
-    ['traceability', 'Traceability'],
-    ['quality_general', 'Quality (general)'],
-    ['canning', 'Canning (lab testing)'],
-    ['live', 'Live production'],
-    ['technical/maintenance', 'Technical / Maintenance'],
-    ['warehouse/stock_management', 'Warehouse / Stock management'],
-    ['unknown5', 'Cross-contamination control'],
-    ['unknown6', 'Expiration & dating'],
-    ['sop', 'SOPs'],
-  ];
+
+  // Use palette names from Lookups.lists.palettes where available so the
+  // category dropdown stays in sync with the central palette list.
+  function labelForPalette(p) {
+    if (!p) return 'Default';
+    return String(p).replace(/\//g, ' / ').replace(/[-_]/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
+  }
+
+  const CATEGORIES = [['', 'Default']].concat((window.Lookups && window.Lookups.get('palettes') || [])
+    .map(p => [p, labelForPalette(p)]));
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function rowId(r) { return r.recordKey || ('doc:' + r.docNo); }
