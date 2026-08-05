@@ -83,7 +83,14 @@
   .fr-empty{ padding:18px; text-align:center; color:#8a939b; }
   .fr-badge{ display:inline-block; padding:1px 7px; border-radius:9px; font-size:10px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; background:#eceeef; color:#54606b; white-space:nowrap; }
   .fr-badge-ok{ background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); }
+  .fr-badge-fail{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); }
   .fr-locked{ padding:8px 11px; margin-bottom:10px; border-left:3px solid var(--palette-ok,#2f6b3a); background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); font-size:11.5px; font-weight:600; }
+  .fr-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
+  .fr-notice.show{ display:block; }
+  .fr-notice-due{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); border:1px solid #e8b8b3; }
+  .fr-history-list{ max-height:220px; overflow:auto; border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; }
+  .fr-history-item{ padding:7px 10px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:11.5px; }
+  .fr-history-item:last-child{ border-bottom:none; }
   .fr-section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-label,#54606b); margin:14px 0 8px; }
   .fr-section-title:first-child{ margin-top:0; }
   .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; }
@@ -246,6 +253,29 @@
       return f ? f.label : key;
     }
 
+    // On by default -- every controlled record needs a verification step -- so a
+    // record opts OUT with showVerificationStrip:false rather than opting in.
+    const showVerification = config.showVerificationStrip !== false;
+    const verificationHtml = showVerification ? `
+        <div class="fr-panel no-print">
+          <div class="fr-panel-head"><h2>Verification</h2></div>
+          <div class="fr-panel-body">
+            <div class="fr-notice fr-notice-due" id="fr_verifyNotice"></div>
+            <h3 class="fr-section-title" style="margin-top:0;">Entries to verify</h3>
+            <div class="fr-history-list" id="fr_verifySelect" style="margin-bottom:10px;"></div>
+            <div class="fr-grid fr-grid-3" style="margin-bottom:10px;">
+              <label class="fr-field">Verified by<input id="fr_verifiedBy"></label>
+              <label class="fr-field">Signature (type name to sign)<input id="fr_verifiedSig"></label>
+              <label class="fr-field">Date<input id="fr_verifiedDate" type="date"></label>
+            </div>
+            <div class="fr-actions" style="justify-content:flex-start; margin-top:0;">
+              <button class="fr-btn fr-btn-primary fr-btn-sm" id="fr_saveVerificationBtn">Log verification</button>
+            </div>
+            <h3 class="fr-section-title">Verification history</h3>
+            <div class="fr-history-list" id="fr_verificationHistory"></div>
+          </div>
+        </div>` : '';
+
     mount.innerHTML = `
       <div class="fr-top">
         <div class="doc-line">
@@ -273,6 +303,7 @@
             <div id="fr_table" class="fr-table-wrap"></div>
           </div>
         </div>
+        ${verificationHtml}
       </div>
       <div id="fr_printSheet" class="fr-sheet"></div>
       <div id="fr_modal" class="fr-modal-overlay no-print" style="display:none;">
@@ -336,9 +367,11 @@
           if (v === '' || v == null) v = '—';
           html += `<td>${esc(v)}</td>`;
         });
-        html += `<td class="no-print">${isSubmitted(sub)
-          ? '<span class="fr-badge fr-badge-ok">✓ Submitted</span>'
-          : '<span class="fr-badge">Draft</span>'}</td>`;
+        html += `<td class="no-print">${sub.verification
+          ? '<span class="fr-badge fr-badge-ok">✓ Verified</span>'
+          : isSubmitted(sub)
+            ? '<span class="fr-badge fr-badge-ok">✓ Submitted</span>'
+            : '<span class="fr-badge">Draft</span>'}</td>`;
         html += `<td class="no-print" style="white-space:nowrap;">
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">${isSubmitted(sub) ? 'View' : 'Open'}</button>
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-pdf="${sub.id}" title="Print this submission as the paper form">PDF</button>
@@ -507,6 +540,8 @@
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       closeForm();
       renderTable();
+      // Submitting adds it to the verifier's pick list, so that has to redraw too.
+      refreshVerification();
       toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
     }
 
@@ -579,9 +614,9 @@
         <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(who)}</td>
             <td class="fr-sheet-lbl">Signature:</td><td></td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(when)}</td></tr>
-        <tr><td class="fr-sheet-lbl">Verified by:</td><td></td>
-            <td class="fr-sheet-lbl">Signature:</td><td></td>
-            <td class="fr-sheet-lbl">Date:</td><td></td></tr>
+        <tr><td class="fr-sheet-lbl">Verified by:</td><td>${esc(sub.verification ? sub.verification.verifiedBy : '')}</td>
+            <td class="fr-sheet-lbl">Signature:</td><td>${esc(sub.verification ? sub.verification.verifiedSig : '')}</td>
+            <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification ? sub.verification.verifiedDate : '')}</td></tr>
       </tbody></table>`;
     }
 
@@ -618,6 +653,83 @@
       printSheets([sub], safeKey(config.docCode) + '_' + safeKey(config.title) + '_' + safeKey(stamp));
     }
 
+    // ---------- verification strip ----------
+    // Mirrors monitoring-log.js's verification strip: the verifier signs off named
+    // submissions, not "the record" in the abstract, so they pick exactly which
+    // submitted entries this signature covers.
+    let refreshVerification = () => {};
+    if (showVerification) {
+      function pendingForVerification() {
+        return submissions.filter(s => isSubmitted(s) && !s.verification);
+      }
+
+      function renderVerifySelect() {
+        const target = el('fr_verifySelect');
+        if (!target) return;
+        const pending = pendingForVerification();
+        if (!pending.length) {
+          target.innerHTML = `<div class="fr-history-item fr-muted">No submitted entries are waiting to be verified.</div>`;
+          return;
+        }
+        target.innerHTML = `<div class="fr-history-item"><label style="font-weight:700;">
+            <input type="checkbox" id="fr_verifyAll"> Select all (${pending.length})</label></div>` +
+          pending.map(s => `<div class="fr-history-item"><label>
+            <input type="checkbox" class="fr-verify-pick" value="${esc(s.id)}">
+            ${esc(dateOf(s.values) || '(no date)')}</label></div>`).join('');
+        el('fr_verifyAll').addEventListener('change', ev => {
+          target.querySelectorAll('.fr-verify-pick').forEach(cb => { cb.checked = ev.target.checked; });
+        });
+      }
+
+      async function renderVerificationHistory() {
+        const raw = await storeGet('verification_log:' + config.recordKey, true);
+        let hist = [];
+        try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
+        renderVerifySelect();
+        const notice = el('fr_verifyNotice');
+        const pendingCount = pendingForVerification().length;
+        if (pendingCount) {
+          notice.innerHTML = `${pendingCount} submitted ${pendingCount === 1 ? 'entry is' : 'entries are'} awaiting verification.`;
+          notice.classList.add('show');
+        } else {
+          notice.innerHTML = '';
+          notice.classList.remove('show');
+        }
+        const target = el('fr_verificationHistory');
+        if (!hist.length) { target.innerHTML = `<div class="fr-history-item fr-muted">No verification logged yet.</div>`; return; }
+        target.innerHTML = hist.slice().reverse().map(v => `
+          <div class="fr-history-item"><span>${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} <span class="fr-muted">(signed: ${esc(v.verifiedSig)}${v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : ''})</span></span></div>`).join('');
+      }
+
+      el('fr_saveVerificationBtn').addEventListener('click', async () => {
+        const verifiedBy = el('fr_verifiedBy').value.trim();
+        const verifiedSig = el('fr_verifiedSig').value.trim();
+        const verifiedDate = el('fr_verifiedDate').value;
+        if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, signature and date are all required.'); return; }
+
+        const picked = [...document.querySelectorAll('.fr-verify-pick:checked')].map(cb => cb.value);
+        if (pendingForVerification().length && !picked.length) { toast('Tick at least one entry to verify.'); return; }
+
+        const record = { verifiedBy, verifiedSig, verifiedDate, loggedAt: Date.now() };
+        const raw = await storeGet('verification_log:' + config.recordKey, true);
+        let hist = [];
+        try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
+        hist.push(Object.assign({ entryIds: picked }, record));
+        await storeSet('verification_log:' + config.recordKey, JSON.stringify(hist), true);
+
+        if (picked.length) {
+          const set = new Set(picked);
+          submissions.forEach(s => { if (set.has(s.id)) s.verification = record; });
+          await persist();
+          renderTable();
+        }
+        toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');
+        el('fr_verifiedBy').value = ''; el('fr_verifiedSig').value = ''; el('fr_verifiedDate').value = '';
+        renderVerificationHistory();
+      });
+      refreshVerification = renderVerificationHistory;
+    }
+
     el('fr_addBtn').addEventListener('click', () => openForm(null));
     el('fr_cancelBtn').addEventListener('click', closeForm);
     el('fr_saveBtn').addEventListener('click', () => saveForm(false));
@@ -634,6 +746,7 @@
     renderDocBadge();
     await load();
     renderTable();
+    refreshVerification();
   }
 
   /* Controlled-copy title block on every printed page. The paper baseline comes from the
