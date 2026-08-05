@@ -1,0 +1,461 @@
+(function () {
+  const STORAGE_PREFIX = 'handover-db:';
+  const INDEX_KEY = STORAGE_PREFIX + 'index';
+  const RECORD_PREFIX = STORAGE_PREFIX + 'record:';
+  const UNSAVED_PREFIX = STORAGE_PREFIX + 'unsaved:';
+  const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
+
+  const pageConfigs = [
+    { suffix: 'production-handover-report.html', pageKey: 'production', pageLabel: 'Production' },
+    { suffix: 'quality-handover-report.html', pageKey: 'quality', pageLabel: 'Quality' }
+  ];
+
+  const pageConfig = pageConfigs.find(cfg => window.location.pathname.includes(cfg.suffix));
+  if (!pageConfig) {
+    return;
+  }
+
+  const root = document.querySelector('.max-w-5xl') || document.body;
+  const statusEl = document.getElementById('handover-db-status');
+  const loadBtn = document.getElementById('handover-db-load-btn');
+  const saveBtn = document.getElementById('handover-db-save-btn');
+  const exportBtn = document.getElementById('handover-db-export-btn');
+
+  let debounceTimer = null;
+
+  function getInputValue(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  function getCurrentRecordId() {
+    const date = getInputValue('hDate');
+    const shift = getInputValue('hShift');
+    if (!date || !shift) {
+      return null;
+    }
+    return `${pageConfig.pageKey}:${date}:${shift}`;
+  }
+
+  function getRecordKey(recordId) {
+    return RECORD_PREFIX + recordId;
+  }
+
+  function getUnsavedKey() {
+    return UNSAVED_PREFIX + pageConfig.pageKey;
+  }
+
+  function updateStatus(message, isError = false) {
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.style.color = isError ? '#b91c1c' : '#0f172a';
+  }
+
+  function getIndex() {
+    try {
+      return JSON.parse(localStorage.getItem(INDEX_KEY) || '{}');
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveIndex(index) {
+    try {
+      localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+    } catch (e) {
+      console.error('handover-db: unable to save index', e);
+    }
+  }
+
+  function collectFormState() {
+    const state = {
+      page: pageConfig.pageKey,
+      pageLabel: pageConfig.pageLabel,
+      updatedAt: Date.now(),
+      status: 'draft',
+      fields: {},
+      bubbleButtons: {},
+      jobLists: {},
+      savedAt: null
+    };
+
+    const fieldElements = Array.from(root.querySelectorAll('input,textarea,select'));
+    fieldElements.forEach(el => {
+      const key = el.id || el.name;
+      if (!key) return;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        state.fields[key] = { type: el.type, checked: el.checked, value: el.value };
+      } else {
+        state.fields[key] = { type: el.type || el.tagName.toLowerCase(), value: el.value };
+      }
+    });
+
+    const bubbleButtons = Array.from(root.querySelectorAll('.bubble-btn[data-name]'));
+    bubbleButtons.forEach(btn => {
+      state.bubbleButtons[btn.dataset.name] = {
+        conforming: btn.classList.contains('conforming'),
+        nc: btn.classList.contains('nc')
+      };
+    });
+
+    Array.from(root.querySelectorAll('.section-job-list, #nrcs-container')).forEach(container => {
+      if (!container.id) return;
+      state.jobLists[container.id] = container.innerHTML;
+    });
+
+    return state;
+  }
+
+  function restoreFormState(state) {
+    if (!state || !state.fields) {
+      return;
+    }
+
+    Object.entries(state.fields).forEach(([key, info]) => {
+      const el = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
+      if (!el) return;
+      if (info.type === 'checkbox' || info.type === 'radio') {
+        el.checked = !!info.checked;
+      }
+      if (info.value !== undefined) {
+        el.value = info.value;
+      }
+    });
+
+    Object.entries(state.bubbleButtons || {}).forEach(([name, buttonState]) => {
+      const btn = root.querySelector(`.bubble-btn[data-name="${CSS.escape(name)}"]`);
+      if (!btn) return;
+      btn.classList.toggle('conforming', !!buttonState.conforming);
+      btn.classList.toggle('nc', !!buttonState.nc);
+    });
+
+    Object.entries(state.jobLists || {}).forEach(([containerId, html]) => {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.innerHTML = html;
+      }
+    });
+
+    if (typeof window.updateComplianceIcons === 'function') {
+      window.updateComplianceIcons();
+    }
+    if (typeof window.validatePrint === 'function') {
+      window.validatePrint();
+    }
+    if (typeof window.updateDaysInDrying === 'function') {
+      window.updateDaysInDrying();
+    }
+  }
+
+  function maybeAssignUnsaved(recordId) {
+    const unsavedKey = getUnsavedKey();
+    const specificKey = getRecordKey(recordId);
+    const unsavedValue = localStorage.getItem(unsavedKey);
+    if (!unsavedValue || localStorage.getItem(specificKey)) {
+      return;
+    }
+    localStorage.setItem(specificKey, unsavedValue);
+    localStorage.removeItem(unsavedKey);
+  }
+
+  function updateIndexForRecord(recordId, state) {
+    if (!recordId) return;
+    const index = getIndex();
+    const [pageKey, date, shift] = recordId.split(':');
+    index[recordId] = {
+      page: pageKey,
+      pageLabel: pageConfig.pageLabel,
+      date,
+      shift,
+      status: state.status,
+      updatedAt: state.updatedAt,
+      savedAt: state.savedAt || state.updatedAt
+    };
+    saveIndex(index);
+  }
+
+  function saveDraft(options = {}) {
+    const state = collectFormState();
+    state.status = options.finalize ? 'submitted' : 'draft';
+    state.savedAt = Date.now();
+    const recordId = getCurrentRecordId();
+    const storageKey = recordId ? getRecordKey(recordId) : getUnsavedKey();
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+      if (recordId) {
+        maybeAssignUnsaved(recordId);
+        updateIndexForRecord(recordId, state);
+        updateStatus(`Saved ${options.finalize ? 'submitted' : 'draft'} record ${recordId}.`);
+      } else {
+        updateStatus('Draft saved locally. Choose a date and shift to store under a handover ID.');
+      }
+      return true;
+    } catch (e) {
+      console.error('handover-db: save failed', e);
+      updateStatus('Save failed: local storage not available.', true);
+      return false;
+    }
+  }
+
+  function loadDraft() {
+    const recordId = getCurrentRecordId();
+    if (!recordId) {
+      updateStatus('Choose a date and shift before loading a saved handover.', true);
+      return;
+    }
+
+    maybeAssignUnsaved(recordId);
+    const storageKey = getRecordKey(recordId);
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) {
+      updateStatus(`No saved handover found for ${recordId}.`, true);
+      return;
+    }
+
+    try {
+      const state = JSON.parse(raw);
+      restoreFormState(state);
+      const statusText = state.status === 'submitted' ? 'submitted' : 'draft';
+      updateStatus(`Loaded saved ${statusText} handover for ${recordId}.`);
+    } catch (e) {
+      console.error('handover-db: load failed', e);
+      updateStatus('Saved handover could not be loaded.', true);
+    }
+  }
+
+  function getAllSavedRecords() {
+    const index = getIndex();
+    return Object.keys(index).map(id => {
+      const raw = localStorage.getItem(getRecordKey(id));
+      if (!raw) return null;
+      try {
+        const state = JSON.parse(raw);
+        return { id, ...state };
+      } catch (e) {
+        return null;
+      }
+    }).filter(Boolean);
+  }
+
+  function downloadBlob(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }
+
+  function loadSqlJs() {
+    if (window.initSqlJs) {
+      return window.initSqlJs({ locateFile: file => SQL_JS_URL.replace('sql-wasm.js', file) });
+    }
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${SQL_JS_URL}"]`);
+      if (existing) {
+        existing.addEventListener('load', () => {
+          if (window.initSqlJs) {
+            resolve(window.initSqlJs({ locateFile: file => SQL_JS_URL.replace('sql-wasm.js', file) }));
+          } else {
+            reject(new Error('sql.js loaded but initSqlJs missing')); 
+          }
+        });
+        existing.addEventListener('error', () => reject(new Error('sql.js failed to load')));
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = SQL_JS_URL;
+      script.async = true;
+      script.onload = () => {
+        if (!window.initSqlJs) {
+          reject(new Error('sql.js loaded but initSqlJs missing'));
+          return;
+        }
+        window.initSqlJs({ locateFile: file => SQL_JS_URL.replace('sql-wasm.js', file) }).then(resolve).catch(reject);
+      };
+      script.onerror = () => reject(new Error('sql.js failed to load'));
+      document.head.appendChild(script);
+    });
+  }
+
+  async function exportSqlite() {
+    const records = getAllSavedRecords();
+    if (!records.length) {
+      updateStatus('No saved handover records available for export.', true);
+      return;
+    }
+
+    updateStatus('Preparing SQLite export...');
+    try {
+      const SQL = await loadSqlJs();
+      const db = new SQL.Database();
+      db.run(`CREATE TABLE handover_records (
+        id TEXT PRIMARY KEY,
+        page TEXT,
+        pageLabel TEXT,
+        date TEXT,
+        shift TEXT,
+        ownerName TEXT,
+        status TEXT,
+        updatedAt INTEGER,
+        submittedAt INTEGER,
+        payload TEXT
+      );`);
+
+      const stmt = db.prepare('INSERT INTO handover_records VALUES (?,?,?,?,?,?,?,?,?,?)');
+      records.forEach(record => {
+        const [pageKey, date, shift] = record.id.split(':');
+        const ownerName = (record.fields && record.fields.hName && record.fields.hName.value) || '';
+        stmt.run([
+          record.id,
+          record.page,
+          record.pageLabel,
+          date,
+          shift,
+          ownerName,
+          record.status,
+          record.updatedAt || 0,
+          record.submittedAt || null,
+          JSON.stringify(record)
+        ]);
+      });
+      stmt.free();
+
+      const binary = db.export();
+      const blob = new Blob([binary], { type: 'application/octet-stream' });
+      const filename = `handover_records_${pageConfig.pageKey}.dat`;
+      downloadBlob(blob, filename);
+      updateStatus(`Exported ${records.length} handover records to ${filename}.`);
+    } catch (error) {
+      console.error('handover-db: SQLite export failed', error);
+      updateStatus('SQLite export failed; exporting JSON instead.', true);
+      exportJson();
+    }
+  }
+
+  function exportJson() {
+    const records = getAllSavedRecords();
+    const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+    downloadBlob(blob, `handover_records_${pageConfig.pageKey}.json`);
+  }
+
+  function debounceSave() {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    debounceTimer = setTimeout(() => saveDraft({ reason: 'autosave' }), 600);
+  }
+
+  function handleFieldInput(event) {
+    const id = event.target.id;
+    if (id === 'hDate' || id === 'hShift') {
+      checkCurrentRecord();
+    }
+    debounceSave();
+  }
+
+  function handleBubbleClick() {
+    setTimeout(() => saveDraft({ reason: 'autosave' }), 100);
+  }
+
+  function checkCurrentRecord() {
+    const recordId = getCurrentRecordId();
+    const unsavedKey = getUnsavedKey();
+    const unsavedExists = !!localStorage.getItem(unsavedKey);
+    if (!recordId) {
+      if (unsavedExists) {
+        updateStatus('Temporary draft exists. Choose a date and shift to save it under a handover ID.');
+      } else {
+        updateStatus('Autosave is active. Choose date + shift to identify this handover.');
+      }
+      return;
+    }
+
+    const recordKey = getRecordKey(recordId);
+    if (localStorage.getItem(recordKey)) {
+      updateStatus(`Existing handover record found for ${recordId}. Click Load draft.`);
+      return;
+    }
+
+    if (unsavedExists) {
+      updateStatus('No saved handover exists for this ID. A temporary draft is available and can be saved here.');
+      return;
+    }
+
+    updateStatus(`No saved handover exists for ${recordId}. Changes will autosave.`);
+  }
+
+  function attachListeners() {
+    if (loadBtn) {
+      loadBtn.addEventListener('click', loadDraft);
+    }
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => saveDraft({ reason: 'manual' }));
+    }
+    if (exportBtn) {
+      exportBtn.addEventListener('click', exportSqlite);
+    }
+
+    const fieldElements = Array.from(root.querySelectorAll('input,textarea,select'));
+    fieldElements.forEach(el => {
+      el.addEventListener('input', handleFieldInput);
+      el.addEventListener('change', handleFieldInput);
+    });
+
+    Array.from(root.querySelectorAll('.bubble-btn, .yesno-toggle button')).forEach(button => {
+      button.addEventListener('click', handleBubbleClick);
+    });
+
+    window.addEventListener('beforeunload', () => saveDraft({ reason: 'unload' }));
+  }
+
+  function insertStatusPanel() {
+    const controls = document.getElementById('handover-db-controls');
+    if (controls) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'handover-db-controls';
+    panel.className = 'section-card no-print';
+    panel.innerHTML = `
+      <div class="section-title">Handover database</div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="text-sm text-slate-600 leading-6">
+          This handover record is stored separately from other pages. Use the footer date + shift to identify the draft.
+        </div>
+        <div><button id="handover-db-load-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Load draft</button></div>
+        <div><button id="handover-db-save-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Save now</button></div>
+        <div><button id="handover-db-export-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Export SQLite .dat</button></div>
+      </div>
+      <div id="handover-db-status" class="mt-3 text-sm text-slate-700">Autosave is active. Select date + shift before saving or exporting.</div>
+    `;
+
+    const header = root.querySelector('.report-header');
+    if (header && header.parentNode) {
+      header.parentNode.insertBefore(panel, header.nextSibling);
+    } else {
+      root.insertBefore(panel, root.firstChild);
+    }
+  }
+
+  function init() {
+    insertStatusPanel();
+    attachListeners();
+    if (loadBtn && saveBtn && exportBtn) {
+      // Refresh references now that the panel exists in the DOM.
+      window.requestAnimationFrame(() => {
+        updateStatus('Autosave is active. Choose date + shift to identify this handover.');
+        checkCurrentRecord();
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  window.HandoverDB = {
+    saveDraft,
+    loadDraft,
+    exportSqlite,
+    getAllSavedRecords
+  };
+})();
