@@ -89,7 +89,7 @@
           <label class="field">Job no.<div class="job-number-row"><select id="h_jobPrefix"></select><input id="h_jobDigits" placeholder="Digits" inputmode="numeric"></div><span class="field-hint" id="jobNoHint"></span></label>
         </div>
         <div class="grid grid-6">
-          <label class="field">Size range<input id="h_sizeRange" placeholder="Range"></label>
+          <label class="field">Size range<select id="h_sizeRange"><option value="">—</option></select></label>
         </div>
       </div>
     </div>
@@ -113,9 +113,9 @@
       <div class="panel-head"><h2>Quality Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Damages after shucking<input id="h_damagesAfterShucking" placeholder="Notes"></label>
+          <label class="field">Damages after shucking?<select id="h_damagesAfterShucking"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
           <label class="field">Beak cut correct?<select id="h_beakCutCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Damages after gutting &amp; beaking<input id="h_damagesAfterGutting" placeholder="Notes"></label>
+          <label class="field">Damages after gutting &amp; beaking?<select id="h_damagesAfterGutting"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
         </div>
       </div>
     </div>
@@ -249,10 +249,10 @@ function toast(msg){
 
   function renderForm(){
     $('h_intakeDate').value = state.intakeDate;
-    $('h_harvestFarm').value = state.harvestFarm;
+    window.Lookups.setValue('h_harvestFarm', 'farms', state.harvestFarm);
     $('h_processingFor').value = state.processingFor;
     renderJobNo();
-    $('h_sizeRange').value = state.sizeRange;
+    window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.sizeRange);
     $('h_incomingTemp').value = state.incomingTemp;
     $('h_noOfMortalities').value = state.noOfMortalities;
     $('h_signsOfParasites').value = state.signsOfParasites;
@@ -382,9 +382,11 @@ function toast(msg){
   }
 
 function wire(){
-window.Lookups.fill('h_jobPrefix', 'jobPrefixes', { selected: splitJobNo(state.jobNo).prefix });
-$('logVerificationBtn').addEventListener('click', logVerification);
-bindInputs();
+  window.Lookups.fill('h_jobPrefix', 'jobPrefixes', { selected: splitJobNo(state.jobNo).prefix });
+  window.Lookups.upgrade('h_harvestFarm', 'farms');
+  window.Lookups.upgrade('h_sizeRange', 'sizeRanges');
+  $('logVerificationBtn').addEventListener('click', logVerification);
+  bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
     $('exportBtn').addEventListener('click', ()=>{
