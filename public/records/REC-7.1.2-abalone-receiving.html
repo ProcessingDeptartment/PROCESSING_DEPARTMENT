@@ -244,6 +244,24 @@
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
     </div>
+
+    <div class="panel no-print">
+      <div class="panel-head"><h2>Verification</h2></div>
+      <div class="panel-body">
+        <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
+        <div id="verifySelect" style="margin-bottom:10px;"></div>
+        <div class="grid grid-3" style="margin-bottom:8px;">
+          <label class="field">Verified by<input id="v_verifiedBy"></label>
+          <label class="field">Signature (type name to sign)<input id="v_verifiedSig"></label>
+          <label class="field">Date<input id="v_verifiedDate" type="date"></label>
+        </div>
+        <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
+          <button class="btn btn-primary" id="logVerificationBtn">Log verification</button>
+        </div>
+        <div class="muted" style="margin:10px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Verification history</div>
+        <div id="verificationHistory"></div>
+      </div>
+    </div>
   </div>
 
   <div class="toast no-print" id="toast"></div>
@@ -670,6 +688,7 @@ function toast(msg){
   }
 
   function wire(){
+$('logVerificationBtn').addEventListener('click', logVerification);
     window.Lookups.upgrade('h_receivedFrom', 'farms');
     // Size range now belongs to the basket being captured, so it starts blank.
     window.Lookups.fill('h_sizeRange', 'sizeRanges', { selected: '' });
@@ -702,6 +721,7 @@ function toast(msg){
 
   wire();
   renderAll();
+  renderVerificationHistory();
 })();
 </script>
 </body>

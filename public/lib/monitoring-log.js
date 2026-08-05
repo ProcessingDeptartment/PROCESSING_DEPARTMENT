@@ -839,7 +839,6 @@
         </div>
         <div class="ml-topline no-print">
           ${topAddEntry ? `<button class="ml-btn ml-btn-ghost" id="ml_topAddEntryBtn">+ Add entry</button>` : ''}
-          ${showThresholds ? `<button class="ml-btn ml-btn-ghost" id="ml_thresholdsBtn">Thresholds</button>` : ''}
         </div>
       </div>
       <div class="ml-body">
