@@ -617,11 +617,11 @@
         ${rows}
       </table>
       <table class="sheet-sign">
-        <tr><td class="sheet-lbl">Boiler Operator:</td><td>${esc(opF ? (v[opF.key] || '') : '')}</td>
-            <td class="sheet-lbl">Signature:</td><td>${esc(entryRow.status === 'submitted' && opF ? (v[opF.key] || '') : '')}</td>
+        <tr><td class="sheet-lbl">Completed by:</td><td>${esc(opF ? (v[opF.key] || '') : '')}</td>
+            <td class="sheet-lbl">Title:</td><td></td>
             <td class="sheet-lbl">Date:</td><td>${esc(entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : '')}</td></tr>
         <tr><td class="sheet-lbl">Verified by:</td><td>${esc(verified ? verified.verifiedBy : '')}</td>
-            <td class="sheet-lbl">Signature:</td><td>${esc(verified ? verified.verifiedSig : '')}</td>
+            <td class="sheet-lbl">Title:</td><td>${esc(verified ? verified.verifiedSig : '')}</td>
             <td class="sheet-lbl">Date:</td><td>${esc(verified ? verified.verifiedDate : '')}</td></tr>
       </table>`;
     }
@@ -805,7 +805,7 @@
           <div class="ml-history-list" id="ml_verifySelect" style="margin-bottom:10px;"></div>` : ''}
           <div class="ml-grid ml-grid-3" style="margin-bottom:10px;">
             <label class="ml-field">Verified by<input id="ml_verifiedBy"></label>
-            <label class="ml-field">Signature (type name to sign)<input id="ml_verifiedSig"></label>
+            <label class="ml-field">Title<input id="ml_verifiedSig"></label>
             <label class="ml-field">Date<input id="ml_verifiedDate" type="date"></label>
           </div>
           <div class="ml-actions" style="justify-content:flex-start; margin-top:0;">
@@ -1075,7 +1075,7 @@
         const verifiedBy = el('ml_verifiedBy').value.trim();
         const verifiedSig = el('ml_verifiedSig').value.trim();
         const verifiedDate = el('ml_verifiedDate').value;
-        if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, signature and date are all required.'); return; }
+        if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, title and date are all required.'); return; }
 
         // With the draft/submit flow the signature is attached to the entries the
         // verifier ticked, so each printed sheet carries its own verifier line.

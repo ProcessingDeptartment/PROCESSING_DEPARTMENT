@@ -265,7 +265,7 @@
             <div class="fr-history-list" id="fr_verifySelect" style="margin-bottom:10px;"></div>
             <div class="fr-grid fr-grid-3" style="margin-bottom:10px;">
               <label class="fr-field">Verified by<input id="fr_verifiedBy"></label>
-              <label class="fr-field">Signature (type name to sign)<input id="fr_verifiedSig"></label>
+              <label class="fr-field">Title<input id="fr_verifiedSig"></label>
               <label class="fr-field">Date<input id="fr_verifiedDate" type="date"></label>
             </div>
             <div class="fr-actions" style="justify-content:flex-start; margin-top:0;">
@@ -612,10 +612,10 @@
         ? window.DocHeader.fmtDate(new Date(sub.submittedAt)) : '';
       return `<table class="fr-sheet-sign"><tbody>
         <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(who)}</td>
-            <td class="fr-sheet-lbl">Signature:</td><td></td>
+            <td class="fr-sheet-lbl">Title:</td><td></td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(when)}</td></tr>
         <tr><td class="fr-sheet-lbl">Verified by:</td><td>${esc(sub.verification ? sub.verification.verifiedBy : '')}</td>
-            <td class="fr-sheet-lbl">Signature:</td><td>${esc(sub.verification ? sub.verification.verifiedSig : '')}</td>
+            <td class="fr-sheet-lbl">Title:</td><td>${esc(sub.verification ? sub.verification.verifiedSig : '')}</td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification ? sub.verification.verifiedDate : '')}</td></tr>
       </tbody></table>`;
     }
@@ -705,7 +705,7 @@
         const verifiedBy = el('fr_verifiedBy').value.trim();
         const verifiedSig = el('fr_verifiedSig').value.trim();
         const verifiedDate = el('fr_verifiedDate').value;
-        if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, signature and date are all required.'); return; }
+        if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, title and date are all required.'); return; }
 
         const picked = [...document.querySelectorAll('.fr-verify-pick:checked')].map(cb => cb.value);
         if (pendingForVerification().length && !picked.length) { toast('Tick at least one entry to verify.'); return; }
