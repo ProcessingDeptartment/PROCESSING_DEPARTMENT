@@ -460,7 +460,11 @@
 
     const panel = document.createElement('div');
     panel.id = 'handover-db-controls';
-    panel.className = 'section-card no-print';
+    panel.style.padding = '1rem';
+    panel.style.border = '1px solid #cbd5e1';
+    panel.style.background = '#ffffff';
+    panel.style.borderRadius = '16px';
+    panel.style.marginTop = '1rem';
     panel.innerHTML = `
       <div class="section-title">Handover database</div>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
@@ -468,13 +472,13 @@
           This handover record is stored separately from other pages. Use the footer date + shift to identify the draft.
         </div>
         <div>
-          <select id="handover-db-record-select" class="bubble-btn w-full text-left" style="min-height:40px; font-size:12px;">
+          <select id="handover-db-record-select" class="bubble-btn w-full text-left" style="min-height:40px; font-size:12px; background:#f8fafc; border:1px solid #cbd5e1; color:#0f172a;">
             <option value="">Loading saved handovers...</option>
           </select>
         </div>
-        <div><button id="handover-db-load-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Load draft</button></div>
-        <div><button id="handover-db-save-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Save now</button></div>
-        <div><button id="handover-db-export-btn" type="button" class="bubble-btn w-full" style="font-size:12px;">Export SQLite .dat</button></div>
+        <div><button id="handover-db-load-btn" type="button" class="bubble-btn w-full" style="font-size:12px; background:#2563eb; color:#fff;">Load draft</button></div>
+        <div><button id="handover-db-save-btn" type="button" class="bubble-btn w-full" style="font-size:12px; background:#10b981; color:#fff;">Save now</button></div>
+        <div><button id="handover-db-export-btn" type="button" class="bubble-btn w-full" style="font-size:12px; background:#f97316; color:#fff;">Export SQLite .dat</button></div>
       </div>
       <div id="handover-db-status" class="mt-3 text-sm text-slate-700">Autosave is active. Select date + shift before saving or exporting.</div>
     `;
@@ -503,7 +507,12 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
   window.HandoverDB = {
     saveDraft,
     loadDraft,
