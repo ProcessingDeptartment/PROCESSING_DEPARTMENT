@@ -294,7 +294,7 @@
 
   // ---- one controller per log (primary + optional secondary share this factory) ----
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged } = opts;
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline } = opts;
     let entries = [];
     let editingId = null;
 
@@ -472,9 +472,12 @@
         if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
         if (submitBtn) submitBtn.style.display = locked ? 'none' : '';
       }
-      el(modalIds.overlay).style.display = 'flex';
+      if (!inline) el(modalIds.overlay).style.display = 'flex';
     }
+    // Inline mode has no overlay to hide -- "Cancel" instead resets the always-visible
+    // form back to a blank "Add entry" so it's ready for the next one.
     function closeForm() {
+      if (inline) { editingId = null; openForm(null); return; }
       el(modalIds.overlay).style.display = 'none';
     }
 
@@ -742,12 +745,23 @@
      * entryWorkflow:'save-only' rather than opting in. */
     const submitFlow = config.entryWorkflow !== 'save-only';
 
-    function logBlockHtml(ns, blockTitle) {
-      return `
+    // A record can opt into showing its entry fields directly on the page --
+    // the form IS the page, matching the paper form -- instead of hiding them
+    // behind a "+ Add entry" button and modal. Same field-rendering code path
+    // (fieldInputHtml, openForm, saveForm); only the container and the trigger differ.
+    function logBlockHtml(ns, blockTitle, inline) {
+      const fieldsAndActions = `
+          <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>
+          <div class="ml-actions">
+            <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">${inline ? 'Clear' : 'Cancel'}</button>
+            <button class="ml-btn ${submitFlow ? 'ml-btn-flat' : 'ml-btn-primary'}" id="${ns}_saveBtn">${submitFlow ? 'Save draft' : 'Save entry'}</button>
+            ${submitFlow ? `<button class="ml-btn ml-btn-primary" id="${ns}_submitBtn">Submit</button>` : ''}
+          </div>`;
+      const entriesPanel = `
       <div class="ml-panel no-print">
         <div class="ml-panel-head">
           <h2>${esc(blockTitle)}</h2>
-          <button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>
+          ${inline ? '' : `<button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>`}
         </div>
         <div class="ml-panel-body">
           <div class="ml-filters">
@@ -761,16 +775,21 @@
           </div>
           <div id="${ns}_table" class="ml-table-wrap"></div>
         </div>
+      </div>`;
+      if (inline) {
+        return `
+      <div class="ml-panel no-print">
+        <div class="ml-panel-head"><h2 id="${ns}_modalTitle">${esc(blockTitle)}</h2></div>
+        <div class="ml-panel-body">${fieldsAndActions}</div>
       </div>
+      ${entriesPanel}`;
+      }
+      return `
+      ${entriesPanel}
       <div id="${ns}_modal" class="ml-modal-overlay no-print" style="display:none;">
         <div class="ml-modal-inner">
           <h2 id="${ns}_modalTitle">Add entry</h2>
-          <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>
-          <div class="ml-actions">
-            <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">Cancel</button>
-            <button class="ml-btn ${submitFlow ? 'ml-btn-flat' : 'ml-btn-primary'}" id="${ns}_saveBtn">${submitFlow ? 'Save draft' : 'Save entry'}</button>
-            ${submitFlow ? `<button class="ml-btn ml-btn-primary" id="${ns}_submitBtn">Submit</button>` : ''}
-          </div>
+          ${fieldsAndActions}
         </div>
       </div>`;
     }
@@ -805,8 +824,10 @@
     const topAddEntry = config.topAddEntry === true;
     const entriesAtBottom = config.entriesPosition === 'bottom';
 
+    const inlineEntryForm = config.inlineEntryForm === true;
+
     const logsHtml = `
-        ${logBlockHtml('ml_p', config.secondaryLog ? (config.primaryLogTitle || 'Entries') : 'Entries')}
+        ${logBlockHtml('ml_p', config.secondaryLog ? (config.primaryLogTitle || 'Entries') : 'Entries', inlineEntryForm)}
         ${config.secondaryLog ? logBlockHtml('ml_s', config.secondaryLog.title) : ''}`;
 
     mount.innerHTML = `
@@ -863,7 +884,8 @@
       modalIds: { overlay: 'ml_p_modal', title: 'ml_p_modalTitle', fields: 'ml_p_modalFields' },
       deviationLabel: config.deviationLabel || 'Deviation',
       deviationPolarity: config.deviationPolarity || 'deviation',
-      submitFlow
+      submitFlow,
+      inline: inlineEntryForm
     });
     let secondary = null;
     if (config.secondaryLog) {
@@ -885,7 +907,8 @@
     }
 
     function wireLog(ctrl, ns) {
-      el(`${ns}_addEntryBtn`).addEventListener('click', () => ctrl.openForm(null));
+      const addBtn = el(`${ns}_addEntryBtn`);
+      if (addBtn) addBtn.addEventListener('click', () => ctrl.openForm(null));
       el(`${ns}_cancelBtn`).addEventListener('click', () => ctrl.closeForm());
       el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm(!submitFlow));
       if (submitFlow) el(`${ns}_submitBtn`).addEventListener('click', () => ctrl.saveForm(true));
@@ -900,6 +923,7 @@
     wireLog(primary, 'ml_p');
     if (secondary) wireLog(secondary, 'ml_s');
     if (topAddEntry) el('ml_topAddEntryBtn').addEventListener('click', () => primary.openForm(null));
+    if (inlineEntryForm) primary.openForm(null);
 
     // ---------- thresholds modal ----------
     function buildThresholdsTable() {
