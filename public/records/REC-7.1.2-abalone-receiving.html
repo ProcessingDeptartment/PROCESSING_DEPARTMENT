@@ -83,26 +83,34 @@
     #panelSignoff{ order:2; }
     #panelBaskets{ order:3; break-before:page; page-break-before:always; }
 
-    .panel{ border-color:#000; margin-bottom:6px; break-inside:avoid; }
+    /* One font size for the whole printed record, matching the basket table
+     * (8.5px) instead of each panel picking its own -- that mismatch (8px
+     * labels, 9px boxed inputs on page 1 vs 8.5px thin-rule table on page 2)
+     * was what made page 1 read as a different document from page 2. */
+    #ar-root{ font-size:8.5px; }
+    .panel{ border:1px solid #000; margin-bottom:6px; break-inside:avoid; }
     .panel-head{ background:#fff; padding:4px 7px; }
+    .panel-head h2{ font-size:8.5px; }
 
-    /* Smaller block fields: keep the boxed look, tighten it.
+    /* Fields print as a label over a ruled line -- the same thin-border
+     * language as the basket table rows and the sign-off .sig-line -- rather
+     * than boxed, radius-cornered inputs, which was the odd one out.
      * .field is matched bare here (not label.field) so the print-only
      * verification row, which uses divs, picks up the same styling. */
-    #ar-root .field{ display:flex; flex-direction:column; font-size:8px; gap:1px;
+    #ar-root .field{ display:flex; flex-direction:column; font-size:8.5px; gap:1px;
                      color:#54606b; font-weight:600; }
     #ar-root .panel-body{ padding:7px; }
     #ar-root .grid{ gap:5px; }
     #ar-root input, #ar-root select{
-      font-size:9px; padding:2px 3px; border:1px solid #000; border-radius:2px;
-      -webkit-appearance:none; appearance:none; background:#fff;
+      font-size:8.5px; padding:1px 0; border:none; border-bottom:1px solid #999;
+      border-radius:0; -webkit-appearance:none; appearance:none; background:transparent;
       text-overflow:clip; min-width:0;
     }
 
     /* Job no. must never clip: the prefix column shrinks to its content and the
      * digits take the rest, instead of the fixed 74px screen column. */
     .job-number-row{ grid-template-columns:auto 1fr; gap:3px; }
-    .job-number-row select, .job-number-row input{ font-size:9px; padding:2px 3px; }
+    .job-number-row select, .job-number-row input{ font-size:8.5px; padding:1px 0; }
     #jobNoHint{ display:none; }
 
     /* Signature ruled lines for the print-only verification row. */
@@ -149,11 +157,13 @@
         <!-- Capture widget only: the confirmed table below is the record, so this whole
              block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
         <div id="basketCapture" class="no-print">
-        <div class="grid grid-3">
+        <div class="grid grid-2">
           <label class="field">Basket nr.<input id="h_basketNr" type="number"></label>
-          <label class="field">Size range<select id="h_sizeRange"></select></label>
           <label class="field">Whole weight<input id="h_wholeWeight" type="number" step="0.01"></label>
         </div>
+        <!-- Size range shows in the confirmed table only (populated by import); no manual
+             capture field for it here, but the element stays for Lookups/edit wiring. -->
+        <select id="h_sizeRange" style="display:none;"></select>
         <div class="grid grid-3" style="margin-top:8px;">
           <label class="field">Farm count<input id="h_farmCount" type="number"></label>
           <label class="field">Factory count<input id="h_factoryCount" type="number"></label>
