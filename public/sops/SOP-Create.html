@@ -49,13 +49,22 @@ SopDoc.mount({
 
 });
 
-document.querySelectorAll('input, textarea, select').forEach(el => {
-    if (el.type === 'checkbox' || el.type === 'radio') {
-        el.checked = false;
-    } else {
-        el.value = '';
-    }
+SopDoc.mount({
+  ...
 });
+
+setTimeout(() => {
+
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.type === 'checkbox' || el.type === 'radio') {
+            el.checked = false;
+        } else {
+            el.value = '';
+        }
+    });
+
+}, 500);
+
 </script>
 
 </body>
