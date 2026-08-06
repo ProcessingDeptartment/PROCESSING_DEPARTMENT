@@ -1,65 +1,41 @@
-// Standalone handover data service.
+// Standalone handover data service using MongoDB Atlas (free tier).
 // Runs independently of the Processing Department static site — its own
-// process, its own container, its own SQLite database file.
+// process, its own container, its own database.
 //
 // Responsibility: receive a handover record when a user clicks "Generate PDF"
-// on the front-end, and persist it into a real SQLite database on disk
-// (append/update, not a one-off download).
+// on the front-end, and persist it into MongoDB (append/update, not a one-off download).
+//
+// Requires: MONGODB_URI env var (get from MongoDB Atlas free tier)
 
 const http = require('http');
-const path = require('path');
-const fs = require('fs');
-const { DatabaseSync } = require('node:sqlite');
+const { MongoClient } = require('mongodb');
 
 const PORT = process.env.PORT || 4000;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'handovers.db');
+const MONGODB_URI = process.env.MONGODB_URI;
 const MAX_BODY_BYTES = 5 * 1024 * 1024; // 5MB safety cap per record
 
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI env var is required');
+  process.exit(1);
+}
 
-const db = new DatabaseSync(DB_PATH);
-db.exec(`
-  CREATE TABLE IF NOT EXISTS handover_records (
-    id TEXT PRIMARY KEY,
-    page TEXT,
-    page_label TEXT,
-    date TEXT,
-    shift TEXT,
-    owner_name TEXT,
-    status TEXT,
-    updated_at INTEGER,
-    submitted_at INTEGER,
-    received_at INTEGER,
-    payload TEXT
-  );
-`);
+const client = new MongoClient(MONGODB_URI);
+let db = null;
+let collection = null;
 
-const upsertStmt = db.prepare(`
-  INSERT INTO handover_records
-    (id, page, page_label, date, shift, owner_name, status, updated_at, submitted_at, received_at, payload)
-  VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ON CONFLICT(id) DO UPDATE SET
-    page = excluded.page,
-    page_label = excluded.page_label,
-    date = excluded.date,
-    shift = excluded.shift,
-    owner_name = excluded.owner_name,
-    status = excluded.status,
-    updated_at = excluded.updated_at,
-    submitted_at = excluded.submitted_at,
-    received_at = excluded.received_at,
-    payload = excluded.payload;
-`);
-
-const listStmt = db.prepare(`
-  SELECT id, page, page_label, date, shift, owner_name, status, updated_at, submitted_at, received_at
-  FROM handover_records
-  ORDER BY date DESC, shift ASC;
-`);
-
-const getStmt = db.prepare(`SELECT * FROM handover_records WHERE id = ?;`);
+async function connectMongo() {
+  try {
+    await client.connect();
+    db = client.db('handover-data');
+    collection = db.collection('records');
+    await collection.createIndex({ id: 1 }, { unique: true });
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('MongoDB connection failed', err);
+    process.exit(1);
+  }
+}
 
 function setCors(res) {
   res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
@@ -101,72 +77,92 @@ function readJsonBody(req) {
   });
 }
 
-function handleCreateOrUpdate(req, res) {
-  readJsonBody(req)
-    .then(record => {
-      if (!record || typeof record.id !== 'string' || !record.id) {
-        sendJson(res, 400, { error: 'Missing required field: id' });
-        return;
-      }
+async function handleCreateOrUpdate(req, res) {
+  try {
+    const record = await readJsonBody(req);
+    if (!record || typeof record.id !== 'string' || !record.id) {
+      sendJson(res, 400, { error: 'Missing required field: id' });
+      return;
+    }
 
-      const now = Date.now();
-      upsertStmt.run(
-        record.id,
-        record.page || null,
-        record.pageLabel || null,
-        record.date || null,
-        record.shift || null,
-        record.ownerName || null,
-        record.status || 'submitted',
-        record.updatedAt || now,
-        record.submittedAt || now,
-        now,
-        JSON.stringify(record.payload || {})
-      );
+    const now = Date.now();
+    const doc = {
+      id: record.id,
+      page: record.page || null,
+      pageLabel: record.pageLabel || null,
+      date: record.date || null,
+      shift: record.shift || null,
+      ownerName: record.ownerName || null,
+      status: record.status || 'submitted',
+      updatedAt: record.updatedAt || now,
+      submittedAt: record.submittedAt || now,
+      receivedAt: now,
+      payload: JSON.stringify(record.payload || {})
+    };
 
-      sendJson(res, 200, { ok: true, id: record.id, receivedAt: now });
-    })
-    .catch(err => {
-      const status = err.message === 'Payload too large' ? 413 : 400;
-      sendJson(res, status, { error: err.message });
-    });
-}
+    await collection.updateOne(
+      { id: record.id },
+      { $set: doc },
+      { upsert: true }
+    );
 
-function handleList(req, res) {
-  const rows = listStmt.all().map(row => ({
-    id: row.id,
-    page: row.page,
-    pageLabel: row.page_label,
-    date: row.date,
-    shift: row.shift,
-    ownerName: row.owner_name,
-    status: row.status,
-    updatedAt: row.updated_at,
-    submittedAt: row.submitted_at,
-    receivedAt: row.received_at
-  }));
-  sendJson(res, 200, { records: rows });
-}
-
-function handleGetOne(req, res, id) {
-  const row = getStmt.get(id);
-  if (!row) {
-    sendJson(res, 404, { error: 'Record not found' });
-    return;
+    sendJson(res, 200, { ok: true, id: record.id, receivedAt: now });
+  } catch (err) {
+    const status = err.message === 'Payload too large' ? 413 : 400;
+    sendJson(res, status, { error: err.message });
   }
-  sendJson(res, 200, {
-    id: row.id,
-    page: row.page,
-    pageLabel: row.page_label,
-    date: row.date,
-    shift: row.shift,
-    ownerName: row.owner_name,
-    status: row.status,
-    updatedAt: row.updated_at,
-    submittedAt: row.submitted_at,
-    receivedAt: row.received_at,
-    payload: JSON.parse(row.payload || '{}')
-  });
+}
+
+async function handleList(req, res) {
+  try {
+    const rows = await collection
+      .find({})
+      .sort({ date: -1, shift: 1 })
+      .toArray();
+
+    const records = rows.map(row => ({
+      id: row.id,
+      page: row.page,
+      pageLabel: row.pageLabel,
+      date: row.date,
+      shift: row.shift,
+      ownerName: row.ownerName,
+      status: row.status,
+      updatedAt: row.updatedAt,
+      submittedAt: row.submittedAt,
+      receivedAt: row.receivedAt
+    }));
+
+    sendJson(res, 200, { records });
+  } catch (err) {
+    sendJson(res, 500, { error: err.message });
+  }
+}
+
+async function handleGetOne(req, res, id) {
+  try {
+    const row = await collection.findOne({ id });
+    if (!row) {
+      sendJson(res, 404, { error: 'Record not found' });
+      return;
+    }
+
+    sendJson(res, 200, {
+      id: row.id,
+      page: row.page,
+      pageLabel: row.pageLabel,
+      date: row.date,
+      shift: row.shift,
+      ownerName: row.ownerName,
+      status: row.status,
+      updatedAt: row.updatedAt,
+      submittedAt: row.submittedAt,
+      receivedAt: row.receivedAt,
+      payload: JSON.parse(row.payload || '{}')
+    });
+  } catch (err) {
+    sendJson(res, 500, { error: err.message });
+  }
 }
 
 const server = http.createServer((req, res) => {
@@ -204,7 +200,8 @@ const server = http.createServer((req, res) => {
   sendJson(res, 404, { error: 'Not found' });
 });
 
-server.listen(PORT, () => {
-  console.log(`Handover backend listening on port ${PORT}`);
-  console.log(`Database file: ${DB_PATH}`);
+connectMongo().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Handover backend listening on port ${PORT}`);
+  });
 });
