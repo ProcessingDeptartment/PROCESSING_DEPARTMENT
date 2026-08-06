@@ -84,25 +84,24 @@
     #panelBaskets{ order:3; break-before:page; page-break-before:always; }
 
     /* One font size for the whole printed record, matching the basket table
-     * (8.5px) instead of each panel picking its own -- that mismatch (8px
-     * labels, 9px boxed inputs on page 1 vs 8.5px thin-rule table on page 2)
-     * was what made page 1 read as a different document from page 2. */
-    #ar-root{ font-size:8.5px; }
+     * while making the PDF text more readable. */
+    #ar-root{ font-size:10px; }
     .panel{ border:1px solid #000; margin-bottom:6px; break-inside:avoid; }
+    #panelReceiving, #panelSignoff{ border:0; }
     .panel-head{ background:#fff; padding:4px 7px; }
-    .panel-head h2{ font-size:8.5px; }
+    .panel-head h2{ font-size:10px; }
 
     /* Fields print as a label over a ruled line -- the same thin-border
      * language as the basket table rows and the sign-off .sig-line -- rather
      * than boxed, radius-cornered inputs, which was the odd one out.
      * .field is matched bare here (not label.field) so the print-only
      * verification row, which uses divs, picks up the same styling. */
-    #ar-root .field{ display:flex; flex-direction:column; font-size:8.5px; gap:1px;
+    #ar-root .field{ display:flex; flex-direction:column; font-size:10px; gap:1px;
                      color:#54606b; font-weight:600; }
     #ar-root .panel-body{ padding:7px; }
     #ar-root .grid{ gap:5px; }
     #ar-root input, #ar-root select{
-      font-size:8.5px; padding:1px 0; border:none; border-bottom:1px solid #999;
+      font-size:10px; padding:1px 0; border:none; border-bottom:1px solid #999;
       border-radius:0; -webkit-appearance:none; appearance:none; background:transparent;
       text-overflow:clip; min-width:0;
     }
@@ -375,6 +374,20 @@ function toast(msg){
     });
   }
 
+  function formatNumeric(value, digits = 0){
+    const n = Number(value);
+    if (Number.isNaN(n)) return String(value || '');
+    const fixed = n.toFixed(digits);
+    const [intPart, fracPart] = fixed.split('.');
+    const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return digits > 0 && fracPart ? `${formattedInt}.${fracPart}` : formattedInt;
+  }
+
+  function formatWeight(value){
+    const formatted = formatNumeric(value);
+    return formatted ? `${formatted} g` : '';
+  }
+
   function renderEntryTable(){
     const body = $('basketTableBody');
     const empty = $('basketTableEmpty');
@@ -391,10 +404,10 @@ function toast(msg){
       tr.innerHTML = `
         <td style="padding:5px 6px;">${entry.basketNr || ''}</td>
         <td style="padding:5px 6px;">${entry.sizeRange || ''}</td>
-        <td style="padding:5px 6px;">${entry.wholeWeight || ''}</td>
-        <td style="padding:5px 6px;">${entry.farmCount || ''}</td>
-        <td style="padding:5px 6px;">${entry.factoryCount || ''}</td>
-        <td style="padding:5px 6px;">${entry.mortalityCount || ''}</td>
+        <td style="padding:5px 6px;">${formatWeight(entry.wholeWeight)}</td>
+        <td style="padding:5px 6px;">${formatNumeric(entry.farmCount)}</td>
+        <td style="padding:5px 6px;">${formatNumeric(entry.factoryCount)}</td>
+        <td style="padding:5px 6px;">${formatNumeric(entry.mortalityCount)}</td>
         <td style="padding:5px 6px;">${entry.editedBy ? entry.editedBy + ' · ' + new Date(entry.editedAt).toLocaleString() : ''}</td>
         <td class="no-print" style="padding:5px 6px;"><button class="btn btn-flat editEntryBtn" data-id="${entry.id}" style="padding:3px 8px; font-size:10.5px;">Edit</button></td>
       `;
@@ -406,17 +419,16 @@ function toast(msg){
      * running total on each page would read as if it were the final one. */
     const sum = key => state.basketEntries
       .reduce((t, e) => t + (parseFloat(e[key]) || 0), 0);
-    const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(2);
     const totals = document.createElement('tr');
     totals.id = 'basketTotalsRow';
     totals.style.cssText = 'border-top:2px solid var(--steel); font-weight:700;';
     totals.innerHTML = `
       <td style="padding:5px 6px;">Final</td>
       <td style="padding:5px 6px;"></td>
-      <td style="padding:5px 6px;">${fmt(sum('wholeWeight'))}</td>
-      <td style="padding:5px 6px;">${fmt(sum('farmCount'))}</td>
-      <td style="padding:5px 6px;">${fmt(sum('factoryCount'))}</td>
-      <td style="padding:5px 6px;">${fmt(sum('mortalityCount'))}</td>
+      <td style="padding:5px 6px;">${formatWeight(sum('wholeWeight'))}<br><span style="font-weight:400;">${formatNumeric(Math.round(sum('wholeWeight') / 10) / 100)} Kg</span></td>
+      <td style="padding:5px 6px;">${formatNumeric(sum('farmCount'))}</td>
+      <td style="padding:5px 6px;">${formatNumeric(sum('factoryCount'))}</td>
+      <td style="padding:5px 6px;">${formatNumeric(sum('mortalityCount'))}</td>
       <td style="padding:5px 6px;"></td>
       <td class="no-print" style="padding:5px 6px;"></td>
     `;
@@ -466,7 +478,7 @@ function toast(msg){
     if(verificationBlock) verificationBlock.refresh();
   }
 
-  function formatDateForFilename(value){
+  function formatDateToDDMMYY(value){
     if (!value) return '';
     const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m) return `${m[3]}${m[2]}${m[1].slice(-2)}`;
@@ -477,10 +489,16 @@ function toast(msg){
     return value.replace(/[^\d]/g, '').slice(0,6);
   }
 
+  function withPrintTitle(name, fn){
+    const previousTitle = document.title;
+    document.title = name;
+    try { fn(); }
+    finally { document.title = previousTitle; }
+  }
+
   function generatePdf(){
-    const datePrefix = formatDateForFilename(state.receivingDate);
-    document.title = `${datePrefix ? datePrefix + '_' : ''}REC7.1.2_ABALONE_RECEIVING`;
-    window.print();
+    const datePrefix = formatDateToDDMMYY(state.receivingDate);
+    withPrintTitle(`${datePrefix ? datePrefix + '_' : ''}REC7.1.2_ABALONE_RECIEVING`, () => window.print());
   }
 
   function readEntryInputs(){
