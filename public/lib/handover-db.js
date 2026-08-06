@@ -107,6 +107,29 @@
     }
   }
 
+  function getAllRecords() {
+    const records = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(RECORD_PREFIX)) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      try {
+        const state = JSON.parse(raw);
+        const id = key.slice(RECORD_PREFIX.length);
+        if (state.page !== pageConfig.pageKey) continue;
+        records.push({ id, ...state });
+      } catch (e) {
+        console.error('handover-db: invalid record in storage', key, e);
+      }
+    }
+    return records;
+  }
+
+  function getAllSavedRecords() {
+    return getAllRecords().filter(record => record.status !== 'submitted');
+  }
+
   function collectFormState() {
     const state = {
       page: pageConfig.pageKey,
@@ -218,6 +241,9 @@
     const state = collectFormState();
     state.status = options.finalize ? 'submitted' : 'draft';
     state.savedAt = Date.now();
+    if (options.finalize) {
+      state.submittedAt = Date.now();
+    }
     const recordId = getCurrentRecordId();
     const storageKey = recordId ? getRecordKey(recordId) : getUnsavedKey();
 
@@ -226,7 +252,11 @@
       if (recordId) {
         maybeAssignUnsaved(recordId);
         updateIndexForRecord(recordId, state);
-        updateStatus(`Saved ${options.finalize ? 'submitted' : 'draft'} record ${recordId}.`);
+        if (state.status === 'submitted') {
+          removeSavedRecordFromSelect(recordId);
+        }
+        populateRecordSelect();
+        updateStatus(`Saved ${state.status} record ${recordId}.`);
       } else {
         updateStatus('Draft saved locally. Choose a date and shift to store under a handover ID.');
       }
@@ -235,6 +265,14 @@
       console.error('handover-db: save failed', e);
       updateStatus('Save failed: local storage not available.', true);
       return false;
+    }
+  }
+
+  function removeSavedRecordFromSelect(recordId) {
+    if (!recordSelect) return;
+    const option = recordSelect.querySelector(`option[value="${CSS.escape(recordId)}"]`);
+    if (option) {
+      option.remove();
     }
   }
 
@@ -264,18 +302,22 @@
     }
   }
 
-  function getAllSavedRecords() {
-    const index = getIndex();
-    return Object.keys(index).map(id => {
-      const raw = localStorage.getItem(getRecordKey(id));
-      if (!raw) return null;
-      try {
-        const state = JSON.parse(raw);
-        return { id, ...state };
-      } catch (e) {
-        return null;
-      }
-    }).filter(Boolean);
+  async function finalizeAndExport() {
+    const recordId = getCurrentRecordId();
+    if (!recordId) {
+      updateStatus('Cannot finalize PDF export: date and shift are required.', true);
+      return false;
+    }
+
+    const saved = saveDraft({ finalize: true });
+    if (!saved) {
+      updateStatus('Finalizing handover failed before export.', true);
+      return false;
+    }
+
+    await exportSqlite(true);
+    updateStatus(`Finalized and exported handover ${recordId}.`);
+    return true;
   }
 
   function downloadBlob(blob, filename) {
@@ -320,10 +362,10 @@
     });
   }
 
-  async function exportSqlite() {
-    const records = getAllSavedRecords();
+  async function exportSqlite(includeAll = false) {
+    const records = includeAll ? getAllRecords() : getAllSavedRecords();
     if (!records.length) {
-      updateStatus('No saved handover records available for export.', true);
+      updateStatus('No handover records available for export.', true);
       return;
     }
 
@@ -435,7 +477,7 @@
       saveBtn.addEventListener('click', () => saveDraft({ reason: 'manual' }));
     }
     if (exportBtn) {
-      exportBtn.addEventListener('click', exportSqlite);
+      exportBtn.addEventListener('click', () => exportSqlite(true));
     }
     if (recordSelect) {
       recordSelect.addEventListener('change', () => selectSavedRecord(recordSelect.value));
@@ -517,6 +559,7 @@
     saveDraft,
     loadDraft,
     exportSqlite,
+    finalizeAndExport,
     getAllSavedRecords
   };
 })();

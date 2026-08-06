@@ -879,7 +879,7 @@ function validatePrint() {
     document.getElementById('printWarning').classList.toggle('hidden', isReady);
 }
 
-function preparePrint() {
+async function preparePrint() {
     const dateVal = document.getElementById('hDate').value;
     const shiftVal = document.getElementById('hShift').value;
     const managerName = document.getElementById('hName').value || '---';
@@ -915,6 +915,11 @@ function preparePrint() {
             toRestore.push(el);
         }
     });
+
+    const finalized = await window.HandoverDB.finalizeAndExport();
+    if (!finalized) {
+      return;
+    }
 
     // Print and then restore the interactive elements
     window.print();

@@ -581,7 +581,7 @@
             if(document.getElementById('printWarning')) document.getElementById('printWarning').classList.toggle('hidden', isReady);
         }
 
-        function preparePrint() {
+        async function preparePrint() {
             const dateVal = document.getElementById('hDate').value;
             const shiftVal = document.getElementById('hShift').value;
             
@@ -655,6 +655,10 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
             document.getElementById('nrcs-count-val').innerText = batchCount;
             document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || "No additional comments recorded.";
             
+            const finalized = await window.HandoverDB.finalizeAndExport();
+            if (!finalized) {
+                return;
+            }
             window.print();
         }
     </script>
