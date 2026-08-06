@@ -247,19 +247,11 @@
     <div class="panel">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
-        <div class="signoff-grid">
-          <div class="signoff-item">
-            <label class="field">Operator<input id="f_operator"></label>
-            <label class="field">Date<input id="f_operatorDate" type="date"></label>
-          </div>
-          <div class="signoff-item">
-            <label class="field">Supervisor<input id="f_supervisor"></label>
-            <label class="field">Date<input id="f_supervisorDate" type="date"></label>
-          </div>
-          <div class="signoff-item no-print">
-            <label class="field">Verified by (QA)<input id="f_verifiedBy"></label>
-            <label class="field">Date<input id="f_verifiedDate" type="date"></label>
-          </div>
+        <div id="signoffCompletedBy"></div>
+        <div class="grid grid-3" style="margin-top:8px;">
+          <label class="field">Supervisor<input id="f_supervisor"></label>
+          <label class="field">Title<input id="f_supervisorTitle"></label>
+          <label class="field">Date<input id="f_supervisorDate" type="date"></label>
         </div>
       </div>
     </div>
@@ -271,23 +263,7 @@
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
     </div>
 
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Verification</h2></div>
-      <div class="panel-body">
-        <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
-        <div id="verifySelect" style="margin-bottom:10px;"></div>
-        <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Verified by<input id="v_verifiedBy"></label>
-          <label class="field">Signature (type name to sign)<input id="v_verifiedSig"></label>
-          <label class="field">Date<input id="v_verifiedDate" type="date"></label>
-        </div>
-        <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
-          <button class="btn btn-primary" id="logVerificationBtn">Log verification</button>
-        </div>
-        <div class="muted" style="margin:10px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Verification history</div>
-        <div id="verificationHistory"></div>
-      </div>
-    </div>
+    <div class="panel no-print" id="panelVerification"></div>
   </div>
 
   <div class="toast no-print" id="toast"></div>
@@ -313,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=1"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -323,9 +300,9 @@ document.addEventListener('DOMContentLoaded', function () {
       header:{ intakeDate:'', harvestFarm:'', trackingNo:'', processingFor:'', sizeRange:'', wholeWeight:'', jobPrefix:'', jobNumber:'' },
       weights: [],
       comments:'',
-      operator:'', operatorDate:'',
-      supervisor:'', supervisorDate:'',
-      verifiedBy:'', verifiedDate:'',
+      operator:'', operatorTitle:'', operatorDate:'',
+      supervisor:'', supervisorTitle:'', supervisorDate:'',
+      verification: null,
       createdAt: null, updatedAt: null
     };
   }
@@ -403,11 +380,11 @@ function toast(msg){
     $('h_jobNumber').value = state.header.jobNumber;
     $('commentsBox').value = state.comments;
     $('f_operator').value = state.operator;
+    $('f_operatorTitle').value = state.operatorTitle;
     $('f_operatorDate').value = state.operatorDate;
     $('f_supervisor').value = state.supervisor;
+    $('f_supervisorTitle').value = state.supervisorTitle;
     $('f_supervisorDate').value = state.supervisorDate;
-    $('f_verifiedBy').value = state.verifiedBy;
-    $('f_verifiedDate').value = state.verifiedDate;
   }
 
   function bindInputs(){
@@ -420,7 +397,7 @@ function toast(msg){
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; updateResults(); });
     });
     $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['operator','operatorDate','supervisor','supervisorDate','verifiedBy','verifiedDate'].forEach(key=>{
+    ['operator','operatorTitle','operatorDate','supervisor','supervisorTitle','supervisorDate'].forEach(key=>{
       const id = 'f_' + key;
       $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
     });
@@ -453,6 +430,7 @@ function toast(msg){
     if(!ok){ toast('Save failed.'); return; }
     toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
     renderAll();
+    if(verificationBlock) verificationBlock.refresh();
   }
 
   function generatePdf(){
@@ -461,65 +439,31 @@ function toast(msg){
     window.print();
   }
 
-  function _vEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  function pendingVerification(){
-    return (state.status === 'submitted' && !state.verification) ? [state] : [];
+  function mountSignoff(){
+    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
+      byId: 'f_operator', titleId: 'f_operatorTitle', dateId: 'f_operatorDate', byLabel: 'Operator'
+    });
   }
 
-  function renderVerifySelect(){
-    const target = $('verifySelect');
-    if(!target) return;
-    const pending = pendingVerification();
-    if(!pending.length){
-      target.innerHTML = '<div class="muted" style="font-size:11px;">No submitted entries are waiting to be verified.</div>';
-      return;
-    }
-    target.innerHTML = pending.map(function(s){
-      return '<div style="font-size:11px;padding:4px 0;">' + _vEsc(s.id || '(unsaved)') +
-        (s.updatedAt ? ' &middot; saved ' + new Date(s.updatedAt).toLocaleString() : '') + '</div>';
-    }).join('');
-  }
-
-  async function renderVerificationHistory(){
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = [];
-    try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    renderVerifySelect();
-    const target = $('verificationHistory');
-    if(!target) return;
-    if(!hist.length){ target.innerHTML = '<div class="muted" style="font-size:11px;">No verification logged yet.</div>'; return; }
-    target.innerHTML = hist.slice().reverse().map(function(v){
-      return '<div style="font-size:11px;padding:4px 0;border-top:1px solid var(--line-soft);">' +
-        _vEsc(v.verifiedDate || '(no date)') + ' &middot; ' + _vEsc(v.verifiedBy) +
-        ' <span class="muted">(signed: ' + _vEsc(v.verifiedSig) + ')</span></div>';
-    }).join('');
-  }
-
-  async function logVerification(){
-    const verifiedBy = $('v_verifiedBy').value.trim();
-    const verifiedSig = $('v_verifiedSig').value.trim();
-    const verifiedDate = $('v_verifiedDate').value;
-    if(!verifiedBy || !verifiedSig || !verifiedDate){ toast('Verified by, signature and date are all required.'); return; }
-    const record = { verifiedBy: verifiedBy, verifiedSig: verifiedSig, verifiedDate: verifiedDate, loggedAt: Date.now() };
-    const pending = pendingVerification();
-    if(pending.length){
-      state.verification = record;
-      await storeSet('record:'+state.id, JSON.stringify(state), true);
-    }
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = [];
-    try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    hist.push(Object.assign({ entryId: pending.length ? state.id : null }, record));
-    await storeSet('verification_log:' + window.RecordDoc.recordKey, JSON.stringify(hist), true);
-    toast('Verification logged.');
-    $('v_verifiedBy').value=''; $('v_verifiedSig').value=''; $('v_verifiedDate').value='';
-    renderAll();
-    renderVerificationHistory();
+  let verificationBlock = null;
+  function mountVerification(){
+    verificationBlock = window.SignOffBlock.mountVerification({
+      recordKey: window.RecordDoc.recordKey,
+      mount: '#panelVerification',
+      getPending(){
+        return (state.status === 'submitted' && !state.verification)
+          ? [{ id: state.id, label: state.header.intakeDate ? `Intake ${state.header.intakeDate}` : 'This record' }]
+          : [];
+      },
+      async onLogged(record){
+        state.verification = record;
+        await storeSet('record:'+state.id, JSON.stringify(state), true);
+        renderAll();
+      }
+    });
   }
 
 function wire(){
-$('logVerificationBtn').addEventListener('click', logVerification);
 bindInputs();
     populateSizeRanges();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
@@ -553,9 +497,10 @@ bindInputs();
   }
 
   (async function init(){
+    mountSignoff();
     wire();
     renderAll();
-    renderVerificationHistory();
+    mountVerification();
   })();
 })();
 </script>

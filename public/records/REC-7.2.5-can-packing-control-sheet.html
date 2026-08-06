@@ -83,12 +83,9 @@
     <div class="panel">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
-        <div class="grid grid-2">
-          <label class="field">Packer<input id="f_packer"></label>
-          <label class="field">QC online<input id="f_qcOnline"></label>
-        </div>
+        <div id="signoffCompletedBy"></div>
         <div class="grid grid-2" style="margin-top:8px;">
-          <label class="field">Date<input id="f_packerDate" type="date"></label>
+          <label class="field">QC online<input id="f_qcOnline"></label>
         </div>
       </div>
     </div>
@@ -99,23 +96,7 @@
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
     </div>
 
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Verification</h2></div>
-      <div class="panel-body">
-        <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
-        <div id="verifySelect" style="margin-bottom:10px;"></div>
-        <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Verified by<input id="v_verifiedBy"></label>
-          <label class="field">Signature (type name to sign)<input id="v_verifiedSig"></label>
-          <label class="field">Date<input id="v_verifiedDate" type="date"></label>
-        </div>
-        <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
-          <button class="btn btn-primary" id="logVerificationBtn">Log verification</button>
-        </div>
-        <div class="muted" style="margin:10px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Verification history</div>
-        <div id="verificationHistory"></div>
-      </div>
-    </div>
+    <div class="panel no-print" id="panelVerification"></div>
   </div>
   <div class="toast no-print" id="toast"></div>
 </div>
@@ -138,53 +119,49 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=1"></script>
 <script>
 (async function(){
   const $=id=>document.getElementById(id);
-  function newRecord(){return{id:null,revision:1,status:'draft',date:'',time:'',trackingOrJobNo:'',sizeRange:'',qualityOfAbalone:'',piecesSizes:'',ingoWeightSpec:'',actualIngoWeight:'',processDeviation:'',packer:'',qcOnline:'',packerDate:'',createdAt:null,updatedAt:null};}
+  function newRecord(){return{id:null,revision:1,status:'draft',date:'',time:'',trackingOrJobNo:'',sizeRange:'',qualityOfAbalone:'',piecesSizes:'',ingoWeightSpec:'',actualIngoWeight:'',processDeviation:'',packer:'',packerTitle:'',qcOnline:'',packerDate:'',verification:null,createdAt:null,updatedAt:null};}
   let state=newRecord();
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
   function safeKey(s){return String(s).trim().replace(/[\s\/\\'"]+/g,'_');}
   async function storeGet(key,shared){try{const r=await window.storage.get(key,shared);return r?r.value:null;}catch(e){return null;}}
   async function storeSet(key,value,shared){try{await window.storage.set(key,value,shared);return true;}catch(e){return false;}}
-  function renderForm(){$('h_date').value=state.date;$('h_time').value=state.time;$('h_trackingOrJobNo').value=state.trackingOrJobNo;$('h_sizeRange').value=state.sizeRange;$('h_qualityOfAbalone').value=state.qualityOfAbalone;$('h_piecesSizes').value=state.piecesSizes;$('h_ingoWeightSpec').value=state.ingoWeightSpec;$('h_actualIngoWeight').value=state.actualIngoWeight;$('h_processDeviation').value=state.processDeviation;$('f_packer').value=state.packer;$('f_qcOnline').value=state.qcOnline;$('f_packerDate').value=state.packerDate;}
-  function bindInputs(){const fields=['date','time','trackingOrJobNo','sizeRange','qualityOfAbalone','piecesSizes','ingoWeightSpec','actualIngoWeight','processDeviation','packer','qcOnline','packerDate'];fields.forEach(f=>{const id=f.startsWith('packer')||f.startsWith('qcOnline')?'f_'+f:'h_'+f;const el=$(id);if(el)el.addEventListener('input',()=>{state[f]=el.value;});});}
+  function renderForm(){$('h_date').value=state.date;$('h_time').value=state.time;$('h_trackingOrJobNo').value=state.trackingOrJobNo;$('h_sizeRange').value=state.sizeRange;$('h_qualityOfAbalone').value=state.qualityOfAbalone;$('h_piecesSizes').value=state.piecesSizes;$('h_ingoWeightSpec').value=state.ingoWeightSpec;$('h_actualIngoWeight').value=state.actualIngoWeight;$('h_processDeviation').value=state.processDeviation;$('f_packer').value=state.packer;$('f_packerTitle').value=state.packerTitle;$('f_qcOnline').value=state.qcOnline;$('f_packerDate').value=state.packerDate;}
+  function bindInputs(){const fields=['date','time','trackingOrJobNo','sizeRange','qualityOfAbalone','piecesSizes','ingoWeightSpec','actualIngoWeight','processDeviation','packer','packerTitle','qcOnline','packerDate'];fields.forEach(f=>{const id=f.startsWith('packer')||f.startsWith('qcOnline')?'f_'+f:'h_'+f;const el=$(id);if(el)el.addEventListener('input',()=>{state[f]=el.value;});});}
   function updateRecordStatus(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'No job';const submitted=state.status==='submitted';$('recordStatus').textContent=`${submitted?'✓ Submitted':'Draft'} · ${jobStr} · ${state.id?'ID: '+state.id.slice(-8):'Unsaved'}`;}
   function renderAll(){renderForm();updateRecordStatus();$('statusLine').textContent=state.updatedAt?`Last saved ${new Date(state.updatedAt).toLocaleString()}`:'Not yet saved';}
-  async function saveRecord(finalize){const now=Date.now();if(!state.id){const jobId=state.trackingOrJobNo?state.trackingOrJobNo:'NOJOB';state.id=`can_packing_${safeKey(jobId)}_${now}`;state.createdAt=now;}state.updatedAt=now;state.status=finalize?'submitted':'draft';const ok=await storeSet('record:'+state.id,JSON.stringify(state),true);if(!ok){toast('Save failed.');return;}toast(finalize?'Submitted for verification.':'Draft saved.');renderAll();}
+  async function saveRecord(finalize){const now=Date.now();if(!state.id){const jobId=state.trackingOrJobNo?state.trackingOrJobNo:'NOJOB';state.id=`can_packing_${safeKey(jobId)}_${now}`;state.createdAt=now;}state.updatedAt=now;state.status=finalize?'submitted':'draft';const ok=await storeSet('record:'+state.id,JSON.stringify(state),true);if(!ok){toast('Save failed.');return;}toast(finalize?'Submitted for verification.':'Draft saved.');renderAll();if(verificationBlock)verificationBlock.refresh();}
   function generatePdf(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'record';document.title=`REC_7.2.5_CAN_PACKING_${safeKey(jobStr)}_${state.date||''}`;window.print();}
-  function _vEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function pendingVerification(){ return (state.status === 'submitted' && !state.verification) ? [state] : []; }
-  function renderVerifySelect(){
-    const target = $('verifySelect'); if(!target) return;
-    const pending = pendingVerification();
-    if(!pending.length){ target.innerHTML = '<div class="muted" style="font-size:11px;">No submitted entries are waiting to be verified.</div>'; return; }
-    target.innerHTML = pending.map(function(s){ return '<div style="font-size:11px;padding:4px 0;">' + _vEsc(s.id || '(unsaved)') + (s.updatedAt ? ' &middot; saved ' + new Date(s.updatedAt).toLocaleString() : '') + '</div>'; }).join('');
+
+  function mountSignoff(){
+    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
+      byId: 'f_packer', titleId: 'f_packerTitle', dateId: 'f_packerDate', byLabel: 'Packer'
+    });
   }
-  async function renderVerificationHistory(){
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = []; try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    renderVerifySelect();
-    const target = $('verificationHistory'); if(!target) return;
-    if(!hist.length){ target.innerHTML = '<div class="muted" style="font-size:11px;">No verification logged yet.</div>'; return; }
-    target.innerHTML = hist.slice().reverse().map(function(v){ return '<div style="font-size:11px;padding:4px 0;border-top:1px solid var(--line-soft);">' + _vEsc(v.verifiedDate || '(no date)') + ' &middot; ' + _vEsc(v.verifiedBy) + ' <span class="muted">(signed: ' + _vEsc(v.verifiedSig) + ')</span></div>'; }).join('');
+
+  let verificationBlock = null;
+  function mountVerification(){
+    verificationBlock = window.SignOffBlock.mountVerification({
+      recordKey: window.RecordDoc.recordKey,
+      mount: '#panelVerification',
+      getPending(){
+        return (state.status === 'submitted' && !state.verification)
+          ? [{ id: state.id, label: state.date ? `Pack ${state.date}` : 'This record' }]
+          : [];
+      },
+      async onLogged(record){
+        state.verification = record;
+        await storeSet('record:'+state.id, JSON.stringify(state), true);
+        renderAll();
+      }
+    });
   }
-  async function logVerification(){
-    const verifiedBy = $('v_verifiedBy').value.trim(); const verifiedSig = $('v_verifiedSig').value.trim(); const verifiedDate = $('v_verifiedDate').value;
-    if(!verifiedBy || !verifiedSig || !verifiedDate){ toast('Verified by, signature and date are all required.'); return; }
-    const record = { verifiedBy: verifiedBy, verifiedSig: verifiedSig, verifiedDate: verifiedDate, loggedAt: Date.now() };
-    const pending = pendingVerification();
-    if(pending.length){ state.verification = record; await storeSet('record:'+state.id, JSON.stringify(state), true); }
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = []; try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    hist.push(Object.assign({ entryId: pending.length ? state.id : null }, record));
-    await storeSet('verification_log:' + window.RecordDoc.recordKey, JSON.stringify(hist), true);
-    toast('Verification logged.');
-    $('v_verifiedBy').value=''; $('v_verifiedSig').value=''; $('v_verifiedDate').value='';
-    renderAll(); renderVerificationHistory();
-  }
-function wire(){$('logVerificationBtn').addEventListener('click', logVerification);bindInputs();$('saveDraftBtn').addEventListener('click',()=>saveRecord(false));$('submitBtn').addEventListener('click',()=>saveRecord(true));$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'can_packing_draft';a.download=`can_packing_${safeKey(jobStr)}.json`;a.click();});$('generatePdfBtn').addEventListener('click',generatePdf);}
-  wire();renderAll();renderVerificationHistory();
+
+function wire(){bindInputs();$('saveDraftBtn').addEventListener('click',()=>saveRecord(false));$('submitBtn').addEventListener('click',()=>saveRecord(true));$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'can_packing_draft';a.download=`can_packing_${safeKey(jobStr)}.json`;a.click();});$('generatePdfBtn').addEventListener('click',generatePdf);}
+  mountSignoff();wire();renderAll();mountVerification();
 })();
 </script>
 </body>

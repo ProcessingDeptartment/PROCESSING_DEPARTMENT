@@ -208,13 +208,13 @@
 
     <div class="panel no-print">
       <div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body footer-grid">
-        <label class="field">Completed by<input id="f_completedBy"></label>
-        <label class="field">Verified by<input id="f_verifiedBy"></label>
-        <label class="field">Signature (type name to sign)<input id="f_completedSig"></label>
-        <label class="field">Signature (type name to sign)<input id="f_verifiedSig"></label>
-        <label class="field">Date<input id="f_completedDate" type="date"></label>
-        <label class="field">Date<input id="f_verifiedDate" type="date"></label>
+      <div class="panel-body">
+        <div id="signoffCompletedBy"></div>
+        <div class="grid grid-3" style="margin-top:8px;">
+          <label class="field">Verified by<input id="f_verifiedBy"></label>
+          <label class="field">Title<input id="f_verifiedSig"></label>
+          <label class="field">Date<input id="f_verifiedDate" type="date"></label>
+        </div>
       </div>
     </div>
 
@@ -223,6 +223,8 @@
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
       <button class="btn btn-flat" id="generatePdfBtn">Generate PDF</button>
     </div>
+
+    <div class="panel no-print" id="panelVerification"></div>
   </div>
 
   <div id="specModal" class="no-print" style="display:none; position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center;">
@@ -283,24 +285,6 @@
       </div>
 
     </div>
-
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Verification</h2></div>
-      <div class="panel-body">
-        <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
-        <div id="verifySelect" style="margin-bottom:10px;"></div>
-        <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Verified by<input id="v_verifiedBy"></label>
-          <label class="field">Signature (type name to sign)<input id="v_verifiedSig"></label>
-          <label class="field">Date<input id="v_verifiedDate" type="date"></label>
-        </div>
-        <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
-          <button class="btn btn-primary" id="logVerificationBtn">Log verification</button>
-        </div>
-        <div class="muted" style="margin:10px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Verification history</div>
-        <div id="verificationHistory"></div>
-      </div>
-    </div>
   </div>
 
   <div class="toast no-print" id="toast"></div>
@@ -328,6 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/signoff-block.js?v=1"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -867,6 +852,7 @@ function toast(msg){
 
     toast(finalize ? 'Submitted as complete.' : 'Draft saved.');
     renderAll();
+    if(verificationBlock) verificationBlock.refresh();
   }
 
   async function searchBatch(){
@@ -930,8 +916,8 @@ function toast(msg){
       <div class="panel-body footer-grid">
         <label class="field">Completed by<span>${state.completedBy||'—'}</span></label>
         <label class="field">Verified by<span>${state.verifiedBy||'—'}</span></label>
-        <label class="field">Signature<span>${state.completedSig||'—'}</span></label>
-        <label class="field">Signature<span>${state.verifiedSig||'—'}</span></label>
+        <label class="field">Title<span>${state.completedSig||'—'}</span></label>
+        <label class="field">Title<span>${state.verifiedSig||'—'}</span></label>
         <label class="field">Date<span>${state.completedDate||'—'}</span></label>
         <label class="field">Date<span>${state.verifiedDate||'—'}</span></label>
       </div></div>`;
@@ -1100,38 +1086,31 @@ $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules
     sel.value = PermissionRules.getCurrentRole();
     sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
   }
-  function _vEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function pendingVerification(){ return (state.status === 'submitted' && !state.verification) ? [state] : []; }
-  function renderVerifySelect(){
-    const target = $('verifySelect'); if(!target) return;
-    const pending = pendingVerification();
-    if(!pending.length){ target.innerHTML = '<div class="muted" style="font-size:11px;">No submitted entries are waiting to be verified.</div>'; return; }
-    target.innerHTML = pending.map(function(s){ return '<div style="font-size:11px;padding:4px 0;">' + _vEsc(s.id || '(unsaved)') + (s.updatedAt ? ' &middot; saved ' + new Date(s.updatedAt).toLocaleString() : '') + '</div>'; }).join('');
+  function mountSignoff(){
+    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
+      byId: 'f_completedBy', titleId: 'f_completedSig', dateId: 'f_completedDate', byLabel: 'Completed by'
+    });
   }
-  async function renderVerificationHistory(){
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = []; try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    renderVerifySelect();
-    const target = $('verificationHistory'); if(!target) return;
-    if(!hist.length){ target.innerHTML = '<div class="muted" style="font-size:11px;">No verification logged yet.</div>'; return; }
-    target.innerHTML = hist.slice().reverse().map(function(v){ return '<div style="font-size:11px;padding:4px 0;border-top:1px solid var(--line-soft);">' + _vEsc(v.verifiedDate || '(no date)') + ' &middot; ' + _vEsc(v.verifiedBy) + ' <span class="muted">(signed: ' + _vEsc(v.verifiedSig) + ')</span></div>'; }).join('');
+
+  let verificationBlock = null;
+  function mountVerification(){
+    verificationBlock = window.SignOffBlock.mountVerification({
+      recordKey: window.RecordDoc.recordKey,
+      mount: '#panelVerification',
+      getPending(){
+        return (state.status === 'complete' && !state.verification)
+          ? [{ id: state.id, label: state.header.reportDate ? `Report ${state.header.reportDate}` : 'This record' }]
+          : [];
+      },
+      async onLogged(record){
+        state.verification = record;
+        await storeSet('record:'+state.id, JSON.stringify(state), true);
+        renderAll();
+      }
+    });
   }
-  async function logVerification(){
-    const verifiedBy = $('v_verifiedBy').value.trim(); const verifiedSig = $('v_verifiedSig').value.trim(); const verifiedDate = $('v_verifiedDate').value;
-    if(!verifiedBy || !verifiedSig || !verifiedDate){ toast('Verified by, signature and date are all required.'); return; }
-    const record = { verifiedBy: verifiedBy, verifiedSig: verifiedSig, verifiedDate: verifiedDate, loggedAt: Date.now() };
-    const pending = pendingVerification();
-    if(pending.length){ state.verification = record; await storeSet('record:'+state.id, JSON.stringify(state), true); }
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = []; try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    hist.push(Object.assign({ entryId: pending.length ? state.id : null }, record));
-    await storeSet('verification_log:' + window.RecordDoc.recordKey, JSON.stringify(hist), true);
-    toast('Verification logged.');
-    $('v_verifiedBy').value=''; $('v_verifiedSig').value=''; $('v_verifiedDate').value='';
-    renderAll(); renderVerificationHistory();
-  }
+
 function wire(){
-    $('logVerificationBtn').addEventListener('click', logVerification);
     wireActingRole();
 bindHeaderInputs();
     buildSpecFormRows();
@@ -1171,11 +1150,12 @@ bindHeaderInputs();
   }
 
   (async function init(){
+    mountSignoff();
     wire();
     await renderDocRevBadge();
     await loadSpecProfiles();
     renderAll();
-    renderVerificationHistory();
+    mountVerification();
   })();
 })();
 </script>
