@@ -1,0 +1,13 @@
+{
+  "name": "handover-backend",
+  "version": "0.1.0",
+  "description": "Standalone data service for shift handover records. Runs as its own container, independent of the Processing Department static site.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {}
+}

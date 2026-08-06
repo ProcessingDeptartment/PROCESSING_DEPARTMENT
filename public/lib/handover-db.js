@@ -3,7 +3,11 @@
   const INDEX_KEY = STORAGE_PREFIX + 'index';
   const RECORD_PREFIX = STORAGE_PREFIX + 'record:';
   const UNSAVED_PREFIX = STORAGE_PREFIX + 'unsaved:';
-  const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
+  const SYNC_QUEUE_KEY = STORAGE_PREFIX + 'sync-queue';
+
+  // URL of the standalone handover-backend service (separate container/deploy).
+  // Override before this script loads with: window.HANDOVER_BACKEND_URL = '...'
+  const BACKEND_URL = window.HANDOVER_BACKEND_URL || 'https://handover-backend.onrender.com';
 
   const pageConfigs = [
     { suffix: 'production-handover-report.html', pageKey: 'production', pageLabel: 'Production' },
@@ -267,7 +271,7 @@
       } else {
         updateStatus('Draft saved locally. Choose a date and shift to store under a handover ID.');
       }
-      return true;
+      return { recordId, state };
     } catch (e) {
       console.error('handover-db: save failed', e);
       updateStatus('Save failed: local storage not available.', true);
@@ -309,125 +313,83 @@
     }
   }
 
+  async function syncToBackend(recordId, state) {
+    const [, date, shift] = recordId.split(':');
+    const ownerName = (state.fields && state.fields.hName && state.fields.hName.value) || '';
+    const body = {
+      id: recordId,
+      page: state.page,
+      pageLabel: state.pageLabel,
+      date,
+      shift,
+      ownerName,
+      status: state.status,
+      updatedAt: state.updatedAt,
+      submittedAt: state.submittedAt || null,
+      payload: state
+    };
+
+    try {
+      const resp = await fetch(BACKEND_URL + '/api/handovers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!resp.ok) throw new Error('Backend returned ' + resp.status);
+      removeSyncQueueItem(recordId);
+      return true;
+    } catch (err) {
+      console.warn('handover-db: backend sync failed, queued for retry', err);
+      addSyncQueueItem(recordId);
+      return false;
+    }
+  }
+
+  function getSyncQueue() {
+    try { return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]'); } catch { return []; }
+  }
+  function addSyncQueueItem(recordId) {
+    const q = getSyncQueue();
+    if (!q.includes(recordId)) { q.push(recordId); }
+    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q));
+  }
+  function removeSyncQueueItem(recordId) {
+    const q = getSyncQueue().filter(id => id !== recordId);
+    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q));
+  }
+  async function retrySyncQueue() {
+    const q = getSyncQueue();
+    for (const recordId of q) {
+      const raw = localStorage.getItem(getRecordKey(recordId));
+      if (!raw) { removeSyncQueueItem(recordId); continue; }
+      try {
+        const state = JSON.parse(raw);
+        await syncToBackend(recordId, state);
+      } catch { /* will retry next time */ }
+    }
+  }
+
   async function finalizeAndExport() {
     const recordId = getCurrentRecordId();
     if (!recordId) {
-      updateStatus('Cannot finalize PDF export: date and shift are required.', true);
+      updateStatus('Cannot finalize: date and shift are required.', true);
       return false;
     }
 
-    const saved = saveDraft({ finalize: true });
-    if (!saved) {
-      updateStatus('Finalizing handover failed before export.', true);
+    const result = saveDraft({ finalize: true });
+    if (!result) {
+      updateStatus('Finalizing handover failed.', true);
       return false;
     }
 
-    await exportSqlite(true);
-    updateStatus(`Finalized and exported handover ${recordId}.`);
+    updateStatus('Submitting handover to database...');
+    const synced = await syncToBackend(recordId, result.state);
+    if (synced) {
+      updateStatus(`Handover ${recordId} submitted to database.`);
+    } else {
+      updateStatus(`Handover ${recordId} saved locally. Will sync to database when connection is available.`);
+    }
     return true;
-  }
-
-  function downloadBlob(blob, filename) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    URL.revokeObjectURL(a.href);
-    a.remove();
-  }
-
-  function loadSqlJs() {
-    if (window.initSqlJs) {
-      return window.initSqlJs({ locateFile: file => SQL_JS_URL.replace('sql-wasm.js', file) });
-    }
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[src="${SQL_JS_URL}"]`);
-      if (existing) {
-        existing.addEventListener('load', () => {
-          if (window.initSqlJs) {
-            resolve(window.initSqlJs({ locateFile: file => SQL_JS_URL.replace('sql-wasm.js', file) }));
-          } else {
-            reject(new Error('sql.js loaded but initSqlJs missing')); 
-          }
-        });
-        existing.addEventListener('error', () => reject(new Error('sql.js failed to load')));
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = SQL_JS_URL;
-      script.async = true;
-      script.onload = () => {
-        if (!window.initSqlJs) {
-          reject(new Error('sql.js loaded but initSqlJs missing'));
-          return;
-        }
-        window.initSqlJs({ locateFile: file => SQL_JS_URL.replace('sql-wasm.js', file) }).then(resolve).catch(reject);
-      };
-      script.onerror = () => reject(new Error('sql.js failed to load'));
-      document.head.appendChild(script);
-    });
-  }
-
-  async function exportSqlite(includeAll = false) {
-    const records = includeAll ? getAllRecords() : getAllSavedRecords();
-    if (!records.length) {
-      updateStatus('No handover records available for export.', true);
-      return;
-    }
-
-    updateStatus('Preparing SQLite export...');
-    try {
-      const SQL = await loadSqlJs();
-      const db = new SQL.Database();
-      db.run(`CREATE TABLE handover_records (
-        id TEXT PRIMARY KEY,
-        page TEXT,
-        pageLabel TEXT,
-        date TEXT,
-        shift TEXT,
-        ownerName TEXT,
-        status TEXT,
-        updatedAt INTEGER,
-        submittedAt INTEGER,
-        payload TEXT
-      );`);
-
-      const stmt = db.prepare('INSERT INTO handover_records VALUES (?,?,?,?,?,?,?,?,?,?)');
-      records.forEach(record => {
-        const [pageKey, date, shift] = record.id.split(':');
-        const ownerName = (record.fields && record.fields.hName && record.fields.hName.value) || '';
-        stmt.run([
-          record.id,
-          record.page,
-          record.pageLabel,
-          date,
-          shift,
-          ownerName,
-          record.status,
-          record.updatedAt || 0,
-          record.submittedAt || null,
-          JSON.stringify(record)
-        ]);
-      });
-      stmt.free();
-
-      const binary = db.export();
-      const blob = new Blob([binary], { type: 'application/octet-stream' });
-      const filename = `handover_records_${pageConfig.pageKey}.dat`;
-      downloadBlob(blob, filename);
-      updateStatus(`Exported ${records.length} handover records to ${filename}.`);
-    } catch (error) {
-      console.error('handover-db: SQLite export failed', error);
-      updateStatus('SQLite export failed; exporting JSON instead.', true);
-      exportJson();
-    }
-  }
-
-  function exportJson() {
-    const records = getAllSavedRecords();
-    const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
-    downloadBlob(blob, `handover_records_${pageConfig.pageKey}.json`);
   }
 
   function debounceSave() {
@@ -549,6 +511,7 @@
     window.requestAnimationFrame(() => {
       updateStatus('Autosave is active. Choose date + shift to identify this handover.');
       checkCurrentRecord();
+      retrySyncQueue();
     });
   }
 
@@ -561,7 +524,6 @@
   window.HandoverDB = {
     saveDraft,
     loadDraft,
-    exportSqlite,
     finalizeAndExport,
     getAllSavedRecords
   };
