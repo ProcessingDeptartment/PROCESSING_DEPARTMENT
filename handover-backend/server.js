@@ -9,6 +9,7 @@
 
 const http = require('http');
 const { MongoClient } = require('mongodb');
+const ExcelJS = require('exceljs');
 
 const PORT = process.env.PORT || 4000;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
@@ -165,6 +166,69 @@ async function handleGetOne(req, res, id) {
   }
 }
 
+function getWeekRange() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  return {
+    start: monday.toISOString().split('T')[0],
+    end: sunday.toISOString().split('T')[0]
+  };
+}
+
+async function handleExport(req, res) {
+  try {
+    const rows = await collection.find({}).sort({ date: -1, shift: 1 }).toArray();
+    if (!rows.length) {
+      sendJson(res, 404, { error: 'No records to export' });
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Handovers');
+
+    worksheet.columns = [
+      { header: 'Date', key: 'date', width: 12 },
+      { header: 'Shift', key: 'shift', width: 10 },
+      { header: 'Page', key: 'page', width: 15 },
+      { header: 'Manager', key: 'ownerName', width: 20 },
+      { header: 'Status', key: 'status', width: 12 },
+      { header: 'Updated', key: 'updatedAt', width: 20 },
+      { header: 'Submitted', key: 'submittedAt', width: 20 }
+    ];
+
+    rows.forEach(row => {
+      worksheet.addRow({
+        date: row.date,
+        shift: row.shift,
+        page: row.page,
+        ownerName: row.ownerName,
+        status: row.status,
+        updatedAt: new Date(row.updatedAt).toLocaleString(),
+        submittedAt: row.submittedAt ? new Date(row.submittedAt).toLocaleString() : 'N/A'
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const week = getWeekRange();
+    const filename = `productionhandover_${week.start}_${week.end}.xlsx`;
+
+    res.writeHead(200, {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${filename}"`
+    });
+    res.end(buffer);
+  } catch (err) {
+    sendJson(res, 500, { error: err.message });
+  }
+}
+
 const server = http.createServer((req, res) => {
   setCors(res);
 
@@ -183,6 +247,10 @@ const server = http.createServer((req, res) => {
   }
 
   if (parts[0] === 'api' && parts[1] === 'handovers') {
+    if (parts.length === 3 && parts[2] === 'export' && req.method === 'GET') {
+      handleExport(req, res);
+      return;
+    }
     if (parts.length === 2 && req.method === 'POST') {
       handleCreateOrUpdate(req, res);
       return;

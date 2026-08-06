@@ -10,6 +10,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "mongodb": "^6.3.0"
+    "mongodb": "^6.3.0",
+    "exceljs": "^4.3.0"
   }
 }
