@@ -100,11 +100,11 @@
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Incoming abalone temp (°C)<input id="h_incomingTemp" type="number" step="0.1"></label>
           <label class="field">No. of mortalities<input id="h_noOfMortalities" type="number"></label>
-          <label class="field">Signs of parasites?<select id="h_signsOfParasites"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Foreign/physical objects?<select id="h_foreignObjects"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Signs of parasites?<span class="ml-yesno" data-yesno-for="h_signsOfParasites"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_signsOfParasites" value=""></span></label>
+          <label class="field">Foreign/physical objects?<span class="ml-yesno" data-yesno-for="h_foreignObjects"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_foreignObjects" value=""></span></label>
         </div>
         <div class="grid grid-6">
-          <label class="field">Damages on foot?<select id="h_damagesOnFoot"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Damages on foot?<span class="ml-yesno" data-yesno-for="h_damagesOnFoot"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesOnFoot" value=""></span></label>
         </div>
       </div>
     </div>
@@ -113,9 +113,9 @@
       <div class="panel-head"><h2>Quality Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Damages after shucking?<select id="h_damagesAfterShucking"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Beak cut correct?<select id="h_beakCutCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Damages after gutting &amp; beaking?<select id="h_damagesAfterGutting"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+          <label class="field">Damages after shucking?<span class="ml-yesno" data-yesno-for="h_damagesAfterShucking"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterShucking" value=""></span></label>
+          <label class="field">Beak cut correct?<span class="ml-yesno" data-yesno-for="h_beakCutCorrect"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_beakCutCorrect" value=""></span></label>
+          <label class="field">Damages after gutting &amp; beaking?<span class="ml-yesno" data-yesno-for="h_damagesAfterGutting"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterGutting" value=""></span></label>
         </div>
       </div>
     </div>
@@ -355,6 +355,25 @@ function wire(){
   wire();
   renderAll();
   mountVerification();
+})();
+</script>
+<script src="/lib/yesno-replace.js"></script>
+<script>
+// Wire any inlined .ml-yesno groups on this page (None / Y / N buttons)
+(function(){
+  document.querySelectorAll('.ml-yesno').forEach(group=>{
+    const hidden = group.querySelector('input[type=hidden]');
+    group.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if (btn.disabled) return;
+        const requested = btn.dataset.v;
+        const next = btn.classList.contains('on') ? '' : requested;
+        hidden.value = next;
+        group.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+  });
 })();
 </script>
 </body>
