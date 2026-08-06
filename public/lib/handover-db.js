@@ -251,6 +251,16 @@
       return false;
     }
 
+    if (!options.finalize && recordId) {
+      const existing = localStorage.getItem(getRecordKey(recordId));
+      if (existing) {
+        try {
+          const prev = JSON.parse(existing);
+          if (prev.status === 'submitted') return false;
+        } catch (e) {}
+      }
+    }
+
     const state = collectFormState();
     state.status = options.finalize ? 'submitted' : 'draft';
     state.savedAt = Date.now();
