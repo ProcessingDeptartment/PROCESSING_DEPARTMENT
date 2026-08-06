@@ -185,7 +185,8 @@ body {
     .section-title { font-size: 14px; }
 }
 @media print {
-    @page { size: A4 portrait; margin: 0.6cm; }
+    @page { size: A4 portrait; margin: 0.6cm; counter-increment: page; }
+    @page:first { counter-reset: page 1; }
     body { background: white; padding: 0; color: black; font-size: 11px; line-height: 1.2; }
     .no-print { display: none !important; }
     .print-only { display: block !important; }

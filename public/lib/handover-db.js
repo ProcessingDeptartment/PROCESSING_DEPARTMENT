@@ -469,26 +469,23 @@
 
     const panel = document.createElement('div');
     panel.id = 'handover-db-controls';
+    panel.className = 'no-print';
     panel.style.padding = '1rem';
     panel.style.border = '1px solid #cbd5e1';
     panel.style.background = '#ffffff';
     panel.style.borderRadius = '16px';
     panel.style.marginTop = '1rem';
     panel.innerHTML = `
-      <div class="section-title">Handover database</div>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-        <div class="text-sm text-slate-600 leading-6">
-          Handovers are saved and searched by date + shift. Submitted handovers (PDF generated) are removed from this list automatically.
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
         <div>
           <select id="handover-db-record-select" class="bubble-btn w-full text-left" style="min-height:40px; font-size:12px; background:#f8fafc; border:1px solid #cbd5e1; color:#0f172a;">
-            <option value="">Loading saved handovers...</option>
+            <option value="">Select saved handover</option>
           </select>
         </div>
         <div><button id="handover-db-load-btn" type="button" class="bubble-btn handover-db-controls-btn w-full" style="font-size:12px; background:#2563eb; color:#fff;">Load draft</button></div>
         <div><button id="handover-db-save-btn" type="button" class="bubble-btn handover-db-controls-btn w-full" style="font-size:12px; background:#10b981; color:#fff;">Save now</button></div>
       </div>
-      <div id="handover-db-status" class="mt-3 text-sm text-slate-700">Autosave is active. Select date + shift before saving.</div>
+      <div id="handover-db-status" class="mt-3 text-sm text-slate-700" style="display:none;"></div>
     `;
 
     const header = root.querySelector('.report-header');
