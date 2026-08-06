@@ -162,7 +162,14 @@
        submissions browser (filters, list, buttons), none of which is the record. */
     body.fr-printing .fr-body{ display:none !important; }
     body.fr-printing .fr-sheet{ display:block; }
-  }`;
+  }
+  /* Yes/No button group styles copied from monitoring-log.js to match appearance */
+  .ml-yesno{ display:flex; gap:6px; }
+  .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
+  .ml-yesno button:hover:not(:disabled){ border-color:#8a939b !important; }
+  .ml-yesno button.on[data-v="Yes"]{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
+  .ml-yesno button.on[data-v="No"]{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); }
+  .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }`;
 
   function injectStyleOnce() {
     if (document.getElementById('fr-style')) return;
@@ -181,18 +188,43 @@
 
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
-    if (field.type === 'select' || field.type === 'yesno') {
-      const opts = field.type === 'yesno' ? ['', 'Yes', 'No'] : ['', ...(field.options || [])];
-      // Keep a stored value that is no longer an option (e.g. an option list
-      // that was since renamed) so old records still show what was captured.
-      if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
-      return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
+      if (field.type === 'yesno') {
+        return `<span class="ml-yesno" data-yesno-for="${id}">
+          <button type="button" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}">Yes</button>
+          <button type="button" data-v="No" class="${v === 'No' ? 'on' : ''}">No</button>
+          <input type="hidden" id="${id}" value="${esc(v)}">
+        </span>`;
     }
-    if (field.type === 'textarea') return `<textarea id="${id}" rows="3">${esc(v)}</textarea>`;
-    if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}">`;
-    if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}">`;
-    return `<input type="text" id="${id}" value="${esc(v)}">`;
-  }
+      if (field.type === 'select') {
+        const opts = ['', ...(field.options || [])];
+        // Keep a stored value that is no longer an option (e.g. an option list
+        // that was since renamed) so old records still show what was captured.
+        if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
+        return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
+      }
+      if (field.type === 'textarea') return `<textarea id="${id}" rows="3">${esc(v)}</textarea>`;
+      if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}">`;
+      if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}">`;
+      return `<input type="text" id="${id}" value="${esc(v)}">`;
+    }
+
+    // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
+    // listening for a normal field change (computed fields) still sees it. Clicking the
+    // active choice again clears it -- there is no other way back to "not answered".
+    function wireYesNo(container) {
+      container.querySelectorAll('.ml-yesno').forEach(group => {
+        const hidden = group.querySelector('input[type=hidden]');
+        group.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            const next = btn.classList.contains('on') ? '' : btn.dataset.v;
+            hidden.value = next;
+            group.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === next && next !== ''));
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+        });
+      });
+    }
 
   function allFields(config) {
     const fields = [];
@@ -400,15 +432,17 @@
       if (!rows.length) rows.push({});
       function draw() {
         container.innerHTML = rows.map((r, i) => rosterRowHtml('fr', i, r)).join('');
-        container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const i = Number(btn.dataset.removeRosterRow);
-            rows.splice(i, 1);
-            if (!rows.length) rows.push({});
-            draw();
-          });
-        });
-      }
+              // Wire Yes/No button groups inside roster rows
+              if (typeof wireYesNo === 'function') wireYesNo(container);
+              container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                  const i = Number(btn.dataset.removeRosterRow);
+                  rows.splice(i, 1);
+                  if (!rows.length) rows.push({});
+                  draw();
+                });
+              });
+            }
       draw();
       container._getRows = () => {
         // capture current input values before returning
@@ -466,6 +500,8 @@
         renderRosterEditor(existing ? existing.roster : null);
         el('fr_addRosterRowBtn').addEventListener('click', () => container.querySelector('#fr_rosterRows')._addRow());
       }
+      // Wire Yes/No button groups in the modal
+      if (typeof wireYesNo === 'function') wireYesNo(container);
       // A submitted record is evidence -- it opens to be read, never to be re-typed.
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked; });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
