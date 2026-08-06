@@ -287,12 +287,12 @@
     s.textContent = `
       table.dh-block{ width:100%; border-collapse:collapse; table-layout:fixed;
         font-family:'Segoe UI',system-ui,sans-serif; color:#4a4a4a; margin-bottom:6px; }
-      table.dh-block td{ border:1px solid #b9bcbe; padding:1px 5px; font-size:9px;
+      table.dh-block td{ border:1px solid #b9bcbe; padding:1px 5px; font-size:14px;
         line-height:1.35; vertical-align:middle; }
       table.dh-block td.dh-brand{ width:22%; text-align:center; padding:2px 6px; }
       table.dh-block td.dh-lbl{ width:13%; white-space:nowrap; }
       table.dh-block td.dh-val{ width:19%; color:#333; }
-      table.dh-block td.dh-foot{ font-size:8.5px; }
+      table.dh-block td.dh-foot{ font-size:14px; }
       .dh-logo{ max-width:100%; max-height:34px; width:auto; height:auto; display:inline-block; }
       .dh-logo-text{ font-weight:700; letter-spacing:.22em; font-size:12px; color:#5a5a5a; }
       @media print{
