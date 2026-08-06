@@ -24,6 +24,7 @@
   let loadBtn = null;
   let saveBtn = null;
   let recordSelect = null;
+  let finalBtn = null;
 
   let debounceTimer = null;
 
@@ -392,6 +393,31 @@
     return true;
   }
 
+  async function finalSubmit() {
+    const recordId = getCurrentRecordId();
+    if (!recordId) {
+      updateStatus('Enter a date and shift before submitting.', true);
+      statusEl.style.display = '';
+      return;
+    }
+    if (!confirm('Submit this handover to the database? It will be removed from saved drafts.')) return;
+
+    statusEl.style.display = '';
+    updateStatus('Submitting handover to database...');
+    const result = saveDraft({ finalize: true });
+    if (!result) {
+      updateStatus('Submit failed.', true);
+      return;
+    }
+    const synced = await syncToBackend(recordId, result.state);
+    if (synced) {
+      updateStatus(`Handover ${recordId} submitted.`);
+    } else {
+      updateStatus(`Handover ${recordId} saved locally. Will sync when connection is available.`);
+    }
+    populateRecordSelect();
+  }
+
   function debounceSave() {
     if (debounceTimer) {
       clearTimeout(debounceTimer);
@@ -445,6 +471,9 @@
     if (saveBtn) {
       saveBtn.addEventListener('click', () => saveDraft({ reason: 'manual' }));
     }
+    if (finalBtn) {
+      finalBtn.addEventListener('click', finalSubmit);
+    }
     if (recordSelect) {
       recordSelect.addEventListener('change', () => selectSavedRecord(recordSelect.value));
     }
@@ -476,7 +505,7 @@
     panel.style.borderRadius = '16px';
     panel.style.marginTop = '1rem';
     panel.innerHTML = `
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
         <div>
           <select id="handover-db-record-select" class="bubble-btn w-full text-left" style="min-height:40px; font-size:12px; background:#f8fafc; border:1px solid #cbd5e1; color:#0f172a;">
             <option value="">Select saved handover</option>
@@ -484,6 +513,7 @@
         </div>
         <div><button id="handover-db-load-btn" type="button" class="bubble-btn handover-db-controls-btn w-full" style="font-size:12px; background:#2563eb; color:#fff;">Load draft</button></div>
         <div><button id="handover-db-save-btn" type="button" class="bubble-btn handover-db-controls-btn w-full" style="font-size:12px; background:#10b981; color:#fff;">Save now</button></div>
+        <div><button id="handover-db-final-btn" type="button" class="bubble-btn handover-db-controls-btn w-full" style="font-size:12px; background:#dc2626; color:#fff;">Final Submit</button></div>
       </div>
       <div id="handover-db-status" class="mt-3 text-sm text-slate-700" style="display:none;"></div>
     `;
@@ -498,6 +528,7 @@
     statusEl = document.getElementById('handover-db-status');
     loadBtn = document.getElementById('handover-db-load-btn');
     saveBtn = document.getElementById('handover-db-save-btn');
+    finalBtn = document.getElementById('handover-db-final-btn');
     recordSelect = document.getElementById('handover-db-record-select');
     populateRecordSelect();
   }
