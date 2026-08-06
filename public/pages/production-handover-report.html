@@ -48,6 +48,11 @@ body {
 }
 .bubble-btn.conforming { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; box-shadow: 0 0 0 1px #3b82f6; }
 .bubble-btn.nc { background: #fef2f2; border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 0 1px #ef4444; }
+.bubble-btn:active, #printBtn:active, .handover-db-controls-btn:active {
+    transform: scale(0.94);
+    filter: brightness(0.9);
+}
+#printBtn:not(:disabled):active { box-shadow: inset 0 2px 6px rgba(0,0,0,0.35); }
 .bubble-block {
     background: #f8fafc;
     border: 1px solid #e2e8f0;

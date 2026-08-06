@@ -19,7 +19,6 @@
   let statusEl = null;
   let loadBtn = null;
   let saveBtn = null;
-  let exportBtn = null;
   let recordSelect = null;
 
   let debounceTimer = null;
@@ -53,10 +52,13 @@
   }
 
   function getSavedRecordsForSelect() {
-    return getAllSavedRecords().map(record => ({
-      id: record.id,
-      label: `${record.date} ${record.shift} (${record.status || 'draft'})`
-    })).sort((a, b) => a.id.localeCompare(b.id));
+    return getAllSavedRecords().map(record => {
+      const [, date, shift] = record.id.split(':');
+      return {
+        id: record.id,
+        label: `${date} - ${shift} (${record.status || 'draft'})`
+      };
+    }).sort((a, b) => a.id.localeCompare(b.id));
   }
 
   function populateRecordSelect() {
@@ -238,13 +240,18 @@
   }
 
   function saveDraft(options = {}) {
+    const recordId = getCurrentRecordId();
+    if (!recordId && options.reason === 'manual') {
+      updateStatus('Enter a date and shift before saving. Handovers are saved as date + shift.', true);
+      return false;
+    }
+
     const state = collectFormState();
     state.status = options.finalize ? 'submitted' : 'draft';
     state.savedAt = Date.now();
     if (options.finalize) {
       state.submittedAt = Date.now();
     }
-    const recordId = getCurrentRecordId();
     const storageKey = recordId ? getRecordKey(recordId) : getUnsavedKey();
 
     try {
@@ -476,9 +483,6 @@
     if (saveBtn) {
       saveBtn.addEventListener('click', () => saveDraft({ reason: 'manual' }));
     }
-    if (exportBtn) {
-      exportBtn.addEventListener('click', () => exportSqlite(true));
-    }
     if (recordSelect) {
       recordSelect.addEventListener('change', () => selectSavedRecord(recordSelect.value));
     }
@@ -490,6 +494,7 @@
     });
 
     Array.from(root.querySelectorAll('.bubble-btn, .yesno-toggle button')).forEach(button => {
+      if (button.classList.contains('handover-db-controls-btn')) return;
       button.addEventListener('click', handleBubbleClick);
     });
 
@@ -509,20 +514,19 @@
     panel.style.marginTop = '1rem';
     panel.innerHTML = `
       <div class="section-title">Handover database</div>
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
         <div class="text-sm text-slate-600 leading-6">
-          This handover record is stored separately from other pages. Use the footer date + shift to identify the draft.
+          Handovers are saved and searched by date + shift. Submitted handovers (PDF generated) are removed from this list automatically.
         </div>
         <div>
           <select id="handover-db-record-select" class="bubble-btn w-full text-left" style="min-height:40px; font-size:12px; background:#f8fafc; border:1px solid #cbd5e1; color:#0f172a;">
             <option value="">Loading saved handovers...</option>
           </select>
         </div>
-        <div><button id="handover-db-load-btn" type="button" class="bubble-btn w-full" style="font-size:12px; background:#2563eb; color:#fff;">Load draft</button></div>
-        <div><button id="handover-db-save-btn" type="button" class="bubble-btn w-full" style="font-size:12px; background:#10b981; color:#fff;">Save now</button></div>
-        <div><button id="handover-db-export-btn" type="button" class="bubble-btn w-full" style="font-size:12px; background:#f97316; color:#fff;">Export SQLite .dat</button></div>
+        <div><button id="handover-db-load-btn" type="button" class="bubble-btn handover-db-controls-btn w-full" style="font-size:12px; background:#2563eb; color:#fff;">Load draft</button></div>
+        <div><button id="handover-db-save-btn" type="button" class="bubble-btn handover-db-controls-btn w-full" style="font-size:12px; background:#10b981; color:#fff;">Save now</button></div>
       </div>
-      <div id="handover-db-status" class="mt-3 text-sm text-slate-700">Autosave is active. Select date + shift before saving or exporting.</div>
+      <div id="handover-db-status" class="mt-3 text-sm text-slate-700">Autosave is active. Select date + shift before saving.</div>
     `;
 
     const header = root.querySelector('.report-header');
@@ -535,7 +539,6 @@
     statusEl = document.getElementById('handover-db-status');
     loadBtn = document.getElementById('handover-db-load-btn');
     saveBtn = document.getElementById('handover-db-save-btn');
-    exportBtn = document.getElementById('handover-db-export-btn');
     recordSelect = document.getElementById('handover-db-record-select');
     populateRecordSelect();
   }
