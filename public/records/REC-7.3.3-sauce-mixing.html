@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
       date:'', brothBatchDate:'', potNo:'', phBroth:'', brixBroth:'', saltBroth:'', litres:'',
       chickenLiquidWeight:'', chickenLiquidBatchCode:'', smokeyFlavourWeight:'', smokeyFlavourBatchCode:'',
       cvgMixBatchCode:'', xg1BatchCode:'', xg2BatchCode:'', xg3BatchCode:'', mdMixBatchCode:'',
-      tsMixBatchCode:'', soMixBatchCode:'', mixedBy:'', mixedByTitle:'', mixedByDate:'',
+      tsMixBatchCode:'', soMixBatchCode:'', mixedBy:'', mixedByTitle:'', mixedByDate:'', mixedBySignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -217,10 +217,11 @@ function toast(msg){
     $('f_mixedBy').value = state.mixedBy;
     $('f_mixedByTitle').value = state.mixedByTitle;
     $('f_mixedByDate').value = state.mixedByDate;
+    $('f_mixedBySignature').value = state.mixedBySignature;
   }
 
   function bindInputs(){
-    const fields = ['date','brothBatchDate','potNo','phBroth','brixBroth','saltBroth','litres','chickenLiquidWeight','chickenLiquidBatchCode','smokeyFlavourWeight','smokeyFlavourBatchCode','cvgMixBatchCode','xg1BatchCode','xg2BatchCode','xg3BatchCode','mdMixBatchCode','tsMixBatchCode','soMixBatchCode','mixedBy','mixedByTitle','mixedByDate'];
+    const fields = ['date','brothBatchDate','potNo','phBroth','brixBroth','saltBroth','litres','chickenLiquidWeight','chickenLiquidBatchCode','smokeyFlavourWeight','smokeyFlavourBatchCode','cvgMixBatchCode','xg1BatchCode','xg2BatchCode','xg3BatchCode','mdMixBatchCode','tsMixBatchCode','soMixBatchCode','mixedBy','mixedByTitle','mixedByDate','mixedBySignature'];
     fields.forEach(f=>{
       const id = f.startsWith('mixedBy') ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -265,7 +266,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_mixedBy', titleId: 'f_mixedByTitle', dateId: 'f_mixedByDate', byLabel: 'Mixed by'
+      byId: 'f_mixedBy', titleId: 'f_mixedByTitle', dateId: 'f_mixedByDate', signatureId: 'f_mixedBySignature', byLabel: 'Mixed by'
     });
   }
 

@@ -119,18 +119,18 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $=id=>document.getElementById(id);
-  function newRecord(){return{id:null,revision:1,status:'draft',date:'',time:'',trackingOrJobNo:'',sizeRange:'',qualityOfAbalone:'',piecesSizes:'',ingoWeightSpec:'',actualIngoWeight:'',processDeviation:'',packer:'',packerTitle:'',qcOnline:'',packerDate:'',verification:null,createdAt:null,updatedAt:null};}
+  function newRecord(){return{id:null,revision:1,status:'draft',date:'',time:'',trackingOrJobNo:'',sizeRange:'',qualityOfAbalone:'',piecesSizes:'',ingoWeightSpec:'',actualIngoWeight:'',processDeviation:'',packer:'',packerTitle:'',qcOnline:'',packerDate:'',packerSignature:'',verification:null,createdAt:null,updatedAt:null};}
   let state=newRecord();
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
   function safeKey(s){return String(s).trim().replace(/[\s\/\\'"]+/g,'_');}
   async function storeGet(key,shared){try{const r=await window.storage.get(key,shared);return r?r.value:null;}catch(e){return null;}}
   async function storeSet(key,value,shared){try{await window.storage.set(key,value,shared);return true;}catch(e){return false;}}
-  function renderForm(){$('h_date').value=state.date;$('h_time').value=state.time;$('h_trackingOrJobNo').value=state.trackingOrJobNo;$('h_sizeRange').value=state.sizeRange;$('h_qualityOfAbalone').value=state.qualityOfAbalone;$('h_piecesSizes').value=state.piecesSizes;$('h_ingoWeightSpec').value=state.ingoWeightSpec;$('h_actualIngoWeight').value=state.actualIngoWeight;$('h_processDeviation').value=state.processDeviation;$('f_packer').value=state.packer;$('f_packerTitle').value=state.packerTitle;$('f_qcOnline').value=state.qcOnline;$('f_packerDate').value=state.packerDate;}
-  function bindInputs(){const fields=['date','time','trackingOrJobNo','sizeRange','qualityOfAbalone','piecesSizes','ingoWeightSpec','actualIngoWeight','processDeviation','packer','packerTitle','qcOnline','packerDate'];fields.forEach(f=>{const id=f.startsWith('packer')||f.startsWith('qcOnline')?'f_'+f:'h_'+f;const el=$(id);if(el)el.addEventListener('input',()=>{state[f]=el.value;});});}
+  function renderForm(){$('h_date').value=state.date;$('h_time').value=state.time;$('h_trackingOrJobNo').value=state.trackingOrJobNo;$('h_sizeRange').value=state.sizeRange;$('h_qualityOfAbalone').value=state.qualityOfAbalone;$('h_piecesSizes').value=state.piecesSizes;$('h_ingoWeightSpec').value=state.ingoWeightSpec;$('h_actualIngoWeight').value=state.actualIngoWeight;$('h_processDeviation').value=state.processDeviation;$('f_packer').value=state.packer;$('f_packerTitle').value=state.packerTitle;$('f_qcOnline').value=state.qcOnline;$('f_packerDate').value=state.packerDate;$('f_packerSignature').value=state.packerSignature;}
+  function bindInputs(){const fields=['date','time','trackingOrJobNo','sizeRange','qualityOfAbalone','piecesSizes','ingoWeightSpec','actualIngoWeight','processDeviation','packer','packerTitle','qcOnline','packerDate','packerSignature'];fields.forEach(f=>{const id=f.startsWith('packer')||f.startsWith('qcOnline')?'f_'+f:'h_'+f;const el=$(id);if(el)el.addEventListener('input',()=>{state[f]=el.value;});});}
   function updateRecordStatus(){const jobStr=state.trackingOrJobNo?state.trackingOrJobNo:'No job';const submitted=state.status==='submitted';$('recordStatus').textContent=`${submitted?'✓ Submitted':'Draft'} · ${jobStr} · ${state.id?'ID: '+state.id.slice(-8):'Unsaved'}`;}
   function renderAll(){renderForm();updateRecordStatus();$('statusLine').textContent=state.updatedAt?`Last saved ${new Date(state.updatedAt).toLocaleString()}`:'Not yet saved';}
   async function saveRecord(finalize){const now=Date.now();if(!state.id){const jobId=state.trackingOrJobNo?state.trackingOrJobNo:'NOJOB';state.id=`can_packing_${safeKey(jobId)}_${now}`;state.createdAt=now;}state.updatedAt=now;state.status=finalize?'submitted':'draft';const ok=await storeSet('record:'+state.id,JSON.stringify(state),true);if(!ok){toast('Save failed.');return;}toast(finalize?'Submitted for verification.':'Draft saved.');renderAll();if(verificationBlock)verificationBlock.refresh();}
@@ -138,7 +138,7 @@ function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show')
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_packer', titleId: 'f_packerTitle', dateId: 'f_packerDate', byLabel: 'Packer'
+      byId: 'f_packer', titleId: 'f_packerTitle', dateId: 'f_packerDate', signatureId: 'f_packerSignature', byLabel: 'Packer'
     });
   }
 

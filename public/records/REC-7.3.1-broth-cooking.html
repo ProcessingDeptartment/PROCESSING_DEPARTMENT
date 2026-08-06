@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
       id: null, revision: 1, status:'draft',
       date:'', potNo:'', waterLitres:'', abaloneShellsIntakeDate:'', driedKelpWeight:'',
       scallopJuiceWeight:'', finalBrothLitres:'', ph:'', salt:'', brix:'', comments:'',
-      cookedBy:'', checkedAndCompletedBy:'', checkedAndCompletedByTitle:'', checkedAndCompletedByDate:'',
+      cookedBy:'', checkedAndCompletedBy:'', checkedAndCompletedByTitle:'', checkedAndCompletedByDate:'', checkedAndCompletedBySignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -200,10 +200,11 @@ function toast(msg){
     $('f_checkedAndCompletedBy').value = state.checkedAndCompletedBy;
     $('f_checkedAndCompletedByTitle').value = state.checkedAndCompletedByTitle;
     $('f_checkedAndCompletedByDate').value = state.checkedAndCompletedByDate;
+    $('f_checkedAndCompletedBySignature').value = state.checkedAndCompletedBySignature;
   }
 
   function bindInputs(){
-    const fields = ['date','potNo','waterLitres','abaloneShellsIntakeDate','driedKelpWeight','scallopJuiceWeight','finalBrothLitres','ph','salt','brix','comments','cookedBy','checkedAndCompletedBy','checkedAndCompletedByTitle','checkedAndCompletedByDate'];
+    const fields = ['date','potNo','waterLitres','abaloneShellsIntakeDate','driedKelpWeight','scallopJuiceWeight','finalBrothLitres','ph','salt','brix','comments','cookedBy','checkedAndCompletedBy','checkedAndCompletedByTitle','checkedAndCompletedByDate','checkedAndCompletedBySignature'];
     fields.forEach(f=>{
       const id = (f.startsWith('cookedBy') || f.startsWith('checkedAndCompletedBy')) ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -248,7 +249,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_checkedAndCompletedBy', titleId: 'f_checkedAndCompletedByTitle', dateId: 'f_checkedAndCompletedByDate', byLabel: 'Checked and completed by'
+      byId: 'f_checkedAndCompletedBy', titleId: 'f_checkedAndCompletedByTitle', dateId: 'f_checkedAndCompletedByDate', signatureId: 'f_checkedAndCompletedBySignature', byLabel: 'Checked and completed by'
     });
   }
 

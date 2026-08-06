@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function () {
         microSerial:'', microVerified:'', gauge121:'', gauge300:'' },
       stages:{ before: blankStage(), during: blankStage(), after: blankStage() },
       comments:'',
-      completedBy:'', completedSig:'', completedDate:'',
+      completedBy:'', completedSig:'', completedDate:'', completedBySignature:'',
       verifiedBy:'', verifiedSig:'', verifiedDate:'',
       createdAt: null, updatedAt: null
     };
@@ -767,6 +767,7 @@ function toast(msg){
     $('f_completedBy').value = state.completedBy;
     $('f_completedSig').value = state.completedSig;
     $('f_completedDate').value = state.completedDate;
+    $('f_completedBySignature').value = state.completedBySignature;
     $('f_verifiedBy').value = state.verifiedBy;
     $('f_verifiedSig').value = state.verifiedSig;
     $('f_verifiedDate').value = state.verifiedDate;
@@ -783,7 +784,7 @@ function toast(msg){
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; renderIssues(); });
     });
     $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['f_completedBy','f_completedSig','f_completedDate','f_verifiedBy','f_verifiedSig','f_verifiedDate'].forEach(id=>{
+    ['f_completedBy','f_completedSig','f_completedDate','f_completedBySignature','f_verifiedBy','f_verifiedSig','f_verifiedDate'].forEach(id=>{
       const key = id.replace('f_','');
       $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
     });
@@ -920,6 +921,7 @@ function toast(msg){
         <label class="field">Title<span>${state.verifiedSig||'—'}</span></label>
         <label class="field">Date<span>${state.completedDate||'—'}</span></label>
         <label class="field">Date<span>${state.verifiedDate||'—'}</span></label>
+        <label class="field">Signature<span>${state.completedBySignature||'—'}</span></label>
       </div></div>`;
   }
 
@@ -1088,7 +1090,7 @@ $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules
   }
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_completedBy', titleId: 'f_completedSig', dateId: 'f_completedDate', byLabel: 'Completed by'
+      byId: 'f_completedBy', titleId: 'f_completedSig', dateId: 'f_completedDate', signatureId: 'f_completedBySignature', byLabel: 'Completed by'
     });
   }
 

@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
       bleedingStartTime:'', bleedingFinishTime:'', bleedingTotalTime:'', standardSaltingTime:'',
       saltingStartTime:'', saltingFinishTime:'', shuckWeight:'', saltKg:'', saltPercent:'', saltBatchCode:'',
       bakingSodaG:'', bakingSodaBatchCode:'', saltingTotalTime:'', processDeviation:'',
-      operator:'', operatorTitle:'', qualityController:'', operatorDate:'',
+      operator:'', operatorTitle:'', qualityController:'', operatorDate:'', operatorSignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -225,10 +225,11 @@ function toast(msg){
     $('f_operatorTitle').value = state.operatorTitle;
     $('f_qualityController').value = state.qualityController;
     $('f_operatorDate').value = state.operatorDate;
+    $('f_operatorSignature').value = state.operatorSignature;
   }
 
   function bindInputs(){
-    const fields = ['date','harvestFarm','jobNo','sizeRange','noOfCrates','bleedingStartTime','bleedingFinishTime','bleedingTotalTime','standardSaltingTime','saltingStartTime','saltingFinishTime','shuckWeight','saltKg','saltPercent','saltBatchCode','bakingSodaG','bakingSodaBatchCode','saltingTotalTime','processDeviation','operator','operatorTitle','qualityController','operatorDate'];
+    const fields = ['date','harvestFarm','jobNo','sizeRange','noOfCrates','bleedingStartTime','bleedingFinishTime','bleedingTotalTime','standardSaltingTime','saltingStartTime','saltingFinishTime','shuckWeight','saltKg','saltPercent','saltBatchCode','bakingSodaG','bakingSodaBatchCode','saltingTotalTime','processDeviation','operator','operatorTitle','qualityController','operatorDate','operatorSignature'];
     fields.forEach(f=>{
       const id = (f.startsWith('operator')||f.startsWith('qualityController')) ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -273,7 +274,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_operator', titleId: 'f_operatorTitle', dateId: 'f_operatorDate', byLabel: 'Operator'
+      byId: 'f_operator', titleId: 'f_operatorTitle', dateId: 'f_operatorDate', signatureId: 'f_operatorSignature', byLabel: 'Operator'
     });
   }
 

@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // sizeRange is per basket, not per record -- one receiving can hold mixed sizes.
       receivingDate:'', receivedFrom:'', toBeProcessedFor:'', jobNo:'',
       basketEntries: [],
-      checkedBy:'', checkedByTitle:'', checkedByDate:'',
+      checkedBy:'', checkedByTitle:'', checkedByDate:'', checkedBySignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -320,6 +320,7 @@ function toast(msg){
     $('f_checkedBy').value = state.checkedBy;
     $('f_checkedByTitle').value = state.checkedByTitle;
     $('f_checkedByDate').value = state.checkedByDate;
+    $('f_checkedBySignature').value = state.checkedBySignature;
   }
 
   // jobNo is stored as one string (e.g. "3CP000123") but entered as
@@ -363,7 +364,8 @@ function toast(msg){
       ['toBeProcessedFor', 'h_toBeProcessedFor'],
       ['checkedBy', 'f_checkedBy'],
       ['checkedByTitle', 'f_checkedByTitle'],
-      ['checkedByDate', 'f_checkedByDate']
+      ['checkedByDate', 'f_checkedByDate'],
+      ['checkedBySignature', 'f_checkedBySignature']
     ];
     inputs.forEach(([stateKey, id])=>{
       const el = $(id);
@@ -705,7 +707,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', byLabel: 'Completed by'
+      byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', signatureId: 'f_checkedBySignature', byLabel: 'Completed by'
     });
   }
 

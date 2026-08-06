@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/traceability.js?v=2"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
       litresWaterPerCook:'', sugarKgUsed:'', sugarBatchCode:'', precookingStartTime:'', temperature:'',
       waterInPotChanged:'', rinseWaterChanged:'', cleanWeight:'', precookWeight:'',
       totalWholeWeight:'', totalCleanWeight:'', totalPrecookWeight:'', percentCleanWeight:'', percentPrecookWeight:'',
-      cookedBy:'', cookedByTitle:'', cookedByDate:'',
+      cookedBy:'', cookedByTitle:'', cookedByDate:'', cookedBySignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -224,10 +224,11 @@ function toast(msg){
     $('f_cookedBy').value = state.cookedBy;
     $('f_cookedByTitle').value = state.cookedByTitle;
     $('f_cookedByDate').value = state.cookedByDate;
+    $('f_cookedBySignature').value = state.cookedBySignature;
   }
 
   function bindInputs(){
-    const fields = ['intakeDate','harvestFarm','trackingNo','precookingDate','jobNumber','sizeRange','litresWaterPerCook','sugarKgUsed','sugarBatchCode','precookingStartTime','temperature','waterInPotChanged','rinseWaterChanged','cleanWeight','precookWeight','totalWholeWeight','totalCleanWeight','totalPrecookWeight','percentCleanWeight','percentPrecookWeight','cookedBy','cookedByTitle','cookedByDate'];
+    const fields = ['intakeDate','harvestFarm','trackingNo','precookingDate','jobNumber','sizeRange','litresWaterPerCook','sugarKgUsed','sugarBatchCode','precookingStartTime','temperature','waterInPotChanged','rinseWaterChanged','cleanWeight','precookWeight','totalWholeWeight','totalCleanWeight','totalPrecookWeight','percentCleanWeight','percentPrecookWeight','cookedBy','cookedByTitle','cookedByDate','cookedBySignature'];
     fields.forEach(f=>{
       const id = f.startsWith('cookedBy') ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -278,7 +279,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_cookedBy', titleId: 'f_cookedByTitle', dateId: 'f_cookedByDate', byLabel: 'Cooked by'
+      byId: 'f_cookedBy', titleId: 'f_cookedByTitle', dateId: 'f_cookedByDate', signatureId: 'f_cookedBySignature', byLabel: 'Cooked by'
     });
   }
 

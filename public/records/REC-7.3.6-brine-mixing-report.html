@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
       date:'', jobNumber:'', sample:'', productDescription:'', productionDateIngo:'', canPieces:'',
       nettWeightMin:'', drainMassMin:'', drainMassMax:'', saltG:'', saltBatchNo:'', saltPercent:'',
       sugarG:'', sugarBatchNo:'', sugarPercent:'', maltG:'', maltBatchNo:'', commentsDeviations:'',
-      completedBy:'', completedByTitle:'', completedByDate:'',
+      completedBy:'', completedByTitle:'', completedByDate:'', completedBySignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -233,10 +233,11 @@ function toast(msg){
     $('f_completedBy').value = state.completedBy;
     $('f_completedByTitle').value = state.completedByTitle;
     $('f_completedByDate').value = state.completedByDate;
+    $('f_completedBySignature').value = state.completedBySignature;
   }
 
   function bindInputs(){
-    const fields = ['date','jobNumber','sample','productDescription','productionDateIngo','canPieces','nettWeightMin','drainMassMin','drainMassMax','saltG','saltBatchNo','saltPercent','sugarG','sugarBatchNo','sugarPercent','maltG','maltBatchNo','commentsDeviations','completedBy','completedByTitle','completedByDate'];
+    const fields = ['date','jobNumber','sample','productDescription','productionDateIngo','canPieces','nettWeightMin','drainMassMin','drainMassMax','saltG','saltBatchNo','saltPercent','sugarG','sugarBatchNo','sugarPercent','maltG','maltBatchNo','commentsDeviations','completedBy','completedByTitle','completedByDate','completedBySignature'];
     fields.forEach(f=>{
       const id = f.startsWith('completedBy') ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -282,7 +283,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_completedBy', titleId: 'f_completedByTitle', dateId: 'f_completedByDate', byLabel: 'Completed by'
+      byId: 'f_completedBy', titleId: 'f_completedByTitle', dateId: 'f_completedByDate', signatureId: 'f_completedBySignature', byLabel: 'Completed by'
     });
   }
 

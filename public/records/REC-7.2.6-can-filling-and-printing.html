@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
       date:'', startTime:'', jobNo:'', waterOrSauceFillingBatch:'',
       productTemp:'', nettWeightSpec:'', actualNettWeight:'', printedAgCode:'',
       printedBestBeforeDate:'', verifiedBeforePrinting:'', verifiedAfterPrinting:'',
-      processDeviations:'', checkedBy:'', checkedByTitle:'', checkedByDate:'',
+      processDeviations:'', checkedBy:'', checkedByTitle:'', checkedByDate:'', checkedBySignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -205,10 +205,11 @@ function toast(msg){
     $('f_checkedBy').value = state.checkedBy;
     $('f_checkedByTitle').value = state.checkedByTitle;
     $('f_checkedByDate').value = state.checkedByDate;
+    $('f_checkedBySignature').value = state.checkedBySignature;
   }
 
   function bindInputs(){
-    const fields = ['date','startTime','jobNo','waterOrSauceFillingBatch','productTemp','nettWeightSpec','actualNettWeight','printedAgCode','printedBestBeforeDate','verifiedBeforePrinting','verifiedAfterPrinting','processDeviations','checkedBy','checkedByTitle','checkedByDate'];
+    const fields = ['date','startTime','jobNo','waterOrSauceFillingBatch','productTemp','nettWeightSpec','actualNettWeight','printedAgCode','printedBestBeforeDate','verifiedBeforePrinting','verifiedAfterPrinting','processDeviations','checkedBy','checkedByTitle','checkedByDate','checkedBySignature'];
     fields.forEach(f=>{
       const id = f.startsWith('checkedBy') ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -253,7 +254,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', byLabel: 'Checked by'
+      byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', signatureId: 'f_checkedBySignature', byLabel: 'Checked by'
     });
   }
 

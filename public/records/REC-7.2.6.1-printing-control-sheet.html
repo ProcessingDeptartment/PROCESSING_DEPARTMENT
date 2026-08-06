@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/signoff-block.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return {
       id: null, revision: 1, status:'draft',
       date:'', productionDate:'', time:'', codeCorrect:'', canPosition:'',
-      actualCanPieces:'', piecesOnCan:'', correctiveActions:'', supervisor:'', supervisorTitle:'', supervisorDate:'',
+      actualCanPieces:'', piecesOnCan:'', correctiveActions:'', supervisor:'', supervisorTitle:'', supervisorDate:'', supervisorSignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -191,10 +191,11 @@ function toast(msg){
     $('f_supervisor').value = state.supervisor;
     $('f_supervisorTitle').value = state.supervisorTitle;
     $('f_supervisorDate').value = state.supervisorDate;
+    $('f_supervisorSignature').value = state.supervisorSignature;
   }
 
   function bindInputs(){
-    const fields = ['date','productionDate','time','codeCorrect','canPosition','actualCanPieces','piecesOnCan','correctiveActions','supervisor','supervisorTitle','supervisorDate'];
+    const fields = ['date','productionDate','time','codeCorrect','canPosition','actualCanPieces','piecesOnCan','correctiveActions','supervisor','supervisorTitle','supervisorDate','supervisorSignature'];
     fields.forEach(f=>{
       const id = f.startsWith('supervisor') ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -237,7 +238,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_supervisor', titleId: 'f_supervisorTitle', dateId: 'f_supervisorDate', byLabel: 'Supervisor'
+      byId: 'f_supervisor', titleId: 'f_supervisorTitle', dateId: 'f_supervisorDate', signatureId: 'f_supervisorSignature', byLabel: 'Supervisor'
     });
   }
 
