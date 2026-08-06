@@ -69,6 +69,7 @@
   .ml-grid{ display:grid; gap:10px; }
   .ml-grid-2{ grid-template-columns:repeat(2,1fr); }
   .ml-grid-3{ grid-template-columns:repeat(3,1fr); }
+  .ml-grid-4{ grid-template-columns:repeat(4,1fr); }
   .ml-field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--palette-label,#54606b); font-weight:600; }
   .ml-field span.hint{ font-weight:400; color:#8a939b; font-family:'IBM Plex Mono',monospace; font-size:10.5px; }
   .ml-filters{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
@@ -113,9 +114,10 @@
   .ml-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
   @media (max-width:1024px){
     .ml-grid-3{ grid-template-columns:repeat(2,1fr); }
+    .ml-grid-4{ grid-template-columns:repeat(2,1fr); }
     .ml-body{ padding:14px 14px 60px; }
   }
-  @media (max-width:900px){ .ml-grid-2,.ml-grid-3{grid-template-columns:1fr;} }
+  @media (max-width:900px){ .ml-grid-2,.ml-grid-3,.ml-grid-4{grid-template-columns:1fr;} }
   @media (max-width:768px){
     .ml-top{ padding:10px 12px; gap:10px; }
     .ml-topline{ width:100%; }
@@ -619,10 +621,12 @@
       <table class="sheet-sign">
         <tr><td class="sheet-lbl">Completed by:</td><td>${esc(opF ? (v[opF.key] || '') : '')}</td>
             <td class="sheet-lbl">Title:</td><td></td>
-            <td class="sheet-lbl">Date:</td><td>${esc(entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : '')}</td></tr>
+            <td class="sheet-lbl">Date:</td><td>${esc(entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : '')}</td>
+            <td class="sheet-lbl">Signature:</td><td></td></tr>
         <tr><td class="sheet-lbl">Verified by:</td><td>${esc(verified ? verified.verifiedBy : '')}</td>
             <td class="sheet-lbl">Title:</td><td>${esc(verified ? verified.verifiedSig : '')}</td>
-            <td class="sheet-lbl">Date:</td><td>${esc(verified ? verified.verifiedDate : '')}</td></tr>
+            <td class="sheet-lbl">Date:</td><td>${esc(verified ? verified.verifiedDate : '')}</td>
+            <td class="sheet-lbl">Signature:</td><td>${esc(verified ? verified.verifiedSignature : '')}</td></tr>
       </table>`;
     }
 
@@ -803,11 +807,7 @@
           ${submitFlow ? `
           <h3 style="margin-top:0;">Entries to verify</h3>
           <div class="ml-history-list" id="ml_verifySelect" style="margin-bottom:10px;"></div>` : ''}
-          <div class="ml-grid ml-grid-3" style="margin-bottom:10px;">
-            <label class="ml-field">Verified by<input id="ml_verifiedBy"></label>
-            <label class="ml-field">Title<input id="ml_verifiedSig"></label>
-            <label class="ml-field">Date<input id="ml_verifiedDate" type="date"></label>
-          </div>
+          ${window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'ml_verified', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}
           <div class="ml-actions" style="justify-content:flex-start; margin-top:0;">
             <button class="ml-btn ml-btn-primary ml-btn-sm" id="ml_saveVerificationBtn">Log verification</button>
           </div>
@@ -1061,21 +1061,17 @@
       }
 
       async function renderVerificationHistory() {
-        const raw = await storeGet('verification_log:' + config.recordKey, true);
-        let hist = [];
-        try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
+        const hist = await window.SignOffBlock.getVerificationHistory(config.recordKey);
         const target = el('ml_verificationHistory');
         renderVerifySelect();
         checkVerificationDue(hist);
         if (!hist.length) { target.innerHTML = `<div class="ml-history-item ml-muted">No verification logged yet.</div>`; return; }
         target.innerHTML = hist.slice().reverse().map(v => `
-          <div class="ml-history-item"><span>${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} <span class="ml-muted">(signed: ${esc(v.verifiedSig)}${v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : ''})</span></span></div>`).join('');
+          <div class="ml-history-item"><span>${window.SignOffBlock.historyLine(v)}</span></div>`).join('');
       }
       el('ml_saveVerificationBtn').addEventListener('click', async () => {
-        const verifiedBy = el('ml_verifiedBy').value.trim();
-        const verifiedSig = el('ml_verifiedSig').value.trim();
-        const verifiedDate = el('ml_verifiedDate').value;
-        if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, title and date are all required.'); return; }
+        const values = window.SignOffBlock.readVerifyInputs('ml_verified');
+        if (!window.SignOffBlock.validateVerifyInputs(values)) { toast('Verified by, title, date and signature are all required.'); return; }
 
         // With the draft/submit flow the signature is attached to the entries the
         // verifier ticked, so each printed sheet carries its own verifier line.
@@ -1088,19 +1084,14 @@
           }
         }
 
-        const record = { verifiedBy, verifiedSig, verifiedDate, loggedAt: Date.now() };
-        const raw = await storeGet('verification_log:' + config.recordKey, true);
-        let hist = [];
-        try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
-        hist.push(Object.assign({ entryIds: picked.map(p => p.id) }, record));
-        await storeSet('verification_log:' + config.recordKey, JSON.stringify(hist), true);
+        const record = await window.SignOffBlock.logVerification({ recordKey: config.recordKey, values, picked: picked.map(p => p.id) });
 
         if (picked.length) {
           await primary.applyVerification(picked.filter(p => p.which === 'primary').map(p => p.id), record);
           if (secondary) await secondary.applyVerification(picked.filter(p => p.which === 'secondary').map(p => p.id), record);
         }
         toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');
-        el('ml_verifiedBy').value = ''; el('ml_verifiedSig').value = ''; el('ml_verifiedDate').value = '';
+        window.SignOffBlock.clearVerifyInputs('ml_verified');
         renderVerificationHistory();
       });
       // Deliberately not called here -- the due check counts entries, so it runs at the

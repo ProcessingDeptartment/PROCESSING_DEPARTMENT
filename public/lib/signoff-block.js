@@ -1,22 +1,21 @@
 /*
- * Shared sign-off / verification UI for bespoke (non-FormRecord/monitoring-log) record
- * pages. Those pages have their own custom state/save/print logic, so this module does
- * NOT own the record's data -- it only renders the standard "Completed by / Title /
- * Date" + "Verified by / Title / Date" markup and, for the interactive Verification
- * panel, owns its own storage (verification_log:<recordKey>, same shape and same
- * localStorage key convention as form-record.js / monitoring-log.js) so bespoke pages
- * stop hand-rolling that panel.
+ * Single source of truth for sign-off / verification UI and logic, used by bespoke record
+ * pages directly (mountVerification) and by form-record.js / monitoring-log.js (which own
+ * their own panel chrome -- notice banners, section headings -- but call the exported
+ * field/logic helpers below instead of hand-rolling the Verified by/Title/Date/Signature
+ * inputs, storage, validation and history formatting). Storage convention is
+ * verification_log:<recordKey>, same shared-storage key across all three callers.
  *
  * Usage:
- *   SignOffBlock.completedByHtml({ byId, titleId, dateId, byLabel })
- *     -> markup for the on-screen "Completed by / Title / Date" row (grid-3).
+ *   SignOffBlock.completedByHtml({ byId, titleId, dateId, signatureId, byLabel })
+ *     -> markup for the on-screen "Completed by / Title / Date / Signature" row (grid-4).
  *      Caller keeps wiring byId/dateId into its own state exactly as before; it only
- *      needs to also read/write titleId alongside them.
+ *      needs to also read/write titleId/signatureId alongside them.
  *
- *   SignOffBlock.printRow({ label, by, title, date })
+ *   SignOffBlock.printRow({ label, by, title, date, signature })
  *     -> one <tr> of a print-sheet sign-off table, consistent label set for both the
- *        Completed-by and Verified-by rows. `by`/`title`/`date` are already-escaped or
- *        plain strings (this module HTML-escapes them).
+ *        Completed-by and Verified-by rows. Values are already-escaped or plain strings
+ *        (this module HTML-escapes them).
  *
  *   SignOffBlock.mountVerification({
  *     recordKey,            // storage key suffix, same value the page's own record uses
@@ -25,28 +24,107 @@
  *     onLogged              // (record, pickedIds) => void, called after a verification is saved
  *   })
  *     -> renders the full interactive panel (entries-to-verify list, Verified by/Title/
- *        Date inputs, Log verification button, verification history) and returns
- *        { refresh() } so the caller can re-render the pending list after its own state
- *        changes (e.g. a new entry gets submitted).
+ *        Date/Signature inputs, Log verification button, verification history) and
+ *        returns { refresh() } so the caller can re-render the pending list after its own
+ *        state changes (e.g. a new entry gets submitted).
+ *
+ *   Lower-level helpers for callers that own their own panel markup (form-record.js,
+ *   monitoring-log.js):
+ *     verifyIds(idPrefix)              -> { by, title, date, signature } element ids
+ *     verifyFieldsHtml({ idPrefix, gridClass, fieldClass })
+ *                                       -> the 4 label/input elements only, no panel chrome
+ *     readVerifyInputs(idPrefix)       -> { verifiedBy, verifiedSig, verifiedDate, verifiedSignature }
+ *     validateVerifyInputs(values)     -> bool, all 4 fields required
+ *     clearVerifyInputs(idPrefix)
+ *     historyLine(v)                  -> formatted inner-HTML string for one history entry
+ *     logVerification({ recordKey, values, picked }) -> appends to storage, returns the record
+ *     getVerificationHistory(recordKey) -> stored history array
  */
 (function () {
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
   function completedByHtml(opts) {
-    const byId = opts.byId, titleId = opts.titleId, dateId = opts.dateId;
+    const byId = opts.byId, titleId = opts.titleId, dateId = opts.dateId, signatureId = opts.signatureId;
     const byLabel = opts.byLabel || 'Completed by';
-    return `<div class="grid grid-3">
+    return `<div class="grid grid-4">
       <label class="field">${esc(byLabel)}<input id="${byId}"></label>
       <label class="field">Title<input id="${titleId}"></label>
       <label class="field">Date<input id="${dateId}" type="date"></label>
+      <label class="field">Signature<input id="${signatureId}"></label>
     </div>`;
   }
 
   function printRow(opts) {
     return `<tr style="font-size:14px;"><td class="sheet-lbl">${esc(opts.label)}:</td><td>${esc(opts.by || '')}</td>
       <td class="sheet-lbl">Title:</td><td>${esc(opts.title || '')}</td>
-      <td class="sheet-lbl">Date:</td><td>${esc(opts.date || '')}</td></tr>`;
+      <td class="sheet-lbl">Date:</td><td>${esc(opts.date || '')}</td>
+      <td class="sheet-lbl">Signature:</td><td>${esc(opts.signature || '')}</td></tr>`;
+  }
+
+  // Shared verification field ids for a given idPrefix, so markup and logic never drift apart.
+  function verifyIds(idPrefix) {
+    return { by: idPrefix + '_by', title: idPrefix + '_title', date: idPrefix + '_date', signature: idPrefix + '_signature' };
+  }
+
+  // Renders the Verified by / Title / Date / Signature inputs so callers (bespoke pages via
+  // mountVerification, or FormRecord/monitoring-log which own their surrounding panel markup)
+  // share one field set. `gridClass`/`fieldClass` let each page family keep its own CSS look.
+  function verifyFieldsHtml(opts) {
+    const ids = verifyIds(opts.idPrefix);
+    const gridClass = opts.gridClass || 'grid grid-4';
+    const fieldClass = opts.fieldClass || 'field';
+    return `<div class="${gridClass}" style="margin-bottom:8px;">
+      <label class="${fieldClass}">Verified by<input id="${ids.by}"></label>
+      <label class="${fieldClass}">Title<input id="${ids.title}"></label>
+      <label class="${fieldClass}">Date<input id="${ids.date}" type="date"></label>
+      <label class="${fieldClass}">Signature<input id="${ids.signature}"></label>
+    </div>`;
+  }
+
+  function readVerifyInputs(idPrefix) {
+    const ids = verifyIds(idPrefix);
+    return {
+      verifiedBy: (el(ids.by).value || '').trim(),
+      verifiedSig: (el(ids.title).value || '').trim(),
+      verifiedDate: el(ids.date).value,
+      verifiedSignature: (el(ids.signature).value || '').trim()
+    };
+  }
+
+  function clearVerifyInputs(idPrefix) {
+    const ids = verifyIds(idPrefix);
+    el(ids.by).value = ''; el(ids.title).value = ''; el(ids.date).value = ''; el(ids.signature).value = '';
+  }
+
+  function validateVerifyInputs(v) {
+    return !!(v.verifiedBy && v.verifiedSig && v.verifiedDate && v.verifiedSignature);
+  }
+
+  // One line of formatted verification-history text (caller supplies the wrapping element/class).
+  function historyLine(v) {
+    const entryNote = v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : '';
+    return `${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} `
+      + `<span class="muted">(title: ${esc(v.verifiedSig)} · signature: ${esc(v.verifiedSignature || '')}${entryNote})</span>`;
+  }
+
+  async function logVerification(opts) {
+    const recordKey = opts.recordKey;
+    const values = opts.values;
+    const picked = opts.picked || [];
+    const storageKey = 'verification_log:' + recordKey;
+    const record = { verifiedBy: values.verifiedBy, verifiedSig: values.verifiedSig, verifiedDate: values.verifiedDate, verifiedSignature: values.verifiedSignature, loggedAt: Date.now() };
+    const raw = await storeGet(storageKey, true);
+    let hist = [];
+    try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
+    hist.push(Object.assign({ entryIds: picked }, record));
+    await storeSet(storageKey, JSON.stringify(hist), true);
+    return record;
+  }
+
+  async function getVerificationHistory(recordKey) {
+    const raw = await storeGet('verification_log:' + recordKey, true);
+    try { return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
   }
 
   async function storeGet(key, shared) {
@@ -59,19 +137,15 @@
   function mountVerification(opts) {
     const recordKey = opts.recordKey;
     const mountEl = typeof opts.mount === 'string' ? document.querySelector(opts.mount) : opts.mount;
-    const storageKey = 'verification_log:' + recordKey;
     const uid = 'sob_' + Math.random().toString(36).slice(2, 8);
+    const idPrefix = uid + '_verified';
 
     mountEl.innerHTML = `
       <div class="panel-head"><h2>Verification</h2></div>
       <div class="panel-body">
         <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
         <div id="${uid}_select" style="margin-bottom:10px;"></div>
-        <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Verified by<input id="${uid}_by"></label>
-          <label class="field">Title<input id="${uid}_title"></label>
-          <label class="field">Date<input id="${uid}_date" type="date"></label>
-        </div>
+        ${verifyFieldsHtml({ idPrefix })}
         <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
           <button class="btn btn-primary" id="${uid}_log">Log verification</button>
         </div>
@@ -96,16 +170,11 @@
     }
 
     async function renderHistory() {
-      const raw = await storeGet(storageKey, true);
-      let hist = [];
-      try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
+      const hist = await getVerificationHistory(recordKey);
       const target = el(uid + '_history');
       if (!hist.length) { target.innerHTML = `<div class="muted" style="font-size:11px;">No verification logged yet.</div>`; return; }
       target.innerHTML = hist.slice().reverse().map(v => `
-        <div style="font-size:11.5px; padding:4px 0; border-bottom:1px solid #e2e4e3;">
-          ${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)}
-          <span class="muted">(title: ${esc(v.verifiedSig)}${v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : ''})</span>
-        </div>`).join('');
+        <div style="font-size:11.5px; padding:4px 0; border-bottom:1px solid #e2e4e3;">${historyLine(v)}</div>`).join('');
     }
 
     function toast(msg) {
@@ -117,26 +186,19 @@
     }
 
     el(uid + '_log').addEventListener('click', async () => {
-      const verifiedBy = el(uid + '_by').value.trim();
-      const verifiedSig = el(uid + '_title').value.trim();
-      const verifiedDate = el(uid + '_date').value;
-      if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, title and date are all required.'); return; }
+      const values = readVerifyInputs(idPrefix);
+      if (!validateVerifyInputs(values)) { toast('Verified by, title, date and signature are all required.'); return; }
 
       const pending = opts.getPending() || [];
       const picked = [...document.querySelectorAll('.' + uid + '_pick:checked')].map(cb => cb.value);
       if (pending.length && !picked.length) { toast('Tick at least one entry to verify.'); return; }
 
-      const record = { verifiedBy, verifiedSig, verifiedDate, loggedAt: Date.now() };
-      const raw = await storeGet(storageKey, true);
-      let hist = [];
-      try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
-      hist.push(Object.assign({ entryIds: picked }, record));
-      await storeSet(storageKey, JSON.stringify(hist), true);
+      const record = await logVerification({ recordKey, values, picked });
 
       if (opts.onLogged) opts.onLogged(record, picked);
 
       toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');
-      el(uid + '_by').value = ''; el(uid + '_title').value = ''; el(uid + '_date').value = '';
+      clearVerifyInputs(idPrefix);
       renderSelect();
       renderHistory();
     });
@@ -146,5 +208,9 @@
     return { refresh() { renderSelect(); renderHistory(); } };
   }
 
-  window.SignOffBlock = { completedByHtml, printRow, mountVerification };
+  window.SignOffBlock = {
+    completedByHtml, printRow, mountVerification,
+    verifyIds, verifyFieldsHtml, readVerifyInputs, clearVerifyInputs, validateVerifyInputs,
+    historyLine, logVerification, getVerificationHistory
+  };
 })();

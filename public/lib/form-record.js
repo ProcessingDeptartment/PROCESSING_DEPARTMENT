@@ -71,6 +71,7 @@
   .fr-grid{ display:grid; gap:10px; }
   .fr-grid-2{ grid-template-columns:repeat(2,1fr); }
   .fr-grid-3{ grid-template-columns:repeat(3,1fr); }
+  .fr-grid-4{ grid-template-columns:repeat(4,1fr); }
   .fr-field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--palette-label,#54606b); font-weight:600; }
   .fr-field.wide{ grid-column:1/-1; }
   .fr-filters{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
@@ -106,9 +107,10 @@
   .fr-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
   @media (max-width:1024px){
     .fr-grid-3{ grid-template-columns:repeat(2,1fr); }
+    .fr-grid-4{ grid-template-columns:repeat(2,1fr); }
     .fr-body{ padding:14px 14px 60px; }
   }
-  @media (max-width:900px){ .fr-grid-2,.fr-grid-3{grid-template-columns:1fr;} }
+  @media (max-width:900px){ .fr-grid-2,.fr-grid-3,.fr-grid-4{grid-template-columns:1fr;} }
   @media (max-width:768px){
     .fr-top{ padding:10px 12px; gap:10px; }
     .fr-body{ padding:10px 12px 60px; }
@@ -151,6 +153,7 @@
   .fr-sheet th{ background:#eee; font-weight:700; }
   .fr-sheet td.fr-sheet-lbl{ font-weight:700; width:26%; }
   .fr-sheet .fr-sheet-sign td{ height:26px; }
+  .fr-sheet .fr-sheet-sign td.fr-sheet-lbl{ width:13%; }
   @media print{
     @page{ size:A4; margin:12mm; }
     body{ background:#fff; }
@@ -263,11 +266,7 @@
             <div class="fr-notice fr-notice-due" id="fr_verifyNotice"></div>
             <h3 class="fr-section-title" style="margin-top:0;">Entries to verify</h3>
             <div class="fr-history-list" id="fr_verifySelect" style="margin-bottom:10px;"></div>
-            <div class="fr-grid fr-grid-3" style="margin-bottom:10px;">
-              <label class="fr-field">Verified by<input id="fr_verifiedBy"></label>
-              <label class="fr-field">Title<input id="fr_verifiedSig"></label>
-              <label class="fr-field">Date<input id="fr_verifiedDate" type="date"></label>
-            </div>
+            ${window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'fr_verified', gridClass: 'fr-grid fr-grid-4', fieldClass: 'fr-field' })}
             <div class="fr-actions" style="justify-content:flex-start; margin-top:0;">
               <button class="fr-btn fr-btn-primary fr-btn-sm" id="fr_saveVerificationBtn">Log verification</button>
             </div>
@@ -613,10 +612,12 @@
       return `<table class="fr-sheet-sign"><tbody>
         <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(who)}</td>
             <td class="fr-sheet-lbl">Title:</td><td></td>
-            <td class="fr-sheet-lbl">Date:</td><td>${esc(when)}</td></tr>
+            <td class="fr-sheet-lbl">Date:</td><td>${esc(when)}</td>
+            <td class="fr-sheet-lbl">Signature:</td><td></td></tr>
         <tr><td class="fr-sheet-lbl">Verified by:</td><td>${esc(sub.verification ? sub.verification.verifiedBy : '')}</td>
             <td class="fr-sheet-lbl">Title:</td><td>${esc(sub.verification ? sub.verification.verifiedSig : '')}</td>
-            <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification ? sub.verification.verifiedDate : '')}</td></tr>
+            <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification ? sub.verification.verifiedDate : '')}</td>
+            <td class="fr-sheet-lbl">Signature:</td><td>${esc(sub.verification ? sub.verification.verifiedSignature : '')}</td></tr>
       </tbody></table>`;
     }
 
@@ -682,9 +683,7 @@
       }
 
       async function renderVerificationHistory() {
-        const raw = await storeGet('verification_log:' + config.recordKey, true);
-        let hist = [];
-        try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
+        const hist = await window.SignOffBlock.getVerificationHistory(config.recordKey);
         renderVerifySelect();
         const notice = el('fr_verifyNotice');
         const pendingCount = pendingForVerification().length;
@@ -698,24 +697,17 @@
         const target = el('fr_verificationHistory');
         if (!hist.length) { target.innerHTML = `<div class="fr-history-item fr-muted">No verification logged yet.</div>`; return; }
         target.innerHTML = hist.slice().reverse().map(v => `
-          <div class="fr-history-item"><span>${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} <span class="fr-muted">(signed: ${esc(v.verifiedSig)}${v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : ''})</span></span></div>`).join('');
+          <div class="fr-history-item"><span>${window.SignOffBlock.historyLine(v)}</span></div>`).join('');
       }
 
       el('fr_saveVerificationBtn').addEventListener('click', async () => {
-        const verifiedBy = el('fr_verifiedBy').value.trim();
-        const verifiedSig = el('fr_verifiedSig').value.trim();
-        const verifiedDate = el('fr_verifiedDate').value;
-        if (!verifiedBy || !verifiedSig || !verifiedDate) { toast('Verified by, title and date are all required.'); return; }
+        const values = window.SignOffBlock.readVerifyInputs('fr_verified');
+        if (!window.SignOffBlock.validateVerifyInputs(values)) { toast('Verified by, title, date and signature are all required.'); return; }
 
         const picked = [...document.querySelectorAll('.fr-verify-pick:checked')].map(cb => cb.value);
         if (pendingForVerification().length && !picked.length) { toast('Tick at least one entry to verify.'); return; }
 
-        const record = { verifiedBy, verifiedSig, verifiedDate, loggedAt: Date.now() };
-        const raw = await storeGet('verification_log:' + config.recordKey, true);
-        let hist = [];
-        try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
-        hist.push(Object.assign({ entryIds: picked }, record));
-        await storeSet('verification_log:' + config.recordKey, JSON.stringify(hist), true);
+        const record = await window.SignOffBlock.logVerification({ recordKey: config.recordKey, values, picked });
 
         if (picked.length) {
           const set = new Set(picked);
@@ -724,7 +716,7 @@
           renderTable();
         }
         toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');
-        el('fr_verifiedBy').value = ''; el('fr_verifiedSig').value = ''; el('fr_verifiedDate').value = '';
+        window.SignOffBlock.clearVerifyInputs('fr_verified');
         renderVerificationHistory();
       });
       refreshVerification = renderVerificationHistory;
