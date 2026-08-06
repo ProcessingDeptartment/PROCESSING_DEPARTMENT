@@ -1,4 +1,4 @@
-// Replace Yes/No <select> elements with two-button groups on page load
+// Replace Yes/No <select> elements with three-button groups (None, Y, N) on page load
 (function(){
   function createYesNoForSelect(sel) {
     const opts = Array.from(sel.options || []).map(o => o.text.trim().toLowerCase());
@@ -11,17 +11,18 @@
     span.className = 'ml-yesno';
     span.setAttribute('data-yesno-for', id);
 
-    function makeBtn(v){
+    function makeBtn(label, v){
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset.v = v;
-      b.textContent = v;
-      if (String(currentVal).toLowerCase() === v.toLowerCase()) b.classList.add('on');
+      b.textContent = label;
+      if (String(currentVal) === String(v)) b.classList.add('on');
       return b;
     }
 
-    const yesBtn = makeBtn('Yes');
-    const noBtn = makeBtn('No');
+    const noneBtn = makeBtn('None', '');
+    const yesBtn = makeBtn('Y', 'Yes');
+    const noBtn = makeBtn('N', 'No');
     const hidden = document.createElement('input');
     hidden.type = 'hidden';
     hidden.id = id;
@@ -30,8 +31,9 @@
     hidden.value = currentVal;
 
     // Preserve disabled state
-    if (sel.disabled) { yesBtn.disabled = true; noBtn.disabled = true; hidden.disabled = true; }
+    if (sel.disabled) { noneBtn.disabled = true; yesBtn.disabled = true; noBtn.disabled = true; hidden.disabled = true; }
 
+    span.appendChild(noneBtn);
     span.appendChild(yesBtn);
     span.appendChild(noBtn);
     span.appendChild(hidden);
@@ -40,12 +42,13 @@
     sel.parentNode && sel.parentNode.replaceChild(span, sel);
 
     // Wiring: clicking toggles on/off, writes hidden value and dispatches input
-    [yesBtn, noBtn].forEach(btn => {
+    [noneBtn, yesBtn, noBtn].forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.disabled) return;
-        const next = btn.classList.contains('on') ? '' : btn.dataset.v;
+        const requested = btn.dataset.v;
+        const next = btn.classList.contains('on') ? '' : requested;
         hidden.value = next;
-        [yesBtn, noBtn].forEach(b => b.classList.toggle('on', b.dataset.v === next && next !== ''));
+        [noneBtn, yesBtn, noBtn].forEach(b => b.classList.toggle('on', b.dataset.v === next));
         hidden.dispatchEvent(new Event('input', { bubbles: true }));
       });
     });
