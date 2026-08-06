@@ -607,5 +607,16 @@
   .dc-top, .so-top, .dsir-top, .cp-top, .rcs-top, .gbt-top,
   .fr-top, .ml-top { display: none !important; }
 
+  /* Print-only sign-off blocks should use 12px body text while keeping
+   * heading sizes unchanged. This covers the shared record signoff panel
+   * and its print-only verification row across bespoke pages. */
+  #ar-root #panelSignoff .field,
+  #ar-root #panelSignoff .field input,
+  #ar-root #panelSignoff .field select,
+  #ar-root #panelSignoff .field textarea,
+  #ar-root #signoffCompletedBy {
+    font-size: 12px !important;
+  }
+
   *:has(> .doc-line) { display: none !important; }
 }
