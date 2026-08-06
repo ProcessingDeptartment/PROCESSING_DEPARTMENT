@@ -10,6 +10,7 @@
  */
 window.SopIndexData = {
   rows: [
+    {sopNo:'SOP New', name: 'Create New SOP', area: 'New SOP', revision: 0, recordKey: 'sop-new-create-new-sop', href: 'SOP-Create.html'},
     { sopNo: 'SOP 2', name: 'Basket Receiving', area: 'Receiving & Sorting', revision: 3, recordKey: 'sop-02-basket-receiving', href: 'SOP-02-basket-receiving.html' },
     { sopNo: 'SOP 3', name: 'Sorting Procedure', area: 'Receiving & Sorting', revision: 5, recordKey: 'sop-03-sorting-procedure', href: 'SOP-03-sorting-procedure.html' },
     { sopNo: 'SOP 4', name: 'Remove Animals from Basket', area: 'Receiving & Sorting', revision: 3, recordKey: 'sop-04-remove-animals-from-basket', href: 'SOP-04-remove-animals-from-basket.html' },
