@@ -8,28 +8,28 @@
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
-    --ink:#1b2330; --steel:#2f4356; --steel-dk:#1d2b38; --paper:#f4f5f3;
-    --line:#c9cdd1; --line-soft:#e2e4e3; --ok:#2f7a52; --ok-bg:#e8f3ec;
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:#a3352d; --fail-bg:#fbe8e6;
-    --accent:#c9832b; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
+    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
+    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
     --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
   }
-  #ar-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:13px; line-height:1.4; }
+  #ar-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:var(--form-fs-root); line-height:1.4; }
   #ar-root *{ box-sizing:border-box; }
   #ar-root h1,#ar-root h2,#ar-root h3{ margin:0; font-weight:700; }
   #ar-root input, #ar-root select, #ar-root textarea{
-    font-family:var(--mono); font-size:12.5px; border:1px solid var(--line); border-radius:3px;
+    font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
     padding:4px 6px; background:#fff; color:var(--ink); width:100%;
   }
   #ar-root input:focus, #ar-root select:focus, #ar-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #ar-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .dc-top{ background:var(--steel-dk); color:#f4f1e8; padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .dc-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
   .dc-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .dc-topline input{ width:120px; padding:3px 5px; font-size:11px; }
-  .btn{ padding:5px 11px; font-size:11.5px; }
-  .btn-primary{ background:var(--accent); color:#241a0a; }
-  .btn-primary:hover{ background:#dd9536; }
-  .btn-ghost{ background:transparent; color:#f4f1e8; border:1px solid #55636e !important; }
+  .dc-topline input{ width:120px; padding:3px 5px; font-size:var(--form-fs-small); }
+  .btn{ padding:5px 11px; font-size:var(--form-fs-button); }
+  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
+  .btn-primary:hover{ background:var(--palette-primary-hover); }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; }
   .btn-ghost:hover{ background:#33444f; }
   .btn-flat{ background:var(--line-soft); color:var(--ink); }
   .btn-flat:hover{ background:#d5d8d6; }
@@ -37,13 +37,13 @@
 
   .dc-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
   .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
-  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:#fbfbfa; border-radius:5px 5px 0 0; }
-  .panel-head h2{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
+  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:var(--palette-head-bg); border-radius:5px 5px 0 0; }
+  .panel-head h2{ font-size:var(--form-fs-panel-head); text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
   .panel-body{ padding:11px; }
 
   .job-number-row{ display:grid; grid-template-columns:74px 1fr; gap:6px; }
-  .job-number-row select, .job-number-row input{ font-size:11.5px; padding:3px 5px; }
-  .field-hint{ font-size:9.5px; font-weight:500; color:#8a939b; font-family:var(--mono); }
+  .job-number-row select, .job-number-row input{ font-size:var(--form-fs-button); padding:3px 5px; }
+  .field-hint{ font-size:var(--form-fs-hint); font-weight:500; color:#8a939b; font-family:var(--mono); }
   .field-hint.bad{ color:var(--fail); }
 
   .grid{ display:grid; gap:8px; }
@@ -52,14 +52,14 @@
   .grid-4{ grid-template-columns:repeat(4,1fr); }
   .grid-3{ grid-template-columns:repeat(3,1fr); }
   .grid-2{ grid-template-columns:repeat(2,1fr); }
-  label.field{ display:flex; flex-direction:column; gap:2px; font-size:10.5px; color:#54606b; font-weight:600; }
-  label.field input, label.field select{ font-size:11.5px; padding:3px 5px; }
+  label.field{ display:flex; flex-direction:column; gap:2px; font-size:var(--form-fs-label); color:var(--palette-label); font-weight:600; }
+  label.field input, label.field select{ font-size:var(--form-fs-button); padding:3px 5px; }
 
   .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
   .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
-  .record-status{ font-size:10px; color:#54606b; font-weight:600; padding:4px 8px; background:#e2e4e3; border-radius:3px; }
+  .record-status{ font-size:10px; color:var(--palette-label); font-weight:600; padding:4px 8px; background:var(--palette-border); border-radius:3px; }
   .muted{ color:#8a939b; }
-  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:11px; z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
   .toast.show{ opacity:1; }
 
   @media (max-width:900px){
@@ -85,23 +85,23 @@
 
     /* One font size for the whole printed record, matching the basket table
      * while making the PDF text more readable. */
-    #ar-root{ font-size:12px; }
+    #ar-root{ font-size:14px; }
     .panel{ border:1px solid #000; margin-bottom:6px; break-inside:avoid; }
     #panelReceiving, #panelSignoff{ border:0; }
     .panel-head{ background:#fff; padding:4px 7px; }
-    .panel-head h2{ font-size:12px; }
+    .panel-head h2{ font-size:14px; }
 
     /* Fields print as a label over a ruled line -- the same thin-border
      * language as the basket table rows and the sign-off .sig-line -- rather
      * than boxed, radius-cornered inputs, which was the odd one out.
      * .field is matched bare here (not label.field) so the print-only
      * verification row, which uses divs, picks up the same styling. */
-    #ar-root .field{ display:flex; flex-direction:column; font-size:10px; gap:1px;
-                     color:#54606b; font-weight:600; }
+    #ar-root .field{ display:flex; flex-direction:column; font-size:14px; gap:1px;
+                     color:var(--palette-label); font-weight:600; }
     #ar-root .panel-body{ padding:7px; }
     #ar-root .grid{ gap:5px; }
     #ar-root input, #ar-root select{
-      font-size:10px; padding:1px 0; border:none; border-bottom:1px solid #999;
+      font-size:14px; padding:1px 0; border:none; border-bottom:1px solid #999;
       border-radius:0; -webkit-appearance:none; appearance:none; background:transparent;
       text-overflow:clip; min-width:0;
     }
@@ -109,7 +109,7 @@
     /* Job no. must never clip: the prefix column shrinks to its content and the
      * digits take the rest, instead of the fixed 74px screen column. */
     .job-number-row{ grid-template-columns:auto 1fr; gap:3px; }
-    .job-number-row select, .job-number-row input{ font-size:8.5px; padding:1px 0; }
+    .job-number-row select, .job-number-row input{ font-size:14px; padding:1px 0; }
     #jobNoHint{ display:none; }
 
     /* Signature ruled lines for the print-only verification row. */
@@ -118,7 +118,7 @@
     /* One compact row per basket, header repeated on each page, no split rows.
      * !important because the table carries an inline font-size, which would
      * otherwise beat this rule and keep the screen size in the PDF. */
-    #basketTable{ font-size:8.5px !important; }
+    #basketTable{ font-size:14px !important; }
     #basketTable thead{ display:table-header-group; }
     #basketTable tr{ break-inside:avoid; page-break-inside:avoid; }
     #basketTable th, #basketTable td{ padding:1.5px 4px !important; border-bottom:1px solid #999; }

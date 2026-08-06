@@ -514,6 +514,26 @@
 }
 
 /* ========================================================================
+   1.5 BESPOKE RECORD FORM TYPE SCALE
+
+   The ~28 bespoke record pages (7.1.x-7.4.4) each carry their own inline
+   STYLE block for form typography instead of using the engine-driven
+   pattern the other records use. These variables are the single place to
+   change that type scale -- each page's inline block should reference
+   these instead of hardcoding px values, so a size change here reaches
+   every bespoke page at once.
+   ======================================================================== */
+:root {
+  --form-fs-root: 14px;
+  --form-fs-input: 14px;
+  --form-fs-button: 14px;
+  --form-fs-small: 14px;
+  --form-fs-label: 14px;
+  --form-fs-hint: 14px;
+  --form-fs-panel-head: 14px;
+}
+
+/* ========================================================================
    2. HEADER TYPOGRAPHY
 
    Every record header is the same three-part line:
@@ -615,7 +635,7 @@
   #ar-root #panelSignoff .field select,
   #ar-root #panelSignoff .field textarea,
   #ar-root #signoffCompletedBy {
-    font-size: 12px !important;
+    font-size: 14px !important;
   }
 
   *:has(> .doc-line) { display: none !important; }

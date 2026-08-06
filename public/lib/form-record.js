@@ -141,13 +141,13 @@
   }
   /* Print sheet: one submission laid out as the paper form. Hidden on screen; the
      whole on-screen app is swapped out for it while printing. */
-  .fr-sheet{ display:none; color:#000; font-family:'Segoe UI',system-ui,sans-serif; font-size:10.5px; }
+  .fr-sheet{ display:none; color:#000; font-family:'Segoe UI',system-ui,sans-serif; font-size:14px; }
   .fr-sheet .fr-sheet-page{ page-break-after:always; }
   .fr-sheet .fr-sheet-page:last-child{ page-break-after:auto; }
-  .fr-sheet h3{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; margin:9px 0 4px; font-weight:700; }
+  .fr-sheet h3{ font-size:14px; text-transform:uppercase; letter-spacing:.05em; margin:9px 0 4px; font-weight:700; }
   .fr-sheet h3:first-child{ margin-top:0; }
   .fr-sheet table{ width:100%; border-collapse:collapse; margin-bottom:7px; }
-  .fr-sheet td,.fr-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; font-size:10px; }
+  .fr-sheet td,.fr-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; font-size:14px; }
   .fr-sheet th{ background:#eee; font-weight:700; }
   .fr-sheet td.fr-sheet-lbl{ font-weight:700; width:26%; }
   .fr-sheet .fr-sheet-sign td{ height:26px; }

@@ -44,7 +44,7 @@
   }
 
   function printRow(opts) {
-    return `<tr style="font-size:12px;"><td class="sheet-lbl">${esc(opts.label)}:</td><td>${esc(opts.by || '')}</td>
+    return `<tr style="font-size:14px;"><td class="sheet-lbl">${esc(opts.label)}:</td><td>${esc(opts.by || '')}</td>
       <td class="sheet-lbl">Title:</td><td>${esc(opts.title || '')}</td>
       <td class="sheet-lbl">Date:</td><td>${esc(opts.date || '')}</td></tr>`;
   }
