@@ -524,13 +524,26 @@
    every bespoke page at once.
    ======================================================================== */
 :root {
-  --form-fs-root: 14px;
-  --form-fs-input: 14px;
-  --form-fs-button: 14px;
-  --form-fs-small: 14px;
-  --form-fs-label: 14px;
-  --form-fs-hint: 14px;
-  --form-fs-panel-head: 14px;
+  --form-fs-root: 12px;
+  --form-fs-input: 12px;
+  --form-fs-button: 12px;
+  --form-fs-small: 12px;
+  --form-fs-label: 12px;
+  --form-fs-hint: 12px;
+  --form-fs-panel-head: 12px;
+}
+
+/* PDF/print keeps its own 14px scale regardless of the on-screen size above. */
+@media print {
+  :root {
+    --form-fs-root: 14px;
+    --form-fs-input: 14px;
+    --form-fs-button: 14px;
+    --form-fs-small: 14px;
+    --form-fs-label: 14px;
+    --form-fs-hint: 14px;
+    --form-fs-panel-head: 14px;
+  }
 }
 
 /* ========================================================================
