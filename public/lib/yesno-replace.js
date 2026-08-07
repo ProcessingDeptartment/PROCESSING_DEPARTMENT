@@ -20,7 +20,6 @@
       return b;
     }
 
-    const noneBtn = makeBtn('None', '');
     const yesBtn = makeBtn('Y', 'Yes');
     const noBtn = makeBtn('N', 'No');
     const hidden = document.createElement('input');
@@ -31,9 +30,8 @@
     hidden.value = currentVal;
 
     // Preserve disabled state
-    if (sel.disabled) { noneBtn.disabled = true; yesBtn.disabled = true; noBtn.disabled = true; hidden.disabled = true; }
+    if (sel.disabled) { yesBtn.disabled = true; noBtn.disabled = true; hidden.disabled = true; }
 
-    span.appendChild(noneBtn);
     span.appendChild(yesBtn);
     span.appendChild(noBtn);
     span.appendChild(hidden);
@@ -41,14 +39,13 @@
     // Replace select with span in DOM
     sel.parentNode && sel.parentNode.replaceChild(span, sel);
 
-    // Wiring: clicking toggles on/off, writes hidden value and dispatches input
-    [noneBtn, yesBtn, noBtn].forEach(btn => {
+    // Wiring: radio-style selection, writes hidden value and dispatches input
+    [yesBtn, noBtn].forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.disabled) return;
-        const requested = btn.dataset.v;
-        const next = btn.classList.contains('on') ? '' : requested;
+        const next = btn.dataset.v;
         hidden.value = next;
-        [noneBtn, yesBtn, noBtn].forEach(b => b.classList.toggle('on', b.dataset.v === next));
+        [yesBtn, noBtn].forEach(b => b.classList.toggle('on', b.dataset.v === next));
         hidden.dispatchEvent(new Event('input', { bubbles: true }));
       });
     });

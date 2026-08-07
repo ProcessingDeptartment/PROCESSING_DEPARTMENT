@@ -21,6 +21,12 @@
     font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
     padding:4px 6px; background:#fff; color:var(--ink); width:100%;
   }
+  #br-root .ml-yesno{ display:flex; gap:10px; }
+  #br-root .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid var(--line) !important; background:#fff; color:var(--steel); }
+  #br-root .ml-yesno button:hover:not(:disabled){ border-color:var(--steel-dk) !important; }
+  #br-root .ml-yesno button.on[data-v="Yes"]{ background:var(--ok-bg); border-color:var(--ok) !important; color:var(--ok); }
+  #br-root .ml-yesno button.on[data-v="No"]{ background:var(--fail-bg); border-color:var(--fail) !important; color:var(--fail); }
+  #br-root .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
   #br-root input:focus, #br-root select:focus, #br-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #br-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .dc-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
@@ -100,11 +106,11 @@
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Incoming abalone temp (°C)<input id="h_incomingTemp" type="number" step="0.1"></label>
           <label class="field">No. of mortalities<input id="h_noOfMortalities" type="number"></label>
-          <label class="field">Signs of parasites?<span class="ml-yesno" data-yesno-for="h_signsOfParasites"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_signsOfParasites" value=""></span></label>
-          <label class="field">Foreign/physical objects?<span class="ml-yesno" data-yesno-for="h_foreignObjects"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_foreignObjects" value=""></span></label>
+          <label class="field">Signs of parasites?<span class="ml-yesno" data-yesno-for="h_signsOfParasites"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_signsOfParasites" value=""></span></label>
+          <label class="field">Foreign/physical objects?<span class="ml-yesno" data-yesno-for="h_foreignObjects"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_foreignObjects" value=""></span></label>
         </div>
         <div class="grid grid-6">
-          <label class="field">Damages on foot?<span class="ml-yesno" data-yesno-for="h_damagesOnFoot"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesOnFoot" value=""></span></label>
+          <label class="field">Damages on foot?<span class="ml-yesno" data-yesno-for="h_damagesOnFoot"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesOnFoot" value=""></span></label>
         </div>
       </div>
     </div>
@@ -113,9 +119,9 @@
       <div class="panel-head"><h2>Quality Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Damages after shucking?<span class="ml-yesno" data-yesno-for="h_damagesAfterShucking"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterShucking" value=""></span></label>
-          <label class="field">Beak cut correct?<span class="ml-yesno" data-yesno-for="h_beakCutCorrect"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_beakCutCorrect" value=""></span></label>
-          <label class="field">Damages after gutting &amp; beaking?<span class="ml-yesno" data-yesno-for="h_damagesAfterGutting"><button type="button" data-v="">None</button><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterGutting" value=""></span></label>
+          <label class="field">Damages after shucking?<span class="ml-yesno" data-yesno-for="h_damagesAfterShucking"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterShucking" value=""></span></label>
+          <label class="field">Beak cut correct?<span class="ml-yesno" data-yesno-for="h_beakCutCorrect"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_beakCutCorrect" value=""></span></label>
+          <label class="field">Damages after gutting &amp; beaking?<span class="ml-yesno" data-yesno-for="h_damagesAfterGutting"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterGutting" value=""></span></label>
         </div>
       </div>
     </div>
@@ -359,15 +365,14 @@ function wire(){
 </script>
 <script src="/lib/yesno-replace.js"></script>
 <script>
-// Wire any inlined .ml-yesno groups on this page (None / Y / N buttons)
+// Wire any inlined .ml-yesno groups on this page (Y / N radio-style buttons)
 (function(){
   document.querySelectorAll('.ml-yesno').forEach(group=>{
     const hidden = group.querySelector('input[type=hidden]');
     group.querySelectorAll('button').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         if (btn.disabled) return;
-        const requested = btn.dataset.v;
-        const next = btn.classList.contains('on') ? '' : requested;
+        const next = btn.dataset.v;
         hidden.value = next;
         group.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
         hidden.dispatchEvent(new Event('input', { bubbles: true }));

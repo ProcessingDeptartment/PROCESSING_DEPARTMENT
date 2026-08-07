@@ -86,7 +86,7 @@
   .ml-badge-fail{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); }
   .ml-badge-muted{ background:#eee; color:#777; }
   .ml-muted{ color:#8a939b; }
-  .ml-yesno{ display:flex; gap:6px; }
+  .ml-yesno{ display:flex; gap:10px; }
   .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
   .ml-yesno button:hover:not(:disabled){ border-color:#8a939b !important; }
   .ml-yesno button.on[data-v=""]{ background:#f0f0f0; border-color:#9aa !important; color:#333; }
@@ -223,7 +223,6 @@
     // the same id, so every reader (saveForm, computed fields) is unchanged.
     if (field.type === 'yesno') {
       return `<span class="ml-yesno" data-yesno-for="${id}">
-        <button type="button" data-v="" class="${v === '' ? 'on' : ''}">None</button>
         <button type="button" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}">Y</button>
         <button type="button" data-v="No" class="${v === 'No' ? 'on' : ''}">N</button>
         <input type="hidden" id="${id}" value="${esc(v)}">
@@ -270,7 +269,7 @@
       group.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => {
           if (btn.disabled) return;
-          const next = btn.classList.contains('on') ? '' : btn.dataset.v;
+          const next = btn.dataset.v;
           hidden.value = next;
           group.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
           hidden.dispatchEvent(new Event('input', { bubbles: true }));
