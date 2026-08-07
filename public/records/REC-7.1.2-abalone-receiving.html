@@ -118,10 +118,14 @@
     /* One compact row per basket, header repeated on each page, no split rows.
      * !important because the table carries an inline font-size, which would
      * otherwise beat this rule and keep the screen size in the PDF. */
-    #basketTable{ font-size:14px !important; }
+    #basketTable{ font-size:14px !important; table-layout:fixed; width:100%; }
     #basketTable thead{ display:table-header-group; }
     #basketTable tr{ break-inside:avoid; page-break-inside:avoid; }
-    #basketTable th, #basketTable td{ padding:1.5px 4px !important; border-bottom:1px solid #999; }
+    #basketTable th, #basketTable td{
+      padding:1.5px 3px !important; border-bottom:1px solid #999;
+      white-space:nowrap; overflow:hidden; text-overflow:clip;
+    }
+    #basketTable td{ font-size:12px !important; }
     #basketTable th{ border-bottom:1px solid #000; }
   }
 </style>
