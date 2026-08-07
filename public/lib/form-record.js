@@ -170,9 +170,10 @@
   .ml-yesno{ display:flex; gap:10px; }
   .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
   .ml-yesno button:hover:not(:disabled){ border-color:#8a939b !important; }
-  .ml-yesno button.on[data-v=""]{ background:#f0f0f0; border-color:#9aa !important; color:#333; }
-  .ml-yesno button.on[data-v="Yes"]{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
-  .ml-yesno button.on[data-v="No"]{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); }
+  /* Which answer is "good" (green) vs "bad" (red) varies by question -- set via
+     data-good="Yes"|"No" on the .ml-yesno span (defaults to Yes when absent). */
+  .ml-yesno[data-good="Yes"] button.on[data-v="Yes"], .ml-yesno[data-good="No"] button.on[data-v="No"], .ml-yesno:not([data-good]) button.on[data-v="Yes"]{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
+  .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"], .ml-yesno:not([data-good]) button.on[data-v="No"]{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); }
   .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }`;
 
   function injectStyleOnce() {
@@ -193,7 +194,7 @@
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
       if (field.type === 'yesno') {
-        return `<span class="ml-yesno" data-yesno-for="${id}">
+        return `<span class="ml-yesno" data-yesno-for="${id}" data-good="${field.good === 'No' ? 'No' : 'Yes'}">
             <button type="button" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}">Y</button>
             <button type="button" data-v="No" class="${v === 'No' ? 'on' : ''}">N</button>
             <input type="hidden" id="${id}" value="${esc(v)}">

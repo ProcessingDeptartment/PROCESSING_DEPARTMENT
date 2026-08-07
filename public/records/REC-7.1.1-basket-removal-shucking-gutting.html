@@ -24,8 +24,10 @@
   #br-root .ml-yesno{ display:flex; gap:10px; }
   #br-root .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid var(--line) !important; background:#fff; color:var(--steel); }
   #br-root .ml-yesno button:hover:not(:disabled){ border-color:var(--steel-dk) !important; }
-  #br-root .ml-yesno button.on[data-v="Yes"]{ background:var(--ok-bg); border-color:var(--ok) !important; color:var(--ok); }
-  #br-root .ml-yesno button.on[data-v="No"]{ background:var(--fail-bg); border-color:var(--fail) !important; color:var(--fail); }
+  /* Which answer is "good" (green) vs "bad" (red) varies by question -- set via
+     data-good="Yes"|"No" on the .ml-yesno span (defaults to Yes when absent). */
+  #br-root .ml-yesno[data-good="Yes"] button.on[data-v="Yes"], #br-root .ml-yesno[data-good="No"] button.on[data-v="No"], #br-root .ml-yesno:not([data-good]) button.on[data-v="Yes"]{ background:var(--ok-bg); border-color:var(--ok) !important; color:var(--ok); }
+  #br-root .ml-yesno[data-good="Yes"] button.on[data-v="No"], #br-root .ml-yesno[data-good="No"] button.on[data-v="Yes"], #br-root .ml-yesno:not([data-good]) button.on[data-v="No"]{ background:var(--fail-bg); border-color:var(--fail) !important; color:var(--fail); }
   #br-root .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
   #br-root input:focus, #br-root select:focus, #br-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
   #br-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
@@ -106,11 +108,11 @@
         <div class="grid grid-4" style="margin-bottom:8px;">
           <label class="field">Incoming abalone temp (°C)<input id="h_incomingTemp" type="number" step="0.1"></label>
           <label class="field">No. of mortalities<input id="h_noOfMortalities" type="number"></label>
-          <label class="field">Signs of parasites?<span class="ml-yesno" data-yesno-for="h_signsOfParasites"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_signsOfParasites" value=""></span></label>
-          <label class="field">Foreign/physical objects?<span class="ml-yesno" data-yesno-for="h_foreignObjects"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_foreignObjects" value=""></span></label>
+          <label class="field">Signs of parasites?<span class="ml-yesno" data-yesno-for="h_signsOfParasites" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_signsOfParasites" value=""></span></label>
+          <label class="field">Foreign/physical objects?<span class="ml-yesno" data-yesno-for="h_foreignObjects" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_foreignObjects" value=""></span></label>
         </div>
         <div class="grid grid-6">
-          <label class="field">Damages on foot?<span class="ml-yesno" data-yesno-for="h_damagesOnFoot"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesOnFoot" value=""></span></label>
+          <label class="field">Damages on foot?<span class="ml-yesno" data-yesno-for="h_damagesOnFoot" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesOnFoot" value=""></span></label>
         </div>
       </div>
     </div>
@@ -119,9 +121,9 @@
       <div class="panel-head"><h2>Quality Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Damages after shucking?<span class="ml-yesno" data-yesno-for="h_damagesAfterShucking"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterShucking" value=""></span></label>
-          <label class="field">Beak cut correct?<span class="ml-yesno" data-yesno-for="h_beakCutCorrect"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_beakCutCorrect" value=""></span></label>
-          <label class="field">Damages after gutting &amp; beaking?<span class="ml-yesno" data-yesno-for="h_damagesAfterGutting"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterGutting" value=""></span></label>
+          <label class="field">Damages after shucking?<span class="ml-yesno" data-yesno-for="h_damagesAfterShucking" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterShucking" value=""></span></label>
+          <label class="field">Beak cut correct?<span class="ml-yesno" data-yesno-for="h_beakCutCorrect" data-good="Yes"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_beakCutCorrect" value=""></span></label>
+          <label class="field">Damages after gutting &amp; beaking?<span class="ml-yesno" data-yesno-for="h_damagesAfterGutting" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterGutting" value=""></span></label>
         </div>
       </div>
     </div>

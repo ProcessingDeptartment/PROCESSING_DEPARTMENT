@@ -10,6 +10,10 @@
     const span = document.createElement('span');
     span.className = 'ml-yesno';
     span.setAttribute('data-yesno-for', id);
+    // Which answer counts as "good" (colored green) varies by question -- e.g. "No
+    // damages?" wants No=green, "Correct?" wants Yes=green. Mark it on the original
+    // select with data-good="No"; defaults to Yes when not specified.
+    span.setAttribute('data-good', sel.dataset.good === 'No' ? 'No' : 'Yes');
 
     function makeBtn(label, v){
       const b = document.createElement('button');
