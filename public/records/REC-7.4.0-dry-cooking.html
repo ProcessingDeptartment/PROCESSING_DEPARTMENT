@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
       startTime:'', startingTemp:'', temp20MinAfter:'', endOfCookingTemp:'', timeOut:'', totalCookingTime:'',
       cookSeaWater:'', cookPh:'', saltKg:'', saltBatchNumber:'',
       sugarKg:'', sugarBatchNumber:'', vinegarKg:'', vinegarBatchNumber:'',
-      comments:'', cooker:'', cookerTitle:'', cookerDate:'',
+      comments:'', cooker:'', cookerTitle:'', cookerDate:'', cookerSignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -250,6 +250,7 @@ function toast(msg){
     $('f_cooker').value = state.cooker;
     $('f_cookerTitle').value = state.cookerTitle;
     $('f_cookerDate').value = state.cookerDate;
+    $('f_cookerSignature').value = state.cookerSignature;
   }
 
   function bindInputs(){
@@ -257,7 +258,7 @@ function toast(msg){
       'blanchSeaWater','blanchPh','blanchSaltKg','blanchTemp','cookingTime','blanchBatchNumber',
       'startTime','startingTemp','temp20MinAfter','endOfCookingTemp','timeOut','totalCookingTime',
       'cookSeaWater','cookPh','saltKg','saltBatchNumber',
-      'sugarKg','sugarBatchNumber','vinegarKg','vinegarBatchNumber','comments','cooker','cookerTitle','cookerDate'];
+      'sugarKg','sugarBatchNumber','vinegarKg','vinegarBatchNumber','comments','cooker','cookerTitle','cookerDate','cookerSignature'];
     fields.forEach(f=>{
       const id = (f.startsWith('cooker')||f.startsWith('comments')) ? (f.startsWith('cooker') ? 'f_'+f : 'commentsBox') : 'h_'+f;
       const el = $(id);
@@ -306,7 +307,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_cooker', titleId: 'f_cookerTitle', dateId: 'f_cookerDate', byLabel: 'Cooker'
+      byId: 'f_cooker', titleId: 'f_cookerTitle', dateId: 'f_cookerDate', signatureId: 'f_cookerSignature', byLabel: 'Cooker'
     });
   }
 

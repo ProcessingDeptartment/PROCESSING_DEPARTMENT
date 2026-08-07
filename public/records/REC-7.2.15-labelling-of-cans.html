@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
       date:'', labelUsed:'', stickersUsed:'', clientDetails:'', quantityLabelsIssued:'',
       quantityIssued:'', boxesFull:'', cansCheckedBeforeLabelling:'', cansCheckedAfterLabelling:'',
       correctLabelUsed:'', labellingRequirementCorrect:'', cartonLabelsCorrespond:'',
-      correctiveActions:'', inspectedBy:'', inspectedByTitle:'', inspectedByDate:'',
+      correctiveActions:'', inspectedBy:'', inspectedByTitle:'', inspectedByDate:'', inspectedBySignature:'',
       verification: null,
       createdAt: null, updatedAt: null
     };
@@ -211,10 +211,11 @@ function toast(msg){
     $('f_inspectedBy').value = state.inspectedBy;
     $('f_inspectedByTitle').value = state.inspectedByTitle;
     $('f_inspectedByDate').value = state.inspectedByDate;
+    $('f_inspectedBySignature').value = state.inspectedBySignature;
   }
 
   function bindInputs(){
-    const fields = ['date','labelUsed','stickersUsed','clientDetails','quantityLabelsIssued','quantityIssued','boxesFull','cansCheckedBeforeLabelling','cansCheckedAfterLabelling','correctLabelUsed','labellingRequirementCorrect','cartonLabelsCorrespond','correctiveActions','inspectedBy','inspectedByTitle','inspectedByDate'];
+    const fields = ['date','labelUsed','stickersUsed','clientDetails','quantityLabelsIssued','quantityIssued','boxesFull','cansCheckedBeforeLabelling','cansCheckedAfterLabelling','correctLabelUsed','labellingRequirementCorrect','cartonLabelsCorrespond','correctiveActions','inspectedBy','inspectedByTitle','inspectedByDate','inspectedBySignature'];
     fields.forEach(f=>{
       const id = f.startsWith('inspectedBy') ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -257,7 +258,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_inspectedBy', titleId: 'f_inspectedByTitle', dateId: 'f_inspectedByDate', byLabel: 'Inspected by'
+      byId: 'f_inspectedBy', titleId: 'f_inspectedByTitle', dateId: 'f_inspectedByDate', signatureId: 'f_inspectedBySignature', byLabel: 'Inspected by'
     });
   }
 

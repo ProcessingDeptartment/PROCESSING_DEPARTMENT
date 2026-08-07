@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
       header:{ intakeDate:'', harvestFarm:'', trackingNo:'', processingFor:'', sizeRange:'', wholeWeight:'', jobPrefix:'', jobNumber:'' },
       weights: [],
       comments:'',
-      operator:'', operatorTitle:'', operatorDate:'',
+      operator:'', operatorTitle:'', operatorDate:'', operatorSignature:'',
       supervisor:'', supervisorTitle:'', supervisorDate:'',
       verification: null,
       createdAt: null, updatedAt: null
@@ -382,6 +382,7 @@ function toast(msg){
     $('f_operator').value = state.operator;
     $('f_operatorTitle').value = state.operatorTitle;
     $('f_operatorDate').value = state.operatorDate;
+    $('f_operatorSignature').value = state.operatorSignature;
     $('f_supervisor').value = state.supervisor;
     $('f_supervisorTitle').value = state.supervisorTitle;
     $('f_supervisorDate').value = state.supervisorDate;
@@ -397,7 +398,7 @@ function toast(msg){
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; updateResults(); });
     });
     $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['operator','operatorTitle','operatorDate','supervisor','supervisorTitle','supervisorDate'].forEach(key=>{
+    ['operator','operatorTitle','operatorDate','operatorSignature','supervisor','supervisorTitle','supervisorDate'].forEach(key=>{
       const id = 'f_' + key;
       $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
     });
@@ -441,7 +442,7 @@ function toast(msg){
 
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_operator', titleId: 'f_operatorTitle', dateId: 'f_operatorDate', byLabel: 'Operator'
+      byId: 'f_operator', titleId: 'f_operatorTitle', dateId: 'f_operatorDate', signatureId: 'f_operatorSignature', byLabel: 'Operator'
     });
   }
 
