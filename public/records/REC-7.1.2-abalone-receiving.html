@@ -178,6 +178,8 @@
         <table class="entry-table" id="basketTable" style="width:100%; border-collapse:collapse; margin-top:12px; font-size:11.5px;">
           <thead>
             <tr style="text-align:left; border-bottom:1px solid var(--line-soft); color:#54606b;">
+              <th style="padding:5px 6px;">Farm</th>
+              <th style="padding:5px 6px;">Processing for</th>
               <th style="padding:5px 6px;">Basket nr.</th>
               <th style="padding:5px 6px;">Size range</th>
               <th style="padding:5px 6px;">Whole weight</th>
@@ -201,20 +203,6 @@
         <div class="actions" style="margin-top:12px;">
           <button class="btn btn-flat" id="editNameCancelBtn">Cancel</button>
           <button class="btn btn-primary" id="editNameOkBtn">Continue</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- One CSV covers a whole day, which is usually several receiving records
-         (one per farm / processing stream / size range). This lets the importer
-         pick which one to load into the form. -->
-    <div class="modal-overlay no-print" id="importPickModal" style="display:none; position:fixed; inset:0; background:rgba(20,26,32,.5); z-index:1000; align-items:center; justify-content:center;">
-      <div class="modal-box" style="background:#fff; border-radius:6px; padding:16px; width:440px; max-height:80vh; overflow:auto; box-shadow:0 8px 30px rgba(0,0,0,.25);">
-        <h3 style="font-size:12.5px; margin-bottom:4px;">Choose the record to import</h3>
-        <p class="muted" style="font-size:10.5px; margin:0 0 10px;">Job no. is not in the file — enter it after importing.</p>
-        <div id="importPickList"></div>
-        <div class="actions" style="margin-top:12px;">
-          <button class="btn btn-flat" id="importPickCancelBtn">Cancel</button>
         </div>
       </div>
     </div>
@@ -404,6 +392,8 @@ function toast(msg){
       tr.style.borderBottom = '1px solid var(--line-soft)';
       if(entry.id === editingEntryId) tr.style.background = '#fbf0dc';
       tr.innerHTML = `
+        <td style="padding:5px 6px;">${entry.receivedFrom || ''}</td>
+        <td style="padding:5px 6px;">${entry.toBeProcessedFor || ''}</td>
         <td style="padding:5px 6px;">${entry.basketNr || ''}</td>
         <td style="padding:5px 6px;">${entry.sizeRange || ''}</td>
         <td style="padding:5px 6px;">${formatWeight(entry.wholeWeight)}</td>
@@ -425,6 +415,8 @@ function toast(msg){
     totals.id = 'basketTotalsRow';
     totals.style.cssText = 'border-top:2px solid var(--steel); font-weight:700;';
     totals.innerHTML = `
+      <td style="padding:5px 6px;"></td>
+      <td style="padding:5px 6px;"></td>
       <td style="padding:5px 6px;">Final</td>
       <td style="padding:5px 6px;"></td>
       <td style="padding:5px 6px;">${formatWeight(sum('wholeWeight'))}<br><span style="font-weight:400;">${formatNumeric(Math.round(sum('wholeWeight') / 10) / 100)} Kg</span></td>
@@ -539,7 +531,11 @@ function toast(msg){
       }
       editingEntryId = null;
     } else {
-      state.basketEntries.push({ id: 'entry_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), ...values });
+      state.basketEntries.push({
+        id: 'entry_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+        receivedFrom: state.receivedFrom, toBeProcessedFor: state.toBeProcessedFor,
+        ...values
+      });
       toast('Basket entry added.');
     }
 
@@ -610,6 +606,15 @@ function toast(msg){
     return rows.filter(r => r.some(v => String(v).trim() !== ''));
   }
 
+  // Can and Dried are processed on separate lines and must never land on the same
+  // receiving record. Live/Other/blank carry no such restriction.
+  function processingStream(value){
+    const v = String(value || '').trim().toLowerCase();
+    if(v === 'can') return 'can';
+    if(v === 'dried' || v === 'dry') return 'dry';
+    return null;
+  }
+
   function groupImportRows(text){
     const rows = parseCsv(text);
     if(!rows.length) throw new Error('The file is empty.');
@@ -621,12 +626,13 @@ function toast(msg){
     const missing = IMPORT_HEADERS.filter(h => !(h in col));
     if(missing.length) throw new Error('Missing column(s): ' + missing.join(', '));
 
+    // Groups keyed on farm + processing-for (not date, not size range) so one
+    // import can carry several farms and/or several processing streams onto
+    // the same basket list -- the only combination it must reject is Can + Dried.
     const groups = new Map();
     rows.slice(1).forEach(r => {
       const get = name => String(r[col[name]] ?? '').trim();
-      // Size range is deliberately NOT part of the key: it is a per-basket value now,
-      // so a day's baskets stay in one record instead of splitting once per size.
-      const key = [get('receivingDate'), get('harvestFarm'), get('processingFor')].join('|');
+      const key = [get('harvestFarm'), get('processingFor')].join('|');
       if(!groups.has(key)){
         groups.set(key, {
           receivingDate: get('receivingDate'),
@@ -644,45 +650,39 @@ function toast(msg){
         mortalityCount: get('mortalityCount')
       });
     });
-    return [...groups.values()];
+
+    const groupList = [...groups.values()];
+    const streams = new Set(groupList.map(g => processingStream(g.toBeProcessedFor)).filter(Boolean));
+    if(streams.has('can') && streams.has('dry')){
+      throw new Error('This file mixes Can and Dried processing — import them separately.');
+    }
+    return groupList;
   }
 
-  function applyImport(group){
-    state.receivingDate = group.receivingDate;
-    state.receivedFrom = group.receivedFrom;
-    state.toBeProcessedFor = group.toBeProcessedFor;
-    state.basketEntries = group.entries.map((e, n) => ({
-      id: 'entry_' + Date.now() + '_' + n + '_' + Math.random().toString(36).slice(2,7),
+  function applyImport(groups){
+    const stampedEntries = groups.flatMap((g, gi) => g.entries.map((e, n) => ({
+      id: 'entry_' + Date.now() + '_' + gi + '_' + n + '_' + Math.random().toString(36).slice(2,7),
+      receivedFrom: g.receivedFrom, toBeProcessedFor: g.toBeProcessedFor,
       ...e
-    }));
+    })));
+    state.receivingDate = groups[0].receivingDate;
+    // The header farm / processing-for fields only hold one value each, so they
+    // stay populated only when every imported group agrees on it.
+    state.receivedFrom = groups.every(g => g.receivedFrom === groups[0].receivedFrom) ? groups[0].receivedFrom : '';
+    state.toBeProcessedFor = groups.every(g => g.toBeProcessedFor === groups[0].toBeProcessedFor) ? groups[0].toBeProcessedFor : '';
+    state.basketEntries = stampedEntries;
     editingEntryId = null;
     emptyEntryInputs();
     setEditNotice();
     renderAll();
-    const unknownFarm = group.receivedFrom && !window.Lookups.isValid('farms', group.receivedFrom);
+    const unknownFarm = groups.some(g => g.receivedFrom && !window.Lookups.isValid('farms', g.receivedFrom));
     const unknownSize = state.basketEntries.some(e =>
       e.sizeRange && !window.Lookups.isValid('sizeRanges', e.sizeRange));
     if(unknownFarm || unknownSize){
-      toast('Imported — check the farm and the basket size ranges.');
+      toast('Imported — check the farm(s) and the basket size ranges.');
     } else {
       toast(`Imported ${state.basketEntries.length} basket entries. Enter the job no.`);
     }
-  }
-
-  function closeImportPick(){ $('importPickModal').style.display = 'none'; }
-
-  function openImportPick(groups){
-    const list = $('importPickList');
-    list.innerHTML = '';
-    groups.forEach((g, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-flat';
-      btn.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:6px; padding:8px 10px; font-size:11.5px;';
-      btn.textContent = `${g.receivingDate} · ${g.receivedFrom} · ${g.toBeProcessedFor} — ${g.entries.length} basket${g.entries.length===1?'':'s'}`;
-      btn.addEventListener('click', ()=>{ closeImportPick(); applyImport(groups[i]); });
-      list.appendChild(btn);
-    });
-    $('importPickModal').style.display = 'flex';
   }
 
   function handleImportFile(file){
@@ -698,8 +698,7 @@ function toast(msg){
          !confirm(`This will replace the ${state.basketEntries.length} basket entries currently on the form. Continue?`)){
         return;
       }
-      if(groups.length === 1) applyImport(groups[0]);
-      else openImportPick(groups);
+      applyImport(groups);
     };
     reader.onerror = () => toast('Could not read that file.');
     reader.readAsText(file);
@@ -742,7 +741,6 @@ function toast(msg){
     $('editNameCancelBtn').addEventListener('click', closeEditNameModal);
     $('editNameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') confirmEditName(); });
     $('importBtn').addEventListener('click', ()=>$('importFile').click());
-    $('importPickCancelBtn').addEventListener('click', closeImportPick);
     $('importFile').addEventListener('change', e=>{
       const file = e.target.files && e.target.files[0];
       if(file) handleImportFile(file);
