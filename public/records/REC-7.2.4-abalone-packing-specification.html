@@ -95,6 +95,7 @@
             <label class="field">Ingo weight — max<input id="r_maxIngo" type="number" step="1"></label>
             <label class="field">Checked by (QC)<input id="r_checkedBy"></label>
             <label class="field">Sign-off date<input id="r_checkedByDate" type="date"></label>
+            <label class="field">Date effective<input id="r_dateEffective" type="date"></label>
           </div>
         </div>
         <div class="actions no-print" style="margin-top:8px;">
@@ -113,7 +114,7 @@
         <table class="entry-table" id="specRefTable">
           <thead>
             <tr>
-              <th>Date</th>
+              <th>Date effective</th>
               <th>Pcs</th>
               <th>Drained weight</th>
               <th>Ingo weight (min-max)</th>
@@ -231,8 +232,13 @@ document.addEventListener('DOMContentLoaded', function () {
     return {
       id: null, revision: 1, status:'draft',
       specRefRows: [], rows: [], comments:'',
+      verifications: [],
       createdAt: null, updatedAt: null
     };
+  }
+
+  function todayISO(){
+    return new Date().toISOString().slice(0,10);
   }
 
   let state = newRecord();
@@ -256,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   const ROW_FIELDS = ['pcs','drainedWeight','ingoWeight','minSpec','maxSpec'];
-  const SPEC_REF_FIELDS = ['pcs','drainedWeight','minIngo','maxIngo','checkedBy','checkedByDate'];
+  const SPEC_REF_FIELDS = ['pcs','drainedWeight','minIngo','maxIngo','checkedBy','checkedByDate','dateEffective'];
 
   function emptyRowInputs(){
     ROW_FIELDS.forEach(f=>{ $('h_'+f).value = ''; });
@@ -368,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const max = row.maxIngo === null || row.maxIngo === undefined || row.maxIngo === '' ? '' : row.maxIngo;
       const range = (min !== '' || max !== '') ? `${min}-${max}` : '';
       tr.innerHTML = `
-        <td>${fmtDate(row.enteredAt)}</td>
+        <td>${row.dateEffective || fmtDate(row.enteredAt)}</td>
         <td>${row.pcs || ''}</td>
         <td>${row.drainedWeight || ''}</td>
         <td>${range}</td>
@@ -416,11 +422,13 @@ document.addEventListener('DOMContentLoaded', function () {
       existing.minIngo = minIngo;
       existing.maxIngo = maxIngo;
       existing.enteredAt = now;
+      existing.dateEffective = todayISO();
     } else {
       state.specRefRows.push({
         id: 'specref_' + now + '_' + Math.random().toString(36).slice(2,7),
         pcs, drainedWeight, minIngo, maxIngo,
         checkedBy: '', checkedByDate: '',
+        dateEffective: todayISO(),
         enteredAt: now
       });
     }
@@ -484,6 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderForm();
     renderSpecRefTable();
     renderRowTable();
+    renderVerifySelect();
     updateRecordStatus();
     $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
   }
@@ -553,6 +562,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setEditNotice();
     renderRowTable();
     renderSpecRefTable();
+    renderVerifySelect();
     updateRecordStatus();
   }
 
@@ -576,7 +586,57 @@ document.addEventListener('DOMContentLoaded', function () {
     state.rows = state.rows.filter(r=>r.id !== rowId);
     if(editingRowId === rowId){ editingRowId = null; emptyRowInputs(); setEditNotice(); }
     renderRowTable();
+    renderVerifySelect();
     updateRecordStatus();
+  }
+
+  function renderVerifySelect(){
+    const box = $('verifySelect');
+    if(!state.rows.length){
+      box.innerHTML = '<div class="muted" style="font-size:11px;">No calculation rows to verify yet.</div>';
+      return;
+    }
+    box.innerHTML = state.rows.map(row=>{
+      const calc = calcRow(row);
+      return `<label style="display:flex; align-items:center; gap:6px; font-size:11px; padding:2px 0;">
+        <input type="checkbox" class="verifyRowChk" value="${row.id}">
+        Pcs ${row.pcs || '—'} · DW ${row.drainedWeight || '—'} · Ingo ${row.ingoWeight || '—'} · Cookout ${fmt(calc.cookoutPct)}%
+      </label>`;
+    }).join('');
+  }
+
+  function logVerification(){
+    const checked = Array.from(document.querySelectorAll('.verifyRowChk:checked')).map(c=>c.value);
+    const verifiedBy = $('v_verifiedBy').value.trim();
+    const verifiedSig = $('v_verifiedSig').value.trim();
+    const verifiedDate = $('v_verifiedDate').value;
+    if(!checked.length){ toast('Select at least one row to verify.'); return; }
+    if(!verifiedBy || !verifiedSig || !verifiedDate){ toast('Enter verified by, signature and date.'); return; }
+    state.verifications.push({
+      id: 'verify_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      rowIds: checked, verifiedBy, verifiedSig, verifiedDate,
+      loggedAt: Date.now()
+    });
+    $('v_verifiedBy').value = '';
+    $('v_verifiedSig').value = '';
+    $('v_verifiedDate').value = '';
+    document.querySelectorAll('.verifyRowChk:checked').forEach(c=>{ c.checked = false; });
+    renderVerificationHistory();
+    toast('Verification logged.');
+  }
+
+  function renderVerificationHistory(){
+    renderVerifySelect();
+    const box = $('verificationHistory');
+    if(!state.verifications.length){
+      box.innerHTML = '<div class="muted" style="font-size:11px;">No verifications logged yet.</div>';
+      return;
+    }
+    box.innerHTML = state.verifications.slice().reverse().map(v=>`
+      <div style="font-size:11px; padding:4px 0; border-bottom:1px solid var(--line-soft);">
+        ${v.rowIds.length} row${v.rowIds.length===1?'':'s'} verified by <strong>${v.verifiedBy}</strong> (sig: ${v.verifiedSig}) on ${v.verifiedDate}
+      </div>
+    `).join('');
   }
 
   function wire(){
