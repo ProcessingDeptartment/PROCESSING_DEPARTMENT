@@ -652,14 +652,15 @@
   .dc-top, .so-top, .dsir-top, .cp-top, .rcs-top, .gbt-top,
   .fr-top, .ml-top { display: none !important; }
 
-  /* Print-only sign-off blocks should use 12px body text while keeping
-   * heading sizes unchanged. This covers the shared record signoff panel
-   * and its print-only verification row across bespoke pages. */
-  #ar-root #panelSignoff .field,
-  #ar-root #panelSignoff .field input,
-  #ar-root #panelSignoff .field select,
-  #ar-root #panelSignoff .field textarea,
-  #ar-root #signoffCompletedBy {
+  /* Sign-off blocks print at 14px like the controlled-copy header, not the
+   * 12px body size. Matched bare (not scoped to one page's root id) so every
+   * bespoke record's #panelSignoff picks this up, not just the one page it
+   * was originally written against. */
+  #panelSignoff .field,
+  #panelSignoff .field input,
+  #panelSignoff .field select,
+  #panelSignoff .field textarea,
+  #signoffCompletedBy {
     font-size: 14px !important;
   }
 
