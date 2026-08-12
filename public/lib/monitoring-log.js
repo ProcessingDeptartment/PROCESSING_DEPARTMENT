@@ -173,6 +173,12 @@
     body.ml-printing-entry .ml-top,
     body.ml-printing-entry .ml-body{ display:none !important; }
     body.ml-printing-entry .ml-sheet{ display:block; }
+    /* Printing the whole log: the controlled-copy header is injected into
+     * table.ml-table's own thead instead (see injectListPrintHeader) so it repeats
+     * using that table's native pagination -- the usual #dh-print-header block is
+     * hidden here to avoid showing it twice. */
+    body.ml-printing-list #dh-print-header{ display:none !important; }
+    #ml-list-print-header-row td{ padding:0; border:none; }
   }`;
 
   // @page can't be toggled by a class, so the rule is swapped before each print:
@@ -298,7 +304,7 @@
 
   // ---- one controller per log (primary + optional secondary share this factory) ----
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline } = opts;
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey } = opts;
     let entries = [];
     let editingId = null;
 
@@ -570,9 +576,41 @@
       download(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), safeKey(title) + '.json');
     }
 
+    /* The whole-log list is a native <table> that itself needs to paginate (it can run
+     * to many pages), so the shared repeating-header mechanism (doc-header.js wrapping
+     * the whole document in an outer table) doesn't work here -- a table nested inside
+     * another table's cell loses reliable thead-repeat behaviour in print. Instead the
+     * header is injected as an extra row in THIS table's own thead, so it repeats using
+     * the same native pagination as the column-label row beside it. */
+    function injectListPrintHeader() {
+      const table = tableWrap && tableWrap.querySelector('table.ml-table');
+      const thead = table && table.querySelector('thead');
+      if (!thead || !window.DocHeader) return;
+      const h = window.DocHeader.current(recordKey);
+      if (!h) return;
+      const tr = document.createElement('tr');
+      tr.id = 'ml-list-print-header-row';
+      const td = document.createElement('td');
+      td.colSpan = 99; // spans every column regardless of how many this record has
+      td.innerHTML = window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png');
+      tr.appendChild(td);
+      thead.insertBefore(tr, thead.firstChild);
+    }
+
+    function removeListPrintHeader() {
+      const row = document.getElementById('ml-list-print-header-row');
+      if (row) row.remove();
+    }
+
     function printPdf() {
       setPageOrientation('landscape');
+      document.body.classList.add('ml-printing-list');
+      document.body.setAttribute('data-dh-skip-wrap', '');
+      injectListPrintHeader();
       withPrintTitle(safeKey(title) + '_' + new Date().toISOString().slice(0, 10), () => window.print());
+      removeListPrintHeader();
+      document.body.removeAttribute('data-dh-skip-wrap');
+      document.body.classList.remove('ml-printing-list');
     }
 
     function withPrintTitle(name, fn) {
@@ -877,6 +915,7 @@
       title: config.title,
       entryFields: expandCommentFields(config.entryFields),
       storageKey: 'monitoring_log:' + config.recordKey,
+      recordKey: config.recordKey,
       sheetMeta: config.docMeta, docCode: config.docCode, docTitle: config.title,
       onEntriesChanged: () => refreshVerification(),
       specGetter: () => currentSpec,
@@ -895,6 +934,7 @@
         title: config.secondaryLog.title,
         entryFields: expandCommentFields(config.secondaryLog.entryFields),
         storageKey: 'monitoring_log:' + config.recordKey + '__' + config.secondaryLog.key,
+        recordKey: config.recordKey,
         sheetMeta: config.docMeta, docCode: config.docCode, docTitle: config.title,
       onEntriesChanged: () => refreshVerification(),
         specGetter: () => currentSpec,

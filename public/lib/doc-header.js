@@ -190,6 +190,11 @@
    * once) is a no-op because #dh-print-table already exists. */
   function wrapForRepeatingHeader() {
     if (document.getElementById('dh-print-table')) return;
+    // Opt-out for a page that already contains its own native <table> meant to paginate
+    // (e.g. monitoring-log's whole-log list print). Nesting that table inside this one
+    // breaks the browser's ability to paginate/repeat either table's thead reliably --
+    // that page injects the header into its own table's thead instead. See monitoring-log.js.
+    if (document.body.hasAttribute('data-dh-skip-wrap')) return;
     const header = document.getElementById('dh-print-header');
     if (!header) return; // nothing mounted -- nothing to repeat
 
