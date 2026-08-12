@@ -60,6 +60,12 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+  @media print{
+    .gbt-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelInstructions{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelBinDetails{ order:3; break-before:page; page-break-before:always; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -74,7 +80,7 @@
 
   <div class="gbt-body">
 
-    <div class="panel">
+    <div class="panel" id="panelInstructions">
       <div class="panel-head"><h2>Instructions</h2></div>
       <div class="panel-body">
         <p style="font-size:11px; margin:0; color:#54606b;">
@@ -83,7 +89,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelBinDetails">
       <div class="panel-head"><h2>Bin Details</h2></div>
       <div class="panel-body">
         <div class="grid grid-3" style="margin-bottom:8px;">
@@ -95,7 +101,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

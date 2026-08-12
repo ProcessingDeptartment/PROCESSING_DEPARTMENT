@@ -60,6 +60,14 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  @media print{
+    .cp-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelBatchInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelCookingProcessing{ order:3; break-before:page; page-break-before:always; }
+    #panelDamageReport{ order:4; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -74,7 +82,7 @@
 
   <div class="cp-body">
 
-    <div class="panel">
+    <div class="panel" id="panelBatchInfo">
       <div class="panel-head"><h2>Batch Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
@@ -88,7 +96,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelCookingProcessing">
       <div class="panel-head"><h2>Cooking & Processing</h2></div>
       <div class="panel-body">
         <div class="grid grid-4" style="margin-bottom:8px;">
@@ -106,7 +114,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelDamageReport">
       <div class="panel-head"><h2>Damage Report</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
@@ -116,7 +124,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

@@ -60,6 +60,14 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  @media print{
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelCheckInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelVerification2{ order:3; break-before:page; page-break-before:always; }
+    #panelCorrectiveActions{ order:4; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -77,7 +85,7 @@
       <strong>Instructions:</strong> Check printing on can is correct (pieces, best before date). Check pieces on can for the first and last can whenever the printer changes.
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelCheckInfo">
       <div class="panel-head"><h2>Check Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -89,7 +97,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelVerification2">
       <div class="panel-head"><h2>Verification</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -100,7 +108,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelCorrectiveActions">
       <div class="panel-head"><h2>Corrective Actions</h2></div>
       <div class="panel-body">
         <div class="grid grid-6">
@@ -109,7 +117,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

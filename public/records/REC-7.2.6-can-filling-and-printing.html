@@ -60,6 +60,14 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  @media print{
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelFillingInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelPrintingInfo{ order:3; break-before:page; page-break-before:always; }
+    #panelProcessVerification{ order:4; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -77,7 +85,7 @@
       <strong>Instructions:</strong> Before printing: QC verifies printing information (AG code, best before date) before printing starts.
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelFillingInfo">
       <div class="panel-head"><h2>Filling Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -89,7 +97,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelPrintingInfo">
       <div class="panel-head"><h2>Printing Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -104,7 +112,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelProcessVerification">
       <div class="panel-head"><h2>Process & Verification</h2></div>
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
@@ -117,7 +125,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

@@ -60,6 +60,16 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  /* Page 1 of the printed record carries only the Batch & Production Info and the
+     Sign-off -- Retort Information and Process Notes move to page 2. */
+  @media print{
+    .rcs-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelBatchProductionInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelRetortInformation{ order:3; break-before:page; page-break-before:always; }
+    #panelProcessNotes{ order:4; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -74,7 +84,7 @@
 
   <div class="rcs-body">
 
-    <div class="panel">
+    <div class="panel" id="panelBatchProductionInfo">
       <div class="panel-head"><h2>Batch & Production Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
@@ -88,7 +98,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelRetortInformation">
       <div class="panel-head"><h2>Retort Information</h2></div>
       <div class="panel-body">
         <div class="grid grid-4" style="margin-bottom:8px;">
@@ -106,14 +116,14 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelProcessNotes">
       <div class="panel-head"><h2>Process Notes</h2></div>
       <div class="panel-body">
         <label class="field">Process deviation<textarea id="h_processDeviation" rows="3" placeholder="Any deviations or notes…"></textarea></label>
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

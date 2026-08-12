@@ -60,6 +60,14 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  @media print{
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelBatchInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelBleeding{ order:3; break-before:page; page-break-before:always; }
+    #panelSalting{ order:4; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -74,7 +82,7 @@
 
   <div class="dc-body">
 
-    <div class="panel">
+    <div class="panel" id="panelBatchInfo">
       <div class="panel-head"><h2>Batch Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
@@ -87,7 +95,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelBleeding">
       <div class="panel-head"><h2>Bleeding</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -99,7 +107,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSalting">
       <div class="panel-head"><h2>Salting</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
@@ -125,7 +133,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

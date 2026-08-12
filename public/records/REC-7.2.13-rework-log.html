@@ -60,6 +60,14 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  @media print{
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelReworkRequest{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelProductDetails{ order:3; break-before:page; page-break-before:always; }
+    #panelReworkApproval{ order:4; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -73,7 +81,7 @@
   </div>
 
   <div class="dc-body">
-    <div class="panel">
+    <div class="panel" id="panelReworkRequest">
       <div class="panel-head"><h2>Rework Request</h2></div>
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
@@ -85,7 +93,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelProductDetails">
       <div class="panel-head"><h2>Product Details</h2></div>
       <div class="panel-body">
         <div class="grid grid-4" style="margin-bottom:8px;">
@@ -100,7 +108,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelReworkApproval">
       <div class="panel-head"><h2>Rework Approval</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
@@ -110,7 +118,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

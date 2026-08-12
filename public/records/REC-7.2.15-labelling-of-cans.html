@@ -60,6 +60,15 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  @media print{
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelLabelIssuance{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelPreLabellingChecks{ order:3; break-before:page; page-break-before:always; }
+    #panelLabellingChecks{ order:4; }
+    #panelPostLabellingChecks{ order:5; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -73,7 +82,7 @@
   </div>
 
   <div class="dc-body">
-    <div class="panel">
+    <div class="panel" id="panelLabelIssuance">
       <div class="panel-head"><h2>Label Issuance</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -89,7 +98,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelPreLabellingChecks">
       <div class="panel-head"><h2>Pre-Labelling Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
@@ -99,7 +108,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelLabellingChecks">
       <div class="panel-head"><h2>Labelling Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
@@ -113,7 +122,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelPostLabellingChecks">
       <div class="panel-head"><h2>Post-Labelling Checks</h2></div>
       <div class="panel-body">
         <div class="grid grid-6">
@@ -122,7 +131,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

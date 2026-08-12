@@ -40,6 +40,13 @@
   .toast{position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s;}
   .toast.show{opacity:1;}
   @media(max-width:900px){.grid-6{grid-template-columns:repeat(3,1fr);}.grid-4{grid-template-columns:repeat(2,1fr);}}
+
+  @media print{
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelPackInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelWeightCheck{ order:3; break-before:page; page-break-before:always; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -52,7 +59,7 @@
     </div>
   </div>
   <div class="dc-body">
-    <div class="panel">
+    <div class="panel" id="panelPackInfo">
       <div class="panel-head"><h2>Pack Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
@@ -65,7 +72,7 @@
         </div>
       </div>
     </div>
-    <div class="panel">
+    <div class="panel" id="panelWeightCheck">
       <div class="panel-head"><h2>Weight Check</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -80,7 +87,7 @@
         <textarea id="h_processDeviation" rows="2" placeholder="Deviations…" style="font-size:11px;"></textarea>
       </div>
     </div>
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>
