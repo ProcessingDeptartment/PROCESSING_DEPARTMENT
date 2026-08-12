@@ -147,7 +147,11 @@
     .no-print{ display:none !important; }
     #so-root{ font-size:14px; background:#fff; }
     .so-top{ padding:4px 8px; }
-    .so-body{ padding:6px 8px 0; }
+    .so-body{ display:flex; flex-direction:column; max-width:none; padding:6px 8px 0; }
+    #panelInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelWeights{ order:3; break-before:page; page-break-before:always; }
+    #panelResults{ order:4; }
     .panel{ margin-bottom:6px; break-inside:avoid; }
     .panel-head{ padding:4px 8px; }
     .panel-head h2{ font-size:14px; }
@@ -182,7 +186,7 @@
 
   <div class="so-body">
 
-    <div class="panel">
+    <div class="panel" id="panelInfo">
       <div class="panel-head"><h2>Batch Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
@@ -211,7 +215,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelWeights">
       <div class="panel-head"><h2>Weight Measurements (kg)</h2></div>
       <div class="panel-body">
         <table class="weights" id="weightsTable">
@@ -221,7 +225,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelResults">
       <div class="panel-head"><h2>Results</h2></div>
       <div class="panel-body">
         <div class="summary-row">
@@ -244,7 +248,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>

@@ -664,5 +664,14 @@
     font-size: 14px !important;
   }
 
+  /* Section header blocks within the body ("RECEIVING INFO", "SIGN-OFF", ...)
+   * print at the same 12px as the body text they head, not bold -- they were
+   * inheriting the app's on-screen h1/h2/h3 bold rule, which reads like a
+   * second heading level on a controlled-copy printout. */
+  .panel-head h2 {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+  }
+
   *:has(> .doc-line) { display: none !important; }
 }

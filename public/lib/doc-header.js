@@ -148,7 +148,7 @@
     return row && row.revision != null ? row.revision : 1;
   }
 
-  /* Print the block once, in normal document flow, ahead of everything else on the page.
+  /* Repeat the block on every printed page.
    *
    * This used to park the block in a position:fixed strip reserved by an @page top margin,
    * repainted once per printed page. That's the textbook trick for a repeating print header
@@ -156,9 +156,14 @@
    * come out of a renderer where position:fixed does not repeat per page; it gets placed
    * once using the *whole tall document's* flow coordinates, which is why the block was
    * showing up mid-document (over the sign-off section on REC-7.1.2) instead of at the top
-   * of page 1. An in-flow block is the only placement every renderer agrees on, so that's
-   * the trade made here: it prints once at the very top of the document rather than
-   * repeating on every page. */
+   * of page 1.
+   *
+   * The one placement every renderer honours for a repeating header is a real HTML
+   * <table><thead>: browsers repaint <thead> content on every page a table spans. So at
+   * print time (beforeprint), the header and the rest of the page's content are moved --
+   * not cloned, the live nodes -- into such a table: header into <thead>, everything else
+   * into one <tbody> cell. afterprint moves them all back out to their original body
+   * position so the on-screen app is completely unaffected outside the print window. */
   function injectPrintHeaderStyles(side) {
     let s = document.getElementById('dh-print-header-styles');
     if (!s) {
@@ -167,12 +172,79 @@
     }
     s.textContent = `
       #dh-print-header{ display:none; }
+      #dh-print-table{ display:none; }
       @media print{
         @page{ margin:${side}; }
         #dh-print-header{ display:block; }
+        #dh-print-table{ display:table; width:100%; border-collapse:collapse; }
+        #dh-print-table > thead > tr > td,
+        #dh-print-table > tbody > tr > td{ padding:0; border:none; }
+        #dh-print-table > thead{ display:table-header-group; }
       }
     `;
     document.head.appendChild(s); // moves it to the end if it was already there
+  }
+
+  /* Move the header + the rest of body into the repeating-header table. Idempotent --
+   * a second beforeprint before the matching afterprint (some browsers fire it more than
+   * once) is a no-op because #dh-print-table already exists. */
+  function wrapForRepeatingHeader() {
+    if (document.getElementById('dh-print-table')) return;
+    const header = document.getElementById('dh-print-header');
+    if (!header) return; // nothing mounted -- nothing to repeat
+
+    const table = document.createElement('table');
+    table.id = 'dh-print-table';
+    const thead = document.createElement('thead');
+    const theadRow = document.createElement('tr');
+    const theadCell = document.createElement('td');
+    const tbody = document.createElement('tbody');
+    const tbodyRow = document.createElement('tr');
+    const tbodyCell = document.createElement('td');
+
+    // Move the header node itself into the head cell (not a copy -- same element,
+    // so nothing about it needs to be kept in sync).
+    theadCell.appendChild(header);
+    theadRow.appendChild(theadCell);
+    thead.appendChild(theadRow);
+
+    // Everything else that was a direct child of body moves into the one body cell,
+    // in its original order.
+    Array.from(document.body.childNodes).forEach(node => tbodyCell.appendChild(node));
+    tbodyRow.appendChild(tbodyCell);
+    tbody.appendChild(tbodyRow);
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    document.body.appendChild(table);
+  }
+
+  /* Reverse wrapForRepeatingHeader exactly: header back to being body's first child,
+   * then every other node back to body in its original order, then drop the table. */
+  function unwrapForRepeatingHeader() {
+    const table = document.getElementById('dh-print-table');
+    if (!table) return;
+    // table.tHead / table.tBodies only ever return the table's own direct-child
+    // sections -- never a nested one, unlike querySelector('tbody > tr > td'),
+    // which would just as happily match the header's own inner <table class="dh-block">
+    // (a tbody with no thead) since that's nested inside our thead cell.
+    const theadCell = table.tHead && table.tHead.rows[0] && table.tHead.rows[0].cells[0];
+    const tbodyCell = table.tBodies[0] && table.tBodies[0].rows[0] && table.tBodies[0].rows[0].cells[0];
+    const header = theadCell && theadCell.firstChild;
+    const rest = tbodyCell ? Array.from(tbodyCell.childNodes) : [];
+    // Detach the wrapper first -- header/rest are plain node references, unaffected
+    // by removing their (now empty of interest) ancestor table from the document.
+    table.remove();
+    if (header) document.body.insertBefore(header, document.body.firstChild || null);
+    rest.forEach(node => document.body.appendChild(node));
+  }
+
+  let printWrapWired = false;
+  function wirePrintWrap() {
+    if (printWrapWired) return;
+    printWrapWired = true;
+    window.addEventListener('beforeprint', wrapForRepeatingHeader);
+    window.addEventListener('afterprint', unwrapForRepeatingHeader);
   }
 
   /* Put the controlled-copy block on every printed page of the calling record.
@@ -203,6 +275,7 @@
     }
     host.innerHTML = blockHtml(h, null, null, opts.logoSrc || '../assets/abagold-logo.png');
     RESOLVED[opts.recordKey] = h;
+    wirePrintWrap();
     return h;
   }
 

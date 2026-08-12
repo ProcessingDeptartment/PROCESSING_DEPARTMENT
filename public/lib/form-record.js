@@ -146,7 +146,7 @@
   .fr-sheet{ display:none; color:#000; font-family:'Segoe UI',system-ui,sans-serif; font-size:12px; }
   .fr-sheet .fr-sheet-page{ page-break-after:always; }
   .fr-sheet .fr-sheet-page:last-child{ page-break-after:auto; }
-  .fr-sheet h3{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:9px 0 4px; font-weight:700; }
+  .fr-sheet h3{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:9px 0 4px; font-weight:400; }
   .fr-sheet h3:first-child{ margin-top:0; }
   .fr-sheet table{ width:100%; border-collapse:collapse; margin-bottom:7px; }
   .fr-sheet td,.fr-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; font-size:12px; color:#000; }
