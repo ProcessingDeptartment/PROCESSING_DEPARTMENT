@@ -533,16 +533,21 @@
   --form-fs-panel-head: 12px;
 }
 
-/* PDF/print keeps its own 14px scale regardless of the on-screen size above. */
+/* PDF/print body text stays 12px and black -- same scale as the screen, just
+   forced black regardless of each bespoke page's on-screen label/ink colour.
+   The controlled-copy header (doc-header.js) and the sign-off block
+   (#panelSignoff, .fr-sheet-sign, .ml-sheet .sheet-head/.sheet-sign) are the
+   two pieces every printed record carries and are sized separately at 14px --
+   this only touches the body content in between. */
 @media print {
   :root {
-    --form-fs-root: 14px;
-    --form-fs-input: 14px;
-    --form-fs-button: 14px;
-    --form-fs-small: 14px;
-    --form-fs-label: 14px;
-    --form-fs-hint: 14px;
-    --form-fs-panel-head: 14px;
+    --form-fs-root: 12px;
+    --form-fs-input: 12px;
+    --form-fs-button: 12px;
+    --form-fs-small: 12px;
+    --form-fs-label: 12px;
+    --form-fs-hint: 12px;
+    --form-fs-panel-head: 12px;
   }
 }
 
@@ -629,6 +634,13 @@
    having to be listed here.
    ======================================================================== */
 @media print {
+  /* Body text prints black regardless of which palette a record carries
+     on screen -- overrides the palette-specific --palette-ink further up
+     this file, which is what every bespoke page's body text is coloured
+     from. The controlled-copy header (doc-header.js) sets its own colour
+     and is untouched by this. */
+  :root, :root[data-palette] { --palette-ink: #000; }
+
   .no-print { display: none !important; }
 
   .doc-line { display: none !important; }

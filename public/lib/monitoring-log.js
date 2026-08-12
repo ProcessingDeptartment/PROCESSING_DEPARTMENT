@@ -151,9 +151,9 @@
   }
   /* Single-entry printout -- a screen-hidden replica of the paper form, so one entry
      prints as the controlled document rather than as a row of a web table. */
-  .ml-sheet{ display:none; color:#000; font-family:'Segoe UI',system-ui,sans-serif; font-size:14px; }
+  .ml-sheet{ display:none; color:#000; font-family:'Segoe UI',system-ui,sans-serif; font-size:12px; }
   .ml-sheet table{ width:100%; border-collapse:collapse; margin-bottom:8px; }
-  .ml-sheet td,.ml-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; }
+  .ml-sheet td,.ml-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; color:#000; }
   .ml-sheet .sheet-logo{ width:78px; text-align:center; font-weight:700; font-size:14px; vertical-align:middle; }
   .ml-sheet .sheet-lbl{ font-weight:700; white-space:nowrap; width:88px; }
   .ml-sheet .sheet-head td{ font-size:14px; }
