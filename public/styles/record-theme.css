@@ -653,13 +653,21 @@
   .fr-top, .ml-top { display: none !important; }
 
   /* Sign-off blocks print at 14px like the controlled-copy header, not the
-   * 12px body size. Matched bare (not scoped to one page's root id) so every
-   * bespoke record's #panelSignoff picks this up, not just the one page it
-   * was originally written against. */
+   * 12px body size. #panelSignoff only exists on one page (REC-7.1.2) -- every
+   * other bespoke record's sign-off panel is a bare .panel with no id, so
+   * matching that id alone left every other page's sign-off content (Comments,
+   * "Cooked by", the injected Completed-by fields, ...) at the 12px body size.
+   * :has(#signoffCompletedBy) finds that panel on every record generically,
+   * since SignOffBlock always mounts into a #signoffCompletedBy div wherever
+   * it's used. */
   #panelSignoff .field,
   #panelSignoff .field input,
   #panelSignoff .field select,
   #panelSignoff .field textarea,
+  .panel:has(#signoffCompletedBy) .field,
+  .panel:has(#signoffCompletedBy) .field input,
+  .panel:has(#signoffCompletedBy) .field select,
+  .panel:has(#signoffCompletedBy) .field textarea,
   #signoffCompletedBy {
     font-size: 14px !important;
   }

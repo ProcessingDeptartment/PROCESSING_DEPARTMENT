@@ -160,7 +160,7 @@
   .ml-sheet .sheet-body th{ background:#eee; font-weight:700; }
   .ml-sheet .sheet-body td.sheet-item{ width:46%; }
   .ml-sheet .sheet-body td.sheet-rec{ width:14%; text-align:center; font-weight:700; }
-  .ml-sheet .sheet-sign td{ height:30px; }
+  .ml-sheet .sheet-sign td{ height:30px; font-size:14px; }
   .ml-sheet .sheet-title{ font-weight:700; font-size:14px; text-align:center; padding:4px; }
   @media print{
     body{ background:#fff; }
