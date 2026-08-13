@@ -155,7 +155,9 @@
   .fr-sheet .fr-sheet-sign td{ height:26px; font-size:14px; }
   .fr-sheet .fr-sheet-sign td.fr-sheet-lbl{ width:13%; }
   @media print{
-    @page{ size:A4; margin:12mm; }
+    @page{ size:A4; margin:12mm;
+      @bottom-right{ content:"Page " counter(page) " of " counter(pages); font-family:'Segoe UI',system-ui,sans-serif; font-size:10px; color:#4a4a4a; }
+    }
     body{ background:#fff; }
     .no-print{ display:none !important; }
     .fr-top{ display:none !important; }

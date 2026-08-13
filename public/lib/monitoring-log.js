@@ -187,7 +187,7 @@
     let s = document.getElementById('ml-page-style');
     if (!s) { s = document.createElement('style'); s.id = 'ml-page-style'; document.head.appendChild(s); }
     const side = (window.DocHeader && window.DocHeader.PAGE_SIDE_MARGIN) || '12mm';
-    s.textContent = `@page{ size:A4 ${orientation}; margin:${side}; }`;
+    s.textContent = `@page{ size:A4 ${orientation}; margin:${side}; @bottom-right{ content:"Page " counter(page) " of " counter(pages); font-family:'Segoe UI',system-ui,sans-serif; font-size:10px; color:#4a4a4a; } }`;
   }
 
   function injectStyleOnce() {

@@ -174,7 +174,15 @@
       #dh-print-header{ display:none; }
       #dh-print-table{ display:none; }
       @media print{
-        @page{ margin:${side}; }
+        @page{
+          margin:${side};
+          @bottom-right{
+            content:"Page " counter(page) " of " counter(pages);
+            font-family:'Segoe UI',system-ui,sans-serif;
+            font-size:10px;
+            color:#4a4a4a;
+          }
+        }
         #dh-print-header{ display:block; }
         #dh-print-table{ display:table; width:100%; border-collapse:collapse; }
         #dh-print-table > thead > tr > td,
@@ -259,9 +267,8 @@
    * therefore number them; nothing does that today, so a record that skips this call simply
    * prints no title block at all.
    *
-   * The Page cell is left blank here on purpose: CSS exposes no page count to an element
-   * outside the @page margin boxes, and a wrong page number on a controlled copy is worse
-   * than an empty one. */
+   * Page numbering ("Page 1 of 3") is handled by CSS @page margin boxes
+   * rather than a cell in the header block. */
   async function mountPrintHeader(opts) {
     opts = opts || {};
     // A caller that doesn't state its paper revision gets the one off the index row, so
@@ -322,12 +329,8 @@
     return out;
   }
 
-  /* One page's title block. `page`/`pages` produce the "1 of 3" cell; omit them and the
-   * cell is left blank rather than printing a wrong number. `logoSrc` is relative to the
-   * calling page. */
   function blockHtml(h, page, pages, logoSrc) {
     h = h || {};
-    const pageText = (page && pages) ? (page + ' of ' + pages) : '';
     const logo = logoSrc
       ? `<img class="dh-logo" src="${esc(logoSrc)}" alt="Abagold">`
       : `<span class="dh-logo-text">ABAGOLD</span>`;
@@ -343,11 +346,11 @@
       </tr>
       <tr>
         <td class="dh-lbl">Approved by:</td><td class="dh-val">${esc(h.approvedBy)}</td>
-        <td class="dh-lbl">Page</td><td class="dh-val">${esc(pageText)}</td>
+        <td class="dh-lbl">Revision Date:</td><td class="dh-val">${esc(fmtDate(h.revisionDate))}</td>
       </tr>
       <tr>
         <td class="dh-lbl">Effective Date:</td><td class="dh-val">${esc(fmtDate(h.effectiveDate))}</td>
-        <td class="dh-lbl">Revision Date:</td><td class="dh-val">${esc(fmtDate(h.revisionDate))}</td>
+        <td class="dh-lbl"></td><td class="dh-val"></td>
       </tr>
       <tr>
         <td class="dh-foot" colspan="5">Distribution approved as controlled copy</td>
