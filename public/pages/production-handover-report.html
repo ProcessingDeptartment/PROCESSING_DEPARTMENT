@@ -680,15 +680,15 @@ function setYesNoValue(button, inputId) {
     const value = button.getAttribute('data-value');
     input.value = value;
     toggle.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn === button));
+    const yesIsBad = !inputId.match(/-(stringed|complete|boxing)$/);
     if (!value) {
         parent.classList.remove('conforming');
         parent.classList.remove('nc');
-    } else if (/^yes\b/i.test(value)) {
-        parent.classList.remove('conforming');
-        parent.classList.add('nc');
     } else {
-        parent.classList.remove('nc');
-        parent.classList.add('conforming');
+        const isYes = /^yes\b/i.test(value);
+        const isBad = yesIsBad ? isYes : !isYes;
+        parent.classList.toggle('nc', isBad);
+        parent.classList.toggle('conforming', !isBad);
     }
     updateComplianceIcons();
 }
@@ -952,9 +952,12 @@ function renderPrintTable(headers, rows) {
     return rows.map(row => {
         const parts = row.map((cell, i) => {
             const val = cell || '--';
-            const isCarry = headers[i] === 'Carry' && cell && cell.toLowerCase() === 'yes';
-            if (isCarry) return `<span class="print-label">${headers[i]}:</span> <span class="print-carry-yes">${val}</span>`;
-            return `<span class="print-label">${headers[i]}:</span> <strong>${val}</strong>`;
+            const h = headers[i];
+            const lc = (cell || '').toLowerCase();
+            const isRedYes = h === 'Carry' && lc === 'yes';
+            const isRedNo = (h === 'Strung' || h === 'Grade' || h === 'Box') && lc === 'no';
+            if (isRedYes || isRedNo) return `<span class="print-label">${h}:</span> <span class="print-carry-yes">${val}</span>`;
+            return `<span class="print-label">${h}:</span> <strong>${val}</strong>`;
         }).join(' &nbsp; ');
         return `<div class="print-job-line">${parts}</div>`;
     }).join('');
