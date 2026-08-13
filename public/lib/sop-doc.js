@@ -339,6 +339,17 @@
       await refreshHeader();
     });
 
+    // Mount the controlled-copy title block so it repeats on every printed page
+    if (window.DocHeader) {
+      try {
+        await window.DocHeader.mountPrintHeader({
+          recordKey: cfg.recordKey,
+          defaults: { document: cfg.name, docNumber: cfg.sopNo },
+          revisionStart: cfg.startRev || 1
+        });
+      } catch (e) { console.error('SOP title block unavailable', e); }
+    }
+
     current = await resolve(cfg.recordKey, cfg);
     applyResolved(current);
     await refreshHeader();

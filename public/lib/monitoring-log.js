@@ -582,12 +582,16 @@
      * another table's cell loses reliable thead-repeat behaviour in print. Instead the
      * header is injected as an extra row in THIS table's own thead, so it repeats using
      * the same native pagination as the column-label row beside it. */
+    // Returns true if it actually injected something. A log with no entries yet never
+    // builds table.ml-table at all (renderTable renders an empty-state div instead), so
+    // there is nothing to inject into -- the caller must fall back to the standard
+    // once-per-document header in that case, not hide it and leave nothing printed.
     function injectListPrintHeader() {
       const table = tableWrap && tableWrap.querySelector('table.ml-table');
       const thead = table && table.querySelector('thead');
-      if (!thead || !window.DocHeader) return;
+      if (!thead || !window.DocHeader) return false;
       const h = window.DocHeader.current(recordKey);
-      if (!h) return;
+      if (!h) return false;
       const tr = document.createElement('tr');
       tr.id = 'ml-list-print-header-row';
       const td = document.createElement('td');
@@ -595,6 +599,7 @@
       td.innerHTML = window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png');
       tr.appendChild(td);
       thead.insertBefore(tr, thead.firstChild);
+      return true;
     }
 
     function removeListPrintHeader() {
@@ -604,13 +609,20 @@
 
     function printPdf() {
       setPageOrientation('landscape');
-      document.body.classList.add('ml-printing-list');
-      document.body.setAttribute('data-dh-skip-wrap', '');
-      injectListPrintHeader();
+      // Only switch to the injected-into-the-table header (and hide the standard one)
+      // when the injection actually found a table to put it in -- an empty log has no
+      // table.ml-table yet, and hiding the fallback there would print no header at all.
+      const injected = injectListPrintHeader();
+      if (injected) {
+        document.body.classList.add('ml-printing-list');
+        document.body.setAttribute('data-dh-skip-wrap', '');
+      }
       withPrintTitle(safeKey(title) + '_' + new Date().toISOString().slice(0, 10), () => window.print());
-      removeListPrintHeader();
-      document.body.removeAttribute('data-dh-skip-wrap');
-      document.body.classList.remove('ml-printing-list');
+      if (injected) {
+        removeListPrintHeader();
+        document.body.removeAttribute('data-dh-skip-wrap');
+        document.body.classList.remove('ml-printing-list');
+      }
     }
 
     function withPrintTitle(name, fn) {
@@ -864,7 +876,9 @@
     const topAddEntry = config.topAddEntry === true;
     const entriesAtBottom = config.entriesPosition === 'bottom';
 
-    const inlineEntryForm = config.inlineEntryForm === true;
+    // Every record now leads with the entry form as its main view -- the "+ Add entry"
+    // button/modal is the exception, opted into per record via inlineEntryForm:false.
+    const inlineEntryForm = config.inlineEntryForm !== false;
 
     const logsHtml = `
         ${logBlockHtml('ml_p', config.secondaryLog ? (config.primaryLogTitle || 'Entries') : 'Entries', inlineEntryForm)}

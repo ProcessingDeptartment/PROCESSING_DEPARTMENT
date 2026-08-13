@@ -634,11 +634,16 @@
    having to be listed here.
    ======================================================================== */
 @media print {
-  /* Body text prints black regardless of which palette a record carries
-     on screen -- overrides the palette-specific --palette-ink further up
-     this file, which is what every bespoke page's body text is coloured
-     from. The controlled-copy header (doc-header.js) sets its own colour
-     and is untouched by this. */
+  /* Every PDF prints black text only -- no palette colour, no muted grey, no
+     status-colour text, nothing. Overriding the ink/label palette variables
+     wasn't enough on its own: headings use --palette-heading, badges and
+     "muted" text carry their own hardcoded colours, and doc-header.js sets
+     its own grey directly -- so this is a blanket override of every element's
+     text colour, which wins over all of that in one place instead of chasing
+     each source separately. Backgrounds are untouched, so coloured status
+     badges etc. still show as coloured fills with black text on them. */
+  * { color: #000 !important; }
+
   :root, :root[data-palette] { --palette-ink: #000; }
 
   .no-print { display: none !important; }

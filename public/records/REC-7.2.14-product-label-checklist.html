@@ -60,6 +60,16 @@
     .grid-6{grid-template-columns:repeat(3,1fr);}
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
+
+  /* Page 1 of the printed record carries only Receipt Info and Comments & Sign-off --
+     Label Verification and Compliance move to page 2. */
+  @media print{
+    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
+    #panelReceiptInfo{ order:1; }
+    #panelSignoff{ order:2; }
+    #panelLabelVerification{ order:3; break-before:page; page-break-before:always; }
+    #panelCompliance{ order:4; }
+  }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -77,7 +87,7 @@
       <strong>Instructions:</strong> All labels must be checked and verified against an approved label artwork on receipt.
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelReceiptInfo">
       <div class="panel-head"><h2>Receipt Info</h2></div>
       <div class="panel-body">
         <div class="grid grid-4">
@@ -93,7 +103,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelLabelVerification">
       <div class="panel-head"><h2>Label Verification</h2></div>
       <div class="panel-body">
         <div class="grid grid-2">
@@ -103,7 +113,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelCompliance">
       <div class="panel-head"><h2>Compliance</h2></div>
       <div class="panel-body">
         <div class="grid grid-2" style="margin-bottom:8px;">
@@ -117,7 +127,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelSignoff">
       <div class="panel-head"><h2>Comments & Sign-off</h2></div>
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
