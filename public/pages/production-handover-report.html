@@ -185,32 +185,35 @@ body {
     .section-title { font-size: 14px; }
 }
 @media print {
-    @page { size: A4 portrait; margin: 0.6cm; counter-increment: page; }
-    @page:first { counter-reset: page 1; }
-    body { background: white; padding: 0; color: black; font-size: 11px; line-height: 1.2; }
+    @page { size: A4 portrait; margin: 0.6cm; }
+    body { background: white; padding: 0; color: black; font-size: 13px; line-height: 1.4; font-family: Arial, sans-serif; }
     .no-print { display: none !important; }
     .print-only { display: block !important; }
-    .status-icon { display: inline-block !important; font-size: 18px !important; margin-right: 6px; }
-    /* Hide status icons for most sections in the printed header (keep staffing visible) */
-    #sec-1 .status-icon, #sec-3 .status-icon, #sec-4 .status-icon, #sec-5 .status-icon, #sec-6 .status-icon { display: none !important; }
-    .print-header { display: block; text-align: center; border-bottom: 2.5px solid #000; margin-bottom: 12px; padding-bottom: 6px; }
-    .print-header h1 { font-size: 15px; font-weight: 900; margin: 0; text-transform: uppercase; }
-    .section-card { border: none; margin-bottom: 12px; padding: 0; page-break-inside: avoid; }
-    .section-title { font-size: 12px; border-bottom: 2px solid #000; margin-bottom: 4px; padding-bottom: 2px; text-transform: uppercase; color: black; font-weight: 800; }
-    .bubble-block { padding: 6px !important; background: #fff !important; border: 1px solid #000 !important; text-align: left !important; border-radius: 4px; min-height: auto; display: inline-flex !important; flex-direction: column !important; align-items: flex-start !important; box-sizing: border-box !important; max-width: 30% !important; }
-    .bubble-block.conforming { background: #dcfce7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .bubble-block.nc { background: #fee2e2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
-    .compliance-answer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
-    .section-print-notes { font-size: 11px !important; font-weight: 700 !important; color: #111827 !important; margin-top: 8px; line-height: 1.4; border-top: 1px solid #d1d5db; padding-top: 6px; }
+    .status-icon { display: none !important; }
+    .print-header { display: block; text-align: center; border-bottom: 2.5px solid #000; margin-bottom: 10px; padding-bottom: 6px; }
+    .print-header h1 { font-size: 16px; font-weight: 900; margin: 0; text-transform: uppercase; }
+    .print-header h2 { font-size: 13px; margin-top: 3px; font-weight: 700; }
+    .section-card { border: none; margin-bottom: 6px; padding: 0; page-break-inside: avoid; }
+    .section-title { font-size: 13px; border-bottom: 2px solid #000; margin-bottom: 4px; padding-bottom: 2px; text-transform: uppercase; color: black; font-weight: 800; background: none; border-radius: 0; }
+    .bubble-block { display: none !important; }
+    .bubble-val-input { display: none !important; }
+    .compliance-answer { font-size: 13px; font-weight: 900; text-transform: uppercase; }
+    .section-print-notes { font-size: 13px !important; font-weight: 600 !important; color: #111827 !important; margin-top: 2px; line-height: 1.4; padding: 2px 0 4px; }
     .print-summary-list { display: block; margin: 0; padding: 0; }
-    .print-summary-item { display: block; padding: 2px 0; margin: 0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .print-summary-item { display: block; padding: 2px 0; margin: 0; white-space: normal; word-wrap: break-word; }
     .print-summary-item:last-child { border-bottom: none; }
-    .print-empty { color: #6b7280; font-style: italic; }
-    .page-break { page-break-before: always; margin-top: 1cm; }
-    .production-row-print { display: flex !important; flex-wrap: wrap; gap: 6px; align-items: center; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
+    .print-empty { color: #9ca3af; font-style: italic; font-size: 12px; }
+    .print-job-table { display: none !important; }
+    .print-job-line { font-size: 13px; font-weight: 600; padding: 1px 0; }
+    .print-job-line .print-label { color: #6b7280; font-weight: 400; }
+    .print-carry-yes { color: #dc2626; font-weight: 900; }
+    .page-break { page-break-before: always; margin-top: 0.5cm; }
+    .production-row-print { display: flex !important; flex-wrap: wrap; gap: 4px; align-items: center; border-bottom: 1px solid #000; padding: 4px 0; font-size: 12px; font-weight: 800; }
     .inline-detail-pill { border-color: #000; background: #fff; }
-    .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
+    .signature-line { border-top: 2px solid black; width: 200px; margin-top: 20px; }
+    .print-gen-comments-box { border: 1px solid #000; border-radius: 0; padding: 6px 10px; font-size: 13px; font-style: italic; min-height: 24px; margin-top: 3px; }
+    .print-processes-grid { display: grid !important; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+    .print-processes-grid span { padding: 3px 0; font-size: 13px; font-weight: 700; }
 }
     </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
@@ -564,7 +567,7 @@ body {
         <div class="section-card">
             <div class="section-title">7. General Handover Comments</div>
             <textarea id="gen-comments" rows="2" placeholder="Enter additional shift notes..." class="no-print p-3 text-sm w-full border rounded"></textarea>
-            <div id="print-gen-comments" class="print-only text-[11px] font-medium italic min-h-[30px] border p-2 rounded whitespace-pre-wrap break-words"></div>
+            <div id="print-gen-comments" class="print-only print-gen-comments-box whitespace-pre-wrap break-words"></div>
         </div>
 
         <div class="bg-slate-900 p-4 rounded-xl text-white mb-6 no-print">
@@ -696,8 +699,8 @@ function updateHarvestCount(type) {
     const size = parseFloat(document.getElementById(`${prefix}-size`).value);
     const countElement = document.getElementById(`${prefix}-count`);
     let countText = '--';
-    if (!isNaN(weight) && !isNaN(size) && weight > 0) {
-        const computed = Math.round(weight * size);
+    if (!isNaN(weight) && !isNaN(size) && weight > 0 && size > 0) {
+        const computed = Math.round((weight * 1000) / size);
         countText = computed.toString();
     }
     countElement.innerText = countText;
@@ -938,12 +941,23 @@ async function preparePrint() {
 }
 
 function renderPrintList(items) {
-    if (!items.length) return '<div class="print-empty">No details entered.</div>';
-    // remove exact duplicates
+    if (!items.length) return '<div class="print-empty">--</div>';
     items = items.filter((v, i, a) => a.indexOf(v) === i);
-    // Render each item on its own line so multiple jobs show as separate rows
     const html = items.map(i => `<div class="print-summary-item">${i}</div>`).join('');
     return `<div class="print-summary-list">${html}</div>`;
+}
+
+function renderPrintTable(headers, rows) {
+    if (!rows.length) return '<div class="print-empty">--</div>';
+    return rows.map(row => {
+        const parts = row.map((cell, i) => {
+            const val = cell || '--';
+            const isCarry = headers[i] === 'Carry' && cell && cell.toLowerCase() === 'yes';
+            if (isCarry) return `<span class="print-label">${headers[i]}:</span> <span class="print-carry-yes">${val}</span>`;
+            return `<span class="print-label">${headers[i]}:</span> <strong>${val}</strong>`;
+        }).join(' &nbsp; ');
+        return `<div class="print-job-line">${parts}</div>`;
+    }).join('');
 }
 
 function buildSectionSummary(sectionId, labels) {
@@ -960,11 +974,10 @@ function buildSectionSummary(sectionId, labels) {
         const btn = Array.from(section.querySelectorAll('.bubble-btn')).find(el => el.getAttribute('data-name') === label);
         if (btn && btn.classList.contains('conforming')) activeItems.push(label);
     });
-    // For section 1 (Processes on shift) render active items inline rather than each on its own line
     if (sectionId === 'sec-1') {
         if (!activeItems.length) return '<div class="print-empty">No processes entered.</div>';
-        const content = activeItems.join(' • ');
-        return `<div class="print-summary-list"><div class="print-summary-item" style="display:inline-block; white-space:nowrap;">${content}</div></div>`;
+        const spans = activeItems.map(item => `<span>${item}</span>`).join('');
+        return `<div class="print-processes-grid">${spans}</div>`;
     }
     return renderPrintList(activeItems);
 }
@@ -972,255 +985,135 @@ function buildSectionSummary(sectionId, labels) {
 function buildStaffingSummary() {
     const absent = document.getElementById('staff-absent-input').value.trim();
     const leave = document.getElementById('staff-leave-input').value.trim();
-    const items = [];
-    if (absent) items.push(`Absent staff: ${absent}`);
-    if (leave) items.push(`Staff on leave: ${leave}`);
-    return renderPrintList(items);
+    const parts = [];
+    if (absent) parts.push('Absent: <strong>' + absent + '</strong>');
+    if (leave) parts.push('On leave: <strong>' + leave + '</strong>');
+    if (!parts.length) return '<div class="print-empty">--</div>';
+    return '<div class="print-summary-list"><div class="print-summary-item">' + parts.join(' &nbsp;|&nbsp; ') + '</div></div>';
 }
 
 function buildHarvestSummary() {
-    // Group harvest jobs by Type (CAN / DRY) and render header then job lines
-    const rows = Array.from(document.querySelectorAll('#harvest-job-list .compliance-row'));
+    const domRows = Array.from(document.querySelectorAll('#harvest-job-list .compliance-row'));
     const groups = { CAN: [], DRY: [] };
-    rows.forEach(row => {
+    domRows.forEach(row => {
         const map = {};
         row.querySelectorAll('.inline-detail-pill').forEach(span => {
             const text = span.textContent.trim();
             const parts = text.split(':');
-            if (parts.length >= 2) {
-                const label = parts[0].trim();
-                const value = parts.slice(1).join(':').trim();
-                map[label] = value;
-            }
+            if (parts.length >= 2) { map[parts[0].trim()] = parts.slice(1).join(':').trim(); }
         });
         const type = (map['Type'] || '').toUpperCase();
-        const lineParts = [];
-        ['Job','Weight','Size','Count'].forEach(k => { if (map[k]) lineParts.push(`${k} ${map[k]}`); });
-        const line = lineParts.join(' | ');
-        if (type === 'CAN') groups.CAN.push(line);
-        else if (type === 'DRY') groups.DRY.push(line);
-        else if (line) groups.CAN.push(line); // default to CAN if unknown
+        const arr = [map['Job'] || '', map['Weight'] || '', map['Size'] || '', map['Count'] || ''];
+        if (type === 'DRY') groups.DRY.push(arr); else groups.CAN.push(arr);
     });
 
-    // If no job rows, use the live inputs for Can/Dry
-    if (!rows.length) {
-        const canParts = [];
+    if (!domRows.length) {
         const canJob = document.getElementById('harvest-can-job').value.trim();
-        if (canJob) canParts.push(`Job ${canJob}`);
-        const canWeight = document.getElementById('harvest-can-weight').value.trim();
-        if (canWeight) canParts.push(`Weight ${canWeight}`);
-        const canSizeText = document.querySelector('#harvest-can-size option:checked')?.text || '';
-        if (canSizeText) canParts.push(`Size ${canSizeText}`);
-        const canCount = document.getElementById('harvest-can-count').textContent.trim();
-        if (canCount && canCount !== '--') canParts.push(`Count ${canCount}`);
-        if (canParts.length) groups.CAN.push(canParts.join(' | '));
-
-        const dryParts = [];
+        if (canJob) {
+            groups.CAN.push([canJob, document.getElementById('harvest-can-weight').value.trim(), document.querySelector('#harvest-can-size option:checked')?.text || '', document.getElementById('harvest-can-count').textContent.trim()]);
+        }
         const dryJob = document.getElementById('harvest-dry-job').value.trim();
-        if (dryJob) dryParts.push(`Job ${dryJob}`);
-        const dryWeight = document.getElementById('harvest-dry-weight').value.trim();
-        if (dryWeight) dryParts.push(`Weight ${dryWeight}`);
-        const drySizeText = document.querySelector('#harvest-dry-size option:checked')?.text || '';
-        if (drySizeText) dryParts.push(`Size ${drySizeText}`);
-        const dryCount = document.getElementById('harvest-dry-count').textContent.trim();
-        if (dryCount && dryCount !== '--') dryParts.push(`Count ${dryCount}`);
-        if (dryParts.length) groups.DRY.push(dryParts.join(' | '));
+        if (dryJob) {
+            groups.DRY.push([dryJob, document.getElementById('harvest-dry-weight').value.trim(), document.querySelector('#harvest-dry-size option:checked')?.text || '', document.getElementById('harvest-dry-count').textContent.trim()]);
+        }
     }
 
-    const output = [];
-    if (groups.CAN.length) {
-        output.push(`<strong>Can:</strong>`);
-        groups.CAN.forEach(line => output.push(line));
-    }
-    if (groups.DRY.length) {
-        output.push(`<strong>Dry:</strong>`);
-        groups.DRY.forEach(line => output.push(line));
-    }
-    return renderPrintList(output);
+    let html = '';
+    if (groups.CAN.length) html += '<strong>Can</strong>' + renderPrintTable(['Job', 'Weight', 'Size', 'Count'], groups.CAN);
+    if (groups.DRY.length) html += '<strong>Dry</strong>' + renderPrintTable(['Job', 'Weight', 'Size', 'Count'], groups.DRY);
+    return html || '<div class="print-empty">--</div>';
 }
 
 function buildLiveSummary() {
-    const output = [];
+    const rows = [];
     const liveBaskets = document.getElementById('live-sorting-baskets').value.trim();
     const liveBags = document.getElementById('live-sorting-bags').value.trim();
-    if (liveBaskets || liveBags) {
-        output.push(`<strong>Live sorting</strong>`);
-        const line = `No. of baskets in: ${liveBaskets || '0'} / No. of bags produced: ${liveBags || '0'}`;
-        output.push(line);
-    }
-
+    if (liveBaskets || liveBags) rows.push(['Live sorting', liveBaskets || '0', liveBags || '0']);
     const frozenBaskets = document.getElementById('frozen-sorting-baskets').value.trim();
     const frozenBags = document.getElementById('frozen-sorting-bags').value.trim();
-    if (frozenBaskets || frozenBags) {
-        output.push(`<strong>Frozen sorting</strong>`);
-        const line = `No. of baskets in: ${frozenBaskets || '0'} / No. of bags produced: ${frozenBags || '0'}`;
-        output.push(line);
-    }
-
+    if (frozenBaskets || frozenBags) rows.push(['Frozen sorting', frozenBaskets || '0', frozenBags || '0']);
     const packed = document.getElementById('live-packing-boxes').value.trim();
     const prepared = document.getElementById('live-packing-prepared').value.trim();
-    if (packed || prepared) {
-        output.push(`<strong>Live packing</strong>`);
-        const line = `No. of boxes packed: ${packed || '0'} / No. of boxes prepared: ${prepared || '0'}`;
-        output.push(line);
-    }
-
-    return renderPrintList(output);
+    if (packed || prepared) rows.push(['Live packing', packed || '0', prepared || '0']);
+    if (!rows.length) return '<div class="print-empty">--</div>';
+    return renderPrintTable(['Process', 'In', 'Out'], rows);
 }
 
 function buildCanningSummary() {
-    // For canning, group by cultivated and third party and render header then job lines
-    const output = [];
-    const cultivated = document.getElementById('cultivated-job-list');
-    if (cultivated) {
-        const rows = Array.from(cultivated.querySelectorAll('.compliance-row'));
-        if (rows.length) {
-            output.push(`<strong>Cultivated abalone:</strong>`);
-            rows.forEach(row => {
+    const headers = ['Job', 'OOSW%', 'Precook%', 'Cans', 'Carry'];
+    let html = '';
+    function extractCanningRows(listId, prefix) {
+        const container = document.getElementById(listId);
+        if (!container) return [];
+        const domRows = Array.from(container.querySelectorAll('.compliance-row'));
+        if (domRows.length) {
+            return domRows.map(row => {
                 const map = {};
                 row.querySelectorAll('.inline-detail-pill').forEach(span => {
                     const text = span.textContent.trim();
                     const parts = text.split(':');
                     if (parts.length >= 2) { map[parts[0].trim()] = parts.slice(1).join(':').trim(); }
                 });
-                const lineParts = [];
-                ['Job','OOSW%','Precook%','Cans closed','Carry over'].forEach(k => { if (map[k]) lineParts.push(`${k} ${map[k]}`); });
-                let line = lineParts.join(' | ');
-                // if this job has carry over to next shift, append a red dot
-                const carry = (map['Carry over'] || '').toLowerCase();
-                if (carry && carry !== 'n/a' && carry !== 'no' && carry !== 'false') {
-                    line += ' <span style="color:#dc2626">â—</span>';
-                }
-                output.push(line);
+                return [map['Job'] || '', map['OOSW%'] || '', map['Precook%'] || '', map['Cans closed'] || '', map['Carry over'] || ''];
             });
-        } else {
-            // fallback to live fields
-            const job = document.getElementById('cultivated-job').value.trim();
-            if (job) {
-                const details = [`Job ${job}`,
-                    `OOSW% ${document.getElementById('cultivated-oosw').value.trim() || 'n/a'}`,
-                    `Precook% ${document.getElementById('cultivated-precook').value.trim() || 'n/a'}`,
-                    `Cans closed ${document.getElementById('cultivated-cans').value.trim() || 'n/a'}`,
-                    `Carry over ${document.getElementById('cultivated-carry').value.trim() || 'n/a'}`];
-                output.push(`<strong>Cultivated abalone:</strong>`);
-                output.push(details.join(' | '));
-            }
         }
-    }
-
-    const third = document.getElementById('thirdparty-job-list');
-    if (third) {
-        const rows = Array.from(third.querySelectorAll('.compliance-row'));
-        if (rows.length) {
-            output.push(`<strong>Third party abalone:</strong>`);
-            rows.forEach(row => {
-                const map = {};
-                row.querySelectorAll('.inline-detail-pill').forEach(span => {
-                    const text = span.textContent.trim();
-                    const parts = text.split(':');
-                    if (parts.length >= 2) { map[parts[0].trim()] = parts.slice(1).join(':').trim(); }
-                });
-                const lineParts = [];
-                ['Job','OOSW%','Precook%','Cans closed','Carry over'].forEach(k => { if (map[k]) lineParts.push(`${k} ${map[k]}`); });
-                let line = lineParts.join(' | ');
-                const carry = (map['Carry over'] || '').toLowerCase();
-                if (carry && carry !== 'n/a' && carry !== 'no' && carry !== 'false') {
-                    line += ' <span style="color:#dc2626">â—</span>';
-                }
-                output.push(line);
-            });
-        } else {
-            const job = document.getElementById('thirdparty-job').value.trim();
-            if (job) {
-                const details = [`Job ${job}`,
-                    `OOSW% ${document.getElementById('thirdparty-oosw').value.trim() || 'n/a'}`,
-                    `Precook% ${document.getElementById('thirdparty-precook').value.trim() || 'n/a'}`,
-                    `Cans closed ${document.getElementById('thirdparty-cans').value.trim() || 'n/a'}`,
-                    `Carry over ${document.getElementById('thirdparty-carry').value.trim() || 'n/a'}`];
-                output.push(`<strong>Third party abalone:</strong>`);
-                output.push(details.join(' | '));
-            }
+        const job = document.getElementById(`${prefix}-job`).value.trim();
+        if (job) {
+            return [[job, document.getElementById(`${prefix}-oosw`).value.trim() || '--', document.getElementById(`${prefix}-precook`).value.trim() || '--', document.getElementById(`${prefix}-cans`).value.trim() || '--', document.getElementById(`${prefix}-carry`).value.trim() || '--']];
         }
+        return [];
     }
-    return renderPrintList(output);
+    const cultRows = extractCanningRows('cultivated-job-list', 'cultivated');
+    if (cultRows.length) html += '<strong>Cultivated</strong>' + renderPrintTable(headers, cultRows);
+    const tpRows = extractCanningRows('thirdparty-job-list', 'thirdparty');
+    if (tpRows.length) html += '<strong>Third party</strong>' + renderPrintTable(headers, tpRows);
+    return html || '<div class="print-empty">--</div>';
 }
 
 function buildDryingSummary() {
-    const output = [];
-    const procContainer = document.getElementById('dry-process-job-list');
-    if (procContainer) {
-        const rows = Array.from(procContainer.querySelectorAll('.compliance-row'));
-        if (rows.length) {
-            output.push(`<strong>Dry processing:</strong>`);
-            rows.forEach(row => {
+    let html = '';
+    function extractDryRows(listId, prefix, fields) {
+        const container = document.getElementById(listId);
+        if (!container) return [];
+        const domRows = Array.from(container.querySelectorAll('.compliance-row'));
+        if (domRows.length) {
+            return domRows.map(row => {
                 const map = {};
                 row.querySelectorAll('.inline-detail-pill').forEach(span => {
                     const text = span.textContent.trim();
                     const parts = text.split(':');
                     if (parts.length >= 2) { map[parts[0].trim()] = parts.slice(1).join(':').trim(); }
                 });
-                const lineParts = [];
-                ['Job','OOSW%','Pots cooked','Stringed & hung','Carry over'].forEach(k => { if (map[k]) lineParts.push(`${k} ${map[k]}`); });
-                let line = lineParts.join(' | ');
-                const carry = (map['Carry over'] || '').toLowerCase();
-                if (carry && carry !== 'n/a' && carry !== 'no' && carry !== 'false') line += ' <span style="color:#dc2626">â—</span>';
-                output.push(line);
+                return fields.map(f => map[f.key] || '');
             });
-        } else {
-            const processJob = document.getElementById('dry-process-job').value.trim();
-            if (processJob) {
-                const processDetails = [`Job ${processJob}`,
-                    `OOSW% ${document.getElementById('dry-process-oosw').value.trim() || 'n/a'}`,
-                    `Pots cooked ${document.getElementById('dry-process-pots').value.trim() || 'n/a'}`,
-                    `Stringed & hung ${document.getElementById('dry-process-stringed').value.trim() || 'n/a'}`,
-                    `Carry over ${document.getElementById('dry-process-carry').value.trim() || 'n/a'}`].filter(Boolean);
-                output.push(`<strong>Dry processing:</strong>`);
-                output.push(processDetails.join(' | '));
-            }
         }
+        const job = document.getElementById(`${prefix}-job`).value.trim();
+        if (!job) return [];
+        return [fields.map(f => {
+            if (f.key === 'Job') return job;
+            const el = document.getElementById(f.id);
+            return el ? (el.value.trim() || '--') : '--';
+        })];
     }
 
-    const gradeContainer = document.getElementById('dry-grade-job-list');
-    if (gradeContainer) {
-        const rows = Array.from(gradeContainer.querySelectorAll('.compliance-row'));
-        if (rows.length) {
-            output.push(`<strong>Grading:</strong>`);
-            rows.forEach(row => {
-                const map = {};
-                row.querySelectorAll('.inline-detail-pill').forEach(span => {
-                    const text = span.textContent.trim();
-                    const parts = text.split(':');
-                    if (parts.length >= 2) { map[parts[0].trim()] = parts.slice(1).join(':').trim(); }
-                });
-                const lineParts = [];
-                ['Job','Date in','Date out','Days','Grading complete','Boxing complete','Carry over'].forEach(k => { if (map[k]) lineParts.push(`${k} ${map[k]}`); });
-                let line = lineParts.join(' | ');
-                const daysVal = parseInt(map['Days'] || '', 10);
-                if (!isNaN(daysVal) && daysVal > 25) {
-                    line += ' <span style="color:#ef4444">âŒ</span>';
-                }
-                const carry = (map['Carry over'] || '').toLowerCase();
-                if (carry && carry !== 'n/a' && carry !== 'no' && carry !== 'false') line += ' <span style="color:#dc2626">â—</span>';
-                output.push(line);
-            });
-        } else {
-            const gradeJob = document.getElementById('dry-grade-job').value.trim();
-            if (gradeJob) {
-                const days = document.getElementById('dry-grade-days').value.trim();
-                const warning = parseInt(days, 10) > 25 ? ' | WARNING: Days in drying room exceeds 25' : '';
-                const gradingDetails = [`Job ${gradeJob}`,
-                    `In ${document.getElementById('dry-grade-in').value || 'n/a'}`,
-                    `Out ${document.getElementById('dry-grade-out').value || 'n/a'}`,
-                    `Days ${days || 'n/a'}${warning}`,
-                    `Grading complete ${document.getElementById('dry-grade-complete').value.trim() || 'n/a'}`,
-                    `Boxing complete ${document.getElementById('dry-grade-boxing').value.trim() || 'n/a'}`,
-                    `Carry over ${document.getElementById('dry-grade-carry').value.trim() || 'n/a'}`].filter(Boolean);
-                output.push(`<strong>Grading:</strong>`);
-                output.push(gradingDetails.join(' | '));
-            }
-        }
-    }
-    return renderPrintList(output);
+    const procFields = [
+        {key:'Job', id:'dry-process-job'}, {key:'OOSW%', id:'dry-process-oosw'},
+        {key:'Pots cooked', id:'dry-process-pots'}, {key:'Stringed & hung', id:'dry-process-stringed'},
+        {key:'Carry over', id:'dry-process-carry'}
+    ];
+    const procRows = extractDryRows('dry-process-job-list', 'dry-process', procFields);
+    if (procRows.length) html += '<strong>Processing</strong>' + renderPrintTable(['Job','OOSW%','Pots','Strung','Carry'], procRows);
+
+    const gradeFields = [
+        {key:'Job', id:'dry-grade-job'}, {key:'Date in', id:'dry-grade-in'},
+        {key:'Date out', id:'dry-grade-out'}, {key:'Days', id:'dry-grade-days'},
+        {key:'Grading complete', id:'dry-grade-complete'}, {key:'Boxing complete', id:'dry-grade-boxing'},
+        {key:'Carry over', id:'dry-grade-carry'}
+    ];
+    const gradeRows = extractDryRows('dry-grade-job-list', 'dry-grade', gradeFields);
+    if (gradeRows.length) html += '<strong>Grading</strong>' + renderPrintTable(['Job','In','Out','Days','Grade','Box','Carry'], gradeRows);
+
+    return html || '<div class="print-empty">--</div>';
 }
     </script>
     <script src="../lib/handover-db.js"></script>
