@@ -141,6 +141,7 @@
     @media print{
       .dc-actions, .save-bar, .back-link, .row-add, .row-rm{ display:none !important; }
       [contenteditable]{ outline:none; background:none; }
+      .sd-related-docs{ page-break-before:always; }
     }
     @media (max-width: 768px){
       .dc-top{ padding:10px 12px; }
@@ -199,7 +200,7 @@
         <div id="sd-process"></div>
         <h2>4. Review</h2>
         <p id="sd-review"></p>
-        <h2>Related Documents <button class="btn btn-ghost row-add" id="sd-refAdd" style="display:none;">+ Add</button></h2>
+        <h2 class="sd-related-docs">Related Documents <button class="btn btn-ghost row-add" id="sd-refAdd" style="display:none;">+ Add</button></h2>
         <table class="refs"><tbody id="sd-refBody"></tbody></table>
         <h2>Change Notification</h2>
         <table class="hist">
