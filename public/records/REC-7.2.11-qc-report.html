@@ -140,14 +140,16 @@
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h2>Quality Sign-off</h2></div>
+      <div class="panel-head"><h2>Comments</h2></div>
       <div class="panel-body">
-        <div class="grid grid-6" style="margin-bottom:8px;">
-          <label class="field">Comments<textarea id="h_comments" rows="3"></textarea></label>
-        </div>
-        <div class="grid grid-2">
-          <label class="field">Quality control<input id="f_qualityControl"></label>
-        </div>
+        <label class="field">Comments<textarea id="h_comments" rows="3"></textarea></label>
+      </div>
+    </div>
+
+    <div class="panel" id="panelSignoff">
+      <div class="panel-head"><h2>Sign-off</h2></div>
+      <div class="panel-body">
+        <div id="signoffCompletedBy"></div>
       </div>
     </div>
 
@@ -158,23 +160,7 @@
       <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
     </div>
 
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Verification</h2></div>
-      <div class="panel-body">
-        <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
-        <div id="verifySelect" style="margin-bottom:10px;"></div>
-        <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Verified by<input id="v_verifiedBy"></label>
-          <label class="field">Signature (type name to sign)<input id="v_verifiedSig"></label>
-          <label class="field">Date<input id="v_verifiedDate" type="date"></label>
-        </div>
-        <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
-          <button class="btn btn-primary" id="logVerificationBtn">Log verification</button>
-        </div>
-        <div class="muted" style="margin:10px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Verification history</div>
-        <div id="verificationHistory"></div>
-      </div>
-    </div>
+    <div class="panel no-print" id="panelVerification"></div>
   </div>
 
   <div class="toast no-print" id="toast"></div>
@@ -199,6 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/traceability.js?v=2"></script>
 <script>
 (async function(){
@@ -211,7 +198,8 @@ document.addEventListener('DOMContentLoaded', function () {
       canPieces:'', nettMassMin:'', drainMassMin:'', drainMassMax:'', ph:'', brix:'',
       waterReading:'', saltPercent:'', vacuum:'', rustOnCans:'', rustOnLids:'', dentsOnBatch:'',
       oddOursOnOpening:'', damagedPcsInCans:'', bluingBlackSpots:'', sauceColour:'',
-      visualAppearance:'', textureOfAbalone:'', tasteOfProduct:'', comments:'', qualityControl:'',
+      visualAppearance:'', textureOfAbalone:'', tasteOfProduct:'', comments:'',
+      checkedBy:'', checkedByTitle:'', checkedByDate:'', checkedBySignature:'',
       createdAt: null, updatedAt: null
     };
   }
@@ -258,14 +246,20 @@ function toast(msg){
     $('h_textureOfAbalone').value = state.textureOfAbalone;
     $('h_tasteOfProduct').value = state.tasteOfProduct;
     $('h_comments').value = state.comments;
-    $('f_qualityControl').value = state.qualityControl;
+    $('f_checkedBy').value = state.checkedBy;
+    $('f_checkedByTitle').value = state.checkedByTitle;
+    $('f_checkedByDate').value = state.checkedByDate;
+    $('f_checkedBySignature').value = state.checkedBySignature;
   }
 
   function bindInputs(){
-    const fields = ['date','harvestFarm','productionCode','productDescription','jobNumber','canPieces','nettMassMin','drainMassMin','drainMassMax','ph','brix','waterReading','saltPercent','vacuum','rustOnCans','rustOnLids','dentsOnBatch','oddOursOnOpening','damagedPcsInCans','bluingBlackSpots','sauceColour','visualAppearance','textureOfAbalone','tasteOfProduct','comments','qualityControl'];
+    const fields = ['date','harvestFarm','productionCode','productDescription','jobNumber','canPieces','nettMassMin','drainMassMin','drainMassMax','ph','brix','waterReading','saltPercent','vacuum','rustOnCans','rustOnLids','dentsOnBatch','oddOursOnOpening','damagedPcsInCans','bluingBlackSpots','sauceColour','visualAppearance','textureOfAbalone','tasteOfProduct','comments'];
     fields.forEach(f=>{
-      const id = f.startsWith('qualityControl') ? 'f_'+f : 'h_'+f;
-      const el = $(id);
+      const el = $('h_'+f);
+      if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
+    });
+    ['checkedBy','checkedByTitle','checkedByDate','checkedBySignature'].forEach(f=>{
+      const el = $('f_'+f);
       if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
     });
   }
@@ -299,6 +293,7 @@ function toast(msg){
     }
     toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
     renderAll();
+    if(verificationBlock) verificationBlock.refresh();
   }
 
   function generatePdf(){
@@ -308,65 +303,31 @@ function toast(msg){
   }
 
 
-  function _vEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  function pendingVerification(){
-    return (state.status === 'submitted' && !state.verification) ? [state] : [];
+  function mountSignoff(){
+    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
+      byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', signatureId: 'f_checkedBySignature', byLabel: 'Quality control'
+    });
   }
 
-  function renderVerifySelect(){
-    const target = $('verifySelect');
-    if(!target) return;
-    const pending = pendingVerification();
-    if(!pending.length){
-      target.innerHTML = '<div class="muted" style="font-size:11px;">No submitted entries are waiting to be verified.</div>';
-      return;
-    }
-    target.innerHTML = pending.map(function(s){
-      return '<div style="font-size:11px;padding:4px 0;">' + _vEsc(s.id || '(unsaved)') +
-        (s.updatedAt ? ' &middot; saved ' + new Date(s.updatedAt).toLocaleString() : '') + '</div>';
-    }).join('');
-  }
-
-  async function renderVerificationHistory(){
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = [];
-    try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    renderVerifySelect();
-    const target = $('verificationHistory');
-    if(!target) return;
-    if(!hist.length){ target.innerHTML = '<div class="muted" style="font-size:11px;">No verification logged yet.</div>'; return; }
-    target.innerHTML = hist.slice().reverse().map(function(v){
-      return '<div style="font-size:11px;padding:4px 0;border-top:1px solid var(--line-soft);">' +
-        _vEsc(v.verifiedDate || '(no date)') + ' &middot; ' + _vEsc(v.verifiedBy) +
-        ' <span class="muted">(signed: ' + _vEsc(v.verifiedSig) + ')</span></div>';
-    }).join('');
-  }
-
-  async function logVerification(){
-    const verifiedBy = $('v_verifiedBy').value.trim();
-    const verifiedSig = $('v_verifiedSig').value.trim();
-    const verifiedDate = $('v_verifiedDate').value;
-    if(!verifiedBy || !verifiedSig || !verifiedDate){ toast('Verified by, signature and date are all required.'); return; }
-    const record = { verifiedBy: verifiedBy, verifiedSig: verifiedSig, verifiedDate: verifiedDate, loggedAt: Date.now() };
-    const pending = pendingVerification();
-    if(pending.length){
-      state.verification = record;
-      await storeSet('record:'+state.id, JSON.stringify(state), true);
-    }
-    const raw = await storeGet('verification_log:' + window.RecordDoc.recordKey, true);
-    let hist = [];
-    try{ hist = raw ? JSON.parse(raw) : []; }catch(e){ hist = []; }
-    hist.push(Object.assign({ entryId: pending.length ? state.id : null }, record));
-    await storeSet('verification_log:' + window.RecordDoc.recordKey, JSON.stringify(hist), true);
-    toast('Verification logged.');
-    $('v_verifiedBy').value=''; $('v_verifiedSig').value=''; $('v_verifiedDate').value='';
-    renderAll();
-    renderVerificationHistory();
+  let verificationBlock = null;
+  function mountVerification(){
+    verificationBlock = window.SignOffBlock.mountVerification({
+      recordKey: window.RecordDoc.recordKey,
+      mount: '#panelVerification',
+      getPending(){
+        return (state.status === 'submitted' && !state.verification)
+          ? [{ id: state.id, label: state.jobNumber ? `Job ${state.jobNumber}` : 'This record' }]
+          : [];
+      },
+      async onLogged(record){
+        state.verification = record;
+        await storeSet('record:'+state.id, JSON.stringify(state), true);
+        renderAll();
+      }
+    });
   }
 
 function wire(){
-$('logVerificationBtn').addEventListener('click', logVerification);
 bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
@@ -381,9 +342,10 @@ bindInputs();
     $('generatePdfBtn').addEventListener('click', generatePdf);
   }
 
+  mountSignoff();
   wire();
   renderAll();
-  renderVerificationHistory();
+  mountVerification();
 })();
 </script>
 <script src="/lib/yesno-replace.js"></script>

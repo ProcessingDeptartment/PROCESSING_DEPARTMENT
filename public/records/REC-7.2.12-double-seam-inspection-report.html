@@ -219,9 +219,10 @@
     </div>
 
     <div class="actions no-print">
+      <span class="record-status" id="recordStatus"></span>
       <span class="status-line" id="statusLine"></span>
       <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Generate PDF</button>
+      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
     </div>
 
     <div class="panel no-print" id="panelVerification"></div>
@@ -802,6 +803,8 @@ function toast(msg){
     renderIssues();
     applyPermissionGating();
     $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
+    const submitted = state.status === 'submitted';
+    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
   // ---------- save / recall ----------
