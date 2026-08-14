@@ -954,8 +954,8 @@ function renderPrintTable(headers, rows) {
             const val = cell || '--';
             const h = headers[i];
             const lc = (cell || '').toLowerCase();
-            const isRedYes = h === 'Carry' && lc === 'yes';
-            const isRedNo = (h === 'Strung' || h === 'Grade' || h === 'Box') && lc === 'no';
+            const isRedYes = h === 'Carried over' && lc === 'yes';
+            const isRedNo = (h === 'Stringing complete' || h === 'Grading complete' || h === 'Boxing complete') && lc === 'no';
             if (isRedYes || isRedNo) return `<span class="print-label">${h}:</span> <span class="print-carry-yes">${val}</span>`;
             return `<span class="print-label">${h}:</span> <strong>${val}</strong>`;
         }).join(' &nbsp; ');
@@ -1028,22 +1028,22 @@ function buildHarvestSummary() {
 }
 
 function buildLiveSummary() {
-    const rows = [];
+    const lines = [];
     const liveBaskets = document.getElementById('live-sorting-baskets').value.trim();
     const liveBags = document.getElementById('live-sorting-bags').value.trim();
-    if (liveBaskets || liveBags) rows.push(['Live sorting', liveBaskets || '0', liveBags || '0']);
+    if (liveBaskets || liveBags) lines.push('<div class="print-job-line"><strong>Live sorting</strong> &nbsp; <span class="print-label">Baskets in:</span> <strong>' + (liveBaskets || '0') + '</strong> &nbsp; <span class="print-label">Bags produced:</span> <strong>' + (liveBags || '0') + '</strong></div>');
     const frozenBaskets = document.getElementById('frozen-sorting-baskets').value.trim();
     const frozenBags = document.getElementById('frozen-sorting-bags').value.trim();
-    if (frozenBaskets || frozenBags) rows.push(['Frozen sorting', frozenBaskets || '0', frozenBags || '0']);
+    if (frozenBaskets || frozenBags) lines.push('<div class="print-job-line"><strong>Frozen sorting</strong> &nbsp; <span class="print-label">Baskets in:</span> <strong>' + (frozenBaskets || '0') + '</strong> &nbsp; <span class="print-label">Bags produced:</span> <strong>' + (frozenBags || '0') + '</strong></div>');
     const packed = document.getElementById('live-packing-boxes').value.trim();
     const prepared = document.getElementById('live-packing-prepared').value.trim();
-    if (packed || prepared) rows.push(['Live packing', packed || '0', prepared || '0']);
-    if (!rows.length) return '<div class="print-empty">--</div>';
-    return renderPrintTable(['Process', 'In', 'Out'], rows);
+    if (packed || prepared) lines.push('<div class="print-job-line"><strong>Live packing</strong> &nbsp; <span class="print-label">Boxes packed:</span> <strong>' + (packed || '0') + '</strong> &nbsp; <span class="print-label">Boxes prepared:</span> <strong>' + (prepared || '0') + '</strong></div>');
+    if (!lines.length) return '<div class="print-empty">--</div>';
+    return lines.join('');
 }
 
 function buildCanningSummary() {
-    const headers = ['Job', 'OOSW%', 'Precook%', 'Cans', 'Carry'];
+    const headers = ['Job', 'OOSW%', 'Precook%', 'Cans', 'Carried over'];
     let html = '';
     function extractCanningRows(listId, prefix) {
         const container = document.getElementById(listId);
@@ -1105,7 +1105,7 @@ function buildDryingSummary() {
         {key:'Carry over', id:'dry-process-carry'}
     ];
     const procRows = extractDryRows('dry-process-job-list', 'dry-process', procFields);
-    if (procRows.length) html += '<strong>Processing</strong>' + renderPrintTable(['Job','OOSW%','Pots','Strung','Carry'], procRows);
+    if (procRows.length) html += '<strong>Processing</strong>' + renderPrintTable(['Job','OOSW%','Pots','Stringing complete','Carried over'], procRows);
 
     const gradeFields = [
         {key:'Job', id:'dry-grade-job'}, {key:'Date in', id:'dry-grade-in'},
@@ -1114,7 +1114,7 @@ function buildDryingSummary() {
         {key:'Carry over', id:'dry-grade-carry'}
     ];
     const gradeRows = extractDryRows('dry-grade-job-list', 'dry-grade', gradeFields);
-    if (gradeRows.length) html += '<strong>Grading</strong>' + renderPrintTable(['Job','In','Out','Days','Grade','Box','Carry'], gradeRows);
+    if (gradeRows.length) html += '<strong>Grading</strong>' + renderPrintTable(['Job','Date in','Date out','Days','Grading complete','Boxing complete','Carried over'], gradeRows);
 
     return html || '<div class="print-empty">--</div>';
 }
