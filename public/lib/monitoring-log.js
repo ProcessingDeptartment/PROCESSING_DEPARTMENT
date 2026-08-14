@@ -169,10 +169,16 @@
     .ml-app{ font-size:10px; }
     .ml-table-wrap{ overflow:visible !important; }
     table.ml-table th,table.ml-table td{ border:1px solid #000; padding:3px 5px; }
-    /* Printing one entry hides the whole app and shows only that entry's sheet. */
+    /* Printing one entry hides the whole app and shows only that entry's sheet.
+     * The sheet carries its own controlled-copy header (sheet-head, built in
+     * buildEntrySheet to match the paper form's layout exactly) -- so the
+     * generic #dh-print-header block is hidden here too, the same way the
+     * whole-log print hides it in favour of its own injected header row.
+     * Without this, both headers printed, one after the other. */
     body.ml-printing-entry .ml-top,
     body.ml-printing-entry .ml-body{ display:none !important; }
     body.ml-printing-entry .ml-sheet{ display:block; }
+    body.ml-printing-entry #dh-print-header{ display:none !important; }
     /* Printing the whole log: the controlled-copy header is injected into
      * table.ml-table's own thead instead (see injectListPrintHeader) so it repeats
      * using that table's native pagination -- the usual #dh-print-header block is
