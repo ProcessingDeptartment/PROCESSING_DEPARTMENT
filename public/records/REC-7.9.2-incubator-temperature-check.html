@@ -17,6 +17,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=4"></script>
@@ -40,7 +41,7 @@
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'incubatorTemp', label: 'Incubator temperature', unit: '°C', min: 36.1, max: 37.8 }
+      { key: 'incubatorTemp', label: 'Incubator temperature', unit: '°C', ...Thresholds.get('incubator-temperature-check', 'incubatorTemp') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'

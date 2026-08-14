@@ -17,6 +17,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=4"></script>
@@ -41,9 +42,9 @@
       { key: 'comments', label: 'Comments for any deviation', type: 'textarea' }
     ],
     specFields: [
-      { key: 'freshPh', label: 'Fresh water pH', min: null, max: null },
-      { key: 'seaSalt', label: 'Sea water salt', unit: '%', min: null, max: null },
-      { key: 'seaPh', label: 'Sea water pH', min: null, max: null }
+      { key: 'freshPh', label: 'Fresh water pH', ...Thresholds.get('water-monitoring', 'freshPh') },
+      { key: 'seaSalt', label: 'Sea water salt', unit: '%', ...Thresholds.get('water-monitoring', 'seaSalt') },
+      { key: 'seaPh', label: 'Sea water pH', ...Thresholds.get('water-monitoring', 'seaPh') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'

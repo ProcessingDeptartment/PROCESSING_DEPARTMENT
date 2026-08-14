@@ -17,6 +17,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=4"></script>
@@ -54,7 +55,7 @@
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'diffTolerance', label: 'Reference vs test difference', unit: '°C', min: -0.5, max: 0.5 }
+      { key: 'diffTolerance', label: 'Reference vs test difference', unit: '°C', ...Thresholds.get('thermometer-correction-factors', 'diffTolerance') }
     ],
     deviationLabel: 'Within tolerance',
     deviationPolarity: 'accurate'

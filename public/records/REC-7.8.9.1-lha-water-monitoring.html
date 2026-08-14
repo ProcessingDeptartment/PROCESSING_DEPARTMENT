@@ -17,6 +17,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=4"></script>
@@ -43,7 +44,7 @@
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: '°C', min: 12, max: 18 }
+      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: '°C', ...Thresholds.get('lha-water-monitoring', 'lhaTemp') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'

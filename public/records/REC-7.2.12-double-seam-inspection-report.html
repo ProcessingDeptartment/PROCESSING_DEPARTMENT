@@ -308,6 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script>
@@ -339,34 +340,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const DOC_REVISION_KEY = 'double-seam-inspection-report';
   const DOC_REVISION_START = 11; // paper REC 7.2.12 is currently at Rev 11
 
-  // Seeded from "3. Production/3. CAN/73 dia. double seam inspection report.xls".
-  // That sheet only gave one dataset, so EOA and NEO start identical -- use Specs ->
-  // Edit to enter the real NEO-specific tolerances when known. Seam length, cover hook,
-  // internal and tightness% weren't specified there either, so they're left as
-  // "record only" rather than guessed; the seam-thickness cell in that sheet (0.19/0.03)
-  // matches the Free space row exactly and looks like a copy-paste artifact, so it was
-  // NOT carried over -- fill it in via Specs -> Edit once confirmed.
-  const DEFAULT_SPEC_EOA = {
-    name: 'Fujian 73x119mm EOA',
-    vacuum: { op:'gt', value:-10, label:'>-10 kPa' },
-    seamLength: null,
-    seamThickness: null,
-    bodyHook: {min:1.83, max:2.23},
-    coverHook: null,
-    overlapPctMin: 45,
-    bhbPct: {min:70, max:100},
-    actualOverlapMin: 1,
-    freespace: {min:0.03, max:0.19},
-    internal: null,
-    tightnessPctMin: null,
-    plateThicknessEnd: null,
-    plateThicknessBody: null,
-    countersinkDepth: {min:4.73, max:4.97},
-    gauge121Target: 1.21,
-    gauge300Target: 3.00,
-    gaugeTolerance: 0.02
-  };
-  const DEFAULT_SPEC_NEO = Object.assign({}, DEFAULT_SPEC_EOA, { name: 'Fujian 73x119mm NEO' });
+  // Defaults live in thresholds.js (DOUBLE_SEAM_DEFAULT_SPEC_EOA/NEO) -- use Specs ->
+  // Edit to enter the real NEO-specific tolerances when known.
+  const DEFAULT_SPEC_EOA = Thresholds.DOUBLE_SEAM_DEFAULT_SPEC_EOA;
+  const DEFAULT_SPEC_NEO = Thresholds.DOUBLE_SEAM_DEFAULT_SPEC_NEO;
 
   function blankPoint(){
     return {seamLength:'', seamThickness:'', bodyHook:'', coverHook:'', bhbPct:'',

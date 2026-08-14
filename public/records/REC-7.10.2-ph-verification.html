@@ -17,6 +17,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=4"></script>
@@ -43,9 +44,9 @@
       { key: 'comments', label: 'Comments / deviation', type: 'textarea' }
     ],
     specFields: [
-      { key: 'buffer4', label: 'pH buffer 4.01 reading', min: 3.9, max: 4.1 },
-      { key: 'buffer7', label: 'pH buffer 7.01 reading', min: 6.9, max: 7.1 },
-      { key: 'buffer10', label: 'pH buffer 10.01 reading', min: 9.9, max: 10.1 }
+      { key: 'buffer4', label: 'pH buffer 4.01 reading', ...Thresholds.get('ph-verification', 'buffer4') },
+      { key: 'buffer7', label: 'pH buffer 7.01 reading', ...Thresholds.get('ph-verification', 'buffer7') },
+      { key: 'buffer10', label: 'pH buffer 10.01 reading', ...Thresholds.get('ph-verification', 'buffer10') }
     ],
     deviationLabel: 'Equipment accurate',
     deviationPolarity: 'accurate',

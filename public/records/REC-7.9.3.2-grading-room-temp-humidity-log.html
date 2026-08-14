@@ -17,6 +17,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=4"></script>
@@ -46,8 +47,8 @@
       { key: 'correctiveAction', label: 'Corrective action', type: 'textarea' }
     ],
     specFields: [
-      { key: 'roomTemp', label: 'Room temperature', unit: '°C', min: 25, max: 32 },
-      { key: 'roomHumidity', label: 'Relative humidity', unit: '% rH', min: null, max: null }
+      { key: 'roomTemp', label: 'Room temperature', unit: '°C', ...Thresholds.get('grading-room-temp-humidity-log', 'roomTemp') },
+      { key: 'roomHumidity', label: 'Relative humidity', unit: '% rH', ...Thresholds.get('grading-room-temp-humidity-log', 'roomHumidity') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'

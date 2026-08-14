@@ -17,6 +17,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=4"></script>
@@ -67,9 +68,9 @@
       { key: 'verifiedDate', label: 'Verified date', type: 'date' }
     ],
     specFields: [
-      { key: 'coldRange', label: 'Cold water reference/test reading', unit: '°C', min: 0, max: 5 },
-      { key: 'hotRange', label: 'Hot water reference/test reading', unit: '°C', min: 85, max: 95 },
-      { key: 'diffTolerance', label: 'Reference vs test deviation', unit: '°C', min: -0.5, max: 0.5 }
+      { key: 'coldRange', label: 'Cold water reference/test reading', unit: '°C', ...Thresholds.get('thermometer-verification', 'coldRange') },
+      { key: 'hotRange', label: 'Hot water reference/test reading', unit: '°C', ...Thresholds.get('thermometer-verification', 'hotRange') },
+      { key: 'diffTolerance', label: 'Reference vs test deviation', unit: '°C', ...Thresholds.get('thermometer-verification', 'diffTolerance') }
     ],
     deviationLabel: 'Equipment accurate',
     deviationPolarity: 'accurate'
