@@ -145,17 +145,16 @@
     <div class="panel" id="panelReceiving">
       <div class="panel-head"><h2>Receiving Info</h2></div>
       <div class="panel-body">
-        <div class="grid grid-4" style="margin-bottom:8px;">
+        <div class="grid grid-3" style="margin-bottom:8px;">
           <label class="field">Receiving date<input id="h_receivingDate" type="date"></label>
-          <label class="field">Harvest farm<select id="h_receivedFrom"></select></label>
           <label class="field">Processing for<select id="h_toBeProcessedFor"><option value="">—</option><option value="Can">Can</option><option value="Dried">Dried</option><option value="Live">Live</option><option value="Other">Other</option></select></label>
           <label class="field">Job no.<div class="job-number-row"><select id="h_jobPrefix"></select><input id="h_jobDigits" placeholder="Digits" inputmode="numeric"></div><span class="field-hint" id="jobNoHint"></span></label>
         </div>
+        <select id="h_receivedFrom" style="display:none;"></select>
       </div>
     </div>
 
-    <div class="panel" id="panelBaskets">
-      <div class="panel-head"><h2>Basket & Counts</h2></div>
+    <div class="panel" id="panelBaskets" style="border:none; background:transparent;">
       <div class="panel-body">
         <!-- Capture widget only: the confirmed table below is the record, so this whole
              block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
@@ -183,10 +182,9 @@
           <thead>
             <tr style="text-align:left; border-bottom:1px solid var(--line-soft); color:#54606b;">
               <th style="padding:5px 6px;">Farm</th>
-              <th style="padding:5px 6px;">Processing for</th>
               <th style="padding:5px 6px;">Basket nr.</th>
               <th style="padding:5px 6px;">Size range</th>
-              <th style="padding:5px 6px;">Whole weight</th>
+              <th style="padding:5px 6px;">Whole weight (Kg)</th>
               <th style="padding:5px 6px;">Farm count</th>
               <th style="padding:5px 6px;">Factory count</th>
               <th style="padding:5px 6px;">Mortality count</th>
@@ -382,6 +380,12 @@ function toast(msg){
     return formatted ? `${formatted} g` : '';
   }
 
+  function formatWeightKg(value){
+    const g = parseFloat(value);
+    if(Number.isNaN(g)) return '';
+    return formatNumeric(g / 1000, 2) + ' Kg';
+  }
+
   function renderEntryTable(){
     const body = $('basketTableBody');
     const empty = $('basketTableEmpty');
@@ -397,10 +401,9 @@ function toast(msg){
       if(entry.id === editingEntryId) tr.style.background = '#fbf0dc';
       tr.innerHTML = `
         <td style="padding:5px 6px;">${entry.receivedFrom || ''}</td>
-        <td style="padding:5px 6px;">${entry.toBeProcessedFor || ''}</td>
         <td style="padding:5px 6px;">${entry.basketNr || ''}</td>
         <td style="padding:5px 6px;">${entry.sizeRange || ''}</td>
-        <td style="padding:5px 6px;">${formatWeight(entry.wholeWeight)}</td>
+        <td style="padding:5px 6px;">${formatWeightKg(entry.wholeWeight)}</td>
         <td style="padding:5px 6px;">${formatNumeric(entry.farmCount)}</td>
         <td style="padding:5px 6px;">${formatNumeric(entry.factoryCount)}</td>
         <td style="padding:5px 6px;">${formatNumeric(entry.mortalityCount)}</td>
@@ -420,10 +423,9 @@ function toast(msg){
     totals.style.cssText = 'border-top:2px solid var(--steel); font-weight:700;';
     totals.innerHTML = `
       <td style="padding:5px 6px;"></td>
-      <td style="padding:5px 6px;"></td>
       <td style="padding:5px 6px;">Final</td>
       <td style="padding:5px 6px;"></td>
-      <td style="padding:5px 6px;">${formatWeight(sum('wholeWeight'))}<br><span style="font-weight:400;">${formatNumeric(Math.round(sum('wholeWeight') / 10) / 100)} Kg</span></td>
+      <td style="padding:5px 6px;">${formatWeightKg(sum('wholeWeight'))}</td>
       <td style="padding:5px 6px;">${formatNumeric(sum('farmCount'))}</td>
       <td style="padding:5px 6px;">${formatNumeric(sum('factoryCount'))}</td>
       <td style="padding:5px 6px;">${formatNumeric(sum('mortalityCount'))}</td>
@@ -537,7 +539,7 @@ function toast(msg){
     } else {
       state.basketEntries.push({
         id: 'entry_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-        receivedFrom: state.receivedFrom, toBeProcessedFor: state.toBeProcessedFor,
+        receivedFrom: state.receivedFrom,
         ...values
       });
       toast('Basket entry added.');

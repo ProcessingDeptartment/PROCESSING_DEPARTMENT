@@ -1,24 +1,17 @@
 /*
- * Shared engine for SOP pages (public/sops/*.html).
+ * Engine for Policy pages (public/policies/*.html).
  *
- * Unlike a REC, a SOP is a controlled PROCEDURE, not a fill-in form -- there is no
- * signature block or save-state for a completed instance. The HTML page itself is the
- * controlled copy (there is no separate original file to fall back to), so editing it
- * in place -- code, name, body sections, related documents -- IS the document-control
- * action, gated the same way master-record-index.html gates its own edits: only
- * PermissionRules.can('manageSOPs') may edit, and every save requires a reason, who
- * made it, and their title (enforced by document-revision.js, not re-implemented here).
+ * Mirrors sop-doc.js exactly, but scoped to Policies:
+ *   - Permission gate: PermissionRules.can('managePolicies')
+ *   - Storage key prefix: policy_doc:<recordKey>
+ *   - Back link: policy-list.html
  *
- * Each SOP page is a thin config calling SopDoc.mount({...}) rather than duplicating
- * this markup/JS 55 times -- see monitoring-log.js for the same config-driven pattern
- * applied to the monitoring logs.
- *
- * Storage layout, keyed by recordKey (e.g. 'sop-02-basket-receiving'):
- *   sop_doc:<recordKey>            -- { sopNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
- *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision (existing engine)
+ * Storage layout, keyed by recordKey:
+ *   policy_doc:<recordKey>         -- { polNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
+ *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision
  */
 (function () {
-  const KEY = k => 'sop_doc:' + k;
+  const KEY = k => 'policy_doc:' + k;
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -39,7 +32,7 @@
   async function resolve(recordKey, defaults) {
     const stored = await loadOverrides(recordKey);
     return {
-      sopNo: stored.sopNo || defaults.sopNo,
+      polNo: stored.polNo || defaults.polNo,
       name: stored.name || defaults.name,
       area: defaults.area || '',
       sections: Object.assign({}, defaults.sections, stored.sections),
@@ -48,7 +41,7 @@
   }
 
   function canEdit() {
-    return !window.PermissionRules || window.PermissionRules.can('manageSOPs');
+    return !window.PermissionRules || window.PermissionRules.can('managePolicies');
   }
 
   function fmtDate(ms) {
@@ -132,7 +125,7 @@
     @media print{
       .dc-actions, .save-bar, .back-link, .row-add, .row-rm{ display:none !important; }
       [contenteditable]{ outline:none; background:none; }
-      .sd-related-docs{ page-break-before:always; }
+      .pd-related-docs{ page-break-before:always; }
     }
     @media (max-width: 768px){
       .dc-top{ padding:10px 12px; }
@@ -154,68 +147,70 @@
   `;
 
   function injectStyles() {
-    if (document.getElementById('sop-doc-styles')) return;
+    if (document.getElementById('policy-doc-styles')) return;
     const s = document.createElement('style');
-    s.id = 'sop-doc-styles';
+    s.id = 'policy-doc-styles';
     s.textContent = STYLES;
     document.head.appendChild(s);
   }
 
+  // cfg: { recordKey, polNo, name, area, startRev, backHref, sections:{objective,roles,process,review},
+  //        relatedDocs:[{code,name}], baselineHistory:[{rev,reason,date}] }
   async function mount(cfg) {
     injectStyles();
-    const root = document.getElementById('sop-root');
+    const root = document.getElementById('policy-root');
     root.innerHTML = `
       <div class="dc-top">
         <div class="dc-inner">
-          <div class="doc-line"><span class="doc-code" id="sd-code"></span><span id="sd-name"></span></div>
+          <div class="doc-line"><span class="doc-code" id="pd-code"></span><span id="pd-name"></span></div>
           <div class="dc-meta">
-            <div><b id="sd-rev"></b>Revision</div>
-            <div><b id="sd-date"></b>Revision Date</div>
+            <div><b id="pd-rev"></b>Revision</div>
+            <div><b id="pd-date"></b>Revision Date</div>
             <div><b>${esc(cfg.area)}</b>Area</div>
           </div>
           <div class="dc-actions">
             <button class="btn btn-primary" onclick="window.print()">Print</button>
-            <button class="btn btn-ghost" id="sd-editBtn" style="display:none;">Edit</button>
+            <button class="btn btn-ghost" id="pd-editBtn" style="display:none;">Edit</button>
           </div>
         </div>
       </div>
       <div class="doc-body">
-        <div class="note">This page is the controlled copy of ${esc(cfg.sopNo)} &mdash; there is no separate original file. Edits made here become the record, with each change logged below under Change Notification.</div>
+        <div class="note">This page is the controlled copy of ${esc(cfg.polNo)} &mdash; there is no separate original file. Edits made here become the record, with each change logged below under Change Notification.</div>
         <h2>1. Objective</h2>
-        <p id="sd-objective"></p>
+        <p id="pd-objective"></p>
         <h2>2. Roles and Responsibilities</h2>
-        <div id="sd-roles"></div>
-        <h2>3. Process</h2>
-        <div id="sd-process"></div>
+        <div id="pd-roles"></div>
+        <h2>3. Policy Statement</h2>
+        <div id="pd-process"></div>
         <h2>4. Review</h2>
-        <p id="sd-review"></p>
-        <h2 class="sd-related-docs">Related Documents <button class="btn btn-ghost row-add" id="sd-refAdd" style="display:none;">+ Add</button></h2>
-        <table class="refs"><tbody id="sd-refBody"></tbody></table>
+        <p id="pd-review"></p>
+        <h2 class="pd-related-docs">Related Documents <button class="btn btn-ghost row-add" id="pd-refAdd" style="display:none;">+ Add</button></h2>
+        <table class="refs"><tbody id="pd-refBody"></tbody></table>
         <h2>Change Notification</h2>
         <table class="hist">
           <thead><tr><th>Rev</th><th>Reason for Change</th><th>Changed By</th><th>Title</th><th>Date</th></tr></thead>
-          <tbody id="sd-histBody"></tbody>
+          <tbody id="pd-histBody"></tbody>
         </table>
-        <div class="save-bar" id="sd-saveBar">
-          <span class="msg" id="sd-saveBarMsg"></span>
+        <div class="save-bar" id="pd-saveBar">
+          <span class="msg" id="pd-saveBarMsg"></span>
           <div class="dc-actions" style="margin-top:0;">
-            <button class="btn btn-ghost" id="sd-cancelBtn">Cancel</button>
-            <button class="btn btn-primary" id="sd-saveBtn">Save &amp; Bump Revision</button>
+            <button class="btn btn-ghost" id="pd-cancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="pd-saveBtn">Save &amp; Bump Revision</button>
           </div>
         </div>
-        <a class="back-link" href="${esc(cfg.backHref || 'sop-list.html')}">&larr; Back to SOP List</a>
+        <a class="back-link" href="${esc(cfg.backHref || 'policy-list.html')}">&larr; Back to Policy List</a>
       </div>
-      <div class="dh-modal" id="sd-modal">
+      <div class="dh-modal" id="pd-modal">
         <div class="dh-modal-inner">
-          <h3>Save changes to ${esc(cfg.sopNo)}</h3>
-          <p class="dh-hint">Every change to a controlled SOP needs a reason and who made it, so the Change Notification table stays a proper audit trail.</p>
-          <label class="dh-f">Reason for change<input type="text" id="sd-reason" placeholder="e.g. Clarified a step"></label>
-          <label class="dh-f">Changed by<input type="text" id="sd-changedBy" placeholder="Your name"></label>
-          <label class="dh-f">Title<input type="text" id="sd-changedByTitle" placeholder="e.g. QA Manager"></label>
-          <div class="dh-error" id="sd-saveError">All three fields are required.</div>
+          <h3>Save changes to ${esc(cfg.polNo)}</h3>
+          <p class="dh-hint">Every change to a controlled Policy needs a reason and who made it, so the Change Notification table stays a proper audit trail.</p>
+          <label class="dh-f">Reason for change<input type="text" id="pd-reason" placeholder="e.g. Updated policy statement"></label>
+          <label class="dh-f">Changed by<input type="text" id="pd-changedBy" placeholder="Your name"></label>
+          <label class="dh-f">Title<input type="text" id="pd-changedByTitle" placeholder="e.g. QA Manager"></label>
+          <div class="dh-error" id="pd-saveError">All three fields are required.</div>
           <div class="dh-actions">
-            <button class="btn btn-ghost" id="sd-modalCancel">Cancel</button>
-            <button class="btn btn-primary" id="sd-modalSave">Save &amp; Bump Revision</button>
+            <button class="btn btn-ghost" id="pd-modalCancel">Cancel</button>
+            <button class="btn btn-primary" id="pd-modalSave">Save &amp; Bump Revision</button>
           </div>
         </div>
       </div>
@@ -235,13 +230,13 @@
     }
 
     function applyResolved(r) {
-      $('sd-code').textContent = r.sopNo;
-      $('sd-name').textContent = r.name;
-      $('sd-objective').innerHTML = r.sections.objective || '';
-      $('sd-roles').innerHTML = r.sections.roles || '';
-      $('sd-process').innerHTML = r.sections.process || '';
-      $('sd-review').innerHTML = r.sections.review || '';
-      const refBody = $('sd-refBody');
+      $('pd-code').textContent = r.polNo;
+      $('pd-name').textContent = r.name;
+      $('pd-objective').innerHTML = r.sections.objective || '';
+      $('pd-roles').innerHTML = r.sections.roles || '';
+      $('pd-process').innerHTML = r.sections.process || '';
+      $('pd-review').innerHTML = r.sections.review || '';
+      const refBody = $('pd-refBody');
       refBody.innerHTML = '';
       if (r.relatedDocs.length) {
         r.relatedDocs.forEach(doc => refBody.appendChild(refRow(doc.code, doc.name)));
@@ -259,62 +254,62 @@
     async function refreshHeader() {
       const rev = await window.DocumentRevision.getCurrent(cfg.recordKey, startRev);
       const dateIso = await window.DocumentRevision.getCurrentDate(cfg.recordKey, null);
-      $('sd-rev').textContent = 'Rev ' + rev;
+      $('pd-rev').textContent = 'Rev ' + rev;
       if (dateIso) {
         const d = new Date(dateIso);
-        $('sd-date').textContent = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+        $('pd-date').textContent = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
       } else if (cfg.baselineDate) {
-        $('sd-date').textContent = cfg.baselineDate;
+        $('pd-date').textContent = cfg.baselineDate;
       }
       const hist = await window.DocumentRevision.history(cfg.recordKey);
-      const tbody = $('sd-histBody');
+      const tbody = $('pd-histBody');
       tbody.innerHTML = '';
       (cfg.baselineHistory || []).forEach(row => tbody.appendChild(histRow(row.rev, row.reason, '—', '—', row.date)));
       hist.slice().reverse().forEach(h => tbody.appendChild(histRow(h.revisionNumber, h.reason, h.changedBy, h.changedByTitle, fmtDate(h.changedAt))));
-      $('sd-saveBarMsg').textContent = 'Editing ' + cfg.sopNo + ' — saving bumps this to Rev ' + (rev + 1) + '.';
+      $('pd-saveBarMsg').textContent = 'Editing ' + cfg.polNo + ' — saving bumps this to Rev ' + (rev + 1) + '.';
     }
 
     function toggleEdit(cancel) {
       editing = !cancel && !editing;
-      ['sd-objective', 'sd-roles', 'sd-process', 'sd-review', 'sd-code', 'sd-name'].forEach(id => {
+      ['pd-objective', 'pd-roles', 'pd-process', 'pd-review', 'pd-code', 'pd-name'].forEach(id => {
         $(id).setAttribute('contenteditable', editing ? 'true' : 'false');
       });
-      document.querySelectorAll('#sd-refBody [data-code], #sd-refBody [data-name]').forEach(el =>
+      document.querySelectorAll('#pd-refBody [data-code], #pd-refBody [data-name]').forEach(el =>
         el.setAttribute('contenteditable', editing ? 'true' : 'false'));
-      $('sd-saveBar').classList.toggle('open', editing);
-      $('sd-editBtn').textContent = editing ? 'Editing…' : 'Edit';
-      $('sd-refAdd').style.display = editing ? '' : 'none';
+      $('pd-saveBar').classList.toggle('open', editing);
+      $('pd-editBtn').textContent = editing ? 'Editing…' : 'Edit';
+      $('pd-refAdd').style.display = editing ? '' : 'none';
       document.querySelectorAll('.row-rm').forEach(el => el.style.display = editing ? '' : 'none');
       if (cancel) applyResolved(current);
     }
 
-    $('sd-refAdd').addEventListener('click', () => $('sd-refBody').appendChild(refRow('REC X.X.X', 'New related document')));
-    $('sd-editBtn').addEventListener('click', () => toggleEdit());
-    $('sd-cancelBtn').addEventListener('click', () => toggleEdit(true));
-    $('sd-modalCancel').addEventListener('click', () => $('sd-modal').classList.remove('open'));
-    $('sd-saveBtn').addEventListener('click', () => $('sd-modal').classList.add('open'));
+    $('pd-refAdd').addEventListener('click', () => $('pd-refBody').appendChild(refRow('REC X.X.X', 'New related document')));
+    $('pd-editBtn').addEventListener('click', () => toggleEdit());
+    $('pd-cancelBtn').addEventListener('click', () => toggleEdit(true));
+    $('pd-modalCancel').addEventListener('click', () => $('pd-modal').classList.remove('open'));
+    $('pd-saveBtn').addEventListener('click', () => $('pd-modal').classList.add('open'));
 
-    $('sd-modalSave').addEventListener('click', async () => {
-      const reason = $('sd-reason'), changedBy = $('sd-changedBy'), title = $('sd-changedByTitle');
-      const err = $('sd-saveError');
+    $('pd-modalSave').addEventListener('click', async () => {
+      const reason = $('pd-reason'), changedBy = $('pd-changedBy'), title = $('pd-changedByTitle');
+      const err = $('pd-saveError');
       [reason, changedBy, title].forEach(el => el.classList.remove('err'));
       let ok = true;
       [reason, changedBy, title].forEach(el => { if (!el.value.trim()) { el.classList.add('err'); ok = false; } });
       err.style.display = ok ? 'none' : 'block';
       if (!ok) return;
 
-      const relatedDocs = Array.from(document.querySelectorAll('#sd-refBody tr')).filter(tr => tr.querySelector('[data-code]')).map(tr => ({
+      const relatedDocs = Array.from(document.querySelectorAll('#pd-refBody tr')).filter(tr => tr.querySelector('[data-code]')).map(tr => ({
         code: tr.querySelector('[data-code]').textContent.trim(),
         name: tr.querySelector('[data-name]').textContent.trim()
       }));
       await saveOverrides(cfg.recordKey, {
-        sopNo: $('sd-code').textContent.trim(),
-        name: $('sd-name').textContent.trim(),
+        polNo: $('pd-code').textContent.trim(),
+        name: $('pd-name').textContent.trim(),
         sections: {
-          objective: $('sd-objective').innerHTML,
-          roles: $('sd-roles').innerHTML,
-          process: $('sd-process').innerHTML,
-          review: $('sd-review').innerHTML
+          objective: $('pd-objective').innerHTML,
+          roles: $('pd-roles').innerHTML,
+          process: $('pd-process').innerHTML,
+          review: $('pd-review').innerHTML
         },
         relatedDocs
       });
@@ -323,7 +318,7 @@
       }, startRev);
 
       reason.value = ''; changedBy.value = ''; title.value = '';
-      $('sd-modal').classList.remove('open');
+      $('pd-modal').classList.remove('open');
       current = await resolve(cfg.recordKey, cfg);
       toggleEdit(true);
       await refreshHeader();
@@ -333,17 +328,17 @@
       try {
         await window.DocHeader.mountPrintHeader({
           recordKey: cfg.recordKey,
-          defaults: { document: cfg.name, docNumber: cfg.sopNo },
+          defaults: { document: cfg.name, docNumber: cfg.polNo },
           revisionStart: cfg.startRev || 1
         });
-      } catch (e) { console.error('SOP title block unavailable', e); }
+      } catch (e) { console.error('Policy title block unavailable', e); }
     }
 
     current = await resolve(cfg.recordKey, cfg);
     applyResolved(current);
     await refreshHeader();
-    $('sd-editBtn').style.display = canEdit() ? '' : 'none';
+    $('pd-editBtn').style.display = canEdit() ? '' : 'none';
   }
 
-  window.SopDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
+  window.PolicyDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
 })();

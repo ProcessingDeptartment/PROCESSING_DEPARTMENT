@@ -1,24 +1,17 @@
 /*
- * Shared engine for SOP pages (public/sops/*.html).
+ * Engine for Procedure pages (public/procedures/*.html).
  *
- * Unlike a REC, a SOP is a controlled PROCEDURE, not a fill-in form -- there is no
- * signature block or save-state for a completed instance. The HTML page itself is the
- * controlled copy (there is no separate original file to fall back to), so editing it
- * in place -- code, name, body sections, related documents -- IS the document-control
- * action, gated the same way master-record-index.html gates its own edits: only
- * PermissionRules.can('manageSOPs') may edit, and every save requires a reason, who
- * made it, and their title (enforced by document-revision.js, not re-implemented here).
+ * Mirrors sop-doc.js exactly, but scoped to Procedures:
+ *   - Permission gate: PermissionRules.can('manageProcedures')
+ *   - Storage key prefix: procedure_doc:<recordKey>
+ *   - Back link: procedure-list.html
  *
- * Each SOP page is a thin config calling SopDoc.mount({...}) rather than duplicating
- * this markup/JS 55 times -- see monitoring-log.js for the same config-driven pattern
- * applied to the monitoring logs.
- *
- * Storage layout, keyed by recordKey (e.g. 'sop-02-basket-receiving'):
- *   sop_doc:<recordKey>            -- { sopNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
- *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision (existing engine)
+ * Storage layout, keyed by recordKey:
+ *   procedure_doc:<recordKey>      -- { procNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
+ *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision
  */
 (function () {
-  const KEY = k => 'sop_doc:' + k;
+  const KEY = k => 'procedure_doc:' + k;
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -39,7 +32,7 @@
   async function resolve(recordKey, defaults) {
     const stored = await loadOverrides(recordKey);
     return {
-      sopNo: stored.sopNo || defaults.sopNo,
+      procNo: stored.procNo || defaults.procNo,
       name: stored.name || defaults.name,
       area: defaults.area || '',
       sections: Object.assign({}, defaults.sections, stored.sections),
@@ -48,7 +41,7 @@
   }
 
   function canEdit() {
-    return !window.PermissionRules || window.PermissionRules.can('manageSOPs');
+    return !window.PermissionRules || window.PermissionRules.can('manageProcedures');
   }
 
   function fmtDate(ms) {
@@ -132,7 +125,7 @@
     @media print{
       .dc-actions, .save-bar, .back-link, .row-add, .row-rm{ display:none !important; }
       [contenteditable]{ outline:none; background:none; }
-      .sd-related-docs{ page-break-before:always; }
+      .proc-related-docs{ page-break-before:always; }
     }
     @media (max-width: 768px){
       .dc-top{ padding:10px 12px; }
@@ -154,68 +147,70 @@
   `;
 
   function injectStyles() {
-    if (document.getElementById('sop-doc-styles')) return;
+    if (document.getElementById('procedure-doc-styles')) return;
     const s = document.createElement('style');
-    s.id = 'sop-doc-styles';
+    s.id = 'procedure-doc-styles';
     s.textContent = STYLES;
     document.head.appendChild(s);
   }
 
+  // cfg: { recordKey, procNo, name, area, startRev, backHref, sections:{objective,roles,process,review},
+  //        relatedDocs:[{code,name}], baselineHistory:[{rev,reason,date}] }
   async function mount(cfg) {
     injectStyles();
-    const root = document.getElementById('sop-root');
+    const root = document.getElementById('procedure-root');
     root.innerHTML = `
       <div class="dc-top">
         <div class="dc-inner">
-          <div class="doc-line"><span class="doc-code" id="sd-code"></span><span id="sd-name"></span></div>
+          <div class="doc-line"><span class="doc-code" id="pr-code"></span><span id="pr-name"></span></div>
           <div class="dc-meta">
-            <div><b id="sd-rev"></b>Revision</div>
-            <div><b id="sd-date"></b>Revision Date</div>
+            <div><b id="pr-rev"></b>Revision</div>
+            <div><b id="pr-date"></b>Revision Date</div>
             <div><b>${esc(cfg.area)}</b>Area</div>
           </div>
           <div class="dc-actions">
             <button class="btn btn-primary" onclick="window.print()">Print</button>
-            <button class="btn btn-ghost" id="sd-editBtn" style="display:none;">Edit</button>
+            <button class="btn btn-ghost" id="pr-editBtn" style="display:none;">Edit</button>
           </div>
         </div>
       </div>
       <div class="doc-body">
-        <div class="note">This page is the controlled copy of ${esc(cfg.sopNo)} &mdash; there is no separate original file. Edits made here become the record, with each change logged below under Change Notification.</div>
+        <div class="note">This page is the controlled copy of ${esc(cfg.procNo)} &mdash; there is no separate original file. Edits made here become the record, with each change logged below under Change Notification.</div>
         <h2>1. Objective</h2>
-        <p id="sd-objective"></p>
+        <p id="pr-objective"></p>
         <h2>2. Roles and Responsibilities</h2>
-        <div id="sd-roles"></div>
+        <div id="pr-roles"></div>
         <h2>3. Process</h2>
-        <div id="sd-process"></div>
+        <div id="pr-process"></div>
         <h2>4. Review</h2>
-        <p id="sd-review"></p>
-        <h2 class="sd-related-docs">Related Documents <button class="btn btn-ghost row-add" id="sd-refAdd" style="display:none;">+ Add</button></h2>
-        <table class="refs"><tbody id="sd-refBody"></tbody></table>
+        <p id="pr-review"></p>
+        <h2 class="proc-related-docs">Related Documents <button class="btn btn-ghost row-add" id="pr-refAdd" style="display:none;">+ Add</button></h2>
+        <table class="refs"><tbody id="pr-refBody"></tbody></table>
         <h2>Change Notification</h2>
         <table class="hist">
           <thead><tr><th>Rev</th><th>Reason for Change</th><th>Changed By</th><th>Title</th><th>Date</th></tr></thead>
-          <tbody id="sd-histBody"></tbody>
+          <tbody id="pr-histBody"></tbody>
         </table>
-        <div class="save-bar" id="sd-saveBar">
-          <span class="msg" id="sd-saveBarMsg"></span>
+        <div class="save-bar" id="pr-saveBar">
+          <span class="msg" id="pr-saveBarMsg"></span>
           <div class="dc-actions" style="margin-top:0;">
-            <button class="btn btn-ghost" id="sd-cancelBtn">Cancel</button>
-            <button class="btn btn-primary" id="sd-saveBtn">Save &amp; Bump Revision</button>
+            <button class="btn btn-ghost" id="pr-cancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="pr-saveBtn">Save &amp; Bump Revision</button>
           </div>
         </div>
-        <a class="back-link" href="${esc(cfg.backHref || 'sop-list.html')}">&larr; Back to SOP List</a>
+        <a class="back-link" href="${esc(cfg.backHref || 'procedure-list.html')}">&larr; Back to Procedure List</a>
       </div>
-      <div class="dh-modal" id="sd-modal">
+      <div class="dh-modal" id="pr-modal">
         <div class="dh-modal-inner">
-          <h3>Save changes to ${esc(cfg.sopNo)}</h3>
-          <p class="dh-hint">Every change to a controlled SOP needs a reason and who made it, so the Change Notification table stays a proper audit trail.</p>
-          <label class="dh-f">Reason for change<input type="text" id="sd-reason" placeholder="e.g. Clarified a step"></label>
-          <label class="dh-f">Changed by<input type="text" id="sd-changedBy" placeholder="Your name"></label>
-          <label class="dh-f">Title<input type="text" id="sd-changedByTitle" placeholder="e.g. QA Manager"></label>
-          <div class="dh-error" id="sd-saveError">All three fields are required.</div>
+          <h3>Save changes to ${esc(cfg.procNo)}</h3>
+          <p class="dh-hint">Every change to a controlled Procedure needs a reason and who made it, so the Change Notification table stays a proper audit trail.</p>
+          <label class="dh-f">Reason for change<input type="text" id="pr-reason" placeholder="e.g. Updated process step"></label>
+          <label class="dh-f">Changed by<input type="text" id="pr-changedBy" placeholder="Your name"></label>
+          <label class="dh-f">Title<input type="text" id="pr-changedByTitle" placeholder="e.g. QA Manager"></label>
+          <div class="dh-error" id="pr-saveError">All three fields are required.</div>
           <div class="dh-actions">
-            <button class="btn btn-ghost" id="sd-modalCancel">Cancel</button>
-            <button class="btn btn-primary" id="sd-modalSave">Save &amp; Bump Revision</button>
+            <button class="btn btn-ghost" id="pr-modalCancel">Cancel</button>
+            <button class="btn btn-primary" id="pr-modalSave">Save &amp; Bump Revision</button>
           </div>
         </div>
       </div>
@@ -235,13 +230,13 @@
     }
 
     function applyResolved(r) {
-      $('sd-code').textContent = r.sopNo;
-      $('sd-name').textContent = r.name;
-      $('sd-objective').innerHTML = r.sections.objective || '';
-      $('sd-roles').innerHTML = r.sections.roles || '';
-      $('sd-process').innerHTML = r.sections.process || '';
-      $('sd-review').innerHTML = r.sections.review || '';
-      const refBody = $('sd-refBody');
+      $('pr-code').textContent = r.procNo;
+      $('pr-name').textContent = r.name;
+      $('pr-objective').innerHTML = r.sections.objective || '';
+      $('pr-roles').innerHTML = r.sections.roles || '';
+      $('pr-process').innerHTML = r.sections.process || '';
+      $('pr-review').innerHTML = r.sections.review || '';
+      const refBody = $('pr-refBody');
       refBody.innerHTML = '';
       if (r.relatedDocs.length) {
         r.relatedDocs.forEach(doc => refBody.appendChild(refRow(doc.code, doc.name)));
@@ -259,62 +254,62 @@
     async function refreshHeader() {
       const rev = await window.DocumentRevision.getCurrent(cfg.recordKey, startRev);
       const dateIso = await window.DocumentRevision.getCurrentDate(cfg.recordKey, null);
-      $('sd-rev').textContent = 'Rev ' + rev;
+      $('pr-rev').textContent = 'Rev ' + rev;
       if (dateIso) {
         const d = new Date(dateIso);
-        $('sd-date').textContent = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+        $('pr-date').textContent = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
       } else if (cfg.baselineDate) {
-        $('sd-date').textContent = cfg.baselineDate;
+        $('pr-date').textContent = cfg.baselineDate;
       }
       const hist = await window.DocumentRevision.history(cfg.recordKey);
-      const tbody = $('sd-histBody');
+      const tbody = $('pr-histBody');
       tbody.innerHTML = '';
       (cfg.baselineHistory || []).forEach(row => tbody.appendChild(histRow(row.rev, row.reason, '—', '—', row.date)));
       hist.slice().reverse().forEach(h => tbody.appendChild(histRow(h.revisionNumber, h.reason, h.changedBy, h.changedByTitle, fmtDate(h.changedAt))));
-      $('sd-saveBarMsg').textContent = 'Editing ' + cfg.sopNo + ' — saving bumps this to Rev ' + (rev + 1) + '.';
+      $('pr-saveBarMsg').textContent = 'Editing ' + cfg.procNo + ' — saving bumps this to Rev ' + (rev + 1) + '.';
     }
 
     function toggleEdit(cancel) {
       editing = !cancel && !editing;
-      ['sd-objective', 'sd-roles', 'sd-process', 'sd-review', 'sd-code', 'sd-name'].forEach(id => {
+      ['pr-objective', 'pr-roles', 'pr-process', 'pr-review', 'pr-code', 'pr-name'].forEach(id => {
         $(id).setAttribute('contenteditable', editing ? 'true' : 'false');
       });
-      document.querySelectorAll('#sd-refBody [data-code], #sd-refBody [data-name]').forEach(el =>
+      document.querySelectorAll('#pr-refBody [data-code], #pr-refBody [data-name]').forEach(el =>
         el.setAttribute('contenteditable', editing ? 'true' : 'false'));
-      $('sd-saveBar').classList.toggle('open', editing);
-      $('sd-editBtn').textContent = editing ? 'Editing…' : 'Edit';
-      $('sd-refAdd').style.display = editing ? '' : 'none';
+      $('pr-saveBar').classList.toggle('open', editing);
+      $('pr-editBtn').textContent = editing ? 'Editing…' : 'Edit';
+      $('pr-refAdd').style.display = editing ? '' : 'none';
       document.querySelectorAll('.row-rm').forEach(el => el.style.display = editing ? '' : 'none');
       if (cancel) applyResolved(current);
     }
 
-    $('sd-refAdd').addEventListener('click', () => $('sd-refBody').appendChild(refRow('REC X.X.X', 'New related document')));
-    $('sd-editBtn').addEventListener('click', () => toggleEdit());
-    $('sd-cancelBtn').addEventListener('click', () => toggleEdit(true));
-    $('sd-modalCancel').addEventListener('click', () => $('sd-modal').classList.remove('open'));
-    $('sd-saveBtn').addEventListener('click', () => $('sd-modal').classList.add('open'));
+    $('pr-refAdd').addEventListener('click', () => $('pr-refBody').appendChild(refRow('REC X.X.X', 'New related document')));
+    $('pr-editBtn').addEventListener('click', () => toggleEdit());
+    $('pr-cancelBtn').addEventListener('click', () => toggleEdit(true));
+    $('pr-modalCancel').addEventListener('click', () => $('pr-modal').classList.remove('open'));
+    $('pr-saveBtn').addEventListener('click', () => $('pr-modal').classList.add('open'));
 
-    $('sd-modalSave').addEventListener('click', async () => {
-      const reason = $('sd-reason'), changedBy = $('sd-changedBy'), title = $('sd-changedByTitle');
-      const err = $('sd-saveError');
+    $('pr-modalSave').addEventListener('click', async () => {
+      const reason = $('pr-reason'), changedBy = $('pr-changedBy'), title = $('pr-changedByTitle');
+      const err = $('pr-saveError');
       [reason, changedBy, title].forEach(el => el.classList.remove('err'));
       let ok = true;
       [reason, changedBy, title].forEach(el => { if (!el.value.trim()) { el.classList.add('err'); ok = false; } });
       err.style.display = ok ? 'none' : 'block';
       if (!ok) return;
 
-      const relatedDocs = Array.from(document.querySelectorAll('#sd-refBody tr')).filter(tr => tr.querySelector('[data-code]')).map(tr => ({
+      const relatedDocs = Array.from(document.querySelectorAll('#pr-refBody tr')).filter(tr => tr.querySelector('[data-code]')).map(tr => ({
         code: tr.querySelector('[data-code]').textContent.trim(),
         name: tr.querySelector('[data-name]').textContent.trim()
       }));
       await saveOverrides(cfg.recordKey, {
-        sopNo: $('sd-code').textContent.trim(),
-        name: $('sd-name').textContent.trim(),
+        procNo: $('pr-code').textContent.trim(),
+        name: $('pr-name').textContent.trim(),
         sections: {
-          objective: $('sd-objective').innerHTML,
-          roles: $('sd-roles').innerHTML,
-          process: $('sd-process').innerHTML,
-          review: $('sd-review').innerHTML
+          objective: $('pr-objective').innerHTML,
+          roles: $('pr-roles').innerHTML,
+          process: $('pr-process').innerHTML,
+          review: $('pr-review').innerHTML
         },
         relatedDocs
       });
@@ -323,7 +318,7 @@
       }, startRev);
 
       reason.value = ''; changedBy.value = ''; title.value = '';
-      $('sd-modal').classList.remove('open');
+      $('pr-modal').classList.remove('open');
       current = await resolve(cfg.recordKey, cfg);
       toggleEdit(true);
       await refreshHeader();
@@ -333,17 +328,17 @@
       try {
         await window.DocHeader.mountPrintHeader({
           recordKey: cfg.recordKey,
-          defaults: { document: cfg.name, docNumber: cfg.sopNo },
+          defaults: { document: cfg.name, docNumber: cfg.procNo },
           revisionStart: cfg.startRev || 1
         });
-      } catch (e) { console.error('SOP title block unavailable', e); }
+      } catch (e) { console.error('Procedure title block unavailable', e); }
     }
 
     current = await resolve(cfg.recordKey, cfg);
     applyResolved(current);
     await refreshHeader();
-    $('sd-editBtn').style.display = canEdit() ? '' : 'none';
+    $('pr-editBtn').style.display = canEdit() ? '' : 'none';
   }
 
-  window.SopDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
+  window.ProcedureDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
 })();

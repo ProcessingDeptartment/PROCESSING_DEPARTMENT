@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<link rel="stylesheet" href="../styles/responsive.css">
+<title>Create New PRP</title>
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=3"></script>
+<script>
+SopDoc.mount({
+  recordKey: '',
+  sopNo: '',
+  name: '',
+  area: '',
+  startRev: 1,
+  baselineDate: '',
+  docTypeLabel: 'PRP',
+  permissionAction: 'managePRPs',
+  backHref: 'prp-list.html',
+  backLabel: 'Back to PRP List',
+  sections: {
+    objective: '',
+    roles: '',
+    process: '',
+    review: ''
+  },
+  relatedDocs: []
+});
+</script>
+</body>
+</html>

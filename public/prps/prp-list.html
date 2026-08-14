@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRP List</title>
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .container{ max-width:1100px; margin:0 auto; padding:20px; }
+  .search-box{ background:#fff; border:1px solid #d0d5db; border-radius:8px; padding:16px; margin-bottom:20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  .search-input{ width:100%; padding:10px 12px; border:1px solid #d0d5db; border-radius:6px; font-size:14px; }
+  .search-input::placeholder{ color:#9ca3af; }
+  .search-input:focus{ outline:none; border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
+  table.doc-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; }
+  table.doc-table th,table.doc-table td{ border-bottom:1px solid #e2e4e3; padding:10px 12px; text-align:left; font-size:12px; }
+  table.doc-table th{ background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; padding:10px 12px; }
+  table.doc-table td.doc-code{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:#2f4356; white-space:nowrap; }
+  table.doc-table td.title a{ color:#1d4ed8; text-decoration:none; font-weight:500; }
+  table.doc-table td.title a:hover{ text-decoration:underline; }
+  table.doc-table td.revision{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:#2f4356; white-space:nowrap; }
+  table.doc-table td.area{ color:#5c6771; }
+  table.doc-table tbody tr:hover{ background:#f9fafb; }
+  table.doc-table tbody tr.hidden{ display:none; }
+  tr.not-digitised td{ color:#9ca3af; }
+  tr.not-digitised td.doc-code{ color:#9ca3af; }
+  .tag{ display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.04em;
+        text-transform:uppercase; padding:1px 6px; border-radius:9px; background:#f1f2f4; color:#6b7280; }
+  .no-results{ text-align:center; color:#6b7280; padding:40px 20px; }
+  .back-link{ display:inline-block; margin-top:16px; color:#1d4ed8; text-decoration:none; font-size:0.9rem; }
+  .back-link:hover{ text-decoration:underline; }
+  .search-hint{ font-size:11px; color:#9ca3af; margin-top:8px; }
+  .info-bar{ background:#eff6ff; border-left:4px solid #3b82f6; padding:12px 16px; border-radius:4px; margin-bottom:16px; font-size:12px; color:#1e40af; }
+  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:6px; }
+  @media (max-width:768px){
+    .header{ padding:12px 14px; }
+    .header h1{ font-size:16px; }
+    .container{ padding:14px; }
+    .search-box{ padding:12px; margin-bottom:14px; }
+    .search-input{ font-size:16px; }
+    table.doc-table th,table.doc-table td{ padding:8px; font-size:12px; }
+    table.doc-table td.doc-code{ white-space:normal; }
+  }
+  @media (max-width:480px){
+    .container{ padding:10px; }
+    table.doc-table th,table.doc-table td{ padding:6px; font-size:11px; }
+  }
+</style>
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div class="header">
+  <h1>Pre-Requisite Programmes (PRPs)</h1>
+  <p>Read-only reference programmes. Not fill-in records &mdash; see Record List for those.</p>
+</div>
+<div class="container">
+  <div class="info-bar">
+    Each converted PRP page is itself the controlled copy &mdash; there is no separate original
+    file. Document-control roles can edit a PRP's content directly from its page.
+  </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" class="search-input" placeholder="Filter by PRP number, title, or area..." autocomplete="off">
+    <div class="search-hint">Showing <span id="resultCount">0</span> of <span id="totalCount">0</span> PRPs</div>
+  </div>
+  <div class="table-scroll">
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>PRP No.</th>
+          <th>Title</th>
+          <th>Area</th>
+          <th>Rev</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="no-results" id="noResults" style="display:none;">No PRPs found. Try a different search.</div>
+  <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
+</div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/prp-index-data.js?v=1"></script>
+<script>
+(function () {
+  const DOCS = window.PrpIndexData.rows.slice().sort((a, b) => {
+    const na = parseFloat(a.sopNo.replace(/[^\d.]/g, '')) || 0;
+    const nb = parseFloat(b.sopNo.replace(/[^\d.]/g, '')) || 0;
+    return na - nb;
+  });
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  const searchInput = document.getElementById('searchInput');
+  const tableBody = document.getElementById('tableBody');
+  const totalCount = document.getElementById('totalCount');
+  const resultCount = document.getElementById('resultCount');
+  const noResults = document.getElementById('noResults');
+
+  totalCount.textContent = DOCS.length;
+
+  let latest = {};
+
+  function render() {
+    let html = '';
+    DOCS.forEach(r => {
+      const baseline = r.revision || 1;
+      const hit = r.recordKey ? latest[r.recordKey] : null;
+      const live = hit ? hit.revisionNumber : baseline;
+      if (r.href) {
+        html += `<tr>`
+          + `<td class="doc-code">${esc(r.sopNo)}</td>`
+          + `<td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.name)}</a></td>`
+          + `<td class="area">${esc(r.area)}</td>`
+          + `<td class="revision">Rev ${live}</td>`
+          + `</tr>`;
+      } else {
+        html += `<tr class="not-digitised">`
+          + `<td class="doc-code">${esc(r.sopNo)}</td>`
+          + `<td class="title">${esc(r.name)} <span class="tag">Not yet online</span></td>`
+          + `<td class="area">${esc(r.area)}</td>`
+          + `<td class="revision">Rev ${baseline}</td>`
+          + `</tr>`;
+      }
+    });
+    tableBody.innerHTML = html;
+    filterDocs();
+  }
+
+  function filterDocs() {
+    const query = searchInput.value.toLowerCase();
+    const rows = tableBody.querySelectorAll('tr');
+    let shown = 0;
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      if (text.includes(query)) {
+        row.classList.remove('hidden');
+        shown++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+    resultCount.textContent = shown;
+    noResults.style.display = shown === 0 ? 'block' : 'none';
+  }
+
+  searchInput.addEventListener('input', filterDocs);
+
+  window.DocumentRevision.latestAll().then(all => { latest = all; render(); }).catch(() => render());
+})();
+</script>
+</body>
+</html>

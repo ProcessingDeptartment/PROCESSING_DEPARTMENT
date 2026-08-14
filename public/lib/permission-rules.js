@@ -54,6 +54,9 @@
     // SOPs are controlled procedure documents, not fill-in records -- editing the
     // procedure text itself (not just filling in a form) is a document-control action.
     manageSOPs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
+    managePolicies: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
+    manageProcedures: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
+    managePRPs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
   };
 
   const ROLE_KEY = 'acting_as_role';
