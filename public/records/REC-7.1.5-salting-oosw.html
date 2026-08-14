@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .catch(function (e) { console.error('title block failed to mount', e); });
 });
 </script>
-<script src="../lib/size-ranges.js"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -378,7 +378,7 @@ function toast(msg){
     $('h_harvestFarm').value = state.header.harvestFarm;
     $('h_trackingNo').value = state.header.trackingNo;
     $('h_processingFor').value = state.header.processingFor;
-    $('h_sizeRange').value = state.header.sizeRange;
+    window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.header.sizeRange);
     $('h_wholeWeight').value = state.header.wholeWeight;
     $('h_jobPrefix').value = state.header.jobPrefix;
     $('h_jobNumber').value = state.header.jobNumber;
@@ -469,8 +469,8 @@ function toast(msg){
   }
 
 function wire(){
+window.Lookups.upgrade('h_sizeRange', 'sizeRanges');
 bindInputs();
-    populateSizeRanges();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
     $('newRecordBtn').addEventListener('click', ()=>{

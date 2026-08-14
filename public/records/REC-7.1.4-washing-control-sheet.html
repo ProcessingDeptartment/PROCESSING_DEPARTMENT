@@ -89,7 +89,7 @@
           <label class="field">Time started<input id="h_timeStarted" placeholder="HH:MM"></label>
           <label class="field">Job no.<input id="h_jobNo" placeholder="Job"></label>
           <label class="field">First or second wash<select id="h_washNumber"><option value="">—</option><option value="First">First</option><option value="Second">Second</option></select></label>
-          <label class="field">Size range<input id="h_sizeRange" placeholder="Range"></label>
+          <label class="field">Size range<select id="h_sizeRange"><option value="">—</option></select></label>
           <label class="field">Machine no. (ex WW1/T1)<input id="h_machineNo" placeholder="Machine"></label>
         </div>
       </div>
@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
@@ -192,7 +193,7 @@ function toast(msg){
     $('h_timeStarted').value = state.timeStarted;
     $('h_jobNo').value = state.jobNo;
     $('h_washNumber').value = state.washNumber;
-    $('h_sizeRange').value = state.sizeRange;
+    window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.sizeRange);
     $('h_machineNo').value = state.machineNo;
     $('h_binsTraysPerWash').value = state.binsTraysPerWash;
     $('h_totalWashingTime').value = state.totalWashingTime;
@@ -274,6 +275,7 @@ function toast(msg){
   }
 
 function wire(){
+  window.Lookups.upgrade('h_sizeRange', 'sizeRanges');
 bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
     $('submitBtn').addEventListener('click', ()=>saveRecord(true));
