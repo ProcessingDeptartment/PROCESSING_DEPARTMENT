@@ -195,11 +195,7 @@
       <div class="panel-body">
         <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
         <div id="verifySelect" style="margin-bottom:10px;"></div>
-        <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Verified by<input id="v_verifiedBy"></label>
-          <label class="field">Signature (type name to sign)<input id="v_verifiedSig"></label>
-          <label class="field">Date<input id="v_verifiedDate" type="date"></label>
-        </div>
+        <div id="verifyFields"></div>
         <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
           <button class="btn btn-primary" id="logVerificationBtn">Log verification</button>
         </div>
@@ -225,12 +221,17 @@ window.RecordDoc = { docCode: 'REC 7.2.4', recordKey: 'abalone-packing-specifica
 document.addEventListener('DOMContentLoaded', function () {
   if (!window.DocHeader) return;
   window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
+    .then(function () {
+      var badge = document.querySelector('.doc-rev');
+      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
+    })
     .catch(function (e) { console.error('title block failed to mount', e); });
 });
 </script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -615,9 +616,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function logVerification(){
     const checked = Array.from(document.querySelectorAll('.verifyRowChk:checked')).map(c=>c.value);
-    const verifiedBy = $('v_verifiedBy').value.trim();
-    const verifiedSig = $('v_verifiedSig').value.trim();
-    const verifiedDate = $('v_verifiedDate').value;
+    const verifiedBy = $('v_verified_by').value.trim();
+    const verifiedSig = $('v_verified_signature').value.trim();
+    const verifiedDate = $('v_verified_date').value;
     if(!checked.length){ toast('Select at least one row to verify.'); return; }
     if(!verifiedBy || !verifiedSig || !verifiedDate){ toast('Enter verified by, signature and date.'); return; }
     state.verifications.push({
@@ -625,9 +626,9 @@ document.addEventListener('DOMContentLoaded', function () {
       rowIds: checked, verifiedBy, verifiedSig, verifiedDate,
       loggedAt: Date.now()
     });
-    $('v_verifiedBy').value = '';
-    $('v_verifiedSig').value = '';
-    $('v_verifiedDate').value = '';
+    $('v_verified_by').value = '';
+    $('v_verified_signature').value = '';
+    $('v_verified_date').value = '';
     document.querySelectorAll('.verifyRowChk:checked').forEach(c=>{ c.checked = false; });
     renderVerificationHistory();
     toast('Verification logged.');
@@ -668,6 +669,7 @@ $('logVerificationBtn').addEventListener('click', logVerification);
     $('generatePdfBtn').addEventListener('click', generatePdf);
   }
 
+  $('verifyFields').innerHTML = window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'v_verified', gridClass: 'grid grid-3', fields: ['by', 'date', 'signature'] });
   wire();
   renderAll();
   renderVerificationHistory();

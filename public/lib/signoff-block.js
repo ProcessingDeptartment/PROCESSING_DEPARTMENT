@@ -72,21 +72,23 @@
     return { by: idPrefix + '_by', title: idPrefix + '_title', date: idPrefix + '_date', signature: idPrefix + '_signature' };
   }
 
+  const VERIFY_FIELD_LABELS = { by: 'Verified by', title: 'Title', date: 'Date', signature: 'Signature' };
+
   // Renders the Verified by / Title / Date / Signature inputs so callers (bespoke pages via
   // mountVerification, or FormRecord/monitoring-log which own their surrounding panel markup)
   // share one field set. `gridClass`/`fieldClass` let each page family keep its own CSS look.
+  // `fields` narrows which of the four fields to render (default all four, in that order) --
+  // for pages that never captured a separate Title, so the shared source doesn't silently add
+  // a field the page never asked for.
   function verifyFieldsHtml(opts) {
     const ids = verifyIds(opts.idPrefix);
     const gridClass = opts.gridClass || 'grid grid-4';
     const fieldClass = opts.fieldClass || 'field';
+    const fields = opts.fields || ['by', 'title', 'date', 'signature'];
     return `<div class="${gridClass}" style="margin-bottom:8px;">
-      <label class="${fieldClass}">Verified by<input id="${ids.by}"></label>
-      <label class="${fieldClass}">Title<input id="${ids.title}"></label>
-      <label class="${fieldClass}">Date<input id="${ids.date}" type="date"></label>
-      <label class="${fieldClass}">Signature<input id="${ids.signature}"></label>
+      ${fields.map(f => `<label class="${fieldClass}">${VERIFY_FIELD_LABELS[f]}<input id="${ids[f]}"${f === 'date' ? ' type="date"' : ''}></label>`).join('\n      ')}
     </div>`;
   }
-
   // Print-only ruled-line variant of the Verified by/Title/Date/Signature row,
   // for pages where verification is done with a wet-ink signature against the
   // printed copy rather than a capturable on-screen field. Callers add the

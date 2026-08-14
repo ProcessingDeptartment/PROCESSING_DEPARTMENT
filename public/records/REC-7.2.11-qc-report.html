@@ -179,6 +179,10 @@ window.RecordDoc = { docCode: 'REC 7.2.11', recordKey: 'qc-report' };
 document.addEventListener('DOMContentLoaded', function () {
   if (!window.DocHeader) return;
   window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
+    .then(function () {
+      var badge = document.querySelector('.doc-rev');
+      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
+    })
     .catch(function (e) { console.error('title block failed to mount', e); });
 });
 </script>
