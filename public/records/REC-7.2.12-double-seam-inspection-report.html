@@ -210,11 +210,7 @@
       <div class="panel-head"><h2>Sign-off</h2></div>
       <div class="panel-body">
         <div id="signoffCompletedBy"></div>
-        <div class="grid grid-3" style="margin-top:8px;">
-          <label class="field">Verified by<input id="f_verifiedBy"></label>
-          <label class="field">Title<input id="f_verifiedSig"></label>
-          <label class="field">Date<input id="f_verifiedDate" type="date"></label>
-        </div>
+        <div id="signoffVerify"></div>
       </div>
     </div>
 
@@ -388,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
       stages:{ before: blankStage(), during: blankStage(), after: blankStage() },
       comments:'',
       completedBy:'', completedSig:'', completedDate:'', completedBySignature:'',
-      verifiedBy:'', verifiedSig:'', verifiedDate:'',
+      verifiedBy:'', verifiedSig:'', verifiedDate:'', verifiedSignature:'',
       createdAt: null, updatedAt: null
     };
   }
@@ -769,9 +765,10 @@ function toast(msg){
     $('f_completedSig').value = state.completedSig;
     $('f_completedDate').value = state.completedDate;
     $('f_completedBySignature').value = state.completedBySignature;
-    $('f_verifiedBy').value = state.verifiedBy;
-    $('f_verifiedSig').value = state.verifiedSig;
-    $('f_verifiedDate').value = state.verifiedDate;
+    $('f_verified_by').value = state.verifiedBy;
+    $('f_verified_title').value = state.verifiedSig;
+    $('f_verified_date').value = state.verifiedDate;
+    $('f_verified_signature').value = state.verifiedSignature;
     $('recordIdTag').textContent = state.id ? `${state.id} · rev ${state.revision} · ${state.status}` : 'unsaved draft';
   }
 
@@ -785,8 +782,12 @@ function toast(msg){
       $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; renderIssues(); });
     });
     $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['f_completedBy','f_completedSig','f_completedDate','f_completedBySignature','f_verifiedBy','f_verifiedSig','f_verifiedDate'].forEach(id=>{
+    ['f_completedBy','f_completedSig','f_completedDate','f_completedBySignature'].forEach(id=>{
       const key = id.replace('f_','');
+      $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
+    });
+    const verifyIdToKey = { f_verified_by:'verifiedBy', f_verified_title:'verifiedSig', f_verified_date:'verifiedDate', f_verified_signature:'verifiedSignature' };
+    Object.entries(verifyIdToKey).forEach(([id,key])=>{
       $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
     });
   }
@@ -925,6 +926,7 @@ function toast(msg){
         <label class="field">Date<span>${state.completedDate||'—'}</span></label>
         <label class="field">Date<span>${state.verifiedDate||'—'}</span></label>
         <label class="field">Signature<span>${state.completedBySignature||'—'}</span></label>
+        <label class="field">Signature<span>${state.verifiedSignature||'—'}</span></label>
       </div></div>`;
   }
 
@@ -1095,6 +1097,7 @@ $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
       byId: 'f_completedBy', titleId: 'f_completedSig', dateId: 'f_completedDate', signatureId: 'f_completedBySignature', byLabel: 'Completed by'
     });
+    $('signoffVerify').innerHTML = window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'f_verified' });
   }
 
   let verificationBlock = null;

@@ -33,6 +33,11 @@
  *     verifyIds(idPrefix)              -> { by, title, date, signature } element ids
  *     verifyFieldsHtml({ idPrefix, gridClass, fieldClass })
  *                                       -> the 4 label/input elements only, no panel chrome
+ *     printOnlyVerifyFieldsHtml({ gridClass })
+ *                                       -> print-only ruled-line variant (Verified by/Title/
+ *                                          Date/Signature) for pages where verification is a
+ *                                          wet-ink signature against the printed copy, not a
+ *                                          capturable on-screen field.
  *     readVerifyInputs(idPrefix)       -> { verifiedBy, verifiedSig, verifiedDate, verifiedSignature }
  *     validateVerifyInputs(values)     -> bool, all 4 fields required
  *     clearVerifyInputs(idPrefix)
@@ -79,6 +84,22 @@
       <label class="${fieldClass}">Title<input id="${ids.title}"></label>
       <label class="${fieldClass}">Date<input id="${ids.date}" type="date"></label>
       <label class="${fieldClass}">Signature<input id="${ids.signature}"></label>
+    </div>`;
+  }
+
+  // Print-only ruled-line variant of the Verified by/Title/Date/Signature row,
+  // for pages where verification is done with a wet-ink signature against the
+  // printed copy rather than a capturable on-screen field. Callers add the
+  // `print-only` class themselves so the block stays hidden on screen; this
+  // just keeps the same 4-field label set as verifyFieldsHtml so a field can
+  // never be dropped from one of the two without the other noticing.
+  function printOnlyVerifyFieldsHtml(opts) {
+    const gridClass = (opts && opts.gridClass) || 'grid grid-4';
+    return `<div class="${gridClass} print-only" style="margin-top:8px;">
+      <div class="field">Verified by<div class="sig-line"></div></div>
+      <div class="field">Title<div class="sig-line"></div></div>
+      <div class="field">Date<div class="sig-line"></div></div>
+      <div class="field">Signature<div class="sig-line"></div></div>
     </div>`;
   }
 
@@ -210,7 +231,7 @@
 
   window.SignOffBlock = {
     completedByHtml, printRow, mountVerification,
-    verifyIds, verifyFieldsHtml, readVerifyInputs, clearVerifyInputs, validateVerifyInputs,
+    verifyIds, verifyFieldsHtml, printOnlyVerifyFieldsHtml, readVerifyInputs, clearVerifyInputs, validateVerifyInputs,
     historyLine, logVerification, getVerificationHistory
   };
 })();

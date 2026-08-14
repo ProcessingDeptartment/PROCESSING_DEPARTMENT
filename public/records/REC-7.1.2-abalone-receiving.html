@@ -232,11 +232,7 @@
         <div id="signoffCompletedBy"></div>
         <!-- Verification is done against the printed copy, so this row is deliberately
              print-only: it must never be a capturable field on screen. -->
-        <div class="grid grid-3 print-only" style="margin-top:8px;">
-          <div class="field">Verified by<div class="sig-line"></div></div>
-          <div class="field">Title<div class="sig-line"></div></div>
-          <div class="field">Date<div class="sig-line"></div></div>
-        </div>
+        <div id="signoffPrintVerify"></div>
       </div>
     </div>
 
@@ -728,6 +724,7 @@ function toast(msg){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
       byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', signatureId: 'f_checkedBySignature', byLabel: 'Completed by'
     });
+    $('signoffPrintVerify').innerHTML = window.SignOffBlock.printOnlyVerifyFieldsHtml({ gridClass: 'grid grid-4' });
   }
 
   let verificationBlock = null;
