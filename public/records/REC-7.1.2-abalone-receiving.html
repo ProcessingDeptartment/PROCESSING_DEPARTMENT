@@ -67,6 +67,12 @@
     .grid-4{grid-template-columns:repeat(2,1fr);}
   }
 
+  /* Completed by / Title must stay on one row at every width -- responsive.css
+   * collapses the shared .grid-4 sign-off layout to a single column below 768px,
+   * which would stack them. #ar-root #panelSignoff carries two IDs, so it beats
+   * that class-only rule regardless of source order. */
+  #ar-root #panelSignoff .grid-4{ grid-template-columns:repeat(2,1fr) !important; }
+
   /* ---- PDF / print ----------------------------------------------------------
    * The printed record is ordered differently to the screen: Receiving Info and
    * Sign-off belong together on page 1, and Basket & Counts starts on page 2
@@ -123,9 +129,12 @@
     #basketTable tr{ break-inside:avoid; page-break-inside:avoid; }
     #basketTable th, #basketTable td{
       padding:1.5px 3px !important; border-bottom:1px solid #999;
-      white-space:nowrap; overflow:hidden; text-overflow:clip;
+      overflow:hidden;
     }
-    #basketTable td{ font-size:12px !important; }
+    /* Headers wrap instead of clipping -- narrow columns like "Whole weight (Kg)"
+     * and "Mortality count" would otherwise lose text under table-layout:fixed. */
+    #basketTable th{ white-space:normal; line-height:1.15; text-overflow:clip; }
+    #basketTable td{ font-size:12px !important; white-space:nowrap; text-overflow:clip; }
     #basketTable th{ border-bottom:1px solid #000; }
   }
 </style>
@@ -166,9 +175,8 @@
         <!-- Size range shows in the confirmed table only (populated by import); no manual
              capture field for it here, but the element stays for Lookups/edit wiring. -->
         <select id="h_sizeRange" style="display:none;"></select>
-        <div class="grid grid-3" style="margin-top:8px;">
-          <label class="field">Farm count<input id="h_farmCount" type="number"></label>
-          <label class="field">Factory count<input id="h_factoryCount" type="number"></label>
+        <div class="grid grid-2" style="margin-top:8px;">
+          <label class="field">Count<input id="h_farmCount" type="number"></label>
           <label class="field">Mortality count<input id="h_mortalityCount" type="number"></label>
         </div>
         </div>
@@ -179,14 +187,23 @@
         </div>
 
         <table class="entry-table" id="basketTable" style="width:100%; border-collapse:collapse; margin-top:12px; font-size:11.5px;">
+          <colgroup>
+            <col style="width:13%;">
+            <col style="width:11%;">
+            <col style="width:13%;">
+            <col style="width:17%;">
+            <col style="width:10%;">
+            <col style="width:15%;">
+            <col style="width:21%;">
+            <col class="no-print" style="width:0;">
+          </colgroup>
           <thead>
             <tr style="text-align:left; border-bottom:1px solid var(--line-soft); color:#54606b;">
               <th style="padding:5px 6px;">Farm</th>
               <th style="padding:5px 6px;">Basket nr.</th>
               <th style="padding:5px 6px;">Size range</th>
               <th style="padding:5px 6px;">Whole weight (Kg)</th>
-              <th style="padding:5px 6px;">Farm count</th>
-              <th style="padding:5px 6px;">Factory count</th>
+              <th style="padding:5px 6px;">Count</th>
               <th style="padding:5px 6px;">Mortality count</th>
               <th style="padding:5px 6px;">Edited by</th>
               <th class="no-print" style="padding:5px 6px;"></th>
@@ -293,7 +310,7 @@ function toast(msg){
     catch(e){ return false; }
   }
 
-  const ENTRY_FIELDS = ['basketNr','sizeRange','wholeWeight','farmCount','factoryCount','mortalityCount'];
+  const ENTRY_FIELDS = ['basketNr','sizeRange','wholeWeight','farmCount','mortalityCount'];
 
   /* Size range is a lookup-backed <select>, so clearing it means re-selecting the
    * blank option rather than blanking a free-text value. */
@@ -405,7 +422,6 @@ function toast(msg){
         <td style="padding:5px 6px;">${entry.sizeRange || ''}</td>
         <td style="padding:5px 6px;">${formatWeightKg(entry.wholeWeight)}</td>
         <td style="padding:5px 6px;">${formatNumeric(entry.farmCount)}</td>
-        <td style="padding:5px 6px;">${formatNumeric(entry.factoryCount)}</td>
         <td style="padding:5px 6px;">${formatNumeric(entry.mortalityCount)}</td>
         <td style="padding:5px 6px;">${entry.editedBy ? entry.editedBy + ' · ' + new Date(entry.editedAt).toLocaleString() : ''}</td>
         <td class="no-print" style="padding:5px 6px;"><button class="btn btn-flat editEntryBtn" data-id="${entry.id}" style="padding:3px 8px; font-size:10.5px;">Edit</button></td>
@@ -427,7 +443,6 @@ function toast(msg){
       <td style="padding:5px 6px;"></td>
       <td style="padding:5px 6px;">${formatWeightKg(sum('wholeWeight'))}</td>
       <td style="padding:5px 6px;">${formatNumeric(sum('farmCount'))}</td>
-      <td style="padding:5px 6px;">${formatNumeric(sum('factoryCount'))}</td>
       <td style="padding:5px 6px;">${formatNumeric(sum('mortalityCount'))}</td>
       <td style="padding:5px 6px;"></td>
       <td class="no-print" style="padding:5px 6px;"></td>
@@ -652,7 +667,6 @@ function toast(msg){
         sizeRange: get('sizeRange'),
         wholeWeight: get('wholeWeight'),
         farmCount: get('farmCount'),
-        factoryCount: get('factoryCount'),
         mortalityCount: get('mortalityCount')
       });
     });

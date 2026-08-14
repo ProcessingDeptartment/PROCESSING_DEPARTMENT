@@ -5,6 +5,6 @@
  */
 window.ProcedureIndexData = {
   rows: [
-    {sopNo:'PROC New', name: 'Create New Procedure', area: 'New Procedure', revision: 0, recordKey: 'proc-new-create-new-procedure', href: 'Procedure-Create.html'}
+    {procNo:'PROC New', name: 'Create New Procedure', area: 'New Procedure', revision: 0, recordKey: 'proc-new-create-new-procedure', href: 'Procedure-Create.html'}
   ]
 };

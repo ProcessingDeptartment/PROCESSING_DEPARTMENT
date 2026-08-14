@@ -70,7 +70,6 @@
   @media print{
     .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
     #panelSpecRef{ order:1; }
-    #panelSpecCalc{ order:2; break-before:page; page-break-before:always; }
   }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
@@ -87,7 +86,7 @@
   <div class="dc-body">
 
     <div class="panel" id="panelSpecRef">
-      <div class="panel-head"><h2>Packing Specification</h2></div>
+      <div class="panel-head"><h2>Ingo Weights</h2></div>
       <div class="panel-body">
         <div class="muted" style="font-size:10.5px; margin-bottom:6px;">Rows are added and updated automatically from the Packing Specification Calculation table below (matched by Pcs + Drained weight). Use Edit only to correct a line or record sign-off.</div>
 
@@ -102,6 +101,7 @@
             <label class="field">Checked by (QC)<input id="r_checkedBy"></label>
             <label class="field">Sign-off date<input id="r_checkedByDate" type="date"></label>
             <label class="field">Date effective<input id="r_dateEffective" type="date"></label>
+            <label class="field" style="grid-column:span 2;">Comments<input id="r_comments"></label>
           </div>
         </div>
         <div class="actions no-print" style="margin-top:8px;">
@@ -126,6 +126,7 @@
               <th>Ingo weight (min-max)</th>
               <th>Checked by</th>
               <th>Sign-off date</th>
+              <th>Comments</th>
               <th class="no-print"></th>
             </tr>
           </thead>
@@ -135,7 +136,7 @@
       </div>
     </div>
 
-    <div class="panel" id="panelSpecCalc">
+    <div class="panel no-print" id="panelSpecCalc">
       <div class="panel-head"><h2>Packing Specification Calculation</h2></div>
       <div class="panel-body">
         <!-- Capture widget only: the confirmed table below is the record, so this whole
@@ -268,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   const ROW_FIELDS = ['pcs','drainedWeight','ingoWeight','minSpec','maxSpec'];
-  const SPEC_REF_FIELDS = ['pcs','drainedWeight','minIngo','maxIngo','checkedBy','checkedByDate','dateEffective'];
+  const SPEC_REF_FIELDS = ['pcs','drainedWeight','minIngo','maxIngo','checkedBy','checkedByDate','dateEffective','comments'];
 
   function emptyRowInputs(){
     ROW_FIELDS.forEach(f=>{ $('h_'+f).value = ''; });
@@ -386,6 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <td>${range}</td>
         <td>${row.checkedBy || ''}</td>
         <td>${row.checkedByDate || '—'}</td>
+        <td>${row.comments || ''}</td>
         <td class="no-print"><button class="btn btn-flat editSpecRefBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Edit</button> <button class="btn btn-flat deleteSpecRefBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Delete</button></td>
       `;
       body.appendChild(tr);
@@ -433,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
       state.specRefRows.push({
         id: 'specref_' + now + '_' + Math.random().toString(36).slice(2,7),
         pcs, drainedWeight, minIngo, maxIngo,
-        checkedBy: '', checkedByDate: '',
+        checkedBy: '', checkedByDate: '', comments: '',
         dateEffective: todayISO(),
         enteredAt: now
       });

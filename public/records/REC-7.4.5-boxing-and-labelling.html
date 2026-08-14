@@ -13,6 +13,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -35,7 +36,7 @@
       { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
       { key: 'tareWeight', label: 'Tare weight', type: 'number', unit: 'kg' },
       { key: 'binCode', label: 'Bin code', type: 'text', required: true },
-      { key: 'sizeGrade', label: 'Size grade', type: 'text' },
+      Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'colourUniform', label: 'Colour uniform?', type: 'yesno' },
       { key: 'correctSizeGrade', label: 'Correct size grade?', type: 'yesno' },
       { key: 'frillsPresent', label: 'Frills present?', type: 'yesno' },

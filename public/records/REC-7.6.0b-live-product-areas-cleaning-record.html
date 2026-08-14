@@ -13,6 +13,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -41,7 +42,7 @@
     roster: {
       title: 'Checklist items (one row per area/equipment item checked)',
       columns: [
-        { key: 'area', label: 'Area', type: 'text' },
+        Lookups.field({ key: 'area', label: 'Area', list: 'areas' }),
         { key: 'item', label: 'Item / equipment', type: 'text' },
         { key: 'status', label: 'C / NC', type: 'select', options: ['C', 'NC'] },
         { key: 'nonConformance', label: 'Non-conformance', type: 'text' },

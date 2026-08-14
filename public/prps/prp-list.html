@@ -91,8 +91,8 @@
 <script>
 (function () {
   const DOCS = window.PrpIndexData.rows.slice().sort((a, b) => {
-    const na = parseFloat(a.sopNo.replace(/[^\d.]/g, '')) || 0;
-    const nb = parseFloat(b.sopNo.replace(/[^\d.]/g, '')) || 0;
+    const na = parseFloat((a.prpNo || '').replace(/[^\d.]/g, '')) || 0;
+    const nb = parseFloat((b.prpNo || '').replace(/[^\d.]/g, '')) || 0;
     return na - nb;
   });
 
@@ -116,14 +116,14 @@
       const live = hit ? hit.revisionNumber : baseline;
       if (r.href) {
         html += `<tr>`
-          + `<td class="doc-code">${esc(r.sopNo)}</td>`
+          + `<td class="doc-code">${esc(r.prpNo)}</td>`
           + `<td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.name)}</a></td>`
           + `<td class="area">${esc(r.area)}</td>`
           + `<td class="revision">Rev ${live}</td>`
           + `</tr>`;
       } else {
         html += `<tr class="not-digitised">`
-          + `<td class="doc-code">${esc(r.sopNo)}</td>`
+          + `<td class="doc-code">${esc(r.prpNo)}</td>`
           + `<td class="title">${esc(r.name)} <span class="tag">Not yet online</span></td>`
           + `<td class="area">${esc(r.area)}</td>`
           + `<td class="revision">Rev ${baseline}</td>`

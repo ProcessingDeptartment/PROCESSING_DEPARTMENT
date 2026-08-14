@@ -440,7 +440,11 @@
 
   function render() {
     let html = '';
-    for (const r of ROWS) {
+    // Sort by the record's effective document number (override-aware) rather than
+    // its name, so renumbering a record online also re-sorts it in the register.
+    const sortedRows = ROWS.slice().sort((a, b) =>
+      displayDocNo(a).localeCompare(displayDocNo(b), undefined, { numeric: true, sensitivity: 'base' }));
+    for (const r of sortedRows) {
       const id = rowId(r);
       const l = live[id] || {};
       const c = control[id] || {};

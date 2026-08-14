@@ -9,7 +9,7 @@
 <title>Create New Policy</title>
 </head>
 <body>
-<div id="sop-root"></div>
+<div id="policy-root"></div>
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=4"></script>
@@ -17,19 +17,15 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/sop-doc.js?v=3"></script>
+<script src="../lib/policy-doc.js?v=1"></script>
 <script>
-SopDoc.mount({
+PolicyDoc.mount({
   recordKey: '',
-  sopNo: '',
+  polNo: '',
   name: '',
   area: '',
   startRev: 1,
   baselineDate: '',
-  docTypeLabel: 'Policy',
-  permissionAction: 'managePolicies',
-  backHref: 'policy-list.html',
-  backLabel: 'Back to Policy List',
   sections: {
     objective: '',
     roles: '',

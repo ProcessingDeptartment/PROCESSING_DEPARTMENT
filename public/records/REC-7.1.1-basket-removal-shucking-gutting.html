@@ -99,7 +99,6 @@
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
           <label class="field">Intake date<input id="h_intakeDate" type="date"></label>
-          <label class="field">Harvest farm<input id="h_harvestFarm" placeholder="Farm"></label>
           <label class="field">Processing for<select id="h_processingFor"><option value="">—</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Other">Other</option></select></label>
           <label class="field">Job no.<div class="job-number-row"><select id="h_jobPrefix"></select><input id="h_jobDigits" placeholder="Digits" inputmode="numeric"></div><span class="field-hint" id="jobNoHint"></span></label>
         </div>
@@ -190,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',
-      intakeDate:'', harvestFarm:'', processingFor:'', jobNo:'', sizeRange:'',
+      intakeDate:'', processingFor:'', jobNo:'', sizeRange:'',
       incomingTemp:'', noOfMortalities:'', signsOfParasites:'', foreignObjects:'', damagesOnFoot:'',
       damagesAfterShucking:'', beakCutCorrect:'', damagesAfterGutting:'', processDeviations:'',
       checkedBy:'', checkedByTitle:'', checkedByDate:'', checkedBySignature:'',
@@ -246,7 +245,6 @@ function toast(msg){
 
   function renderForm(){
     $('h_intakeDate').value = state.intakeDate;
-    window.Lookups.setValue('h_harvestFarm', 'farms', state.harvestFarm);
     $('h_processingFor').value = state.processingFor;
     renderJobNo();
     window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.sizeRange);
@@ -270,7 +268,7 @@ function toast(msg){
       $(id).addEventListener('input', syncJobNo);
       $(id).addEventListener('change', syncJobNo);
     });
-    const fields = ['intakeDate','harvestFarm','processingFor','sizeRange','incomingTemp','noOfMortalities','signsOfParasites','foreignObjects','damagesOnFoot','damagesAfterShucking','beakCutCorrect','damagesAfterGutting','processDeviations','checkedBy','checkedByTitle','checkedByDate','checkedBySignature'];
+    const fields = ['intakeDate','processingFor','sizeRange','incomingTemp','noOfMortalities','signsOfParasites','foreignObjects','damagesOnFoot','damagesAfterShucking','beakCutCorrect','damagesAfterGutting','processDeviations','checkedBy','checkedByTitle','checkedByDate','checkedBySignature'];
     fields.forEach(f=>{
       const id = f.startsWith('checkedBy') ? 'f_'+f : 'h_'+f;
       const el = $(id);
@@ -350,7 +348,6 @@ function toast(msg){
 
 function wire(){
   window.Lookups.fill('h_jobPrefix', 'jobPrefixes', { selected: splitJobNo(state.jobNo).prefix });
-  window.Lookups.upgrade('h_harvestFarm', 'farms');
   window.Lookups.upgrade('h_sizeRange', 'sizeRanges');
   bindInputs();
     $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));

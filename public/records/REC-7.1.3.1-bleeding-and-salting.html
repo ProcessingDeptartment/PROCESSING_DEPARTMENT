@@ -87,7 +87,7 @@
       <div class="panel-body">
         <div class="grid grid-6" style="margin-bottom:8px;">
           <label class="field">Date<input id="h_date" type="date"></label>
-          <label class="field">Harvest farm<input id="h_harvestFarm" placeholder="Farm"></label>
+          <label class="field">Processing for<select id="h_processingFor"><option value="">—</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Other">Other</option></select></label>
           <label class="field">Job no.<input id="h_jobNo" placeholder="Job"></label>
           <label class="field">Size range<input id="h_sizeRange" placeholder="Range"></label>
           <label class="field">No. of crates<input id="h_noOfCrates" type="number"></label>
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function newRecord(){
     return {
       id: null, revision: 1, status:'draft',
-      date:'', harvestFarm:'', jobNo:'', sizeRange:'', noOfCrates:'',
+      date:'', processingFor:'', jobNo:'', sizeRange:'', noOfCrates:'',
       bleedingStartTime:'', bleedingFinishTime:'', bleedingTotalTime:'', standardSaltingTime:'',
       saltingStartTime:'', saltingFinishTime:'', shuckWeight:'', saltKg:'', saltPercent:'', saltBatchCode:'',
       bakingSodaG:'', bakingSodaBatchCode:'', saltingTotalTime:'', processDeviation:'',
@@ -211,7 +211,7 @@ function toast(msg){
 
   function renderForm(){
     $('h_date').value = state.date;
-    $('h_harvestFarm').value = state.harvestFarm;
+    $('h_processingFor').value = state.processingFor;
     $('h_jobNo').value = state.jobNo;
     $('h_sizeRange').value = state.sizeRange;
     $('h_noOfCrates').value = state.noOfCrates;
@@ -237,7 +237,7 @@ function toast(msg){
   }
 
   function bindInputs(){
-    const fields = ['date','harvestFarm','jobNo','sizeRange','noOfCrates','bleedingStartTime','bleedingFinishTime','bleedingTotalTime','standardSaltingTime','saltingStartTime','saltingFinishTime','shuckWeight','saltKg','saltPercent','saltBatchCode','bakingSodaG','bakingSodaBatchCode','saltingTotalTime','processDeviation','operator','operatorTitle','qualityController','operatorDate','operatorSignature'];
+    const fields = ['date','processingFor','jobNo','sizeRange','noOfCrates','bleedingStartTime','bleedingFinishTime','bleedingTotalTime','standardSaltingTime','saltingStartTime','saltingFinishTime','shuckWeight','saltKg','saltPercent','saltBatchCode','bakingSodaG','bakingSodaBatchCode','saltingTotalTime','processDeviation','operator','operatorTitle','qualityController','operatorDate','operatorSignature'];
     fields.forEach(f=>{
       const id = (f.startsWith('operator')||f.startsWith('qualityController')) ? 'f_'+f : 'h_'+f;
       const el = $(id);

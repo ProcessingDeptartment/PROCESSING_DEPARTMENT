@@ -13,6 +13,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -34,11 +35,11 @@
     ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'area', label: 'Area', type: 'text', required: true },
-      { key: 'equipmentSwabbed', label: 'Equipment swabbed', type: 'text' },
-      { key: 'allergensInvolved', label: 'Allergens involved', type: 'text' },
-      { key: 'productBefore', label: 'Product produced — prior to allergen wash down', type: 'text' },
-      { key: 'productAfter', label: 'Product produced — after allergen wash down', type: 'text' },
+      Lookups.field({ key: 'area', label: 'Area', list: 'areas', required: true }),
+      Lookups.field({ key: 'equipmentSwabbed', label: 'Equipment swabbed', list: 'equipment' }),
+      Lookups.field({ key: 'allergensInvolved', label: 'Allergens involved', list: 'allergens' }),
+      Lookups.field({ key: 'productBefore', label: 'Product produced — prior to allergen wash down', list: 'processingFor' }),
+      Lookups.field({ key: 'productAfter', label: 'Product produced — after allergen wash down', list: 'processingFor' }),
       { key: 'debrisInspection', label: 'Debris inspection (no debris present)', type: 'yesno' },
       { key: 'equipmentCleaned', label: 'Equipment cleaned', type: 'yesno' },
       { key: 'correctBrushwareUse', label: 'Correct brush-ware use', type: 'yesno' },

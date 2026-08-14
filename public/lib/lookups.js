@@ -53,6 +53,12 @@
 
     processingFor: ['Can', 'Dried', 'Live', 'Other'],
 
+    areas: ['Area 1', 'Area 2', 'Area 3', 'Area 4', 'Area 5', 'Area 6', 'Area 7', 'Area 8', 'Area 9', 'Area 10'],
+
+    equipment: ['Equipment 1', 'Equipment 2', 'Equipment 3', 'Equipment 4', 'Equipment 5', 'Equipment 6', 'Equipment 7', 'Equipment 8', 'Equipment 9', 'Equipment 10'],
+
+    allergens: ['Molluscs', 'Crustaceans', 'Fish', 'Egg', 'Milk', 'Soy', 'Gluten', 'Tree nuts', 'Peanuts', 'Sulphites', 'Other'],
+
     jobPrefixes: ['3CP', '3DP', 'CPR', 'DPR'],
 
     palettes: [

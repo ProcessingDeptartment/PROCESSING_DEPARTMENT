@@ -13,6 +13,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -39,7 +40,7 @@
       { key: 'jobNo', label: 'Job no.', type: 'text' },
       { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'] },
       { key: 'stage', label: 'Stage', type: 'select', options: ['0', '1', '2', '3'] },
-      { key: 'sizeRange', label: 'Size range', type: 'text' },
+      Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'sex', label: 'Sex', type: 'select', options: ['Male', 'Female'] },
       { key: 'damagesAfterGutting', label: 'Damages after gutting', type: 'text' },
       { key: 'basketReceivingComments', label: 'Basket receiving — comments', type: 'textarea' },

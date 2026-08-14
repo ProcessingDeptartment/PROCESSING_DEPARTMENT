@@ -13,6 +13,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -29,7 +30,7 @@
     title: 'Dry Chiller Batch Control',
     docRevisionStart: 4,
     entryFields: [
-      { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+      Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingStep', label: 'Processing step', type: 'select', options: ['After first wash', 'After cooking'] },
       { key: 'jobNo', label: 'Job no.', type: 'text', required: true },
       { key: 'date', label: 'Date', type: 'date', required: true },

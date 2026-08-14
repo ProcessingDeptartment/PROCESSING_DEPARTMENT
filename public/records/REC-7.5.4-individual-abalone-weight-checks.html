@@ -13,6 +13,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -45,7 +46,7 @@
         { key: 'nameOfCapturer', label: 'Name of capturer', type: 'text' },
         { key: 'nameOfSupervisor', label: 'Name of supervisor', type: 'text' },
         { key: 'bagNumber', label: 'Bag number', type: 'text' },
-        { key: 'sizeRange', label: 'Size range', type: 'text' },
+        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
         { key: 'gradeRange', label: 'Grade range', type: 'text' },
         { key: 'individualWeights', label: 'Individual weights (1-24, comma-separated)', type: 'textarea' },
         { key: 'approved', label: 'Approved?', type: 'yesno' }
