@@ -6,8 +6,12 @@
  *   - Storage key prefix: procedure_doc:<recordKey>
  *   - Back link: procedure-list.html
  *
+ * Sections are a per-document array (title + html), not a fixed set of four --
+ * each Procedure's sections mirror the headings of its original Word document,
+ * since procedures don't all share the same structure the way SOPs do.
+ *
  * Storage layout, keyed by recordKey:
- *   procedure_doc:<recordKey>      -- { procNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
+ *   procedure_doc:<recordKey>      -- { procNo, name, sections: [{title, html}], relatedDocs: [{code,name}] }
  *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision
  */
 (function () {
@@ -35,7 +39,7 @@
       procNo: stored.procNo || defaults.procNo,
       name: stored.name || defaults.name,
       area: defaults.area || '',
-      sections: Object.assign({}, defaults.sections, stored.sections),
+      sections: stored.sections || defaults.sections || [],
       relatedDocs: stored.relatedDocs || defaults.relatedDocs || []
     };
   }
@@ -154,7 +158,7 @@
     document.head.appendChild(s);
   }
 
-  // cfg: { recordKey, procNo, name, area, startRev, backHref, sections:{objective,roles,process,review},
+  // cfg: { recordKey, procNo, name, area, startRev, backHref, sections:[{title,html}],
   //        relatedDocs:[{code,name}], baselineHistory:[{rev,reason,date}] }
   async function mount(cfg) {
     injectStyles();
@@ -176,14 +180,7 @@
       </div>
       <div class="doc-body">
         <div class="note">This page is the controlled copy of ${esc(cfg.procNo)} &mdash; there is no separate original file. Edits made here become the record, with each change logged below under Change Notification.</div>
-        <h2>1. Objective</h2>
-        <p id="pr-objective"></p>
-        <h2>2. Roles and Responsibilities</h2>
-        <div id="pr-roles"></div>
-        <h2>3. Process</h2>
-        <div id="pr-process"></div>
-        <h2>4. Review</h2>
-        <p id="pr-review"></p>
+        <div id="pr-sections"></div>
         <h2 class="proc-related-docs">Related Documents <button class="btn btn-ghost row-add" id="pr-refAdd" style="display:none;">+ Add</button></h2>
         <table class="refs"><tbody id="pr-refBody"></tbody></table>
         <h2>Change Notification</h2>
@@ -232,10 +229,18 @@
     function applyResolved(r) {
       $('pr-code').textContent = r.procNo;
       $('pr-name').textContent = r.name;
-      $('pr-objective').innerHTML = r.sections.objective || '';
-      $('pr-roles').innerHTML = r.sections.roles || '';
-      $('pr-process').innerHTML = r.sections.process || '';
-      $('pr-review').innerHTML = r.sections.review || '';
+      const secWrap = $('pr-sections');
+      secWrap.innerHTML = '';
+      (r.sections || []).forEach((sec, i) => {
+        const h2 = document.createElement('h2');
+        h2.id = 'pr-sec-title-' + i;
+        h2.textContent = sec.title || '';
+        const body = document.createElement('div');
+        body.id = 'pr-sec-body-' + i;
+        body.innerHTML = sec.html || '';
+        secWrap.appendChild(h2);
+        secWrap.appendChild(body);
+      });
       const refBody = $('pr-refBody');
       refBody.innerHTML = '';
       if (r.relatedDocs.length) {
@@ -271,9 +276,11 @@
 
     function toggleEdit(cancel) {
       editing = !cancel && !editing;
-      ['pr-objective', 'pr-roles', 'pr-process', 'pr-review', 'pr-code', 'pr-name'].forEach(id => {
+      ['pr-code', 'pr-name'].forEach(id => {
         $(id).setAttribute('contenteditable', editing ? 'true' : 'false');
       });
+      document.querySelectorAll('#pr-sections h2, #pr-sections > div').forEach(el =>
+        el.setAttribute('contenteditable', editing ? 'true' : 'false'));
       document.querySelectorAll('#pr-refBody [data-code], #pr-refBody [data-name]').forEach(el =>
         el.setAttribute('contenteditable', editing ? 'true' : 'false'));
       $('pr-saveBar').classList.toggle('open', editing);
@@ -302,15 +309,14 @@
         code: tr.querySelector('[data-code]').textContent.trim(),
         name: tr.querySelector('[data-name]').textContent.trim()
       }));
+      const sections = (current.sections || []).map((sec, i) => ({
+        title: $('pr-sec-title-' + i).textContent.trim(),
+        html: $('pr-sec-body-' + i).innerHTML
+      }));
       await saveOverrides(cfg.recordKey, {
         procNo: $('pr-code').textContent.trim(),
         name: $('pr-name').textContent.trim(),
-        sections: {
-          objective: $('pr-objective').innerHTML,
-          roles: $('pr-roles').innerHTML,
-          process: $('pr-process').innerHTML,
-          review: $('pr-review').innerHTML
-        },
+        sections,
         relatedDocs
       });
       await window.DocumentRevision.bump(cfg.recordKey, {

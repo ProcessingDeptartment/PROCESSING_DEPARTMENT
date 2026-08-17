@@ -7,6 +7,11 @@
 <link rel="stylesheet" href="../styles/record-theme.css">
 <link rel="stylesheet" href="../styles/responsive.css">
 <title>CONT01 Contingency and Succession Plan</title>
+<style>
+.proc-table { border-collapse: collapse; width: 100%; margin: 0.5em 0 1em; }
+.proc-table th, .proc-table td { border: 1px solid var(--palette-border); padding: 6px 10px; text-align: left; }
+.proc-table th { background: var(--palette-head-bg); color: var(--palette-heading); }
+</style>
 </head>
 <body>
 <div id="procedure-root"></div>
@@ -26,12 +31,24 @@ ProcedureDoc.mount({
   "area": "Emergency Preparedness",
   "startRev": 3,
   "baselineDate": "30/11/2024",
-  "sections": {
-    "objective": "To provide guidelines allowing Abagold Ltd to protect resources, minimise customer inconvenience, and identify key staff with specific responsibilities in the context of recovery. This procedure is applicable to Abagold Ltd Management. Refer to the Emergency Preparedness and Response Procedure (PRO 8.4) for handling sudden or unexpected situations including Red Tide, pandemics, natural disasters and IT infrastructure failure; this Plan is revised when shortcomings become known during drills or after an actual emergency.",
-    "roles": "<ul><li>Management is responsible for maintaining and executing the succession plan and site-arrangement stand-in structure.</li><li>The Emergency Controller allocates cleaning personnel to clear drainage during firefighting recovery and communicates with the waste service provider, and identifies a separate area for waste collection during salvage and recovery.</li></ul>",
-    "process": "<p><b>Definitions:</b> Salvage — to rescue or save; Contingency — provision for a possible event or circumstance; Succession — identifying people with potential to fill key business leadership positions.</p><p><b>Salvage and Recovery:</b> activities commence only once the initial emergency is under control to the point that no persons, biological assets, infrastructure, equipment, finished product or documentation are exposed to further injury, damage, pollution or contamination. Separation priority: persons; then biological assets; then inventory including work in progress; then equipment not damaged or contaminated.</p><p><b>Contingency for Biological Assets:</b> initiate the Adverse Water Quality system to minimise impact on stock; periodically test recirculation water quality; possible harvest of biological assets to warehouse product.</p><p><b>Energy Contingency:</b> execute the back-up generator protocol during load shedding or blackouts; ensure sufficient diesel supply for extended outages; possible harvest of biological assets to warehouse product.</p><p><b>Infrastructure Contingency:</b> offsite facilities and server accessed per SLA; IT disaster recovery plan implemented with skeleton staff; non-key staff work from home.</p><p><b>Processing Contingency:</b> food safety, hygiene and employee safety remain priorities at all times; additional stock is kept on hand for resource shortages; processing ceases if there is a shortage of production specialists; office staff work from home.</p><p><b>Succession Plan:</b> a succession plan is in place for top management and key personnel to ensure business decision-making continues, with defined site arrangements for daily stand-in across senior roles (MD, CFO, Marketing Manager, Engineering Manager, COO, Research Manager, Production Manager, IT Manager and Financial Controller).</p>",
-    "review": "This Plan and the Emergency Procedure are revised when shortcomings become known during drills, or after an actual emergency."
-  },
+  "sections": [
+    {
+      "title": "PURPOSE",
+      "html": "<p>Guidelines to allow ABAGOLD LTD to protect resources, minimize customer inconvenience and identify key staff, assigning specific responsibilities in the context of recovery</p>"
+    },
+    {
+      "title": "SCOPE",
+      "html": "<p>This procedure is applicable to ABAGOLD LTD Management</p>"
+    },
+    {
+      "title": "DEFINITIONS",
+      "html": "<p>Salvage              To rescue or save</p><p>Contingency     Provision for a possible event or circumstance</p><p>Succession        Identifying people with the potential to fill key business leadership positions</p>"
+    },
+    {
+      "title": "Procedure",
+      "html": "<ul><li>Refer to the Emergency Preparedness and Response Procedure to educate yourself regarding the specific procedures for handling sudden or unexpected situations, include Red Tide, Covid-19, natural disasters, and IT infrastructure.</li><li>The Emergency Procedure together with this Plan will be revised when shortcomings become known during drills, or after an actual emergency.</li></ul><p><b>SALVAGE AND RECOVERY</b></p><ul><li>Salvage and recovery activities shall only commence once the initial emergency is under control to a point where no persons, biological assets, infrastructure, equipment, finished product, and documentation are exposed to further injuries, damage, pollution, and contamination.</li><li>Identify and attempt to do separation in the following sequence of importance:</li><li>Persons; then</li><li>Biological assets; then</li><li>Inventory including Work in progress; then</li><li>Equipment which has not been damaged or contaminated.</li><li>Emergency Controller to allocate cleaning personnel to clear drainage by removing debris during firefighting which may clog the drains. Emergency Controller also to communicate with waste service provider.</li><li>Identify and allocate a separate area for waste collection and storage during salvage and recovery activities.</li></ul><p><b>CONTINGENCY</b></p><p>To mitigate against possible events listed in the Emergency Preparedness and Response Procedure that could prevent the supply of product, ABAGOLD LTD has the following in place as contingency until the farm and processing facility is fully operational:</p><p><b>Contingency for Biological Assets</b></p><ul><li>Initiate the Adverse Water Quality system to minimize the impact on the biological stock.</li><li>Periodic testing of the water quality in recirculation; and</li><li>Possible harvest of biological assets to warehouse product.</li></ul><p><b>Energy Contingency</b></p><ul><li>Execute the protocol for the back-up generators during periods of load shedding or blackouts.</li><li>Ensure that there is sufficient diesel supply to run the generators for extended periods of load shedding or blackouts.</li><li>Possible harvest of biological assets to warehouse product.</li></ul><p><b>Infrastructure Contingency:</b></p><ul><li>Offsite facilities and server to be accessed in line with SLA.</li><li>IT disaster recovery plan to be implemented with skeleton staff.</li><li>Non-key staff to work from home.</li></ul><p><b>Processing Contingency:</b></p><ul><li>Food safety and hygiene to always be priorities, along with the safety of employees.</li><li>Additional stock to be kept on hand in case of a shortage in resources.</li><li>Cease processing if there is a shortage in production specialists.</li><li>Office staff to work from home.</li></ul><p><b>SUCCESSION PLAN</b></p><p>A succession plan is in place for top management and key personnel to ensure business decision making continues</p><ul><li>Site arrangements for daily stand-in of</li><li>MD is the CFO</li><li>CFO is the MD/ Financial Controller</li><li>Marketing Manager is the MD</li><li>Engineering Manager is the Technical Manager</li><li>COO is the MD</li><li>Research Manager is the Operations Manager/ Research assistant</li><li>Production Manager is the Marketing Manager</li><li>Production Manager is the Quality Manager</li><li>IT Manager is the external consultant</li><li>Financial controller is the CFO</li></ul>"
+    }
+  ],
   "relatedDocs": [
     {
       "code": "PRO 8.4",
