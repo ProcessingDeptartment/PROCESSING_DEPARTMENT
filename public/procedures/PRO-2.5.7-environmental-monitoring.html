@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<link rel="stylesheet" href="../styles/responsive.css">
+<title>PRO 2.5.7 Environmental Monitoring</title>
+</head>
+<body>
+<div id="procedure-root"></div>
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/procedure-doc.js?v=1"></script>
+<script>
+ProcedureDoc.mount({
+  "recordKey": "pro-2.5.7-environmental-monitoring",
+  "procNo": "PRO 2.5.7",
+  "name": "Environmental Monitoring",
+  "area": "FSSC Additional Requirements",
+  "startRev": 2,
+  "baselineDate": "16/09/2025",
+  "sections": {
+    "objective": "This procedure outlines the Environmental Monitoring Programme (EMP) for Abagold’s abalone processing facility, complying with the FSSC 22000 guidance document. The EMP ensures food safety risks associated with microbial contamination are controlled by monitoring high-risk areas and applying corrective actions when necessary, and serves as both a training resource and step-by-step guide for staff.",
+    "roles": "<ul><li>The Quality Assurance team implements the EMP, conducts sampling per the plan, and evaluates results.</li><li>Production staff and supervisors support corrective actions (intensified cleaning, retraining, process adjustment) when alert or action levels are exceeded.</li></ul>",
+    "process": "<p>The facility is divided into risk-based zones based on proximity to food and contamination likelihood, scored using Traffic Patterns, Moisture Levels and Historical Data/Industry Trends (High=3, Medium=2, Low=1 each), giving a combined Risk Rating: High=9 (Zone 1), Medium-High=7–8 (Zone 2), Medium=5–6 (Zone 3), Low=3–4 (Zone 4).</p><p><b>Zone Definitions:</b> Zone 1 — direct product contact / high risk (all food-contact surfaces and tools, e.g. conveyor belts, canning seamer surfaces, cooking pots, cutting blades, sieves, packaging surfaces, trays, live-pack surfaces). Zone 2 — adjacent non-food-contact surfaces near product (control panels, chiller door handles, trolley handles, equipment frames). Zone 3 — processing environment / plant infrastructure (floors, drains, walls, ceilings, storage bin exteriors). Zone 4 — non-processing / support areas (locker rooms, canteen, offices, corridors, loading bays, quality lab benches).</p><p>Assessed areas include entrance areas, shucking area, live sorting/holding/packing areas, washing and salting area, dry &amp; sauce cooking area, dry room, scrubbing area, chillers and freezer, canning and retort area (Zone 1, highest risk), FG02, dry grading room, raw material &amp; packaging store, canteen/locker rooms, chemical storeroom and factory office.</p><p><b>Sampling Plan:</b> Zone 1 — monthly, 4 swabs (rotating highest-risk contact points), tested for Listeria spp./L. monocytogenes, TPC and Salmonella spp. (all \"Not detected\", TPC &lt;100 cfu/swab). Zone 2 — bi-monthly, 4 swabs, tested for TPC and E. coli. Zone 3 — monthly drain swabs (2/month) plus quarterly floor/wall/bin-exterior swabs (4/quarter), tested for Listeria spp., TPC and E. coli. Zone 4 — bi-annually, 2–4 swabs, tested for TPC and E. coli.</p><p><b>Sample Types:</b> surface swabs (standardised 25 cm² area), drain sponge swabs (tested monthly for Listeria spp.), and air samples via agar plates for TPC (10–15 minute exposure, e.g. in dry rooms/freeze driers).</p><p><b>Action Limits and Escalation:</b> any detection of Listeria spp., Listeria monocytogenes, E. coli or Salmonella spp. in Zone 1 triggers immediate hold on the affected area, deep clean, re-swab and product assessment; Zone 2/3 detections escalate to increased cleaning and targeted Zone 1 sampling; any L. monocytogenes detection anywhere escalates to plant/product hold and investigation/recall assessment. TPC alert level &gt;100 cfu/swab triggers a cleaning review and increased sampling. Alert level exceeded: increase cleaning frequency, re-swab, log the incident. Action level exceeded: stop production on the affected line if linked to product touchpoints, perform deep sanitation and full clean verification, review affected batches, inform Senior Management, and require re-sampling before restart. Pathogen detected: immediate line hold, isolate/hold suspect lots, escalate to the Emergency Response Team, notify regulators/customers if required, perform full root-cause investigation, verify via external lab, and document all actions. Persistent positive trend (≥3 fails in 30 days at the same location): full review of maintenance, equipment design, traffic flow and staff hygiene, with permanent engineering controls and retraining.</p><p><b>Trending &amp; Review:</b> a monthly QA review compiles the EMP report (% passes/fails, trending graphs, hotspot mapping); the annual management review includes EMP outcomes, corrective actions, resource needs and sampling frequency changes. Trigger-based intensification (doubled sample counts for 4 weeks) applies after significant process/legislation changes, equipment maintenance/construction work, extended positive-free periods, microbiological outbreaks, adverse data trends, repeat pathogen detection, new microbiological hazards, supplier changes, product recalls/withdrawals linked to microbiological hazards, internal audit findings, or customer complaints/feedback about foodborne illness or contamination.</p><p><b>Validation &amp; Verification:</b> initial validation (intensive sampling over several weeks) is performed when starting the EMP or adding a new line/equipment to set baseline limits; swab area and lab method are confirmed and recorded; pathogen confirmation uses an accredited external laboratory with retained certificates.</p><p><b>Training:</b> staff receive training on the importance of environmental monitoring, sampling techniques and response actions, with regular updates to ensure FSSC 22000 compliance.</p>",
+    "review": "This procedure is reviewed periodically as part of the FSMS document review cycle; the most recent review added the risk assessment and zone classification."
+  },
+  "relatedDocs": [
+    {
+      "code": "REC 2.5.7",
+      "name": "Environmental Monitoring Plan"
+    },
+    {
+      "code": "PRO 8.9",
+      "name": "Control of Product and Process Nonconformities"
+    }
+  ],
+  "baselineHistory": [
+    {
+      "rev": 1,
+      "reason": "New document",
+      "date": "07/11/2024"
+    },
+    {
+      "rev": 2,
+      "reason": "Procedure review and addition of Risk Assessment and Zones",
+      "date": "16/09/2025"
+    }
+  ]
+});
+</script>
+</body>
+</html>

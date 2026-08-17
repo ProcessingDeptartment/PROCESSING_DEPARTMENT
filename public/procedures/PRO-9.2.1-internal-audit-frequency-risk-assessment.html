@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<link rel="stylesheet" href="../styles/responsive.css">
+<title>PRO 9.2.1 Internal Audit Frequency Risk Assessment</title>
+</head>
+<body>
+<div id="procedure-root"></div>
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/procedure-doc.js?v=1"></script>
+<script>
+ProcedureDoc.mount({
+  "recordKey": "pro-9.2.1-internal-audit-frequency-risk-assessment",
+  "procNo": "PRO 9.2.1",
+  "name": "Internal Audit Frequency Risk Assessment",
+  "area": "Performance Evaluation",
+  "startRev": 1,
+  "baselineDate": "",
+  "sections": {
+    "objective": "To determine internal audit frequency, each area of the FSMS is evaluated against two criteria required by PRO 9.2: the importance of the processes and the results of monitoring, measurement, changes, and previous audits.",
+    "roles": "<ul><li>The Food Safety Team Leader conducts the risk assessment and determines the resulting audit frequency for each FSMS area.</li></ul>",
+    "process": "<p><b>Impact on Food Safety/Quality (Severity):</b> 1 = Low (administrative, low risk to product safety); 2 = Medium (PRPs, moderate impact on safety/quality); 3 = High (CCPs, OPRPs, high risk to consumer safety or legal compliance).</p><p><b>Stability &amp; Historical Performance (Likelihood of Failure):</b> 1 = Highly Stable (no recent changes, historically zero/minor findings); 2 = Moderately Stable (occasional minor findings, routine updates); 3 = Unstable/New (new requirements, frequent changes, historical major non-conformances).</p><p><b>Risk Score Calculation:</b> Impact × Stability = Risk Score. High Risk (6–9): audit bi-annually. Medium Risk (3–4): audit annually. Low Risk (1–2): audit annually.</p><p><b>Risk Assessment Matrix:</b></p><ul><li>Context of the Organisation &amp; Leadership — Impact 2, Stability 1, Score 2 — Annually — high-level administrative processes, stable management team, historically strong audit performance.</li><li>Core PRPs (Cleaning, Pest Control, Personnel Hygiene) — Impact 2, Stability 2, Score 4 — Annually — vital for baseline hygiene, with routine daily/weekly monitoring already catching deviations early.</li><li>Operational Control (Equipment, Storage, Rework, Traceability) — Impact 3, Stability 1, Score 3 — Annually — high impact but mature, stable and strictly monitored via daily QC checks.</li><li>FSSC Additional Requirements (Allergens, Food Fraud, Food Defence) — Impact 3, Stability 1, Score 3 — Annually — critical for FSSC compliance; systems are well established and verified annually without major historical failures.</li><li>New FSSC Additional Requirements / Significant Process Changes — Impact 3, Stability 3, Score 9 — Bi-Annually — newly implemented standards carry higher uncertainty and non-conformity risk during initial rollout.</li></ul><p><b>Conclusion:</b> core processes, PRPs and established FSSC requirements exhibit moderate-to-high impact on food safety but demonstrate a high level of historical stability and strong monitoring, so a baseline annual internal audit frequency is deemed sufficient. New additional requirements (FSSC scheme updates or significant internal process changes) carry inherently higher risk due to a lack of historical stability data, so these elements are audited bi-annually by a trained internal auditor and annually by an outsourced trained internal auditor until stability and conformity are proven.</p>",
+    "review": "This risk assessment is reviewed alongside PRO 9.2 whenever the internal audit schedule or scope changes, or a new FSSC additional requirement is introduced."
+  },
+  "relatedDocs": [
+    {
+      "code": "PRO 9.2",
+      "name": "Internal Audits"
+    }
+  ],
+  "baselineHistory": [
+    {
+      "rev": 1,
+      "reason": "New document",
+      "date": "—"
+    }
+  ]
+});
+</script>
+</body>
+</html>

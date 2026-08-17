@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<link rel="stylesheet" href="../styles/responsive.css">
+<title>PRO 2.5.9 Quality Control</title>
+</head>
+<body>
+<div id="procedure-root"></div>
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/procedure-doc.js?v=1"></script>
+<script>
+ProcedureDoc.mount({
+  "recordKey": "pro-2.5.9-quality-control",
+  "procNo": "PRO 2.5.9",
+  "name": "Quality Control",
+  "area": "FSSC Additional Requirements",
+  "startRev": 2,
+  "baselineDate": "02/10/2025",
+  "sections": {
+    "objective": "To ensure Abagold consistently produces abalone products meeting defined quality parameters, in line with finished product specifications and FSSC 22000 v6 (section 2.5.9). Quality control is critical to product integrity, consumer satisfaction, and legal/customer compliance. Applies to all abalone products processed at this facility: canned, dried and live abalone.",
+    "roles": "<ul><li><b>Quality Manager:</b> oversees the quality control programme, ensures compliance, reviews results and approves corrective actions.</li><li><b>Quality Controllers:</b> carry out inspections, sampling, testing and record results.</li><li><b>Production Supervisors:</b> ensure corrective actions are implemented when out-of-spec results occur.</li></ul>",
+    "process": "<p><b>Canned Abalone</b> — each batch is tested for: pH (calibrated pH meter); Salt % (calibrated salt meter); Brix % (calibrated refractometer); Texture (standard texture analysis); Size (weight and grading verification); Visual inspection (colour, defects, fill level, sealing integrity); and Sensory inspection (taste and odour by a trained panel).</p><p><b>Dried Abalone</b> — each lot is assessed for visual appearance (absence of mould/foreign matter/defects), size conformity to grading standards, colour uniformity, and texture (firmness and dryness level).</p><p><b>Live Abalone</b> — each consignment is inspected for shell condition (cracks, damage, abnormalities), shell colour, and general vitality (active and healthy in holding tanks).</p><p><b>Monitoring and Frequency:</b> QC checks are performed per batch before product release; sampling and testing methods are defined in work instructions; minimum frequency is per production run, with additional tests as required by customer or regulatory requirements.</p><p><b>Records:</b> results are documented on QC report REC 7.2.11 and signed by the responsible technician. Out-of-specification (OOS) results are escalated to the Quality Manager, and non-conformities trigger corrective actions per PRO 8.9.</p><p><b>Review:</b> QC data is trended and reviewed monthly by the QA department; an annual review of quality parameters is carried out during Management Review.</p>",
+    "review": "QC data is trended and reviewed monthly by QA, with an annual review of quality parameters during Management Review."
+  },
+  "relatedDocs": [
+    {
+      "code": "POL 5.2",
+      "name": "Food Safety and Quality Policy"
+    },
+    {
+      "code": "POL 6.2",
+      "name": "Food Safety and Quality Objectives"
+    },
+    {
+      "code": "PRO 2.5.8",
+      "name": "Food Safety & Quality Culture Procedure"
+    },
+    {
+      "code": "PRO 8.9",
+      "name": "Control of Product and Process Nonconformities"
+    },
+    {
+      "code": "REC 7.2.11",
+      "name": "QC Report"
+    }
+  ],
+  "baselineHistory": [
+    {
+      "rev": 1,
+      "reason": "New document",
+      "date": "07/11/2024"
+    },
+    {
+      "rev": 2,
+      "reason": "Reviewed document to specify parameters for each of the products",
+      "date": "02/10/2025"
+    }
+  ]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress Dashboard</title>
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .container{ max-width:1200px; margin:0 auto; padding:20px; }
+
+  .summary-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .summary-card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; padding:14px 16px; }
+  .summary-card .num{ font-size:24px; font-weight:700; color:#1d2b38; }
+  .summary-card .num.warn{ color:#a3352d; }
+  .summary-card .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; margin-top:2px; }
+
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:18px; overflow:hidden; }
+  .panel-head{ padding:11px 16px; border-bottom:1px solid #e2e4e3; background:#fbfbfa; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; }
+  .panel-body{ padding:0; }
+  .panel-body.pad{ padding:14px 16px; }
+
+  table.dash-table{ width:100%; border-collapse:collapse; }
+  table.dash-table th,table.dash-table td{ border-bottom:1px solid #eceeef; padding:9px 12px; text-align:left; font-size:12px; vertical-align:middle; }
+  table.dash-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; }
+  table.dash-table tbody tr:last-child td{ border-bottom:none; }
+  table.dash-table tbody tr:hover{ background:#f9fafb; }
+  td.doc a{ color:#1d4ed8; text-decoration:none; font-weight:600; }
+  td.doc a:hover{ text-decoration:underline; }
+  td.num-cell{ font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+  .badge-warn{ background:#fbe8e6; color:#a3352d; }
+  .badge-ok{ background:#e8f3ec; color:#2f7a52; }
+  .badge-muted{ background:#eee; color:#777; }
+  .empty{ padding:24px; text-align:center; color:#8a939b; }
+  .filters{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .filters input[type=text]{ padding:6px 10px; border:1px solid #d0d5db; border-radius:5px; font-size:12px; min-width:200px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+
+  @media (max-width:900px){
+    .summary-row{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:640px){
+    .summary-row{ grid-template-columns:1fr; }
+    .container{ padding:12px; }
+    table.dash-table th,table.dash-table td{ padding:7px 8px; font-size:11.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Progress Dashboard</h1>
+  <p>Live snapshot of every record on this device &mdash; drafts in progress, submissions awaiting verification, and recent activity.</p>
+  <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
+</div>
+
+<div class="container">
+
+  <div class="summary-row">
+    <div class="summary-card"><div class="num" id="sumDrafts">0</div><div class="lbl">Drafts in progress</div></div>
+    <div class="summary-card"><div class="num warn" id="sumPending">0</div><div class="lbl">Awaiting verification</div></div>
+    <div class="summary-card"><div class="num" id="sumVerified">0</div><div class="lbl">Verified submissions</div></div>
+    <div class="summary-card"><div class="num" id="sumActive">0</div><div class="lbl">Records with activity</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Needs attention &mdash; submitted, not yet verified</h2>
+    </div>
+    <div class="panel-body" id="pendingTableWrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>All records with activity on this device</h2>
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Filter by name or doc code...">
+      </div>
+    </div>
+    <div class="panel-body" id="allTableWrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Note on scope</h2></div>
+    <div class="panel-body pad" style="color:#5c6771;">
+      This reads whatever this browser/device has saved locally (localStorage) &mdash; it is not yet a
+      facility-wide view across devices. Once a shared backend is connected (see BACKEND_INTEGRATION.md),
+      this same page will show every device's data without any change to this file.
+    </div>
+  </div>
+
+</div>
+
+<script src="../lib/master-index-data.js"></script>
+<script>
+(function () {
+  const STORAGE_PREFIX = 'facility_records:';
+
+  // Map recordKey -> { name, docNo, href } from the Master Index, for nice labels/links.
+  const indexByKey = {};
+  (window.MasterIndexData && window.MasterIndexData.rows || []).forEach(function (row) {
+    if (row.recordKey) {
+      indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
+    }
+  });
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    try { return new Date(ts).toLocaleString(); } catch (e) { return '—'; }
+  }
+
+  // Scan localStorage directly (device-local view, no async round trip needed).
+  function collectRecords() {
+    const records = {}; // recordKey -> { engine, name, docNo, href, entries: [] }
+
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const rawKey = window.localStorage.key(i);
+      if (!rawKey || !rawKey.startsWith(STORAGE_PREFIX)) continue;
+      const key = rawKey.slice(STORAGE_PREFIX.length);
+
+      let engine = null, recordKey = null;
+      if (key.startsWith('formrecord:')) { engine = 'form-record'; recordKey = key.slice('formrecord:'.length); }
+      else if (key.startsWith('monitoring_log:')) { engine = 'monitoring-log'; recordKey = key.slice('monitoring_log:'.length).replace(/__.*$/, ''); }
+      else continue;
+
+      let list;
+      try { list = JSON.parse(window.localStorage.getItem(rawKey)) || []; } catch (e) { continue; }
+      if (!Array.isArray(list) || !list.length) continue;
+
+      if (!records[recordKey]) {
+        const meta = indexByKey[recordKey] || {};
+        records[recordKey] = {
+          engine: engine,
+          recordKey: recordKey,
+          name: meta.name || recordKey,
+          docNo: meta.docNo || '',
+          href: meta.href ? '../records/' + meta.href : null,
+          entries: []
+        };
+      }
+      records[recordKey].entries = records[recordKey].entries.concat(list);
+    }
+    return records;
+  }
+
+  // Normalise status across form-record (status/verification) and monitoring-log
+  // (status is implicit; entries carry verifiedAt-style fields on some records) --
+  // form-record is the shape with an explicit draft/submitted lifecycle, so that is
+  // what "awaiting verification" is computed from. Monitoring-log entries are always
+  // counted as activity but not split into draft/pending since they don't carry that state.
+  function classify(rec) {
+    let drafts = 0, pending = 0, verified = 0, other = 0, lastAt = 0;
+    rec.entries.forEach(function (e) {
+      const at = e.updatedAt || e.createdAt || e.submittedAt || e.ts || 0;
+      if (at > lastAt) lastAt = at;
+      if (rec.engine === 'form-record') {
+        const submitted = e.status == null || e.status === 'submitted';
+        if (!submitted) drafts++;
+        else if (e.verification) verified++;
+        else pending++;
+      } else {
+        other++;
+      }
+    });
+    return { drafts: drafts, pending: pending, verified: verified, other: other, lastAt: lastAt, total: rec.entries.length };
+  }
+
+  function docLabel(rec) {
+    const code = rec.docNo ? esc(rec.docNo) + ' &mdash; ' : '';
+    const name = esc(rec.name);
+    return rec.href ? '<a href="' + esc(rec.href) + '" target="_blank">' + code + name + '</a>' : code + name;
+  }
+
+  function render() {
+    const records = collectRecords();
+    const rows = Object.keys(records).map(function (k) {
+      const rec = records[k];
+      return Object.assign({ rec: rec }, classify(rec));
+    });
+
+    const totalDrafts = rows.reduce(function (s, r) { return s + r.drafts; }, 0);
+    const totalPending = rows.reduce(function (s, r) { return s + r.pending; }, 0);
+    const totalVerified = rows.reduce(function (s, r) { return s + r.verified; }, 0);
+
+    document.getElementById('sumDrafts').textContent = totalDrafts;
+    document.getElementById('sumPending').textContent = totalPending;
+    document.getElementById('sumVerified').textContent = totalVerified;
+    document.getElementById('sumActive').textContent = rows.length;
+
+    // Needs attention: only records with a nonzero pending count, worst first.
+    const pendingRows = rows.filter(function (r) { return r.pending > 0; })
+      .sort(function (a, b) { return b.pending - a.pending; });
+    const pendingWrap = document.getElementById('pendingTableWrap');
+    if (!pendingRows.length) {
+      pendingWrap.innerHTML = '<div class="empty">Nothing waiting on verification right now.</div>';
+    } else {
+      pendingWrap.innerHTML = '<table class="dash-table"><thead><tr><th>Document</th><th>Awaiting verification</th><th>Last activity</th></tr></thead><tbody>' +
+        pendingRows.map(function (r) {
+          return '<tr><td class="doc">' + docLabel(r.rec) + '</td>' +
+            '<td class="num-cell"><span class="badge badge-warn">' + r.pending + '</span></td>' +
+            '<td>' + fmtDate(r.lastAt) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+    }
+
+    // All records table, sorted by most recent activity.
+    const allRows = rows.slice().sort(function (a, b) { return b.lastAt - a.lastAt; });
+    function renderAll(filterText) {
+      const ft = (filterText || '').toLowerCase();
+      const visible = !ft ? allRows : allRows.filter(function (r) {
+        return (r.rec.name + ' ' + r.rec.docNo + ' ' + r.rec.recordKey).toLowerCase().indexOf(ft) !== -1;
+      });
+      const wrap = document.getElementById('allTableWrap');
+      if (!visible.length) {
+        wrap.innerHTML = '<div class="empty">No matching records.</div>';
+        return;
+      }
+      wrap.innerHTML = '<table class="dash-table"><thead><tr><th>Document</th><th>Drafts</th><th>Pending verification</th><th>Verified</th><th>Total entries</th><th>Last activity</th></tr></thead><tbody>' +
+        visible.map(function (r) {
+          return '<tr><td class="doc">' + docLabel(r.rec) + '</td>' +
+            '<td class="num-cell">' + (r.drafts ? '<span class="badge badge-muted">' + r.drafts + '</span>' : '—') + '</td>' +
+            '<td class="num-cell">' + (r.pending ? '<span class="badge badge-warn">' + r.pending + '</span>' : '—') + '</td>' +
+            '<td class="num-cell">' + (r.verified ? '<span class="badge badge-ok">' + r.verified + '</span>' : '—') + '</td>' +
+            '<td class="num-cell">' + r.total + '</td>' +
+            '<td>' + fmtDate(r.lastAt) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+    }
+    renderAll('');
+    document.getElementById('searchInput').addEventListener('input', function (e) { renderAll(e.target.value); });
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>
