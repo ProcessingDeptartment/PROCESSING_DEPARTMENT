@@ -269,6 +269,62 @@
       $('pd-saveBarMsg').textContent = 'Editing ' + cfg.polNo + ' — saving bumps this to Rev ' + (rev + 1) + '.';
     }
 
+    function setupProcessTableControls(editing) {
+      const container = $('pd-process');
+      container.querySelectorAll('table').forEach(table => {
+        const tbody = table.querySelector('tbody') || table;
+        // strip any previously injected controls first (idempotent)
+        table.querySelectorAll('.pd-row-rm-cell').forEach(td => td.remove());
+        table.querySelectorAll('.pd-row-rm-head').forEach(th => th.remove());
+        let next = table.nextElementSibling;
+        if (next && next.classList && next.classList.contains('pd-table-addrow')) next.remove();
+        if (!editing) return;
+
+        const headRow = table.querySelector('thead tr');
+        if (headRow) {
+          const th = document.createElement('th');
+          th.className = 'pd-row-rm-head';
+          th.style.cssText = 'position:sticky;top:0;background:#f3f5f7;border:1px solid #d8dee4;width:1px;';
+          headRow.appendChild(th);
+        }
+
+        function addRemoveCell(row) {
+          const td = document.createElement('td');
+          td.className = 'pd-row-rm-cell';
+          td.style.cssText = 'border:1px solid #d8dee4;padding:4px;text-align:center;vertical-align:top;';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-ghost';
+          btn.style.cssText = 'padding:2px 6px;font-size:10px;';
+          btn.textContent = 'Remove';
+          btn.addEventListener('click', () => row.remove());
+          td.appendChild(btn);
+          row.appendChild(td);
+        }
+
+        Array.from(tbody.rows).forEach(addRemoveCell);
+
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'btn btn-ghost pd-table-addrow';
+        addBtn.style.cssText = 'margin-top:8px;font-size:11px;padding:4px 10px;';
+        addBtn.textContent = '+ Add Row';
+        addBtn.addEventListener('click', () => {
+          const refRow = tbody.rows[tbody.rows.length - 1];
+          const cols = refRow ? refRow.cells.length - 1 : (headRow ? headRow.cells.length - 1 : 1);
+          const tr = document.createElement('tr');
+          for (let i = 0; i < cols; i++) {
+            const td = document.createElement('td');
+            td.style.cssText = 'padding:6px 8px;border:1px solid #d8dee4;vertical-align:top';
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+          addRemoveCell(tr);
+        });
+        table.insertAdjacentElement('afterend', addBtn);
+      });
+    }
+
     function toggleEdit(cancel) {
       editing = !cancel && !editing;
       ['pd-objective', 'pd-roles', 'pd-process', 'pd-review', 'pd-code', 'pd-name'].forEach(id => {
@@ -276,6 +332,7 @@
       });
       document.querySelectorAll('#pd-refBody [data-code], #pd-refBody [data-name]').forEach(el =>
         el.setAttribute('contenteditable', editing ? 'true' : 'false'));
+      setupProcessTableControls(editing);
       $('pd-saveBar').classList.toggle('open', editing);
       $('pd-editBtn').textContent = editing ? 'Editing…' : 'Edit';
       $('pd-refAdd').style.display = editing ? '' : 'none';
@@ -302,6 +359,7 @@
         code: tr.querySelector('[data-code]').textContent.trim(),
         name: tr.querySelector('[data-name]').textContent.trim()
       }));
+      setupProcessTableControls(false);
       await saveOverrides(cfg.recordKey, {
         polNo: $('pd-code').textContent.trim(),
         name: $('pd-name').textContent.trim(),
