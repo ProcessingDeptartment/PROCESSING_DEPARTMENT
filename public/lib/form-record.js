@@ -177,7 +177,13 @@
      data-good="Yes"|"No" on the .ml-yesno span (defaults to Yes when absent). */
   .ml-yesno[data-good="Yes"] button.on[data-v="Yes"], .ml-yesno[data-good="No"] button.on[data-v="No"], .ml-yesno:not([data-good]) button.on[data-v="Yes"]{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
   .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"], .ml-yesno:not([data-good]) button.on[data-v="No"]{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); }
-  .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }`;
+  .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
+  .fr-jobnumber{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .fr-jobnumber select{ width:auto; min-width:70px; }
+  .fr-jobnumber input.fr-jn-digits{ width:auto; flex:1; min-width:80px; }
+  .fr-jn-hint{ font-size:10.5px; font-weight:500; color:#8a939b; font-family:'IBM Plex Mono',monospace; }
+  .fr-jn-hint.bad{ color:var(--palette-fail,#a3352d); }
+  .fr-roster-totals{ font-size:11px; color:#54606b; margin-top:6px; font-weight:600; }`;
 
   function injectStyleOnce() {
     if (document.getElementById('fr-style')) return;
@@ -194,8 +200,26 @@
     try { await window.storage.set(key, value, shared); return true; } catch (e) { console.error('storage set failed', e); return false; }
   }
 
+  // Job/batch number: PREFIX (from Lookups jobPrefixes) + up to 8 digits, stored as one
+  // string ("3CP000123") in a hidden input, same shape hand-rolled pages used before.
+  function splitJobNo(value) {
+    const m = String(value || '').trim().toUpperCase().match(/^([A-Z]{2,3})(\d*)$/);
+    return m ? { prefix: m[1], digits: m[2] } : { prefix: '', digits: '' };
+  }
+
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
+      if (field.type === 'jobnumber') {
+        const parts = splitJobNo(v);
+        const prefixes = ['', ...(window.Lookups ? window.Lookups.get('jobPrefixes') : [])];
+        const validate = field.validate !== false;
+        return `<span class="fr-jobnumber" data-jobnumber-for="${id}" data-validate="${validate}">
+            <select class="fr-jn-prefix">${prefixes.map(p => `<option value="${esc(p)}" ${p === parts.prefix ? 'selected' : ''}>${p || '—'}</option>`).join('')}</select>
+            <input type="text" class="fr-jn-digits" inputmode="numeric" placeholder="Digits" value="${esc(parts.digits)}">
+            <input type="hidden" id="${id}" value="${esc(v)}">
+            <span class="fr-jn-hint"></span>
+          </span>`;
+      }
       if (field.type === 'yesno') {
         return `<span class="ml-yesno" data-yesno-for="${id}" data-good="${field.good === 'No' ? 'No' : 'Yes'}">
             <button type="button" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}">Y</button>
@@ -231,6 +255,41 @@
             hidden.dispatchEvent(new Event('input', { bubbles: true }));
           });
         });
+      });
+    }
+
+    // Prefix select + digits box combine into one hidden value ("3CP000123"). Digits are
+    // scrubbed to numeric-only as typed; validation (when data-validate="true") uses the
+    // same Lookups.batch.isValid format check hand-rolled pages used before migration.
+    function wireJobNumber(container) {
+      container.querySelectorAll('.fr-jobnumber').forEach(group => {
+        const hidden = group.querySelector('input[type=hidden]');
+        const prefixSel = group.querySelector('.fr-jn-prefix');
+        const digitsInp = group.querySelector('.fr-jn-digits');
+        const hint = group.querySelector('.fr-jn-hint');
+        const validate = group.dataset.validate === 'true';
+        function sync() {
+          if (prefixSel.disabled) return;
+          const digits = digitsInp.value.replace(/\D/g, '').slice(0, 8);
+          if (digits !== digitsInp.value) digitsInp.value = digits;
+          const value = (prefixSel.value && digits) ? prefixSel.value + digits : '';
+          hidden.value = value;
+          if (!value) {
+            hint.textContent = '';
+            hint.classList.remove('bad');
+          } else if (validate && window.Lookups && window.Lookups.batch) {
+            const ok = window.Lookups.batch.isValid(value);
+            hint.textContent = ok ? value : '4–8 digits required';
+            hint.classList.toggle('bad', !ok);
+          } else {
+            hint.textContent = value;
+            hint.classList.remove('bad');
+          }
+          hidden.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        prefixSel.addEventListener('change', sync);
+        digitsInp.addEventListener('input', sync);
+        sync();
       });
     }
 
@@ -458,10 +517,32 @@
       const container = el('fr_rosterRows');
       let rows = (existingRows || []).slice();
       if (!rows.length) rows.push({});
+
+      // Sums the roster.totalsRow numeric columns across current on-screen row values.
+      function renderRosterTotals() {
+        const totalsEl = el('fr_rosterTotals');
+        if (!totalsEl || !config.roster.totalsRow) return;
+        const totals = {};
+        config.roster.totalsRow.forEach(k => { totals[k] = 0; });
+        rows.forEach((_, i) => {
+          config.roster.totalsRow.forEach(k => {
+            const inp = el(`fr_roster_${i}_${k}`);
+            const val = inp ? parseFloat(inp.value) : NaN;
+            if (!isNaN(val)) totals[k] += val;
+          });
+        });
+        totalsEl.innerHTML = 'Totals — ' + config.roster.totalsRow.map(k => {
+          const col = config.roster.columns.find(c => c.key === k);
+          return `${esc(col ? col.label : k)}: ${totals[k].toFixed(2)}`;
+        }).join(' &nbsp;·&nbsp; ');
+      }
+
       function draw() {
         container.innerHTML = rows.map((r, i) => rosterRowHtml('fr', i, r)).join('');
-              // Wire Yes/No button groups inside roster rows
+              // Wire Yes/No button groups and job-number widgets inside roster rows
               if (typeof wireYesNo === 'function') wireYesNo(container);
+              if (typeof wireJobNumber === 'function') wireJobNumber(container);
+              renderRosterTotals();
               container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
                 btn.addEventListener('click', () => {
                   const i = Number(btn.dataset.removeRosterRow);
@@ -471,6 +552,8 @@
                 });
               });
             }
+      // Attached once (not inside draw()) since container itself is never replaced.
+      container.addEventListener('input', renderRosterTotals);
       draw();
       container._getRows = () => {
         // capture current input values before returning
@@ -521,7 +604,8 @@
         html += `
         <div class="fr-section-title">${esc(config.roster.title)}</div>
         <div id="fr_rosterRows"></div>
-        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="fr_addRosterRowBtn">+ Add row</button>`;
+        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="fr_addRosterRowBtn">+ Add row</button>
+        ${config.roster.totalsRow ? `<div id="fr_rosterTotals" class="fr-roster-totals"></div>` : ''}`;
       }
       // Show fields from old submissions that no longer exist in the current template
       if (existing && existing.values) {
@@ -538,8 +622,9 @@
         renderRosterEditor(existing ? existing.roster : null);
         el('fr_addRosterRowBtn').addEventListener('click', () => container.querySelector('#fr_rosterRows')._addRow());
       }
-      // Wire Yes/No button groups in the modal
+      // Wire Yes/No button groups and job-number widgets in the modal
       if (typeof wireYesNo === 'function') wireYesNo(container);
+      if (typeof wireJobNumber === 'function') wireJobNumber(container);
       // A submitted record is evidence -- it opens to be read, never to be re-typed.
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked; });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
@@ -555,12 +640,18 @@
     async function saveForm(finalize) {
       const values = {};
       let missingRequired = null;
+      let invalidJobNumber = null;
       allFields(config).forEach(f => {
         const inp = el(`fr_f_${f.key}`);
         values[f.key] = inp ? inp.value : '';
         if (f.required && !String(values[f.key] || '').trim()) missingRequired = f.label;
+        if (f.type === 'jobnumber' && f.validate !== false && values[f.key] &&
+            window.Lookups && window.Lookups.batch && !window.Lookups.batch.isValid(values[f.key])) {
+          invalidJobNumber = f.label;
+        }
       });
       if (missingRequired && finalize) { toast(`"${missingRequired}" is required.`); return; }
+      if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
       // Validate batch number format if this record has a batchField
       if (config.batchField && window.BatchValidation) {
         const batchValue = values[config.batchField];
@@ -658,7 +749,10 @@
           `<tr><td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td>
              <td>${esc(displayValue(f, sub.values[f.key]))}</td></tr>`).join('');
         if (!rows) return '';
-        return `<h3>${esc(sec.title)}</h3><table><tbody>${rows}</tbody></table>`;
+        // newPage forces this section onto a fresh printed page -- used by records whose
+        // paper form spans several sheets (batch info on page 1, detail panels after).
+        const pageBreak = sec.newPage ? ' style="page-break-before:always;"' : '';
+        return `<div${pageBreak}><h3>${esc(sec.title)}</h3><table><tbody>${rows}</tbody></table></div>`;
       }).join('');
     }
 
@@ -671,9 +765,22 @@
       // sign on, and a printed copy is often completed by hand.
       const body = (rows.length ? rows : [{}, {}, {}]).map(r =>
         `<tr>${cols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
+      let totalsRowHtml = '';
+      if (config.roster.totalsRow && rows.length) {
+        const totals = {};
+        config.roster.totalsRow.forEach(k => { totals[k] = 0; });
+        rows.forEach(r => config.roster.totalsRow.forEach(k => {
+          const val = parseFloat(r[k]);
+          if (!isNaN(val)) totals[k] += val;
+        }));
+        totalsRowHtml = `<tr>${cols.map((c, ci) => {
+          if (config.roster.totalsRow.includes(c.key)) return `<td><strong>${totals[c.key].toFixed(2)}</strong></td>`;
+          return `<td><strong>${ci === 0 ? 'Total' : ''}</strong></td>`;
+        }).join('')}</tr>`;
+      }
       return `<h3>${esc(config.roster.title)}</h3>
         <table><thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
-        <tbody>${body}</tbody></table>`;
+        <tbody>${body}${totalsRowHtml}</tbody></table>`;
     }
 
     /* Signature line. A draft prints an empty one: an unsubmitted form is not evidence,

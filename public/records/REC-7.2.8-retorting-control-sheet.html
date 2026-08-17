@@ -6,315 +6,57 @@
 <title>REC 7.2.8 Retorting Control Sheet</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
-<style>
-  :root{
-    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:#c9cdd1; --line-soft:var(--palette-border); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
-    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
-  }
-  #rcs-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:var(--form-fs-root); line-height:1.4; }
-  #rcs-root *{ box-sizing:border-box; }
-  #rcs-root h1,#rcs-root h2,#rcs-root h3{ margin:0; font-weight:700; }
-  #rcs-root input, #rcs-root select, #rcs-root textarea{
-    font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
-    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
-  }
-  #rcs-root input:focus, #rcs-root select:focus, #rcs-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
-  #rcs-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .rcs-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .rcs-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .rcs-topline input{ width:120px; padding:3px 5px; font-size:var(--form-fs-small); }
-  .btn{ padding:5px 11px; font-size:var(--form-fs-button); }
-  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
-  .btn-primary:hover{ background:var(--palette-primary-hover); }
-  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; }
-  .btn-ghost:hover{ background:#33444f; }
-  .btn-flat{ background:var(--line-soft); color:var(--ink); }
-  .btn-flat:hover{ background:#d5d8d6; }
-  .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-  .rcs-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
-  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
-  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:var(--palette-head-bg); border-radius:5px 5px 0 0; }
-  .panel-head h2{ font-size:var(--form-fs-panel-head); text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
-  .panel-body{ padding:11px; }
-
-  .grid{ display:grid; gap:8px; }
-  .grid-6{ grid-template-columns:repeat(6,1fr); }
-  .grid-4{ grid-template-columns:repeat(4,1fr); }
-  .grid-3{ grid-template-columns:repeat(3,1fr); }
-  .grid-2{ grid-template-columns:repeat(2,1fr); }
-  label.field{ display:flex; flex-direction:column; gap:2px; font-size:var(--form-fs-label); color:var(--palette-label); font-weight:600; }
-  label.field input, label.field select, label.field textarea{ font-size:var(--form-fs-button); padding:3px 5px; }
-
-  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
-  .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
-  .record-status{ font-size:10px; color:var(--palette-label); font-weight:600; padding:4px 8px; background:var(--palette-border); border-radius:3px; }
-  .muted{ color:#8a939b; }
-  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
-  .toast.show{ opacity:1; }
-
-  @media (max-width:900px){
-    .grid-6{grid-template-columns:repeat(3,1fr);}
-    .grid-4{grid-template-columns:repeat(2,1fr);}
-  }
-
-  /* Page 1 of the printed record carries only the Batch & Production Info and the
-     Sign-off -- Retort Information and Process Notes move to page 2. */
-  @media print{
-    .rcs-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
-    #panelBatchProductionInfo{ order:1; }
-    #panelSignoff{ order:2; }
-    #panelRetortInformation{ order:3; break-before:page; page-break-before:always; }
-    #panelProcessNotes{ order:4; }
-  }
-</style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="rcs-root">
-  <div class="rcs-top">
-    <div class="doc-line"><span class="doc-code">REC 7.2.8</span><h1>Retorting Control Sheet</h1><span class="doc-rev">Rev 4 &middot; Rev date not set</span></div>
-    <div class="rcs-topline no-print"><button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
-    </div>
-  </div>
-
-  <div class="rcs-body">
-
-    <div class="panel" id="panelBatchProductionInfo">
-      <div class="panel-head"><h2>Batch & Production Info</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-6" style="margin-bottom:8px;">
-          <label class="field">Date<input id="h_date" type="date"></label>
-          <label class="field">Time<input id="h_time" placeholder="HH:MM"></label>
-          <label class="field">Production code<input id="h_productionCode" placeholder="Code"></label>
-          <label class="field">Job number<input id="h_jobNumber" placeholder="Job"></label>
-          <label class="field">Product recipe<input id="h_productRecipe" placeholder="Recipe"></label>
-          <label class="field">Time trolley in<input id="h_timeTrolleyIn" placeholder="HH:MM"></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelRetortInformation">
-      <div class="panel-head"><h2>Retort Information</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-4" style="margin-bottom:8px;">
-          <label class="field">Retort no.<input id="h_retortNo" placeholder="No."></label>
-          <label class="field">Pressure on gauge<input id="h_pressureOnGauge" type="number" step="0.1"></label>
-          <label class="field">Temp on gauge (°C)<input id="h_tempOnGauge" type="number" step="0.1"></label>
-          <label class="field">Pressure on screen<input id="h_pressureOnScreen" type="number" step="0.1"></label>
-        </div>
-        <div class="grid grid-4">
-          <label class="field">Temp on screen (°C)<input id="h_tempOnScreen" type="number" step="0.1"></label>
-          <label class="field">Start sterilization<input id="h_startSterilization" placeholder="HH:MM"></label>
-          <label class="field">Start cooling<input id="h_startCooling" placeholder="HH:MM"></label>
-          <label class="field">Time trolley out<input id="h_timeTrolleyOut" placeholder="HH:MM"></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelProcessNotes">
-      <div class="panel-head"><h2>Process Notes</h2></div>
-      <div class="panel-body">
-        <label class="field">Process deviation<textarea id="h_processDeviation" rows="3" placeholder="Any deviations or notes…"></textarea></label>
-      </div>
-    </div>
-
-    <div class="panel" id="panelSignoff">
-      <div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body">
-        <div id="signoffCompletedBy"></div>
-      </div>
-    </div>
-
-    <div class="actions no-print">
-      <span class="record-status" id="recordStatus"></span>
-      <span class="status-line" id="statusLine"></span>
-      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-    </div>
-
-    <div class="panel no-print" id="panelVerification"></div>
-  </div>
-
-  <div class="toast no-print" id="toast"></div>
-</div>
+<div id="frRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>
-/* Controlled-copy title block, repeated on every printed page.
- * docCode/recordKey are also what tools/build-master-index-data.py keys this page
- * to in the Master Index. Without them the build falls back to the file name, which
- * silently re-keys the record and orphans its stored revision history.
- * The paper revision is deliberately not stated here -- mountPrintHeader takes it
- * from the record's index row, so the issued index stays the single source. */
-window.RecordDoc = { docCode: 'REC 7.2.8', recordKey: 'retorting-control-sheet' };
-document.addEventListener('DOMContentLoaded', function () {
-  if (!window.DocHeader) return;
-  window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
-    .then(function () {
-      var badge = document.querySelector('.doc-rev');
-      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
-    })
-    .catch(function (e) { console.error('title block failed to mount', e); });
-});
-</script>
 <script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=2"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/form-record.js?v=4"></script>
 <script>
-(async function(){
-  const $ = id => document.getElementById(id);
-
-  function newRecord(){
-    return {
-      id: null, revision: 1, status:'draft',
-      date:'', time:'', productionCode:'', jobNumber:'', productRecipe:'', timeTrolleyIn:'',
-      retortNo:'', pressureOnGauge:'', tempOnGauge:'', pressureOnScreen:'', tempOnScreen:'',
-      startSterilization:'', startCooling:'', timeTrolleyOut:'', processDeviation:'',
-      checkedBy:'', checkedByTitle:'', checkedByDate:'', checkedBySignature:'',
-      verification: null,
-      createdAt: null, updatedAt: null
-    };
-  }
-
-  let state = newRecord();
-function toast(msg){
-    const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
-  }
-  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
-
-  async function storeGet(key, shared){
-    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
-    catch(e){ return null; }
-  }
-  async function storeSet(key, value, shared){
-    try{ await window.storage.set(key, value, shared); return true; }
-    catch(e){ return false; }
-  }
-
-  function renderForm(){
-    $('h_date').value = state.date;
-    $('h_time').value = state.time;
-    $('h_productionCode').value = state.productionCode;
-    $('h_jobNumber').value = state.jobNumber;
-    $('h_productRecipe').value = state.productRecipe;
-    $('h_timeTrolleyIn').value = state.timeTrolleyIn;
-    $('h_retortNo').value = state.retortNo;
-    $('h_pressureOnGauge').value = state.pressureOnGauge;
-    $('h_tempOnGauge').value = state.tempOnGauge;
-    $('h_pressureOnScreen').value = state.pressureOnScreen;
-    $('h_tempOnScreen').value = state.tempOnScreen;
-    $('h_startSterilization').value = state.startSterilization;
-    $('h_startCooling').value = state.startCooling;
-    $('h_timeTrolleyOut').value = state.timeTrolleyOut;
-    $('h_processDeviation').value = state.processDeviation;
-    $('f_checkedBy').value = state.checkedBy;
-    $('f_checkedByTitle').value = state.checkedByTitle;
-    $('f_checkedByDate').value = state.checkedByDate;
-    $('f_checkedBySignature').value = state.checkedBySignature;
-  }
-
-  function bindInputs(){
-    const fields = ['date','time','productionCode','jobNumber','productRecipe','timeTrolleyIn',
-      'retortNo','pressureOnGauge','tempOnGauge','pressureOnScreen','tempOnScreen',
-      'startSterilization','startCooling','timeTrolleyOut','processDeviation','checkedBy','checkedByTitle','checkedByDate','checkedBySignature'];
-    fields.forEach(f=>{
-      const id = f.startsWith('checkedBy') ? 'f_'+f : 'h_'+f;
-      const el = $(id);
-      if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
-    });
-  }
-
-  function updateRecordStatus(){
-    const dateStr = state.date ? state.date : 'No date';
-    const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
-  }
-
-  function renderAll(){
-    renderForm();
-    updateRecordStatus();
-    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
-  }
-
-  async function saveRecord(finalize){
-    const now = Date.now();
-    if(!state.id){
-      const jobId = state.jobNumber ? state.jobNumber : 'NOJOB';
-      state.id = `retorting_${safeKey(jobId)}_${now}`;
-      state.createdAt = now;
-    }
-    state.updatedAt = now;
-    state.status = finalize ? 'submitted' : 'draft';
-
-    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
-    if(!ok){ toast('Save failed.'); return; }
-
-    if (window.Traceability) {
-      window.Traceability.indexSubmission({recordKey:'retorting-control-sheet', batchField:'jobNumber', stage:'retorting'}, {values:state});
-    }
-
-    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
-    renderAll();
-    if(verificationBlock) verificationBlock.refresh();
-  }
-
-  function generatePdf(){
-    const jobStr = state.jobNumber ? state.jobNumber : 'record';
-    document.title = `REC_7.2.8_RETORTING_${safeKey(jobStr)}_${state.date||''}`;
-    window.print();
-  }
-
-  function mountSignoff(){
-    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', signatureId: 'f_checkedBySignature', byLabel: 'Checked & completed by'
-    });
-  }
-
-  let verificationBlock = null;
-  function mountVerification(){
-    verificationBlock = window.SignOffBlock.mountVerification({
-      recordKey: window.RecordDoc.recordKey,
-      mount: '#panelVerification',
-      getPending(){
-        return (state.status === 'submitted' && !state.verification)
-          ? [{ id: state.id, label: state.date ? `Retorting ${state.date}` : 'This record' }]
-          : [];
-      },
-      async onLogged(record){
-        state.verification = record;
-        await storeSet('record:'+state.id, JSON.stringify(state), true);
-      }
-    });
-  }
-
-function wire(){
-bindInputs();
-    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
-    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
-    $('exportBtn').addEventListener('click', ()=>{
-      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      const jobStr = state.jobNumber ? state.jobNumber : 'retorting_draft';
-      a.download = `retorting_${safeKey(jobStr)}.json`;
-      a.click();
-    });
-    $('generatePdfBtn').addEventListener('click', generatePdf);
-  }
-
-  mountSignoff();
-  wire();
-  renderAll();
-  mountVerification();
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'retorting-control-sheet',
+    docCode: 'REC 7.2.8',
+    title: 'Retorting Control Sheet',
+    docRevisionStart: 1,
+    listColumns: ['date', 'jobNumber', 'retortNo'],
+    batchField: 'jobNumber',
+    stage: 'retorting',
+    sections: [
+      { title: 'Batch info', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'time', label: 'Time', type: 'text' },
+        { key: 'productionCode', label: 'Production code', type: 'text' },
+        { key: 'jobNumber', label: 'Job number', type: 'text' },
+        { key: 'productRecipe', label: 'Product recipe', type: 'text' },
+        { key: 'timeTrolleyIn', label: 'Time trolley in', type: 'text' }
+      ]},
+      { title: 'Retort information', newPage: true, fields: [
+        { key: 'retortNo', label: 'Retort no.', type: 'text' },
+        { key: 'pressureOnGauge', label: 'Pressure on gauge', type: 'number' },
+        { key: 'tempOnGauge', label: 'Temp on gauge', type: 'number' },
+        { key: 'pressureOnScreen', label: 'Pressure on screen', type: 'number' },
+        { key: 'tempOnScreen', label: 'Temp on screen', type: 'number' },
+        { key: 'startSterilization', label: 'Start sterilization', type: 'text' },
+        { key: 'startCooling', label: 'Start cooling', type: 'text' },
+        { key: 'timeTrolleyOut', label: 'Time trolley out', type: 'text' }
+      ]},
+      { title: 'Notes', fields: [
+        { key: 'processDeviation', label: 'Process deviation', type: 'textarea', wide: true }
+      ]}
+    ]
+  });
 })();
 </script>
 </body>

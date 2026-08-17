@@ -6,360 +6,71 @@
 <title>REC 7.4.0 Dry Cooking</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
-<style>
-  :root{
-    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:#b3c9bf; --line-soft:var(--palette-border); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
-    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
-  }
-  #dc-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:var(--form-fs-root); line-height:1.4; }
-  #dc-root *{ box-sizing:border-box; }
-  #dc-root h1,#dc-root h2,#dc-root h3{ margin:0; font-weight:700; }
-  #dc-root input, #dc-root select, #dc-root textarea{
-    font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
-    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
-  }
-  #dc-root input:focus, #dc-root select:focus, #dc-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
-  #dc-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .dc-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .dc-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .dc-topline input{ width:120px; padding:3px 5px; font-size:var(--form-fs-small); }
-  .btn{ padding:5px 11px; font-size:var(--form-fs-button); }
-  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
-  .btn-primary:hover{ background:var(--palette-primary-hover); }
-  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; }
-  .btn-ghost:hover{ background:#33444f; }
-  .btn-flat{ background:var(--line-soft); color:var(--ink); }
-  .btn-flat:hover{ background:#d5d8d6; }
-  .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-  .dc-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
-  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
-  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:var(--palette-head-bg); border-radius:5px 5px 0 0; }
-  .panel-head h2{ font-size:var(--form-fs-panel-head); text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
-  .panel-body{ padding:11px; }
-
-  .grid{ display:grid; gap:8px; }
-  .grid-6{ grid-template-columns:repeat(6,1fr); }
-  .grid-4{ grid-template-columns:repeat(4,1fr); }
-  .grid-3{ grid-template-columns:repeat(3,1fr); }
-  .grid-2{ grid-template-columns:repeat(2,1fr); }
-  label.field{ display:flex; flex-direction:column; gap:2px; font-size:var(--form-fs-label); color:var(--palette-label); font-weight:600; }
-  label.field input, label.field select{ font-size:var(--form-fs-button); padding:3px 5px; }
-
-  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
-  .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
-  .record-status{ font-size:10px; color:var(--palette-label); font-weight:600; padding:4px 8px; background:var(--palette-border); border-radius:3px; }
-  .muted{ color:#8a939b; }
-  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
-  .toast.show{ opacity:1; }
-
-  @media (max-width:900px){
-    .grid-6{grid-template-columns:repeat(3,1fr);}
-    .grid-4{grid-template-columns:repeat(2,1fr);}
-  }
-  @media print{
-    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
-    #panelBatchCookingInfo{ order:1; }
-    #panelSignoff{ order:2; }
-    #panelBlanching{ order:3; break-before:page; page-break-before:always; }
-    #panelCooking{ order:4; }
-    #panelAdditives{ order:5; }
-  }
-</style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="dc-root">
-  <div class="dc-top">
-    <div class="doc-line"><span class="doc-code">REC 7.4.0</span><h1>Dry Cooking</h1><span class="doc-rev">Rev 7 &middot; Rev date not set</span></div>
-    <div class="dc-topline no-print"><button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
-    </div>
-  </div>
-
-  <div class="dc-body">
-
-    <div class="panel" id="panelBatchCookingInfo">
-      <div class="panel-head"><h2>Batch & Cooking Info</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-6" style="margin-bottom:8px;">
-          <label class="field">Harvest farm<input id="h_harvestFarm" placeholder="Farm"></label>
-          <label class="field">Intake date<input id="h_intakeDate" type="date"></label>
-          <label class="field">Job number<input id="h_jobNumber" placeholder="Job"></label>
-          <label class="field">Cooking date<input id="h_cookingDate" type="date"></label>
-          <label class="field">Pot number<input id="h_potNumber" placeholder="Pot"></label>
-          <label class="field">Abalone (kg)<input id="h_abaloneKg" type="number" step="0.01"></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelBlanching">
-      <div class="panel-head"><h2>Blanching</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-6">
-          <label class="field">Sea water (L)<input id="h_blanchSeaWater" type="number" step="0.01"></label>
-          <label class="field">pH<input id="h_blanchPh" type="number" step="0.01"></label>
-          <label class="field">Salt (kg)<input id="h_blanchSaltKg" type="number" step="0.01"></label>
-          <label class="field">Temperature (°C)<input id="h_blanchTemp" type="number" step="0.1"></label>
-          <label class="field">Cooking time<input id="h_cookingTime" placeholder="e.g. 2h 30m"></label>
-          <label class="field">Batch number<input id="h_blanchBatchNumber" placeholder="Batch"></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelCooking">
-      <div class="panel-head"><h2>Cooking</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-6" style="margin-bottom:10px;">
-          <label class="field">Start time<input id="h_startTime" placeholder="HH:MM"></label>
-          <label class="field">Starting temp (°C)<input id="h_startingTemp" type="number" step="0.1"></label>
-          <label class="field">20 min after reach (°C)<input id="h_temp20MinAfter" type="number" step="0.1"></label>
-          <label class="field">End of cycle (°C)<input id="h_endOfCookingTemp" type="number" step="0.1"></label>
-          <label class="field">Time out<input id="h_timeOut" placeholder="HH:MM"></label>
-          <label class="field">Total cooking time<input id="h_totalCookingTime" placeholder="e.g. 3h 15m"></label>
-        </div>
-        <div class="grid grid-4">
-          <label class="field">Sea water (L)<input id="h_cookSeaWater" type="number" step="0.01"></label>
-          <label class="field">pH<input id="h_cookPh" type="number" step="0.01"></label>
-          <label class="field">Salt (kg)<input id="h_saltKg" type="number" step="0.01"></label>
-          <label class="field">Batch number<input id="h_saltBatchNumber" placeholder="Batch"></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelAdditives">
-      <div class="panel-head"><h2>Additives (if applicable)</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-3" style="margin-bottom:10px;">
-          <label class="field">Sugar (kg)<input id="h_sugarKg" type="number" step="0.01"></label>
-          <label class="field">Sugar batch<input id="h_sugarBatchNumber" placeholder="Batch"></label>
-          <label></label>
-        </div>
-        <div class="grid grid-3">
-          <label class="field">Vinegar (kg)<input id="h_vinegarKg" type="number" step="0.01"></label>
-          <label class="field">Vinegar batch<input id="h_vinegarBatchNumber" placeholder="Batch"></label>
-          <label></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Comments</h2></div>
-      <div class="panel-body">
-        <textarea id="commentsBox" rows="2" placeholder="Notes, deviations…" style="font-size:11px;"></textarea>
-      </div>
-    </div>
-
-    <div class="panel" id="panelSignoff">
-      <div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body">
-        <div id="signoffCompletedBy"></div>
-      </div>
-    </div>
-
-    <div class="actions no-print">
-      <span class="record-status" id="recordStatus"></span>
-      <span class="status-line" id="statusLine"></span>
-      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-    </div>
-
-    <div class="panel no-print" id="panelVerification"></div>
-  </div>
-
-  <div class="toast no-print" id="toast"></div>
-</div>
+<div id="frRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>
-/* Controlled-copy title block, repeated on every printed page.
- * docCode/recordKey are also what tools/build-master-index-data.py keys this page
- * to in the Master Index. Without them the build falls back to the file name, which
- * silently re-keys the record and orphans its stored revision history.
- * The paper revision is deliberately not stated here -- mountPrintHeader takes it
- * from the record's index row, so the issued index stays the single source. */
-window.RecordDoc = { docCode: 'REC 7.4.0', recordKey: 'dry-cooking' };
-document.addEventListener('DOMContentLoaded', function () {
-  if (!window.DocHeader) return;
-  window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
-    .then(function () {
-      var badge = document.querySelector('.doc-rev');
-      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
-    })
-    .catch(function (e) { console.error('title block failed to mount', e); });
-});
-</script>
 <script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/form-record.js?v=4"></script>
 <script>
-(async function(){
-  const $ = id => document.getElementById(id);
-
-  function newRecord(){
-    return {
-      id: null, revision: 1, status:'draft',
-      harvestFarm:'', intakeDate:'', jobNumber:'', cookingDate:'', potNumber:'', abaloneKg:'',
-      blanchSeaWater:'', blanchPh:'', blanchSaltKg:'', blanchTemp:'', cookingTime:'', blanchBatchNumber:'',
-      startTime:'', startingTemp:'', temp20MinAfter:'', endOfCookingTemp:'', timeOut:'', totalCookingTime:'',
-      cookSeaWater:'', cookPh:'', saltKg:'', saltBatchNumber:'',
-      sugarKg:'', sugarBatchNumber:'', vinegarKg:'', vinegarBatchNumber:'',
-      comments:'', cooker:'', cookerTitle:'', cookerDate:'', cookerSignature:'',
-      verification: null,
-      createdAt: null, updatedAt: null
-    };
-  }
-
-  let state = newRecord();
-function toast(msg){
-    const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
-  }
-  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
-
-  async function storeGet(key, shared){
-    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
-    catch(e){ return null; }
-  }
-  async function storeSet(key, value, shared){
-    try{ await window.storage.set(key, value, shared); return true; }
-    catch(e){ return false; }
-  }
-
-  function renderForm(){
-    $('h_harvestFarm').value = state.harvestFarm;
-    $('h_intakeDate').value = state.intakeDate;
-    $('h_jobNumber').value = state.jobNumber;
-    $('h_cookingDate').value = state.cookingDate;
-    $('h_potNumber').value = state.potNumber;
-    $('h_abaloneKg').value = state.abaloneKg;
-    $('h_blanchSeaWater').value = state.blanchSeaWater;
-    $('h_blanchPh').value = state.blanchPh;
-    $('h_blanchSaltKg').value = state.blanchSaltKg;
-    $('h_blanchTemp').value = state.blanchTemp;
-    $('h_cookingTime').value = state.cookingTime;
-    $('h_blanchBatchNumber').value = state.blanchBatchNumber;
-    $('h_startTime').value = state.startTime;
-    $('h_startingTemp').value = state.startingTemp;
-    $('h_temp20MinAfter').value = state.temp20MinAfter;
-    $('h_endOfCookingTemp').value = state.endOfCookingTemp;
-    $('h_timeOut').value = state.timeOut;
-    $('h_totalCookingTime').value = state.totalCookingTime;
-    $('h_cookSeaWater').value = state.cookSeaWater;
-    $('h_cookPh').value = state.cookPh;
-    $('h_saltKg').value = state.saltKg;
-    $('h_saltBatchNumber').value = state.saltBatchNumber;
-    $('h_sugarKg').value = state.sugarKg;
-    $('h_sugarBatchNumber').value = state.sugarBatchNumber;
-    $('h_vinegarKg').value = state.vinegarKg;
-    $('h_vinegarBatchNumber').value = state.vinegarBatchNumber;
-    $('commentsBox').value = state.comments;
-    $('f_cooker').value = state.cooker;
-    $('f_cookerTitle').value = state.cookerTitle;
-    $('f_cookerDate').value = state.cookerDate;
-    $('f_cookerSignature').value = state.cookerSignature;
-  }
-
-  function bindInputs(){
-    const fields = ['harvestFarm','intakeDate','jobNumber','cookingDate','potNumber','abaloneKg',
-      'blanchSeaWater','blanchPh','blanchSaltKg','blanchTemp','cookingTime','blanchBatchNumber',
-      'startTime','startingTemp','temp20MinAfter','endOfCookingTemp','timeOut','totalCookingTime',
-      'cookSeaWater','cookPh','saltKg','saltBatchNumber',
-      'sugarKg','sugarBatchNumber','vinegarKg','vinegarBatchNumber','comments','cooker','cookerTitle','cookerDate','cookerSignature'];
-    fields.forEach(f=>{
-      const id = (f.startsWith('cooker')||f.startsWith('comments')) ? (f.startsWith('cooker') ? 'f_'+f : 'commentsBox') : 'h_'+f;
-      const el = $(id);
-      if(el) el.addEventListener('input', ()=>{
-        const key = f.startsWith('cooker') ? f : (f === 'comments' ? 'comments' : f);
-        state[key] = el.value;
-      });
-    });
-  }
-
-  function updateRecordStatus(){
-    const jobStr = state.jobNumber ? `${state.jobNumber}` : 'No job';
-    const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
-  }
-
-  function renderAll(){
-    renderForm();
-    updateRecordStatus();
-    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
-  }
-
-  async function saveRecord(finalize){
-    const now = Date.now();
-    if(!state.id){
-      const jobId = state.jobNumber ? state.jobNumber : 'NOJOB';
-      state.id = `dry_cooking_${safeKey(jobId)}_${now}`;
-      state.createdAt = now;
-    }
-    state.updatedAt = now;
-    state.status = finalize ? 'submitted' : 'draft';
-
-    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
-    if(!ok){ toast('Save failed.'); return; }
-    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
-    renderAll();
-    if(verificationBlock) verificationBlock.refresh();
-  }
-
-  function generatePdf(){
-    const jobStr = state.jobNumber ? state.jobNumber : 'record';
-    document.title = `REC_7.4.0_DRY_COOKING_${safeKey(jobStr)}_${state.intakeDate||''}`;
-    window.print();
-  }
-
-
-  function mountSignoff(){
-    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_cooker', titleId: 'f_cookerTitle', dateId: 'f_cookerDate', signatureId: 'f_cookerSignature', byLabel: 'Cooker'
-    });
-  }
-
-  let verificationBlock = null;
-  function mountVerification(){
-    verificationBlock = window.SignOffBlock.mountVerification({
-      recordKey: window.RecordDoc.recordKey,
-      mount: '#panelVerification',
-      getPending(){
-        return (state.status === 'submitted' && !state.verification)
-          ? [{ id: state.id, label: state.jobNumber ? `Job ${state.jobNumber}` : 'This record' }]
-          : [];
-      },
-      async onLogged(record){
-        state.verification = record;
-        await storeSet('record:'+state.id, JSON.stringify(state), true);
-        renderAll();
-      }
-    });
-  }
-
-function wire(){
-bindInputs();
-    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
-    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
-    $('exportBtn').addEventListener('click', ()=>{
-      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      const jobStr = state.jobNumber ? state.jobNumber : 'dry_cooking_draft';
-      a.download = `dry_cooking_${safeKey(jobStr)}.json`;
-      a.click();
-    });
-    $('generatePdfBtn').addEventListener('click', generatePdf);
-  }
-
-  mountSignoff();
-  wire();
-  renderAll();
-  mountVerification();
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'dry-cooking',
+    docCode: 'REC 7.4.0',
+    title: 'Dry Cooking',
+    docRevisionStart: 1,
+    listColumns: ['intakeDate', 'jobNumber', 'potNumber'],
+    sections: [
+      { title: 'Batch & cooking info', fields: [
+        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+        { key: 'jobNumber', label: 'Job number', type: 'text' },
+        { key: 'cookingDate', label: 'Cooking date', type: 'date' },
+        { key: 'potNumber', label: 'Pot number', type: 'text' },
+        { key: 'abaloneKg', label: 'Abalone (kg)', type: 'number' }
+      ]},
+      { title: 'Blanching', newPage: true, fields: [
+        { key: 'blanchSeaWater', label: 'Blanch sea water', type: 'number' },
+        { key: 'blanchPh', label: 'Blanch pH', type: 'number' },
+        { key: 'blanchSaltKg', label: 'Blanch salt (kg)', type: 'number' },
+        { key: 'blanchTemp', label: 'Blanch temp', type: 'number' },
+        { key: 'cookingTime', label: 'Cooking time', type: 'text' },
+        { key: 'blanchBatchNumber', label: 'Blanch batch number', type: 'text' }
+      ]},
+      { title: 'Cooking', fields: [
+        { key: 'startTime', label: 'Start time', type: 'text' },
+        { key: 'startingTemp', label: 'Starting temp', type: 'number' },
+        { key: 'temp20MinAfter', label: 'Temp 20 min after', type: 'number' },
+        { key: 'endOfCookingTemp', label: 'End of cooking temp', type: 'number' },
+        { key: 'timeOut', label: 'Time out', type: 'text' },
+        { key: 'totalCookingTime', label: 'Total cooking time', type: 'text' },
+        { key: 'cookSeaWater', label: 'Cook sea water', type: 'number' },
+        { key: 'cookPh', label: 'Cook pH', type: 'number' },
+        { key: 'saltKg', label: 'Salt (kg)', type: 'number' },
+        { key: 'saltBatchNumber', label: 'Salt batch number', type: 'text' }
+      ]},
+      { title: 'Additives (optional)', fields: [
+        { key: 'sugarKg', label: 'Sugar (kg)', type: 'number' },
+        { key: 'sugarBatchNumber', label: 'Sugar batch number', type: 'text' },
+        { key: 'vinegarKg', label: 'Vinegar (kg)', type: 'number' },
+        { key: 'vinegarBatchNumber', label: 'Vinegar batch number', type: 'text' }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'cooker', label: 'Cooker', type: 'text' },
+        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
+      ]}
+    ]
+  });
 })();
 </script>
 </body>

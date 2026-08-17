@@ -15,6 +15,7 @@
     { value: 'select', label: 'Dropdown' },
     { value: 'textarea', label: 'Text area' },
     { value: 'yesno', label: 'Yes / No' },
+    { value: 'jobnumber', label: 'Job number' },
   ];
 
   const STYLE = `

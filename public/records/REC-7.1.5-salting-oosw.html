@@ -6,511 +6,54 @@
 <title>REC 7.1.5 Salting (OOSW)</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
-<style>
-  :root{
-    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:#c9cdd1; --line-soft:var(--palette-border); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
-    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
-  }
-  #so-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:var(--form-fs-root); line-height:1.4; }
-  #so-root *{ box-sizing:border-box; }
-  #so-root h1,#so-root h2,#so-root h3{ margin:0; font-weight:700; }
-  #so-root input, #so-root select, #so-root textarea{
-    font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
-    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
-  }
-  #so-root input:focus, #so-root select:focus, #so-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
-  #so-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .so-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .so-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .so-topline input{ width:120px; padding:3px 5px; font-size:var(--form-fs-small); }
-  .btn{ padding:5px 11px; font-size:var(--form-fs-button); }
-  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
-  .btn-primary:hover{ background:var(--palette-primary-hover); }
-  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; }
-  .btn-ghost:hover{ background:#33444f; }
-  .btn-flat{ background:var(--line-soft); color:var(--ink); }
-  .btn-flat:hover{ background:#d5d8d6; }
-  .btn-sm{ padding:3px 8px; font-size:10px; }
-  .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-  .so-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
-  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
-  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:var(--palette-head-bg); border-radius:5px 5px 0 0; }
-  .panel-head h2{ font-size:var(--form-fs-panel-head); text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
-  .panel-body{ padding:11px; }
-
-  .grid{ display:grid; gap:8px; }
-  .grid-6{ grid-template-columns:repeat(6,1fr); }
-  .grid-4{ grid-template-columns:repeat(4,1fr); }
-  .grid-3{ grid-template-columns:repeat(3,1fr); }
-  .grid-2{ grid-template-columns:repeat(2,1fr); }
-  label.field{ display:flex; flex-direction:column; gap:2px; font-size:var(--form-fs-label); color:var(--palette-label); font-weight:600; }
-  label.field input, label.field select{ font-size:var(--form-fs-button); padding:3px 5px; }
-
-  .job-number-row{ display:grid; grid-template-columns:100px 1fr; gap:8px; }
-  .job-number-row select, .job-number-row input{ font-size:var(--form-fs-button); padding:3px 5px; }
-
-  .weight-input-section{ background:var(--palette-head-bg); padding:20px; border-radius:4px; margin-bottom:10px; }
-  .weight-input-row{ display:flex; gap:12px; align-items:center; }
-  .weight-input-row input{ flex:0 0 200px; font-size:18px; padding:12px 12px; }
-  .weight-input-row button{ flex:0 0 auto; padding:10px 24px; font-size:14px; font-weight:700; }
-
-  table.weights{ width:100%; border-collapse:collapse; margin-top:8px; font-size:var(--form-fs-hint); }
-  table.weights th, table.weights td{ border:1px solid var(--line-soft); padding:2px 4px; text-align:center; }
-  table.weights th{ background:var(--palette-head-bg); font-weight:700; color:#5c6771; text-transform:uppercase; letter-spacing:.02em; font-size:9px; }
-  table.weights input{ width:100%; text-align:center; padding:1px; font-size:9px; }
-  table.weights .clear-btn{ padding:1px 3px; font-size:8px; width:auto; background:#f0e0e0; color:#8a343d; }
-  table.weights .clear-btn:hover{ background:#e0d0d0; }
-
-  .summary-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px; background:var(--palette-head-bg); border-radius:3px; margin-bottom:8px; }
-  .summary-item{ font-size:var(--form-fs-small); }
-  .summary-item .label{ color:var(--palette-label); font-weight:600; margin-bottom:2px; }
-  .summary-item .value{ font-family:var(--mono); font-size:var(--form-fs-root); font-weight:700; color:var(--ink); }
-
-  .signoff-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-  .signoff-item{ display:flex; flex-direction:column; gap:8px; }
-  .signoff-item label{ display:flex; flex-direction:column; gap:2px; }
-
-  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
-  .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
-  .record-status{ font-size:10px; color:var(--palette-label); font-weight:600; padding:4px 8px; background:var(--palette-border); border-radius:3px; }
-  .muted{ color:#8a939b; }
-  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
-  .toast.show{ opacity:1; }
-
-  @media (max-width:900px){
-    .grid-6{grid-template-columns:repeat(3,1fr);}
-    .grid-4{grid-template-columns:repeat(2,1fr);}
-    .signoff-grid{grid-template-columns:1fr;}
-    .job-number-row{grid-template-columns:80px 1fr;}
-  }
-  @media (max-width:768px){
-    #so-root{ font-size:14px; }
-    .so-top{ padding:10px 12px; }
-    .so-topline{ gap:6px; }
-    .so-topline input{ width:100px; font-size:12px; }
-    .btn{ padding:6px 12px; font-size:12px; }
-    .so-body{ padding:10px 12px 40px; }
-    .grid-6{ grid-template-columns:repeat(2,1fr); }
-    .grid-4{ grid-template-columns:1fr; }
-    .grid-2{ grid-template-columns:1fr; }
-    .grid-3{ grid-template-columns:repeat(2,1fr); }
-    label.field input, label.field select{ font-size:var(--form-fs-root); padding:6px; }
-    .job-number-row{ grid-template-columns:70px 1fr; gap:6px; }
-    .weight-input-section{ padding:12px; }
-    .weight-input-row{ gap:6px; flex-wrap:wrap; }
-    .weight-input-row input{ flex:1 1 140px; min-width:120px; font-size:16px; padding:10px; }
-    .weight-input-row button{ flex:1 1 auto; min-width:100px; padding:10px 12px; font-size:var(--form-fs-root); }
-    table.weights{ font-size:10px; }
-    table.weights th, table.weights td{ padding:3px 2px; }
-    table.weights input{ font-size:10px; padding:2px; }
-    .summary-row{ grid-template-columns:1fr; }
-    .signoff-grid{ gap:8px; }
-    .signoff-item label{ font-size:10px; }
-    .panel-body{ padding:10px; }
-  }
-  @media (max-width:480px){
-    #so-root{ font-size:12px; }
-    .so-top{ padding:8px 10px; gap:8px; }
-    .so-topline{ gap:4px; flex-direction:column; }
-    .so-topline label.role-label{ font-size:8.5px; }
-    .so-topline input{ width:100%; font-size:var(--form-fs-small); }
-    .btn{ padding:5px 10px; font-size:var(--form-fs-small); }
-    .so-body{ padding:8px 10px 40px; }
-    .grid-6, .grid-4, .grid-3, .grid-2{ grid-template-columns:1fr; gap:6px; }
-    label.field{ font-size:10px; }
-    label.field input, label.field select{ font-size:14px; padding:8px; }
-    .job-number-row{ grid-template-columns:60px 1fr; gap:4px; }
-    .weight-input-section{ padding:10px; margin-bottom:8px; }
-    .weight-input-row{ gap:4px; }
-    .weight-input-row input{ flex:1 1 auto; font-size:16px; padding:10px 8px; }
-    .weight-input-row button{ flex:0 0 100%; padding:10px; font-size:12px; margin-top:4px; }
-    table.weights{ font-size:9px; margin-top:6px; }
-    table.weights th, table.weights td{ padding:2px 1px; }
-    table.weights input{ font-size:9px; padding:1px; }
-    table.weights .clear-btn{ font-size:7px; padding:1px 2px; }
-    .summary-row{ padding:6px; margin-bottom:6px; }
-    .summary-item{ font-size:10px; }
-    .summary-item .value{ font-size:14px; }
-    .signoff-grid{ gap:6px; }
-    .signoff-item label{ font-size:9px; }
-    .panel-head h2{ font-size:10px; }
-    .panel-body{ padding:8px; }
-    textarea{ font-size:12px; }
-  }
-  @media print{
-    @page{ size:A4 portrait; margin:6mm; }
-    body{ background:#fff; padding:0; margin:0; }
-    .no-print{ display:none !important; }
-    #so-root{ font-size:14px; background:#fff; }
-    .so-top{ padding:4px 8px; }
-    .so-body{ display:flex; flex-direction:column; max-width:none; padding:6px 8px 0; }
-    #panelInfo{ order:1; }
-    #panelSignoff{ order:2; }
-    #panelWeights{ order:3; break-before:page; page-break-before:always; }
-    #panelResults{ order:4; }
-    .panel{ margin-bottom:6px; break-inside:avoid; }
-    .panel-head{ padding:4px 8px; }
-    .panel-head h2{ font-size:14px; }
-    .panel-body{ padding:6px; }
-    label.field{ font-size:14px; gap:1px; }
-    .weight-input-section{ display:none; }
-    table.weights{ font-size:14px; margin-top:6px; }
-    table.weights th, table.weights td{ padding:2px 3px; }
-    table.weights input{ font-size:14px; padding:1px; }
-    table.weights .clear-btn{ display:none; }
-    .summary-row{ padding:4px; margin-bottom:4px; }
-    .summary-item{ font-size:14px; }
-    .summary-item .value{ font-size:14px; }
-    .signoff-grid{ gap:6px; }
-    .signoff-item{ gap:4px; }
-    .signoff-item label{ font-size:14px; }
-    .actions{ display:none; }
-    .record-status{ display:none; }
-  }
-</style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="so-root">
-  <div class="so-top">
-    <div class="doc-line"><span class="doc-code">REC 7.1.5</span><h1>Salting (OOSW)</h1><span class="doc-rev">Rev 3 &middot; Rev date not set</span></div>
-    <div class="so-topline no-print"><button class="btn btn-ghost" id="newRecordBtn">New</button>
-      <button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
-    </div>
-  </div>
-
-  <div class="so-body">
-
-    <div class="panel" id="panelInfo">
-      <div class="panel-head"><h2>Batch Info</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-6" style="margin-bottom:8px;">
-          <label class="field">Intake date<input id="h_intakeDate" type="date"></label>
-          <label class="field">Harvest farm<input id="h_harvestFarm" placeholder="Farm"></label>
-          <label class="field">Tracking no.<input id="h_trackingNo" placeholder="Track"></label>
-          <label class="field">Processing for<select id="h_processingFor"><option value="">—</option><option value="Can">Can</option><option value="Dried">Dried</option><option value="Other">Other</option></select></label>
-          <label class="field">Size range<select id="h_sizeRange"><option value="">—</option></select></label>
-          <label class="field" style="grid-column:span 1;">Whole weight (kg)<input id="h_wholeWeight" type="number" step="0.01" placeholder="0.00" style="margin-top:auto;"></label>
-        </div>
-        <div class="grid grid-2">
-          <label class="field">Job number<div class="job-number-row"><select id="h_jobPrefix"><option value="">—</option><option value="CPR">CPR</option><option value="DPR">DPR</option><option value="3CP">3CP</option><option value="3DP">3DP</option></select><input id="h_jobNumber" placeholder="Number" type="text"></div></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Add Weight</h2></div>
-      <div class="panel-body">
-        <div class="weight-input-section">
-          <div class="weight-input-row">
-            <input id="newWeightInput" type="number" step="0.01" placeholder="Enter weight (kg)">
-            <button class="btn btn-flat" id="addWeightBtn">+ Add weight</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelWeights">
-      <div class="panel-head"><h2>Weight Measurements (kg)</h2></div>
-      <div class="panel-body">
-        <table class="weights" id="weightsTable">
-          <thead><tr><th>Wt 1</th><th>Wt 2</th><th>Wt 3</th><th>Wt 4</th><th>Wt 5</th><th>Wt 6</th></tr></thead>
-          <tbody id="weightsBody"><tr><td colspan="6" style="text-align:center; color:#8a939b; padding:6px;">No weights added yet</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="panel" id="panelResults">
-      <div class="panel-head"><h2>Results</h2></div>
-      <div class="panel-body">
-        <div class="summary-row">
-          <div class="summary-item">
-            <div class="label">Total OOSW (kg)</div>
-            <div class="value" id="totalOosw">0.00</div>
-          </div>
-          <div class="summary-item">
-            <div class="label">OOSW %</div>
-            <div class="value" id="ooswPercent">0.0</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Comments</h2></div>
-      <div class="panel-body">
-        <textarea id="commentsBox" rows="2" placeholder="Notes, deviations…" style="font-size:11px;"></textarea>
-      </div>
-    </div>
-
-    <div class="panel" id="panelSignoff">
-      <div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body">
-        <div id="signoffCompletedBy"></div>
-        <div class="grid grid-3" style="margin-top:8px;">
-          <label class="field">Supervisor<input id="f_supervisor"></label>
-          <label class="field">Title<input id="f_supervisorTitle"></label>
-          <label class="field">Date<input id="f_supervisorDate" type="date"></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="actions no-print">
-      <span class="record-status" id="recordStatus"></span>
-      <span class="status-line" id="statusLine"></span>
-      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-    </div>
-
-    <div class="panel no-print" id="panelVerification"></div>
-  </div>
-
-  <div class="toast no-print" id="toast"></div>
-</div>
+<div id="frRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>
-/* Controlled-copy title block, repeated on every printed page.
- * docCode/recordKey are also what tools/build-master-index-data.py keys this page
- * to in the Master Index. Without them the build falls back to the file name, which
- * silently re-keys the record and orphans its stored revision history.
- * The paper revision is deliberately not stated here -- mountPrintHeader takes it
- * from the record's index row, so the issued index stays the single source. */
-window.RecordDoc = { docCode: 'REC 7.1.5', recordKey: 'salting-oosw' };
-document.addEventListener('DOMContentLoaded', function () {
-  if (!window.DocHeader) return;
-  window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
-    .then(function () {
-      var badge = document.querySelector('.doc-rev');
-      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
-    })
-    .catch(function (e) { console.error('title block failed to mount', e); });
-});
-</script>
-<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/form-record.js?v=4"></script>
 <script>
-(function(){
-  const $ = id => document.getElementById(id);
-
-  function newRecord(){
-    return {
-      id: null, revision: 1, status:'draft',
-      header:{ intakeDate:'', harvestFarm:'', trackingNo:'', processingFor:'', sizeRange:'', wholeWeight:'', jobPrefix:'', jobNumber:'' },
-      weights: [],
-      comments:'',
-      operator:'', operatorTitle:'', operatorDate:'', operatorSignature:'',
-      supervisor:'', supervisorTitle:'', supervisorDate:'',
-      verification: null,
-      createdAt: null, updatedAt: null
-    };
-  }
-
-  let state = newRecord();
-function toast(msg){
-    const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
-  }
-  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
-  function num(v){ const n = parseFloat(v); return (v===''||v==null||isNaN(n)) ? null : n; }
-
-  async function storeGet(key, shared){
-    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
-    catch(e){ return null; }
-  }
-  async function storeSet(key, value, shared){
-    try{ await window.storage.set(key, value, shared); return true; }
-    catch(e){ return false; }
-  }
-
-  function updateResults(){
-    const wholeWt = num(state.header.wholeWeight);
-    const totalOosw = state.weights.reduce((sum, w) => sum + (num(w) || 0), 0);
-    const ooswPct = wholeWt && wholeWt > 0 ? ((totalOosw / wholeWt) * 100) : 0;
-
-    $('totalOosw').textContent = totalOosw.toFixed(2);
-    $('ooswPercent').textContent = ooswPct.toFixed(1);
-  }
-
-  function renderWeightsTable(){
-    const tbody = $('weightsBody');
-    if(!state.weights.length){
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#8a939b; padding:6px;">No weights added yet</td></tr>';
-      updateResults();
-      return;
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'salting-oosw',
+    docCode: 'REC 7.1.5',
+    title: 'Salting (OOSW)',
+    docRevisionStart: 1,
+    listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
+    sections: [
+      { title: 'Batch info', fields: [
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
+        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
+        { key: 'wholeWeight', label: 'Whole weight', type: 'number' },
+        { key: 'jobNo', label: 'Job no.', type: 'jobnumber', validate: false }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'supervisor', label: 'Supervisor', type: 'text' },
+        { key: 'supervisorTitle', label: 'Supervisor title', type: 'text' },
+        { key: 'supervisorDate', label: 'Supervisor date', type: 'date' },
+        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
+      ]}
+    ],
+    roster: {
+      title: 'OOSW weights',
+      totalsRow: ['weight'],
+      columns: [
+        { key: 'weight', label: 'Weight', type: 'number' }
+      ]
     }
-    let html = '';
-    for(let i = 0; i < state.weights.length; i += 6){
-      const rowWeights = state.weights.slice(i, i + 6);
-      html += '<tr>';
-      for(let j = 0; j < 6; j++){
-        const w = rowWeights[j];
-        const idx = i + j;
-        html += `<td style="position:relative;"><input type="number" step="0.01" data-idx="${idx}" value="${w || ''}" style="width:100%; padding-right:20px;"><button class="clear-btn" data-clear="${idx}" title="Clear this cell" style="position:absolute; right:2px; top:2px;">✕</button></td>`;
-      }
-      html += '</tr>';
-    }
-    tbody.innerHTML = html;
-    tbody.querySelectorAll('input[data-idx]').forEach(inp=>{
-      inp.addEventListener('input', (e)=>{
-        const idx = parseInt(e.target.dataset.idx);
-        state.weights[idx] = e.target.value;
-        updateResults();
-      });
-    });
-    tbody.querySelectorAll('.clear-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const idx = parseInt(btn.dataset.clear);
-        state.weights[idx] = '';
-        renderWeightsTable();
-      });
-    });
-    updateResults();
-  }
-
-  function renderHeader(){
-    $('h_intakeDate').value = state.header.intakeDate;
-    $('h_harvestFarm').value = state.header.harvestFarm;
-    $('h_trackingNo').value = state.header.trackingNo;
-    $('h_processingFor').value = state.header.processingFor;
-    window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.header.sizeRange);
-    $('h_wholeWeight').value = state.header.wholeWeight;
-    $('h_jobPrefix').value = state.header.jobPrefix;
-    $('h_jobNumber').value = state.header.jobNumber;
-    $('commentsBox').value = state.comments;
-    $('f_operator').value = state.operator;
-    $('f_operatorTitle').value = state.operatorTitle;
-    $('f_operatorDate').value = state.operatorDate;
-    $('f_operatorSignature').value = state.operatorSignature;
-    $('f_supervisor').value = state.supervisor;
-    $('f_supervisorTitle').value = state.supervisorTitle;
-    $('f_supervisorDate').value = state.supervisorDate;
-  }
-
-  function bindInputs(){
-    const headerMap = {
-      h_intakeDate:'intakeDate', h_harvestFarm:'harvestFarm', h_trackingNo:'trackingNo',
-      h_processingFor:'processingFor', h_sizeRange:'sizeRange', h_wholeWeight:'wholeWeight',
-      h_jobPrefix:'jobPrefix', h_jobNumber:'jobNumber'
-    };
-    Object.entries(headerMap).forEach(([id,key])=>{
-      $(id).addEventListener('input', ()=>{ state.header[key] = $(id).value; updateResults(); });
-    });
-    $('commentsBox').addEventListener('input', ()=>{ state.comments = $('commentsBox').value; });
-    ['operator','operatorTitle','operatorDate','operatorSignature','supervisor','supervisorTitle','supervisorDate'].forEach(key=>{
-      const id = 'f_' + key;
-      $(id).addEventListener('input', ()=>{ state[key] = $(id).value; });
-    });
-  }
-
-  function updateRecordStatus(){
-    const jobStr = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'No job';
-    const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${jobStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
-  }
-
-  function renderAll(){
-    renderHeader();
-    renderWeightsTable();
-    updateRecordStatus();
-    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
-  }
-
-  async function saveRecord(finalize){
-    const now = Date.now();
-    if(!state.id){
-      const jobId = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'NOJOB';
-      state.id = `oosw_${safeKey(jobId)}_${now}`;
-      state.createdAt = now;
-    }
-    state.updatedAt = now;
-    state.status = finalize ? 'submitted' : 'draft';
-
-    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
-    if(!ok){ toast('Save failed.'); return; }
-    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
-    renderAll();
-    if(verificationBlock) verificationBlock.refresh();
-  }
-
-  function generatePdf(){
-    const jobStr = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'record';
-    document.title = `REC_7.1.5_OOSW_${safeKey(jobStr)}_${state.header.intakeDate||''}`;
-    window.print();
-  }
-
-  function mountSignoff(){
-    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_operator', titleId: 'f_operatorTitle', dateId: 'f_operatorDate', signatureId: 'f_operatorSignature', byLabel: 'Operator'
-    });
-  }
-
-  let verificationBlock = null;
-  function mountVerification(){
-    verificationBlock = window.SignOffBlock.mountVerification({
-      recordKey: window.RecordDoc.recordKey,
-      mount: '#panelVerification',
-      getPending(){
-        return (state.status === 'submitted' && !state.verification)
-          ? [{ id: state.id, label: state.header.intakeDate ? `Intake ${state.header.intakeDate}` : 'This record' }]
-          : [];
-      },
-      async onLogged(record){
-        state.verification = record;
-        await storeSet('record:'+state.id, JSON.stringify(state), true);
-        renderAll();
-      }
-    });
-  }
-
-function wire(){
-window.Lookups.upgrade('h_sizeRange', 'sizeRanges');
-bindInputs();
-    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
-    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
-    $('newRecordBtn').addEventListener('click', ()=>{
-      if(confirm('Start new record? Unsaved changes will be lost.')){
-        state = newRecord();
-        renderAll();
-      }
-    });
-    $('addWeightBtn').addEventListener('click', ()=>{
-      const val = $('newWeightInput').value.trim();
-      if(!val){ toast('Enter a weight.'); return; }
-      state.weights.push(val);
-      $('newWeightInput').value = '';
-      $('newWeightInput').focus();
-      renderWeightsTable();
-    });
-    $('newWeightInput').addEventListener('keydown', (e)=>{
-      if(e.key==='Enter'){ $('addWeightBtn').click(); }
-    });
-    $('exportBtn').addEventListener('click', ()=>{
-      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      const jobStr = (state.header.jobPrefix && state.header.jobNumber) ? `${state.header.jobPrefix}-${state.header.jobNumber}` : 'oosw_draft';
-      a.download = `oosw_${safeKey(jobStr)}.json`;
-      a.click();
-    });
-    $('generatePdfBtn').addEventListener('click', generatePdf);
-  }
-
-  (async function init(){
-    mountSignoff();
-    wire();
-    renderAll();
-    mountVerification();
-  })();
+  });
 })();
 </script>
 </body>

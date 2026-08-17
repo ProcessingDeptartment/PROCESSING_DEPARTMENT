@@ -3,316 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REC 7.2.7 Labelling of Cans</title>
+<title>REC 7.2.15 Labelling of Cans</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
-<style>
-  :root{
-    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:#c9cdd1; --line-soft:var(--palette-border); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
-    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
-  }
-  #loc-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:var(--form-fs-root); line-height:1.4; }
-  #loc-root *{ box-sizing:border-box; }
-  #loc-root h1,#loc-root h2,#loc-root h3{ margin:0; font-weight:700; }
-  #loc-root input, #loc-root select, #loc-root textarea{
-    font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
-    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
-  }
-  #loc-root input:focus, #loc-root select:focus, #loc-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
-  #loc-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .dc-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .dc-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .dc-topline input{ width:120px; padding:3px 5px; font-size:var(--form-fs-small); }
-  .btn{ padding:5px 11px; font-size:var(--form-fs-button); }
-  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
-  .btn-primary:hover{ background:var(--palette-primary-hover); }
-  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; }
-  .btn-ghost:hover{ background:#33444f; }
-  .btn-flat{ background:var(--line-soft); color:var(--ink); }
-  .btn-flat:hover{ background:#d5d8d6; }
-  .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-  .dc-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
-  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
-  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:var(--palette-head-bg); border-radius:5px 5px 0 0; }
-  .panel-head h2{ font-size:var(--form-fs-panel-head); text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
-  .panel-body{ padding:11px; }
-
-  .grid{ display:grid; gap:8px; }
-  .grid-6{ grid-template-columns:repeat(6,1fr); }
-  .grid-4{ grid-template-columns:repeat(4,1fr); }
-  .grid-3{ grid-template-columns:repeat(3,1fr); }
-  .grid-2{ grid-template-columns:repeat(2,1fr); }
-  label.field{ display:flex; flex-direction:column; gap:2px; font-size:var(--form-fs-label); color:var(--palette-label); font-weight:600; }
-  label.field input, label.field select{ font-size:var(--form-fs-button); padding:3px 5px; }
-
-  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
-  .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
-  .record-status{ font-size:10px; color:var(--palette-label); font-weight:600; padding:4px 8px; background:var(--palette-border); border-radius:3px; }
-  .muted{ color:#8a939b; }
-  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
-  .toast.show{ opacity:1; }
-
-  @media (max-width:900px){
-    .grid-6{grid-template-columns:repeat(3,1fr);}
-    .grid-4{grid-template-columns:repeat(2,1fr);}
-  }
-
-  @media print{
-    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
-    #panelLabelIssuance{ order:1; }
-    #panelSignoff{ order:2; }
-    #panelPreLabellingChecks{ order:3; break-before:page; page-break-before:always; }
-    #panelLabellingChecks{ order:4; }
-    #panelPostLabellingChecks{ order:5; }
-  }
-</style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="loc-root">
-  <div class="dc-top">
-    <div class="doc-line"><span class="doc-code">REC 7.2.15</span><h1>Labelling of Cans</h1><span class="doc-rev">Rev 3 &middot; Rev date not set</span></div>
-    <div class="dc-topline no-print"><button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
-    </div>
-  </div>
-
-  <div class="dc-body">
-    <div class="panel" id="panelLabelIssuance">
-      <div class="panel-head"><h2>Label Issuance</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-4">
-          <label class="field">Date<input id="h_date" type="date"></label>
-          <label class="field">Label used<input id="h_labelUsed" placeholder="Label type"></label>
-          <label class="field">Stickers used<input id="h_stickersUsed" placeholder="Sticker type"></label>
-          <label class="field">Client details<input id="h_clientDetails" placeholder="Details"></label>
-        </div>
-        <div class="grid grid-2" style="margin-top:8px;">
-          <label class="field">Quantity labels issued<input id="h_quantityLabelsIssued" type="number"></label>
-          <label class="field">Quantity issued<input id="h_quantityIssued" type="number"></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelPreLabellingChecks">
-      <div class="panel-head"><h2>Pre-Labelling Checks</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-2">
-          <label class="field">Boxes full?<select id="h_boxesFull"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Cans checked before labelling?<select id="h_cansCheckedBeforeLabelling"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelLabellingChecks">
-      <div class="panel-head"><h2>Labelling Checks</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-2" style="margin-bottom:8px;">
-          <label class="field">Cans checked after labelling?<select id="h_cansCheckedAfterLabelling"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Correct label used?<select id="h_correctLabelUsed"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-        </div>
-        <div class="grid grid-2">
-          <label class="field">Labelling requirement correct?<select id="h_labellingRequirementCorrect"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-          <label class="field">Carton labels correspond?<select id="h_cartonLabelsCorrespond"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelPostLabellingChecks">
-      <div class="panel-head"><h2>Post-Labelling Checks</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-6">
-          <label class="field">Corrective actions<textarea id="h_correctiveActions" rows="3"></textarea></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelSignoff">
-      <div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body">
-        <div id="signoffCompletedBy"></div>
-      </div>
-    </div>
-
-    <div class="actions no-print">
-      <span class="record-status" id="recordStatus"></span>
-      <span class="status-line" id="statusLine"></span>
-      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-    </div>
-
-    <div class="panel no-print" id="panelVerification"></div>
-  </div>
-
-  <div class="toast no-print" id="toast"></div>
-</div>
+<div id="frRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>
-/* Controlled-copy title block, repeated on every printed page.
- * docCode/recordKey are also what tools/build-master-index-data.py keys this page
- * to in the Master Index. Without them the build falls back to the file name, which
- * silently re-keys the record and orphans its stored revision history.
- * The paper revision is deliberately not stated here -- mountPrintHeader takes it
- * from the record's index row, so the issued index stays the single source. */
-window.RecordDoc = { docCode: 'REC 7.2.15', recordKey: 'labelling-of-cans' };
-document.addEventListener('DOMContentLoaded', function () {
-  if (!window.DocHeader) return;
-  window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
-    .then(function () {
-      var badge = document.querySelector('.doc-rev');
-      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
-    })
-    .catch(function (e) { console.error('title block failed to mount', e); });
-});
-</script>
 <script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/form-record.js?v=4"></script>
 <script>
-(async function(){
-  const $ = id => document.getElementById(id);
-
-  function newRecord(){
-    return {
-      id: null, revision: 1, status:'draft',
-      date:'', labelUsed:'', stickersUsed:'', clientDetails:'', quantityLabelsIssued:'',
-      quantityIssued:'', boxesFull:'', cansCheckedBeforeLabelling:'', cansCheckedAfterLabelling:'',
-      correctLabelUsed:'', labellingRequirementCorrect:'', cartonLabelsCorrespond:'',
-      correctiveActions:'', inspectedBy:'', inspectedByTitle:'', inspectedByDate:'', inspectedBySignature:'',
-      verification: null,
-      createdAt: null, updatedAt: null
-    };
-  }
-
-  let state = newRecord();
-function toast(msg){
-    const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
-  }
-  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
-
-  async function storeGet(key, shared){
-    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
-    catch(e){ return null; }
-  }
-  async function storeSet(key, value, shared){
-    try{ await window.storage.set(key, value, shared); return true; }
-    catch(e){ return false; }
-  }
-
-  function renderForm(){
-    $('h_date').value = state.date;
-    $('h_labelUsed').value = state.labelUsed;
-    $('h_stickersUsed').value = state.stickersUsed;
-    $('h_clientDetails').value = state.clientDetails;
-    $('h_quantityLabelsIssued').value = state.quantityLabelsIssued;
-    $('h_quantityIssued').value = state.quantityIssued;
-    $('h_boxesFull').value = state.boxesFull;
-    $('h_cansCheckedBeforeLabelling').value = state.cansCheckedBeforeLabelling;
-    $('h_cansCheckedAfterLabelling').value = state.cansCheckedAfterLabelling;
-    $('h_correctLabelUsed').value = state.correctLabelUsed;
-    $('h_labellingRequirementCorrect').value = state.labellingRequirementCorrect;
-    $('h_cartonLabelsCorrespond').value = state.cartonLabelsCorrespond;
-    $('h_correctiveActions').value = state.correctiveActions;
-    $('f_inspectedBy').value = state.inspectedBy;
-    $('f_inspectedByTitle').value = state.inspectedByTitle;
-    $('f_inspectedByDate').value = state.inspectedByDate;
-    $('f_inspectedBySignature').value = state.inspectedBySignature;
-  }
-
-  function bindInputs(){
-    const fields = ['date','labelUsed','stickersUsed','clientDetails','quantityLabelsIssued','quantityIssued','boxesFull','cansCheckedBeforeLabelling','cansCheckedAfterLabelling','correctLabelUsed','labellingRequirementCorrect','cartonLabelsCorrespond','correctiveActions','inspectedBy','inspectedByTitle','inspectedByDate','inspectedBySignature'];
-    fields.forEach(f=>{
-      const id = f.startsWith('inspectedBy') ? 'f_'+f : 'h_'+f;
-      const el = $(id);
-      if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
-    });
-  }
-
-  function updateRecordStatus(){
-    const dateStr = state.date ? state.date : 'No date';
-    const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
-  }
-
-  function renderAll(){
-    renderForm();
-    updateRecordStatus();
-    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
-  }
-
-  async function saveRecord(finalize){
-    const now = Date.now();
-    if(!state.id){
-      state.id = `labelling_of_cans_${now}`;
-      state.createdAt = now;
-    }
-    state.updatedAt = now;
-    state.status = finalize ? 'submitted' : 'draft';
-
-    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
-    if(!ok){ toast('Save failed.'); return; }
-    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
-    renderAll();
-    if(verificationBlock) verificationBlock.refresh();
-  }
-
-  function generatePdf(){
-    document.title = `REC_7.2.7_LABELLING_OF_CANS_${state.date||''}`;
-    window.print();
-  }
-
-  function mountSignoff(){
-    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_inspectedBy', titleId: 'f_inspectedByTitle', dateId: 'f_inspectedByDate', signatureId: 'f_inspectedBySignature', byLabel: 'Inspected by'
-    });
-  }
-
-  let verificationBlock = null;
-  function mountVerification(){
-    verificationBlock = window.SignOffBlock.mountVerification({
-      recordKey: window.RecordDoc.recordKey,
-      mount: '#panelVerification',
-      getPending(){
-        return (state.status === 'submitted' && !state.verification)
-          ? [{ id: state.id, label: state.date ? `Labelling ${state.date}` : (state.id || '(unsaved)') }]
-          : [];
-      },
-      async onLogged(record){
-        state.verification = record;
-        await storeSet('record:'+state.id, JSON.stringify(state), true);
-        renderAll();
-      }
-    });
-  }
-
-function wire(){
-bindInputs();
-    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
-    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
-    $('exportBtn').addEventListener('click', ()=>{
-      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `labelling_of_cans_${state.date||'draft'}.json`;
-      a.click();
-    });
-    $('generatePdfBtn').addEventListener('click', generatePdf);
-  }
-
-  mountSignoff();
-  wire();
-  renderAll();
-  mountVerification();
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'labelling-of-cans',
+    docCode: 'REC 7.2.15',
+    title: 'Labelling of Cans',
+    docRevisionStart: 1,
+    listColumns: ['date', 'labelUsed', 'clientDetails'],
+    sections: [
+      { title: 'Pre-labelling', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'labelUsed', label: 'Label used', type: 'text' },
+        { key: 'stickersUsed', label: 'Stickers used', type: 'text' },
+        { key: 'clientDetails', label: 'Client details', type: 'text' },
+        { key: 'quantityLabelsIssued', label: 'Quantity labels issued', type: 'number' },
+        { key: 'quantityIssued', label: 'Quantity issued', type: 'number' },
+        { key: 'boxesFull', label: 'Boxes full?', type: 'yesno' },
+        { key: 'cansCheckedBeforeLabelling', label: 'Cans checked before labelling?', type: 'yesno' }
+      ]},
+      { title: 'Labelling & post-labelling', newPage: true, fields: [
+        { key: 'cansCheckedAfterLabelling', label: 'Cans checked after labelling?', type: 'yesno' },
+        { key: 'correctLabelUsed', label: 'Correct label used?', type: 'yesno' },
+        { key: 'labellingRequirementCorrect', label: 'Labelling requirement correct?', type: 'yesno' },
+        { key: 'cartonLabelsCorrespond', label: 'Carton labels correspond?', type: 'yesno' }
+      ]},
+      { title: 'Notes', fields: [
+        { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea', wide: true }
+      ]}
+    ]
+  });
 })();
 </script>
-<script src="/lib/yesno-replace.js"></script>
 </body>
 </html>

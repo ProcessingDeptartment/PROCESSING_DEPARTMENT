@@ -6,388 +6,53 @@
 <title>REC 7.1.1 Basket Removal, Shucking &amp; Gutting</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
-<style>
-  :root{
-    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:#c9cdd1; --line-soft:var(--palette-border); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
-    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
-  }
-  #br-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:var(--form-fs-root); line-height:1.4; }
-  #br-root *{ box-sizing:border-box; }
-  #br-root h1,#br-root h2,#br-root h3{ margin:0; font-weight:700; }
-  #br-root input, #br-root select, #br-root textarea{
-    font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
-    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
-  }
-  #br-root .ml-yesno{ display:flex; gap:10px; }
-  #br-root .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid var(--line) !important; background:#fff; color:var(--steel); }
-  #br-root .ml-yesno button:hover:not(:disabled){ border-color:var(--steel-dk) !important; }
-  /* Which answer is "good" (green) vs "bad" (red) varies by question -- set via
-     data-good="Yes"|"No" on the .ml-yesno span (defaults to Yes when absent). */
-  #br-root .ml-yesno[data-good="Yes"] button.on[data-v="Yes"], #br-root .ml-yesno[data-good="No"] button.on[data-v="No"], #br-root .ml-yesno:not([data-good]) button.on[data-v="Yes"]{ background:var(--ok-bg); border-color:var(--ok) !important; color:var(--ok); }
-  #br-root .ml-yesno[data-good="Yes"] button.on[data-v="No"], #br-root .ml-yesno[data-good="No"] button.on[data-v="Yes"], #br-root .ml-yesno:not([data-good]) button.on[data-v="No"]{ background:var(--fail-bg); border-color:var(--fail) !important; color:var(--fail); }
-  #br-root .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
-  #br-root input:focus, #br-root select:focus, #br-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
-  #br-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .dc-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .dc-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .dc-topline input{ width:120px; padding:3px 5px; font-size:var(--form-fs-small); }
-  .btn{ padding:5px 11px; font-size:var(--form-fs-button); }
-  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
-  .btn-primary:hover{ background:var(--palette-primary-hover); }
-  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; }
-  .btn-ghost:hover{ background:#33444f; }
-  .btn-flat{ background:var(--line-soft); color:var(--ink); }
-  .btn-flat:hover{ background:#d5d8d6; }
-  .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-  .dc-body{ padding:12px 14px 40px; max-width:900px; margin:0 auto; }
-  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
-  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:var(--palette-head-bg); border-radius:5px 5px 0 0; }
-  .panel-head h2{ font-size:var(--form-fs-panel-head); text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
-  .panel-body{ padding:11px; }
-
-  .job-number-row{ display:grid; grid-template-columns:74px 1fr; gap:6px; }
-  .job-number-row select, .job-number-row input{ font-size:var(--form-fs-button); padding:3px 5px; }
-  .field-hint{ font-size:var(--form-fs-hint); font-weight:500; color:#8a939b; font-family:var(--mono); }
-  .field-hint.bad{ color:var(--fail); }
-
-  .grid{ display:grid; gap:8px; }
-  .grid-6{ grid-template-columns:repeat(6,1fr); }
-  .grid-4{ grid-template-columns:repeat(4,1fr); }
-  .grid-3{ grid-template-columns:repeat(3,1fr); }
-  .grid-2{ grid-template-columns:repeat(2,1fr); }
-  label.field{ display:flex; flex-direction:column; gap:2px; font-size:var(--form-fs-label); color:var(--palette-label); font-weight:600; }
-  label.field input, label.field select, label.field textarea{ font-size:var(--form-fs-button); padding:3px 5px; }
-
-  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
-  .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
-  .record-status{ font-size:10px; color:var(--palette-label); font-weight:600; padding:4px 8px; background:var(--palette-border); border-radius:3px; }
-  .muted{ color:#8a939b; }
-  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
-  .toast.show{ opacity:1; }
-
-  @media (max-width:900px){
-    .grid-6{grid-template-columns:repeat(3,1fr);}
-    .grid-4{grid-template-columns:repeat(2,1fr);}
-  }
-  @media print{
-    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
-    #panelIntakeProcessing{ order:1; }
-    #panelSignoff{ order:2; }
-    #panelIncomingCheck{ order:3; break-before:page; page-break-before:always; }
-    #panelQualityChecks{ order:4; }
-  }
-</style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="br-root">
-  <div class="dc-top">
-    <div class="doc-line"><span class="doc-code">REC 7.1.1</span><h1>Basket Removal, Shucking &amp; Gutting</h1><span class="doc-rev">Rev 5 &middot; Rev date not set</span></div>
-    <div class="dc-topline no-print"><button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
-    </div>
-  </div>
-
-  <div class="dc-body">
-
-    <div class="panel" id="panelIntakeProcessing">
-      <div class="panel-head"><h2>Intake &amp; Processing Info</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-6" style="margin-bottom:8px;">
-          <label class="field">Intake date<input id="h_intakeDate" type="date"></label>
-          <label class="field">Processing for<select id="h_processingFor"><option value="">—</option><option value="Can">Can</option><option value="Dry">Dry</option><option value="Other">Other</option></select></label>
-          <label class="field">Job no.<div class="job-number-row"><select id="h_jobPrefix"></select><input id="h_jobDigits" placeholder="Digits" inputmode="numeric"></div><span class="field-hint" id="jobNoHint"></span></label>
-        </div>
-        <div class="grid grid-6">
-          <label class="field">Size range<select id="h_sizeRange"><option value="">—</option></select></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelIncomingCheck">
-      <div class="panel-head"><h2>Incoming Check</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-4" style="margin-bottom:8px;">
-          <label class="field">Incoming abalone temp (°C)<input id="h_incomingTemp" type="number" step="0.1"></label>
-          <label class="field">No. of mortalities<input id="h_noOfMortalities" type="number"></label>
-          <label class="field">Signs of parasites?<span class="ml-yesno" data-yesno-for="h_signsOfParasites" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_signsOfParasites" value=""></span></label>
-          <label class="field">Foreign/physical objects?<span class="ml-yesno" data-yesno-for="h_foreignObjects" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_foreignObjects" value=""></span></label>
-        </div>
-        <div class="grid grid-6">
-          <label class="field">Damages on foot?<span class="ml-yesno" data-yesno-for="h_damagesOnFoot" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesOnFoot" value=""></span></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panelQualityChecks">
-      <div class="panel-head"><h2>Quality Checks</h2></div>
-      <div class="panel-body">
-        <div class="grid grid-3" style="margin-bottom:8px;">
-          <label class="field">Damages after shucking?<span class="ml-yesno" data-yesno-for="h_damagesAfterShucking" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterShucking" value=""></span></label>
-          <label class="field">Beak cut correct?<span class="ml-yesno" data-yesno-for="h_beakCutCorrect" data-good="Yes"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_beakCutCorrect" value=""></span></label>
-          <label class="field">Damages after gutting &amp; beaking?<span class="ml-yesno" data-yesno-for="h_damagesAfterGutting" data-good="No"><button type="button" data-v="Yes">Y</button><button type="button" data-v="No">N</button><input type="hidden" id="h_damagesAfterGutting" value=""></span></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Process Deviations</h2></div>
-      <div class="panel-body">
-        <textarea id="h_processDeviations" rows="2" placeholder="Record deviations and corrective actions…" style="font-size:11px;"></textarea>
-      </div>
-    </div>
-
-    <div class="panel" id="panelSignoff">
-      <div class="panel-head"><h2>Sign-off</h2></div>
-      <div class="panel-body">
-        <div id="signoffCompletedBy"></div>
-      </div>
-    </div>
-
-    <div class="actions no-print">
-      <span class="record-status" id="recordStatus"></span>
-      <span class="status-line" id="statusLine"></span>
-      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-    </div>
-
-    <div class="panel no-print" id="panelVerification"></div>
-  </div>
-
-  <div class="toast no-print" id="toast"></div>
-</div>
+<div id="frRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>
-/* Controlled-copy title block, repeated on every printed page.
- * docCode/recordKey are also what tools/build-master-index-data.py keys this page
- * to in the Master Index. Without them the build falls back to the file name, which
- * silently re-keys the record and orphans its stored revision history.
- * The paper revision is deliberately not stated here -- mountPrintHeader takes it
- * from the record's index row, so the issued index stays the single source. */
-window.RecordDoc = { docCode: 'REC 7.1.1', recordKey: 'basket-removal-shucking-gutting' };
-document.addEventListener('DOMContentLoaded', function () {
-  if (!window.DocHeader) return;
-  window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
-    .then(function () {
-      var badge = document.querySelector('.doc-rev');
-      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
-    })
-    .catch(function (e) { console.error('title block failed to mount', e); });
-});
-</script>
 <script src="../lib/data-store.js?v=4"></script>
 <script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/form-record.js?v=4"></script>
 <script>
-(async function(){
-  const $ = id => document.getElementById(id);
-
-  function newRecord(){
-    return {
-      id: null, revision: 1, status:'draft',
-      intakeDate:'', processingFor:'', jobNo:'', sizeRange:'',
-      incomingTemp:'', noOfMortalities:'', signsOfParasites:'', foreignObjects:'', damagesOnFoot:'',
-      damagesAfterShucking:'', beakCutCorrect:'', damagesAfterGutting:'', processDeviations:'',
-      checkedBy:'', checkedByTitle:'', checkedByDate:'', checkedBySignature:'',
-      createdAt: null, updatedAt: null
-    };
-  }
-
-  let state = newRecord();
-function toast(msg){
-    const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
-  }
-  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
-
-  async function storeGet(key, shared){
-    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
-    catch(e){ return null; }
-  }
-  async function storeSet(key, value, shared){
-    try{ await window.storage.set(key, value, shared); return true; }
-    catch(e){ return false; }
-  }
-
-  // jobNo is stored as one string (e.g. "3CP000123") but entered as
-  // prefix + digits so the product code can't be mistyped.
-  function splitJobNo(value){
-    const m = String(value || '').trim().toUpperCase().match(/^(3CP|3DP|CPR|DPR)(\d*)$/);
-    return m ? { prefix: m[1], digits: m[2] } : { prefix: '', digits: '' };
-  }
-
-  function renderJobNo(){
-    const parts = splitJobNo(state.jobNo);
-    $('h_jobPrefix').value = parts.prefix;
-    $('h_jobDigits').value = parts.digits;
-    updateJobNoHint();
-  }
-
-  function updateJobNoHint(){
-    const hint = $('jobNoHint');
-    if(!state.jobNo){ hint.textContent = 'e.g. 3CP000001'; hint.classList.remove('bad'); return; }
-    const ok = window.Lookups.batch.isValid(state.jobNo);
-    hint.textContent = ok ? state.jobNo : '4–8 digits required';
-    hint.classList.toggle('bad', !ok);
-  }
-
-  function syncJobNo(){
-    const prefix = $('h_jobPrefix').value;
-    const digits = $('h_jobDigits').value.replace(/\D/g, '').slice(0, 8);
-    $('h_jobDigits').value = digits;
-    state.jobNo = (prefix && digits) ? prefix + digits : '';
-    updateJobNoHint();
-  }
-
-  function renderForm(){
-    $('h_intakeDate').value = state.intakeDate;
-    $('h_processingFor').value = state.processingFor;
-    renderJobNo();
-    window.Lookups.setValue('h_sizeRange', 'sizeRanges', state.sizeRange);
-    $('h_incomingTemp').value = state.incomingTemp;
-    $('h_noOfMortalities').value = state.noOfMortalities;
-    $('h_signsOfParasites').value = state.signsOfParasites;
-    $('h_foreignObjects').value = state.foreignObjects;
-    $('h_damagesOnFoot').value = state.damagesOnFoot;
-    $('h_damagesAfterShucking').value = state.damagesAfterShucking;
-    $('h_beakCutCorrect').value = state.beakCutCorrect;
-    $('h_damagesAfterGutting').value = state.damagesAfterGutting;
-    $('h_processDeviations').value = state.processDeviations;
-    $('f_checkedBy').value = state.checkedBy;
-    $('f_checkedByTitle').value = state.checkedByTitle;
-    $('f_checkedByDate').value = state.checkedByDate;
-    $('f_checkedBySignature').value = state.checkedBySignature;
-  }
-
-  function bindInputs(){
-    ['h_jobPrefix','h_jobDigits'].forEach(id=>{
-      $(id).addEventListener('input', syncJobNo);
-      $(id).addEventListener('change', syncJobNo);
-    });
-    const fields = ['intakeDate','processingFor','sizeRange','incomingTemp','noOfMortalities','signsOfParasites','foreignObjects','damagesOnFoot','damagesAfterShucking','beakCutCorrect','damagesAfterGutting','processDeviations','checkedBy','checkedByTitle','checkedByDate','checkedBySignature'];
-    fields.forEach(f=>{
-      const id = f.startsWith('checkedBy') ? 'f_'+f : 'h_'+f;
-      const el = $(id);
-      if(el) el.addEventListener('input', ()=>{ state[f] = el.value; });
-    });
-  }
-
-  function updateRecordStatus(){
-    const dateStr = state.intakeDate ? state.intakeDate : 'No date';
-    const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${dateStr} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
-  }
-
-  function renderAll(){
-    renderForm();
-    updateRecordStatus();
-    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
-  }
-
-  function validateJobNo(){
-    if (!state.jobNo || !window.Lookups || !window.Lookups.batch || !window.Lookups.batch.isValid) return true;
-    const valid = window.Lookups.batch.isValid(state.jobNo);
-    if (valid) return true;
-    toast(window.Lookups.batch.formatError());
-    return false;
-  }
-
-  async function saveRecord(finalize){
-    if (!validateJobNo()) return;
-
-    const now = Date.now();
-    if(!state.id){
-      const dateId = state.intakeDate ? state.intakeDate : 'NODATE';
-      state.id = `basket_removal_${safeKey(dateId)}_${now}`;
-      state.createdAt = now;
-    }
-    state.updatedAt = now;
-    state.status = finalize ? 'submitted' : 'draft';
-
-    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
-    if(!ok){ toast('Save failed.'); return; }
-    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
-    renderAll();
-    if(verificationBlock) verificationBlock.refresh();
-  }
-
-  function generatePdf(){
-    const dateStr = state.intakeDate ? state.intakeDate : 'record';
-    document.title = `REC_7.1.1_BASKET_REMOVAL_${safeKey(dateStr)}`;
-    window.print();
-  }
-
-
-  function mountSignoff(){
-    $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
-      byId: 'f_checkedBy', titleId: 'f_checkedByTitle', dateId: 'f_checkedByDate', signatureId: 'f_checkedBySignature', byLabel: 'Completed by'
-    });
-  }
-
-  let verificationBlock = null;
-  function mountVerification(){
-    verificationBlock = window.SignOffBlock.mountVerification({
-      recordKey: window.RecordDoc.recordKey,
-      mount: '#panelVerification',
-      getPending(){
-        return (state.status === 'submitted' && !state.verification)
-          ? [{ id: state.id, label: state.intakeDate ? `Intake ${state.intakeDate}` : 'This record' }]
-          : [];
-      },
-      async onLogged(record){
-        state.verification = record;
-        await storeSet('record:'+state.id, JSON.stringify(state), true);
-        renderAll();
-      }
-    });
-  }
-
-function wire(){
-  window.Lookups.fill('h_jobPrefix', 'jobPrefixes', { selected: splitJobNo(state.jobNo).prefix });
-  window.Lookups.upgrade('h_sizeRange', 'sizeRanges');
-  bindInputs();
-    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
-    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
-    $('exportBtn').addEventListener('click', ()=>{
-      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      const dateStr = state.intakeDate ? state.intakeDate : 'basket_removal_draft';
-      a.download = `basket_removal_${safeKey(dateStr)}.json`;
-      a.click();
-    });
-    $('generatePdfBtn').addEventListener('click', generatePdf);
-  }
-
-  mountSignoff();
-  wire();
-  renderAll();
-  mountVerification();
-})();
-</script>
-<script src="/lib/yesno-replace.js"></script>
-<script>
-// Wire any inlined .ml-yesno groups on this page (Y / N radio-style buttons)
-(function(){
-  document.querySelectorAll('.ml-yesno').forEach(group=>{
-    const hidden = group.querySelector('input[type=hidden]');
-    group.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        if (btn.disabled) return;
-        const next = btn.dataset.v;
-        hidden.value = next;
-        group.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
-        hidden.dispatchEvent(new Event('input', { bubbles: true }));
-      });
-    });
+(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'basket-removal-shucking-gutting',
+    docCode: 'REC 7.1.1',
+    title: 'Basket Removal, Shucking & Gutting',
+    docRevisionStart: 1,
+    listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
+    sections: [
+      { title: 'Intake & processing info', fields: [
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dry', 'Other'] },
+        { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
+        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
+      ]},
+      { title: 'Incoming check', newPage: true, fields: [
+        { key: 'incomingTemp', label: 'Incoming abalone temp (°C)', type: 'number' },
+        { key: 'noOfMortalities', label: 'No. of mortalities', type: 'number' },
+        { key: 'signsOfParasites', label: 'Signs of parasites?', type: 'yesno', good: 'No' },
+        { key: 'foreignObjects', label: 'Foreign/physical objects?', type: 'yesno', good: 'No' },
+        { key: 'damagesOnFoot', label: 'Damages on foot?', type: 'yesno', good: 'No' }
+      ]},
+      { title: 'Quality checks', fields: [
+        { key: 'damagesAfterShucking', label: 'Damages after shucking?', type: 'yesno', good: 'No' },
+        { key: 'beakCutCorrect', label: 'Beak cut correct?', type: 'yesno', good: 'Yes' },
+        { key: 'damagesAfterGutting', label: 'Damages after gutting & beaking?', type: 'yesno', good: 'No' }
+      ]},
+      { title: 'Process deviations', fields: [
+        { key: 'processDeviations', label: 'Process deviations', type: 'textarea', wide: true }
+      ]}
+    ]
   });
 })();
 </script>
