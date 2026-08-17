@@ -737,6 +737,21 @@
     }
 
     injectStyleOnce();
+
+    // Template override: load saved customizations before rendering
+    try {
+      const _teRaw = await (async () => { try { const r = await window.storage.get('record_template:' + config.recordKey, true); return r ? r.value : null; } catch (e) { return null; } })();
+      if (_teRaw) {
+        const override = JSON.parse(_teRaw);
+        if (override && override.schemaVersion === 1 && override.engine === 'monitoring-log') {
+          if (override.entryFields) config.entryFields = override.entryFields;
+          if (override.specFields) config.specFields = override.specFields;
+        }
+      }
+    } catch (e) { console.warn('ml: template override parse failed', e); }
+
+    const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
+
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
     mount.classList.add('ml-app');
 
@@ -900,6 +915,7 @@
         <div class="ml-topline no-print">
           ${topAddEntry ? `<button class="ml-btn ml-btn-ghost" id="ml_topAddEntryBtn">+ Add entry</button>` : ''}
           ${showThresholds ? `<button class="ml-btn ml-btn-ghost" id="ml_thresholdsBtn">Thresholds</button>` : ''}
+          ${canManageTemplates ? `<button class="ml-btn ml-btn-ghost" id="ml_editTemplateBtn">Edit Template</button>` : ''}
         </div>
       </div>
       <div class="ml-body">
@@ -1039,6 +1055,30 @@
       el('ml_thSaveBtn').addEventListener('click', saveThresholds);
     } else {
       el('ml_thresholdsModal').remove();
+    }
+
+    // ---------- edit template button ----------
+    if (canManageTemplates && el('ml_editTemplateBtn')) {
+      el('ml_editTemplateBtn').addEventListener('click', function () {
+        function doOpen() {
+          window.TemplateEditor.open({
+            recordKey: config.recordKey,
+            engine: 'monitoring-log',
+            currentConfig: {
+              entryFields: JSON.parse(JSON.stringify(config.entryFields || [])),
+              specFields: JSON.parse(JSON.stringify(config.specFields || []))
+            },
+            inlineConfig: null,
+            docRevisionStart: config.docRevisionStart,
+            onSave: () => location.reload()
+          });
+        }
+        if (window.TemplateEditor) { doOpen(); return; }
+        const s = document.createElement('script');
+        s.src = '../lib/template-editor.js';
+        s.onload = doOpen;
+        document.head.appendChild(s);
+      });
     }
 
     // ---------- verification strip ----------

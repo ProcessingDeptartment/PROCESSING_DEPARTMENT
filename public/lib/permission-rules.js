@@ -57,6 +57,7 @@
     managePolicies: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
     manageProcedures: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
     managePRPs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
+    manageTemplates: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
   };
 
   const ROLE_KEY = 'acting_as_role';

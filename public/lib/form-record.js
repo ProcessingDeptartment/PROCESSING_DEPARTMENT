@@ -247,6 +247,27 @@
     }
 
     injectStyleOnce();
+
+    // Template override: load saved customizations before rendering
+    const inlineConfig = {
+      sections: JSON.parse(JSON.stringify(config.sections || [])),
+      roster: config.roster ? JSON.parse(JSON.stringify(config.roster)) : null,
+      listColumns: config.listColumns ? config.listColumns.slice() : undefined
+    };
+    try {
+      const overrideRaw = await storeGet('record_template:' + config.recordKey, true);
+      if (overrideRaw) {
+        const override = JSON.parse(overrideRaw);
+        if (override && override.schemaVersion === 1 && override.engine === 'form-record') {
+          config.sections = override.sections;
+          if (override.roster !== undefined) config.roster = override.roster || undefined;
+          if (override.listColumns) config.listColumns = override.listColumns;
+        }
+      }
+    } catch (e) { console.warn('fr: template override parse failed', e); }
+
+    const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
+
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
     mount.classList.add('fr-app');
 
@@ -318,6 +339,9 @@
           <span class="doc-code">${esc(config.docCode)}</span>
           <h1>${esc(config.title)}</h1>
           <span class="doc-rev" id="fr_docRev"></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;" class="no-print">
+          ${canManageTemplates ? '<button class="fr-btn fr-btn-flat fr-btn-sm" id="fr_editTemplateBtn">Edit Template</button>' : ''}
         </div>
       </div>
       <div class="fr-body">
@@ -498,6 +522,16 @@
         <div class="fr-section-title">${esc(config.roster.title)}</div>
         <div id="fr_rosterRows"></div>
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="fr_addRosterRowBtn">+ Add row</button>`;
+      }
+      // Show fields from old submissions that no longer exist in the current template
+      if (existing && existing.values) {
+        const currentKeys = new Set(allFields(config).map(f => f.key));
+        const removed = Object.entries(existing.values).filter(([k, v]) => !currentKeys.has(k) && v !== '' && v != null);
+        if (removed.length) {
+          html += `<div class="fr-section-title">Previously captured</div>
+            <div class="fr-grid fr-grid-2">${removed.map(([k, v]) =>
+              `<label class="fr-field">${esc(k)}<input type="text" value="${esc(v)}" disabled></label>`).join('')}</div>`;
+        }
       }
       container.innerHTML = html;
       if (hasRoster) {
@@ -772,6 +806,31 @@
     ['filterFrom', 'filterTo', 'filterSearch'].forEach(suffix => {
       el(`fr_${suffix}`).addEventListener('input', renderTable);
     });
+
+    // Wire Edit Template button (dynamically loads template-editor.js if needed)
+    if (canManageTemplates && el('fr_editTemplateBtn')) {
+      el('fr_editTemplateBtn').addEventListener('click', function openEditor() {
+        function doOpen() {
+          window.TemplateEditor.open({
+            recordKey: config.recordKey,
+            engine: 'form-record',
+            currentConfig: {
+              sections: JSON.parse(JSON.stringify(config.sections || [])),
+              roster: config.roster ? JSON.parse(JSON.stringify(config.roster)) : null,
+              listColumns: config.listColumns ? config.listColumns.slice() : undefined
+            },
+            inlineConfig,
+            docRevisionStart: config.docRevisionStart,
+            onSave: () => location.reload()
+          });
+        }
+        if (window.TemplateEditor) { doOpen(); return; }
+        const s = document.createElement('script');
+        s.src = (config.libPath || '../lib/') + 'template-editor.js';
+        s.onload = doOpen;
+        document.head.appendChild(s);
+      });
+    }
 
     /* Header first, then the badge FROM it: the on-screen badge and the printed block
      * state the same revision, so they can never disagree. */
