@@ -129,6 +129,16 @@
   .dh-modal .btn-ghost:hover{ background:#dfe2e4; }
   @media (max-width:768px){ .dh-grid{ grid-template-columns:1fr; } }
 
+  /* ---- add-record flow ---- */
+  .nr-q{ background:var(--palette-head-bg); border:1px solid var(--palette-border);
+         border-radius:4px; padding:14px; margin-bottom:14px; }
+  .nr-q p{ margin:0 0 10px; font-size:13.5px; font-weight:600; color:var(--palette-heading); }
+  .nr-q .nr-choices{ display:flex; gap:8px; }
+  .nr-q .btn.chosen{ outline:2px solid var(--palette-focus,#2f4356); outline-offset:1px; }
+  .c-name .sop-link{ color:var(--palette-heading); }
+  .tag-added{ background:#e6f0e6; color:#2f5d33; }
+  .tag-sop{ background:#e7edf5; color:#294663; }
+
   @media (max-width:768px){
     .container{ padding:12px; }
     .toolbar input[type=text]{ min-width:0; width:100%; }
@@ -164,6 +174,7 @@
   </div>
   <div class="dc-actions">
     <button class="btn btn-primary" id="printBtn">Print / PDF</button>
+    <button class="btn btn-primary" id="addRecordBtn">Add new record</button>
     <button class="btn btn-ghost" id="headersBtn">Edit document headers</button>
     <button class="btn btn-ghost" id="csvBtn">Export CSV</button>
     <a class="btn btn-ghost" href="record-list.html" style="text-decoration:none;display:inline-block;">Open a record &rarr;</a>
@@ -190,6 +201,7 @@
         <option value="paper">Not yet digitised</option>
         <option value="bumped">Revised since the index was issued</option>
         <option value="unlisted">Not on the index list</option>
+        <option value="added">Added online</option>
       </select>
     </div>
     <div>
@@ -219,6 +231,52 @@
   <div class="no-results" id="noResults" style="display:none;">No records match this filter.</div>
 
   <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
+</div>
+
+<!-- Add a record to the register. A record added here is a REGISTER entry only: it lists
+     the record on REC 01 with its paper revision and date of issue. It does not create an
+     online fill-in page (those are built as files under public/records), so a new row shows
+     as "not digitised" until one exists. Straight after it is added the SOP question is
+     asked, because "which SOP does this record belong to" is the answer that is available
+     at that moment and almost never chased afterwards. -->
+<div id="nrModal" class="dh-modal" style="display:none;">
+  <div class="dh-modal-inner">
+    <h2 id="nrTitle">Add a new record</h2>
+    <p class="dh-hint" id="nrHint">The document number and name as they appear on the paper
+      record. Revision and date of issue are the paper baseline — once the record is digitised,
+      revisions bumped inside the record take over this row automatically.</p>
+
+    <div id="nrStep1">
+      <div class="dh-grid">
+        <label class="dh-f">Document No.<input id="nrDocNo" type="text" placeholder="e.g. REC 7.2.20" autocomplete="off"></label>
+        <label class="dh-f">Document name<input id="nrName" type="text" autocomplete="off"></label>
+        <label class="dh-f">Details for change<input id="nrDetails" type="text" value="New record" autocomplete="off"></label>
+        <label class="dh-f">Revision<input id="nrRevision" type="number" min="0" step="1" value="1"></label>
+        <label class="dh-f">Date of issue<input id="nrDate" type="date"></label>
+        <label class="dh-f">Added by<input id="nrAddedBy" type="text" autocomplete="off"></label>
+      </div>
+    </div>
+
+    <div id="nrStep2" style="display:none;">
+      <div class="nr-q">
+        <p>Is there a relevant SOP for <span id="nrQName"></span>?</p>
+        <div class="nr-choices">
+          <button type="button" class="btn btn-primary" id="nrSopYes">Yes — link an SOP</button>
+          <button type="button" class="btn btn-ghost" id="nrSopNo">No SOP</button>
+        </div>
+      </div>
+      <div id="nrSopWrap" style="display:none;">
+        <label class="dh-f">Find an SOP<input id="nrSopFilter" type="text" placeholder="Type to narrow the list…" autocomplete="off"></label>
+        <label class="dh-f">Relevant SOP<select id="nrSopSelect" size="8"></select></label>
+      </div>
+    </div>
+
+    <div class="dh-actions">
+      <span class="dh-state" id="nrState"></span>
+      <button class="btn btn-ghost" id="nrCancel">Cancel</button>
+      <button class="btn btn-primary" id="nrPrimary">Add record</button>
+    </div>
+  </div>
 </div>
 
 <!-- Controlled-copy title block editor. The block prints on every page of a record, so
@@ -289,6 +347,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/sop-index-data.js?v=1"></script>
 <script>
 (function () {
   const DATA = window.MasterIndexData;
@@ -312,6 +371,17 @@
 
   const CATEGORY_PREFIX = 'record_category:';
 
+  // Records added to the register from this page (rather than from the issued spreadsheet).
+  // One shared blob: they are read together on every load and there are only ever a handful
+  // between spreadsheet reissues.
+  const ADDED_KEY = 'master_index_added_rows';
+
+  // The SOP a record belongs to, keyed by rowId. The reverse half of the link is written to
+  // sop_record_links:<sopKey>, which public/lib/sop-doc.js merges into that SOP's related
+  // documents -- see the storage layout comment at the top of that file.
+  const SOP_LINK_PREFIX = 'record_sop_link:';
+  const SOP_LINKS_BY_SOP = 'sop_record_links:';
+
   // Use palette names from Lookups.lists.palettes where available so the
   // category dropdown stays in sync with the central palette list.
   function labelForPalette(p) {
@@ -323,7 +393,10 @@
     .map(p => [p, labelForPalette(p)]));
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-  function rowId(r) { return r.recordKey || ('doc:' + r.docNo); }
+  // An added row carries its own id so renumbering it later does not orphan its SOP link or
+  // its Y/N control state (rows from the spreadsheet have neither addedId nor, often, a
+  // recordKey, so they keep falling back to the document number as before).
+  function rowId(r) { return r.addedId || r.recordKey || ('doc:' + r.docNo); }
   function fmtDate(ms) {
     const d = new Date(ms);
     return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
@@ -339,6 +412,8 @@
   let live = {};        // rowId -> { revision, reason, dateOfIssue, bumped }
   let categories = {};  // file name (lower-case) -> category override, '' included
   let recordNumbers = {}; // recordKey -> overridden Document No.
+  let addedRows = [];     // rows added through this page
+  let sopLinks = {};      // rowId -> { sopNo, name, href, recordKey }
   let canEdit = false;
 
   async function loadControl() {
@@ -384,6 +459,62 @@
     if (value) recordNumbers[recordKey] = value;
     else delete recordNumbers[recordKey];
     await window.storage.set(RECORD_NUMBER_PREFIX + recordKey, value, true);
+  }
+
+  async function loadAddedRows() {
+    let arr = [];
+    try {
+      const raw = await window.storage.get(ADDED_KEY, true);
+      const parsed = raw ? JSON.parse(raw.value) : [];
+      if (Array.isArray(parsed)) arr = parsed;
+    } catch (e) { arr = []; }
+    // ROWS is the single list the whole page renders, sorts and counts from, so added rows
+    // are merged into it rather than tracked separately. Drop the previous merge first so a
+    // reload does not duplicate them.
+    for (let i = ROWS.length - 1; i >= 0; i--) if (ROWS[i].addedId) ROWS.splice(i, 1);
+    addedRows = arr;
+    arr.forEach(r => ROWS.push(r));
+  }
+
+  async function saveAddedRows() {
+    await window.storage.set(ADDED_KEY, JSON.stringify(addedRows), true);
+  }
+
+  async function loadSopLinks() {
+    sopLinks = {};
+    try {
+      const raw = await window.storage.getByPrefix(SOP_LINK_PREFIX, true);
+      for (const k in raw) {
+        try { sopLinks[k.slice(SOP_LINK_PREFIX.length)] = JSON.parse(raw[k]); } catch (e) {}
+      }
+    } catch (e) { sopLinks = {}; }
+  }
+
+  // Writes both halves of the link: the record -> SOP side this page renders, and the
+  // SOP -> record side that shows up in the SOP's related documents table.
+  async function saveSopLink(id, rec, sop) {
+    const link = {
+      sopNo: sop.sopNo,
+      name: sop.name,
+      href: sop.href,
+      recordKey: sop.recordKey,
+      linkedAt: Date.now(),
+      linkedBy: (window.Auth && window.Auth.getDisplayName && window.Auth.getDisplayName()) || ''
+    };
+    sopLinks[id] = link;
+    await window.storage.set(SOP_LINK_PREFIX + id, JSON.stringify(link), true);
+
+    let back = [];
+    try {
+      const raw = await window.storage.get(SOP_LINKS_BY_SOP + sop.recordKey, true);
+      const parsed = raw ? JSON.parse(raw.value) : [];
+      if (Array.isArray(parsed)) back = parsed;
+    } catch (e) { back = []; }
+    const code = String(rec.docNo || '').trim();
+    if (!back.some(d => String(d.code || '').trim().toLowerCase() === code.toLowerCase())) {
+      back.push({ code: code, name: rec.name || '' });
+      await window.storage.set(SOP_LINKS_BY_SOP + sop.recordKey, JSON.stringify(back), true);
+    }
   }
 
   // The docNo shown everywhere on this page: the online override if one has been saved,
@@ -467,6 +598,14 @@
       if (r.notOnIndexList) tag = '<span class="tag tag-unlisted">not on index list</span>';
       else if (!online) tag = '<span class="tag tag-paper">not digitised</span>';
       if (l.bumped) tag += ' <span class="tag tag-bumped">revised online</span>';
+      if (r.addedId) tag += ' <span class="tag tag-added">added online</span>';
+
+      const sop = sopLinks[id];
+      const sopLine = sop
+        ? `<span class="sub"><span class="tag tag-sop">SOP</span> `
+          + `<a class="sop-link" href="../sops/${esc(sop.href)}" target="_blank">`
+          + `${esc(sop.sopNo)} — ${esc(sop.name)}</a></span>`
+        : '';
 
       const obs = c.obsoleteRetrieved != null ? c.obsoleteRetrieved : r.obsoleteRetrieved;
       const dist = c.distributed != null ? c.distributed : r.distributed;
@@ -477,9 +616,10 @@
         : '<span class="cat-none">—</span>';
 
       html += `<tr class="${online ? '' : 'not-digitised'}" data-id="${esc(id)}"`
-        + ` data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}">`
+        + ` data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}"`
+        + ` data-added="${!!r.addedId}">`
         + `<td class="c-code">${esc(displayDocNo(r))}</td>`
-        + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}</td>`
+        + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}${sopLine}</td>`
         + `<td class="c-cat">${catCell}</td>`
         + `<td class="c-details">${esc(details || '')}${detailSub}</td>`
         + `<td class="c-rev">${rev == null ? '—' : 'Rev ' + rev}</td>`
@@ -501,11 +641,13 @@
       const online = row.dataset.online === 'true';
       const bumped = row.dataset.bumped === 'true';
       const unlisted = row.dataset.unlisted === 'true';
+      const added = row.dataset.added === 'true';
       let ok = true;
       if (status === 'online') ok = online;
       else if (status === 'paper') ok = !online;
       else if (status === 'bumped') ok = bumped;
       else if (status === 'unlisted') ok = unlisted;
+      else if (status === 'added') ok = added;
       if (ok && q) {
         ok = row.textContent.toLowerCase().includes(q);
       }
@@ -561,6 +703,144 @@
     a.download = 'REC-01-master-record-index.csv';
     a.click();
     URL.revokeObjectURL(a.href);
+  });
+
+  /* ---- add a record to the register --------------------------------------------
+   * Two steps in one modal: the record's own details, then the SOP question. The
+   * question is not optional-looking on purpose -- it is asked every time, and "No SOP"
+   * is an explicit answer rather than a dialog someone can walk away from. */
+  const nrModal = $('nrModal');
+  let nrStep = 1;
+  let nrAdded = null;   // the row just added, carried into step 2
+
+  // The Create-New-SOP template row is a page, not a procedure -- never offer it as the
+  // SOP a record belongs to.
+  function nrSopRows() {
+    return ((window.SopIndexData && window.SopIndexData.rows) || [])
+      .filter(r => r.recordKey && r.href && r.recordKey !== 'sop-new-create-new-sop');
+  }
+
+  function nrSetState(msg, kind) {
+    const el = $('nrState');
+    el.textContent = msg || '';
+    el.style.color = kind === 'error' ? 'var(--palette-fail)'
+                   : kind === 'ok' ? 'var(--palette-ok)' : 'var(--palette-label)';
+  }
+
+  // dd/mm/yyyy is what every other row in this register carries (it is transcribed from
+  // the paper index), so the date input's ISO value is converted rather than stored raw.
+  function nrUkDate(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+  }
+
+  function nrFillSopSelect() {
+    const q = $('nrSopFilter').value.toLowerCase().trim();
+    const rows = nrSopRows().filter(r => !q || (r.sopNo + ' ' + r.name + ' ' + (r.area || '')).toLowerCase().includes(q));
+    $('nrSopSelect').innerHTML = rows.map(r =>
+      `<option value="${esc(r.recordKey)}">${esc(r.sopNo)} — ${esc(r.name)}${r.area ? ' (' + esc(r.area) + ')' : ''}</option>`
+    ).join('') || '<option value="" disabled>No SOP matches that search</option>';
+  }
+
+  function nrShowStep(n) {
+    nrStep = n;
+    $('nrStep1').style.display = n === 1 ? '' : 'none';
+    $('nrStep2').style.display = n === 2 ? '' : 'none';
+    $('nrSopWrap').style.display = 'none';
+    $('nrSopYes').classList.remove('chosen');
+    if (n === 1) {
+      $('nrTitle').textContent = 'Add a new record';
+      $('nrPrimary').textContent = 'Add record';
+      $('nrPrimary').style.display = '';
+      $('nrCancel').textContent = 'Cancel';
+    } else {
+      $('nrTitle').textContent = 'Link this record to an SOP';
+      $('nrPrimary').textContent = 'Link SOP';
+      $('nrPrimary').style.display = 'none';   // shown once "Yes" is chosen
+      $('nrCancel').textContent = 'Close';
+      $('nrQName').textContent = (nrAdded ? nrAdded.docNo + ' ' + nrAdded.name : 'this record');
+    }
+  }
+
+  function nrOpen() {
+    if (!canEdit) return;
+    nrAdded = null;
+    ['nrDocNo', 'nrName', 'nrSopFilter'].forEach(id => { $(id).value = ''; });
+    $('nrDetails').value = 'New record';
+    $('nrRevision').value = '1';
+    $('nrDate').value = new Date().toISOString().slice(0, 10);
+    $('nrAddedBy').value = (window.Auth && window.Auth.getDisplayName && window.Auth.getDisplayName()) || '';
+    nrSetState('');
+    nrShowStep(1);
+    nrModal.classList.add('open');
+    nrModal.style.display = 'flex';
+    $('nrDocNo').focus();
+  }
+
+  function nrClose() {
+    nrModal.classList.remove('open');
+    nrModal.style.display = 'none';
+  }
+
+  async function nrAddRecord() {
+    const docNo = $('nrDocNo').value.trim();
+    const name = $('nrName').value.trim();
+    if (!docNo || !name) { nrSetState('Document number and name are both required.', 'error'); return; }
+    const clash = ROWS.some(r => displayDocNo(r).trim().toLowerCase() === docNo.toLowerCase());
+    if (clash) { nrSetState('“' + docNo + '” is already on the index.', 'error'); return; }
+
+    const rev = parseInt($('nrRevision').value, 10);
+    nrAdded = {
+      addedId: 'added:' + Date.now() + ':' + Math.random().toString(36).slice(2, 7),
+      docNo: docNo,
+      name: name,
+      details: $('nrDetails').value.trim(),
+      revision: isNaN(rev) ? 1 : rev,
+      obsoleteRetrieved: 'N/A',
+      distributed: 'N/A',
+      dateOfIssue: nrUkDate($('nrDate').value),
+      recordKey: null,
+      href: null,
+      addedBy: $('nrAddedBy').value.trim(),
+      addedAt: Date.now()
+    };
+    nrSetState('Saving…');
+    addedRows.push(nrAdded);
+    ROWS.push(nrAdded);
+    await saveAddedRows();
+    render();
+    nrShowStep(2);
+    nrSetState(docNo + ' added to the index.', 'ok');
+  }
+
+  async function nrLinkSop() {
+    const key = $('nrSopSelect').value;
+    const sop = nrSopRows().find(r => r.recordKey === key);
+    if (!sop || !nrAdded) { nrSetState('Choose an SOP first.', 'error'); return; }
+    nrSetState('Linking…');
+    try {
+      await saveSopLink(rowId(nrAdded), nrAdded, sop);
+      render();
+      nrSetState('Linked to ' + sop.sopNo + '.', 'ok');
+      setTimeout(nrClose, 700);
+    } catch (e) { nrSetState(e.message, 'error'); }
+  }
+
+  $('addRecordBtn').addEventListener('click', nrOpen);
+  $('nrCancel').addEventListener('click', nrClose);
+  nrModal.addEventListener('click', e => { if (e.target === nrModal) nrClose(); });
+  $('nrSopFilter').addEventListener('input', nrFillSopSelect);
+  $('nrSopNo').addEventListener('click', nrClose);
+  $('nrSopYes').addEventListener('click', () => {
+    $('nrSopYes').classList.add('chosen');
+    $('nrSopWrap').style.display = '';
+    $('nrPrimary').style.display = '';
+    nrFillSopSelect();
+    $('nrSopFilter').focus();
+  });
+  $('nrPrimary').addEventListener('click', () => {
+    const run = nrStep === 1 ? nrAddRecord() : nrLinkSop();
+    run.catch(e => nrSetState(e.message, 'error'));
   });
 
   /* ---- controlled-copy title block editor ------------------------------------
@@ -722,6 +1002,8 @@
 
   (async function init() {
     canEdit = !window.PermissionRules || window.PermissionRules.can('manageMasterIndex');
+    $('addRecordBtn').disabled = !canEdit;
+    $('addRecordBtn').title = canEdit ? '' : 'Document control roles may add records to the index.';
 
     $('hdrCode').textContent = DATA.header.docNumber || 'REC 01';
     $('hdrRev').textContent = 'Rev ' + (DATA.header.revision || '?')
@@ -740,7 +1022,8 @@
       p, new Promise((_, rej) => setTimeout(() => rej(new Error('storage timeout')), 15000))
     ]);
     try {
-      await withTimeout(Promise.all([loadControl(), loadLive(), loadCategories(), loadRecordNumbers()]));
+      await withTimeout(Promise.all([loadControl(), loadLive(), loadCategories(),
+                                     loadRecordNumbers(), loadAddedRows(), loadSopLinks()]));
     } catch (e) {
       $('saveState').textContent = 'Live revision data unavailable — showing the issued baseline';
       $('saveState').style.color = 'var(--palette-fail)';

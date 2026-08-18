@@ -17,7 +17,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/policy-doc.js?v=1"></script>
+<script src="../lib/policy-doc.js?v=2"></script>
 <script>
 PolicyDoc.mount({
   "recordKey": "pol-7.2.9-glass-and-brittle-material-policy",
@@ -26,12 +26,23 @@ PolicyDoc.mount({
   "area": "Hygiene & Contamination Control",
   "startRev": 8,
   "baselineDate": "24/09/2025",
-  "sections": {
-    "objective": "To ensure that there are suitable control measures and systems in place to prevent product contamination by physical objects, and to ensure that staff follow the best possible practice to handle a glass breakage situation.",
-    "roles": "<ul><li>As glass is a significant potential physical food safety hazard, it is the policy of Abagold Ltd that all practical steps shall be taken to prevent contamination of food products from glass and hard plastics, and fragments thereof.</li><li>Any staff member who notices broken glass or brittle plastic, or who accidentally breaks any glass or glass equipment, is responsible for reporting the incident to management immediately.</li></ul>",
-    "process": "<p>No glass items or items containing brittle material are allowed to be taken into the production or storage areas. Procedures are established and documented detailing the action to be taken in case of breakage of glass or other brittle items. In the event of breakage in the production areas, a documented Glass Breakage Clearance Certificate must be completed to demonstrate that all necessary steps were taken to isolate and reject affected product and that the affected area is suitably cleaned before production may continue.</p><p><b>Overhead Lights:</b> Overhead light fittings are located at a suitable distance from work and storage surfaces, and in a way that prevents accidental damage from normal day-to-day production and product handling activities. All light fittings located directly above open product inside the production area are suitably covered to protect product in the event of breakage. The condition of light fittings and their protective covers is routinely monitored and records of monitoring are maintained. Production is stopped when light bulbs are replaced by the maintenance team to prevent product contamination, and fittings/covers are only cleaned when there is no production activity taking place in the area.</p><p><b>Windows:</b> All windows inside the production and storage facilities are protected from breakage and shattering to prevent glass fragments contaminating the production and storage areas. Where possible, and where there is a risk to product, windows are manufactured of Perspex or at least covered with a protective layer of plastic film to protect against breakage.</p>",
-    "review": "This policy is reviewed periodically as part of the FSMS document review cycle."
-  },
+  "sections": [
+    {
+      "key": "purpose",
+      "heading": "1. Purpose",
+      "html": "<p>To ensure that there are suitable control measures and systems in place to prevent product contamination by physical objects. To ensure that staff follow the best possible practice to handle a glass breakage situation.</p>"
+    },
+    {
+      "key": "policy",
+      "heading": "2. Policy",
+      "html": "<p>As glass is a significant potential physical food safety hazard, it is the policy of Abagold Ltd that all practical steps shall be taken to prevent contamination of food products from glass and hard plastics, as well as fragments thereof.</p><ul><li>No glass items or items containing brittle material are allowed to be taken into the production or storage areas.</li><li>If any staff member notices any broken glass or brittle plastic, or accidentally breaks any glass or glass equipment, it is their responsibility to report the incident to management immediately.</li><li>Procedures shall be established and documented, detailing the action to be taken in the case of breakage of glass or other brittle items.</li><li>In the event of breakage occurring in the production areas, a documented Glass Breakage Clearance Certificate must be completed to demonstrate that all necessary steps were taken to ensure affected product was isolated and rejected and that the affected area is suitably cleaned before production may continue.</li></ul><h3>2.1 Overhead Lights</h3><ul><li>Overhead light fittings will be located at a suitable distance from work and storage surfaces and in such a way to prevent accidental damage as a result of normal day to day production and product handling activities.</li><li>All light fittings located directly above open product inside the production area will be suitably covered to protect the product in the event of possible breakages.</li><li>The condition of light fittings and its protective covers will be routinely monitored.</li><li>Records of monitoring shall be maintained.</li><li>Production should be stopped when light bulbs are replaced by the maintenance team, to prevent any possible product contamination.</li><li>Light fittings and covers will only be cleaned when there are no production activities taking place in the area.</li></ul><h3>2.2 Windows</h3><ul><li>All windows inside the production and storage facilities will be protected from breakage and shattering to prevent glass fragments contaminating the production and storage areas.</li><li>Where possible, and where there is a risk to product, windows will be manufactured of Perspex or at least covered with a protective layer of plastic film to protect it from breakage.</li></ul>"
+    },
+    {
+      "key": "signoff",
+      "heading": "",
+      "html": "<div class='pd-sig'>Signed: _________________________________&nbsp;&nbsp;&nbsp;Date: _____________________</div>"
+    }
+  ],
   "relatedDocs": [
     {
       "code": "REC",

@@ -17,7 +17,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/policy-doc.js?v=1"></script>
+<script src="../lib/policy-doc.js?v=2"></script>
 <script>
 PolicyDoc.mount({
   "recordKey": "pol-7.2.7-bin-tray-and-crate-usage-policy",
@@ -25,19 +25,75 @@ PolicyDoc.mount({
   "name": "Bin, Tray and Crate Usage Policy",
   "area": "Hygiene & Contamination Control",
   "startRev": 1,
-  "baselineDate": "",
-  "sections": {
-    "objective": "The purpose of this policy is to ensure that all bins, trays, and crates used within the abalone processing facility are handled in a hygienic and controlled manner to prevent contamination, protect product quality, and maintain traceability throughout the production process. Proper use and management of bins, trays, and crates helps prevent physical contamination, cross-contamination between product types, microbiological contamination, and product mix-ups between batches or processing stages. This policy applies to all bins, trays and crates used for handling or transporting raw abalone meat, by-products or waste, processed abalone products (canned, braised, dried), work-in-progress product, rework material and packaging materials, across all production, processing, packing and storage areas.",
-    "roles": "<ul><li><b>Production Staff:</b> Use containers correctly, report damaged or dirty containers, and maintain product identification.</li><li><b>Supervisors:</b> Ensure containers are used according to this policy, monitor hygiene practices, and ensure damaged containers are removed.</li><li><b>Quality / Food Safety Team:</b> Verify compliance with this policy, monitor container hygiene during inspections, and review the policy annually.</li></ul>",
-    "process": "<p><b>Types of Containers Used:</b> Only food-grade containers that are clean, intact, and approved for food contact may be used, including plastic food-grade bins, food-grade trays and plastic crates. Damaged containers (cracked, chipped, or difficult to clean) must not be used and must be removed from service.</p><p><b>Identification and Dedicated Use</b> — containers are colour coded / labelled by area to prevent cross-contamination:</p><ul><li><b>Bins (big ones):</b> Shucking and sorting area — Blue; Guts (by-product) — Red; Scrubbed (clean) product — White; Product after precooking — White; Cans packed with abalone ready to be closed — White.</li><li><b>Crates:</b> Shells (by-product) — tall crates, no specific colour; Dirty abalone at washing area — grey shallow crates; Product to chiller after second wash — grey shallow crates; Dried product pull-down/grading — red shallow crates; Precooking — yellow tall crates; Dry product already cooked (before stringing) — yellow shallow crates; Crates for other crates on the floor — black crates; Ice pack freezing — tall crates, multiple colours.</li><li><b>Trays:</b> Dry product after 1st wash — white &amp; blue trays with holes; Canned product in chiller after first wash — red trays; Canning product during scrubbing — white trays without holes.</li></ul><p><b>Hygiene and Cleaning Requirements:</b> All bins, trays and crates must be cleaned and sanitised before use, cleaned between different production batches when required, and stored in designated clean storage areas, following the facility’s Cleaning and Sanitation Procedure. Containers that fall on the floor or become contaminated must be rewashed before reuse.</p><p><b>Handling Practices:</b></p><ul><li>Do not place bins or trays directly on the floor where product contact occurs.</li><li>Do not overload containers, and ensure containers are stable when stacked.</li><li>Handle containers carefully to avoid damage.</li><li>Avoid contact between containers used for raw and cooked products.</li><li>Product containers must never be used for waste or non-food items.</li></ul><p><b>Product Identification and Traceability:</b> Where product is held in bins or trays during processing, the container must be clearly identified with product name (if applicable — canning product), job number, size range, and intake date (if applicable), to ensure traceability and prevent product mix-ups.</p><p><b>Storage of Containers:</b> Clean containers must be stored off the floor, in designated storage areas, protected from contamination. Dirty containers must be placed in the designated cleaning area and must not be stored with clean containers.</p><p><b>Inspection and Maintenance:</b> Bins, trays and crates must be inspected regularly for cracks, breakage, rough surfaces and signs of contamination. Any damaged containers must be removed from use immediately and either repaired or discarded.</p><p><b>Training:</b> All employees involved in product handling must receive training on correct use of bins, trays and crates, cross-contamination prevention, and hygienic handling practices, conducted during induction and refresher training.</p>",
-    "review": "This policy is reviewed when changes occur in production processes, equipment, or food safety requirements."
-  },
+  "baselineDate": "19/03/2026",
+  "sections": [
+    {
+      "key": "purpose",
+      "heading": "1. Purpose",
+      "html": "<p>The purpose of this policy is to ensure that all bins, trays, and crates used within the abalone processing facility are handled in a hygienic and controlled manner to prevent contamination, protect product quality, and maintain traceability throughout the production process.</p><p>Proper use and management of bins, trays, and crates helps prevent:</p><ul><li>Physical contamination</li><li>Cross-contamination between product types</li><li>Microbiological contamination</li><li>Product mix-ups between batches or processing stages</li></ul>"
+    },
+    {
+      "key": "scope",
+      "heading": "2. Scope",
+      "html": "<p>This policy applies to all bins, trays, and crates used for handling or transporting:</p><ul><li>Raw abalone meat</li><li>By-products or waste</li><li>Processed abalone products (canned, braised, dried)</li><li>Work-in-progress product</li><li>Rework material</li><li>Packaging materials</li></ul><p>It applies to all production, processing, packing, and storage areas.</p>"
+    },
+    {
+      "key": "container-types",
+      "heading": "3. Types of Containers Used",
+      "html": "<p>Only food-grade containers that are clean, intact, and approved for food contact may be used.</p><p>Typical containers used in the facility include:</p><ul><li>Plastic food-grade bins</li><li>Food-grade trays</li><li>Plastic crates</li></ul><p>Damaged containers (cracked, chipped, or difficult to clean) must not be used and must be removed from service.</p>"
+    },
+    {
+      "key": "identification",
+      "heading": "4. Identification and Dedicated Use",
+      "html": "<p>To prevent cross-contamination, containers must be used only for their designated purpose.</p><p>Where applicable, containers may be identified through:</p><ul><li>Colour coding</li><li>Labels</li><li>Area designation</li></ul><div style='overflow-x:auto;margin:0 0 12px'><table style='border-collapse:collapse;width:100%;font-size:12px'><thead><tr style='background:var(--head-bg)'><th style='text-align:left;padding:6px 8px;border:1px solid var(--border)'>Container Use &ndash; Bins (big ones)</th><th style='text-align:left;padding:6px 8px;border:1px solid var(--border)'>Identification</th></tr></thead><tbody><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Shucking and sorting area</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Blue</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Guts &ndash; by-product</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Red</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Scrubbed (clean) product</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>White</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Product after precooking</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>White</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Cans packed with abalone ready to be closed</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>White</td></tr></tbody></table></div><div style='overflow-x:auto;margin:0 0 12px'><table style='border-collapse:collapse;width:100%;font-size:12px'><thead><tr style='background:var(--head-bg)'><th style='text-align:left;padding:6px 8px;border:1px solid var(--border)'>Container Use &ndash; Crates</th><th style='text-align:left;padding:6px 8px;border:1px solid var(--border)'>Identification</th></tr></thead><tbody><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Shells &ndash; by-product</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Tall crates &ndash; no specific colour</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Dirty abalone at washing area</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Gray shallow crates</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Product to chiller after second wash</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Gray shallow crates</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Dried product &ndash; pull down and grading</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Red shallow crates</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Precooking</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Yellow tall crates</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Dry product &ndash; already cooked, before stringing</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Yellow shallow crates</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>To be used on the floor for other crates to be placed on top</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Black crates</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Ice pack freezing</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Tall crates &ndash; multiple colours</td></tr></tbody></table></div><div style='overflow-x:auto;margin:0 0 12px'><table style='border-collapse:collapse;width:100%;font-size:12px'><thead><tr style='background:var(--head-bg)'><th style='text-align:left;padding:6px 8px;border:1px solid var(--border)'>Container Use &ndash; Trays</th><th style='text-align:left;padding:6px 8px;border:1px solid var(--border)'>Identification</th></tr></thead><tbody><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Dry product after 1st wash</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>White &amp; blue trays with holes</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Canned product in chiller after first wash</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Red trays</td></tr><tr><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>Canning product during scrubbing</td><td style='padding:6px 8px;border:1px solid var(--border);vertical-align:top'>White trays without holes</td></tr></tbody></table></div>"
+    },
+    {
+      "key": "hygiene",
+      "heading": "5. Hygiene and Cleaning Requirements",
+      "html": "<p>All bins, trays, and crates must be:</p><ul><li>Cleaned and sanitised before use</li><li>Cleaned between different production batches when required</li><li>Stored in designated clean storage areas</li></ul><p>Cleaning must follow the facility&rsquo;s Cleaning and Sanitation Procedure.</p><p>Containers that fall on the floor or become contaminated must be rewashed before reuse.</p>"
+    },
+    {
+      "key": "handling",
+      "heading": "6. Handling Practices",
+      "html": "<p>Staff must follow these handling rules:</p><ul><li>Do not place bins or trays directly on the floor where product contact occurs.</li><li>Do not overload containers.</li><li>Ensure containers are stable when stacked.</li><li>Handle containers carefully to avoid damage.</li><li>Avoid contact between containers used for raw and cooked products.</li></ul><p>Product containers must never be used for waste or non-food items.</p>"
+    },
+    {
+      "key": "traceability",
+      "heading": "7. Product Identification and Traceability",
+      "html": "<p>Where product is held in bins or trays during processing, the container must be clearly identified with:</p><ul><li>Product name (if applicable &ndash; canning product)</li><li>Job number</li><li>Size range</li><li>Intake date (if applicable)</li></ul><p>This ensures traceability and prevents product mix-ups.</p>"
+    },
+    {
+      "key": "storage",
+      "heading": "8. Storage of Containers",
+      "html": "<p>Clean containers must be stored:</p><ul><li>Off the floor</li><li>In designated storage areas</li><li>Protected from contamination</li></ul><p>Dirty containers must be placed in the designated cleaning area and must not be stored with clean containers.</p>"
+    },
+    {
+      "key": "inspection",
+      "heading": "9. Inspection and Maintenance",
+      "html": "<p>Bins, trays, and crates must be inspected regularly for:</p><ul><li>Cracks</li><li>Breakage</li><li>Rough surfaces</li><li>Signs of contamination</li></ul><p>Any damaged containers must be removed from use immediately and either repaired or discarded.</p>"
+    },
+    {
+      "key": "responsibilities",
+      "heading": "10. Responsibilities",
+      "html": "<h3>Production Staff</h3><ul><li>Use containers correctly</li><li>Report damaged or dirty containers</li><li>Maintain product identification</li></ul><h3>Supervisors</h3><ul><li>Ensure containers are used according to this policy</li><li>Monitor hygiene practices</li><li>Ensure damaged containers are removed</li></ul><h3>Quality / Food Safety Team</h3><ul><li>Verify compliance with this policy</li><li>Monitor container hygiene during inspections</li><li>Review the policy annually</li></ul>"
+    },
+    {
+      "key": "training",
+      "heading": "11. Training",
+      "html": "<p>All employees involved in product handling must receive training on:</p><ul><li>Correct use of bins, trays, and crates</li><li>Cross-contamination prevention</li><li>Hygienic handling practices</li></ul><p>Training is conducted during induction and refresher training.</p>"
+    },
+    {
+      "key": "review",
+      "heading": "12. Review",
+      "html": "<p>This policy will be reviewed when changes occur in production processes, equipment, or food safety requirements.</p>"
+    }
+  ],
   "relatedDocs": [],
   "baselineHistory": [
     {
       "rev": 1,
       "reason": "New document",
-      "date": "—"
+      "date": "19/03/2026"
     }
   ]
 });

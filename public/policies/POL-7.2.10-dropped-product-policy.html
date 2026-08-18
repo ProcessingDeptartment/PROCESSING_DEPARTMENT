@@ -17,7 +17,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/policy-doc.js?v=1"></script>
+<script src="../lib/policy-doc.js?v=2"></script>
 <script>
 PolicyDoc.mount({
   "recordKey": "pol-7.2.10-dropped-product-policy",
@@ -26,12 +26,23 @@ PolicyDoc.mount({
   "area": "Hygiene & Contamination Control",
   "startRev": 5,
   "baselineDate": "24/09/2025",
-  "sections": {
-    "objective": "Any product that is dropped on the floor or another non-food grade or unsanitised surface will be treated in a manner that effectively eliminates any contamination to product or process.",
-    "roles": "<ul><li>Quality members are responsible for training staff in this policy.</li><li>Supervisors are responsible for making sure that the policy is adhered to.</li><li>All staff are responsible for keeping the drop of product to a minimum.</li></ul>",
-    "process": "<p>The staff must follow the best possible practice to handle products that have fallen on the floor. The following must be adhered to:</p><ul><li>Live abalone must be rinsed with sea water and placed back into the tank as soon as possible.</li><li>Abalone in the processing facility that falls on non-food contact / unsanitised surfaces must be scrubbed thoroughly with sea water before being placed back into production.</li></ul>",
-    "review": "This policy is reviewed periodically as part of the FSMS document review cycle."
-  },
+  "sections": [
+    {
+      "key": "policy",
+      "heading": "1. Policy",
+      "html": "<p>Any product that is dropped on the floor or another non-food grade or sanitised surface will be treated in a manner that effectively eliminates any contamination to product or process.</p>"
+    },
+    {
+      "key": "responsibility",
+      "heading": "2. Responsibility",
+      "html": "<ul><li>Quality members are responsible for training staff in this policy.</li><li>Supervisors are responsible for making sure that the policy is adhered to.</li><li>All staff are responsible for keeping the drop of product to a minimum.</li></ul>"
+    },
+    {
+      "key": "procedure",
+      "heading": "3. Procedure",
+      "html": "<p>The staff must follow the best possible practice to handle products that have fallen on the floor.</p><p>The following must be adhered to:</p><ul><li>Live abalone must be rinsed with sea water and placed back into the tank as soon as possible.</li><li>Abalone in the processing facility that falls on non-food contact / un-sanitised surfaces must be scrubbed thoroughly with sea water before being placed back into production.</li></ul>"
+    }
+  ],
   "relatedDocs": [],
   "baselineHistory": [
     {

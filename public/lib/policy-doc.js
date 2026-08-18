@@ -7,7 +7,7 @@
  *   - Back link: policy-list.html
  *
  * Storage layout, keyed by recordKey:
- *   policy_doc:<recordKey>         -- { polNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
+ *   policy_doc:<recordKey>         -- { polNo, name, sections: { <sectionKey>: html, ... }, relatedDocs: [{code,name}] }
  *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision
  */
 (function () {
@@ -29,13 +29,41 @@
     await window.storage.set(KEY(recordKey), JSON.stringify(obj), true);
   }
 
+  // Headings used when a page still supplies the old fixed four-section object.
+  const LEGACY_HEADINGS = {
+    objective: '1. Objective',
+    roles: '2. Roles and Responsibilities',
+    process: '3. Policy Statement',
+    review: '4. Review'
+  };
+
+  // Policies do not share one layout -- each page declares its own ordered sections,
+  // mirroring the headings of the source policy. `heading` may be omitted for a body
+  // block that carries no heading of its own (e.g. a signature block).
+  //   sections: [ { key, heading, html }, ... ]
+  function normalizeSections(input) {
+    if (Array.isArray(input)) {
+      return input.map((s, i) => ({
+        key: s.key || ('s' + (i + 1)),
+        heading: s.heading == null ? '' : s.heading,
+        html: s.html == null ? '' : s.html
+      }));
+    }
+    return ['objective', 'roles', 'process', 'review']
+      .filter(k => input && input[k] != null)
+      .map(k => ({ key: k, heading: LEGACY_HEADINGS[k], html: input[k] }));
+  }
+
   async function resolve(recordKey, defaults) {
     const stored = await loadOverrides(recordKey);
+    const storedSections = stored.sections || {};
+    const sections = normalizeSections(defaults.sections);
+    sections.forEach(s => { if (storedSections[s.key] != null) s.html = storedSections[s.key]; });
     return {
       polNo: stored.polNo || defaults.polNo,
       name: stored.name || defaults.name,
       area: defaults.area || '',
-      sections: Object.assign({}, defaults.sections, stored.sections),
+      sections,
       relatedDocs: stored.relatedDocs || defaults.relatedDocs || []
     };
   }
@@ -84,6 +112,11 @@
                   border-bottom:2px solid var(--border); padding-bottom:6px; margin:22px 0 10px;
                   display:flex; align-items:center; gap:8px; justify-content:space-between; }
     .doc-body h2:first-child{ margin-top:0; }
+    .pd-section > *:last-child{ margin-bottom:0; }
+    .pd-section + h2{ margin-top:22px; }
+    .pd-sig{ margin-top:18px; font-size:12.5px; line-height:2.4; color:var(--label); }
+    .doc-body h3{ font-size:12px; font-weight:700; color:var(--heading); margin:14px 0 6px;
+                  letter-spacing:.01em; }
     .doc-body p{ margin:0 0 10px; }
     .doc-body ol, .doc-body ul{ margin:0 0 10px; padding-left:22px; }
     .doc-body li{ margin-bottom:6px; }
@@ -154,7 +187,7 @@
     document.head.appendChild(s);
   }
 
-  // cfg: { recordKey, polNo, name, area, startRev, backHref, sections:{objective,roles,process,review},
+  // cfg: { recordKey, polNo, name, area, startRev, backHref, sections:[{key,heading,html}],
   //        relatedDocs:[{code,name}], baselineHistory:[{rev,reason,date}] }
   async function mount(cfg) {
     injectStyles();
@@ -176,14 +209,7 @@
       </div>
       <div class="doc-body">
         <div class="note">This page is the controlled copy of ${esc(cfg.polNo)} &mdash; there is no separate original file. Edits made here become the record, with each change logged below under Change Notification.</div>
-        <h2>1. Objective</h2>
-        <p id="pd-objective"></p>
-        <h2>2. Roles and Responsibilities</h2>
-        <div id="pd-roles"></div>
-        <h2>3. Policy Statement</h2>
-        <div id="pd-process"></div>
-        <h2>4. Review</h2>
-        <p id="pd-review"></p>
+        <div id="pd-sections"></div>
         <h2 class="pd-related-docs">Related Documents <button class="btn btn-ghost row-add" id="pd-refAdd" style="display:none;">+ Add</button></h2>
         <table class="refs"><tbody id="pd-refBody"></tbody></table>
         <h2>Change Notification</h2>
@@ -232,10 +258,20 @@
     function applyResolved(r) {
       $('pd-code').textContent = r.polNo;
       $('pd-name').textContent = r.name;
-      $('pd-objective').innerHTML = r.sections.objective || '';
-      $('pd-roles').innerHTML = r.sections.roles || '';
-      $('pd-process').innerHTML = r.sections.process || '';
-      $('pd-review').innerHTML = r.sections.review || '';
+      const host = $('pd-sections');
+      host.innerHTML = '';
+      r.sections.forEach(s => {
+        if (s.heading) {
+          const h = document.createElement('h2');
+          h.textContent = s.heading;
+          host.appendChild(h);
+        }
+        const body = document.createElement('div');
+        body.className = 'pd-section';
+        body.setAttribute('data-key', s.key);
+        body.innerHTML = s.html || '';
+        host.appendChild(body);
+      });
       const refBody = $('pd-refBody');
       refBody.innerHTML = '';
       if (r.relatedDocs.length) {
@@ -270,8 +306,7 @@
     }
 
     function setupProcessTableControls(editing) {
-      const container = $('pd-process');
-      container.querySelectorAll('table').forEach(table => {
+      document.querySelectorAll('#pd-sections .pd-section table').forEach(table => {
         const tbody = table.querySelector('tbody') || table;
         // strip any previously injected controls first (idempotent)
         table.querySelectorAll('.pd-row-rm-cell').forEach(td => td.remove());
@@ -327,9 +362,11 @@
 
     function toggleEdit(cancel) {
       editing = !cancel && !editing;
-      ['pd-objective', 'pd-roles', 'pd-process', 'pd-review', 'pd-code', 'pd-name'].forEach(id => {
+      ['pd-code', 'pd-name'].forEach(id => {
         $(id).setAttribute('contenteditable', editing ? 'true' : 'false');
       });
+      document.querySelectorAll('#pd-sections .pd-section').forEach(el =>
+        el.setAttribute('contenteditable', editing ? 'true' : 'false'));
       document.querySelectorAll('#pd-refBody [data-code], #pd-refBody [data-name]').forEach(el =>
         el.setAttribute('contenteditable', editing ? 'true' : 'false'));
       setupProcessTableControls(editing);
@@ -360,15 +397,17 @@
         name: tr.querySelector('[data-name]').textContent.trim()
       }));
       setupProcessTableControls(false);
+      const sectionsFromDom = () => {
+        const out = {};
+        document.querySelectorAll('#pd-sections .pd-section').forEach(el => {
+          out[el.getAttribute('data-key')] = el.innerHTML;
+        });
+        return out;
+      };
       await saveOverrides(cfg.recordKey, {
         polNo: $('pd-code').textContent.trim(),
         name: $('pd-name').textContent.trim(),
-        sections: {
-          objective: $('pd-objective').innerHTML,
-          roles: $('pd-roles').innerHTML,
-          process: $('pd-process').innerHTML,
-          review: $('pd-review').innerHTML
-        },
+        sections: sectionsFromDom(),
         relatedDocs
       });
       await window.DocumentRevision.bump(cfg.recordKey, {
@@ -398,5 +437,5 @@
     $('pd-editBtn').style.display = canEdit() ? '' : 'none';
   }
 
-  window.PolicyDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
+  window.PolicyDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount, normalizeSections };
 })();

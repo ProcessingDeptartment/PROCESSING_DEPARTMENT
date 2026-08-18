@@ -17,7 +17,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/policy-doc.js?v=1"></script>
+<script src="../lib/policy-doc.js?v=2"></script>
 <script>
 PolicyDoc.mount({
   "recordKey": "pol-2.5.16-food-loss-and-waste-policy-and-procedure",
@@ -26,12 +26,48 @@ PolicyDoc.mount({
   "area": "Sustainability",
   "startRev": 1,
   "baselineDate": "24/09/2025",
-  "sections": {
-    "objective": "The purpose of this policy and procedure is to define Abagold’s commitment and approach to preventing, reducing and managing food loss and waste within our abalone processing operations. This includes optimising yields, minimising losses during processing, ensuring by-products are used in a responsible manner, and continuously improving practices to support sustainability. It applies to all activities within the abalone processing factory, from receiving live abalone through to canning, drying, live packing, packaging, storage and dispatch, and covers the management of by-products (shells, guts, offcuts) and food waste streams.",
-    "roles": "<ul><li><b>Top Management:</b> Endorses the policy, provides resources, and ensures measurable objectives are set.</li><li><b>Production Manager:</b> Ensures processing practices minimise loss and yield is optimised.</li><li><b>Quality Assurance Manager:</b> Monitors compliance, analyses loss/waste data, and reports trends.</li><li><b>Supervisors:</b> Implement controls during production, identify opportunities for improvement.</li><li><b>All Employees:</b> Follow standard operating procedures to reduce waste and report incidents of unnecessary loss.</li></ul>",
-    "process": "<p><b>Abagold is committed to:</b></p><ul><li>Optimising processing operations to minimise food loss and waste.</li><li>Managing product yields effectively to maximise usable output.</li><li>Diverting unavoidable by-products to beneficial use, thereby reducing waste sent to landfill.</li><li>Maintaining partnerships with approved third parties for responsible by-product utilisation.</li><li>Monitoring, recording and reviewing food loss and waste data as part of continuous improvement.</li><li>Training employees to support food loss and waste reduction initiatives.</li></ul><p><b>5.1 Optimising Processing to Minimise Loss</b></p><ul><li>Maintain strict control of handling practices during receiving, shucking, grading, trimming, and packing to reduce physical damage to abalone.</li><li>Conduct regular yield analysis (usable meat weight vs. live intake weight) to monitor efficiency.</li><li>Implement corrective actions if yields fall below agreed thresholds.</li></ul><p><b>5.2 Yield Management</b></p><ul><li>Record yields per batch and compare against historical benchmarks.</li><li>Review trends and identify root causes of variations (e.g. raw material quality, staff handling, equipment efficiency).</li><li>Report yield performance to Management Review as part of continuous improvement.</li></ul><p><b>5.3 Strategy to Reduce Waste</b></p><ul><li>Set measurable annual objectives for reducing food loss and waste.</li><li>Improve staff awareness through training and visible communication campaigns.</li><li>Implement improvement projects (e.g. optimised trimming practices, improved packaging design to reduce rework, tighter storage monitoring).</li><li>Engage with suppliers to ensure raw materials received are of quality that supports high yields.</li></ul><p><b>5.4 By-Product and Waste Utilisation</b></p><ul><li><b>Shells:</b> Collected, cleaned and supplied to a registered non-profit organisation for reuse in interior products such as lampshades.</li><li><b>Guts/Viscera:</b> Collected and provided to a contracted company for compost production.</li></ul><p><b>5.5 Monitoring and Review</b></p><ul><li><b>Monitoring:</b> Daily recording of yields, waste volumes, and by-product outputs by production staff.</li><li><b>Review:</b> Monthly analysis by QA to track trends and compliance with objectives.</li><li><b>Reporting:</b> Summarised data presented at annual management review meetings.</li><li><b>Corrective Action:</b> Any deviations from targets trigger investigation, root cause analysis and documented corrective action.</li></ul><p><b>6. Training and Awareness:</b> All employees will be trained annually on food loss and waste awareness. Training records shall be maintained as part of the FSMS training programme.</p><p><b>7. Records:</b> Yield records per batch, monthly analysis reports, and management review minutes referencing food loss and waste.</p>",
-    "review": "This policy and procedure shall be reviewed annually during the FSMS management review, or earlier if required by changes in processes, regulations, or customer requirements."
-  },
+  "sections": [
+    {
+      "key": "purpose",
+      "heading": "1. Purpose",
+      "html": "<p>The purpose of this policy and procedure is to define Abagold&rsquo;s commitment and approach to preventing, reducing and managing food loss and waste within our abalone processing operations. This includes optimising yields, minimising losses during processing, ensuring by-products are used in a responsible manner, and continuously improving practices to support sustainability.</p>"
+    },
+    {
+      "key": "scope",
+      "heading": "2. Scope",
+      "html": "<p>This policy applies to all activities within the abalone processing factory, from receiving live abalone through to canning, drying, live packing, packaging, storage and dispatch. It also covers the management of by-products (shells, guts, offcuts) and food waste streams.</p>"
+    },
+    {
+      "key": "policy-statement",
+      "heading": "3. Policy Statement",
+      "html": "<p>Abagold is committed to:</p><ul><li>Optimising processing operations to minimise food loss and waste.</li><li>Managing product yields effectively to maximise usable output.</li><li>Diverting unavoidable by-products to beneficial use, thereby reducing waste sent to landfill.</li><li>Maintaining partnerships with approved third parties for responsible by-product utilisation.</li><li>Monitoring, recording and reviewing food loss and waste data as part of continuous improvement.</li><li>Training employees to support food loss and waste reduction initiatives.</li></ul>"
+    },
+    {
+      "key": "responsibilities",
+      "heading": "4. Responsibilities",
+      "html": "<ul><li><b>Top Management:</b> Endorses the policy, provides resources, and ensures measurable objectives are set.</li><li><b>Production Manager:</b> Ensures processing practices minimise loss and yield is optimised.</li><li><b>Quality Assurance Manager:</b> Monitors compliance, analyses loss/waste data, and reports trends.</li><li><b>Supervisors:</b> Implement controls during production, identify opportunities for improvement.</li><li><b>All Employees:</b> Follow standard operating procedures to reduce waste and report incidents of unnecessary loss.</li></ul>"
+    },
+    {
+      "key": "procedure",
+      "heading": "5. Procedure",
+      "html": "<h3>5.1 Optimising Processing to Minimise Loss</h3><ul><li>Maintain strict control of handling practices during receiving, shucking, grading, trimming, and packing to reduce physical damage to abalone.</li><li>Conduct regular yield analysis (usable meat weight vs. live intake weight) to monitor efficiency.</li><li>Implement corrective actions if yields fall below agreed thresholds.</li></ul><h3>5.2 Yield Management</h3><ul><li>Record yields per batch and compare against historical benchmarks.</li><li>Review trends and identify root causes of variations (e.g. raw material quality, staff handling, equipment efficiency).</li><li>Report yield performance to Management Review as part of continuous improvement.</li></ul><h3>5.3 Strategy to Reduce Waste</h3><ul><li>Set measurable annual objectives for reducing food loss and waste.</li><li>Improve staff awareness through training and visible communication campaigns.</li><li>Implement improvement projects (e.g. optimised trimming practices, improved packaging design to reduce rework, tighter storage monitoring).</li><li>Engage with suppliers to ensure raw materials received are of quality that supports high yields.</li></ul><h3>5.4 By-Product and Waste Utilisation</h3><ul><li><b>Shells:</b> Collected, cleaned and supplied to a registered non-profit organisation for reuse in interior products such as lampshades.</li><li><b>Guts/Viscera:</b> Collected and provided to a contracted company for compost production.</li></ul><h3>5.5 Monitoring and Review</h3><ul><li><b>Monitoring:</b> Daily recording of yields, waste volumes, and by-product outputs by production staff.</li><li><b>Review:</b> Monthly analysis by QA to track trends and compliance with objectives.</li><li><b>Reporting:</b> Summarised data presented at annual management review meetings.</li><li><b>Corrective Action:</b> Any deviations from targets trigger investigation, root cause analysis and documented corrective action.</li></ul>"
+    },
+    {
+      "key": "training",
+      "heading": "6. Training and Awareness",
+      "html": "<ul><li>All employees will be trained annually on food loss and waste awareness.</li><li>Training records shall be maintained as part of the FSMS training programme.</li></ul>"
+    },
+    {
+      "key": "records",
+      "heading": "7. Records",
+      "html": "<ul><li>Yield records per batch.</li><li>Monthly analysis reports.</li><li>Management review minutes referencing food loss and waste.</li></ul>"
+    },
+    {
+      "key": "review",
+      "heading": "8. Review of Policy",
+      "html": "<p>This policy and procedure shall be reviewed annually during the FSMS management review, or earlier if required by changes in processes, regulations, or customer requirements.</p>"
+    }
+  ],
   "relatedDocs": [],
   "baselineHistory": [
     {
