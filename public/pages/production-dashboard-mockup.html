@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production View (Mockup)</title>
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .container{ max-width:1280px; margin:0 auto; padding:20px; }
+
+  .mockup-banner{ background:#fdf3e0; border:1px solid #e9c987; color:#7a5b12; border-radius:8px; padding:10px 14px; font-size:12px; margin-bottom:18px; }
+
+  .summary-row{ display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px; }
+  .summary-card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; padding:14px 16px; }
+  .summary-card .num{ font-size:22px; font-weight:700; color:#1d2b38; }
+  .summary-card .num.warn{ color:#a3352d; }
+  .summary-card .num.ok{ color:#2f7a52; }
+  .summary-card .num.mid{ color:#b08900; }
+  .summary-card .lbl{ font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; margin-top:2px; }
+  .summary-card .sub{ font-size:11px; color:#8a939b; margin-top:2px; }
+  .summary-card.clickable{ cursor:pointer; transition:box-shadow .15s ease,border-color .15s ease; }
+  .summary-card.clickable:hover{ border-color:#c7ccd1; box-shadow:0 2px 8px rgba(15,23,42,0.08); }
+  .summary-card.clickable .lbl{ display:flex; align-items:center; gap:5px; }
+  .summary-card.clickable .lbl::after{ content:"View trend \2192"; text-transform:none; letter-spacing:0; font-weight:600; color:#1d4ed8; font-size:10.5px; margin-left:auto; opacity:0; transition:opacity .15s ease; }
+  .summary-card.clickable:hover .lbl::after{ opacity:1; }
+
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); align-items:center; justify-content:center; padding:20px; z-index:50; }
+  .modal-overlay.open{ display:flex; }
+  .modal{ background:#fff; border-radius:10px; max-width:640px; width:100%; max-height:90vh; overflow:auto; box-shadow:0 20px 50px rgba(15,23,42,0.25); }
+  .modal-head{ padding:14px 18px; border-bottom:1px solid #e2e4e3; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .modal-head h3{ margin:0; font-size:14px; color:#1d2b38; }
+  .modal-head p{ margin:3px 0 0; font-size:11.5px; color:#5c6771; }
+  .modal-close{ border:none; background:#f4f5f3; color:#5c6771; width:26px; height:26px; border-radius:50%; font-size:14px; line-height:1; cursor:pointer; flex-shrink:0; }
+  .modal-close:hover{ background:#eceeef; color:#1b2330; }
+  .modal-body{ padding:16px 18px; }
+  .chart-legend{ display:flex; gap:16px; font-size:11px; color:#5c6771; margin-top:6px; }
+  .chart-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .chart-legend .sw{ width:10px; height:3px; border-radius:2px; display:inline-block; }
+  .modal-table-note{ margin:14px 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; }
+
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:18px; overflow:hidden; }
+  .panel-head{ padding:11px 16px; border-bottom:1px solid #e2e4e3; background:#fbfbfa; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; }
+  .panel-head .panel-note{ font-size:11px; color:#8a939b; }
+  .panel-body{ padding:0; }
+  .panel-body.pad{ padding:14px 16px; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+
+  /* line status cards */
+  .lines{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:14px 16px; }
+  .line-card{ border:1px solid #e2e4e3; border-radius:8px; padding:12px 14px; }
+  .line-card .line-name{ font-size:12.5px; font-weight:700; color:#1d2b38; }
+  .line-card .line-job{ font-size:11.5px; color:#5c6771; margin-top:2px; }
+  .line-status{ display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot-run{ background:#2f7a52; }
+  .dot-down{ background:#a3352d; }
+  .dot-idle{ background:#b08900; }
+  .status-run{ color:#2f7a52; }
+  .status-down{ color:#a3352d; }
+  .status-idle{ color:#b08900; }
+  .line-meta{ margin-top:8px; font-size:11px; color:#5c6771; display:flex; justify-content:space-between; }
+
+  table.dash-table{ width:100%; border-collapse:collapse; }
+  table.dash-table th,table.dash-table td{ border-bottom:1px solid #eceeef; padding:9px 12px; text-align:left; font-size:12px; vertical-align:middle; }
+  table.dash-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; }
+  table.dash-table tbody tr:last-child td{ border-bottom:none; }
+  table.dash-table tbody tr:hover{ background:#f9fafb; }
+  td.doc a{ color:#1d4ed8; text-decoration:none; font-weight:600; }
+  td.doc a:hover{ text-decoration:underline; }
+  td.num-cell{ font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+  .badge-warn{ background:#fbe8e6; color:#a3352d; }
+  .badge-ok{ background:#e8f3ec; color:#2f7a52; }
+  .badge-muted{ background:#eee; color:#777; }
+  .badge-info{ background:#e5edfb; color:#1d4ed8; }
+
+  .progress-wrap{ background:#eceeef; border-radius:20px; height:8px; width:120px; overflow:hidden; }
+  .progress-bar{ background:#2f7a52; height:100%; }
+  .progress-bar.mid{ background:#b08900; }
+  .progress-bar.low{ background:#a3352d; }
+
+  /* grade bars */
+  .grade-row{ display:flex; align-items:center; gap:10px; padding:8px 16px; }
+  .grade-row .grade-lbl{ width:70px; font-size:11.5px; font-weight:700; color:#1d2b38; flex-shrink:0; }
+  .grade-row .grade-bar-wrap{ flex:1; background:#eceeef; border-radius:6px; height:14px; overflow:hidden; }
+  .grade-row .grade-bar{ background:#2f4356; height:100%; }
+  .grade-row .grade-kg{ width:80px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5c6771; flex-shrink:0; }
+
+  @media (max-width:1100px){
+    .summary-row{ grid-template-columns:repeat(3,1fr); }
+    .two-col{ grid-template-columns:1fr; }
+  }
+  @media (max-width:900px){
+    .lines{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:640px){
+    .summary-row{ grid-template-columns:1fr 1fr; }
+    .lines{ grid-template-columns:1fr; }
+    .container{ padding:12px; }
+    table.dash-table th,table.dash-table td{ padding:7px 8px; font-size:11.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Production View</h1>
+  <p>Live floor snapshot &mdash; harvesting, seams, drying, grading and quality across today's shift.</p>
+  <a class="back-link" href="production.html">&larr; Back to Production</a>
+</div>
+
+<div class="container">
+
+  <div class="mockup-banner">
+    <strong>Mockup only.</strong> This page shows placeholder data to demonstrate layout &mdash; it is not wired to live jobs, hardware feeds or SysPro yet.
+  </div>
+
+  <div class="summary-row">
+    <div class="summary-card">
+      <div class="num ok">1&thinsp;284</div>
+      <div class="lbl">Harvested weight (kg)</div>
+      <div class="sub">Today, live intake</div>
+    </div>
+    <div class="summary-card clickable" id="seamCard" tabindex="0" role="button" aria-haspopup="dialog">
+      <div class="num ok">98.6%</div>
+      <div class="lbl">Seams in spec</div>
+      <div class="sub">142 / 144 checked</div>
+    </div>
+    <div class="summary-card">
+      <div class="num warn">4.2%</div>
+      <div class="lbl">OOSW</div>
+      <div class="sub">Out-of-spec weight, today</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">3&thinsp;050</div>
+      <div class="lbl">Kg in drying room</div>
+      <div class="sub">Across 3 active racks</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">6&thinsp;410</div>
+      <div class="lbl">Graded this week (kg)</div>
+      <div class="sub">Mon&ndash;today</div>
+    </div>
+    <div class="summary-card">
+      <div class="num warn">3</div>
+      <div class="lbl">Open quality NCs</div>
+      <div class="sub">1 major, 2 minor</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Line status</h2></div>
+    <div class="lines">
+      <div class="line-card">
+        <div class="line-name">Live Intake &amp; Handling</div>
+        <div class="line-job">Job 26-0811 &mdash; Abalone receiving</div>
+        <div class="line-status status-run"><span class="dot dot-run"></span>Running</div>
+        <div class="line-meta"><span>Shift 1</span><span>Started 06:10</span></div>
+      </div>
+      <div class="line-card">
+        <div class="line-name">Canning</div>
+        <div class="line-job">Job 26-0809 &mdash; Retort batch 4</div>
+        <div class="line-status status-run"><span class="dot dot-run"></span>Running</div>
+        <div class="line-meta"><span>Shift 1</span><span>Started 05:40</span></div>
+      </div>
+      <div class="line-card">
+        <div class="line-name">Dry Processing</div>
+        <div class="line-job">Job 26-0805 &mdash; Grading</div>
+        <div class="line-status status-idle"><span class="dot dot-idle"></span>Idle</div>
+        <div class="line-meta"><span>Shift 1</span><span>Paused 09:15</span></div>
+      </div>
+      <div class="line-card">
+        <div class="line-name">Live Product</div>
+        <div class="line-job">Job 26-0812 &mdash; Bag &amp; weigh</div>
+        <div class="line-status status-down"><span class="dot dot-down"></span>Down</div>
+        <div class="line-meta"><span>Shift 1</span><span>Since 08:02</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Seam inspection &mdash; double seam log</h2>
+        <span class="panel-note">REC 7.2.4</span>
+      </div>
+      <div class="panel-body">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Can code</th>
+              <th>Tightness %</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="num-cell">06:30</td><td>0811-A</td><td class="num-cell">87%</td><td><span class="badge badge-ok">In spec</span></td></tr>
+            <tr><td class="num-cell">07:30</td><td>0811-B</td><td class="num-cell">85%</td><td><span class="badge badge-ok">In spec</span></td></tr>
+            <tr><td class="num-cell">08:30</td><td>0809-A</td><td class="num-cell">71%</td><td><span class="badge badge-warn">Out of spec</span></td></tr>
+            <tr><td class="num-cell">09:30</td><td>0809-B</td><td class="num-cell">88%</td><td><span class="badge badge-ok">In spec</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Quality non-conformances</h2>
+        <span class="panel-note">Open + this week</span>
+      </div>
+      <div class="panel-body">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>NC #</th>
+              <th>Area</th>
+              <th>Description</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="doc"><a href="#">NC-0142</a></td><td>Canning</td><td>Seam tightness below spec, can 0809-A</td><td><span class="badge badge-warn">Major</span></td></tr>
+            <tr><td class="doc"><a href="#">NC-0141</a></td><td>Live Product</td><td>Bag seal weight variance</td><td><span class="badge badge-muted">Minor</span></td></tr>
+            <tr><td class="doc"><a href="#">NC-0139</a></td><td>Dry Processing</td><td>Drying room temp excursion</td><td><span class="badge badge-muted">Minor</span></td></tr>
+            <tr><td class="doc"><a href="#">NC-0136</a></td><td>Live Intake</td><td>OOSW above 5% threshold</td><td><span class="badge badge-ok">Closed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="two-col">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Drying room monitoring log</h2>
+        <span class="panel-note">REC 7.4.1</span>
+      </div>
+      <div class="panel-body">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Rack</th>
+              <th>Temp &deg;C</th>
+              <th>Humidity %</th>
+              <th>Kg loaded</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="num-cell">06:00</td><td>Rack 1</td><td class="num-cell">42</td><td class="num-cell">38</td><td class="num-cell">1&thinsp;100</td></tr>
+            <tr><td class="num-cell">08:00</td><td>Rack 2</td><td class="num-cell">43</td><td class="num-cell">36</td><td class="num-cell">980</td></tr>
+            <tr><td class="num-cell">08:00</td><td>Rack 3</td><td class="num-cell">47</td><td class="num-cell">33</td><td class="num-cell">970</td></tr>
+            <tr><td class="num-cell">10:00</td><td>Rack 1</td><td class="num-cell">42</td><td class="num-cell">37</td><td class="num-cell">1&thinsp;100</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Graded abalone this week</h2>
+        <span class="panel-note">By grade, kg</span>
+      </div>
+      <div class="panel-body pad">
+        <div class="grade-row"><div class="grade-lbl">Grade A</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:70%"></div></div><div class="grade-kg">2&thinsp;180 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">Grade B</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:55%"></div></div><div class="grade-kg">1&thinsp;710 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">Grade C</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:40%"></div></div><div class="grade-kg">1&thinsp;260 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">OOSW</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:26%" ></div></div><div class="grade-kg">820 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">Reject</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:14%"></div></div><div class="grade-kg">440 kg</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Records due this shift</h2>
+    </div>
+    <div class="panel-body">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Record</th>
+            <th>Job</th>
+            <th>Owner</th>
+            <th>Due</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="doc"><a href="#">REC 7.2.4 Retort Test Run</a></td>
+            <td>26-0809</td>
+            <td>Production</td>
+            <td class="num-cell">11:00</td>
+            <td><span class="badge badge-warn">Due soon</span></td>
+          </tr>
+          <tr>
+            <td class="doc"><a href="#">REC 7.1.2 Chiller Temp Check</a></td>
+            <td>26-0811</td>
+            <td>Production</td>
+            <td class="num-cell">12:00</td>
+            <td><span class="badge badge-info">Scheduled</span></td>
+          </tr>
+          <tr>
+            <td class="doc"><a href="#">REC 7.5.3 Bag Quality Check</a></td>
+            <td>26-0812</td>
+            <td>Production</td>
+            <td class="num-cell">09:30</td>
+            <td><span class="badge badge-warn">Overdue</span></td>
+          </tr>
+          <tr>
+            <td class="doc"><a href="#">REC 7.4.1 Drying Log</a></td>
+            <td>26-0805</td>
+            <td>Production</td>
+            <td class="num-cell">14:00</td>
+            <td><span class="badge badge-info">Scheduled</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Recent activity</h2>
+    </div>
+    <div class="panel-body">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Job</th>
+            <th>User</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num-cell">09:41</td>
+            <td>Line down &mdash; Live Product</td>
+            <td>26-0812</td>
+            <td>Line Supervisor</td>
+          </tr>
+          <tr>
+            <td class="num-cell">09:15</td>
+            <td>Dry Processing paused</td>
+            <td>26-0805</td>
+            <td>Line Supervisor</td>
+          </tr>
+          <tr>
+            <td class="num-cell">08:50</td>
+            <td>REC 7.1.1 Hygiene Check submitted</td>
+            <td>26-0811</td>
+            <td>N. Adams</td>
+          </tr>
+          <tr>
+            <td class="num-cell">08:30</td>
+            <td>Seam NC-0142 raised &mdash; can 0809-A out of spec</td>
+            <td>26-0809</td>
+            <td>QC</td>
+          </tr>
+          <tr>
+            <td class="num-cell">07:30</td>
+            <td>Job 26-0812 started</td>
+            <td>26-0812</td>
+            <td>Line Supervisor</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="seamModalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="seamModalTitle">
+    <div class="modal-head">
+      <div>
+        <h3 id="seamModalTitle">Seam in-spec trend</h3>
+        <p>Daily seam pass rate, last 14 days &mdash; REC 7.2.4 double seam checks</p>
+      </div>
+      <button class="modal-close" id="seamModalClose" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="seamChartWrap"></div>
+      <div class="chart-legend">
+        <span><span class="sw" style="background:#2f4356;"></span>Seams in spec %</span>
+        <span><span class="sw" style="background:#a3352d;"></span>Target 97%</span>
+      </div>
+
+      <div class="modal-table-note">Lowest-scoring days</div>
+      <table class="dash-table">
+        <thead>
+          <tr><th>Date</th><th>Checked</th><th>In spec</th><th>Pass rate</th></tr>
+        </thead>
+        <tbody id="seamModalTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var seamTrend = [
+    { date: 'Aug 5',  checked: 118, pass: 96.6 },
+    { date: 'Aug 6',  checked: 132, pass: 97.7 },
+    { date: 'Aug 7',  checked: 126, pass: 95.2 },
+    { date: 'Aug 8',  checked: 140, pass: 98.6 },
+    { date: 'Aug 9',  checked: 96,  pass: 99.0 },
+    { date: 'Aug 10', checked: 0,   pass: null },
+    { date: 'Aug 11', checked: 0,   pass: null },
+    { date: 'Aug 12', checked: 134, pass: 94.0 },
+    { date: 'Aug 13', checked: 129, pass: 96.9 },
+    { date: 'Aug 14', checked: 138, pass: 98.6 },
+    { date: 'Aug 15', checked: 122, pass: 97.5 },
+    { date: 'Aug 16', checked: 0,   pass: null },
+    { date: 'Aug 17', checked: 0,   pass: null },
+    { date: 'Aug 18', checked: 144, pass: 98.6 }
+  ];
+
+  function buildChart() {
+    var w = 580, h = 220, padL = 34, padR = 10, padT = 14, padB = 26;
+    var plotW = w - padL - padR, plotH = h - padT - padB;
+    var yMin = 90, yMax = 100;
+
+    var points = seamTrend.filter(function (d) { return d.pass !== null; });
+    var xStep = plotW / (seamTrend.length - 1);
+
+    function xFor(i) { return padL + i * xStep; }
+    function yFor(v) { return padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH; }
+
+    var pathD = '';
+    seamTrend.forEach(function (d, i) {
+      if (d.pass === null) return;
+      var cmd = pathD === '' ? 'M' : 'L';
+      pathD += cmd + xFor(i).toFixed(1) + ',' + yFor(d.pass).toFixed(1) + ' ';
+    });
+
+    var targetY = yFor(97).toFixed(1);
+
+    var gridLines = '';
+    [90, 92, 94, 96, 98, 100].forEach(function (v) {
+      var y = yFor(v).toFixed(1);
+      gridLines += '<line x1="' + padL + '" y1="' + y + '" x2="' + (w - padR) + '" y2="' + y + '" stroke="#eceeef" stroke-width="1"/>';
+      gridLines += '<text x="' + (padL - 8) + '" y="' + (parseFloat(y) + 3) + '" text-anchor="end" font-size="9.5" fill="#8a939b" font-family="IBM Plex Mono, monospace">' + v + '</text>';
+    });
+
+    var xLabels = '';
+    var dots = '';
+    seamTrend.forEach(function (d, i) {
+      if (i % 2 !== 0 && i !== seamTrend.length - 1) return;
+      xLabels += '<text x="' + xFor(i).toFixed(1) + '" y="' + (h - 8) + '" text-anchor="middle" font-size="9.5" fill="#8a939b">' + d.date + '</text>';
+    });
+    seamTrend.forEach(function (d, i) {
+      if (d.pass === null) return;
+      var below = d.pass < 97;
+      dots += '<circle cx="' + xFor(i).toFixed(1) + '" cy="' + yFor(d.pass).toFixed(1) + '" r="3.2" fill="' + (below ? '#a3352d' : '#2f4356') + '"><title>' + d.date + ': ' + d.pass + '% (' + d.checked + ' checked)</title></circle>';
+    });
+
+    var svg = '' +
+      '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" role="img" aria-label="Seam in-spec trend chart">' +
+        gridLines +
+        '<line x1="' + padL + '" y1="' + targetY + '" x2="' + (w - padR) + '" y2="' + targetY + '" stroke="#a3352d" stroke-width="1" stroke-dasharray="4 4"/>' +
+        '<path d="' + pathD.trim() + '" fill="none" stroke="#2f4356" stroke-width="2"/>' +
+        dots +
+        xLabels +
+      '</svg>';
+
+    document.getElementById('seamChartWrap').innerHTML = svg;
+
+    var worst = points.slice().sort(function (a, b) { return a.pass - b.pass; }).slice(0, 4);
+    var rows = worst.map(function (d) {
+      var badgeClass = d.pass < 97 ? 'badge-warn' : 'badge-ok';
+      var badgeText = d.pass < 97 ? 'Below target' : 'On target';
+      return '<tr><td>' + d.date + '</td><td class="num-cell">' + d.checked + '</td><td class="num-cell">' + Math.round(d.checked * d.pass / 100) + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + d.pass + '% &mdash; ' + badgeText + '</span></td></tr>';
+    }).join('');
+    document.getElementById('seamModalTableBody').innerHTML = rows;
+  }
+
+  function openModal() {
+    buildChart();
+    document.getElementById('seamModalOverlay').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('seamModalOverlay').classList.remove('open');
+  }
+
+  var card = document.getElementById('seamCard');
+  card.addEventListener('click', openModal);
+  card.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(); }
+  });
+  document.getElementById('seamModalClose').addEventListener('click', closeModal);
+  document.getElementById('seamModalOverlay').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+})();
+</script>
+
+</body>
+</html>
