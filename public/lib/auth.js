@@ -1,6 +1,6 @@
 /**
  * User authentication and session management for the online records system
- * Each user has set permissions and access levels and a password (currently = username).
+ * Each user has set permissions and access levels and a password (currently "test" for all users).
  * Login is required to edit records etc.
  * === LOCAL SESSION ONLY ===
  * Session is stored in localStorage (sessionKey); users exist in memory. A future
@@ -32,9 +32,9 @@
   }
 
   function login(username, password) {
-    // For now: password = username. Future: call an auth API.
+    // For now: password = "test" for all users. Future: call an auth API.
     const user = USERS.find(u => u.username === username);
-    if (!user || password !== username) {
+    if (!user || password !== 'test') {
       return { ok: false, error: 'Invalid username or password' };
     }
     currentUser = user;
