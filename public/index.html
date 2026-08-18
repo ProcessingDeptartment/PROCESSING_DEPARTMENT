@@ -38,6 +38,12 @@
     .brand-inner{ flex-direction:column; align-items:flex-start; gap:12px; }
     td.document{ width:auto; white-space:normal; }
   }
+
+  .session-bar{ max-width:1100px; margin:0 auto; padding:8px 20px 0; display:flex; justify-content:flex-end; align-items:center; gap:10px; font-size:12px; color:#5c6771; }
+  .session-bar button{ font-size:12px; padding:4px 10px; border:1px solid #d0d5db; background:#fff; border-radius:4px; cursor:pointer; color:#1b2330; }
+  .session-bar button:hover{ background:#f4f5f3; }
+  .session-bar #loginBtnTop{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
+  .session-bar #loginBtnTop:hover{ background:#1d3a9e; }
 </style>
 </head>
 <body>
@@ -54,6 +60,12 @@
     <h1>Processing Department</h1>
     <p>Document-controlled records for Quality and Production</p>
   </div>
+</div>
+
+<div class="session-bar">
+  <span id="sessionUser"></span>
+  <button id="loginBtnTop" type="button" style="display:none;">Log in</button>
+  <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
 </div>
 
 <div class="container">
@@ -107,6 +119,30 @@
   </table>
 
 </div>
+
+<script src="lib/auth.js?v=1"></script>
+<script src="lib/login-ui.js?v=1"></script>
+<script>
+  function refreshSessionBar() {
+    var user = window.Auth.getCurrentUser();
+    document.getElementById('sessionUser').textContent = user ? (user.displayName + ' (' + user.role + ')') : '';
+    document.getElementById('loginBtnTop').style.display = user ? 'none' : '';
+    document.getElementById('logoutBtn').style.display = user ? '' : 'none';
+  }
+
+  document.getElementById('loginBtnTop').addEventListener('click', function () {
+    window.LoginUI.showLoginModal();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    window.Auth.logout();
+    refreshSessionBar();
+  });
+
+  document.addEventListener('authSuccess', refreshSessionBar);
+
+  refreshSessionBar();
+</script>
 
 </body>
 </html>
