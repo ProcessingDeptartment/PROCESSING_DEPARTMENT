@@ -889,9 +889,8 @@
         </div>
       </div>` : '';
 
-    // Thresholds are meaningless for a log with no numeric spec fields (e.g. an
-    // all-checklist record), so the button can be switched off per record.
-    const showThresholds = config.showThresholds !== false;
+    // Thresholds button removed from all records.
+    const showThresholds = false;
     // Records that lead with the action rather than the log put "+ Add entry" in the
     // header and push the entries panel below the verification strip.
     const topAddEntry = config.topAddEntry === true;
