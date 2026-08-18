@@ -44,6 +44,9 @@
   .session-bar button:hover{ background:#f4f5f3; }
   .session-bar #loginBtnTop{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
   .session-bar #loginBtnTop:hover{ background:#1d3a9e; }
+
+  tr.auth-only{ display:none; }
+  body.authenticated tr.auth-only{ display:table-row; }
 </style>
 </head>
 <body>
@@ -87,31 +90,31 @@
         <td class="document"><a href="pages/quality-handover-report.html" target="_blank">Quality Handover Report</a></td>
         <td class="description">Shift handover reporting for Quality</td>
       </tr>
-      <tr class="index">
+      <tr class="index auth-only">
         <td class="document"><a href="records/record-list.html" target="_blank">Record List</a></td>
         <td class="description">Find and open a record to fill in</td>
       </tr>
-      <tr class="index">
+      <tr class="index auth-only">
         <td class="document"><a href="sops/sop-list.html" target="_blank">SOP List</a></td>
         <td class="description">Standard Operating Procedures &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr class="index">
+      <tr class="index auth-only">
         <td class="document"><a href="policies/policy-list.html" target="_blank">Policy List</a></td>
         <td class="description">Policies &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr class="index">
+      <tr class="index auth-only">
         <td class="document"><a href="procedures/procedure-list.html" target="_blank">Procedure List</a></td>
         <td class="description">Procedures &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr class="index">
+      <tr class="index auth-only">
         <td class="document"><a href="prps/prp-list.html" target="_blank">PRP List</a></td>
         <td class="description">Pre-Requisite Programmes &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr class="index">
+      <tr class="index auth-only">
         <td class="document"><a href="records/master-record-index.html" target="_blank">REC 01 Master Record Index</a></td>
         <td class="description">The controlled document-control register: every record, its current revision, reason for change, distribution and issue date</td>
       </tr>
-      <tr class="index">
+      <tr class="index auth-only">
         <td class="document"><a href="pages/progress-dashboard.html" target="_blank">Progress Dashboard</a></td>
         <td class="description">Drafts in progress, submissions awaiting verification, and recent activity across all records on this device</td>
       </tr>
@@ -128,6 +131,7 @@
     document.getElementById('sessionUser').textContent = user ? (user.displayName + ' (' + user.role + ')') : '';
     document.getElementById('loginBtnTop').style.display = user ? 'none' : '';
     document.getElementById('logoutBtn').style.display = user ? '' : 'none';
+    document.body.classList.toggle('authenticated', !!user);
   }
 
   document.getElementById('loginBtnTop').addEventListener('click', function () {
