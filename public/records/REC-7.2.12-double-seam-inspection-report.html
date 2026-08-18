@@ -25,7 +25,6 @@
   #dsir-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
   .dsir-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
   .dsir-topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .dsir-topline label.role-label{ font-size:var(--form-fs-label); color:var(--palette-dark-muted); display:flex; flex-direction:column; gap:2px; }
   .dsir-topline input{ width:150px; }
   .btn{ padding:7px 13px; font-size:var(--form-fs-input); }
   .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
@@ -138,9 +137,7 @@
       <h1>Double Seam Inspection Report</h1>
       <span class="doc-rev" id="docCodeBadge"></span>
     </div>
-    <div class="dsir-topline no-print"><label class="role-label">Acting as (temporary stand-in for login)
-        <select id="actingRoleSelect" style="width:190px;"></select>
-      </label>
+    <div class="dsir-topline no-print">
       <select id="specProfileSelect" style="width:220px;"></select>
       <button class="btn btn-ghost" id="quickCalcBtn" title="Standalone seam calculator — nothing is saved to this record">Quick calculator</button>
       <button class="btn btn-ghost" id="manageSpecsBtn">Specs</button>
@@ -1064,12 +1061,6 @@ $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules
   }
 
   // ---------- wiring ----------
-  function wireActingRole(){
-    const sel = $('actingRoleSelect');
-    sel.innerHTML = PermissionRules.ROLES.map(r=>`<option value="${r}">${PermissionRules.ROLE_LABELS[r]}</option>`).join('');
-    sel.value = PermissionRules.getCurrentRole();
-    sel.addEventListener('change', ()=>{ PermissionRules.setCurrentRole(sel.value); renderAll(); });
-  }
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
       byId: 'f_completedBy', titleId: 'f_completedSig', dateId: 'f_completedDate', signatureId: 'f_completedBySignature', byLabel: 'Completed by'
@@ -1096,7 +1087,6 @@ $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules
   }
 
 function wire(){
-    wireActingRole();
 bindHeaderInputs();
     buildSpecFormRows();
     wireSpecPdfUpload();
