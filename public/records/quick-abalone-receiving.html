@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Abalone Receiving</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f4f5f3;
+    color: #1b2330;
+    margin: 0;
+    padding: 16px;
+    font-size: 14px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 16px; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .04em; color: #2f4356; }
+  .panel { background: #fff; border: 1px solid #e2e4e3; border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+  label { display: block; font-size: 11.5px; font-weight: 600; color: #54606b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .03em; }
+  input, select {
+    width: 100%; font-size: 16px; padding: 9px 8px; border: 1px solid #c9cdd1; border-radius: 4px;
+    font-family: 'IBM Plex Mono', 'SF Mono', Consolas, monospace; background: #fff; color: #1b2330;
+  }
+  input:focus, select:focus { outline: 2px solid #2f4356; outline-offset: -1px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { margin-bottom: 10px; }
+  .total-strip {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #1d2b38; color: #f4f1e8; border-radius: 6px; padding: 14px; margin-bottom: 14px;
+  }
+  .total-strip .num { font-size: 24px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .total-strip .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; opacity: .8; }
+  .total-cell { text-align: center; }
+  .addrow { display: flex; gap: 8px; align-items: flex-end; }
+  .addrow .field { flex: 1; margin-bottom: 0; }
+  button {
+    font-family: 'Segoe UI', system-ui, sans-serif; cursor: pointer; border: none; border-radius: 4px;
+    font-weight: 600; padding: 10px 16px; font-size: 14px;
+  }
+  .btn-primary { background: #c9832b; color: #241a0a; }
+  .btn-primary:hover { background: #dd9536; }
+  .btn-flat { background: #e2e4e3; color: #1b2330; padding: 6px 10px; font-size: 12px; }
+  .btn-flat:hover { background: #d5d8d6; }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #e2e4e3; padding: 6px 8px; text-align: left; font-size: 13px; }
+  th { background: #fbfbfa; font-size: 10.5px; text-transform: uppercase; color: #54606b; }
+  td.num, th.num { text-align: right; }
+  .empty { color: #8a939b; text-align: center; padding: 14px; }
+  .save-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  .toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: #1d2b38; color: #fff; padding: 9px 18px; border-radius: 20px; font-size: 12px;
+    opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 999;
+  }
+  .toast.show { opacity: 1; }
+  .job-list-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; border-bottom: 1px solid #e2e4e3; font-size: 12.5px;
+  }
+  .job-list-item:last-child { border-bottom: none; }
+  @media (max-width: 480px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .addrow { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Quick Abalone Receiving</h1>
+
+  <div class="panel">
+    <div class="grid2">
+      <div class="field">
+        <label for="jobNo">Job number</label>
+        <input type="text" id="jobNo" placeholder="e.g. 3CP000123">
+      </div>
+      <div class="field">
+        <label for="intakeDate">Intake date</label>
+        <input type="date" id="intakeDate">
+      </div>
+    </div>
+  </div>
+
+  <div class="total-strip">
+    <div class="total-cell">
+      <div class="num" id="totalWeight">0.00</div>
+      <div class="lbl">Whole weight (kg)</div>
+    </div>
+    <div class="total-cell">
+      <div class="num" id="totalBaskets">0</div>
+      <div class="lbl">Baskets</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label style="margin-bottom:8px;">Add basket</label>
+    <div class="addrow">
+      <div class="field">
+        <label for="basketNr">Basket number</label>
+        <input type="number" id="basketNr" inputmode="numeric" placeholder="Basket nr.">
+      </div>
+      <div class="field">
+        <label for="basketWeight">Weight (kg)</label>
+        <input type="number" id="basketWeight" step="0.01" inputmode="decimal" placeholder="Weight">
+      </div>
+      <button class="btn-primary" id="addWeightBtn" type="button">Add weight</button>
+    </div>
+
+    <table id="basketTable">
+      <thead><tr><th>Basket nr.</th><th class="num">Weight (kg)</th><th></th></tr></thead>
+      <tbody id="basketRows"></tbody>
+    </table>
+    <div class="empty" id="basketEmpty">No baskets added yet.</div>
+
+    <div class="save-row">
+      <button class="btn-flat" id="newJobBtn" type="button">New job</button>
+      <button class="btn-primary" id="saveJobBtn" type="button">Save job</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label style="margin-bottom:8px;">Saved jobs</label>
+    <div id="jobList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../lib/data-store.js?v=4"></script>
+<script>
+(function () {
+  var STORE_KEY = 'quick_abalone_receiving_jobs';
+  var baskets = [];
+  var jobsCache = [];
+
+  function el(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Goes through window.storage (data-store.js), shared:true -- same seam every other
+  // record uses, so this data moves to the real backend automatically once one is
+  // registered, instead of being stuck in a page-private localStorage key.
+  async function loadJobs() {
+    try {
+      var r = await window.storage.get(STORE_KEY, true);
+      jobsCache = r && r.value ? JSON.parse(r.value) : [];
+    } catch (e) { jobsCache = []; }
+    return jobsCache;
+  }
+  async function saveJobs(jobs) {
+    jobsCache = jobs;
+    return window.storage.set(STORE_KEY, JSON.stringify(jobs), true);
+  }
+
+  function toast(msg) {
+    var t = el('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2000);
+  }
+
+  function renderTotals() {
+    var totalWeight = baskets.reduce(function (sum, b) { return sum + (parseFloat(b.weight) || 0); }, 0);
+    el('totalWeight').textContent = totalWeight.toFixed(2);
+    el('totalBaskets').textContent = baskets.length;
+  }
+
+  function renderBaskets() {
+    var tbody = el('basketRows');
+    if (!baskets.length) {
+      tbody.innerHTML = '';
+      el('basketTable').style.display = 'none';
+      el('basketEmpty').style.display = 'block';
+    } else {
+      el('basketTable').style.display = 'table';
+      el('basketEmpty').style.display = 'none';
+      tbody.innerHTML = baskets.map(function (b, i) {
+        return '<tr><td>' + esc(b.basketNr) + '</td><td class="num">' + parseFloat(b.weight).toFixed(2) +
+          '</td><td><button class="btn-flat" data-remove="' + i + '">Remove</button></td></tr>';
+      }).join('');
+      tbody.querySelectorAll('[data-remove]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          baskets.splice(Number(btn.dataset.remove), 1);
+          renderBaskets();
+          renderTotals();
+        });
+      });
+    }
+    renderTotals();
+  }
+
+  function renderJobList() {
+    var jobs = jobsCache;
+    var target = el('jobList');
+    if (!jobs.length) { target.innerHTML = '<div class="empty">No jobs saved yet.</div>'; return; }
+    target.innerHTML = jobs.slice().reverse().map(function (j) {
+      var totalWeight = j.baskets.reduce(function (s, b) { return s + (parseFloat(b.weight) || 0); }, 0);
+      return '<div class="job-list-item"><span><strong>' + esc(j.jobNo || '(no job no.)') + '</strong> — ' +
+        esc(j.intakeDate || '') + ' — ' + j.baskets.length + ' baskets, ' + totalWeight.toFixed(2) + ' kg</span>' +
+        '<span style="display:flex;gap:6px;">' +
+        '<button class="btn-flat" data-load="' + esc(j.id) + '">Load</button>' +
+        '<button class="btn-flat" data-csv="' + esc(j.id) + '">CSV</button>' +
+        '</span></div>';
+    }).join('');
+    target.querySelectorAll('[data-load]').forEach(function (btn) {
+      btn.addEventListener('click', function () { loadJob(btn.dataset.load); });
+    });
+    target.querySelectorAll('[data-csv]').forEach(function (btn) {
+      btn.addEventListener('click', function () { exportCsv(btn.dataset.csv); });
+    });
+  }
+
+  function csvCell(v) {
+    var s = String(v == null ? '' : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function downloadCsv(filename, csv) {
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 0);
+  }
+
+  function exportCsv(id) {
+    var job = jobsCache.find(function (j) { return j.id === id; });
+    if (!job) return;
+    var rows = [['Job no.', 'Intake date', 'Basket nr.', 'Weight (kg)']];
+    job.baskets.forEach(function (b) {
+      rows.push([job.jobNo, job.intakeDate, b.basketNr, b.weight]);
+    });
+    var totalWeight = job.baskets.reduce(function (s, b) { return s + (parseFloat(b.weight) || 0); }, 0);
+    rows.push(['', '', 'Total', totalWeight.toFixed(2)]);
+    var csv = rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n');
+    downloadCsv((job.jobNo || 'job') + '_' + (job.intakeDate || '') + '.csv', csv);
+  }
+
+  function loadJob(id) {
+    var job = jobsCache.find(function (j) { return j.id === id; });
+    if (!job) return;
+    el('jobNo').value = job.jobNo || '';
+    el('intakeDate').value = job.intakeDate || '';
+    baskets = job.baskets.slice();
+    renderBaskets();
+    toast('Job loaded.');
+  }
+
+  function addWeight() {
+    var basketNr = el('basketNr').value.trim();
+    var weight = el('basketWeight').value.trim();
+    if (!basketNr) { toast('Enter a basket number.'); el('basketNr').focus(); return; }
+    if (!weight || isNaN(parseFloat(weight))) { toast('Enter a valid weight.'); el('basketWeight').focus(); return; }
+    baskets.push({ basketNr: basketNr, weight: weight });
+    el('basketNr').value = '';
+    el('basketWeight').value = '';
+    el('basketNr').focus();
+    renderBaskets();
+  }
+
+  async function saveJob() {
+    var jobNo = el('jobNo').value.trim();
+    var intakeDate = el('intakeDate').value;
+    if (!jobNo) { toast('Enter a job number.'); el('jobNo').focus(); return; }
+    if (!intakeDate) { toast('Enter an intake date.'); el('intakeDate').focus(); return; }
+    if (!baskets.length) { toast('Add at least one basket.'); return; }
+    var jobs = jobsCache.slice();
+    var existing = jobs.find(function (j) { return j.jobNo === jobNo && j.intakeDate === intakeDate; });
+    if (existing) {
+      existing.baskets = baskets.slice();
+      existing.updatedAt = Date.now();
+    } else {
+      jobs.push({ id: 'job_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), jobNo: jobNo, intakeDate: intakeDate, baskets: baskets.slice(), createdAt: Date.now() });
+    }
+    var ok = await saveJobs(jobs);
+    if (!ok) { toast('Save failed — please retry.'); return; }
+    renderJobList();
+    toast('Job saved.');
+  }
+
+  function newJob() {
+    el('jobNo').value = '';
+    el('intakeDate').value = '';
+    baskets = [];
+    renderBaskets();
+  }
+
+  el('addWeightBtn').addEventListener('click', addWeight);
+  el('saveJobBtn').addEventListener('click', saveJob);
+  el('newJobBtn').addEventListener('click', newJob);
+  el('basketWeight').addEventListener('keydown', function (e) { if (e.key === 'Enter') addWeight(); });
+  el('basketNr').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('basketWeight').focus(); });
+
+  renderBaskets();
+  loadJobs().then(renderJobList);
+})();
+</script>
+</body>
+</html>
