@@ -33,6 +33,9 @@
     listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
     // Selecting a job number that was already received on Abalone Receiving (REC 7.1.2) pulls in
     // its receiving date, so it doesn't need to be re-typed. Only fills empty fields.
+    // NOTE: doesn't also autofill processingFor -- this page's options ('Dry') don't match
+    // Abalone Receiving's ('Dried'), so it would silently fail to select on the common case.
+    // Fix the option spelling here to match before wiring that field.
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate' } }
     ],

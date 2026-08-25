@@ -34,9 +34,12 @@
       { label: 'Purpose', text: 'Supervisor check that abalone is cleaned effectively during scrubbing, and any damage is recorded.' }
     ],
     // Selecting a job number that was already received on Abalone Receiving (REC 7.1.2) pulls in
-    // its receiving date, so it doesn't need to be re-typed. Only fills empty fields.
+    // its receiving date, harvest farm, and processing destination, so none of it needs to be
+    // re-typed. Only fills empty fields.
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate' } }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
+        intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor'
+      } }
     ],
     entryFields: [
       { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },

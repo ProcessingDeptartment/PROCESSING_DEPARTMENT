@@ -177,7 +177,23 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
       try { entries = JSON.parse(row.value); } catch { continue; }
       if (!Array.isArray(entries)) continue;
       for (const entry of entries) {
-        const values = entry.values || entry;
+        const values = { ...(entry.values || entry) };
+        // Roster-based records (e.g. Abalone Receiving's baskets) keep their real weight/count
+        // data as per-row roster entries, not a top-level value -- sum each numeric roster
+        // column so autofill can pull "total whole weight received for this job" etc. Never
+        // overwrites a real top-level field of the same name.
+        if (Array.isArray(entry.roster) && entry.roster.length) {
+          const sums = {};
+          for (const row of entry.roster) {
+            for (const [k, v] of Object.entries(row || {})) {
+              const num = parseFloat(v);
+              if (!isNaN(num)) sums[k] = (sums[k] || 0) + num;
+            }
+          }
+          for (const [k, sum] of Object.entries(sums)) {
+            if (!(k in values)) values[k] = String(sum);
+          }
+        }
         if (String(values[field] || '').trim().toUpperCase() !== needle) continue;
         const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
         if (!best || stamp > best.stamp) best = { stamp, values };
