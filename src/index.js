@@ -2,17 +2,21 @@
 // public/lib/api-backend.js (see BACKEND_INTEGRATION.md): get/set/remove by key, and
 // getByPrefix in one round trip. Backed by Postgres (Neon) via Prisma.
 //
-// Any key written under the 'formrecord:' prefix (see public/lib/form-record.js -- each key holds
-// the whole array of submissions for one record) also gets its date fields pulled out into
-// SubmissionDateField, using data/date-field-classification.csv, so dates are queryable without
-// parsing every JSON blob.
+// Any key written under the 'formrecord:' or 'monitoring_log:' prefix (see
+// public/lib/form-record.js and public/lib/monitoring-log.js -- each key holds the whole array of
+// entries for one record) also gets its date fields pulled out into SubmissionDateField, using
+// data/date-field-classification.csv for the field label/classification and
+// data/record-key-map.json to resolve which actual record the key came from (several forms share
+// field keys like "date" or "receivingDate", so the field key alone can't identify the record).
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const dateFieldMap = require('./date-field-map');
+const recordKeyMap = require('./record-key-map');
 
 const prisma = new PrismaClient();
 const dateFields = dateFieldMap.load();
+const recordKeys = recordKeyMap.load();
 const PORT = process.env.PORT || 3001;
 
 const app = express();
@@ -42,7 +46,7 @@ function extractDateFields(obj, found) {
 }
 
 async function syncSubmissionDates(key, value) {
-  if (!key.startsWith('formrecord:')) return;
+  if (!recordKeyMap.hasKnownPrefix(key)) return;
   let parsed;
   try {
     parsed = JSON.parse(value);
@@ -53,6 +57,10 @@ async function syncSubmissionDates(key, value) {
   const found = [];
   extractDateFields(parsed, found);
 
+  const recordKey = recordKeyMap.recordKeyFromStorageKey(key);
+  const record = recordKeys[recordKey];
+  const recordName = record ? record.recordName : recordKey;
+
   await prisma.$transaction([
     prisma.submissionDateField.deleteMany({ where: { submissionKey: key } }),
     ...found.map(({ fieldKey, rawValue }) => {
@@ -61,7 +69,7 @@ async function syncSubmissionDates(key, value) {
       return prisma.submissionDateField.create({
         data: {
           submissionKey: key,
-          recordName: meta.recordName,
+          recordName,
           fieldKey,
           fieldLabel: meta.fieldLabel,
           recordClass: meta.recordClass,

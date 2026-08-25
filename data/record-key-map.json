@@ -1,0 +1,310 @@
+{
+  "dry-export-pack-front-page": {
+    "recordName": "Dry Export Pack Front Page",
+    "docCode": "Dry Export Pack Front Page"
+  },
+  "live-leftovers-log": {
+    "recordName": "Live Leftovers Log",
+    "docCode": "Live Leftovers Log"
+  },
+  "master-cleaning-checklist": {
+    "recordName": "Master Cleaning Checklist (New Plant)",
+    "docCode": "Master Cleaning Checklist"
+  },
+  "master-cleaning-plan": {
+    "recordName": "Master Cleaning Plan",
+    "docCode": "Master Cleaning Plan"
+  },
+  "mortalities-log": {
+    "recordName": "Mortalities Log",
+    "docCode": "Mortalities Log"
+  },
+  "mortality-counts-by-customer": {
+    "recordName": "Mortality Counts by Customer",
+    "docCode": "Mortality Counts by Customer"
+  },
+  "qa1-damaged-cans-and-lids": {
+    "recordName": "Damaged Cans and Lids",
+    "docCode": "QA1"
+  },
+  "cans-released-form": {
+    "recordName": "Cans Released Form (Awaiting NRCS Releases)",
+    "docCode": "REC 01"
+  },
+  "gonad-inspection-report": {
+    "recordName": "Gonad Inspection Report",
+    "docCode": "REC 1"
+  },
+  "training-register": {
+    "recordName": "Training Register",
+    "docCode": "REC 6.1.2"
+  },
+  "incubator-cans-log": {
+    "recordName": "Incubator Cans Log",
+    "docCode": "REC 7.1"
+  },
+  "daily-weight-sampling": {
+    "recordName": "Daily Weight Sampling",
+    "docCode": "REC 7.1.0"
+  },
+  "fixed-reader-checks": {
+    "recordName": "Fixed Reader Checks",
+    "docCode": "REC 7.1.00"
+  },
+  "basket-removal-shucking-gutting": {
+    "recordName": "Basket Removal, Shucking & Gutting",
+    "docCode": "REC 7.1.1"
+  },
+  "abalone-receiving": {
+    "recordName": "Abalone Receiving",
+    "docCode": "REC 7.1.2"
+  },
+  "salting-and-tumbling": {
+    "recordName": "Salting and Tumbling",
+    "docCode": "REC 7.1.3"
+  },
+  "bleeding-and-salting": {
+    "recordName": "Bleeding and Salting",
+    "docCode": "REC 7.1.3.1"
+  },
+  "washing-control-sheet": {
+    "recordName": "Washing Control Sheet",
+    "docCode": "REC 7.1.4"
+  },
+  "salting-oosw": {
+    "recordName": "Salting (OOSW)",
+    "docCode": "REC 7.1.5"
+  },
+  "scrubbing-check-supervisor": {
+    "recordName": "Scrubbing Check - Supervisor",
+    "docCode": "REC 7.1.6"
+  },
+  "sampling-log": {
+    "recordName": "Sampling Log",
+    "docCode": "REC 7.2"
+  },
+  "stock-loading": {
+    "recordName": "Stock Loading",
+    "docCode": "REC 7.2.10"
+  },
+  "rework-log": {
+    "recordName": "Rework Log",
+    "docCode": "REC 7.2.13"
+  },
+  "labelling-of-cans": {
+    "recordName": "Labelling of Cans",
+    "docCode": "REC 7.2.15"
+  },
+  "stock-transfers": {
+    "recordName": "Stock Transfers",
+    "docCode": "REC 7.2.16"
+  },
+  "scrubbing-checklist-qc": {
+    "recordName": "Scrubbing Checklist",
+    "docCode": "REC 7.2.2"
+  },
+  "precooking-check-sheet": {
+    "recordName": "Precooking Check Sheet",
+    "docCode": "REC 7.2.3"
+  },
+  "can-packing-control-sheet": {
+    "recordName": "Can Packing Control Sheet",
+    "docCode": "REC 7.2.5"
+  },
+  "can-filling-and-printing": {
+    "recordName": "Can Filling and Printing",
+    "docCode": "REC 7.2.6"
+  },
+  "printing-control-sheet": {
+    "recordName": "Printing Control Sheet",
+    "docCode": "REC 7.2.6.1"
+  },
+  "broth-cooking": {
+    "recordName": "Broth Cooking",
+    "docCode": "REC 7.3.1"
+  },
+  "final-sauce-mix": {
+    "recordName": "Final Sauce Mix",
+    "docCode": "REC 7.3.4"
+  },
+  "sauce-batch-coding": {
+    "recordName": "Sauce Batch Coding",
+    "docCode": "REC 7.3.5"
+  },
+  "dried-abalone-transfer": {
+    "recordName": "Dried Abalone Transfer",
+    "docCode": "REC 7.4.10"
+  },
+  "grading-boxing-traceability": {
+    "recordName": "Grading, Boxing & Traceability",
+    "docCode": "REC 7.4.4"
+  },
+  "boxing-and-labelling": {
+    "recordName": "Boxing & Labelling",
+    "docCode": "REC 7.4.5"
+  },
+  "dry-stock-control": {
+    "recordName": "Dry Stock Control",
+    "docCode": "REC 7.4.6"
+  },
+  "labelling-of-dry-boxes": {
+    "recordName": "Labelling of Dry Boxes",
+    "docCode": "REC 7.4.7"
+  },
+  "dry-labelling-list": {
+    "recordName": "Dry Labelling List",
+    "docCode": "REC 7.4.8"
+  },
+  "dry-stock-transfers": {
+    "recordName": "Dry Stock Transfers",
+    "docCode": "REC 7.4.9"
+  },
+  "live-production-pack": {
+    "recordName": "Live Production Pack",
+    "docCode": "REC 7.5.1"
+  },
+  "individual-abalone-weight-checks": {
+    "recordName": "Individual Abalone Weight Checks - Quality",
+    "docCode": "REC 7.5.4"
+  },
+  "receiving-live-returns": {
+    "recordName": "Receiving Live Returns",
+    "docCode": "REC 7.5.5"
+  },
+  "production-areas-cleaning-record": {
+    "recordName": "Production Areas Cleaning Record",
+    "docCode": "REC 7.6.0a"
+  },
+  "live-product-areas-cleaning-record": {
+    "recordName": "Live Product Areas Cleaning Record",
+    "docCode": "REC 7.6.0b"
+  },
+  "personnel-facilities-cleaning-record": {
+    "recordName": "Personnel Facilities Cleaning Record",
+    "docCode": "REC 7.6.0c"
+  },
+  "daily-cleaning-inspection": {
+    "recordName": "Daily Cleaning Inspection",
+    "docCode": "REC 7.6.1"
+  },
+  "deep-cleaning-record-weekly": {
+    "recordName": "Deep Cleaning Record Weekly",
+    "docCode": "REC 7.6.1.1"
+  },
+  "weekly-cleaning-record": {
+    "recordName": "Weekly Cleaning Record",
+    "docCode": "REC 7.6.2"
+  },
+  "dispatch-cleaning-inspection": {
+    "recordName": "Dispatch Cleaning Inspection",
+    "docCode": "REC 7.6.2.2"
+  },
+  "facility-inspection": {
+    "recordName": "Facility Inspection",
+    "docCode": "REC 7.6.3"
+  },
+  "facility-inspection-nc-report": {
+    "recordName": "Facility Inspection NC Report",
+    "docCode": "REC 7.6.3.1"
+  },
+  "chemical-stock-issue-register": {
+    "recordName": "Chemical Stock & Issue Register",
+    "docCode": "REC 7.6.4"
+  },
+  "internal-pest-sightings-log": {
+    "recordName": "Internal Pest Sightings Log",
+    "docCode": "REC 7.6.5"
+  },
+  "allergen-cleaning-verification": {
+    "recordName": "Allergen Cleaning Verification",
+    "docCode": "REC 7.6.8"
+  },
+  "daily-equipment-checklist": {
+    "recordName": "Daily Equipment Checklist",
+    "docCode": "REC 7.7.1"
+  },
+  "safety-glass-register": {
+    "recordName": "Safety Glass Register",
+    "docCode": "REC 7.7.4.1a"
+  },
+  "goggles-register": {
+    "recordName": "Goggles Register",
+    "docCode": "REC 7.7.4.1b"
+  },
+  "knife-register": {
+    "recordName": "Knife Register",
+    "docCode": "REC 7.7.4c"
+  },
+  "glove-issuing-register": {
+    "recordName": "Glove Issuing Register",
+    "docCode": "REC 7.7.5"
+  },
+  "plaster-dressing-inspection": {
+    "recordName": "Plaster Issuing / Dressing Inspection",
+    "docCode": "REC 7.7.6"
+  },
+  "first-aid-checklist-record": {
+    "recordName": "First Aid Checklist Record (Plaster/Dressing Inspection)",
+    "docCode": "REC 7.7.6a"
+  },
+  "salt-issuing-register": {
+    "recordName": "Salt Issuing Register",
+    "docCode": "REC 7.7.7"
+  },
+  "chiller-batch-control": {
+    "recordName": "Chiller Batch Control (Canning)",
+    "docCode": "REC 7.8.1"
+  },
+  "dry-chiller-batch-control": {
+    "recordName": "Dry Chiller Batch Control",
+    "docCode": "REC 7.8.1"
+  },
+  "water-tank-inspection": {
+    "recordName": "Water Tank Inspection",
+    "docCode": "REC 7.8.11"
+  },
+  "equipment-checklist-roof": {
+    "recordName": "Equipment Checklist - Roof (Daily Ozone & Compressor)",
+    "docCode": "REC 7.8.12.1"
+  },
+  "daily-waste-removal": {
+    "recordName": "Daily Waste Removal",
+    "docCode": "REC 7.8.2"
+  },
+  "incoming-ppe-inspection": {
+    "recordName": "Incoming PPE Inspection",
+    "docCode": "REC 7.8.5"
+  },
+  "incoming-goods-inspection-log": {
+    "recordName": "Incoming Goods Inspection (Log)",
+    "docCode": "REC 7.8.5.1"
+  },
+  "water-monitoring": {
+    "recordName": "Water Monitoring",
+    "docCode": "REC 7.8.9"
+  },
+  "lha-water-monitoring": {
+    "recordName": "LHA Water Monitoring",
+    "docCode": "REC 7.8.9.1"
+  },
+  "incubator-temperature-check": {
+    "recordName": "Daily Incubator Temperature Check",
+    "docCode": "REC 7.9.2"
+  },
+  "traceability-mock-recall-canned-braised-abalone": {
+    "recordName": "Traceability & Mock Recall Checklist for Canned Braised Abalone",
+    "docCode": "REC 8.1.6a"
+  },
+  "traceability-mock-recall-canned-minced-abalone": {
+    "recordName": "Traceability & Mock Recall Checklist for Canned Minced Abalone",
+    "docCode": "REC 8.1.6b"
+  },
+  "traceability-mock-recall-live-abalone": {
+    "recordName": "Traceability & Mock Recall Checklist for Live Abalone",
+    "docCode": "REC 8.1.8"
+  },
+  "emergency-evacuation-attendance-register": {
+    "recordName": "Emergency Evacuation Attendance Register",
+    "docCode": "REC 8.4.a"
+  }
+}
