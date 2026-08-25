@@ -463,7 +463,7 @@
       editingId = id || null;
       const existing = id ? entries.find(e => e.id === id) : null;
       const locked = existing ? isSubmitted(existing) : false;
-      el(modalIds.title).textContent = !id ? 'Add entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
+      el(modalIds.title).textContent = !id ? 'New entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
       const container = el(modalIds.fields);
       // Fields carrying a `group` get a heading when the group changes, so near-identical
       // start-up and shut-down questions read as distinct steps rather than duplicates.
@@ -986,7 +986,31 @@
     function wireLog(ctrl, ns) {
       const addBtn = el(`${ns}_addEntryBtn`);
       if (addBtn) addBtn.addEventListener('click', () => ctrl.openForm(null));
-      el(`${ns}_cancelBtn`).addEventListener('click', () => ctrl.closeForm());
+      /* "Clear" sits permanently beside Submit now that the form is always open, so a
+       * mis-tap on a factory tablet could wipe a part-filled entry. First tap arms it,
+       * a second within 4 seconds clears. An empty or read-only form clears at once. */
+      const cancelBtn = el(`${ns}_cancelBtn`);
+      const baseLabel = cancelBtn.textContent;
+      let armed = false, armTimer = null;
+      function disarm() {
+        armed = false;
+        if (armTimer) { clearTimeout(armTimer); armTimer = null; }
+        cancelBtn.textContent = baseLabel;
+      }
+      function hasInput() {
+        const c = el(`${ns}_modalFields`);
+        if (!c) return false;
+        return Array.from(c.querySelectorAll('input,select,textarea')).some(i =>
+          (i.type === 'checkbox' || i.type === 'radio') ? i.checked : String(i.value || '').trim() !== '');
+      }
+      cancelBtn.addEventListener('click', () => {
+        const saveBtn = el(`${ns}_saveBtn`);
+        const locked = !!saveBtn && saveBtn.style.display === 'none';
+        if (!inlineEntryForm || locked || !hasInput() || armed) { disarm(); ctrl.closeForm(); return; }
+        armed = true;
+        cancelBtn.textContent = 'Tap again to clear';
+        armTimer = setTimeout(disarm, 4000);
+      });
       el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm(!submitFlow));
       if (submitFlow) el(`${ns}_submitBtn`).addEventListener('click', () => ctrl.saveForm(true));
       el(`${ns}_exportCsvBtn`).addEventListener('click', () => ctrl.exportCsv());

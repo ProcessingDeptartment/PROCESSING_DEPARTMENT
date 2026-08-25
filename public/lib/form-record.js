@@ -340,6 +340,31 @@
     const storageKey = 'formrecord:' + config.recordKey;
     let submissions = [];
     let editingId = null;
+    /* The entry form is always open, so "Clear" sits permanently beside Submit and a
+     * mis-tap on a factory tablet would silently wipe a part-filled entry. It therefore
+     * arms on the first tap and only clears on a second one within 4 seconds. An empty
+     * or read-only form has nothing to lose and skips the confirmation. */
+    let formLocked = false;
+    let clearArmed = false;
+    let clearTimer = null;
+    function formHasInput() {
+      const c = el('fr_modalSections');
+      if (!c) return false;
+      return Array.from(c.querySelectorAll('input,select,textarea')).some(i =>
+        (i.type === 'checkbox' || i.type === 'radio') ? i.checked : String(i.value || '').trim() !== '');
+    }
+    function disarmClear() {
+      clearArmed = false;
+      if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+    }
+    function onClearClick() {
+      const btn = el('fr_cancelBtn');
+      if (formLocked || !formHasInput()) { disarmClear(); closeForm(); return; }
+      if (clearArmed) { disarmClear(); closeForm(); return; }
+      clearArmed = true;
+      btn.textContent = 'Tap again to clear';
+      clearTimer = setTimeout(() => { clearArmed = false; clearTimer = null; btn.textContent = 'Clear'; }, 4000);
+    }
     const hasRoster = !!config.roster;
 
     async function load() {
@@ -411,7 +436,7 @@
              the same openForm/saveForm code path now fills this always-visible panel. -->
         <div class="fr-panel no-print">
           <div class="fr-panel-head">
-            <h2 id="fr_modalTitle">New submission</h2>
+            <h2 id="fr_modalTitle">New entry</h2>
           </div>
           <div class="fr-panel-body">
             <div id="fr_modalSections"></div>
@@ -590,8 +615,8 @@
       editingId = id || null;
       const existing = id ? submissions.find(s => s.id === id) : null;
       const locked = isSubmitted(existing);
-      el('fr_modalTitle').textContent = !id ? 'New submission'
-        : (locked ? 'Submitted submission (read-only)' : 'Edit submission');
+      el('fr_modalTitle').textContent = !id ? 'New entry'
+        : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
       const container = el('fr_modalSections');
       let html = locked
         ? `<div class="fr-locked">Submitted${existing.submittedAt
@@ -634,6 +659,8 @@
       el('fr_saveBtn').style.display = locked ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
+      formLocked = locked;
+      disarmClear();
     }
     // There is no overlay to hide: "Clear"/"Close" resets the always-visible form back
     // to a blank new submission, ready for the next one.
@@ -909,7 +936,7 @@
       refreshVerification = renderVerificationHistory;
     }
 
-    el('fr_cancelBtn').addEventListener('click', closeForm);
+    el('fr_cancelBtn').addEventListener('click', onClearClick);
     el('fr_saveBtn').addEventListener('click', () => saveForm(false));
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
     el('fr_exportJsonBtn').addEventListener('click', exportJson);
