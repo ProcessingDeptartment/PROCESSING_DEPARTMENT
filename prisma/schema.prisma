@@ -3,96 +3,37 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// SQLite has no native enum type, so these are documentation of the allowed
-// values rather than a connector-enforced type. Values match the originals:
-//   Role: ADMIN | EDITOR | VIEWER
-//   DocumentStatus: DRAFT | PUBLISHED | OBSOLETE
-//   ApprovalStatus: PENDING | APPROVED | REJECTED
-//   StandaloneReportType: QUALITY_HANDOVER | PRODUCTION_HANDOVER
-
-model User {
-  id                String            @id @default(uuid())
-  email             String            @unique
-  name              String?
-  role              String            @default("VIEWER")
-  createdAt         DateTime          @default(now())
-  documents         DocumentRecord[]
-  approvals         Approval[]
-  reports           StandaloneReport[]
-  publishedVersions DocumentVersion[]
+// Generic key/value store backing window.storage (see BACKEND_INTEGRATION.md).
+// Keys are namespaced strings like 'submissions:brine-mixing' or 'document_revision:double-seam'.
+// `value` is an opaque JSON string -- the API never parses it except to feed SubmissionDateField.
+model KeyValue {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model DocumentTemplate {
-  id          String            @id @default(uuid())
-  name        String
-  description String?
-  schema      String            // JSON, stored as text -- SQLite has no native Json type
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  versions    DocumentVersion[]
-  records     DocumentRecord[]
-}
+// One row per date field found inside a 'submissions:*' record, so dates are queryable without
+// parsing every JSON blob. Populated/replaced by the API whenever a submissions:* key is written.
+// recordClass matches DATE_FIELDS_ALL_RECORDS.csv: "A - Record header date" (one date per
+// submission, e.g. the form's own date) vs "B - Line-item event" (a date attached to one line/row
+// within the submission, e.g. a receiving date on one pallet).
+model SubmissionDateField {
+  id            Int       @id @default(autoincrement())
+  submissionKey String
+  recordName    String
+  fieldKey      String
+  fieldLabel    String
+  recordClass   String
+  dateValue     DateTime?
+  rawValue      String?
+  createdAt     DateTime  @default(now())
 
-model DocumentVersion {
-  id             String           @id @default(uuid())
-  template       DocumentTemplate @relation(fields: [templateId], references: [id])
-  templateId     String
-  versionNumber  Int
-  status         String           @default("DRAFT")
-  changeReason   String?
-  publishedBy    User?            @relation(fields: [publishedById], references: [id])
-  publishedById  String?
-  publishedAt    DateTime?
-  data           String           // JSON, stored as text -- SQLite has no native Json type
-  createdAt      DateTime         @default(now())
-  approvals      Approval[]
-  records        DocumentRecord[]
-
-  @@unique([templateId, versionNumber])
-}
-
-model DocumentRecord {
-  id            String           @id @default(uuid())
-  template      DocumentTemplate @relation(fields: [templateId], references: [id])
-  templateId    String
-  version       DocumentVersion? @relation(fields: [versionId], references: [id])
-  versionId     String?
-  data          String           // JSON, stored as text -- SQLite has no native Json type
-  createdBy     User?            @relation(fields: [createdById], references: [id])
-  createdById   String?
-  createdAt     DateTime         @default(now())
-  submittedAt   DateTime?
-}
-
-model Approval {
-  id                String          @id @default(uuid())
-  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id])
-  documentVersionId String
-  approver          User            @relation(fields: [approverId], references: [id])
-  approverId        String
-  status            String          @default("PENDING")
-  comment           String?
-  reviewedAt        DateTime?
-  createdAt         DateTime        @default(now())
-}
-
-model StandaloneReport {
-  id              String    @id @default(uuid())
-  reportType      String
-  name            String
-  description     String?
-  status          String    @default("DRAFT")
-  versionNumber   Int       @default(1)
-  changeReason    String?
-  publishedBy     User?     @relation(fields: [publishedById], references: [id])
-  publishedById   String?
-  publishedAt     DateTime?
-  traceability    String?   // JSON, stored as text -- SQLite has no native Json type
-  fileReference   String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  @@index([submissionKey])
+  @@index([fieldKey])
+  @@index([dateValue])
 }

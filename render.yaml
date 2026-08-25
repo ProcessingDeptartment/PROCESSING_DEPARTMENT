@@ -1,0 +1,24 @@
+services:
+  # The site: static front-end, served over HTTPS by Render automatically.
+  - type: web
+    name: facility-site
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run start
+    envVars:
+      - key: PORT
+        value: 3000
+
+  # The API: implements the storage contract in public/lib/api-backend.js, backed by Neon Postgres.
+  - type: web
+    name: facility-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    startCommand: npm run api
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false

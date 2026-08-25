@@ -105,4 +105,26 @@ assumption:
 Static JS in `public/lib/` is cached hard by browsers. When editing a lib file, bump its `?v=N` on
 **every** `<script src="../lib/....js?v=N">` tag that loads it, or a stale copy silently breaks the
 page — a missing export throws inside an async IIFE with no visible console error. Current
-versions: `data-store.js?v=4`, `traceability.js?v=2`.
+versions: `data-store.js?v=4`, `traceability.js?v=2`, `api-backend.js?v=1`.
+
+## Status: the seam is now filled in
+
+`api-backend.js` is wired up on all 243 pages that load `data-store.js` (added right after it, per
+the contract above), and now implements the real Express API in [src/index.js](src/index.js),
+backed by Postgres (Neon). It only switches off `localStorage` once `/api/health` responds, so a
+page never fails silently if the API happens to be down.
+
+- **Database**: [prisma/schema.prisma](prisma/schema.prisma) — a generic `KeyValue` table backing
+  the storage contract, plus a `SubmissionDateField` table that automatically extracts and
+  classifies every date field inside any `submissions:*` record (see
+  [data/date-field-classification.csv](data/date-field-classification.csv), sourced from
+  `DATE_FIELDS_ALL_RECORDS.csv`). Queryable via `GET /api/dates`.
+- **API**: [src/index.js](src/index.js) — implements `GET/PUT/DELETE /api/storage/key/:key` and
+  `GET /api/storage/prefix/:prefix` exactly per the contract above.
+- **Deployment**: [render.yaml](render.yaml) defines two Render services — `facility-site` (the
+  existing static site) and `facility-api` (this new service, needs a `DATABASE_URL` env var set
+  in the Render dashboard to your Neon connection string — not committed to git).
+- **Not done yet**: `facility-api` hasn't actually been deployed to Render, so
+  `public/lib/api-backend.js`'s `API_BASE` still points at a placeholder URL
+  (`facility-api.onrender.com`) — update it once the real service is live. Until then every page
+  correctly stays on `localStorage` (the health check fails closed).

@@ -1,0 +1,214 @@
+REC no.,Record name,Field label,Field key (HTML id),Input type,Required,Where on form,Suggested class
+Dry Export Pack Front Page,Dry Export Pack Front Page,Packing date,packingDate,date,Yes,section,B - Line-item event
+Live Leftovers Log,Live Leftovers Log,Date,date,date,Yes,section,A - Record header date
+Master Cleaning Checklist,Master Cleaning Checklist (New Plant),Week of,weekOf,date,Yes,section,A - Record header date
+Master Cleaning Plan,Master Cleaning Plan,Effective date,effectiveDate,date,Yes,section,B - Line-item event
+Mortalities Log,Mortalities Log,Date,date,date,Yes,section,A - Record header date
+Mortality Counts by Customer,Mortality Counts by Customer,Date,date,date,Yes,section,A - Record header date
+Production Information NRCS (Canning),Production Information NRCS (Canning),Receiving date,receivingDate,date,Yes,section,B - Line-item event
+Production Information NRCS (Canning),Production Information NRCS (Canning),Date of inspection,dateOfInspection,date,,section,B - Line-item event
+Production Information NRCS (Dry),Dry NRCS Packs — Production Information NRCS,Receiving date,receivingDate,date,Yes,section,B - Line-item event
+Production Information NRCS (Dry),Dry NRCS Packs — Production Information NRCS,Date of inspection,dateOfInspection,date,,section,B - Line-item event
+Production Information NRCS (Dry),Dry NRCS Packs — Production Information NRCS,Job number / production date,jobNumberProductionDate,text,,section,B - Line-item event
+Production Information NRCS (Rework),Production Information NRCS (Rework),Rework date,reworkDate,date,Yes,section,B - Line-item event
+Production Information NRCS (Rework),Production Information NRCS (Rework),Date of inspection,dateOfInspection,date,,section,B - Line-item event
+QA1,Damaged Cans and Lids,Date,date,date,Yes,section,A - Record header date
+QA1,Damaged Cans and Lids,Pallet number and production date,palletNumberProductionDate,text,,section,B - Line-item event
+REC 01,Cans Released Form (Awaiting NRCS Releases),Date,date,date,Yes,section,A - Record header date
+REC 1,Gonad Inspection Report,Date,date,date,Yes,section,A - Record header date
+REC 6.1.2,Training Register,Date,date,date,Yes,section,A - Record header date
+REC 7.1,Incubator Cans Log,Date in,dateIn,date,Yes,section,B - Line-item event
+REC 7.1,Incubator Cans Log,Date out for micro,dateOutForMicro,date,,section,B - Line-item event
+REC 7.1,Incubator Cans Log,Date cleared,dateCleared,date,,section,B - Line-item event
+REC 7.1,Incubator Cans Log,Cleared by — date,clearedByDate,date,,section,C - Sign-off / audit
+REC 7.1.0,Daily Weight Sampling,Date,date,date,Yes,section,A - Record header date
+REC 7.1.00,Fixed Reader Checks,Date,date,date,Yes,section,A - Record header date
+REC 7.1.1,"Basket Removal, Shucking & Gutting",Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.1.2,Abalone Receiving,Receiving date,receivingDate,date,Yes,section,B - Line-item event
+REC 7.1.3,Salting and Tumbling,Date,date,date,Yes,section,A - Record header date
+REC 7.1.3.1,Bleeding and Salting,Date,date,date,Yes,section,A - Record header date
+REC 7.1.4,Washing Control Sheet,Date,date,date,Yes,section,A - Record header date
+REC 7.1.5,Salting (OOSW),Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.1.5,Salting (OOSW),Supervisor date,supervisorDate,date,,section,C - Sign-off / audit
+REC 7.1.6,Scrubbing Check - Supervisor,Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.1.6,Scrubbing Check - Supervisor,Date,date,date,,section,A - Record header date
+REC 7.10.2,pH Verification,Date,date,date,Yes,section,A - Record header date
+REC 7.10.2,pH Verification,Date,date,date,Yes,section,A - Record header date
+REC 7.10.3,Thermometer Verification,Date,date,date,Yes,section,A - Record header date
+REC 7.10.3,Thermometer Verification,Verified date,verifiedDate,date,,section,C - Sign-off / audit
+REC 7.10.4,Thermometer Correction Factors,Date,date,date,Yes,section,A - Record header date
+REC 7.2,Sampling Log,Date,date,date,Yes,section,A - Record header date
+REC 7.2,Sampling Log,"Product information (AG code, DW / dry job no. / live tag / ranched incoming date)",productInfo,text,Yes,section,B - Line-item event
+REC 7.2.10,Stock Loading,Date,date,date,Yes,section,A - Record header date
+REC 7.2.11,QC Report,Date,date,date,Yes,section,A - Record header date
+REC 7.2.13,Rework Log,Date,date,date,Yes,section,A - Record header date
+REC 7.2.13,Rework Log,Production date / FG01 transfer date,productionDateOrFg01TransferDate,date,,section,B - Line-item event
+REC 7.2.13,Rework Log,New production date,newProductionDate,date,,section,B - Line-item event
+REC 7.2.14,Product Label Checklist,Date,date,date,Yes,section,A - Record header date
+REC 7.2.15,Labelling of Cans,Date,date,date,Yes,section,A - Record header date
+REC 7.2.16,Stock Transfers,Date,date,date,Yes,section,A - Record header date
+REC 7.2.2,Scrubbing Checklist,Date,date,date,Yes,section,A - Record header date
+REC 7.2.3,Precooking Check Sheet,Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.2.3,Precooking Check Sheet,Precooking date,precookingDate,date,,section,B - Line-item event
+REC 7.2.5,Can Packing Control Sheet,Date,date,date,Yes,section,A - Record header date
+REC 7.2.6,Can Filling and Printing,Date,date,date,Yes,section,A - Record header date
+REC 7.2.6,Can Filling and Printing,Printed best before date,printedBestBeforeDate,date,,section,D - Forward-looking / planned
+REC 7.2.6.1,Printing Control Sheet,Date,date,date,Yes,section,A - Record header date
+REC 7.2.6.1,Printing Control Sheet,Production date,productionDate,date,,section,B - Line-item event
+REC 7.2.7,Cans Produced,Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.2.8,Retorting Control Sheet,Date,date,date,Yes,section,A - Record header date
+REC 7.2.9,Retort Inspection Report,Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.3.1,Broth Cooking,Date,date,date,Yes,section,A - Record header date
+REC 7.3.1,Broth Cooking,Abalone shells intake date,abaloneShellsIntakeDate,date,,section,B - Line-item event
+REC 7.3.2,Ingredient Weighing,Date,date,date,Yes,section,A - Record header date
+REC 7.3.3,Sauce Mixing,Date,date,date,Yes,section,A - Record header date
+REC 7.3.3,Sauce Mixing,Broth batch date,brothBatchDate,date,,section,B - Line-item event
+REC 7.3.4,Final Sauce Mix,Date,date,date,Yes,section,A - Record header date
+REC 7.3.5,Sauce Batch Coding,Date of mix,dateOfMix,date,Yes,section,B - Line-item event
+REC 7.3.6,Brine Mixing Report,Date,date,date,Yes,section,A - Record header date
+REC 7.3.6,Brine Mixing Report,Production date (ingo),productionDateIngo,date,,section,B - Line-item event
+REC 7.4.0,Dry Cooking,Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.4.0,Dry Cooking,Cooking date,cookingDate,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Intake date,intakeDate,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Cooking date,cookingDate,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Movement to dry room 1,movementToDryRoom1Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 1,steam1Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 2,steam2Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 3,steam3Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 4,steam4Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 5,steam5Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 6,steam6Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 7,steam7Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 8,steam8Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 9,steam9Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 10,steam10Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 11,steam11Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 12,steam12Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 13,steam13Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Steam 14,steam14Date,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Movement to container,movementToContainerDate,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Removed from trolleys,removedFromTrolleysDate,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Movement to grading room,movementToGradingRoomDate,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Date de-string,dateDeString,date,,section,B - Line-item event
+REC 7.4.1,Drying Process,Date graded,dateGraded,date,,section,B - Line-item event
+REC 7.4.10,Dried Abalone Transfer,Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.4.10,Dried Abalone Transfer,Actual dried date,actualDriedDate,date,,section,B - Line-item event
+REC 7.4.2,Dry Monitoring,Date,date,date,Yes,section,A - Record header date
+REC 7.4.2,Dry Monitoring,Intake date,intakeDate,date,,section,B - Line-item event
+REC 7.4.2,Dry Monitoring,Cooking date,cookingDate,date,,section,B - Line-item event
+REC 7.4.2,Dry Monitoring,Estimated dry date,estimatedDryDate,date,,section,D - Forward-looking / planned
+REC 7.4.3.1,Grading Production Log (Cultivated),Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.4.3.1,Grading Production Log (Cultivated),Date into grading room,dateIntoGradingRoom,date,,section,B - Line-item event
+REC 7.4.3.1,Grading Production Log (Cultivated),Grading date,gradingDate,date,,section,B - Line-item event
+REC 7.4.3.2,Grading Production Log (Ranched),Intake date,intakeDate,date,Yes,section,B - Line-item event
+REC 7.4.3.2,Grading Production Log (Ranched),Date into grading room,dateIntoGradingRoom,date,,section,B - Line-item event
+REC 7.4.3.2,Grading Production Log (Ranched),Grading date,gradingDate,date,,section,B - Line-item event
+REC 7.4.4,"Grading, Boxing & Traceability",Date created,dateCreated,date,Yes,section,B - Line-item event
+REC 7.4.5,Boxing & Labelling,Packing date,packingDate,date,Yes,section,B - Line-item event
+REC 7.4.6,Dry Stock Control,Intake date,intakeDate,date,,section,B - Line-item event
+REC 7.4.6,Dry Stock Control,Cooking date,cookingDate,date,,section,B - Line-item event
+REC 7.4.6,Dry Stock Control,Date in,dateIn,date,,section,B - Line-item event
+REC 7.4.6,Dry Stock Control,Date out,dateOut,date,,section,B - Line-item event
+REC 7.4.7,Labelling of Dry Boxes,Date,date,date,Yes,section,A - Record header date
+REC 7.4.8,Dry Labelling List,ETD,etd,date,,section,D - Forward-looking / planned
+REC 7.4.9,Dry Stock Transfers,Date,date,date,Yes,section,A - Record header date
+REC 7.5.1,Live Production Pack,Packing date,packingDate,date,Yes,section,B - Line-item event
+REC 7.5.2,Live Pack Checklist,Production date,productionDate,date,Yes,section,B - Line-item event
+REC 7.5.3,Live Packing - Bag Quality Check,Date of checking,dateOfChecking,date,Yes,section,B - Line-item event
+REC 7.5.3,Live Packing - Bag Quality Check,Date of packing,dateOfPacking,date,,section,B - Line-item event
+REC 7.5.3,Live Packing - Bag Quality Check,Date sorted,dateSorted,date,,roster (repeating row),B - Line-item event
+REC 7.5.4,Individual Abalone Weight Checks - Quality,Date,date,date,Yes,section,A - Record header date
+REC 7.5.5,Receiving Live Returns,Date,date,date,Yes,section,A - Record header date
+REC 7.6.0a,Production Areas Cleaning Record,Date,date,date,Yes,section,A - Record header date
+REC 7.6.0b,Live Product Areas Cleaning Record,Date,date,date,Yes,section,A - Record header date
+REC 7.6.0c,Personnel Facilities Cleaning Record,Date,date,date,Yes,section,A - Record header date
+REC 7.6.1,Daily Cleaning Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.6.1.1,Deep Cleaning Record Weekly,Date,date,date,Yes,section,A - Record header date
+REC 7.6.2,Weekly Cleaning Record,Week of,weekOf,date,Yes,section,A - Record header date
+REC 7.6.2.2,Dispatch Cleaning Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.6.3,Facility Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.6.3.1,Facility Inspection NC Report,Inspection date,inspectionDate,date,Yes,section,B - Line-item event
+REC 7.6.3.1,Facility Inspection NC Report,Date,verificationDate,date,,section,C - Sign-off / audit
+REC 7.6.3.1,Facility Inspection NC Report,Target date,targetDate,date,,roster (repeating row),B - Line-item event
+REC 7.6.3.1,Facility Inspection NC Report,Actual date completed,actualDateCompleted,date,,roster (repeating row),B - Line-item event
+REC 7.6.4,Chemical Stock & Issue Register,Expiry date,expiryDate,date,,section,D - Forward-looking / planned
+REC 7.6.4,Chemical Stock & Issue Register,Date of issue,dateOfIssue,date,Yes,section,B - Line-item event
+REC 7.6.5,Internal Pest Sightings Log,Date,date,date,Yes,section,A - Record header date
+REC 7.6.6,Pest Inspection Record,Date,date,date,Yes,section,A - Record header date
+REC 7.6.7a,Staff Hygiene Inspection - Weekends,Date,date,date,Yes,section,A - Record header date
+REC 7.6.7,Staff Hygiene Inspection,Date (beginning of working week),weekStarting,date,Yes,section,A - Record header date
+REC 7.6.8,Allergen Cleaning Verification,Date,date,date,Yes,section,A - Record header date
+REC 7.7.1,Daily Equipment Checklist,Week of,weekOf,date,Yes,section,A - Record header date
+REC 7.7.1,Daily Equipment Checklist,Date,date,date,,roster (repeating row),B - Line-item event
+REC 7.7.2,"Glass, Plastic & Equipment Inspection",Week of,weekOf,date,Yes,section,A - Record header date
+REC 7.7.3,Glass Breakage Clearance Certificate,Date,date,date,Yes,section,A - Record header date
+REC 7.7.4,Utensil Issue Record,Date,date,date,Yes,section,A - Record header date
+REC 7.7.4.1a,Safety Glass Register,Date (beginning of working week),weekStarting,date,Yes,section,A - Record header date
+REC 7.7.4.1b,Goggles Register,Date (beginning of working week),weekStarting,date,Yes,section,A - Record header date
+REC 7.7.4c,Knife Register,Date (beginning of working week),weekStarting,date,Yes,section,A - Record header date
+REC 7.7.5,Glove Issuing Register,Date,date,date,Yes,section,A - Record header date
+REC 7.7.6,Plaster Issuing / Dressing Inspection,Date of incident,dateOfIncident,date,Yes,section,B - Line-item event
+REC 7.7.6a,First Aid Checklist Record (Plaster/Dressing Inspection),Date of incident,dateOfIncident,date,Yes,section,B - Line-item event
+REC 7.7.7,Salt Issuing Register,Date,date,date,Yes,section,A - Record header date
+REC 7.8.1,Chiller Batch Control (Canning),Date,date,date,Yes,section,A - Record header date
+REC 7.8.1,Dry Chiller Batch Control,Date,date,date,Yes,section,A - Record header date
+REC 7.8.10,Maintenance Job Card,Issue date,issueDate,date,Yes,section,B - Line-item event
+REC 7.8.10,Maintenance Job Card,Date,verificationDate,date,,section,C - Sign-off / audit
+REC 7.8.11,Water Tank Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.8.11,Water Tank Inspection,Date of verification,dateOfVerification,date,,section,C - Sign-off / audit
+REC 7.8.12,Factory Maintenance Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.8.12.1,Equipment Checklist - Roof (Daily Ozone & Compressor),Date,date,date,Yes,section,A - Record header date
+REC 7.8.2,Daily Waste Removal,Date,date,date,Yes,section,A - Record header date
+REC 7.8.3,Boiler Inspection Report,Date,date,date,Yes,section,A - Record header date
+REC 7.8.4,Seamer Inspection Report,Date,date,date,Yes,section,A - Record header date
+REC 7.8.5,Incoming PPE Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.8.5.1,Incoming Goods Inspection (Log),Date,date,date,Yes,section,A - Record header date
+REC 7.8.6,Cans Incoming Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.8.6,Cans Incoming Inspection,Production date,productionDate,date,,section,B - Line-item event
+REC 7.8.6.1,Lids Incoming Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.8.6.2,Lids Incoming Inspection (Internal Inspection),Date,date,date,Yes,section,A - Record header date
+REC 7.8.7,Incoming Goods Inspection,Date,date,date,Yes,section,A - Record header date
+REC 7.8.7,Incoming Goods Inspection,Expiry date,expiryDate,date,,section,D - Forward-looking / planned
+REC 7.8.8,Dispatch Loading Inspection Checklist,Date,date,date,Yes,section,A - Record header date
+REC 7.8.8.1,Dispatch Receiving Checklist,Date,date,date,Yes,section,A - Record header date
+REC 7.8.9,Water Monitoring,Date,date,date,Yes,section,A - Record header date
+REC 7.8.9.1,LHA Water Monitoring,Date,date,date,Yes,section,A - Record header date
+REC 7.9.1,Chiller Temperature Monitoring,Date,date,date,Yes,section,A - Record header date
+REC 7.9.2,Daily Incubator Temperature Check,Date,date,date,Yes,section,A - Record header date
+REC 7.9.3.1,Dry Room Temp & Humidity Log,Date,date,date,Yes,section,A - Record header date
+REC 7.9.3.2,Grading Room Temp & Humidity Log,Date,date,date,Yes,section,A - Record header date
+REC 8.1.1.a,Internal CAR,Date,date,date,Yes,section,A - Record header date
+REC 8.1.1.a,Internal CAR,Close out date,closeDate,date,,section,C - Sign-off / audit
+REC 8.1.1.a,Internal CAR,Date,verifiedDate,date,,section,C - Sign-off / audit
+REC 8.1.3,Disposition Investigation Record,Date,date,date,Yes,section,A - Record header date
+REC 8.1.3,Disposition Investigation Record,Date reviewed,dateReviewed,date,,section,C - Sign-off / audit
+REC 8.1.4,Withdrawal (Mock Recall) Record,Date,date,date,Yes,section,A - Record header date
+REC 8.1.4,Withdrawal (Mock Recall) Record,Production code / packing date,productionCodePackingDate,text,,section,B - Line-item event
+REC 8.1.4,Withdrawal (Mock Recall) Record,Best before date,bestBeforeDate,date,,section,D - Forward-looking / planned
+REC 8.1.4,Withdrawal (Mock Recall) Record,Date & time started,dateTimeStarted,text,,section,B - Line-item event
+REC 8.1.4,Withdrawal (Mock Recall) Record,Date & time finished,dateTimeFinished,text,,section,B - Line-item event
+REC 8.1.4,Withdrawal (Mock Recall) Record,"Actions taken to ensure all affected product is retrieved (date, time, action, responsible person)",actionsTaken,textarea,,section,B - Line-item event
+REC 8.1.5,Traceability Exercise,Date initiated,dateInitiated,date,Yes,section,B - Line-item event
+REC 8.1.6a,Traceability & Mock Recall Checklist for Canned Braised Abalone,Date,date,date,Yes,section,A - Record header date
+REC 8.1.6,Traceability & Mock Recall Checklist for Canned Abalone,Date,date,date,Yes,section,A - Record header date
+REC 8.1.6b,Traceability & Mock Recall Checklist for Canned Minced Abalone,Date,date,date,Yes,section,A - Record header date
+REC 8.1.7,Traceability & Mock Recall Checklist for Dried Abalone,Date,date,date,Yes,section,A - Record header date
+REC 8.1.8,Traceability & Mock Recall Checklist for Live Abalone,Recall initiation date,recallInitiationDate,date,Yes,section,B - Line-item event
+REC 8.1.8,Traceability & Mock Recall Checklist for Live Abalone,Packing date,packingDate,date,,section,B - Line-item event
+REC 8.2.1,Supplier Questionnaire,Expiry date of certificate,certificateDate,date,,section,D - Forward-looking / planned
+REC 8.2.1,Supplier Questionnaire,Date,completedByDate,date,,section,C - Sign-off / audit
+REC 8.2.1,Supplier Questionnaire,SQA approval — date,sqaApprovalDate,date,,section,C - Sign-off / audit
+REC 8.2.2,Supplier Approval Record,Date of evaluation,dateOfEvaluation,date,Yes,section,B - Line-item event
+REC 8.2.2,Supplier Approval Record,Date,verificationDate,date,,section,C - Sign-off / audit
+REC 8.2.8,Rapid Food Handler Medicals,Date of assessment,dateOfAssessment,date,Yes,section,B - Line-item event
+REC 8.2.8,Rapid Food Handler Medicals,Date,signatureDate,date,,section,C - Sign-off / audit
+REC 8.2.8.1,RFH Medical Result,Date of medical assessment,dateOfMedicalAssessment,date,Yes,section,B - Line-item event
+REC 8.2.8.1,RFH Medical Result,Date,examinerDate,date,,section,C - Sign-off / audit
+REC 8.2.8.1,RFH Medical Result,Date,verifiedDate,date,,section,C - Sign-off / audit
+REC 8.4.a,Emergency Evacuation Attendance Register,Date,date,date,Yes,section,A - Record header date
+REC 8.4.b,Handling of Emergencies and Incidences (Emergency Drill Report),Date,completedDate,date,,section,B - Line-item event
+REC 8.4.b,Handling of Emergencies and Incidences (Emergency Drill Report),Date,verifiedDate,date,,section,C - Sign-off / audit
+REC 9.1,Daily Factory Feedback Meeting,Date,date,date,Yes,section,A - Record header date
+RTW Medical Questionnaire,Return to Work Medical Questionnaire,Date,employeeSignatureDate,date,,section,C - Sign-off / audit
+ALL RECORDS,(shared component signoff-block.js),Date (verification block),*_date,date,Yes,verification block,C - Sign-off / audit
+ALL RECORDS,(shared component signoff-block.js),Date (completed-by block),*_date,date,,completed-by block,C - Sign-off / audit

@@ -1,15 +1,26 @@
 {
   "name": "facility-control-system",
   "version": "0.1.0",
-  "description": "Processing Department document management system — front-end only. APIs will be added later.",
+  "description": "Processing Department document management system.",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "build": "echo \"No build step required\""
+    "build": "echo \"No build step required\"",
+    "api": "node src/index.js",
+    "api:migrate": "prisma migrate deploy",
+    "api:generate": "prisma generate"
   },
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.20.0"
+  },
+  "allowScripts": {}
 }

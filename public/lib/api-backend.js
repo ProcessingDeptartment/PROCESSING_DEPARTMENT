@@ -6,7 +6,10 @@
  * of localStorage. Never throws -- failures are swallowed and logged, per the contract.
  */
 (function () {
-  const API_BASE = window.FACILITY_API_BASE || '';
+  // TODO: replace with the deployed facility-api Render URL once that service is live
+  // (see render.yaml). Until then this points nowhere and window.storage silently falls back
+  // to localStorage, per the contract in BACKEND_INTEGRATION.md ("never throws").
+  const API_BASE = window.FACILITY_API_BASE || 'https://facility-api.onrender.com';
 
   async function apiGet(key) {
     try {
@@ -56,11 +59,18 @@
     }
   }
 
-  window.storage.useBackend({
-    name: 'api',
-    get: apiGet,
-    set: apiSet,
-    remove: apiRemove,
-    getByPrefix: apiGetByPrefix
+  // Only switch off localStorage once the API is confirmed reachable -- if it's down or not
+  // deployed yet, stay on the local fallback rather than silently failing every save.
+  fetch(API_BASE + '/api/health').then((res) => {
+    if (!res.ok) throw new Error('unhealthy');
+    window.storage.useBackend({
+      name: 'api',
+      get: apiGet,
+      set: apiSet,
+      remove: apiRemove,
+      getByPrefix: apiGetByPrefix
+    });
+  }).catch((e) => {
+    console.error('facility-api unreachable, staying on localStorage', e);
   });
 })();
