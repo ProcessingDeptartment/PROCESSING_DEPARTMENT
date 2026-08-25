@@ -2,7 +2,8 @@
 // public/lib/api-backend.js (see BACKEND_INTEGRATION.md): get/set/remove by key, and
 // getByPrefix in one round trip. Backed by Postgres (Neon) via Prisma.
 //
-// Any key written under the 'submissions:' prefix also gets its date fields pulled out into
+// Any key written under the 'formrecord:' prefix (see public/lib/form-record.js -- each key holds
+// the whole array of submissions for one record) also gets its date fields pulled out into
 // SubmissionDateField, using data/date-field-classification.csv, so dates are queryable without
 // parsing every JSON blob.
 const express = require('express');
@@ -41,7 +42,7 @@ function extractDateFields(obj, found) {
 }
 
 async function syncSubmissionDates(key, value) {
-  if (!key.startsWith('submissions:')) return;
+  if (!key.startsWith('formrecord:')) return;
   let parsed;
   try {
     parsed = JSON.parse(value);

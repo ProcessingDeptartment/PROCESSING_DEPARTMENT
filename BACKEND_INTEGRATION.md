@@ -116,7 +116,7 @@ page never fails silently if the API happens to be down.
 
 - **Database**: [prisma/schema.prisma](prisma/schema.prisma) — a generic `KeyValue` table backing
   the storage contract, plus a `SubmissionDateField` table that automatically extracts and
-  classifies every date field inside any `submissions:*` record (see
+  classifies every date field inside any `formrecord:*` record (see
   [data/date-field-classification.csv](data/date-field-classification.csv), sourced from
   `DATE_FIELDS_ALL_RECORDS.csv`). Queryable via `GET /api/dates`.
 - **API**: [src/index.js](src/index.js) — implements `GET/PUT/DELETE /api/storage/key/:key` and

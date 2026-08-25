@@ -8,7 +8,7 @@ datasource db {
 }
 
 // Generic key/value store backing window.storage (see BACKEND_INTEGRATION.md).
-// Keys are namespaced strings like 'submissions:brine-mixing' or 'document_revision:double-seam'.
+// Keys are namespaced strings like 'formrecord:brine-mixing' or 'document_revision:double-seam'.
 // `value` is an opaque JSON string -- the API never parses it except to feed SubmissionDateField.
 model KeyValue {
   key       String   @id
@@ -17,8 +17,8 @@ model KeyValue {
   updatedAt DateTime @updatedAt
 }
 
-// One row per date field found inside a 'submissions:*' record, so dates are queryable without
-// parsing every JSON blob. Populated/replaced by the API whenever a submissions:* key is written.
+// One row per date field found inside a 'formrecord:*' record, so dates are queryable without
+// parsing every JSON blob. Populated/replaced by the API whenever a formrecord:* key is written.
 // recordClass matches DATE_FIELDS_ALL_RECORDS.csv: "A - Record header date" (one date per
 // submission, e.g. the form's own date) vs "B - Line-item event" (a date attached to one line/row
 // within the submission, e.g. a receiving date on one pallet).
