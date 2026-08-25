@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.2.12 Double Seam Trend</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
+    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #dst-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.4; }
+  #dst-root *{ box-sizing:border-box; }
+  #dst-root h1,#dst-root h2{ margin:0; font-weight:700; }
+  .dst-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .doc-line{ display:flex; align-items:baseline; gap:10px; }
+  .doc-code{ font-family:var(--mono); opacity:.8; }
+  .btn{ padding:7px 13px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
+  .btn-primary:hover{ background:var(--palette-primary-hover); }
+  .btn.on{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .dst-body{ padding:16px 18px 60px; max-width:1200px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; padding:14px 16px; }
+  .panel h2{ font-size:15px; margin-bottom:10px; }
+  .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .muted{ color:#6b7680; font-size:13px; }
+  .charts{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .charts{ grid-template-columns:1fr; } }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:12px; margin-top:6px; }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ padding:6px 8px; border-bottom:1px solid var(--line-soft); text-align:left; white-space:nowrap; }
+  th{ background:#f4f5f6; position:sticky; top:0; }
+  .table-wrap{ max-height:480px; overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
+  #tableSection{ display:none; }
+</style>
+</head>
+<body>
+<div id="dst-root">
+  <div class="dst-top">
+    <div class="doc-line">
+      <span class="doc-code">REC 7.2.12</span>
+      <h1>Double Seam Trend</h1>
+    </div>
+    <div>
+      <a class="btn btn-ghost" href="REC-7.2.12-double-seam-inspection-report.html">Back to record</a>
+    </div>
+  </div>
+  <div class="dst-body">
+    <div class="panel">
+      <div class="toolbar">
+        <button class="btn btn-primary" id="refreshBtn">Refresh</button>
+        <button class="btn btn-ghost" id="toggleTableBtn">Show table</button>
+        <button class="btn btn-ghost" id="downloadCsvBtn">Download CSV</button>
+        <span class="muted" id="statusLine"></span>
+      </div>
+      <div class="muted">
+        After-production stage only, averaged across the 3 measurement points per can. Draft
+        (unsubmitted) inspections are excluded.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>% B.H.B. (overlap)</h2>
+      <div id="chartBhb"></div>
+      <div class="legend">
+        <span><i style="background:#2f6fed"></i> Can 1</span>
+        <span><i style="background:#e0742f"></i> Can 2</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Freespace (mm)</h2>
+      <div id="chartFreespace"></div>
+      <div class="legend">
+        <span><i style="background:#2f6fed"></i> Can 1</span>
+        <span><i style="background:#e0742f"></i> Can 2</span>
+      </div>
+    </div>
+
+    <div class="panel" id="tableSection">
+      <h2>Data</h2>
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>Date</th><th>Batch (cans)</th><th>Rev</th>
+              <th>Can 1 %B.H.B.</th><th>Can 2 %B.H.B.</th>
+              <th>Can 1 Freespace</th><th>Can 2 Freespace</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/api-backend.js?v=1"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
+  function avg(nums) {
+    const vals = nums.filter((n) => n !== null);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  }
+
+  function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+  // Pulls every double-seam record (key: 'record:dsir_<batch>_<timestamp>') in one round trip via
+  // the existing generic prefix endpoint -- no dedicated API route needed for this page.
+  // Two reasons an empty result on the very first call doesn't mean "no data yet": (1) the page
+  // can query window.storage before api-backend.js's health check has switched it off localStorage,
+  // and (2) the API is on a free Render tier that sleeps when idle, so a request right after a
+  // quiet period can time out -- window.storage silently returns {} rather than throwing, per its
+  // contract. Retry once after a short wait before accepting an empty result either way.
+  async function loadRows() {
+    let raw = await window.storage.getByPrefix('record:dsir_', true);
+    if (Object.keys(raw || {}).length === 0) {
+      await sleep(2500);
+      raw = await window.storage.getByPrefix('record:dsir_', true);
+    }
+    const rows = [];
+    for (const [key, value] of Object.entries(raw || {})) {
+      if (!key.startsWith('record:dsir_')) continue;
+      let state;
+      try { state = JSON.parse(value); } catch { continue; }
+      if (state.status !== 'complete') continue;
+      const after = state.stages && state.stages.after;
+      if (!after) continue;
+      const can1Points = (after.can1 && after.can1.points) || [];
+      const can2Points = (after.can2 && after.can2.points) || [];
+      rows.push({
+        date: state.header.reportDate || state.header.dateProduced || '',
+        batch: state.header.batchCans || '(no batch)',
+        revision: state.revision || 1,
+        can1Bhb: avg(can1Points.map((p) => num(p.bhbPct))),
+        can2Bhb: avg(can2Points.map((p) => num(p.bhbPct))),
+        can1Freespace: avg(can1Points.map((p) => num(p.freespace))),
+        can2Freespace: avg(can2Points.map((p) => num(p.freespace)))
+      });
+    }
+    rows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    return rows;
+  }
+
+  // Minimal dependency-free SVG line chart. `series` = [{ color, points: [{x, y}] }], points with
+  // y === null break the line rather than being interpolated across.
+  function renderChart(container, rows, series) {
+    const W = container.clientWidth || 520, H = 220, PAD = { l: 42, r: 12, t: 12, b: 24 };
+    if (!rows.length) { container.innerHTML = '<div class="muted" style="padding:20px;">No submitted inspections yet.</div>'; return; }
+    const allY = series.flatMap((s) => s.points.map((p) => p.y)).filter((v) => v !== null);
+    if (!allY.length) { container.innerHTML = '<div class="muted" style="padding:20px;">No data for this metric yet.</div>'; return; }
+    const yMin = Math.min(...allY), yMax = Math.max(...allY);
+    const yPad = (yMax - yMin) * 0.15 || 1;
+    const y0 = yMin - yPad, y1 = yMax + yPad;
+    const n = rows.length;
+    const xAt = (i) => PAD.l + (n === 1 ? 0 : (i / (n - 1)) * (W - PAD.l - PAD.r));
+    const yAt = (v) => PAD.t + (1 - (v - y0) / (y1 - y0)) * (H - PAD.t - PAD.b);
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="font-family:var(--mono);font-size:10px;">`;
+    // gridlines + y labels
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const v = y0 + (i / steps) * (y1 - y0);
+      const yy = yAt(v);
+      svg += `<line x1="${PAD.l}" y1="${yy}" x2="${W - PAD.r}" y2="${yy}" stroke="#e5e8ea" stroke-width="1"/>`;
+      svg += `<text x="${PAD.l - 6}" y="${yy + 3}" text-anchor="end" fill="#6b7680">${v.toFixed(2)}</text>`;
+    }
+    // x labels (first, middle, last to avoid crowding)
+    [0, Math.floor((n - 1) / 2), n - 1].forEach((i) => {
+      if (i < 0 || i >= n) return;
+      svg += `<text x="${xAt(i)}" y="${H - 6}" text-anchor="middle" fill="#6b7680">${rows[i].date || '—'}</text>`;
+    });
+    // lines + dots
+    series.forEach((s) => {
+      let path = '', open = false;
+      s.points.forEach((p, i) => {
+        if (p.y === null) { open = false; return; }
+        const cmd = open ? 'L' : 'M';
+        path += `${cmd}${xAt(i)},${yAt(p.y)} `;
+        open = true;
+      });
+      svg += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
+      s.points.forEach((p, i) => {
+        if (p.y === null) return;
+        svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="3" fill="${s.color}"><title>${rows[i].date} — ${p.y.toFixed(2)}</title></circle>`;
+      });
+    });
+    svg += '</svg>';
+    container.innerHTML = svg;
+  }
+
+  function renderTable(rows) {
+    $('dataTableBody').innerHTML = rows.map((r) => `
+      <tr>
+        <td>${r.date || '—'}</td>
+        <td>${r.batch}</td>
+        <td>${r.revision}</td>
+        <td>${r.can1Bhb == null ? '—' : r.can1Bhb.toFixed(2)}</td>
+        <td>${r.can2Bhb == null ? '—' : r.can2Bhb.toFixed(2)}</td>
+        <td>${r.can1Freespace == null ? '—' : r.can1Freespace.toFixed(3)}</td>
+        <td>${r.can2Freespace == null ? '—' : r.can2Freespace.toFixed(3)}</td>
+      </tr>`).join('');
+  }
+
+  function downloadCsv(rows) {
+    const header = ['Date', 'Batch (cans)', 'Revision', 'Can 1 %B.H.B.', 'Can 2 %B.H.B.', 'Can 1 Freespace (mm)', 'Can 2 Freespace (mm)'];
+    const lines = [header.join(',')];
+    rows.forEach((r) => {
+      lines.push([
+        r.date, `"${String(r.batch).replace(/"/g, '""')}"`, r.revision,
+        r.can1Bhb == null ? '' : r.can1Bhb.toFixed(2),
+        r.can2Bhb == null ? '' : r.can2Bhb.toFixed(2),
+        r.can1Freespace == null ? '' : r.can1Freespace.toFixed(3),
+        r.can2Freespace == null ? '' : r.can2Freespace.toFixed(3)
+      ].join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `double-seam-trend-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  let currentRows = [];
+
+  async function refresh() {
+    $('statusLine').textContent = 'Loading…';
+    currentRows = await loadRows();
+    $('statusLine').textContent = `${currentRows.length} submitted inspection${currentRows.length === 1 ? '' : 's'}`;
+    renderChart($('chartBhb'), currentRows, [
+      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Bhb })) },
+      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Bhb })) }
+    ]);
+    renderChart($('chartFreespace'), currentRows, [
+      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Freespace })) },
+      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Freespace })) }
+    ]);
+    renderTable(currentRows);
+  }
+
+  async function init() {
+    if (window.LoginUI) { await window.LoginUI.ensureAuthenticated(); }
+    $('refreshBtn').addEventListener('click', refresh);
+    $('downloadCsvBtn').addEventListener('click', () => downloadCsv(currentRows));
+    $('toggleTableBtn').addEventListener('click', () => {
+      const section = $('tableSection');
+      const showing = section.style.display === 'block';
+      section.style.display = showing ? 'none' : 'block';
+      $('toggleTableBtn').textContent = showing ? 'Show table' : 'Hide table';
+    });
+    await refresh();
+    window.addEventListener('resize', () => renderChart($('chartBhb'), currentRows, [
+      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Bhb })) },
+      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Bhb })) }
+    ]) || renderChart($('chartFreespace'), currentRows, [
+      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Freespace })) },
+      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Freespace })) }
+    ]));
+    // Light auto-refresh so a screen left open picks up new submissions without a manual click.
+    setInterval(refresh, 60000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
