@@ -1,16 +1,16 @@
 services:
-  # The site: static front-end, served over HTTPS by Render automatically.
+  # The site: static front-end, served over HTTPS by Render automatically. Deployed as a Render
+  # Static Site (not a Node web service) -- free forever, no sleep/spin-down, since it's just
+  # files off a CDN. server.js is only used for local dev (`npm run dev`).
   - type: web
     name: facility-site
-    runtime: node
-    plan: free
-    buildCommand: npm install
-    startCommand: npm run start
-    envVars:
-      - key: PORT
-        value: 3000
+    runtime: static
+    staticPublishPath: public
+    buildCommand: "true"
 
   # The API: implements the storage contract in public/lib/api-backend.js, backed by Neon Postgres.
+  # This one CANNOT be a static site -- it runs Node/Express against a live database, so it's a
+  # free-tier web service, which does sleep after 15 min idle (see BACKEND_INTEGRATION.md).
   - type: web
     name: facility-api
     runtime: node
