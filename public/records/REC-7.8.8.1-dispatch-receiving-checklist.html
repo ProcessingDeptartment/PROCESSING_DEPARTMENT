@@ -29,12 +29,17 @@
     docCode: 'REC 7.8.8.1',
     title: 'Dispatch Receiving Checklist',
     docRevisionStart: 1,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'clientDetails', label: 'Client details', type: 'text' },
       { key: 'noOfPalletsBoxes', label: 'No. of pallets/boxes', type: 'number' },
       { key: 'deliveryNote', label: 'Delivery note', type: 'text' },
-      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
       { key: 'productDispatched', label: 'Product dispatched', type: 'text' },
       { key: 'outerCartonSealed', label: 'Outer carton sealed tightly & neat', type: 'yesno' },
       { key: 'damagedDirtyBoxesPallets', label: 'Evidence of damaged & dirty boxes, pallets on loading', type: 'yesno' },

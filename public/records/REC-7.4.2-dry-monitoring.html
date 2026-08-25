@@ -29,9 +29,14 @@
     docCode: 'REC 7.4.2',
     title: 'Dry Monitoring',
     docRevisionStart: 3,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'jobNumber', label: 'Job number', type: 'text' },
+      { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
       { key: 'intakeWeight', label: 'Intake weight', type: 'number', unit: 'kg' },
       { key: 'intakeDate', label: 'Intake date', type: 'date' },
       { key: 'cookingDate', label: 'Cooking date', type: 'date' },

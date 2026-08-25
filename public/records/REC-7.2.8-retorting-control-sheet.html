@@ -22,7 +22,7 @@
 <script src="../lib/traceability.js?v=2"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=6"></script>
+<script src="../lib/form-record.js?v=8"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -31,6 +31,11 @@
     docCode: 'REC 7.2.8',
     title: 'Retorting Control Sheet',
     docRevisionStart: 1,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     listColumns: ['date', 'jobNumber', 'retortNo'],
     batchField: 'jobNumber',
     stage: 'retorting',
@@ -39,7 +44,7 @@
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'time', label: 'Time', type: 'text' },
         { key: 'productionCode', label: 'Production code', type: 'text' },
-        { key: 'jobNumber', label: 'Job number', type: 'text' },
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         { key: 'productRecipe', label: 'Product recipe', type: 'text' },
         { key: 'timeTrolleyIn', label: 'Time trolley in', type: 'text' }
       ]},

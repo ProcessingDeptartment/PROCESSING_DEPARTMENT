@@ -22,7 +22,7 @@
 <script src="../lib/traceability.js?v=2"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=6"></script>
+<script src="../lib/form-record.js?v=8"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -31,6 +31,11 @@
     docCode: 'REC 7.2.3',
     title: 'Precooking Check Sheet',
     docRevisionStart: 1,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     listColumns: ['intakeDate', 'jobNumber', 'sizeRange'],
     batchField: 'jobNumber',
     stage: 'precooking',
@@ -40,7 +45,7 @@
         Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
         { key: 'trackingNo', label: 'Tracking no.', type: 'text' },
         { key: 'precookingDate', label: 'Precooking date', type: 'date' },
-        { key: 'jobNumber', label: 'Job number', type: 'text' },
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
       { title: 'Precooking process', newPage: true, fields: [

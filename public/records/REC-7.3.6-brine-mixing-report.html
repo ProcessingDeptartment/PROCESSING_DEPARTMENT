@@ -21,7 +21,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=6"></script>
+<script src="../lib/form-record.js?v=8"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -30,11 +30,16 @@
     docCode: 'REC 7.3.6',
     title: 'Brine Mixing Report',
     docRevisionStart: 1,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     listColumns: ['date', 'jobNumber', 'productDescription'],
     sections: [
       { title: 'Batch info', fields: [
         { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'jobNumber', label: 'Job number', type: 'text' },
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         { key: 'sample', label: 'Sample', type: 'text' },
         { key: 'productDescription', label: 'Product description', type: 'text' },
         { key: 'productionDateIngo', label: 'Production date (ingo)', type: 'date' },

@@ -21,7 +21,7 @@
 <script src="../lib/traceability.js?v=2"></script>
 <script src="../lib/batch-validation.js?v=1"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=6"></script>
+<script src="../lib/form-record.js?v=8"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -36,11 +36,16 @@
     instructions: [
       { label: 'Note', text: 'Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
     ],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     sections: [
       { title: 'Batch details', fields: [
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'agCode', label: 'AG code', type: 'text' },
-        { key: 'jobNo', label: 'Job no.', type: 'text' }
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' }
       ]}
     ],
     roster: {

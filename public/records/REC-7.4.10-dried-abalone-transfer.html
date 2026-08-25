@@ -20,7 +20,7 @@
 <script src="../lib/traceability.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=6"></script>
+<script src="../lib/form-record.js?v=8"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -31,10 +31,15 @@
     title: 'Dried Abalone Transfer',
     docRevisionStart: 2,
     listColumns: ['intakeDate', 'jobNumber', 'totalDriedWeight', 'dryYield'],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     sections: [
       { title: 'Batch details', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'jobNumber', label: 'Job number', type: 'text', required: true },
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch', required: true },
         { key: 'intakeWeight', label: 'Intake weight', type: 'number' },
         { key: 'actualDriedDate', label: 'Actual dried date', type: 'date' }
       ]},

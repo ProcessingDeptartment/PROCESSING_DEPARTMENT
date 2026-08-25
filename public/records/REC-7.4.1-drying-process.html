@@ -32,8 +32,13 @@
     instructions: [
       { label: 'Note', text: 'The paper form has one Date/Time per steam cycle (up to 14). This digital version records the date of each steam turn — steam 1 through 14 — plus the milestone dates either side.' }
     ],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     entryFields: [
-      { key: 'jobNumber', label: 'Job number', type: 'text', required: true },
+      { key: 'jobNumber', label: 'Job number', type: 'jobsearch', required: true },
       { key: 'intakeDate', label: 'Intake date', type: 'date' },
       { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
       { key: 'cookingDate', label: 'Cooking date', type: 'date' },

@@ -216,6 +216,12 @@
         return `<input type="text" id="${id}" list="${id}_list" value="${esc(v)}" autocomplete="off" placeholder="Type or pick a job no.">
             <datalist id="${id}_list"></datalist>`;
       }
+      // Read-only, derived from the roster (see sumRosterColumn) -- kept live as rows change and
+      // recalculated authoritatively from the actual roster at save time, not just trusted off
+      // whatever this display last showed.
+      if (field.type === 'computed') {
+        return `<input type="text" id="${id}" value="${esc(v)}" disabled>`;
+      }
       if (field.type === 'jobnumber') {
         const parts = splitJobNo(v);
         const prefixes = ['', ...(window.Lookups ? window.Lookups.get('jobPrefixes') : [])];
@@ -611,10 +617,11 @@
       let rows = (existingRows || []).slice();
       if (!rows.length) rows.push({});
 
-      // Sums the roster.totalsRow numeric columns across current on-screen row values.
+      // Sums the roster.totalsRow numeric columns across current on-screen row values, and keeps
+      // any top-level `computed` field with a matching sumRosterColumn in sync as rows change
+      // (e.g. an "Intake weight" field mirroring the roster's wholeWeight total live).
       function renderRosterTotals() {
-        const totalsEl = el('fr_rosterTotals');
-        if (!totalsEl || !config.roster.totalsRow) return;
+        if (!config.roster.totalsRow) return;
         const totals = {};
         config.roster.totalsRow.forEach(k => { totals[k] = 0; });
         rows.forEach((_, i) => {
@@ -624,10 +631,18 @@
             if (!isNaN(val)) totals[k] += val;
           });
         });
-        totalsEl.innerHTML = 'Totals — ' + config.roster.totalsRow.map(k => {
-          const col = config.roster.columns.find(c => c.key === k);
-          return `${esc(col ? col.label : k)}: ${totals[k].toFixed(2)}`;
-        }).join(' &nbsp;·&nbsp; ');
+        const totalsEl = el('fr_rosterTotals');
+        if (totalsEl) {
+          totalsEl.innerHTML = 'Totals — ' + config.roster.totalsRow.map(k => {
+            const col = config.roster.columns.find(c => c.key === k);
+            return `${esc(col ? col.label : k)}: ${totals[k].toFixed(2)}`;
+          }).join(' &nbsp;·&nbsp; ');
+        }
+        allFields(config).forEach((f) => {
+          if (f.type !== 'computed' || !f.sumRosterColumn) return;
+          const inp = el(`fr_f_${f.key}`);
+          if (inp) inp.value = (totals[f.sumRosterColumn] || 0).toFixed(2);
+        });
       }
 
       function draw() {
@@ -719,8 +734,10 @@
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); }
-      // A submitted record is evidence -- it opens to be read, never to be re-typed.
-      container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked; });
+      // A submitted record is evidence -- it opens to be read, never to be re-typed. `computed`
+      // fields are always read-only, locked or not -- don't let this blanket pass re-enable them.
+      const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
+      container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked || computedIds.has(i.id); });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
@@ -758,6 +775,19 @@
         }
       }
       const rosterRows = hasRoster ? el('fr_rosterRows')._getRows() : undefined;
+
+      // Authoritative recompute from the actual roster rows being saved -- "finalised on
+      // submission" means this, not whatever the live display last happened to show.
+      if (rosterRows) {
+        allFields(config).forEach((f) => {
+          if (f.type !== 'computed' || !f.sumRosterColumn) return;
+          const total = rosterRows.reduce((sum, r) => {
+            const n = parseFloat(r[f.sumRosterColumn]);
+            return sum + (isNaN(n) ? 0 : n);
+          }, 0);
+          values[f.key] = total.toFixed(2);
+        });
+      }
 
       const status = finalize ? 'submitted' : 'draft';
       let savedSub;

@@ -36,9 +36,14 @@
       { label: 'Stage 2', text: 'Gonad large, tip rounded but not swollen.' },
       { label: 'Stage 3', text: 'Gonad very large, tip rounded and swollen, bulging at shell edge.' }
     ],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'] },
       { key: 'stage', label: 'Stage', type: 'select', options: ['0', '1', '2', '3'] },
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),

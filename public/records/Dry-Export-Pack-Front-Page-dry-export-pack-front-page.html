@@ -19,7 +19,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=6"></script>
+<script src="../lib/form-record.js?v=8"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -29,10 +29,15 @@
     title: 'Dry Export Pack Front Page',
     docRevisionStart: 1,
     listColumns: ['packingDate', 'jobNumber'],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     sections: [
       { title: 'Shipment details', fields: [
         { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
-        { key: 'jobNumber', label: 'Job number', type: 'text' },
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         { key: 'noOfBoxesExported', label: 'No. of boxes exported', type: 'number' }
       ]},
       { title: 'Attachments checklist', fields: [

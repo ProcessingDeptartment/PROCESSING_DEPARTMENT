@@ -21,7 +21,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=6"></script>
+<script src="../lib/form-record.js?v=8"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -30,6 +30,11 @@
     docCode: 'REC 7.2.13',
     title: 'Rework Log',
     docRevisionStart: 1,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     listColumns: ['date', 'jobNo', 'productDescriptionDw'],
     sections: [
       { title: 'Rework details', fields: [
@@ -40,7 +45,7 @@
       { title: 'Product info', newPage: true, fields: [
         { key: 'productDescriptionDw', label: 'Product description (D/W)', type: 'text' },
         { key: 'productionDateOrFg01TransferDate', label: 'Production date / FG01 transfer date', type: 'date' },
-        { key: 'jobNo', label: 'Job no.', type: 'text' },
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'quantityCans', label: 'Quantity (cans)', type: 'number' },
         { key: 'newProductionDate', label: 'New production date', type: 'date' },
         { key: 'quantityProduced', label: 'Quantity produced', type: 'number' }
