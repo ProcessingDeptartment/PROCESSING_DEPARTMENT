@@ -21,7 +21,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=4"></script>
+<script src="../lib/monitoring-log.js?v=5"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -33,11 +33,16 @@
     instructions: [
       { label: 'Purpose', text: 'Supervisor check that abalone is cleaned effectively during scrubbing, and any damage is recorded.' }
     ],
+    // Selecting a job number that was already received on Abalone Receiving (REC 7.1.2) pulls in
+    // its receiving date, so it doesn't need to be re-typed. Only fills empty fields.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate' } }
+    ],
     entryFields: [
       { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
       Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
-      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'abaloneSize', label: 'Abalone size', type: 'number', unit: 'g' },
       { key: 'date', label: 'Date', type: 'date' },
       { key: 'time', label: 'Time', type: 'text' },

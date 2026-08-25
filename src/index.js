@@ -134,6 +134,34 @@ app.get('/api/storage/prefix/:prefix', async (req, res) => {
   }
 });
 
+// Distinct recent values of one field in a record, most recent first -- backs the job-number
+// search-select so a user can pick from what's actually been received instead of typing blind.
+app.get('/api/values/:recordKey/:field', async (req, res) => {
+  try {
+    const { recordKey, field } = req.params;
+    const seen = new Map(); // value -> most recent timestamp seen for it
+    for (const prefix of ['formrecord:', 'monitoring_log:']) {
+      const row = await prisma.keyValue.findUnique({ where: { key: prefix + recordKey } });
+      if (!row) continue;
+      let entries;
+      try { entries = JSON.parse(row.value); } catch { continue; }
+      if (!Array.isArray(entries)) continue;
+      for (const entry of entries) {
+        const values = entry.values || entry;
+        const v = values[field];
+        if (!v) continue;
+        const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
+        if (!seen.has(v) || stamp > seen.get(v)) seen.set(v, stamp);
+      }
+    }
+    const sorted = [...seen.entries()].sort((a, b) => b[1] - a[1]).map(([v]) => v).slice(0, 200);
+    res.json(sorted);
+  } catch (e) {
+    console.error('GET values failed', e);
+    res.status(500).json([]);
+  }
+});
+
 // Finds the most recent entry in a record whose field matches value, for cross-record autofill
 // (e.g. selecting a job number on one record pulls in details already captured on another).
 // Checks both storage prefixes since callers don't know which one a given record uses.

@@ -20,7 +20,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=4"></script>
+<script src="../lib/monitoring-log.js?v=5"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -29,9 +29,14 @@
     docCode: 'REC 7.4.6',
     title: 'Dry Stock Control',
     docRevisionStart: 3,
+    // Search-select only (no date autofill) -- by this point in the process "intake date" means
+    // intake into dry stock, not the original Abalone Receiving date, so it can't be inferred here.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     entryFields: [
       { key: 'month', label: 'Month', type: 'month', required: true },
-      { key: 'jobNo', label: 'Job no.', type: 'text' },
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'intakeDate', label: 'Intake date', type: 'date' },
       { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
       { key: 'cookingDate', label: 'Cooking date', type: 'date' },

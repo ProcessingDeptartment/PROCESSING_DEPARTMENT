@@ -21,7 +21,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=5"></script>
+<script src="../lib/form-record.js?v=6"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -40,7 +40,7 @@
       { title: 'Intake & processing info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dry', 'Other'] },
-        { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
       { title: 'Incoming check', newPage: true, fields: [

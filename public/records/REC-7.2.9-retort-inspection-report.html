@@ -21,7 +21,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=5"></script>
+<script src="../lib/form-record.js?v=6"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -31,11 +31,16 @@
     title: 'Retort Inspection Report',
     docRevisionStart: 1,
     listColumns: ['intakeDate', 'jobNo', 'retortCode'],
+    // Search-select only (no date autofill) -- by this point in the process "intake date" means
+    // intake into retort, not the original Abalone Receiving date, so it can't be inferred here.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     sections: [
       { title: 'Batch info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-        { key: 'jobNo', label: 'Job no.', type: 'text' },
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'trackingCode', label: 'Tracking code', type: 'text' },
         { key: 'retortCode', label: 'Retort code', type: 'text' },
         { key: 'timeTrolleyIn', label: 'Time trolley in', type: 'text' },

@@ -209,6 +209,13 @@
 
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
+      // Search-select for a job number that should already exist elsewhere (paired with an
+      // `autofill` rule watching this field) -- type to filter a real list of received job
+      // numbers instead of typing one blind. Free typing still works if it's not in the list yet.
+      if (field.type === 'jobsearch') {
+        return `<input type="text" id="${id}" list="${id}_list" value="${esc(v)}" autocomplete="off" placeholder="Type or pick a job no.">
+            <datalist id="${id}_list"></datalist>`;
+      }
       if (field.type === 'jobnumber') {
         const parts = splitJobNo(v);
         const prefixes = ['', ...(window.Lookups ? window.Lookups.get('jobPrefixes') : [])];
@@ -292,6 +299,28 @@
         sync();
       });
     }
+
+  // Populates the datalist for every jobsearch field from its paired autofill rule's source
+  // record, and uppercases free-typed entries on blur to match how job numbers are stored.
+  function wireJobSearch(container, config) {
+    allFields(config).forEach((f) => {
+      if (f.type !== 'jobsearch') return;
+      const rule = (config.autofill || []).find((r) => r.watch === f.key);
+      if (!rule) return;
+      const input = container.querySelector('#fr_f_' + f.key);
+      const list = container.querySelector('#fr_f_' + f.key + '_list');
+      if (!input || !list) return;
+      const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+      fetch(`${base}/api/values/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((values) => { list.innerHTML = values.map((val) => `<option value="${esc(val)}"></option>`).join(''); })
+        .catch((e) => console.error('job search fetch failed', e));
+      input.addEventListener('blur', () => {
+        const upper = input.value.trim().toUpperCase();
+        if (upper !== input.value) { input.value = upper; input.dispatchEvent(new Event('input', { bubbles: true })); }
+      });
+    });
+  }
 
   // Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
   // field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
@@ -689,7 +718,7 @@
       // Wire Yes/No button groups, job-number widgets, and cross-record autofill in the modal
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
-      if (!locked) wireAutofill(container, config);
+      if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); }
       // A submitted record is evidence -- it opens to be read, never to be re-typed.
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked; });
       el('fr_saveBtn').style.display = locked ? 'none' : '';

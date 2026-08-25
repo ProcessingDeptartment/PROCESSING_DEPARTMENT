@@ -266,6 +266,13 @@
     if (field.type === 'month') {
       return `<input type="month" id="${id}" value="${esc(v)}">`;
     }
+    // Search-select for a job number that should already exist elsewhere (paired with an
+    // `autofill` rule watching this field) -- type to filter a real list of received job
+    // numbers instead of typing one blind. Free typing still works if it's not in the list yet.
+    if (field.type === 'jobsearch') {
+      return `<input type="text" id="${id}" list="${id}_list" value="${esc(v)}" autocomplete="off" placeholder="Type or pick a job no.">
+        <datalist id="${id}_list"></datalist>`;
+    }
     return `<input type="text" id="${id}" value="${esc(v)}">`;
   }
 
@@ -291,6 +298,63 @@
     });
   }
 
+  // Populates the datalist for every jobsearch field from its paired autofill rule's source
+  // record, and uppercases free-typed entries on blur to match how job numbers are stored.
+  function wireJobSearch(container, ns, entryFields, autofillRules) {
+    (entryFields || []).forEach((f) => {
+      if (f.type !== 'jobsearch') return;
+      const rule = (autofillRules || []).find((r) => r.watch === f.key);
+      if (!rule) return;
+      const id = `${ns}_f_${f.key}`;
+      const input = container.querySelector('#' + id);
+      const list = container.querySelector('#' + id + '_list');
+      if (!input || !list) return;
+      const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+      fetch(`${base}/api/values/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((values) => { list.innerHTML = values.map((val) => `<option value="${esc(val)}"></option>`).join(''); })
+        .catch((e) => console.error('job search fetch failed', e));
+      input.addEventListener('blur', () => {
+        const upper = input.value.trim().toUpperCase();
+        if (upper !== input.value) { input.value = upper; input.dispatchEvent(new Event('input', { bubbles: true })); }
+      });
+    });
+  }
+
+  // Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
+  // field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
+  // record's recordKey) whose `matchField` matches, and copies `fill` (target key -> source key)
+  // into this entry's still-empty fields. Never overwrites something already typed in.
+  function wireAutofill(container, ns, autofillRules) {
+    (autofillRules || []).forEach((rule) => {
+      const watchEl = container.querySelector('#' + ns + '_f_' + rule.watch);
+      if (!watchEl) return;
+      let lastValue = '';
+      watchEl.addEventListener('input', async () => {
+        const value = watchEl.value;
+        if (!value || value === lastValue) return;
+        lastValue = value;
+        try {
+          const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+          const url = `${base}/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const found = await res.json();
+          if (!found) return;
+          Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
+            const targetEl = container.querySelector('#' + ns + '_f_' + targetKey);
+            if (targetEl && !targetEl.value && found[sourceKey] != null) {
+              targetEl.value = found[sourceKey];
+              targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          });
+        } catch (e) {
+          console.error('autofill lookup failed', e);
+        }
+      });
+    });
+  }
+
   /* The paper forms put a Comments column beside every checklist line. A field marked
    * withComment gets a synthetic sibling field here, so the modal, save, CSV and JSON
    * paths all handle it as an ordinary field -- only the printed sheet treats it
@@ -310,7 +374,7 @@
 
   // ---- one controller per log (primary + optional secondary share this factory) ----
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey } = opts;
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey, autofill } = opts;
     let entries = [];
     let editingId = null;
 
@@ -477,6 +541,7 @@
         </label>`;
       }).join('');
       wireYesNo(container);
+      if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); }
       container.querySelectorAll('input,select,textarea').forEach(inp => {
         inp.addEventListener('input', recalcComputedInModal);
         inp.addEventListener('change', recalcComputedInModal);
@@ -960,7 +1025,8 @@
       deviationLabel: config.deviationLabel || 'Deviation',
       deviationPolarity: config.deviationPolarity || 'deviation',
       submitFlow,
-      inline: inlineEntryForm
+      inline: inlineEntryForm,
+      autofill: config.autofill
     });
     let secondary = null;
     if (config.secondaryLog) {
