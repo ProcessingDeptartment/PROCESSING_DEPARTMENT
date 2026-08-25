@@ -6,10 +6,7 @@
  * of localStorage. Never throws -- failures are swallowed and logged, per the contract.
  */
 (function () {
-  // TODO: replace with the deployed facility-api Render URL once that service is live
-  // (see render.yaml). Until then this points nowhere and window.storage silently falls back
-  // to localStorage, per the contract in BACKEND_INTEGRATION.md ("never throws").
-  const API_BASE = window.FACILITY_API_BASE || 'https://facility-api.onrender.com';
+  const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
 
   async function apiGet(key) {
     try {
