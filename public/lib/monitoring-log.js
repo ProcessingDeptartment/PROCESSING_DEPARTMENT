@@ -891,18 +891,17 @@
 
     // Thresholds button removed from all records.
     const showThresholds = false;
-    // Records that lead with the action rather than the log put "+ Add entry" in the
-    // header and push the entries panel below the verification strip.
-    const topAddEntry = config.topAddEntry === true;
+    // The "+ Add entry" button is gone from every record: opening a record shows the
+    // entry fields ready to complete. This is a system-wide rule, not per record, so
+    // the old per-record opt-outs (config.topAddEntry, config.inlineEntryForm) are
+    // deliberately ignored rather than read.
+    const topAddEntry = false;
     const entriesAtBottom = config.entriesPosition === 'bottom';
-
-    // Every record now leads with the entry form as its main view -- the "+ Add entry"
-    // button/modal is the exception, opted into per record via inlineEntryForm:false.
-    const inlineEntryForm = config.inlineEntryForm !== false;
+    const inlineEntryForm = true;
 
     const logsHtml = `
         ${logBlockHtml('ml_p', config.secondaryLog ? (config.primaryLogTitle || 'Entries') : 'Entries', inlineEntryForm)}
-        ${config.secondaryLog ? logBlockHtml('ml_s', config.secondaryLog.title) : ''}`;
+        ${config.secondaryLog ? logBlockHtml('ml_s', config.secondaryLog.title, inlineEntryForm) : ''}`;
 
     mount.innerHTML = `
       <div class="ml-top">
@@ -979,7 +978,8 @@
         modalIds: { overlay: 'ml_s_modal', title: 'ml_s_modalTitle', fields: 'ml_s_modalFields' },
         deviationLabel: config.secondaryLog.deviationLabel || 'Deviation',
         deviationPolarity: config.secondaryLog.deviationPolarity || 'deviation',
-        submitFlow
+        submitFlow,
+        inline: inlineEntryForm
       });
     }
 
@@ -1000,7 +1000,10 @@
     wireLog(primary, 'ml_p');
     if (secondary) wireLog(secondary, 'ml_s');
     if (topAddEntry) el('ml_topAddEntryBtn').addEventListener('click', () => primary.openForm(null));
-    if (inlineEntryForm) primary.openForm(null);
+    if (inlineEntryForm) {
+      primary.openForm(null);
+      if (secondary) secondary.openForm(null);
+    }
 
     // ---------- thresholds modal ----------
     function buildThresholdsTable() {

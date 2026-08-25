@@ -406,10 +406,25 @@
       <div class="fr-body">
         ${instructionsHtml}
         ${relatedHtml}
+        <!-- The entry form IS the page: opening a record shows the fields ready to
+             complete, matching the paper form. There is no "+ New" button and no modal;
+             the same openForm/saveForm code path now fills this always-visible panel. -->
+        <div class="fr-panel no-print">
+          <div class="fr-panel-head">
+            <h2 id="fr_modalTitle">New submission</h2>
+          </div>
+          <div class="fr-panel-body">
+            <div id="fr_modalSections"></div>
+            <div class="fr-actions">
+              <button class="fr-btn fr-btn-flat" id="fr_cancelBtn">Clear</button>
+              <button class="fr-btn fr-btn-flat" id="fr_saveBtn">Save draft</button>
+              <button class="fr-btn fr-btn-primary" id="fr_submitBtn">Submit</button>
+            </div>
+          </div>
+        </div>
         <div class="fr-panel no-print">
           <div class="fr-panel-head">
             <h2>Submissions</h2>
-            <button class="fr-btn fr-btn-primary fr-btn-sm" id="fr_addBtn">+ New</button>
           </div>
           <div class="fr-panel-body">
             <div class="fr-filters">
@@ -425,17 +440,6 @@
         ${verificationHtml}
       </div>
       <div id="fr_printSheet" class="fr-sheet"></div>
-      <div id="fr_modal" class="fr-modal-overlay no-print" style="display:none;">
-        <div class="fr-modal-inner">
-          <h2 id="fr_modalTitle">New submission</h2>
-          <div id="fr_modalSections"></div>
-          <div class="fr-actions">
-            <button class="fr-btn fr-btn-flat" id="fr_cancelBtn">Cancel</button>
-            <button class="fr-btn fr-btn-flat" id="fr_saveBtn">Save draft</button>
-            <button class="fr-btn fr-btn-primary" id="fr_submitBtn">Submit</button>
-          </div>
-        </div>
-      </div>
       <div class="fr-toast no-print" id="fr_toast"></div>
     `;
 
@@ -629,10 +633,11 @@
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked; });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
-      el('fr_cancelBtn').textContent = locked ? 'Close' : 'Cancel';
-      el('fr_modal').style.display = 'flex';
+      el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
     }
-    function closeForm() { el('fr_modal').style.display = 'none'; }
+    // There is no overlay to hide: "Clear"/"Close" resets the always-visible form back
+    // to a blank new submission, ready for the next one.
+    function closeForm() { editingId = null; openForm(null); }
 
     /* finalize=false saves a draft, finalize=true submits. A draft is a part-filled shift
      * that someone comes back to, so required fields are only enforced on submit -- the
@@ -904,7 +909,6 @@
       refreshVerification = renderVerificationHistory;
     }
 
-    el('fr_addBtn').addEventListener('click', () => openForm(null));
     el('fr_cancelBtn').addEventListener('click', closeForm);
     el('fr_saveBtn').addEventListener('click', () => saveForm(false));
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
@@ -913,6 +917,9 @@
     ['filterFrom', 'filterTo', 'filterSearch'].forEach(suffix => {
       el(`fr_${suffix}`).addEventListener('input', renderTable);
     });
+
+    // Open the record straight onto a blank entry form.
+    openForm(null);
 
     // Wire Edit Template button (dynamically loads template-editor.js if needed)
     if (canManageTemplates && el('fr_editTemplateBtn')) {
