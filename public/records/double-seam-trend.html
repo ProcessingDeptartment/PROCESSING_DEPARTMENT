@@ -39,6 +39,10 @@
   th{ background:#f4f5f6; position:sticky; top:0; }
   .table-wrap{ max-height:480px; overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
   #tableSection{ display:none; }
+  .trend-alert{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:5px; font-size:13px; font-weight:600; margin-bottom:10px; }
+  .trend-alert.stable{ background:#f0f4f0; color:#3a6b45; }
+  .trend-alert.watch{ background:#fbf0dc; color:#8a5a10; }
+  .trend-alert.alarm{ background:#fbe4e2; color:#9c241d; }
 </style>
 </head>
 <body>
@@ -61,25 +65,33 @@
         <span class="muted" id="statusLine"></span>
       </div>
       <div class="muted">
-        After-production stage only, averaged across both cans and all 3 measurement points per
-        inspection. Draft (unsubmitted) inspections are excluded.
+        One line per production stage (before / during / after), each averaged across both cans
+        and all 3 measurement points. Draft (unsubmitted) inspections are excluded. The alert
+        banners judge trend and severity on the after-production reading only -- that's the final
+        result that actually shipped.
       </div>
     </div>
 
     <div class="panel">
       <h2>% B.H.B. (overlap)</h2>
+      <div id="alertBhb"></div>
       <div id="chartBhb"></div>
       <div class="legend">
-        <span><i style="background:#2f6fed"></i> In spec</span>
+        <span><i style="background:#8a94a0"></i> Before production</span>
+        <span><i style="background:#2f6fed"></i> During production</span>
+        <span><i style="background:#2f9e57"></i> After production</span>
         <span><i style="background:#d0342c"></i> Out of spec</span>
       </div>
     </div>
 
     <div class="panel">
       <h2>Freespace (mm)</h2>
+      <div id="alertFreespace"></div>
       <div id="chartFreespace"></div>
       <div class="legend">
-        <span><i style="background:#2f6fed"></i> In spec</span>
+        <span><i style="background:#8a94a0"></i> Before production</span>
+        <span><i style="background:#2f6fed"></i> During production</span>
+        <span><i style="background:#2f9e57"></i> After production</span>
         <span><i style="background:#d0342c"></i> Out of spec</span>
       </div>
     </div>
@@ -90,8 +102,12 @@
         <table id="dataTable">
           <thead>
             <tr>
-              <th>Date</th><th>Batch (cans)</th><th>Rev</th>
-              <th>%B.H.B.</th><th>Freespace</th>
+              <th rowspan="2">Date</th><th rowspan="2">Batch (cans)</th><th rowspan="2">Rev</th>
+              <th colspan="3">%B.H.B.</th><th colspan="3">Freespace</th>
+            </tr>
+            <tr>
+              <th>Before</th><th>During</th><th>After</th>
+              <th>Before</th><th>During</th><th>After</th>
             </tr>
           </thead>
           <tbody id="dataTableBody"></tbody>
@@ -116,6 +132,49 @@
     return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
   }
 
+  // Compares the average of the earlier half of readings against the more recent half to call a
+  // direction (up / down / flat, vs. noise -- an 8%-of-spec-range move is the bar for "a trend").
+  // `badDirection` is which way is actually concerning for this metric (bhbPct dropping toward its
+  // min is bad; freespace rising toward its max is bad) -- trending the other way is good news, not
+  // an alarm, even though it's still a "trend". Severity escalates as the recent average gets close
+  // to the bad-direction limit, and jumps straight to alarm if any of the last 5 readings are
+  // already out of spec outright. Judged on the after-production stage only -- the final result
+  // is what actually matters for whether the seam shipped good, even though before/during also
+  // get plotted for context.
+  function computeTrendAlert(rows, getValue, spec, badDirection, label) {
+    const vals = rows.map(getValue).filter((v) => v != null);
+    if (vals.length < 4) return { level: 'stable', text: `${label}: not enough data yet for a trend.` };
+    const mid = Math.floor(vals.length / 2);
+    const firstAvg = avg(vals.slice(0, mid));
+    const secondAvg = avg(vals.slice(mid));
+    const specRange = spec.max - spec.min;
+    const diff = secondAvg - firstAvg;
+    const flat = Math.abs(diff) < specRange * 0.08;
+    const direction = flat ? 'flat' : (diff > 0 ? 'up' : 'down');
+
+    const recentOut = rows.slice(-5).some((r) => isOutOfSpec(getValue(r), spec));
+    const proximity = badDirection === 'down'
+      ? (secondAvg - spec.min) / specRange
+      : (spec.max - secondAvg) / specRange;
+
+    let level = 'stable';
+    if (recentOut || (direction === badDirection && proximity < 0.15)) level = 'alarm';
+    else if (direction === badDirection && proximity < 0.3) level = 'watch';
+
+    let text = flat
+      ? `${label} is holding steady around ${secondAvg.toFixed(2)}.`
+      : `${label} is trending ${direction} (${firstAvg.toFixed(2)} → ${secondAvg.toFixed(2)}).`;
+    if (level === 'alarm') text += recentOut ? ' Recent readings are out of spec.' : ' Approaching the spec limit.';
+    else if (level === 'watch') text += ' Worth keeping an eye on.';
+
+    return { level, text };
+  }
+
+  function renderAlert(container, alert) {
+    const icon = alert.level === 'stable' ? '✓' : '🔔';
+    container.innerHTML = `<div class="trend-alert ${alert.level}">${icon} ${alert.text}</div>`;
+  }
+
   function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
   // Pulls every double-seam record (key: 'record:dsir_<batch>_<timestamp>') in one round trip via
@@ -137,33 +196,38 @@
       let state;
       try { state = JSON.parse(value); } catch { continue; }
       if (state.status !== 'complete') continue;
-      const after = state.stages && state.stages.after;
-      if (!after) continue;
+      if (!state.stages) continue;
       // Can 1 vs Can 2 isn't a meaningful split for trending -- both cans go through the same
-      // seamer, so every point across both (6 total: 2 cans x 3 measurement points) is one pool.
-      const allPoints = [
-        ...((after.can1 && after.can1.points) || []),
-        ...((after.can2 && after.can2.points) || [])
-      ];
+      // seamer, so every point across both (6 total: 2 cans x 3 measurement points) is one pool
+      // per stage. Before/during/after production stay separate -- that's the point of tracking
+      // them, seeing whether the seam changes as production runs.
+      function stageAvg(stageKey, field) {
+        const stage = state.stages[stageKey];
+        if (!stage) return null;
+        const points = [...((stage.can1 && stage.can1.points) || []), ...((stage.can2 && stage.can2.points) || [])];
+        return avg(points.map((p) => num(p[field])));
+      }
       rows.push({
         date: state.header.reportDate || state.header.dateProduced || '',
         batch: state.header.batchCans || '(no batch)',
         revision: state.revision || 1,
-        bhb: avg(allPoints.map((p) => num(p.bhbPct))),
-        freespace: avg(allPoints.map((p) => num(p.freespace)))
+        before: { bhb: stageAvg('before', 'bhbPct'), freespace: stageAvg('before', 'freespace') },
+        during: { bhb: stageAvg('during', 'bhbPct'), freespace: stageAvg('during', 'freespace') },
+        after: { bhb: stageAvg('after', 'bhbPct'), freespace: stageAvg('after', 'freespace') }
       });
     }
     rows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     return rows;
   }
 
-  // Minimal dependency-free SVG line chart for one metric. `points` = [{y, outOfSpec}], y === null
-  // breaks the line rather than being interpolated across. The line itself carries no markers --
-  // only out-of-spec points get a dot, in red, so problems are the only thing that draws the eye.
-  function renderChart(container, rows, points, spec) {
+  // Minimal dependency-free SVG line chart for one metric, one line per stage. `series` =
+  // [{ name, color, points: [{y, outOfSpec}] }], y === null breaks that stage's line rather than
+  // being interpolated across. Lines carry no markers of their own -- only out-of-spec points get
+  // a dot, always red regardless of which stage, so a problem is the only thing that draws the eye.
+  function renderChart(container, rows, series, spec) {
     const W = container.clientWidth || 520, H = 220, PAD = { l: 42, r: 12, t: 12, b: 24 };
     if (!rows.length) { container.innerHTML = '<div class="muted" style="padding:20px;">No submitted inspections yet.</div>'; return; }
-    const allY = points.map((p) => p.y).filter((v) => v !== null);
+    const allY = series.flatMap((s) => s.points.map((p) => p.y)).filter((v) => v !== null);
     if (!allY.length) { container.innerHTML = '<div class="muted" style="padding:20px;">No data for this metric yet.</div>'; return; }
     const dataMin = Math.min(...allY), dataMax = Math.max(...allY);
     // Spec lines only get drawn if they're within view range -- a spec limit 10x outside the
@@ -195,18 +259,22 @@
       if (i < 0 || i >= n) return;
       svg += `<text x="${xAt(i)}" y="${H - 6}" text-anchor="middle" fill="#6b7680">${rows[i].date || '—'}</text>`;
     });
-    // the line itself -- unbroken except across genuinely missing data
-    let path = '', open = false;
-    points.forEach((p, i) => {
-      if (p.y === null) { open = false; return; }
-      path += `${open ? 'L' : 'M'}${xAt(i)},${yAt(p.y)} `;
-      open = true;
+    // one line per stage -- unbroken except across genuinely missing data
+    series.forEach((s) => {
+      let path = '', open = false;
+      s.points.forEach((p, i) => {
+        if (p.y === null) { open = false; return; }
+        path += `${open ? 'L' : 'M'}${xAt(i)},${yAt(p.y)} `;
+        open = true;
+      });
+      svg += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
     });
-    svg += `<path d="${path}" fill="none" stroke="#2f6fed" stroke-width="2"/>`;
-    // only out-of-spec points get a marker
-    points.forEach((p, i) => {
-      if (p.y === null || !p.outOfSpec) return;
-      svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="4" fill="#d0342c"><title>${rows[i].date} — ${p.y.toFixed(2)} (out of spec: ${spec.min}–${spec.max})</title></circle>`;
+    // only out-of-spec points get a marker, always red regardless of stage
+    series.forEach((s) => {
+      s.points.forEach((p, i) => {
+        if (p.y === null || !p.outOfSpec) return;
+        svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="4" fill="#d0342c"><title>${rows[i].date} — ${s.name}: ${p.y.toFixed(2)} (out of spec: ${spec.min}–${spec.max})</title></circle>`;
+      });
     });
     svg += '</svg>';
     container.innerHTML = svg;
@@ -214,25 +282,34 @@
 
   function isOutOfSpec(v, spec) { return v != null && (v < spec.min || v > spec.max); }
 
+  function td(v, decimals, spec) {
+    const out = v == null ? '—' : v.toFixed(decimals);
+    return `<td${isOutOfSpec(v, spec) ? ' style="color:#d0342c;font-weight:600;"' : ''}>${out}</td>`;
+  }
+
   function renderTable(rows, specs) {
     $('dataTableBody').innerHTML = rows.map((r) => `
       <tr>
         <td>${r.date || '—'}</td>
         <td>${r.batch}</td>
         <td>${r.revision}</td>
-        <td${isOutOfSpec(r.bhb, specs.bhbPct) ? ' style="color:#d0342c;font-weight:600;"' : ''}>${r.bhb == null ? '—' : r.bhb.toFixed(2)}</td>
-        <td${isOutOfSpec(r.freespace, specs.freespace) ? ' style="color:#d0342c;font-weight:600;"' : ''}>${r.freespace == null ? '—' : r.freespace.toFixed(3)}</td>
+        ${td(r.before.bhb, 2, specs.bhbPct)}${td(r.during.bhb, 2, specs.bhbPct)}${td(r.after.bhb, 2, specs.bhbPct)}
+        ${td(r.before.freespace, 3, specs.freespace)}${td(r.during.freespace, 3, specs.freespace)}${td(r.after.freespace, 3, specs.freespace)}
       </tr>`).join('');
   }
 
+  function csvCell(v, decimals) { return v == null ? '' : v.toFixed(decimals); }
+
   function downloadCsv(rows) {
-    const header = ['Date', 'Batch (cans)', 'Revision', '%B.H.B.', 'Freespace (mm)'];
+    const header = ['Date', 'Batch (cans)', 'Revision',
+      'Before %B.H.B.', 'During %B.H.B.', 'After %B.H.B.',
+      'Before Freespace (mm)', 'During Freespace (mm)', 'After Freespace (mm)'];
     const lines = [header.join(',')];
     rows.forEach((r) => {
       lines.push([
         r.date, `"${String(r.batch).replace(/"/g, '""')}"`, r.revision,
-        r.bhb == null ? '' : r.bhb.toFixed(2),
-        r.freespace == null ? '' : r.freespace.toFixed(3)
+        csvCell(r.before.bhb, 2), csvCell(r.during.bhb, 2), csvCell(r.after.bhb, 2),
+        csvCell(r.before.freespace, 3), csvCell(r.during.freespace, 3), csvCell(r.after.freespace, 3)
       ].join(','));
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
@@ -251,21 +328,33 @@
   // fixed tolerances regardless of which spec profile a given inspection was validated against.
   const SPECS = window.Thresholds.DOUBLE_SEAM_DEFAULT_SPEC_EOA;
 
+  const STAGE_COLORS = { before: '#8a94a0', during: '#2f6fed', after: '#2f9e57' };
+  const STAGE_NAMES = { before: 'Before production', during: 'During production', after: 'After production' };
+
+  function stageSeries(rows, metric, spec) {
+    return ['before', 'during', 'after'].map((stage) => ({
+      name: STAGE_NAMES[stage],
+      color: STAGE_COLORS[stage],
+      points: rows.map((r) => ({ y: r[stage][metric], outOfSpec: isOutOfSpec(r[stage][metric], spec) }))
+    }));
+  }
+
   function renderCharts() {
-    renderChart($('chartBhb'), currentRows,
-      currentRows.map((r) => ({ y: r.bhb, outOfSpec: isOutOfSpec(r.bhb, SPECS.bhbPct) })), SPECS.bhbPct);
-    renderChart($('chartFreespace'), currentRows,
-      currentRows.map((r) => ({ y: r.freespace, outOfSpec: isOutOfSpec(r.freespace, SPECS.freespace) })), SPECS.freespace);
+    renderChart($('chartBhb'), currentRows, stageSeries(currentRows, 'bhb', SPECS.bhbPct), SPECS.bhbPct);
+    renderChart($('chartFreespace'), currentRows, stageSeries(currentRows, 'freespace', SPECS.freespace), SPECS.freespace);
   }
 
   async function refresh() {
     $('statusLine').textContent = 'Loading…';
     currentRows = await loadRows();
-    const outCount = currentRows.filter((r) => isOutOfSpec(r.bhb, SPECS.bhbPct) || isOutOfSpec(r.freespace, SPECS.freespace)).length;
+    const anyOut = (r, metric, spec) => ['before', 'during', 'after'].some((s) => isOutOfSpec(r[s][metric], spec));
+    const outCount = currentRows.filter((r) => anyOut(r, 'bhb', SPECS.bhbPct) || anyOut(r, 'freespace', SPECS.freespace)).length;
     $('statusLine').textContent = `${currentRows.length} submitted inspection${currentRows.length === 1 ? '' : 's'}`
-      + (outCount ? ` — ${outCount} out of spec` : '');
+      + (outCount ? ` — ${outCount} with an out-of-spec reading` : '');
     renderCharts();
     renderTable(currentRows, SPECS);
+    renderAlert($('alertBhb'), computeTrendAlert(currentRows, (r) => r.after.bhb, SPECS.bhbPct, 'down', '%B.H.B.'));
+    renderAlert($('alertFreespace'), computeTrendAlert(currentRows, (r) => r.after.freespace, SPECS.freespace, 'up', 'Freespace'));
   }
 
   async function init() {
