@@ -61,8 +61,8 @@
         <span class="muted" id="statusLine"></span>
       </div>
       <div class="muted">
-        After-production stage only, averaged across the 3 measurement points per can. Draft
-        (unsubmitted) inspections are excluded.
+        After-production stage only, averaged across both cans and all 3 measurement points per
+        inspection. Draft (unsubmitted) inspections are excluded.
       </div>
     </div>
 
@@ -70,8 +70,8 @@
       <h2>% B.H.B. (overlap)</h2>
       <div id="chartBhb"></div>
       <div class="legend">
-        <span><i style="background:#2f6fed"></i> Can 1</span>
-        <span><i style="background:#e0742f"></i> Can 2</span>
+        <span><i style="background:#2f6fed"></i> In spec</span>
+        <span><i style="background:#d0342c"></i> Out of spec</span>
       </div>
     </div>
 
@@ -79,8 +79,8 @@
       <h2>Freespace (mm)</h2>
       <div id="chartFreespace"></div>
       <div class="legend">
-        <span><i style="background:#2f6fed"></i> Can 1</span>
-        <span><i style="background:#e0742f"></i> Can 2</span>
+        <span><i style="background:#2f6fed"></i> In spec</span>
+        <span><i style="background:#d0342c"></i> Out of spec</span>
       </div>
     </div>
 
@@ -91,8 +91,7 @@
           <thead>
             <tr>
               <th>Date</th><th>Batch (cans)</th><th>Rev</th>
-              <th>Can 1 %B.H.B.</th><th>Can 2 %B.H.B.</th>
-              <th>Can 1 Freespace</th><th>Can 2 Freespace</th>
+              <th>%B.H.B.</th><th>Freespace</th>
             </tr>
           </thead>
           <tbody id="dataTableBody"></tbody>
@@ -106,6 +105,7 @@
 <script src="../lib/api-backend.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/thresholds.js?v=1"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -139,31 +139,38 @@
       if (state.status !== 'complete') continue;
       const after = state.stages && state.stages.after;
       if (!after) continue;
-      const can1Points = (after.can1 && after.can1.points) || [];
-      const can2Points = (after.can2 && after.can2.points) || [];
+      // Can 1 vs Can 2 isn't a meaningful split for trending -- both cans go through the same
+      // seamer, so every point across both (6 total: 2 cans x 3 measurement points) is one pool.
+      const allPoints = [
+        ...((after.can1 && after.can1.points) || []),
+        ...((after.can2 && after.can2.points) || [])
+      ];
       rows.push({
         date: state.header.reportDate || state.header.dateProduced || '',
         batch: state.header.batchCans || '(no batch)',
         revision: state.revision || 1,
-        can1Bhb: avg(can1Points.map((p) => num(p.bhbPct))),
-        can2Bhb: avg(can2Points.map((p) => num(p.bhbPct))),
-        can1Freespace: avg(can1Points.map((p) => num(p.freespace))),
-        can2Freespace: avg(can2Points.map((p) => num(p.freespace)))
+        bhb: avg(allPoints.map((p) => num(p.bhbPct))),
+        freespace: avg(allPoints.map((p) => num(p.freespace)))
       });
     }
     rows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     return rows;
   }
 
-  // Minimal dependency-free SVG line chart. `series` = [{ color, points: [{x, y}] }], points with
-  // y === null break the line rather than being interpolated across.
-  function renderChart(container, rows, series) {
+  // Minimal dependency-free SVG line chart for one metric. `points` = [{y, outOfSpec}], y === null
+  // breaks the line rather than being interpolated across. The line itself carries no markers --
+  // only out-of-spec points get a dot, in red, so problems are the only thing that draws the eye.
+  function renderChart(container, rows, points, spec) {
     const W = container.clientWidth || 520, H = 220, PAD = { l: 42, r: 12, t: 12, b: 24 };
     if (!rows.length) { container.innerHTML = '<div class="muted" style="padding:20px;">No submitted inspections yet.</div>'; return; }
-    const allY = series.flatMap((s) => s.points.map((p) => p.y)).filter((v) => v !== null);
+    const allY = points.map((p) => p.y).filter((v) => v !== null);
     if (!allY.length) { container.innerHTML = '<div class="muted" style="padding:20px;">No data for this metric yet.</div>'; return; }
-    const yMin = Math.min(...allY), yMax = Math.max(...allY);
-    const yPad = (yMax - yMin) * 0.15 || 1;
+    const dataMin = Math.min(...allY), dataMax = Math.max(...allY);
+    // Spec lines only get drawn if they're within view range -- a spec limit 10x outside the
+    // actual data would just squash the real trend down to a flat line.
+    const yMin = Math.min(dataMin, spec.min), yMax = Math.max(dataMax, spec.max);
+    const span = yMax - yMin;
+    const yPad = span * 0.15 || 1;
     const y0 = yMin - yPad, y1 = yMax + yPad;
     const n = rows.length;
     const xAt = (i) => PAD.l + (n === 1 ? 0 : (i / (n - 1)) * (W - PAD.l - PAD.r));
@@ -178,53 +185,54 @@
       svg += `<line x1="${PAD.l}" y1="${yy}" x2="${W - PAD.r}" y2="${yy}" stroke="#e5e8ea" stroke-width="1"/>`;
       svg += `<text x="${PAD.l - 6}" y="${yy + 3}" text-anchor="end" fill="#6b7680">${v.toFixed(2)}</text>`;
     }
+    // spec limit lines, dashed
+    [spec.min, spec.max].forEach((v) => {
+      const yy = yAt(v);
+      svg += `<line x1="${PAD.l}" y1="${yy}" x2="${W - PAD.r}" y2="${yy}" stroke="#d0342c" stroke-width="1" stroke-dasharray="4,3" opacity="0.55"/>`;
+    });
     // x labels (first, middle, last to avoid crowding)
     [0, Math.floor((n - 1) / 2), n - 1].forEach((i) => {
       if (i < 0 || i >= n) return;
       svg += `<text x="${xAt(i)}" y="${H - 6}" text-anchor="middle" fill="#6b7680">${rows[i].date || '—'}</text>`;
     });
-    // lines + dots
-    series.forEach((s) => {
-      let path = '', open = false;
-      s.points.forEach((p, i) => {
-        if (p.y === null) { open = false; return; }
-        const cmd = open ? 'L' : 'M';
-        path += `${cmd}${xAt(i)},${yAt(p.y)} `;
-        open = true;
-      });
-      svg += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
-      s.points.forEach((p, i) => {
-        if (p.y === null) return;
-        svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="3" fill="${s.color}"><title>${rows[i].date} — ${p.y.toFixed(2)}</title></circle>`;
-      });
+    // the line itself -- unbroken except across genuinely missing data
+    let path = '', open = false;
+    points.forEach((p, i) => {
+      if (p.y === null) { open = false; return; }
+      path += `${open ? 'L' : 'M'}${xAt(i)},${yAt(p.y)} `;
+      open = true;
+    });
+    svg += `<path d="${path}" fill="none" stroke="#2f6fed" stroke-width="2"/>`;
+    // only out-of-spec points get a marker
+    points.forEach((p, i) => {
+      if (p.y === null || !p.outOfSpec) return;
+      svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="4" fill="#d0342c"><title>${rows[i].date} — ${p.y.toFixed(2)} (out of spec: ${spec.min}–${spec.max})</title></circle>`;
     });
     svg += '</svg>';
     container.innerHTML = svg;
   }
 
-  function renderTable(rows) {
+  function isOutOfSpec(v, spec) { return v != null && (v < spec.min || v > spec.max); }
+
+  function renderTable(rows, specs) {
     $('dataTableBody').innerHTML = rows.map((r) => `
       <tr>
         <td>${r.date || '—'}</td>
         <td>${r.batch}</td>
         <td>${r.revision}</td>
-        <td>${r.can1Bhb == null ? '—' : r.can1Bhb.toFixed(2)}</td>
-        <td>${r.can2Bhb == null ? '—' : r.can2Bhb.toFixed(2)}</td>
-        <td>${r.can1Freespace == null ? '—' : r.can1Freespace.toFixed(3)}</td>
-        <td>${r.can2Freespace == null ? '—' : r.can2Freespace.toFixed(3)}</td>
+        <td${isOutOfSpec(r.bhb, specs.bhbPct) ? ' style="color:#d0342c;font-weight:600;"' : ''}>${r.bhb == null ? '—' : r.bhb.toFixed(2)}</td>
+        <td${isOutOfSpec(r.freespace, specs.freespace) ? ' style="color:#d0342c;font-weight:600;"' : ''}>${r.freespace == null ? '—' : r.freespace.toFixed(3)}</td>
       </tr>`).join('');
   }
 
   function downloadCsv(rows) {
-    const header = ['Date', 'Batch (cans)', 'Revision', 'Can 1 %B.H.B.', 'Can 2 %B.H.B.', 'Can 1 Freespace (mm)', 'Can 2 Freespace (mm)'];
+    const header = ['Date', 'Batch (cans)', 'Revision', '%B.H.B.', 'Freespace (mm)'];
     const lines = [header.join(',')];
     rows.forEach((r) => {
       lines.push([
         r.date, `"${String(r.batch).replace(/"/g, '""')}"`, r.revision,
-        r.can1Bhb == null ? '' : r.can1Bhb.toFixed(2),
-        r.can2Bhb == null ? '' : r.can2Bhb.toFixed(2),
-        r.can1Freespace == null ? '' : r.can1Freespace.toFixed(3),
-        r.can2Freespace == null ? '' : r.can2Freespace.toFixed(3)
+        r.bhb == null ? '' : r.bhb.toFixed(2),
+        r.freespace == null ? '' : r.freespace.toFixed(3)
       ].join(','));
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
@@ -239,20 +247,25 @@
   }
 
   let currentRows = [];
+  // Standard specs (thresholds.js), not per-record custom profiles -- bhbPct and freespace are
+  // fixed tolerances regardless of which spec profile a given inspection was validated against.
+  const SPECS = window.Thresholds.DOUBLE_SEAM_DEFAULT_SPEC_EOA;
+
+  function renderCharts() {
+    renderChart($('chartBhb'), currentRows,
+      currentRows.map((r) => ({ y: r.bhb, outOfSpec: isOutOfSpec(r.bhb, SPECS.bhbPct) })), SPECS.bhbPct);
+    renderChart($('chartFreespace'), currentRows,
+      currentRows.map((r) => ({ y: r.freespace, outOfSpec: isOutOfSpec(r.freespace, SPECS.freespace) })), SPECS.freespace);
+  }
 
   async function refresh() {
     $('statusLine').textContent = 'Loading…';
     currentRows = await loadRows();
-    $('statusLine').textContent = `${currentRows.length} submitted inspection${currentRows.length === 1 ? '' : 's'}`;
-    renderChart($('chartBhb'), currentRows, [
-      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Bhb })) },
-      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Bhb })) }
-    ]);
-    renderChart($('chartFreespace'), currentRows, [
-      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Freespace })) },
-      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Freespace })) }
-    ]);
-    renderTable(currentRows);
+    const outCount = currentRows.filter((r) => isOutOfSpec(r.bhb, SPECS.bhbPct) || isOutOfSpec(r.freespace, SPECS.freespace)).length;
+    $('statusLine').textContent = `${currentRows.length} submitted inspection${currentRows.length === 1 ? '' : 's'}`
+      + (outCount ? ` — ${outCount} out of spec` : '');
+    renderCharts();
+    renderTable(currentRows, SPECS);
   }
 
   async function init() {
@@ -266,13 +279,7 @@
       $('toggleTableBtn').textContent = showing ? 'Show table' : 'Hide table';
     });
     await refresh();
-    window.addEventListener('resize', () => renderChart($('chartBhb'), currentRows, [
-      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Bhb })) },
-      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Bhb })) }
-    ]) || renderChart($('chartFreespace'), currentRows, [
-      { color: '#2f6fed', points: currentRows.map((r) => ({ y: r.can1Freespace })) },
-      { color: '#e0742f', points: currentRows.map((r) => ({ y: r.can2Freespace })) }
-    ]));
+    window.addEventListener('resize', renderCharts);
     // Light auto-refresh so a screen left open picks up new submissions without a manual click.
     setInterval(refresh, 60000);
   }
