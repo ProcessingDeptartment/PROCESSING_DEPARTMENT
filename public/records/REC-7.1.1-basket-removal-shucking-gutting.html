@@ -21,7 +21,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=4"></script>
+<script src="../lib/form-record.js?v=5"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -31,6 +31,11 @@
     title: 'Basket Removal, Shucking & Gutting',
     docRevisionStart: 1,
     listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
+    // Selecting a job number that was already received on Abalone Receiving (REC 7.1.2) pulls in
+    // its receiving date, so it doesn't need to be re-typed. Only fills empty fields.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate' } }
+    ],
     sections: [
       { title: 'Intake & processing info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },

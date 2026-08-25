@@ -134,6 +134,34 @@ app.get('/api/storage/prefix/:prefix', async (req, res) => {
   }
 });
 
+// Finds the most recent entry in a record whose field matches value, for cross-record autofill
+// (e.g. selecting a job number on one record pulls in details already captured on another).
+// Checks both storage prefixes since callers don't know which one a given record uses.
+app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
+  try {
+    const { recordKey, field, value } = req.params;
+    const needle = value.trim().toUpperCase();
+    let best = null;
+    for (const prefix of ['formrecord:', 'monitoring_log:']) {
+      const row = await prisma.keyValue.findUnique({ where: { key: prefix + recordKey } });
+      if (!row) continue;
+      let entries;
+      try { entries = JSON.parse(row.value); } catch { continue; }
+      if (!Array.isArray(entries)) continue;
+      for (const entry of entries) {
+        const values = entry.values || entry;
+        if (String(values[field] || '').trim().toUpperCase() !== needle) continue;
+        const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
+        if (!best || stamp > best.stamp) best = { stamp, values };
+      }
+    }
+    res.json(best ? best.values : null);
+  } catch (e) {
+    console.error('GET lookup failed', e);
+    res.status(500).json(null);
+  }
+});
+
 // Read-only view over the extracted date fields, for reporting/audits.
 app.get('/api/dates', async (req, res) => {
   try {

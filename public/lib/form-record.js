@@ -293,6 +293,41 @@
       });
     }
 
+  // Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
+  // field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
+  // record's recordKey) whose `matchField` matches, and copies `fill` (target key -> source key)
+  // into this form's still-empty fields. Never overwrites something already typed in.
+  function wireAutofill(container, config) {
+    if (!Array.isArray(config.autofill) || !config.autofill.length) return;
+    config.autofill.forEach((rule) => {
+      const watchEl = container.querySelector('#fr_f_' + rule.watch);
+      if (!watchEl) return;
+      let lastValue = '';
+      watchEl.addEventListener('input', async () => {
+        const value = watchEl.value;
+        if (!value || value === lastValue) return;
+        lastValue = value;
+        try {
+          const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+          const url = `${base}/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const found = await res.json();
+          if (!found) return;
+          Object.entries(rule.fill).forEach(([targetKey, sourceKey]) => {
+            const targetEl = container.querySelector('#fr_f_' + targetKey);
+            if (targetEl && !targetEl.value && found[sourceKey] != null) {
+              targetEl.value = found[sourceKey];
+              targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          });
+        } catch (e) {
+          console.error('autofill lookup failed', e);
+        }
+      });
+    });
+  }
+
   function allFields(config) {
     const fields = [];
     (config.sections || []).forEach(sec => (sec.fields || []).forEach(f => fields.push(f)));
@@ -651,9 +686,10 @@
         renderRosterEditor(existing ? existing.roster : null);
         el('fr_addRosterRowBtn').addEventListener('click', () => container.querySelector('#fr_rosterRows')._addRow());
       }
-      // Wire Yes/No button groups and job-number widgets in the modal
+      // Wire Yes/No button groups, job-number widgets, and cross-record autofill in the modal
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
+      if (!locked) wireAutofill(container, config);
       // A submitted record is evidence -- it opens to be read, never to be re-typed.
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked; });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
