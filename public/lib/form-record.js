@@ -198,8 +198,12 @@
   async function storeGet(key, shared) {
     try { const r = await window.storage.get(key, shared); return r ? r.value : null; } catch (e) { return null; }
   }
+  /* Returns what the backend actually reported. This used to discard it and return true unless
+   * something threw -- but api-backend.js never throws by contract (it swallows and returns false),
+   * so every failed write reported success and the "Save failed" guard below was dead code. */
   async function storeSet(key, value, shared) {
-    try { await window.storage.set(key, value, shared); return true; } catch (e) { console.error('storage set failed', e); return false; }
+    try { return await window.storage.set(key, value, shared) !== false; }
+    catch (e) { console.error('storage set failed', e); return false; }
   }
 
   // Job/batch number: PREFIX (from Lookups jobPrefixes) + up to 8 digits, stored as one

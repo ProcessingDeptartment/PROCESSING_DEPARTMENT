@@ -17,16 +17,45 @@
   if (window.storage && window.storage.expectBackend) window.storage.expectBackend();
   const KEY_STORE = 'facility_api_key';
 
+  /* Not every device gives us localStorage -- private windows, locked-down browsers and a full
+   * quota all block it. Degrade localStorage -> sessionStorage -> memory rather than break.
+   * `durable` is the part that matters: it says whether what we store survives a page reload.
+   * The access key can live in memory (worst case it's re-entered each session), but the write
+   * queue CANNOT -- telling someone their record is "waiting to sync" when a refresh would
+   * evaporate it is worse than refusing the save outright. See enqueue(). */
+  const memStore = {};
+  function pickStore() {
+    for (const name of ['localStorage', 'sessionStorage']) {
+      try {
+        const s = window[name];
+        s.setItem('__probe__', '1');
+        s.removeItem('__probe__');
+        return { s: s, durable: true, name: name };
+      } catch (e) { /* blocked or full -- try the next one */ }
+    }
+    return {
+      s: {
+        getItem: function (k) { return Object.prototype.hasOwnProperty.call(memStore, k) ? memStore[k] : null; },
+        setItem: function (k, v) { memStore[k] = String(v); },
+        removeItem: function (k) { delete memStore[k]; }
+      },
+      durable: false,
+      name: 'memory'
+    };
+  }
+  const STORE = pickStore();
+  if (!STORE.durable) console.warn('[api-backend] no persistent storage on this device — offline saves cannot be queued');
+
   // The access key is per-device, entered once (see pages/api-key.html), never in the repo.
   function getKey() {
-    try { return window.localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; }
+    try { return STORE.s.getItem(KEY_STORE) || ''; } catch (e) { return ''; }
   }
   function setKey(k) {
-    try { window.localStorage.setItem(KEY_STORE, String(k || '').trim()); return true; }
+    try { STORE.s.setItem(KEY_STORE, String(k || '').trim()); return true; }
     catch (e) { return false; }
   }
   function clearKey() {
-    try { window.localStorage.removeItem(KEY_STORE); return true; } catch (e) { return false; }
+    try { STORE.s.removeItem(KEY_STORE); return true; } catch (e) { return false; }
   }
 
   function headers(extra) {
@@ -61,7 +90,124 @@
 
   window.FacilityApi = { base: () => API_BASE, getKey, setKey, clearKey, headers, fetch: apiFetch };
 
+  /* ---- write-ahead queue ----------------------------------------------------------------------
+   * Factory wifi drops. Before this, a write that failed fell back to localStorage and reported
+   * "Draft saved" -- the record looked captured but was stranded on one tablet, which is exactly
+   * how a pile of orphaned local keys accumulates. Now a failed write goes into a durable outbox
+   * and replays when the connection returns.
+   *
+   * COLLAPSED BY KEY, LAST WRITE WINS. Both engines persist the WHOLE submissions array for a
+   * record on every save, so an older queued write for the same key is not a missing change -- it
+   * is a strictly older copy of the same array. Keeping only the newest is both correct and what
+   * stops the queue growing without bound over a long shift.
+   *
+   * READS OVERLAY THE QUEUE. Otherwise you save while offline, the list re-reads from the API, and
+   * your own entry vanishes until it syncs. Since a queued value is the complete current state of
+   * that key, serving it back is exactly right.
+   *
+   * This is an outbox, not an offline cache: records saved on another device while this one is
+   * offline are still not readable until the connection returns. */
+  const QUEUE_STORE = 'facility_api_queue';
+  let draining = false;
+
+  function loadQueue() {
+    try { return JSON.parse(STORE.s.getItem(QUEUE_STORE) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function saveQueue(q) {
+    try { STORE.s.setItem(QUEUE_STORE, JSON.stringify(q)); return true; }
+    catch (e) { console.error('write queue could not be persisted', e); return false; }
+  }
+  function queueCount() { return Object.keys(loadQueue()).length; }
+
+  // Returns false when the write could not be made durable -- the caller must then report a real
+  // failure rather than a false "saved". On a device with no persistent storage that is every
+  // offline write, which is the honest answer: we cannot promise to deliver it later.
+  function enqueue(op, key, value) {
+    if (!STORE.durable) {
+      showNoStorageBanner();
+      return false;
+    }
+    const q = loadQueue();
+    q[key] = { op: op, value: value, ts: Date.now() };
+    const ok = saveQueue(q);
+    if (!ok) showNoStorageBanner();
+    updateQueueBadge();
+    return ok;
+  }
+
+  let noStorageShown = false;
+  function showNoStorageBanner() {
+    if (noStorageShown || typeof document === 'undefined' || !document.body) return;
+    noStorageShown = true;
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#9c241d;color:#fff;'
+      + 'font:600 14px/1.4 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;padding:11px 16px;'
+      + 'display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center;';
+    el.textContent = 'The records database is unreachable and this device cannot store work offline '
+      + '(private window, or browser storage is blocked). Nothing was saved — reconnect, or use a '
+      + 'different device, before re-entering this record.';
+    document.body.appendChild(el);
+  }
+
+  let queueBadge = null;
+  function updateQueueBadge() {
+    const n = queueCount();
+    if (typeof document === 'undefined' || !document.body) return;
+    if (!n) { if (queueBadge) { queueBadge.remove(); queueBadge = null; } return; }
+    if (!queueBadge) {
+      queueBadge = document.createElement('div');
+      queueBadge.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#8a5a10;'
+        + 'color:#fff;font:600 14px/1.4 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;padding:10px 16px;'
+        + 'display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;';
+      document.body.appendChild(queueBadge);
+    }
+    queueBadge.textContent = n + (n === 1 ? ' record is' : ' records are')
+      + ' saved on this device and waiting to sync. Leave this page open until it clears.';
+  }
+
+  // Replays the outbox oldest-first. Stops at the first failure so a still-down API doesn't burn
+  // through every entry, and so ordering is preserved.
+  async function drain() {
+    if (draining) return;
+    draining = true;
+    try {
+      const q = loadQueue();
+      const keys = Object.keys(q).sort((a, b) => q[a].ts - q[b].ts);
+      for (const key of keys) {
+        const item = q[key];
+        let ok = false;
+        try {
+          const res = item.op === 'remove'
+            ? await apiFetch('/api/storage/key/' + encodeURIComponent(key), { method: 'DELETE' })
+            : await apiFetch('/api/storage/key/' + encodeURIComponent(key), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: item.value })
+              });
+          ok = res.ok;
+        } catch (e) { ok = false; }
+        if (!ok) break;
+        // Re-read: a newer save for this key may have landed while the request was in flight.
+        const latest = loadQueue();
+        if (latest[key] && latest[key].ts === item.ts) { delete latest[key]; saveQueue(latest); }
+      }
+    } finally {
+      draining = false;
+      updateQueueBadge();
+    }
+  }
+
+  window.addEventListener('online', drain);
+  setInterval(function () { if (queueCount()) drain(); }, 30000);
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', updateQueueBadge);
+  }
+
   async function apiGet(key) {
+    // A queued write is the newest state of this key -- serve it rather than the API's older copy.
+    const q = loadQueue();
+    if (q[key]) return q[key].op === 'remove' ? null : { value: q[key].value };
     try {
       const res = await apiFetch('/api/storage/key/' + encodeURIComponent(key));
       if (!res.ok) return null;
@@ -72,57 +218,81 @@
     }
   }
 
+  // Returns true once the write is durable -- either accepted by the API, or safely in the outbox.
+  // Only a queue that can't even be persisted counts as a real failure the caller must surface.
   async function apiSet(key, value) {
+    let res = null;
     try {
-      const res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), {
+      res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value })
       });
-      return res.ok;
     } catch (e) {
-      console.error('storage set failed (api)', e);
-      return false;
+      console.warn('storage set failed, queueing (api)', e);
     }
+    if (res && res.ok) {
+      // Opportunistic: the connection is clearly up, so flush anything waiting behind this.
+      if (queueCount()) drain();
+      return true;
+    }
+    console.warn('storage set queued for retry:', key, res ? res.status : 'network');
+    return enqueue('set', key, value);
   }
 
   async function apiRemove(key) {
+    let res = null;
     try {
-      const res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), {
-        method: 'DELETE'
-      });
-      return res.ok;
+      res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), { method: 'DELETE' });
     } catch (e) {
-      console.error('storage remove failed (api)', e);
-      return false;
+      console.warn('storage remove failed, queueing (api)', e);
     }
+    if (res && res.ok) {
+      const q = loadQueue();
+      if (q[key]) { delete q[key]; saveQueue(q); updateQueueBadge(); }
+      return true;
+    }
+    return enqueue('remove', key, null);
   }
 
   async function apiGetByPrefix(prefix) {
+    let out = {};
     try {
       const res = await apiFetch('/api/storage/prefix/' + encodeURIComponent(prefix));
-      if (!res.ok) return {};
-      return await res.json();
+      if (res.ok) out = await res.json();
     } catch (e) {
       console.error('storage getByPrefix failed (api)', e);
-      return {};
     }
+    // Overlay pending writes so a record saved while offline still appears in its own list.
+    const q = loadQueue();
+    Object.keys(q).forEach(function (k) {
+      if (k.indexOf(prefix) !== 0) return;
+      if (q[k].op === 'remove') delete out[k];
+      else out[k] = q[k].value;
+    });
+    return out;
   }
 
-  // Only switch off localStorage once the API is confirmed reachable -- if it's down or not
-  // deployed yet, stay on the local fallback rather than silently failing every save.
+  /* Register unconditionally -- including when the API is unreachable.
+   *
+   * This used to fall back to localStorage on a failed health check, so an outage quietly turned
+   * every save into a device-local write that reported success and was then stranded there. With
+   * the outbox above, staying registered is the safer behaviour: writes queue durably, the badge
+   * says so, and they replay on reconnect. The health check now only decides whether to attempt an
+   * immediate drain, not whether the backend is used at all. */
+  window.storage.useBackend({
+    name: 'api',
+    get: apiGet,
+    set: apiSet,
+    remove: apiRemove,
+    getByPrefix: apiGetByPrefix
+  });
+
   fetch(API_BASE + '/api/health').then((res) => {
     if (!res.ok) throw new Error('unhealthy');
-    window.storage.useBackend({
-      name: 'api',
-      get: apiGet,
-      set: apiSet,
-      remove: apiRemove,
-      getByPrefix: apiGetByPrefix
-    });
+    if (queueCount()) drain();
   }).catch((e) => {
-    console.error('facility-api unreachable, staying on localStorage', e);
-    // Unblock whenReady() rather than making every reader wait out its safety timeout.
-    if (window.storage && window.storage.backendUnavailable) window.storage.backendUnavailable();
+    console.warn('facility-api unreachable — writes will queue until it returns', e);
+    updateQueueBadge();
   });
 })();
