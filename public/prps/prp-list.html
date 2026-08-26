@@ -118,7 +118,7 @@
       if (r.href) {
         html += `<tr>`
           + `<td class="doc-code">${esc(r.prpNo)}</td>`
-          + `<td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.name)}</a></td>`
+          + `<td class="title"><a href="${esc(r.href)}">${esc(r.name)}</a></td>`
           + `<td class="area">${esc(r.area)}</td>`
           + `<td class="revision">Rev ${live}</td>`
           + `</tr>`;

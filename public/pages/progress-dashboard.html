@@ -177,7 +177,7 @@
   function docLabel(rec) {
     const code = rec.docNo ? esc(rec.docNo) + ' &mdash; ' : '';
     const name = esc(rec.name);
-    return rec.href ? '<a href="' + esc(rec.href) + '" target="_blank">' + code + name + '</a>' : code + name;
+    return rec.href ? '<a href="' + esc(rec.href) + '">' + code + name + '</a>' : code + name;
   }
 
   function render() {

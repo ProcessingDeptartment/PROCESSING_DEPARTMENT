@@ -120,7 +120,7 @@
       const moved = live !== baseline ? `<span class="bumped">was Rev ${baseline}</span>` : '';
       html += `<tr>`
         + `<td class="doc-code">${esc(r.docNo)}</td>`
-        + `<td class="title"><a href="${esc(r.href)}" target="_blank">${esc(r.name)}</a></td>`
+        + `<td class="title"><a href="${esc(r.href)}">${esc(r.name)}</a></td>`
         + `<td class="revision">Rev ${live}${moved}</td>`
         + `</tr>`;
     });

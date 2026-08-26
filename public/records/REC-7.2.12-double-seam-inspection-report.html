@@ -1109,7 +1109,7 @@ bindHeaderInputs();
     });
     $('quickCalcBtn').addEventListener('click', ()=>{
       // standalone working tool -- opened in a new tab so an in-progress record is never lost
-      window.open('seam-quick-calculator.html', '_blank');
+      window.location.href = 'seam-quick-calculator.html';
     });
     $('manageSpecsBtn').addEventListener('click', openSpecManager);
     $('specCloseBtn').addEventListener('click', ()=>$('specModal').style.display='none');
