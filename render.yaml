@@ -18,7 +18,16 @@ services:
     buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
     startCommand: npm run api
     envVars:
-      - key: PORT
-        value: 3001
+      # PORT is deliberately NOT set. Render assigns its own and expects the app to listen on it;
+      # pinning it here makes the health check look at the wrong port and the deploy fails.
+      # src/index.js already reads process.env.PORT.
+      #
+      # Both of these are secrets, so sync:false -- Render prompts for them rather than storing
+      # them in the repo. Set them in Dashboard -> facility-api -> Environment.
+      #   DATABASE_URL  the Neon connection string
+      #   API_KEY       the shared access key; until it is set the API runs UNPROTECTED and logs a
+      #                 warning on startup. Devices enter the same value once at /pages/api-key.html
       - key: DATABASE_URL
+        sync: false
+      - key: API_KEY
         sync: false
