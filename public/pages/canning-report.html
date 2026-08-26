@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canning Report</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
+    --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #cr-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:14px; line-height:1.4; }
+  #cr-root *{ box-sizing:border-box; }
+  #cr-root h1,#cr-root h2{ margin:0; font-weight:700; }
+  .cr-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .doc-line{ display:flex; align-items:baseline; gap:10px; }
+  .doc-code{ font-family:var(--mono); opacity:.8; }
+  .btn{ padding:7px 13px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-flat:hover{ background:#d5d8d6; }
+  .cr-body{ padding:16px 18px 60px; max-width:1100px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; padding:14px 16px; }
+  .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .muted{ color:#6b7680; font-size:12px; }
+  .grow{ flex:1; }
+  .jobline{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; border-bottom:2px solid var(--ink); padding-bottom:8px; margin-bottom:12px; }
+  .jobno{ font-family:var(--mono); font-size:22px; font-weight:700; letter-spacing:.02em; }
+  .pill{ display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; border-radius:20px; padding:2px 9px; }
+  .pill.open{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .pill.closed{ background:#e7eaec; color:#5b6b78; }
+  h2.sec{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#5c6771; margin:18px 0 8px; border-bottom:1px solid var(--line-soft); padding-bottom:4px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ padding:6px 8px; border-bottom:1px solid var(--line-soft); text-align:left; }
+  th{ background:#f4f5f6; font-size:12px; }
+  td.num,th.num{ text-align:right; font-family:var(--mono); }
+  tr.total td{ font-weight:700; border-top:2px solid var(--ink); background:#fafbfb; }
+  .kv{ display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:13px; }
+  .kv dt{ color:#5c6771; }
+  .kv dd{ margin:0; font-family:var(--mono); font-weight:600; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  @media (max-width:760px){ .grid2{ grid-template-columns:1fr; } }
+  .warn{ background:#fbf0dc; color:#8a5a10; border-radius:4px; padding:8px 11px; font-size:12px; margin-top:8px; }
+  @media print{
+    .no-print{ display:none !important; }
+    .cr-top{ background:#fff; color:#000; border-bottom:2px solid #000; }
+    .panel{ border:none; padding:0; margin-bottom:10px; }
+    body{ background:#fff; }
+    h2.sec{ break-after:avoid; }
+    table{ break-inside:auto; }
+    tr{ break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<div id="cr-root">
+  <div class="cr-top">
+    <div class="doc-line">
+      <span class="doc-code">PRODUCTION</span>
+      <h1>Canning Report</h1>
+    </div>
+    <div class="no-print">
+      <a class="btn btn-ghost" href="job-status.html">← Job status</a>
+    </div>
+  </div>
+  <div class="cr-body">
+    <div class="panel no-print">
+      <div class="toolbar">
+        <label class="muted">Job no.</label>
+        <select id="jobSelect" style="min-width:180px;padding:6px 9px;"></select>
+        <button class="btn btn-flat" id="refreshBtn">Refresh</button>
+        <span class="grow"></span>
+        <button class="btn btn-flat" id="csvBtn">Export CSV</button>
+        <button class="btn btn-flat" id="printBtn">Print / PDF</button>
+      </div>
+      <div class="muted" id="statusLine"></div>
+    </div>
+
+    <div class="panel" id="reportPanel"></div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/api-backend.js?v=1"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+  const fmt = (n, d) => (n == null ? '—' : n.toFixed(d == null ? 2 : d));
+
+  // Target yield is a production spec, not something captured per job. Kept here as the one
+  // constant so it's obvious where to change it (or move it into a spec profile later).
+  const TARGET_YIELD = 105.00;      // cans per 100 kg whole mass
+  const EQUIV_DRAINED_G = 213;      // the drained weight everything is normalised to
+
+  let CACHE = {};
+
+  async function getRecord(key) {
+    let raw = await window.storage.get(key, true);
+    // An empty first read can just mean window.storage hasn't switched off localStorage yet
+    // (the api-backend health-check race) -- retry once before accepting it.
+    if (!raw) { await sleep(1500); raw = await window.storage.get(key, true); }
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw.value != null ? raw.value : raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  }
+
+  // Submissions on `key` whose job-number field matches. Records disagree on the field name
+  // (jobNo vs jobNumber), so check both rather than making every caller know which.
+  function forJob(subs, jobNo) {
+    const needle = String(jobNo).trim().toUpperCase();
+    return subs.filter((s) => {
+      const v = s.values || {};
+      const j = String(v.jobNo || v.jobNumber || '').trim().toUpperCase();
+      return j === needle;
+    });
+  }
+
+  async function loadAll() {
+    const [receiving, cansProduced, precooking, oosw] = await Promise.all([
+      getRecord('formrecord:abalone-receiving'),
+      getRecord('formrecord:cans-produced'),
+      getRecord('formrecord:precooking-check-sheet'),
+      getRecord('formrecord:salting-oosw')
+    ]);
+    CACHE = { receiving, cansProduced, precooking, oosw };
+  }
+
+  function buildReport(jobNo) {
+    const receiving = forJob(CACHE.receiving, jobNo);
+    const cans = forJob(CACHE.cansProduced, jobNo);
+    const precook = forJob(CACHE.precooking, jobNo);
+    const oosw = forJob(CACHE.oosw, jobNo);
+
+    // --- harvest breakdown: one line per basket roster row across every receiving submission ---
+    const harvest = [];
+    receiving.forEach((s) => {
+      const date = (s.values || {}).receivingDate || '';
+      (s.roster || []).forEach((r) => {
+        const mass = num(r.wholeWeight), animals = num(r.farmCount);
+        if (mass == null && animals == null) return;
+        harvest.push({ date, sizeRange: r.sizeRange || '', mass, animals });
+      });
+    });
+    const totalMass = harvest.reduce((a, h) => a + (h.mass || 0), 0);
+    const totalAnimals = harvest.reduce((a, h) => a + (h.animals || 0), 0);
+
+    // --- can breakdown: one line per Cans Produced submission ---
+    const canRows = cans.map((s) => {
+      const v = s.values || {};
+      return {
+        productionCode: v.productionCode || '',
+        qty: num(v.numberOfCans),
+        drained: num(v.drainWeight),
+        medium: v.brineOrBraised || '',
+        agCode: v.nrcsAgCode || v.agCode || ''
+      };
+    }).filter((r) => r.qty != null || r.drained != null);
+    const totalCans = canRows.reduce((a, r) => a + (r.qty || 0), 0);
+    // Cans come off the line at different drained weights, so they're normalised to a single
+    // equivalent-can figure before yield means anything.
+    const drainedMassG = canRows.reduce((a, r) => a + (r.qty || 0) * (r.drained || 0), 0);
+    const equivCans = drainedMassG ? drainedMassG / EQUIV_DRAINED_G : null;
+
+    const actualYield = (equivCans != null && totalMass) ? (equivCans / totalMass * 100) : null;
+    const targetCans = totalMass ? (TARGET_YIELD * totalMass / 100) : null;
+    const massPerCan = (equivCans && totalMass) ? (totalMass / equivCans) : null;
+
+    // --- processing measures ---
+    const sumField = (subs, ...keys) => {
+      let total = null;
+      subs.forEach((s) => {
+        const v = s.values || {};
+        for (const k of keys) {
+          const n = num(v[k]);
+          if (n != null) { total = (total || 0) + n; return; }
+        }
+        // OOSW keeps its weights as roster rows rather than one total field.
+        if (Array.isArray(s.roster)) {
+          s.roster.forEach((r) => {
+            const n = num(r.weight);
+            if (n != null) total = (total || 0) + n;
+          });
+        }
+      });
+      return total;
+    };
+    const ooswWeight = sumField(oosw, 'wholeWeight');
+    const cleanWeight = sumField(precook, 'totalCleanWeight', 'cleanWeight');
+    const precookWeight = sumField(precook, 'totalPrecookWeight', 'precookWeight');
+    const pct = (w) => (w != null && totalMass) ? (w / totalMass * 100) : null;
+
+    return {
+      jobNo, receiving, harvest, totalMass, totalAnimals,
+      canRows, totalCans, equivCans, actualYield, targetCans, massPerCan,
+      ooswWeight, cleanWeight, precookWeight, pct,
+      header: (receiving[0] && receiving[0].values) || {},
+      counts: { receiving: receiving.length, cans: cans.length, precook: precook.length, oosw: oosw.length }
+    };
+  }
+
+  function render(rep, statusRow) {
+    const closed = statusRow && statusRow.status === 'closed';
+    const h = rep.header;
+    const missing = [];
+    if (!rep.counts.receiving) missing.push('Abalone Receiving (REC 7.1.2)');
+    if (!rep.counts.cans) missing.push('Cans Produced (REC 7.2.7)');
+    if (!rep.counts.precook) missing.push('Precooking Check Sheet (REC 7.2.3)');
+    if (!rep.counts.oosw) missing.push('Salting OOSW (REC 7.1.5)');
+
+    $('reportPanel').innerHTML = `
+      <div class="jobline">
+        <span class="muted">Canning Job No.</span>
+        <span class="jobno">${esc(rep.jobNo)}</span>
+        <span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span>
+        <span class="grow"></span>
+        <span class="muted">Generated ${new Date().toLocaleString()}</span>
+      </div>
+
+      <div class="grid2">
+        <dl class="kv">
+          <dt>Canning process for</dt><dd>${esc(h.toBeProcessedFor || '—')}</dd>
+          <dt>Received from</dt><dd>${esc(h.receivedFrom || '—')}</dd>
+          <dt>Receiving date</dt><dd>${esc(h.receivingDate || '—')}</dd>
+          <dt>Actual cans</dt><dd>${rep.totalCans || '—'}</dd>
+        </dl>
+        <dl class="kv">
+          <dt>Actual yield</dt><dd>${fmt(rep.actualYield)} cans/100 kg</dd>
+          <dt>Target yield</dt><dd>${TARGET_YIELD.toFixed(2)} cans/100 kg</dd>
+          <dt>${EQUIV_DRAINED_G}g equivalent cans</dt><dd>${rep.equivCans == null ? '—' : Math.round(rep.equivCans)}</dd>
+          <dt>Target cans</dt><dd>${rep.targetCans == null ? '—' : Math.round(rep.targetCans)}</dd>
+        </dl>
+      </div>
+
+      <h2 class="sec">Can breakdown</h2>
+      <table>
+        <thead><tr>
+          <th>Production code</th><th class="num">Quantity</th><th class="num">Drained weight</th>
+          <th>Medium</th><th>NRCS AG code</th>
+        </tr></thead>
+        <tbody>
+          ${rep.canRows.length ? rep.canRows.map((r) => `<tr>
+            <td>${esc(r.productionCode || '—')}</td>
+            <td class="num">${r.qty == null ? '—' : r.qty}</td>
+            <td class="num">${r.drained == null ? '—' : r.drained + 'g'}</td>
+            <td>${esc(r.medium || '—')}</td>
+            <td>${esc(r.agCode || '—')}</td>
+          </tr>`).join('') : '<tr><td colspan="5" class="muted">No Cans Produced records for this job.</td></tr>'}
+          ${rep.canRows.length ? `<tr class="total"><td>TOTAL</td><td class="num">${rep.totalCans}</td><td colspan="3"></td></tr>` : ''}
+        </tbody>
+      </table>
+
+      <h2 class="sec">Harvest breakdown</h2>
+      <table>
+        <thead><tr>
+          <th>Receiving date</th><th>Size range</th><th class="num">Whole mass (kg)</th>
+          <th class="num">Animals</th><th class="num">Weight per animal (g)</th>
+        </tr></thead>
+        <tbody>
+          ${rep.harvest.length ? rep.harvest.map((r) => `<tr>
+            <td>${esc(r.date || '—')}</td>
+            <td>${esc(r.sizeRange || '—')}</td>
+            <td class="num">${fmt(r.mass, 3)}</td>
+            <td class="num">${r.animals == null ? '—' : r.animals}</td>
+            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : '—'}</td>
+          </tr>`).join('') : '<tr><td colspan="5" class="muted">No Abalone Receiving records for this job.</td></tr>'}
+          ${rep.harvest.length ? `<tr class="total">
+            <td>TOTAL</td><td></td>
+            <td class="num">${fmt(rep.totalMass, 2)} kg</td>
+            <td class="num">${rep.totalAnimals || '—'}</td>
+            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : '—'}</td>
+          </tr>` : ''}
+        </tbody>
+      </table>
+
+      <h2 class="sec">Processing measures</h2>
+      <table>
+        <thead><tr><th>Measure</th><th class="num">Weight (kg)</th><th class="num">% of whole mass</th></tr></thead>
+        <tbody>
+          <tr><td>Out of salt weight</td><td class="num">${fmt(rep.ooswWeight)}</td><td class="num">${rep.pct(rep.ooswWeight) == null ? '—' : fmt(rep.pct(rep.ooswWeight)) + '%'}</td></tr>
+          <tr><td>Clean weight</td><td class="num">${fmt(rep.cleanWeight)}</td><td class="num">${rep.pct(rep.cleanWeight) == null ? '—' : fmt(rep.pct(rep.cleanWeight)) + '%'}</td></tr>
+          <tr><td>Precook weight</td><td class="num">${fmt(rep.precookWeight)}</td><td class="num">${rep.pct(rep.precookWeight) == null ? '—' : fmt(rep.pct(rep.precookWeight)) + '%'}</td></tr>
+          <tr class="total"><td>Whole mass per can</td><td class="num">${fmt(rep.massPerCan)} kg</td><td class="num"></td></tr>
+        </tbody>
+      </table>
+
+      ${missing.length ? `<div class="warn no-print"><strong>No data yet from:</strong> ${esc(missing.join(', '))}. Those sections stay blank until those records are submitted against this job.</div>` : ''}
+    `;
+  }
+
+  function currentJob() {
+    return $('jobSelect').value;
+  }
+
+  function downloadCsv() {
+    const rep = buildReport(currentJob());
+    const q = (s) => `"${String(s == null ? '' : s).replace(/"/g, '""')}"`;
+    const lines = [];
+    lines.push(q('Canning Report'), '');
+    lines.push([q('Job no.'), q(rep.jobNo)].join(','));
+    lines.push([q('Processing for'), q(rep.header.toBeProcessedFor)].join(','));
+    lines.push([q('Received from'), q(rep.header.receivedFrom)].join(','));
+    lines.push([q('Actual cans'), q(rep.totalCans)].join(','));
+    lines.push([q(EQUIV_DRAINED_G + 'g equivalent cans'), q(rep.equivCans == null ? '' : Math.round(rep.equivCans))].join(','));
+    lines.push([q('Actual yield (cans/100kg)'), q(fmt(rep.actualYield))].join(','));
+    lines.push([q('Target yield (cans/100kg)'), q(TARGET_YIELD.toFixed(2))].join(','));
+    lines.push([q('Target cans'), q(rep.targetCans == null ? '' : Math.round(rep.targetCans))].join(','));
+    lines.push('');
+    lines.push(q('CAN BREAKDOWN'));
+    lines.push(['Production code', 'Quantity', 'Drained weight (g)', 'Medium', 'NRCS AG code'].map(q).join(','));
+    rep.canRows.forEach((r) => lines.push([q(r.productionCode), q(r.qty), q(r.drained), q(r.medium), q(r.agCode)].join(',')));
+    lines.push([q('TOTAL'), q(rep.totalCans), '', '', ''].join(','));
+    lines.push('');
+    lines.push(q('HARVEST BREAKDOWN'));
+    lines.push(['Receiving date', 'Size range', 'Whole mass (kg)', 'Animals', 'Weight per animal (g)'].map(q).join(','));
+    rep.harvest.forEach((r) => lines.push([
+      q(r.date), q(r.sizeRange), q(fmt(r.mass, 3)), q(r.animals),
+      q((r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : '')
+    ].join(',')));
+    lines.push([q('TOTAL'), '', q(fmt(rep.totalMass, 2)), q(rep.totalAnimals), ''].join(','));
+    lines.push('');
+    lines.push(q('PROCESSING MEASURES'));
+    lines.push(['Measure', 'Weight (kg)', '% of whole mass'].map(q).join(','));
+    [['Out of salt weight', rep.ooswWeight], ['Clean weight', rep.cleanWeight], ['Precook weight', rep.precookWeight]]
+      .forEach(([label, w]) => lines.push([q(label), q(fmt(w)), q(rep.pct(w) == null ? '' : fmt(rep.pct(w)))].join(',')));
+    lines.push([q('Whole mass per can'), q(fmt(rep.massPerCan)), ''].join(','));
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `canning-report-${rep.jobNo}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  let STATUSES = [];
+
+  async function show(jobNo) {
+    if (!jobNo) { $('reportPanel').innerHTML = '<div class="muted">Pick a job number.</div>'; return; }
+    const rep = buildReport(jobNo);
+    render(rep, STATUSES.find((s) => String(s.job_no) === String(jobNo)));
+    $('statusLine').textContent =
+      `${rep.counts.receiving} receiving · ${rep.counts.cans} cans produced · ${rep.counts.precook} precooking · ${rep.counts.oosw} OOSW record(s) for this job`;
+    const url = new URL(location.href);
+    url.searchParams.set('job', jobNo);
+    history.replaceState(null, '', url);
+  }
+
+  async function refresh() {
+    $('statusLine').textContent = 'Loading…';
+    const keep = currentJob();
+    [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
+    // Closed jobs stay selectable here on purpose -- a finished job is exactly the one you want a
+    // report for. It's the data-entry pickers that hide them, not this.
+    $('jobSelect').innerHTML = STATUSES.map((s) =>
+      `<option value="${esc(s.job_no)}">${esc(s.job_no)}${s.status === 'closed' ? ' (closed)' : ''}</option>`).join('');
+    const wanted = keep || new URLSearchParams(location.search).get('job');
+    if (wanted && STATUSES.some((s) => String(s.job_no) === String(wanted))) $('jobSelect').value = wanted;
+    await show(currentJob());
+  }
+
+  async function init() {
+    if (window.LoginUI) { await window.LoginUI.ensureAuthenticated(); }
+    $('jobSelect').addEventListener('change', () => show(currentJob()));
+    $('refreshBtn').addEventListener('click', refresh);
+    $('csvBtn').addEventListener('click', downloadCsv);
+    $('printBtn').addEventListener('click', () => window.print());
+    await refresh();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

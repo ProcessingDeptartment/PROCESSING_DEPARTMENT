@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Status Updates</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
+    --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #js-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.4; }
+  #js-root *{ box-sizing:border-box; }
+  #js-root h1,#js-root h2{ margin:0; font-weight:700; }
+  .js-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .doc-line{ display:flex; align-items:baseline; gap:10px; }
+  .doc-code{ font-family:var(--mono); opacity:.8; }
+  .btn{ padding:7px 13px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-ghost:hover{ background:#33444f; }
+  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-flat:hover{ background:#d5d8d6; }
+  .btn-sm{ padding:4px 9px; font-size:13px; }
+  .btn-danger{ background:var(--palette-fail); color:#fff; }
+  .js-body{ padding:16px 18px 60px; max-width:1200px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; padding:14px 16px; }
+  .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .muted{ color:#6b7680; font-size:13px; }
+  .grow{ flex:1; }
+  input[type=search]{ font-family:var(--sans); font-size:14px; padding:6px 9px; border:1px solid var(--line); border-radius:4px; min-width:200px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ padding:7px 9px; border-bottom:1px solid var(--line-soft); text-align:left; white-space:nowrap; }
+  th{ background:#f4f5f6; }
+  tr.closed td{ color:#8a949c; }
+  .pill{ display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; border-radius:20px; padding:2px 9px; }
+  .pill.open{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .pill.closed{ background:#e7eaec; color:#5b6b78; }
+  .table-wrap{ overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
+  @media print{
+    .no-print{ display:none !important; }
+    .js-top{ background:#fff; color:#000; border-bottom:2px solid #000; }
+    .panel{ border:none; padding:0; }
+    .table-wrap{ border:none; overflow:visible; }
+    body{ background:#fff; }
+  }
+</style>
+</head>
+<body>
+<div id="js-root">
+  <div class="js-top">
+    <div class="doc-line">
+      <span class="doc-code">PRODUCTION</span>
+      <h1>Job Status Updates</h1>
+    </div>
+    <div class="no-print">
+      <a class="btn btn-ghost" href="../index.html">← Home</a>
+    </div>
+  </div>
+  <div class="js-body">
+    <div class="panel">
+      <div class="toolbar no-print">
+        <button class="btn btn-primary" id="refreshBtn">Refresh</button>
+        <input type="search" id="filterInput" placeholder="Filter job no. / farm…">
+        <label class="muted"><input type="checkbox" id="showClosed"> Show closed</label>
+        <span class="grow"></span>
+        <button class="btn btn-flat" id="csvBtn">Export CSV</button>
+        <button class="btn btn-flat" id="printBtn">Print / PDF</button>
+      </div>
+      <div class="muted" id="statusLine" style="margin-top:10px;"></div>
+      <div class="muted">
+        Every job number captured on Abalone Receiving (REC 7.1.2). Closing a job removes it from
+        the job-number pickers on every downstream record — already-submitted records keep showing
+        the job they were filed against.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Job no.</th><th>Received</th><th>Farm</th><th>For</th>
+              <th>Intake weight (kg)</th><th>Status</th><th>Closed</th>
+              <th class="no-print">Report</th><th class="no-print">Action</th>
+            </tr>
+          </thead>
+          <tbody id="jobsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/api-backend.js?v=1"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  let rows = [];
+
+  // Receiving detail per job comes from the Abalone Receiving record itself. This page pulls the
+  // whole record once (unlike the pickers, which use the API's small read view) because it needs
+  // the farm / date / weight behind each job number, not just the numbers.
+  async function receivingByJob() {
+    const byJob = new Map();
+    let raw = await window.storage.get('formrecord:abalone-receiving', true);
+    // An empty first read can just mean window.storage hasn't switched off localStorage yet
+    // (the api-backend health-check race) -- retry once before accepting it.
+    if (!raw) { await sleep(2000); raw = await window.storage.get('formrecord:abalone-receiving', true); }
+    if (!raw) return byJob;
+    let subs;
+    try { subs = JSON.parse(raw.value != null ? raw.value : raw); } catch { return byJob; }
+    if (!Array.isArray(subs)) return byJob;
+    for (const sub of subs) {
+      const v = sub.values || {};
+      const jobNo = String(v.jobNo || '').trim();
+      if (!jobNo) continue;
+      let intake = v.intakeWeight;
+      // Older submissions predate the finalised intakeWeight field -- fall back to summing the
+      // basket roster so they still show a weight rather than a blank.
+      if (intake == null || intake === '') {
+        const sum = (sub.roster || []).reduce((a, r) => {
+          const n = parseFloat(r && r.wholeWeight);
+          return a + (isNaN(n) ? 0 : n);
+        }, 0);
+        intake = sum ? sum.toFixed(2) : '';
+      }
+      const stamp = sub.submittedAt || sub.updatedAt || sub.createdAt || 0;
+      const prev = byJob.get(jobNo);
+      if (!prev || stamp > prev.stamp) {
+        byJob.set(jobNo, {
+          stamp,
+          receivingDate: v.receivingDate || '',
+          receivedFrom: v.receivedFrom || '',
+          toBeProcessedFor: v.toBeProcessedFor || '',
+          intakeWeight: intake || ''
+        });
+      }
+    }
+    return byJob;
+  }
+
+  async function load() {
+    $('statusLine').textContent = 'Loading…';
+    const [jobs, byJob] = await Promise.all([window.JobStatus.list(), receivingByJob()]);
+    rows = jobs.map((j) => Object.assign({}, byJob.get(String(j.job_no)) || {}, j));
+    render();
+  }
+
+  function visibleRows() {
+    const q = $('filterInput').value.trim().toLowerCase();
+    const showClosed = $('showClosed').checked;
+    return rows.filter((r) => {
+      if (!showClosed && r.status === 'closed') return false;
+      if (!q) return true;
+      return String(r.job_no).toLowerCase().includes(q) || String(r.receivedFrom || '').toLowerCase().includes(q);
+    });
+  }
+
+  function render() {
+    const list = visibleRows();
+    const openCount = rows.filter((r) => r.status !== 'closed').length;
+    $('statusLine').textContent =
+      `${rows.length} job${rows.length === 1 ? '' : 's'} — ${openCount} open, ${rows.length - openCount} closed`
+      + (list.length !== rows.length ? ` · showing ${list.length}` : '');
+
+    $('jobsBody').innerHTML = list.map((r) => {
+      const closed = r.status === 'closed';
+      const closedTxt = closed
+        ? `${(r.closed_at || '').slice(0, 10)}${r.closed_by ? ' · ' + esc(r.closed_by) : ''}`
+        : '—';
+      return `<tr class="${closed ? 'closed' : ''}">
+        <td><strong>${esc(r.job_no)}</strong></td>
+        <td>${esc(r.receivingDate || '—')}</td>
+        <td>${esc(r.receivedFrom || '—')}</td>
+        <td>${esc(r.toBeProcessedFor || '—')}</td>
+        <td>${esc(r.intakeWeight || '—')}</td>
+        <td><span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span></td>
+        <td>${closedTxt}</td>
+        <td class="no-print"><a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Report</a></td>
+        <td class="no-print">
+          <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}">
+            ${closed ? 'Reopen' : 'Close job'}
+          </button>
+        </td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="9" class="muted">No jobs to show.</td></tr>';
+
+    document.querySelectorAll('[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => toggleJob(btn.dataset.toggle, btn.dataset.closed === '1'));
+    });
+  }
+
+  async function toggleJob(jobNo, isClosed) {
+    const verb = isClosed ? 'Reopen' : 'Close';
+    // Closing pulls the job out of every downstream picker, so make it a deliberate act rather
+    // than a single mis-tap on a factory tablet.
+    if (!window.confirm(`${verb} job ${jobNo}?` + (isClosed ? '' : '\n\nIt will no longer be selectable on any record.'))) return;
+    const note = window.prompt(`Reason / note for ${verb.toLowerCase()}ing ${jobNo} (optional):`, '') || null;
+    const res = isClosed
+      ? await window.JobStatus.reopen(jobNo, { note })
+      : await window.JobStatus.close(jobNo, { note });
+    if (!res) { alert('Could not save — please retry.'); return; }
+    await load();
+  }
+
+  function downloadCsv() {
+    const header = ['Job no.', 'Received', 'Farm', 'Processing for', 'Intake weight (kg)', 'Status', 'Closed at', 'Closed by', 'Note'];
+    const q = (s) => `"${String(s == null ? '' : s).replace(/"/g, '""')}"`;
+    const lines = [header.join(',')];
+    visibleRows().forEach((r) => {
+      lines.push([
+        q(r.job_no), q(r.receivingDate), q(r.receivedFrom), q(r.toBeProcessedFor),
+        q(r.intakeWeight), q(r.status), q(r.closed_at || ''), q(r.closed_by || ''), q(r.note || '')
+      ].join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `job-status-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function init() {
+    if (window.LoginUI) { await window.LoginUI.ensureAuthenticated(); }
+    $('refreshBtn').addEventListener('click', load);
+    $('filterInput').addEventListener('input', render);
+    $('showClosed').addEventListener('change', render);
+    $('csvBtn').addEventListener('click', downloadCsv);
+    $('printBtn').addEventListener('click', () => window.print());
+    await load();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

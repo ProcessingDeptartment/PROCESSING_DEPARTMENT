@@ -266,12 +266,15 @@
     if (field.type === 'month') {
       return `<input type="month" id="${id}" value="${esc(v)}">`;
     }
-    // Search-select for a job number that should already exist elsewhere (paired with an
-    // `autofill` rule watching this field) -- type to filter a real list of received job
-    // numbers instead of typing one blind. Free typing still works if it's not in the list yet.
+    // Pick-only list of OPEN job numbers (filled in async by wireJobSearch). A job number has to
+    // already exist on Abalone Receiving to be picked -- free-typing one would create a dangling
+    // reference nothing downstream can resolve, so this is deliberately a select, not a datalist.
+    // The already-captured value is always kept as an option so an existing entry still shows what
+    // it recorded even after that job has been closed.
     if (field.type === 'jobsearch') {
-      return `<input type="text" id="${id}" list="${id}_list" value="${esc(v)}" autocomplete="off" placeholder="Type or pick a job no.">
-        <datalist id="${id}_list"></datalist>`;
+      return `<select id="${id}" data-jobsearch="1">` +
+        (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
+        `</select>`;
     }
     return `<input type="text" id="${id}" value="${esc(v)}">`;
   }
@@ -298,27 +301,24 @@
     });
   }
 
-  // Populates the datalist for every jobsearch field from its paired autofill rule's source
-  // record, and uppercases free-typed entries on blur to match how job numbers are stored.
+  // Fills every jobsearch select with the OPEN job numbers. Closed jobs are deliberately absent --
+  // that's what closing a job does. An already-captured value is re-added even if it's now closed,
+  // so opening an old entry still shows the job it was filed against.
   function wireJobSearch(container, ns, entryFields, autofillRules) {
-    (entryFields || []).forEach((f) => {
-      if (f.type !== 'jobsearch') return;
-      const rule = (autofillRules || []).find((r) => r.watch === f.key);
-      if (!rule) return;
-      const id = `${ns}_f_${f.key}`;
-      const input = container.querySelector('#' + id);
-      const list = container.querySelector('#' + id + '_list');
-      if (!input || !list) return;
-      const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
-      fetch(`${base}/api/values/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}`)
-        .then((res) => (res.ok ? res.json() : []))
-        .then((values) => { list.innerHTML = values.map((val) => `<option value="${esc(val)}"></option>`).join(''); })
-        .catch((e) => console.error('job search fetch failed', e));
-      input.addEventListener('blur', () => {
-        const upper = input.value.trim().toUpperCase();
-        if (upper !== input.value) { input.value = upper; input.dispatchEvent(new Event('input', { bubbles: true })); }
+    const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
+    if (!fields.length || !window.JobStatus) return;
+    window.JobStatus.openJobNumbers().then((open) => {
+      fields.forEach((f) => {
+        const sel = container.querySelector('#' + ns + '_f_' + f.key);
+        if (!sel) return;
+        const current = sel.value;
+        const options = open.slice();
+        if (current && options.indexOf(current) === -1) options.unshift(current);
+        sel.innerHTML = '<option value="">—</option>' +
+          options.map((val) => `<option value="${esc(val)}">${esc(val)}</option>`).join('');
+        sel.value = current;
       });
-    });
+    }).catch((e) => console.error('job list load failed', e));
   }
 
   // Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
@@ -330,7 +330,7 @@
       const watchEl = container.querySelector('#' + ns + '_f_' + rule.watch);
       if (!watchEl) return;
       let lastValue = '';
-      watchEl.addEventListener('input', async () => {
+      const onPick = async () => {
         const value = watchEl.value;
         if (!value || value === lastValue) return;
         lastValue = value;
@@ -351,7 +351,11 @@
         } catch (e) {
           console.error('autofill lookup failed', e);
         }
-      });
+      };
+      // jobsearch is a <select> now -- listen for both so this works whether the watched field is
+      // a dropdown or an ordinary typed input.
+      watchEl.addEventListener('input', onPick);
+      watchEl.addEventListener('change', onPick);
     });
   }
 
