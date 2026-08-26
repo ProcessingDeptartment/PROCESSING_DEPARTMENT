@@ -230,6 +230,13 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
           }
         }
         if (String(values[field] || '').trim().toUpperCase() !== needle) continue;
+        // Drafts are matched on purpose: a job number is created on Abalone Receiving at the start
+        // of a shift and downstream records legitimately start before it's finished. But a value
+        // read off an unfinished record is PROVISIONAL -- intake weight in particular keeps rising
+        // as baskets are weighed -- so say which it is rather than handing back a number that looks
+        // final. `__` prefixed so it can't collide with a real field key.
+        values.__status = entry.status || 'submitted';
+        values.__updatedAt = entry.updatedAt || entry.submittedAt || entry.createdAt || null;
         const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
         if (!best || stamp > best.stamp) best = { stamp, values };
       }

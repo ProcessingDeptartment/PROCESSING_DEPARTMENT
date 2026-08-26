@@ -89,6 +89,8 @@
   .fr-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
   .fr-notice.show{ display:block; }
   .fr-notice-due{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); border:1px solid #e8b8b3; }
+  .fr-notice-provisional{ background:#fbf0dc; color:#8a5a10; border:1px solid #e8d3a8; }
+  .fr-app input.fr-provisional,.fr-app select.fr-provisional{ background:#fdf7ea; border-color:#d9ac5a; }
   .fr-history-list{ max-height:220px; overflow:auto; border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; }
   .fr-history-item{ padding:7px 10px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:11.5px; }
   .fr-history-item:last-child{ border-bottom:none; }
@@ -329,10 +331,52 @@
     }).catch((e) => console.error('job list load failed', e));
   }
 
-  // Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
-  // field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
-  // record's recordKey) whose `matchField` matches, and copies `fill` (target key -> source key)
-  // into this form's still-empty fields. Never overwrites something already typed in.
+  // One lookup against the source record, shared by the live autofill and the pre-submit re-check.
+  async function autofillLookup(rule, value) {
+    // Through FacilityApi so the access key is attached (see api-backend.js).
+    const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
+    const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
+      : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
+    if (!res.ok) return null;
+    return await res.json();
+  }
+
+  /* Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
+   * field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
+   * record's recordKey) whose `matchField` matches, and copies `fill` (target key -> source key)
+   * into this form's still-empty fields. Never overwrites something already typed in.
+   *
+   * PROVISIONAL VALUES: a job number is created on Abalone Receiving at the start of a shift and
+   * downstream records legitimately start before it's finished -- but intake weight keeps rising
+   * as baskets are weighed. So anything pulled from a source that is still a DRAFT is marked
+   * provisional: flagged in the form, refreshed on save, and blocked from being submitted as
+   * final (see checkProvisional). Signing a compliance record off against a half-counted weight is
+   * exactly the failure this is here to prevent. */
+  function markProvisional(el, isProvisional) {
+    if (!el) return;
+    if (isProvisional) el.dataset.provisional = '1';
+    else delete el.dataset.provisional;
+    el.classList.toggle('fr-provisional', !!isProvisional);
+  }
+
+  function renderProvisionalNotice(container) {
+    let note = el('fr_provisionalNote');
+    const any = container.querySelectorAll('[data-provisional="1"]').length;
+    if (!note) {
+      if (!any) return;
+      note = document.createElement('div');
+      note.id = 'fr_provisionalNote';
+      note.className = 'fr-notice fr-notice-provisional';
+      container.prepend(note);
+    }
+    note.classList.toggle('show', !!any);
+    if (any) {
+      note.textContent = 'Some values came from a record that is still a draft (highlighted below) — '
+        + 'they are provisional and will be refreshed when you save. This entry can be saved as a draft, '
+        + 'but not submitted as final until the source record is submitted.';
+    }
+  }
+
   function wireAutofill(container, config) {
     if (!Array.isArray(config.autofill) || !config.autofill.length) return;
     config.autofill.forEach((rule) => {
@@ -344,20 +388,18 @@
         if (!value || value === lastValue) return;
         lastValue = value;
         try {
-          // Through FacilityApi so the access key is attached (see api-backend.js).
-          const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
-          const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
-            : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
-          if (!res.ok) return;
-          const found = await res.json();
+          const found = await autofillLookup(rule, value);
           if (!found) return;
+          const provisional = found.__status && found.__status !== 'submitted';
           Object.entries(rule.fill).forEach(([targetKey, sourceKey]) => {
             const targetEl = container.querySelector('#fr_f_' + targetKey);
             if (targetEl && !targetEl.value && found[sourceKey] != null) {
               targetEl.value = found[sourceKey];
+              markProvisional(targetEl, provisional);
               targetEl.dispatchEvent(new Event('input', { bubbles: true }));
             }
           });
+          renderProvisionalNotice(container);
         } catch (e) {
           console.error('autofill lookup failed', e);
         }
@@ -367,6 +409,43 @@
       watchEl.addEventListener('input', onPick);
       watchEl.addEventListener('change', onPick);
     });
+  }
+
+  /* Re-reads every provisional value straight before saving, so a draft picked up at 06:00 doesn't
+   * get saved at 14:00 still carrying the 06:00 intake weight. Returns false to abort a SUBMIT
+   * whose source record is still a draft -- drafts of this record are always allowed through, which
+   * is what lets work start before receiving is finished. */
+  async function refreshProvisional(container, config, finalize, toast) {
+    const stale = container.querySelectorAll('[data-provisional="1"]');
+    if (!stale.length) return true;
+    let stillDraft = false;
+    const changed = [];
+    for (const rule of (config.autofill || [])) {
+      const watchEl = container.querySelector('#fr_f_' + rule.watch);
+      if (!watchEl || !watchEl.value) continue;
+      let found = null;
+      try { found = await autofillLookup(rule, watchEl.value); } catch (e) { found = null; }
+      if (!found) continue;
+      const nowProvisional = found.__status && found.__status !== 'submitted';
+      if (nowProvisional) stillDraft = true;
+      Object.entries(rule.fill).forEach(([targetKey, sourceKey]) => {
+        const targetEl = container.querySelector('#fr_f_' + targetKey);
+        if (!targetEl || targetEl.dataset.provisional !== '1') return;
+        const latest = found[sourceKey];
+        if (latest != null && String(latest) !== String(targetEl.value)) {
+          changed.push(`${targetKey}: ${targetEl.value} → ${latest}`);
+          targetEl.value = latest;
+        }
+        markProvisional(targetEl, nowProvisional);
+      });
+    }
+    renderProvisionalNotice(container);
+    if (changed.length) toast('Updated from source: ' + changed.join(', '));
+    if (finalize && stillDraft) {
+      toast('Cannot submit — the source record for this job is still a draft, so its values are provisional. Save as a draft instead.');
+      return false;
+    }
+    return true;
   }
 
   function allFields(config) {
@@ -758,6 +837,10 @@
      * that someone comes back to, so required fields are only enforced on submit -- the
      * same rule monitoring-log.js applies. */
     async function saveForm(finalize) {
+      // Before reading the fields: re-pull anything copied from a still-draft source, so a value
+      // picked up hours ago isn't saved stale. Aborts a submit whose source is still a draft.
+      if (!await refreshProvisional(el('fr_modalSections'), config, finalize, toast)) return;
+
       const values = {};
       let missingRequired = null;
       let invalidJobNumber = null;
