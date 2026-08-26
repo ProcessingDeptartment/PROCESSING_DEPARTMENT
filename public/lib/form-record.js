@@ -1026,7 +1026,9 @@
         if (picked.length) {
           const set = new Set(picked);
           submissions.forEach(s => { if (set.has(s.id)) s.verification = record; });
-          await persist();
+          // A verification that didn't persist must not report success -- this is the QA sign-off
+          // on a compliance record, so a silent failure here is the worst kind.
+          if (!await persist()) { toast('Verification could not be saved — please retry.'); return; }
           renderTable();
         }
         toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');

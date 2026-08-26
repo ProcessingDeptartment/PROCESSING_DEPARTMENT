@@ -791,8 +791,12 @@
       applyVerification: async (ids, record) => {
         const set = new Set(ids);
         entries.forEach(e => { if (set.has(e.id)) e.verification = record; });
-        await persist();
+        // A verification that didn't persist must not report success -- this is the QA sign-off
+        // on a compliance record, so a silent failure here is the worst kind.
+        const ok = await persist();
         renderTable();
+        if (!ok) { toast('Verification could not be saved — please retry.'); return false; }
+        return true;
       },
       // Drafts aren't finished work and already-verified entries are done, so neither
       // makes a verification due.
@@ -1286,8 +1290,13 @@
         const record = await window.SignOffBlock.logVerification({ recordKey: config.recordKey, values, picked: picked.map(p => p.id) });
 
         if (picked.length) {
-          await primary.applyVerification(picked.filter(p => p.which === 'primary').map(p => p.id), record);
-          if (secondary) await secondary.applyVerification(picked.filter(p => p.which === 'secondary').map(p => p.id), record);
+          // applyVerification reports its own failure -- bail rather than following it with a
+          // success toast that contradicts it.
+          const okP = await primary.applyVerification(picked.filter(p => p.which === 'primary').map(p => p.id), record);
+          const okS = secondary
+            ? await secondary.applyVerification(picked.filter(p => p.which === 'secondary').map(p => p.id), record)
+            : true;
+          if (!okP || !okS) return;
         }
         toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');
         window.SignOffBlock.clearVerifyInputs('ml_verified');
