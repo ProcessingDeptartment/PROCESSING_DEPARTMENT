@@ -94,18 +94,54 @@
   // ------------------------------------------------------------------ active backend
   let backend = LocalBackend;
 
+  /* ---- backend readiness ------------------------------------------------------------------
+   * An adapter like api-backend.js decides asynchronously whether the real backend is reachable
+   * (it health-checks first). Anything that reads shared data on page load therefore races that
+   * decision: it reads an empty localStorage and gets back {} -- which looks exactly like "there
+   * is genuinely nothing saved". That has bitten every read-on-load page written against this
+   * seam, and on a record page it means a shift's saved submissions silently don't appear.
+   *
+   * So: an adapter that intends to register announces itself SYNCHRONOUSLY as its script runs
+   * (expectBackend), and callers await whenReady() before their first read. If no adapter
+   * announced, there is nothing to wait for and whenReady() resolves immediately, so local-only
+   * pages are not delayed. The timeout is a safety net for an adapter that never resolves. */
+  let markReady;
+  let expecting = false;
+  let settled = false;
+  const readyPromise = new Promise(function (resolve) { markReady = resolve; });
+  function settle() { if (!settled) { settled = true; markReady(); } }
+
+  function expectBackend() {
+    if (expecting) return;
+    expecting = true;
+    setTimeout(settle, 8000);
+  }
+
+  // Resolves once the backend decision is made -- a backend registered, the adapter reported it
+  // couldn't, or nothing was ever expected.
+  function whenReady() {
+    if (!expecting) settle();
+    return readyPromise;
+  }
+
   // Register the real backend (see the block comment above). Call once, before records read.
   function useBackend(impl) {
     const missing = ['get', 'set', 'remove', 'getByPrefix']
       .filter(m => typeof (impl || {})[m] !== 'function');
     if (missing.length) {
       console.error('[data-store] backend rejected, missing method(s): ' + missing.join(', '));
+      settle();
       return false;
     }
     backend = impl;
     console.info('[data-store] backend in use: ' + (impl.name || 'custom'));
+    settle();
     return true;
   }
+
+  // For an adapter that announced itself but then found the backend unreachable -- unblocks
+  // whenReady() so the page carries on against localStorage instead of waiting out the timeout.
+  function backendUnavailable() { settle(); }
 
   // Which backend shared data is going to right now -- 'local' until one is registered.
   function backendName() {
@@ -131,5 +167,5 @@
     return (shared === false ? LocalBackend : backend).getByPrefix(prefix);
   }
 
-  window.storage = { get, set, remove, getByPrefix, useBackend, backendName };
+  window.storage = { get, set, remove, getByPrefix, useBackend, backendName, whenReady, expectBackend, backendUnavailable };
 })();

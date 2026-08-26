@@ -11,6 +11,10 @@
  */
 (function () {
   const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+
+  // Tell data-store to hold whenReady() until the health check below resolves, so pages that read
+  // on load don't race it and mistake an empty localStorage for an empty database.
+  if (window.storage && window.storage.expectBackend) window.storage.expectBackend();
   const KEY_STORE = 'facility_api_key';
 
   // The access key is per-device, entered once (see pages/api-key.html), never in the repo.
@@ -118,5 +122,7 @@
     });
   }).catch((e) => {
     console.error('facility-api unreachable, staying on localStorage', e);
+    // Unblock whenReady() rather than making every reader wait out its safety timeout.
+    if (window.storage && window.storage.backendUnavailable) window.storage.backendUnavailable();
   });
 })();

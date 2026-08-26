@@ -100,6 +100,8 @@
   .ml-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
   .ml-notice.show{ display:block; }
   .ml-notice-due{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); border:1px solid #e8b8b3; }
+  .ml-notice-provisional{ background:#fbf0dc; color:#8a5a10; border:1px solid #e8d3a8; }
+  .ml-app input.ml-provisional,.ml-app select.ml-provisional{ background:#fdf7ea; border-color:#d9ac5a; }
   .ml-empty{ padding:18px; text-align:center; color:#8a939b; }
   .ml-history-list{ max-height:220px; overflow:auto; border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; }
   .ml-history-item{ padding:7px 10px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:11.5px; }
@@ -301,6 +303,77 @@
     });
   }
 
+  // One lookup against the source record, shared by the live autofill and the pre-save re-check.
+  async function autofillLookup(rule, value) {
+    const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
+    const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
+      : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
+    if (!res.ok) return null;
+    return await res.json();
+  }
+
+  /* Values copied from a source record that is still a DRAFT are provisional -- see the matching
+   * block in form-record.js. Intake weight in particular keeps rising as baskets are weighed, so
+   * anything pulled from an unfinished record is flagged, refreshed on save, and blocked from being
+   * submitted as final until the source is submitted. */
+  function markProvisional(elm, isProvisional) {
+    if (!elm) return;
+    if (isProvisional) elm.dataset.provisional = '1';
+    else delete elm.dataset.provisional;
+    elm.classList.toggle('ml-provisional', !!isProvisional);
+  }
+
+  function renderProvisionalNotice(container, ns) {
+    const id = ns + '_provisionalNote';
+    let note = document.getElementById(id);
+    const any = container.querySelectorAll('[data-provisional="1"]').length;
+    if (!note) {
+      if (!any) return;
+      note = document.createElement('div');
+      note.id = id;
+      note.className = 'ml-notice ml-notice-provisional';
+      container.prepend(note);
+    }
+    note.classList.toggle('show', !!any);
+    if (any) {
+      note.textContent = 'Some values came from a record that is still a draft (highlighted below) — '
+        + 'they are provisional and will be refreshed when you save. This entry can be saved as a draft, '
+        + 'but not submitted as final until the source record is submitted.';
+    }
+  }
+
+  async function refreshProvisional(container, ns, autofillRules, finalize, toast) {
+    if (!container || !container.querySelectorAll('[data-provisional="1"]').length) return true;
+    let stillDraft = false;
+    const changed = [];
+    for (const rule of (autofillRules || [])) {
+      const watchEl = container.querySelector('#' + ns + '_f_' + rule.watch);
+      if (!watchEl || !watchEl.value) continue;
+      let found = null;
+      try { found = await autofillLookup(rule, watchEl.value); } catch (e) { found = null; }
+      if (!found) continue;
+      const nowProvisional = found.__status && found.__status !== 'submitted';
+      if (nowProvisional) stillDraft = true;
+      Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
+        const targetEl = container.querySelector('#' + ns + '_f_' + targetKey);
+        if (!targetEl || targetEl.dataset.provisional !== '1') return;
+        const latest = found[sourceKey];
+        if (latest != null && String(latest) !== String(targetEl.value)) {
+          changed.push(`${targetKey}: ${targetEl.value} → ${latest}`);
+          targetEl.value = latest;
+        }
+        markProvisional(targetEl, nowProvisional);
+      });
+    }
+    renderProvisionalNotice(container, ns);
+    if (changed.length) toast('Updated from source: ' + changed.join(', '));
+    if (finalize && stillDraft) {
+      toast('Cannot submit — the source record for this job is still a draft, so its values are provisional. Save as a draft instead.');
+      return false;
+    }
+    return true;
+  }
+
   // Fills every jobsearch select with the OPEN job numbers. Closed jobs are deliberately absent --
   // that's what closing a job does. An already-captured value is re-added even if it's now closed,
   // so opening an old entry still shows the job it was filed against.
@@ -336,19 +409,18 @@
         lastValue = value;
         try {
           // Through FacilityApi so the access key is attached (see api-backend.js).
-          const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
-          const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
-            : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
-          if (!res.ok) return;
-          const found = await res.json();
+          const found = await autofillLookup(rule, value);
           if (!found) return;
+          const provisional = found.__status && found.__status !== 'submitted';
           Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
             const targetEl = container.querySelector('#' + ns + '_f_' + targetKey);
             if (targetEl && !targetEl.value && found[sourceKey] != null) {
               targetEl.value = found[sourceKey];
+              markProvisional(targetEl, provisional);
               targetEl.dispatchEvent(new Event('input', { bubbles: true }));
             }
           });
+          renderProvisionalNotice(container, ns);
         } catch (e) {
           console.error('autofill lookup failed', e);
         }
@@ -547,6 +619,12 @@
       }).join('');
       wireYesNo(container);
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); }
+      // Restore provisional markers saved with this entry, so a draft reopened later still shows
+      // which values came from an unfinished record and still gets them refreshed on save.
+      if (existing && Array.isArray(existing.provisionalFields)) {
+        existing.provisionalFields.forEach((k) => markProvisional(container.querySelector('#' + ns + '_f_' + k), true));
+        renderProvisionalNotice(container, ns);
+      }
       container.querySelectorAll('input,select,textarea').forEach(inp => {
         inp.addEventListener('input', recalcComputedInModal);
         inp.addEventListener('change', recalcComputedInModal);
@@ -568,6 +646,10 @@
     }
 
     async function saveForm(finalize) {
+      // Re-pull anything copied from a still-draft source before reading the fields, so a value
+      // picked up hours ago isn't saved stale. Aborts a submit whose source is still a draft.
+      if (!await refreshProvisional(el(modalIds.fields), ns, autofill, finalize, toast)) return;
+
       const raw = {};
       let missingRequired = null;
       entryFields.forEach(f => {
@@ -607,6 +689,12 @@
         };
         entries.push(savedEntry);
       }
+      // Which values are still provisional has to survive the save: the marker lives in the DOM,
+      // so without this a draft reopened tomorrow would show a stale value that looks typed in.
+      const provisionalKeys = Array.from(el(modalIds.fields).querySelectorAll('[data-provisional="1"]'))
+        .map((e) => e.id.slice((ns + '_f_').length));
+      if (provisionalKeys.length) savedEntry.provisionalFields = provisionalKeys;
+      else delete savedEntry.provisionalFields;
       const ok = await persist();
       if (!ok) { toast('Save failed — please retry.'); return; }
       // Best-effort batch traceability index (only if this record declares a batchField).
@@ -1312,6 +1400,9 @@
     // Header first: the badge reads the block it resolves.
     await mountDocHeader(config);
     await renderDocRevBadge();
+    // Wait for the backend decision before the first read -- otherwise this races
+    // api-backend.js and reads an empty localStorage, so saved work silently does not appear.
+    if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await loadSpec();
     await primary.load();
     primary.renderTable();

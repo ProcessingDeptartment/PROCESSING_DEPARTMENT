@@ -819,6 +819,12 @@
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); }
+      // Restore provisional markers saved with this submission, so a draft reopened later still
+      // shows which values came from an unfinished record and still gets them refreshed on save.
+      if (existing && Array.isArray(existing.provisionalFields)) {
+        existing.provisionalFields.forEach((k) => markProvisional(container.querySelector('#fr_f_' + k), true));
+        renderProvisionalNotice(container);
+      }
       // A submitted record is evidence -- it opens to be read, never to be re-typed. `computed`
       // fields are always read-only, locked or not -- don't let this blanket pass re-enable them.
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
@@ -907,6 +913,13 @@
         submissions.push(sub);
         savedSub = sub;
       }
+      // Which values are still provisional has to survive the save: the marker lives in the DOM,
+      // so without this a draft reopened tomorrow would show a stale intake weight that looks like
+      // someone typed it, and refreshProvisional would have nothing to refresh.
+      const provisionalKeys = Array.from(el('fr_modalSections').querySelectorAll('[data-provisional="1"]'))
+        .map((e) => e.id.replace(/^fr_f_/, ''));
+      if (provisionalKeys.length) savedSub.provisionalFields = provisionalKeys;
+      else delete savedSub.provisionalFields;
       // Sign-off records the action that was actually taken. It used to log 'submitted'
       // on every save, back when a save was the only action there was.
       if (window.Auth && window.Auth.isAuthenticated()) {
@@ -1161,6 +1174,9 @@
 
     /* Header first, then the badge FROM it: the on-screen badge and the printed block
      * state the same revision, so they can never disagree. */
+    // Wait for the backend decision before the first read -- otherwise this races
+    // api-backend.js and reads an empty localStorage, so saved work silently does not appear.
+    if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await mountDocHeader(config);
     renderDocBadge();
     await load();
