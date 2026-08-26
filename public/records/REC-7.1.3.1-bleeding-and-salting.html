@@ -19,6 +19,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/traceability.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=8"></script>
@@ -27,6 +28,10 @@
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'bleeding-and-salting',
+    batchField: 'jobNo',
+    // The salt/baking soda batch codes used on this job become searchable in their own right
+    // (batch-trace.html), cross-linked back to the job number.
+    extraBatchFields: ['saltBatchCode', 'bakingSodaBatchCode'],
     docCode: 'REC 7.1.3.1',
     title: 'Bleeding and Salting',
     docRevisionStart: 1,

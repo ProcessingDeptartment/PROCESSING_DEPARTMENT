@@ -90,7 +90,7 @@
 <script src="../lib/api-backend.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/traceability.js?v=2"></script>
+<script src="../lib/traceability.js?v=3"></script>
 <script>
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -101,7 +101,8 @@
 
   async function loadKnownBatches() {
     try {
-      const list = await window.Traceability.knownBatches();
+      let list = await window.Traceability.knownBatches();
+      if (!list.length) { await sleep(2000); list = await window.Traceability.knownBatches(); }
       $('batchList').innerHTML = list.map(b => `<option value="${esc(b)}">`).join('');
       $('hint').textContent = list.length
         ? `${list.length} batch number${list.length === 1 ? '' : 's'} indexed so far.`
@@ -124,10 +125,13 @@
           </div>
           ${r.stage ? `<span class="stage">${esc(r.stage)}</span>` : ''}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
+          ${r.linked_batch ? `<div class="summary">Linked to: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}
           ${r.href ? `<a class="open" href="${esc(r.href)}">Open record →</a>` : ''}
         </div>
       </li>`).join('');
   }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   async function doTrace() {
     const batchNo = $('batchInput').value.trim();
@@ -137,7 +141,12 @@
     setStatus('Tracing…');
     $('traceBtn').disabled = true;
     try {
-      const rows = await window.Traceability.trace(batchNo);
+      let rows = await window.Traceability.trace(batchNo);
+      // An empty result on the very first call this page makes doesn't necessarily mean nothing
+      // is indexed -- window.storage may not have finished switching off localStorage yet (the
+      // API health-check race), especially on a deep link that traces immediately on load. Retry
+      // once before reporting "not found".
+      if (!rows.length) { await sleep(2000); rows = await window.Traceability.trace(batchNo); }
       if (!rows.length) { setStatus(`No records reference batch “${batchNo}” yet.`); return; }
       setStatus('');
       render(rows, batchNo);

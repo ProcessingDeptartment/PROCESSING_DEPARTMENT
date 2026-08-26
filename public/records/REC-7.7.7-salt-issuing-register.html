@@ -19,6 +19,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/traceability.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=5"></script>
 <script>
@@ -26,6 +27,10 @@
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'salt-issuing-register',
+    // Makes this salt batch searchable on its own (batch-trace.html), separate from whichever job
+    // it later gets used on (that cross-link is indexed from the job-side record instead).
+    batchField: 'batchNumber',
+    stage: 'salt issued',
     docCode: 'REC 7.7.7',
     title: 'Salt Issuing Register',
     docRevisionStart: 1,

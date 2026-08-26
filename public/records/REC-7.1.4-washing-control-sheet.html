@@ -19,6 +19,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/traceability.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=8"></script>
@@ -27,6 +28,7 @@
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'washing-control-sheet',
+    batchField: 'jobNo',
     docCode: 'REC 7.1.4',
     title: 'Washing Control Sheet',
     docRevisionStart: 1,

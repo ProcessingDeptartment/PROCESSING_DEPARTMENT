@@ -20,6 +20,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/traceability.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=5"></script>
 <script>
@@ -27,6 +28,7 @@
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'gonad-inspection-report',
+    batchField: 'jobNo',
     docCode: 'REC 1',
     title: 'Gonad Inspection Report',
     docRevisionStart: 1,

@@ -6,13 +6,18 @@
  * number you can trace every record that touched it -- forwards and backwards along a timeline.
  *
  * A record opts in by declaring in its config:
- *     batchField:     'lotBatchNumber'      // which field holds the PRODUCT batch/lot
- *     batchDateField: 'dateReceived'        // (optional) field to order the timeline by
- *     stage:          'intake'              // (optional) process stage label
- *     traceSummary:   sub => '...'          // (optional) one-line summary for the trace view
+ *     batchField:      'lotBatchNumber'     // which field holds the PRODUCT batch/lot or job no.
+ *     extraBatchFields: ['saltBatchCode']   // (optional) other codes on the SAME submission that
+ *                                           // should also be searchable -- e.g. a raw-material
+ *                                           // batch used while processing this job. Each gets its
+ *                                           // own index entry, cross-linked back to batchField's
+ *                                           // value, so tracing either code finds the other.
+ *     batchDateField:  'dateReceived'       // (optional) field to order the timeline by
+ *     stage:           'intake'             // (optional) process stage label
+ *     traceSummary:    sub => '...'         // (optional) one-line summary for the trace view
  * The shared engines call Traceability.indexSubmission() after every save; records with no
  * batchField never touch the index, so the ~40 differently-named ingredient "batch" fields never
- * create false links.
+ * create false links unless explicitly opted in via extraBatchFields.
  *
  * === STORAGE ===
  * Every entry goes through window.storage (see data-store.js) as a normal shared key:
@@ -78,8 +83,7 @@
       let summary = '';
       try { summary = config.traceSummary ? String(config.traceSummary(sub) || '') : ''; } catch (e) { summary = ''; }
 
-      const row = {
-        batch_no: batchNo,
+      const baseRow = {
         record_key: config.recordKey,
         record_title: config.title || config.recordKey,
         submission_id: sub.id,
@@ -89,18 +93,38 @@
         summary: summary || null,
         updated_at: new Date().toISOString()
       };
-      await window.storage.set(keyFor(batchNo, config.recordKey, sub.id), JSON.stringify(row), true);
+      await window.storage.set(
+        keyFor(batchNo, config.recordKey, sub.id),
+        JSON.stringify(Object.assign({ batch_no: batchNo }, baseRow)),
+        true
+      );
+
+      // Other codes on this same submission (e.g. a salt batch code used while processing this
+      // job) get their own index entry, cross-linked back to the primary code -- so tracing the
+      // raw-material batch surfaces which job it went into, not just when it was logged here.
+      for (const field of (config.extraBatchFields || [])) {
+        const extraNo = String(values[field] || '').trim();
+        if (!extraNo || extraNo === batchNo) continue;
+        await window.storage.set(
+          keyFor(extraNo, config.recordKey, sub.id + ':' + field),
+          JSON.stringify(Object.assign({ batch_no: extraNo, linked_batch: batchNo }, baseRow)),
+          true
+        );
+      }
     } catch (e) {
       console.warn('[traceability] index failed (record still saved)', e);
     }
   }
 
-  // Remove every entry a submission created, whatever batch number it was filed under.
+  // Remove every entry a submission created, whatever batch number(s) it was filed under -- the
+  // primary entry's last segment is exactly the submission id, extraBatchFields entries have
+  // ':<field>' appended (URI-encoded, so the ':' inside is safe) -- match both.
   async function removeSubmission(recordKey, submissionId) {
     try {
       const map = await window.storage.getByPrefix(NS, true);
+      const suffix = ':' + seg(recordKey) + ':' + seg(submissionId);
       const doomed = Object.keys(map || {}).filter(function (k) {
-        return k.endsWith(':' + seg(recordKey) + ':' + seg(submissionId));
+        return k.endsWith(suffix) || k.includes(suffix + '%3A');
       });
       for (const k of doomed) await window.storage.remove(k, true);
     } catch (e) {
