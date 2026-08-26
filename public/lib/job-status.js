@@ -38,11 +38,17 @@
     return window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
   }
 
+  // Goes through FacilityApi (api-backend.js) so the access key is attached; falls back to a plain
+  // fetch on the few pages that don't load a backend adapter at all.
+  function apiFetch(path) {
+    return window.FacilityApi ? window.FacilityApi.fetch(path) : fetch(apiBase() + path);
+  }
+
   // jobNo -> { status, closed_at, closed_by, note }. Absent = open.
   async function statusMap() {
     const map = new Map();
     try {
-      const res = await fetch(apiBase() + '/api/storage/prefix/' + encodeURIComponent(NS));
+      const res = await apiFetch('/api/storage/prefix/' + encodeURIComponent(NS));
       if (!res.ok) return map;
       const raw = await res.json();
       Object.keys(raw || {}).forEach((k) => {
@@ -60,7 +66,7 @@
   // Every job number ever captured on Abalone Receiving, most recent first.
   async function allJobNumbers() {
     try {
-      const res = await fetch(apiBase() + '/api/values/abalone-receiving/jobNo');
+      const res = await apiFetch('/api/values/abalone-receiving/jobNo');
       if (!res.ok) return [];
       const list = await res.json();
       return Array.isArray(list) ? list : [];

@@ -344,9 +344,10 @@
         if (!value || value === lastValue) return;
         lastValue = value;
         try {
-          const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
-          const url = `${base}/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
-          const res = await fetch(url);
+          // Through FacilityApi so the access key is attached (see api-backend.js).
+          const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
+          const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
+            : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
           if (!res.ok) return;
           const found = await res.json();
           if (!found) return;

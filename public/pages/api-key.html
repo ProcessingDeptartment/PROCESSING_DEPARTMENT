@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facility Access Key</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
+    --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #ak-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.45; min-height:100vh; }
+  #ak-root *{ box-sizing:border-box; }
+  h1{ margin:0; font-weight:700; }
+  .ak-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .btn{ padding:8px 15px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .ak-body{ padding:22px 18px 60px; max-width:640px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; padding:18px; margin-bottom:14px; }
+  label{ display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#54606b; margin-bottom:5px; }
+  input[type=password],input[type=text]{ width:100%; font-family:var(--mono); font-size:15px; padding:9px 11px; border:1px solid var(--line); border-radius:4px; }
+  .row{ display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .muted{ color:#6b7680; font-size:13px; }
+  .state{ padding:9px 12px; border-radius:4px; font-size:13px; font-weight:600; margin-bottom:14px; }
+  .state.ok{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .state.bad{ background:var(--palette-fail-bg); color:var(--palette-fail); }
+  .note{ background:#fbf0dc; color:#8a5a10; border-radius:4px; padding:10px 12px; font-size:12.5px; }
+</style>
+</head>
+<body>
+<div id="ak-root">
+  <div class="ak-top">
+    <h1>Facility Access Key</h1>
+    <a class="btn btn-ghost" href="../index.html">← Home</a>
+  </div>
+  <div class="ak-body">
+    <div class="panel">
+      <div class="state" id="state">Checking…</div>
+      <label for="keyInput">Access key</label>
+      <input type="password" id="keyInput" placeholder="Paste the key" autocomplete="off" spellcheck="false">
+      <div class="row">
+        <button class="btn btn-primary" id="saveBtn">Save &amp; test</button>
+        <button class="btn btn-flat" id="showBtn">Show</button>
+        <button class="btn btn-flat" id="clearBtn">Clear from this device</button>
+      </div>
+      <p class="muted" style="margin-top:14px;">
+        The key is stored on this device only and is sent with every request to the records
+        database. Enter it once per device (per browser). Ask the system administrator for it.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="note">
+        <strong>What this protects, and what it doesn't.</strong>
+        This stops the records database being read or wiped by anyone who simply has its address.
+        It does <em>not</em> identify who you are: it's one shared key for the whole facility, and
+        anyone who can already use this site can read it out of their own browser. Per-person
+        identity and role enforcement need Entra ID login, which isn't built yet — so this is a
+        lock on the front door, not an audit trail of who did what.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=4"></script>
+<script src="../lib/api-backend.js?v=2"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function setState(msg, cls) {
+    const el = $('state');
+    el.textContent = msg;
+    el.className = 'state' + (cls ? ' ' + cls : '');
+  }
+
+  // A key is "good" if an authenticated route accepts it. /api/health is deliberately exempt from
+  // auth, so testing against that would pass with no key at all -- use a real route instead.
+  async function test() {
+    try {
+      const res = await window.FacilityApi.fetch('/api/storage/prefix/' + encodeURIComponent('__keycheck__'));
+      if (res.status === 401) { setState('Not authorised — this key is missing or wrong. Nothing will save.', 'bad'); return false; }
+      if (!res.ok) { setState('Database reachable but returned ' + res.status + '.', 'bad'); return false; }
+      setState('Authorised — this device can read and write records.', 'ok');
+      return true;
+    } catch (e) {
+      setState('Could not reach the records database. Check the connection and retry.', 'bad');
+      return false;
+    }
+  }
+
+  $('saveBtn').addEventListener('click', async () => {
+    window.FacilityApi.setKey($('keyInput').value);
+    setState('Testing…');
+    await test();
+  });
+
+  $('showBtn').addEventListener('click', () => {
+    const i = $('keyInput');
+    i.type = i.type === 'password' ? 'text' : 'password';
+    $('showBtn').textContent = i.type === 'password' ? 'Show' : 'Hide';
+  });
+
+  $('clearBtn').addEventListener('click', async () => {
+    if (!window.confirm('Remove the access key from this device? Records will stop saving until it is entered again.')) return;
+    window.FacilityApi.clearKey();
+    $('keyInput').value = '';
+    await test();
+  });
+
+  $('keyInput').value = window.FacilityApi.getKey();
+  test();
+})();
+</script>
+</body>
+</html>

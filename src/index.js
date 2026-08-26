@@ -10,6 +10,7 @@
 // field keys like "date" or "receivingDate", so the field key alone can't identify the record).
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const dateFieldMap = require('./date-field-map');
 const recordKeyMap = require('./record-key-map');
@@ -22,6 +23,40 @@ const PORT = process.env.PORT || 3001;
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+
+/* ---------------------------------------------------------------------------------------------
+ * Shared-key auth.
+ *
+ * Set API_KEY in the Render dashboard to turn this on. It is deliberately tolerant of being
+ * unset: the client ships the header before the key is configured, so enabling it is a one-step
+ * dashboard change that never leaves the site briefly broken between two deploys.
+ *
+ * WHAT THIS IS AND ISN'T: this is a device-level shared secret, not user identity. It stops the
+ * API being read or wiped by anyone who simply has the URL. It does NOT stop someone who can
+ * already use the site from reading the key out of their own browser. Real per-user auth needs
+ * Entra ID, and until that exists there is nothing server-side to bind a request to a person --
+ * auth.js is a client-side shared password and permission-rules.js is a client-side role picker,
+ * so neither can be enforced here. Treat this as a lock on the front door, not an audit trail.
+ * ------------------------------------------------------------------------------------------- */
+const API_KEY = process.env.API_KEY || '';
+if (!API_KEY) {
+  console.warn('*** API_KEY is not set — the API is running UNPROTECTED. Set API_KEY in the Render dashboard to require a key. ***');
+}
+
+function tokenMatches(token) {
+  if (!token || token.length !== API_KEY.length) return false; // length check first: timingSafeEqual throws on a mismatch
+  return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(API_KEY));
+}
+
+app.use('/api', (req, res, next) => {
+  if (!API_KEY) return next();                    // not configured yet
+  if (req.method === 'OPTIONS') return next();    // CORS preflight carries no Authorization header
+  if (req.path === '/health') return next();      // uptime probes must stay reachable
+  const header = req.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+  if (tokenMatches(token)) return next();
+  return res.status(401).json({ ok: false, error: 'unauthorised' });
+});
 
 function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
