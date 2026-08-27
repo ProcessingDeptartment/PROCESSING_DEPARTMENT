@@ -59,3 +59,7 @@ Library files are cached hard by browsers. When editing anything in `public/lib/
 
 - `npm run dev` — Start the development server
 - `npm start` — Same as dev
+- `python scripts/extract_quality_trends.py` — Rebuild `public/data/quality-trends.json` from the
+  Quality workbooks in `../Online system/19. Quality report`. Run it whenever Quality updates one of
+  those workbooks; the Quality Trends dashboard (`public/pages/quality-trends.html`) reads only the
+  JSON, never the spreadsheets. Needs `openpyxl`.

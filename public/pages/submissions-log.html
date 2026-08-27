@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submissions &amp; Verifications Log</title>
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .container{ max-width:1400px; margin:0 auto; padding:20px; }
+
+  .summary-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+  .summary-card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; padding:14px 16px; cursor:pointer; }
+  .summary-card.active{ border-color:#2f4356; box-shadow:0 0 0 2px #2f435622; }
+  .summary-card .num{ font-size:24px; font-weight:700; color:#1d2b38; }
+  .summary-card .num.warn{ color:#a3352d; }
+  .summary-card .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; margin-top:2px; }
+
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:18px; overflow:hidden; }
+  .panel-head{ padding:11px 16px; border-bottom:1px solid #e2e4e3; background:#fbfbfa; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; }
+  .panel-body{ padding:0; }
+  .panel-body.pad{ padding:14px 16px; }
+
+  .filters{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .filters input,.filters select{ padding:6px 10px; border:1px solid #d0d5db; border-radius:5px; font-size:12px; background:#fff; }
+  .filters input[type=text]{ min-width:210px; }
+  .btn{ padding:6px 12px; border:1px solid #d0d5db; background:#fff; border-radius:5px; font-size:12px; cursor:pointer; }
+  .btn:hover{ background:#f2f4f6; }
+  .btn-primary{ background:#2f4356; color:#fff; border-color:#2f4356; }
+  .btn-primary:hover{ background:#3b5470; }
+
+  table.log-table{ width:100%; border-collapse:collapse; }
+  table.log-table th,table.log-table td{ border-bottom:1px solid #eceeef; padding:8px 12px; text-align:left; font-size:12px; vertical-align:top; }
+  table.log-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; position:sticky; top:0; z-index:1; cursor:pointer; white-space:nowrap; }
+  table.log-table tbody tr:hover{ background:#f9fafb; }
+  td.doc a{ color:#1d4ed8; text-decoration:none; font-weight:600; }
+  td.doc a:hover{ text-decoration:underline; }
+  td.when{ white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-size:11.5px; }
+  td.detail{ color:#5c6771; font-size:11.5px; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .badge-warn{ background:#fbe8e6; color:#a3352d; }
+  .badge-ok{ background:#e8f3ec; color:#2f7a52; }
+  .badge-muted{ background:#eee; color:#777; }
+  .badge-info{ background:#e6eefb; color:#1d4ed8; }
+  .empty{ padding:24px; text-align:center; color:#8a939b; }
+  .tablewrap{ max-height:70vh; overflow:auto; }
+  .note{ color:#5c6771; }
+  .note code{ background:#f0f2f4; padding:1px 4px; border-radius:3px; }
+
+  @media (max-width:900px){ .summary-row{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:640px){
+    .summary-row{ grid-template-columns:1fr; }
+    .container{ padding:12px; }
+    table.log-table th,table.log-table td{ padding:6px 8px; font-size:11.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Submissions &amp; Verifications Log</h1>
+  <p>Every submission and every verification across all records, one line each &mdash; instead of opening records one at a time.</p>
+  <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
+</div>
+
+<div class="container">
+
+  <div class="summary-row">
+    <div class="summary-card" data-quick="all"><div class="num" id="sumAll">0</div><div class="lbl">Events in view</div></div>
+    <div class="summary-card" data-quick="pending"><div class="num warn" id="sumPending">0</div><div class="lbl">Awaiting verification</div></div>
+    <div class="summary-card" data-quick="verified"><div class="num" id="sumVerified">0</div><div class="lbl">Verified</div></div>
+    <div class="summary-card" data-quick="draft"><div class="num" id="sumDrafts">0</div><div class="lbl">Open drafts</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Log</h2>
+      <div class="filters">
+        <input type="text" id="q" placeholder="Search record, person, job no...">
+        <select id="fEvent">
+          <option value="">All events</option>
+          <option value="submitted">Submitted</option>
+          <option value="verified">Verified</option>
+          <option value="draft">Draft saved</option>
+        </select>
+        <select id="fStatus">
+          <option value="">Any status</option>
+          <option value="pending">Awaiting verification</option>
+          <option value="verified">Verified</option>
+          <option value="draft">Draft</option>
+        </select>
+        <select id="fRecord"><option value="">All records</option></select>
+        <input type="date" id="fFrom" title="From date">
+        <input type="date" id="fTo" title="To date">
+        <button class="btn" id="btnReset">Reset</button>
+        <button class="btn btn-primary" id="btnCsv">Export CSV</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="tablewrap" id="tableWrap"><div class="empty">Loading&hellip;</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Scope</h2></div>
+    <div class="panel-body pad note">
+      <div id="scopeNote">Reading&hellip;</div>
+      <div style="margin-top:6px;">One row per event: a submission when it was submitted, a verification when it was signed off, and a draft
+      while it is still open. Both record engines are covered &mdash; form records (<code>formrecord:*</code>) and monitoring logs
+      (<code>monitoring_log:*</code>).</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+  // recordKey -> nice label/link, from the Master Index.
+  const indexByKey = {};
+  ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach((row) => {
+    if (row.recordKey) indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
+  });
+
+  function fmtWhen(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return '—';
+    const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function dayOf(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return '';
+    const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  /* A verification carries its own typed date (verifiedDate, a plain yyyy-mm-dd the verifier
+   * entered) as well as loggedAt. The typed date is the one an auditor reads, so it drives the
+   * date filter; loggedAt is the fallback when the field was left blank on an older record. */
+  function verifyTs(v) {
+    if (v && v.verifiedDate) {
+      const t = Date.parse(v.verifiedDate + 'T00:00:00');
+      if (!isNaN(t)) return t;
+    }
+    return (v && v.loggedAt) || 0;
+  }
+
+  // The entry's own operational date, if it has one -- what the entry is *about*, not when it was saved.
+  const DATEISH = /date/i;
+  function entryDate(values) {
+    if (!values) return '';
+    const k = Object.keys(values).find((key) => DATEISH.test(key) && values[key]);
+    return k ? String(values[k]) : '';
+  }
+  // A short handle for the entry: job number if present, else the first short non-date value.
+  function entryRef(values) {
+    if (!values) return '';
+    const jobKey = Object.keys(values).find((k) => /job.*(no|number)/i.test(k) && values[k]);
+    if (jobKey) return String(values[jobKey]);
+    const k = Object.keys(values).find((key) => {
+      const v = values[key];
+      return v != null && typeof v !== 'object' && !DATEISH.test(key)
+        && String(v).trim() !== '' && String(v).length <= 30;
+    });
+    return k ? String(values[k]) : '';
+  }
+
+  function personOf(values) {
+    if (!values) return '';
+    const k = Object.keys(values).find((key) => /(completed|recorded|checked|done|performed).*by|^operator$|^name$/i.test(key) && values[key]);
+    return k ? String(values[k]) : '';
+  }
+
+  let EVENTS = [];
+  let sortKey = 'ts', sortDir = -1;
+
+  function pushEvents(rec, entry) {
+    const base = {
+      recordKey: rec.recordKey, name: rec.name, docNo: rec.docNo, href: rec.href,
+      engine: rec.engine, entryId: entry.id || '',
+      entryDate: entryDate(entry.values), ref: entryRef(entry.values)
+    };
+    // Older entries predate the draft/submitted lifecycle and carry no status -- those are submitted.
+    const submitted = entry.status == null || entry.status === 'submitted';
+    const ver = entry.verification || null;
+    const who = personOf(entry.values);
+
+    if (submitted) {
+      EVENTS.push(Object.assign({}, base, {
+        event: 'submitted',
+        ts: entry.submittedAt || entry.updatedAt || entry.createdAt || 0,
+        who: who,
+        status: ver ? 'verified' : 'pending',
+        detail: ver ? '' : 'Not yet verified'
+      }));
+    } else {
+      EVENTS.push(Object.assign({}, base, {
+        event: 'draft',
+        ts: entry.updatedAt || entry.createdAt || 0,
+        who: who,
+        status: 'draft',
+        detail: 'Draft — not submitted'
+      }));
+    }
+
+    if (ver) {
+      EVENTS.push(Object.assign({}, base, {
+        event: 'verified',
+        ts: verifyTs(ver),
+        who: ver.verifiedBy || '',
+        status: 'verified',
+        detail: [ver.verifiedSig ? 'Title: ' + ver.verifiedSig : '', ver.verifiedSignature ? 'Sig: ' + ver.verifiedSignature : '']
+          .filter(Boolean).join(' · ')
+      }));
+    }
+  }
+
+  async function collect() {
+    // Two round trips total, never one per record -- see data-store.js on getByPrefix.
+    const [forms, logs] = await Promise.all([
+      window.storage.getByPrefix('formrecord:', true),
+      window.storage.getByPrefix('monitoring_log:', true)
+    ]);
+
+    function ingest(map, prefix, engine) {
+      Object.keys(map || {}).forEach((key) => {
+        const suffix = key.slice(prefix.length);
+        const recordKey = suffix.replace(/__.*$/, '');   // a secondary monitoring log belongs to its parent record
+        let list;
+        try { list = JSON.parse(map[key]); } catch (e) { return; }
+        if (!Array.isArray(list) || !list.length) return;
+        const meta = indexByKey[recordKey] || {};
+        const rec = {
+          recordKey: recordKey,
+          engine: engine,
+          name: meta.name || recordKey,
+          docNo: meta.docNo || '',
+          href: meta.href ? '../records/' + meta.href : null
+        };
+        list.forEach((entry) => { if (entry && typeof entry === 'object') pushEvents(rec, entry); });
+      });
+    }
+
+    EVENTS = [];
+    ingest(forms, 'formrecord:', 'form-record');
+    ingest(logs, 'monitoring_log:', 'monitoring-log');
+    EVENTS.sort((a, b) => b.ts - a.ts);
+  }
+
+  function filtered() {
+    const q = $('q').value.trim().toLowerCase();
+    const ev = $('fEvent').value, st = $('fStatus').value, rk = $('fRecord').value;
+    const from = $('fFrom').value, to = $('fTo').value;
+    return EVENTS.filter((e) => {
+      if (ev && e.event !== ev) return false;
+      if (st && e.status !== st) return false;
+      if (rk && e.recordKey !== rk) return false;
+      if (from || to) {
+        const d = /^\d{4}-\d{2}-\d{2}/.test(e.entryDate) ? e.entryDate.slice(0, 10) : dayOf(e.ts);
+        if (from && (!d || d < from)) return false;
+        if (to && (!d || d > to)) return false;
+      }
+      if (q) {
+        const hay = (e.name + ' ' + e.docNo + ' ' + e.recordKey + ' ' + e.who + ' ' + e.ref + ' ' + e.detail).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  const EVENT_BADGE = {
+    submitted: '<span class="badge badge-info">Submitted</span>',
+    verified: '<span class="badge badge-ok">Verified</span>',
+    draft: '<span class="badge badge-muted">Draft saved</span>'
+  };
+  const STATUS_BADGE = {
+    pending: '<span class="badge badge-warn">Awaiting verification</span>',
+    verified: '<span class="badge badge-ok">Verified</span>',
+    draft: '<span class="badge badge-muted">Draft</span>'
+  };
+
+  function docLabel(e) {
+    const label = (e.docNo ? esc(e.docNo) + ' — ' : '') + esc(e.name);
+    return e.href ? '<a href="' + esc(e.href) + '">' + label + '</a>' : label;
+  }
+
+  const COLS = [
+    { key: 'ts', label: 'When' },
+    { key: 'event', label: 'Event' },
+    { key: 'name', label: 'Record' },
+    { key: 'who', label: 'By' },
+    { key: 'entryDate', label: 'Entry date' },
+    { key: 'ref', label: 'Ref' },
+    { key: 'status', label: 'Status' },
+    { key: 'detail', label: 'Detail' }
+  ];
+
+  function render() {
+    const rows = filtered().slice().sort((a, b) => {
+      if (sortKey === 'ts') return (a.ts - b.ts) * sortDir;
+      return String(a[sortKey] || '').localeCompare(String(b[sortKey] || '')) * sortDir;
+    });
+
+    $('sumAll').textContent = rows.length;
+    $('sumPending').textContent = rows.filter((r) => r.event === 'submitted' && r.status === 'pending').length;
+    $('sumVerified').textContent = rows.filter((r) => r.event === 'verified').length;
+    $('sumDrafts').textContent = rows.filter((r) => r.event === 'draft').length;
+
+    const wrap = $('tableWrap');
+    if (!rows.length) { wrap.innerHTML = '<div class="empty">No events match these filters.</div>'; return; }
+
+    wrap.innerHTML = '<table class="log-table"><thead><tr>' +
+      COLS.map((c) => '<th data-sort="' + c.key + '">' + esc(c.label) +
+        (sortKey === c.key ? (sortDir === 1 ? ' ▲' : ' ▼') : '') + '</th>').join('') +
+      '</tr></thead><tbody>' +
+      rows.map((e) =>
+        '<tr><td class="when">' + fmtWhen(e.ts) + '</td>' +
+        '<td>' + (EVENT_BADGE[e.event] || esc(e.event)) + '</td>' +
+        '<td class="doc">' + docLabel(e) + '</td>' +
+        '<td>' + esc(e.who || '—') + '</td>' +
+        '<td class="when">' + esc(e.entryDate || '—') + '</td>' +
+        '<td>' + esc(e.ref || '—') + '</td>' +
+        '<td>' + (STATUS_BADGE[e.status] || '') + '</td>' +
+        '<td class="detail">' + esc(e.detail || '') + '</td></tr>').join('') +
+      '</tbody></table>';
+
+    wrap.querySelectorAll('th[data-sort]').forEach((th) => {
+      th.addEventListener('click', () => {
+        const k = th.getAttribute('data-sort');
+        if (sortKey === k) sortDir = -sortDir;
+        else { sortKey = k; sortDir = (k === 'ts') ? -1 : 1; }
+        render();
+      });
+    });
+  }
+
+  function toCsv() {
+    const rows = filtered();
+    const head = ['When', 'Event', 'Doc no', 'Record', 'By', 'Entry date', 'Ref', 'Status', 'Detail', 'Record key', 'Entry id'];
+    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const body = rows.map((e) => [fmtWhen(e.ts), e.event, e.docNo, e.name, e.who, e.entryDate, e.ref, e.status, e.detail, e.recordKey, e.entryId].map(q).join(','));
+    const csv = [head.map(q).join(',')].concat(body).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'submissions-verifications-' + dayOf(Date.now()) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  function fillRecordFilter() {
+    const seen = {};
+    EVENTS.forEach((e) => { seen[e.recordKey] = (e.docNo ? e.docNo + ' — ' : '') + e.name; });
+    $('fRecord').innerHTML = '<option value="">All records</option>' +
+      Object.keys(seen).sort((a, b) => seen[a].localeCompare(seen[b]))
+        .map((k) => '<option value="' + esc(k) + '">' + esc(seen[k]) + '</option>').join('');
+  }
+
+  const FILTER_IDS = ['q', 'fEvent', 'fStatus', 'fRecord', 'fFrom', 'fTo'];
+
+  function wire() {
+    FILTER_IDS.forEach((id) => {
+      $(id).addEventListener(id === 'q' ? 'input' : 'change', render);
+    });
+    $('btnReset').addEventListener('click', () => {
+      FILTER_IDS.forEach((id) => { $(id).value = ''; });
+      document.querySelectorAll('.summary-card').forEach((c) => c.classList.remove('active'));
+      render();
+    });
+    $('btnCsv').addEventListener('click', toCsv);
+
+    // The summary cards double as one-tap filters -- the pending count is the one people chase.
+    document.querySelectorAll('.summary-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const quick = card.getAttribute('data-quick');
+        document.querySelectorAll('.summary-card').forEach((c) => c.classList.remove('active'));
+        if (quick === 'pending') { $('fEvent').value = 'submitted'; $('fStatus').value = 'pending'; card.classList.add('active'); }
+        else if (quick === 'verified') { $('fEvent').value = 'verified'; $('fStatus').value = ''; card.classList.add('active'); }
+        else if (quick === 'draft') { $('fEvent').value = 'draft'; $('fStatus').value = ''; card.classList.add('active'); }
+        else { $('fEvent').value = ''; $('fStatus').value = ''; }
+        render();
+      });
+    });
+  }
+
+  (async function init() {
+    wire();
+    // Let api-backend.js register first, so a facility-wide view isn't silently rendered
+    // from this one device's localStorage.
+    try { await window.storage.whenReady(); } catch (e) { /* falls through to local */ }
+    await collect();
+    fillRecordFilter();
+    render();
+    const backend = window.storage.backendName();
+    // No device key means every API read comes back 401 -- which looks exactly like an empty
+    // log, so say so rather than reporting a facility-wide view of nothing.
+    const noKey = backend !== 'local' && window.FacilityApi && !window.FacilityApi.getKey();
+    $('scopeNote').innerHTML = (backend === 'local')
+      ? 'Showing <strong>this device only</strong> — the records API is not connected, so this reads local storage. '
+        + 'Set a device key on <a href="api-key.html">the API key page</a> for the facility-wide view.'
+      : noKey
+        ? 'This device has <strong>no access key</strong>, so the records API returns nothing — an empty log here does '
+          + 'not mean there are no records. Set a device key on <a href="api-key.html">the API key page</a>.'
+        : 'Showing <strong>facility-wide</strong> data from the records API (<code>' + esc(backend) + '</code>).';
+  })();
+})();
+</script>
+
+</body>
+</html>

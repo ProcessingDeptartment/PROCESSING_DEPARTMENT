@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quality Trends</title>
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .header a{ color:#b9c3cc; }
+  .container{ max-width:1200px; margin:0 auto; padding:20px; }
+
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:18px; overflow:hidden; }
+  .panel-head{ padding:11px 16px; border-bottom:1px solid #e2e4e3; background:#fbfbfa; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; }
+  .panel-body{ padding:14px 16px; }
+
+  .group{ margin-bottom:12px; }
+  .group:last-child{ margin-bottom:0; }
+  .group-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:#5c6771; font-weight:700; margin-bottom:7px; }
+  .btn-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  button.trend-btn, button.range-btn{ font:inherit; cursor:pointer; padding:8px 14px; border-radius:999px; border:1px solid #d0d5db; background:#fff; color:#2f4356; font-weight:600; transition:background .15s ease,border-color .15s ease,color .15s ease; }
+  button.trend-btn:hover, button.range-btn:hover{ background:#eef2f6; }
+  button.trend-btn[aria-pressed="true"]{ background:#7c3aed; border-color:#7c3aed; color:#fff; }
+  button.range-btn{ padding:5px 12px; font-size:12px; }
+  button.range-btn[aria-pressed="true"]{ background:#2f4356; border-color:#2f4356; color:#fff; }
+
+  .summary-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px; }
+  .summary-card{ background:#fbfbfa; border:1px solid #e2e4e3; border-radius:8px; padding:12px 14px; }
+  .summary-card .num{ font-size:22px; font-weight:700; color:#1d2b38; font-variant-numeric:tabular-nums; }
+  .summary-card .num.warn{ color:#a3352d; }
+  .summary-card .lbl{ font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; margin-top:2px; }
+
+  .chart-wrap{ position:relative; overflow-x:auto; }
+  svg.chart{ display:block; width:100%; min-width:520px; height:auto; }
+  .legend{ display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:#3d4b59; }
+  .legend span.key{ display:inline-block; width:14px; height:3px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+  .legend span.key.box{ height:11px; border-radius:2px; }
+  .note{ margin:12px 0 0; padding:9px 12px; background:#fdf6e6; border:1px solid #f0e2bd; border-radius:6px; color:#6b5726; font-size:12px; }
+  #tooltip{ position:fixed; pointer-events:none; background:#1d2b38; color:#f4f1e8; padding:6px 9px; border-radius:5px; font-size:11.5px; white-space:pre; opacity:0; transition:opacity .1s; z-index:20; }
+
+  table.dash-table{ width:100%; border-collapse:collapse; }
+  table.dash-table th,table.dash-table td{ border-bottom:1px solid #eceeef; padding:8px 12px; text-align:left; font-size:12px; }
+  table.dash-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; }
+  table.dash-table td.num-cell{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  table.dash-table tbody tr:hover{ background:#f9fafb; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; }
+  .badge-ok{ background:#e8f3ec; color:#2f7a52; }
+  .badge-warn{ background:#fbe8e6; color:#a3352d; }
+  .badge-muted{ background:#eee; color:#777; }
+  .scroll-y{ max-height:340px; overflow-y:auto; }
+  .empty{ padding:24px; text-align:center; color:#8a939b; }
+  .sources{ font-size:11.5px; color:#5c6771; }
+  .sources li{ margin-bottom:3px; }
+  .back-link{ display:inline-block; margin:4px 0 20px; color:#1d4ed8; text-decoration:none; }
+  .back-link:hover{ text-decoration:underline; }
+  @media print{ .btn-row,.back-link{ display:none; } body{ background:#fff; } }
+</style>
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div class="header">
+  <h1>Quality Trends</h1>
+  <p>Trending from the Quality department workbooks &mdash; monitoring, canning parameters and verification swabs. <span id="stamp"></span></p>
+</div>
+
+<div class="container">
+  <a class="back-link" href="quality.html">&larr; Back to Quality</a>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Choose a trend</h2></div>
+    <div class="panel-body" id="buttons"><div class="empty">Loading trends&hellip;</div></div>
+  </div>
+
+  <div class="panel" id="chart-panel" hidden>
+    <div class="panel-head">
+      <h2 id="chart-title">&nbsp;</h2>
+      <div class="btn-row" id="ranges"></div>
+    </div>
+    <div class="panel-body">
+      <div class="summary-row" id="summary"></div>
+      <div class="chart-wrap"><svg class="chart" id="chart" role="img"></svg></div>
+      <div class="legend" id="legend"></div>
+      <div id="chart-note"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="detail-panel" hidden>
+    <div class="panel-head"><h2 id="detail-title">Latest readings</h2></div>
+    <div class="panel-body" style="padding:0"><div class="scroll-y"><table class="dash-table" id="detail-table"></table></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>EMP zone breakdown (REC 2.5.7.1)</h2></div>
+    <div class="panel-body" style="padding:0"><table class="dash-table" id="emp-table"></table></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Environmental monitoring completion</h2></div>
+    <div class="panel-body" style="padding:0"><div class="scroll-y"><table class="dash-table" id="env-table"></table></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Source workbooks</h2></div>
+    <div class="panel-body"><ul class="sources" id="sources"></ul></div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SVG = 'http://www.w3.org/2000/svg';
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var RANGES = [
+    { key: '3m', label: 'Last 3 months', days: 92 },
+    { key: '6m', label: 'Last 6 months', days: 183 },
+    { key: '12m', label: 'Last 12 months', days: 366 },
+    { key: 'all', label: 'All', days: null }
+  ];
+
+  var data = null, current = null, range = '12m';
+  var tooltip = document.getElementById('tooltip');
+
+  function el(tag, attrs, text) {
+    var n = document.createElement(tag);
+    for (var k in attrs) { if (attrs[k] != null) n.setAttribute(k, attrs[k]); }
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function svgEl(tag, attrs) {
+    var n = document.createElementNS(SVG, tag);
+    for (var k in attrs) { if (attrs[k] != null) n.setAttribute(k, attrs[k]); }
+    return n;
+  }
+  function fmtDate(iso) {
+    var p = iso.split('-');
+    return p[2] + ' ' + MONTHS[+p[1] - 1] + ' ' + p[0];
+  }
+  function fmtMonth(iso) {
+    var p = iso.split('-');
+    return MONTHS[+p[1] - 1] + ' ' + p[0];
+  }
+  function fmtNum(v) {
+    if (v == null) return '–';
+    return Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2).replace(/\.00$/, '');
+  }
+
+  // ------------------------------------------------------------ filtering
+
+  function visiblePoints(trend) {
+    var pts = trend.points;
+    var r = RANGES.filter(function (x) { return x.key === range; })[0];
+    if (!r || !r.days || !pts.length) return pts;
+    var last = new Date(pts[pts.length - 1].d + 'T00:00:00');
+    var from = new Date(last.getTime() - r.days * 86400000);
+    var out = pts.filter(function (p) { return new Date(p.d + 'T00:00:00') >= from; });
+    return out.length ? out : pts;
+  }
+
+  // --------------------------------------------------------------- charts
+
+  function drawChart(trend, pts) {
+    var svg = document.getElementById('chart');
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    var W = 900, H = 340, L = 56, R = 18, T = 16, B = 46;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('aria-label', trend.title);
+    var iw = W - L - R, ih = H - T - B;
+
+    var keys = trend.series.map(function (s) { return s.key; });
+    var vals = [];
+    pts.forEach(function (p) {
+      keys.forEach(function (k) { if (p.v[k] != null) vals.push(p.v[k]); });
+    });
+    var spec = trend.spec || {};
+    if (spec.min != null) vals.push(spec.min);
+    if (spec.max != null) vals.push(spec.max);
+    if (!vals.length) { svg.appendChild(svgEl('rect', { width: W, height: H, fill: '#fff' })); return; }
+
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if (trend.chart === 'bar') lo = 0;
+    if (hi === lo) { hi += 1; lo -= 1; }
+    var pad = (hi - lo) * 0.08;
+    lo -= pad; hi += pad;
+
+    var t0 = new Date(pts[0].d + 'T00:00:00').getTime();
+    var t1 = new Date(pts[pts.length - 1].d + 'T00:00:00').getTime();
+    if (t1 === t0) t1 = t0 + 86400000;
+
+    function y(v) { return T + ih - (v - lo) / (hi - lo) * ih; }
+    function x(p, i) {
+      if (trend.chart === 'bar') return L + (i + 0.5) * (iw / pts.length);
+      return L + (new Date(p.d + 'T00:00:00').getTime() - t0) / (t1 - t0) * iw;
+    }
+
+    // gridlines + y axis
+    for (var g = 0; g <= 4; g++) {
+      var vy = lo + (hi - lo) * g / 4, py = y(vy);
+      svg.appendChild(svgEl('line', { x1: L, x2: W - R, y1: py, y2: py, stroke: '#eceeef' }));
+      var lab = svgEl('text', { x: L - 8, y: py + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#5c6771' });
+      lab.textContent = fmtNum(vy);
+      svg.appendChild(lab);
+    }
+
+    // spec band
+    if (spec.min != null || spec.max != null) {
+      var top = y(spec.max != null ? spec.max : hi);
+      var bot = y(spec.min != null ? spec.min : lo);
+      svg.appendChild(svgEl('rect', { x: L, y: top, width: iw, height: Math.max(1, bot - top),
+        fill: '#16a34a', opacity: 0.07 }));
+      [spec.min, spec.max].forEach(function (v) {
+        if (v == null) return;
+        svg.appendChild(svgEl('line', { x1: L, x2: W - R, y1: y(v), y2: y(v),
+          stroke: '#16a34a', 'stroke-dasharray': '5 4', opacity: 0.7 }));
+      });
+      if (spec.label) {
+        var sl = svgEl('text', { x: W - R - 4, y: y(spec.max != null ? spec.max : spec.min) - 6,
+          'text-anchor': 'end', 'font-size': 11, fill: '#2f7a52' });
+        sl.textContent = spec.label;
+        svg.appendChild(sl);
+      }
+    }
+
+    // x labels
+    var step = Math.max(1, Math.ceil(pts.length / 8));
+    pts.forEach(function (p, i) {
+      if (i % step && i !== pts.length - 1) return;
+      var tx = svgEl('text', { x: x(p, i), y: H - B + 20, 'text-anchor': 'middle',
+        'font-size': 11, fill: '#5c6771' });
+      tx.textContent = trend.chart === 'bar' ? fmtMonth(p.d) : fmtDate(p.d).slice(0, 6);
+      svg.appendChild(tx);
+    });
+    svg.appendChild(svgEl('line', { x1: L, x2: W - R, y1: T + ih, y2: T + ih, stroke: '#c9ced4' }));
+
+    if (trend.chart === 'bar') {
+      var bw = (iw / pts.length) * 0.72 / trend.series.length;
+      pts.forEach(function (p, i) {
+        trend.series.forEach(function (s, si) {
+          var v = p.v[s.key];
+          if (v == null) return;
+          var bx = x(p, i) - (trend.series.length * bw) / 2 + si * bw;
+          svg.appendChild(svgEl('rect', { x: bx, y: y(v), width: Math.max(2, bw - 2),
+            height: Math.max(0, y(lo) - y(v)), fill: s.color, rx: 2 }));
+        });
+      });
+    } else {
+      trend.series.forEach(function (s) {
+        var d = '', open = false;
+        pts.forEach(function (p, i) {
+          var v = p.v[s.key];
+          if (v == null) { open = false; return; }
+          d += (open ? 'L' : 'M') + x(p, i).toFixed(1) + ' ' + y(v).toFixed(1) + ' ';
+          open = true;
+        });
+        if (d) {
+          svg.appendChild(svgEl('path', { d: d, fill: 'none', stroke: s.color,
+            'stroke-width': s.dashed ? 1 : 1.8, 'stroke-dasharray': s.dashed ? '4 4' : null,
+            opacity: s.dashed ? 0.65 : 1, 'stroke-linejoin': 'round' }));
+        }
+        if (pts.length <= 90) {
+          pts.forEach(function (p, i) {
+            if (p.v[s.key] == null || s.dashed) return;
+            svg.appendChild(svgEl('circle', { cx: x(p, i), cy: y(p.v[s.key]), r: 2.4, fill: s.color }));
+          });
+        }
+      });
+    }
+
+    // hover targets
+    pts.forEach(function (p, i) {
+      var hw = iw / pts.length;
+      var hit = svgEl('rect', { x: x(p, i) - hw / 2, y: T, width: hw, height: ih,
+        fill: 'transparent' });
+      hit.addEventListener('mousemove', function (ev) {
+        var lines = [trend.chart === 'bar' ? fmtMonth(p.d) : fmtDate(p.d)];
+        trend.series.forEach(function (s) {
+          if (p.v[s.key] != null) lines.push(s.label + ': ' + fmtNum(p.v[s.key]) + ' ' + trend.unit);
+        });
+        if (p.v.n != null) lines.push(p.v.n + ' reading' + (p.v.n === 1 ? '' : 's') + ' that day');
+        tooltip.textContent = lines.join('\n');
+        tooltip.style.left = Math.min(ev.clientX + 14, window.innerWidth - 190) + 'px';
+        tooltip.style.top = (ev.clientY + 14) + 'px';
+        tooltip.style.opacity = 1;
+      });
+      hit.addEventListener('mouseleave', function () { tooltip.style.opacity = 0; });
+      svg.appendChild(hit);
+    });
+  }
+
+  // -------------------------------------------------------------- summary
+
+  function drawSummary(trend, pts) {
+    var box = document.getElementById('summary');
+    box.innerHTML = '';
+    var keys = trend.series.map(function (s) { return s.key; });
+
+    function card(num, label, warn) {
+      var c = el('div', { 'class': 'summary-card' });
+      c.appendChild(el('div', { 'class': 'num' + (warn ? ' warn' : '') }, num));
+      c.appendChild(el('div', { 'class': 'lbl' }, label));
+      box.appendChild(c);
+    }
+
+    card(String(pts.length), trend.chart === 'bar' ? 'Months shown' : 'Days shown');
+
+    // one card per series -- averaging a temperature against a humidity would
+    // be meaningless, so each reading keeps its own summary
+    trend.series.filter(function (s) { return !s.dashed; }).forEach(function (s) {
+      var vals = [], last = null, lastDate = null;
+      pts.forEach(function (p) {
+        if (p.v[s.key] == null) return;
+        vals.push(p.v[s.key]);
+        last = p.v[s.key];
+        lastDate = p.d;
+      });
+      if (!vals.length) return;
+      var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+      // canning trends carry a single 'Daily average' series -- name its cards
+      // after the measurement instead of "average daily average"
+      if (s.key === 'avg') s = { key: 'avg', label: trend.title.replace(/^Can(ned product)? ?/i, '') || trend.unit };
+      if (trend.chart === 'bar') {
+        card(String(vals.reduce(function (a, b) { return a + b; }, 0)), 'Total ' + s.label.toLowerCase());
+      } else {
+        card(fmtNum(avg), 'Average ' + s.label.toLowerCase());
+        card(fmtNum(Math.min.apply(null, vals)) + ' – ' + fmtNum(Math.max.apply(null, vals)),
+          s.label + ' range');
+        card(fmtNum(last), s.label + ' on ' + fmtDate(lastDate));
+      }
+    });
+    if (trend.spec) {
+      var out = 0;
+      pts.forEach(function (p) {
+        keys.forEach(function (k) {
+          var v = p.v[k];
+          if (v == null) return;
+          if ((trend.spec.max != null && v > trend.spec.max) ||
+              (trend.spec.min != null && v < trend.spec.min)) out++;
+        });
+      });
+      card(String(out), 'Readings out of spec', out > 0);
+    }
+    if (trend.id === 'qp-issues') {
+      var checks = 0, issues = 0;
+      pts.forEach(function (p) { checks += p.v.checks || 0; issues += p.v.issues || 0; });
+      card(checks ? (100 * issues / checks).toFixed(1) + '%' : '–', 'Checks with an issue', issues > 0);
+    }
+  }
+
+  function drawLegend(trend) {
+    var box = document.getElementById('legend');
+    box.innerHTML = '';
+    trend.series.forEach(function (s) {
+      var item = el('div');
+      var key = el('span', { 'class': 'key' + (trend.chart === 'bar' ? ' box' : '') });
+      key.style.background = s.color;
+      item.appendChild(key);
+      item.appendChild(document.createTextNode(s.label));
+      box.appendChild(item);
+    });
+    var noteBox = document.getElementById('chart-note');
+    noteBox.innerHTML = '';
+    if (trend.note) noteBox.appendChild(el('p', { 'class': 'note' }, trend.note));
+  }
+
+  // --------------------------------------------------------------- tables
+
+  function head(cells) {
+    var thead = el('thead'), tr = el('tr');
+    cells.forEach(function (c) { tr.appendChild(el('th', null, c)); });
+    thead.appendChild(tr);
+    return thead;
+  }
+
+  function drawDetail(trend, pts) {
+    var panel = document.getElementById('detail-panel');
+    var table = document.getElementById('detail-table');
+    table.innerHTML = '';
+
+    if (trend.id === 'allergen' || trend.id === 'emp') {
+      var rows = trend.id === 'allergen' ? data.allergen : data.emp.log;
+      document.getElementById('detail-title').textContent =
+        trend.id === 'allergen' ? 'Allergen swabs (most recent first)' : 'EMP samples (most recent first)';
+      table.appendChild(head(trend.id === 'allergen'
+        ? ['Date', 'Area', 'Result']
+        : ['Date', 'Zone', 'Sample point', 'Area', 'Test', 'Result', 'Outcome']));
+      var tb = el('tbody');
+      rows.slice().reverse().slice(0, 200).forEach(function (r) {
+        var tr = el('tr');
+        tr.appendChild(el('td', null, fmtDate(r.d)));
+        if (trend.id === 'allergen') {
+          tr.appendChild(el('td', null, r.area || '–'));
+        } else {
+          tr.appendChild(el('td', null, r.zone));
+          tr.appendChild(el('td', null, r.point));
+          tr.appendChild(el('td', null, r.area));
+          tr.appendChild(el('td', null, r.test));
+          tr.appendChild(el('td', null, r.result));
+        }
+        var outcome = trend.id === 'allergen' ? r.result : r.pf;
+        var td = el('td');
+        var ok = /^pass/i.test(outcome);
+        td.appendChild(el('span', { 'class': 'badge ' + (outcome ? (ok ? 'badge-ok' : 'badge-warn') : 'badge-muted') },
+          outcome || 'Not recorded'));
+        tr.appendChild(td);
+        tb.appendChild(tr);
+      });
+      table.appendChild(tb);
+      panel.hidden = false;
+      return;
+    }
+
+    document.getElementById('detail-title').textContent = 'Readings behind this trend (most recent first)';
+    var cols = ['Date'].concat(trend.series.map(function (s) { return s.label; }));
+    table.appendChild(head(cols));
+    var body = el('tbody');
+    pts.slice().reverse().slice(0, 200).forEach(function (p) {
+      var tr = el('tr');
+      tr.appendChild(el('td', null, trend.chart === 'bar' ? fmtMonth(p.d) : fmtDate(p.d)));
+      trend.series.forEach(function (s) {
+        var v = p.v[s.key];
+        var td = el('td', { 'class': 'num-cell' }, fmtNum(v));
+        if (v != null && trend.spec &&
+            ((trend.spec.max != null && v > trend.spec.max) ||
+             (trend.spec.min != null && v < trend.spec.min))) {
+          td.style.color = '#a3352d';
+          td.style.fontWeight = '700';
+        }
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+    panel.hidden = false;
+  }
+
+  function drawEmpTable() {
+    var table = document.getElementById('emp-table');
+    var rows = (data.emp && data.emp.trend) || [];
+    table.innerHTML = '';
+    if (!rows.length) { table.appendChild(el('caption', { 'class': 'empty' }, 'No zone trend recorded yet.')); return; }
+    table.appendChild(head(['Month', 'Zone', 'Samples', 'Pass', 'Fail', 'Fail %']));
+    var tb = el('tbody');
+    rows.forEach(function (r) {
+      var tr = el('tr');
+      tr.appendChild(el('td', null, r.month));
+      tr.appendChild(el('td', null, r.zone ? 'Zone ' + r.zone : '–'));
+      tr.appendChild(el('td', { 'class': 'num-cell' }, fmtNum(r.total)));
+      tr.appendChild(el('td', { 'class': 'num-cell' }, fmtNum(r.pass)));
+      tr.appendChild(el('td', { 'class': 'num-cell' }, fmtNum(r.fail)));
+      var td = el('td', { 'class': 'num-cell' });
+      td.appendChild(el('span', { 'class': 'badge ' + (r.failPct ? 'badge-warn' : 'badge-ok') },
+        r.failPct == null ? '–' : r.failPct.toFixed(1) + '%'));
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb);
+  }
+
+  function drawEnvTable() {
+    var table = document.getElementById('env-table');
+    table.innerHTML = '';
+    var years = Object.keys(data.env || {}).sort();
+    if (!years.length) { table.appendChild(el('caption', { 'class': 'empty' }, 'No environmental results loaded.')); return; }
+    var year = years[years.length - 1];
+    var items = data.env[year];
+    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    table.appendChild(head(['Test (' + year + ')'].concat(MONTHS)));
+    var tb = el('tbody');
+    items.forEach(function (it) {
+      var tr = el('tr');
+      tr.appendChild(el('td', null, it.test));
+      months.forEach(function (m) {
+        var v = it.months[m];
+        var td = el('td', { 'class': 'num-cell' });
+        if (v == null) { td.textContent = '–'; }
+        else { td.appendChild(el('span', { 'class': 'badge ' + (v >= 1 ? 'badge-ok' : 'badge-warn') }, fmtNum(v))); }
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb);
+  }
+
+  // -------------------------------------------------------------- wiring
+
+  function select(id) {
+    current = data.trends.filter(function (t) { return t.id === id; })[0];
+    if (!current) return;
+    Array.prototype.forEach.call(document.querySelectorAll('.trend-btn'), function (b) {
+      b.setAttribute('aria-pressed', b.dataset.id === id ? 'true' : 'false');
+    });
+    render();
+    try { history.replaceState(null, '', '#' + id); } catch (e) { /* file:// */ }
+  }
+
+  function render() {
+    var pts = visiblePoints(current);
+    document.getElementById('chart-panel').hidden = false;
+    document.getElementById('chart-title').textContent = current.title;
+    drawSummary(current, pts);
+    drawChart(current, pts);
+    drawLegend(current);
+    drawDetail(current, pts);
+  }
+
+  function buildButtons() {
+    var box = document.getElementById('buttons');
+    box.innerHTML = '';
+    var groups = [];
+    data.trends.forEach(function (t) {
+      var g = groups.filter(function (x) { return x.name === t.category; })[0];
+      if (!g) { g = { name: t.category, items: [] }; groups.push(g); }
+      g.items.push(t);
+    });
+    groups.forEach(function (g) {
+      var wrap = el('div', { 'class': 'group' });
+      wrap.appendChild(el('div', { 'class': 'group-label' }, g.name));
+      var row = el('div', { 'class': 'btn-row' });
+      g.items.forEach(function (t) {
+        var b = el('button', { 'class': 'trend-btn', type: 'button', 'aria-pressed': 'false' }, t.title);
+        b.dataset.id = t.id;
+        b.addEventListener('click', function () { select(t.id); });
+        row.appendChild(b);
+      });
+      wrap.appendChild(row);
+      box.appendChild(wrap);
+    });
+
+    var rbox = document.getElementById('ranges');
+    RANGES.forEach(function (r) {
+      var b = el('button', { 'class': 'range-btn', type: 'button',
+        'aria-pressed': r.key === range ? 'true' : 'false' }, r.label);
+      b.addEventListener('click', function () {
+        range = r.key;
+        Array.prototype.forEach.call(rbox.children, function (c) {
+          c.setAttribute('aria-pressed', c === b ? 'true' : 'false');
+        });
+        if (current) render();
+      });
+      rbox.appendChild(b);
+    });
+  }
+
+  function drawSources() {
+    var ul = document.getElementById('sources');
+    ul.innerHTML = '';
+    (data.sources || []).forEach(function (s) {
+      ul.appendChild(el('li', null, s.file + ' — last saved ' + s.modified.replace('T', ' ')));
+    });
+    var ex = data.excluded || {};
+    if (ex.dates || ex.readings) {
+      ul.appendChild(el('li', null,
+        'Left out of the charts as data-capture errors: ' + (ex.dates || 0) +
+        ' date(s) outside 2015–' + (new Date().getFullYear() + 1) + ' and ' +
+        (ex.readings || 0) + ' reading(s) that were broken formula fragments or far outside a possible range.'));
+    }
+    ul.appendChild(el('li', null,
+      'Everything else is plotted exactly as captured, extreme readings included. Treat those as ' +
+      'excursions to check against the source record — nothing here has been corrected or smoothed.'));
+    ul.appendChild(el('li', null,
+      'Refresh this page after the workbooks change by running: python scripts/extract_quality_trends.py'));
+  }
+
+  // cache-busted so a fresh extract shows up without a hard reload
+  fetch('../data/quality-trends.json?t=' + Date.now())
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function (json) {
+      data = json;
+      document.getElementById('stamp').textContent =
+        'Extracted ' + (data.generatedAt || '').replace('T', ' ') + '.';
+      if (!data.trends || !data.trends.length) {
+        document.getElementById('buttons').innerHTML = '<div class="empty">No trends found in the workbooks.</div>';
+        return;
+      }
+      buildButtons();
+      drawEmpTable();
+      drawEnvTable();
+      drawSources();
+      var wanted = (location.hash || '').replace('#', '');
+      select(data.trends.filter(function (t) { return t.id === wanted; }).length ? wanted : data.trends[0].id);
+    })
+    .catch(function (err) {
+      document.getElementById('buttons').innerHTML =
+        '<div class="empty">Could not load quality-trends.json (' + err.message +
+        ').<br>Run <code>python scripts/extract_quality_trends.py</code>, then reload.</div>';
+    });
+})();
+</script>
+</body>
+</html>
