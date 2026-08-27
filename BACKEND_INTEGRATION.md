@@ -115,8 +115,10 @@ assumption:
 Static JS in `public/lib/` is cached hard by browsers. When editing a lib file, bump its `?v=N` on
 **every** `<script src="../lib/....js?v=N">` tag that loads it, or a stale copy silently breaks the
 page — a missing export throws inside an async IIFE with no visible console error. Current
-versions: `data-store.js?v=4`, `traceability.js?v=2`, `api-backend.js?v=1`,
-`lookups.js?v=1` (45 pages).
+versions: `data-store.js?v=5`, `api-backend.js?v=5`, `traceability.js?v=3`,
+`lookups.js?v=1` (45 pages). Check with
+`grep -rho 'data-store.js?v=[0-9]*' public --include=*.html | sort -u` rather than
+trusting this line — it has gone stale before.
 
 ## Status: the seam is filled in and the API is live
 

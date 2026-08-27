@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
+     second origin otherwise costs ~200ms on top of the first data read. -->
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standards Register</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
+    --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #sr-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.45; min-height:100vh; }
+  #sr-root *{ box-sizing:border-box; }
+  h1{ margin:0; font-weight:700; }
+  h2{ font-size:15px; margin:0 0 10px; }
+  .sr-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .btn{ padding:8px 15px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .btn-sm{ padding:5px 10px; font-size:12.5px; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .sr-body{ padding:22px 18px 60px; max-width:1000px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; padding:18px; margin-bottom:14px; }
+  label{ display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#54606b; margin-bottom:5px; }
+  input[type=text],input[type=date],select{ width:100%; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:4px; font-family:var(--sans); background:#fff; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+  .row{ display:flex; gap:8px; align-items:center; margin-top:14px; flex-wrap:wrap; }
+  .muted{ color:#6b7680; font-size:13px; }
+  .mono{ font-family:var(--mono); font-size:12.5px; word-break:break-all; }
+  .note{ background:#fbf0dc; color:#8a5a10; border-radius:4px; padding:10px 12px; font-size:12.5px; }
+  .state{ padding:9px 12px; border-radius:4px; font-size:13px; font-weight:600; margin-bottom:14px; }
+  .state.ok{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .state.bad{ background:var(--palette-fail-bg); color:var(--palette-fail); }
+  .drop{ border:2px dashed var(--line); border-radius:6px; padding:26px 16px; text-align:center; color:#6b7680; cursor:pointer; background:#fcfcfc; }
+  .drop.over{ border-color:var(--accent); background:#f2f7fb; color:var(--ink); }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th,td{ text-align:left; padding:8px 9px; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+  th{ font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:#54606b; }
+  .tag{ display:inline-block; padding:2px 7px; border-radius:3px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+  .tag.current{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .tag.superseded{ background:var(--line-soft); color:#6b7680; }
+  .tag.missing{ background:var(--palette-fail-bg); color:var(--palette-fail); }
+  .shelf{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line-soft); gap:12px; flex-wrap:wrap; }
+  .shelf:last-child{ border-bottom:none; }
+</style>
+</head>
+<body>
+<div id="sr-root">
+  <div class="sr-top">
+    <h1>Standards Register</h1>
+    <a class="btn btn-ghost" href="../index.html">← Home</a>
+  </div>
+
+  <div class="sr-body">
+    <div class="state" id="state">Checking…</div>
+
+    <!-- Coverage: which schemes have a current document registered. This is the view that
+         matters -- an auditor agent can only cite what is registered here. -->
+    <div class="panel">
+      <h2>Coverage</h2>
+      <div id="coverage"></div>
+    </div>
+
+    <!-- Register a document. The FILE ITSELF IS NOT UPLOADED -- see the note. The drop zone
+         reads it locally to capture name, size and a SHA-256 fingerprint, so a finding can
+         later be tied to the exact document version it was based on. -->
+    <div class="panel">
+      <h2>Register a standard</h2>
+      <div class="drop" id="drop">
+        <strong>Drop the PDF here</strong> or click to choose<br>
+        <span class="muted">The file stays on your machine — this records what it is</span>
+        <input type="file" id="file" accept=".pdf,.docx,.doc" hidden>
+      </div>
+      <div id="fileInfo" class="muted" style="margin-top:10px;"></div>
+
+      <div class="grid" style="margin-top:14px;">
+        <div>
+          <label for="scheme">Scheme</label>
+          <select id="scheme">
+            <option value="">—</option>
+            <option value="fssc-22000">FSSC 22000</option>
+            <option value="brcgs-food">BRCGS Food Safety</option>
+            <option value="friend-of-the-sea">Friend of the Sea</option>
+            <option value="nrcs">NRCS / SA legislation</option>
+            <option value="_other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="title">Document title</label>
+          <input type="text" id="title" placeholder="e.g. FSSC 22000 Scheme Version 6">
+        </div>
+        <div>
+          <label for="version">Version / issue</label>
+          <input type="text" id="version" placeholder="e.g. Version 6, Issue 9">
+        </div>
+        <div>
+          <label for="effective">Effective from</label>
+          <input type="date" id="effective">
+        </div>
+        <div>
+          <label for="status">Status</label>
+          <select id="status">
+            <option value="current">Current</option>
+            <option value="superseded">Superseded</option>
+          </select>
+        </div>
+        <div>
+          <label for="source">Source</label>
+          <input type="text" id="source" placeholder="e.g. BRCGS Participate download">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn btn-primary" id="save" disabled>Register</button>
+        <button class="btn btn-flat" id="clear">Clear</button>
+        <span class="muted" id="saveMsg"></span>
+      </div>
+
+      <div class="note" style="margin-top:14px;">
+        <strong>The file is not stored here.</strong> Scheme documents are licensed and large,
+        and this app's storage holds record data, not binaries. After registering, copy the file
+        into the standards library so the auditor agents can read it:
+        <div class="mono" style="margin-top:6px;" id="destPath">…\20. Paperless\STANDARDS\&lt;scheme&gt;\</div>
+      </div>
+    </div>
+
+    <!-- Everything registered, newest first. -->
+    <div class="panel">
+      <h2>Registered documents</h2>
+      <table>
+        <thead>
+          <tr><th>Scheme</th><th>Document</th><th>Version</th><th>Effective</th><th>Status</th><th>Fingerprint</th><th></th></tr>
+        </thead>
+        <tbody id="rows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=5"></script>
+<script>
+(function () {
+  'use strict';
+
+  var KEY_PREFIX = 'standard:';
+  var SCHEMES = [
+    { id: 'fssc-22000',       label: 'FSSC 22000' },
+    { id: 'brcgs-food',       label: 'BRCGS Food Safety' },
+    { id: 'friend-of-the-sea',label: 'Friend of the Sea' },
+    { id: 'nrcs',             label: 'NRCS / SA legislation' }
+  ];
+
+  var el = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  };
+  var pending = null;   // the file the user dropped, not yet registered
+
+  /* A stable id per document so re-registering the same file updates rather than duplicates.
+     Scheme + fingerprint is the natural key: the same PDF in the same shelf is the same entry. */
+  function docId(scheme, hash) { return scheme + '_' + hash.slice(0, 16); }
+
+  /* SHA-256 of the file bytes. This is the point of reading the file at all: it lets a finding
+     say WHICH document it was based on, and catches a silently-replaced file later. */
+  async function fingerprint(file) {
+    var buf = await file.arrayBuffer();
+    var digest = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(digest)).map(function (b) {
+      return b.toString(16).padStart(2, '0');
+    }).join('');
+  }
+
+  function humanSize(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(0) + ' KB';
+    return (n / 1048576).toFixed(1) + ' MB';
+  }
+
+  function setState(cls, text) {
+    var s = el('state');
+    s.className = 'state ' + cls;
+    s.textContent = text;
+  }
+
+  /* ---- reading the register ---------------------------------------------------------------- */
+
+  /* The register as last read, kept in memory so a save can update the view without
+     re-reading. See save() for why re-reading straight after a write is wrong. */
+  var docs = [];
+
+  function sortDocs(list) {
+    return list.sort(function (a, b) { return (b.registeredAt || 0) - (a.registeredAt || 0); });
+  }
+
+  async function loadAll() {
+    var rows = await window.storage.getByPrefix(KEY_PREFIX, true);  // ONE round trip
+    var out = [];
+    Object.keys(rows || {}).forEach(function (k) {
+      var d;
+      try { d = JSON.parse(rows[k]); } catch (e) { return; }  // corrupt entry: skip, don't die
+      // Anything under this prefix that isn't a register entry (a stray key, a half-written
+      // record) would otherwise render as a blank row that looks like a real document.
+      if (!d || !d.id || !d.scheme) return;
+      out.push(d);
+    });
+    return sortDocs(out);
+  }
+
+  function renderCoverage(docs) {
+    el('coverage').innerHTML = SCHEMES.map(function (s) {
+      var current = docs.filter(function (d) { return d.scheme === s.id && d.status === 'current'; });
+      var tag = current.length
+        ? '<span class="tag current">' + esc(current[0].version || 'registered') + '</span>'
+        : '<span class="tag missing">not registered</span>';
+      var detail = current.length
+        ? esc(current[0].title)
+        : 'An auditor agent for this scheme cannot cite anything yet';
+      return '<div class="shelf"><div><strong>' + esc(s.label) + '</strong><br>' +
+             '<span class="muted">' + detail + '</span></div>' + tag + '</div>';
+    }).join('');
+  }
+
+  function renderRows(docs) {
+    if (!docs.length) {
+      el('rows').innerHTML = '<tr><td colspan="7" class="muted">Nothing registered yet.</td></tr>';
+      return;
+    }
+    el('rows').innerHTML = docs.map(function (d) {
+      return '<tr>' +
+        '<td>' + esc(d.scheme) + '</td>' +
+        '<td>' + esc(d.title) + '<br><span class="muted mono">' + esc(d.fileName) + '</span></td>' +
+        '<td>' + esc(d.version) + '</td>' +
+        '<td>' + esc(d.effective || '—') + '</td>' +
+        '<td><span class="tag ' + esc(d.status) + '">' + esc(d.status) + '</span></td>' +
+        '<td class="mono">' + esc((d.sha256 || '').slice(0, 12)) + '…</td>' +
+        '<td><button class="btn btn-flat btn-sm" data-del="' + esc(d.id) + '">Remove</button></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function render() {
+    renderCoverage(docs);
+    renderRows(docs);
+  }
+
+  async function refresh() {
+    docs = await loadAll();
+    render();
+  }
+
+  /* ---- registering ------------------------------------------------------------------------- */
+
+  async function takeFile(file) {
+    if (!file) return;
+    el('fileInfo').textContent = 'Reading…';
+    pending = { name: file.name, size: file.size, sha256: await fingerprint(file) };
+    el('fileInfo').innerHTML = '<strong>' + esc(pending.name) + '</strong> — ' +
+      humanSize(pending.size) + ' · <span class="mono">' + esc(pending.sha256.slice(0, 16)) + '…</span>';
+    // The publisher's filename usually carries the version, so seed the title from it.
+    if (!el('title').value) el('title').value = pending.name.replace(/\.(pdf|docx?|DOCX?|PDF)$/, '');
+    el('save').disabled = false;
+  }
+
+  async function save() {
+    if (!pending) return;
+    var scheme = el('scheme').value;
+    if (!scheme) { el('saveMsg').textContent = 'Choose a scheme first.'; return; }
+
+    var doc = {
+      id: docId(scheme, pending.sha256),
+      scheme: scheme,
+      title: el('title').value.trim() || pending.name,
+      version: el('version').value.trim(),
+      effective: el('effective').value,
+      status: el('status').value,
+      source: el('source').value.trim(),
+      fileName: pending.name,
+      fileSize: pending.size,
+      sha256: pending.sha256,
+      registeredAt: Date.now()
+    };
+
+    el('save').disabled = true;
+    el('saveMsg').textContent = 'Saving…';
+    var ok = await window.storage.set(KEY_PREFIX + doc.id, JSON.stringify(doc), true);
+    // A failed save must say so plainly -- a register that silently lost an entry is worse
+    // than one that never had it, because you would stop checking.
+    el('save').disabled = false;
+    if (ok === false) {
+      el('saveMsg').textContent = 'Could not save — nothing was recorded.';
+      return;
+    }
+    el('saveMsg').textContent = 'Registered.';
+    /* Update from what we just wrote rather than re-reading. A read issued immediately after
+       a write can land before the write is visible on the read path, which made a successful
+       save render as "Nothing registered yet." -- worse than an error, because it says
+       "Registered." at the same time. We know exactly what was stored; use it. */
+    docs = sortDocs(docs.filter(function (d) { return d.id !== doc.id; }).concat([doc]));
+    clearForm();
+    render();
+  }
+
+  function clearForm() {
+    pending = null;
+    el('file').value = '';
+    el('fileInfo').textContent = '';
+    ['title', 'version', 'effective', 'source'].forEach(function (k) { el(k).value = ''; });
+    el('save').disabled = true;
+  }
+
+  /* ---- wiring ------------------------------------------------------------------------------ */
+
+  el('drop').addEventListener('click', function () { el('file').click(); });
+  el('file').addEventListener('change', function (e) { takeFile(e.target.files[0]); });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    el('drop').addEventListener(ev, function (e) { e.preventDefault(); el('drop').classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    el('drop').addEventListener(ev, function (e) { e.preventDefault(); el('drop').classList.remove('over'); });
+  });
+  el('drop').addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files.length) takeFile(e.dataTransfer.files[0]);
+  });
+
+  el('scheme').addEventListener('change', function () {
+    el('destPath').textContent = '…\\20. Paperless\\STANDARDS\\' + (el('scheme').value || '<scheme>') + '\\';
+  });
+  el('save').addEventListener('click', save);
+  el('clear').addEventListener('click', clearForm);
+
+  el('rows').addEventListener('click', async function (e) {
+    var id = e.target.getAttribute('data-del');
+    if (!id) return;
+    if (!confirm('Remove this document from the register?\n\nThe file itself is not touched.')) return;
+    await window.storage.remove(KEY_PREFIX + id, true);
+    docs = docs.filter(function (d) { return d.id !== id; });   // same reason as save()
+    render();
+  });
+
+  /* Let api-backend.js register first, so a facility-wide view isn't rendered off this
+     device's localStorage and then silently replaced a moment later. */
+  window.addEventListener('load', async function () {
+    try {
+      await refresh();
+      setState('ok', 'Register loaded.');
+    } catch (e) {
+      console.error('standards register failed to load', e);
+      setState('bad', 'Could not load the register.');
+    }
+  });
+})();
+</script>
+</body>
+</html>
