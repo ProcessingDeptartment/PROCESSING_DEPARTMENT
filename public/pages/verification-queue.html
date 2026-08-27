@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
+     second origin otherwise costs ~200ms on top of the first data read. -->
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verification Queue</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
+    --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #vq-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.45; min-height:100vh; }
+  #vq-root *{ box-sizing:border-box; }
+  h1{ margin:0; font-weight:700; }
+  h2{ font-size:15px; margin:0 0 10px; }
+  .vq-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .btn{ padding:8px 15px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .vq-body{ padding:22px 18px 60px; max-width:900px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; padding:18px; margin-bottom:14px; }
+  .state{ padding:9px 12px; border-radius:4px; font-size:13px; font-weight:600; margin-bottom:14px; }
+  .state.ok{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .state.bad{ background:var(--palette-fail-bg); color:var(--palette-fail); }
+  .muted{ color:#6b7680; font-size:13px; }
+  .note{ background:#fbf0dc; color:#8a5a10; border-radius:4px; padding:10px 12px; font-size:12.5px; }
+  .who{ display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; margin-bottom:4px; }
+  .who strong{ font-size:19px; }
+  .big{ font-size:34px; font-weight:700; line-height:1; }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th,td{ text-align:left; padding:9px; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+  th{ font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:#54606b; }
+  td.num{ text-align:right; font-variant-numeric:tabular-nums; font-weight:700; }
+  .age{ font-size:12px; }
+  .age.old{ color:var(--palette-fail); font-weight:700; }
+  a.rec{ color:var(--accent); text-decoration:none; font-weight:600; }
+  a.rec:hover{ text-decoration:underline; }
+</style>
+</head>
+<body>
+<div id="vq-root">
+  <div class="vq-top">
+    <h1>Verification Queue</h1>
+    <a class="btn btn-ghost" href="../index.html">← Home</a>
+  </div>
+
+  <div class="vq-body">
+    <div class="state" id="state">Checking…</div>
+
+    <div class="panel" id="summary" style="display:none;">
+      <div class="who">
+        <strong id="who">—</strong>
+        <span class="muted" id="roleLabel"></span>
+      </div>
+      <div class="big" id="total">0</div>
+      <div class="muted">submitted entries awaiting your verification</div>
+    </div>
+
+    <div class="panel" id="listPanel" style="display:none;">
+      <h2>By record — oldest waiting first</h2>
+      <table>
+        <thead><tr><th>Record</th><th>Doc no.</th><th style="text-align:right;">Waiting</th><th>Oldest</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="panel" id="emptyPanel" style="display:none;">
+      <h2>Nothing waiting</h2>
+      <p class="muted" id="emptyMsg">There are no submitted entries awaiting verification for your role.</p>
+    </div>
+
+    <div class="note">
+      <strong>This is a work queue, not an access control.</strong> Logins are eight
+      in-memory users — one per role, all sharing a password — and role rules are not
+      enforced. The queue therefore shows what <em>this role</em> should verify; it cannot
+      tell two people holding the same role apart. The signed verification on the record
+      remains the evidence, not this list.
+    </div>
+  </div>
+</div>
+
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/verification-queue.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+
+  var el = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  };
+
+  function setState(cls, text) {
+    var s = el('state');
+    s.className = 'state ' + cls;
+    s.innerHTML = text;
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    var d = new Date(ts);
+    if (isNaN(d.getTime())) return '—';
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function daysAgo(ts) {
+    if (!ts) return null;
+    return Math.floor((Date.now() - ts) / 86400000);
+  }
+
+  function render(q) {
+    var user = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
+    el('who').textContent = user || 'Not signed in';
+    el('roleLabel').textContent = q.role ? '(' + q.role.replace(/_/g, ' ').toLowerCase() + ')' : '';
+    el('total').textContent = q.total;
+    el('summary').style.display = '';
+
+    if (!q.total) {
+      el('emptyPanel').style.display = '';
+      el('listPanel').style.display = 'none';
+      // A role that never verifies anything is a different situation from a role with an
+      // empty queue -- saying "nothing waiting" to someone who will never see anything
+      // would just be misleading.
+      el('emptyMsg').textContent = q.canVerify
+        ? 'There are no submitted entries awaiting verification for your role.'
+        : 'Your role does not carry verification duties, so nothing will appear here.';
+      return;
+    }
+
+    el('emptyPanel').style.display = 'none';
+    el('listPanel').style.display = '';
+    el('rows').innerHTML = q.records.map(function (r) {
+      var d = daysAgo(r.oldest);
+      var ageCls = (d != null && d >= 7) ? 'age old' : 'age';
+      var age = d == null ? '—' : fmtDate(r.oldest) + ' (' + d + 'd)';
+      var label = esc(r.name);
+      return '<tr>' +
+        '<td>' + (r.href ? '<a class="rec" href="' + esc(r.href) + '">' + label + '</a>' : label) + '</td>' +
+        '<td class="muted">' + esc(r.docNo || '—') + '</td>' +
+        '<td class="num">' + r.count + '</td>' +
+        '<td class="' + ageCls + '">' + age + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  window.addEventListener('load', async function () {
+    // The login modal IS the "user logs in" moment -- auth.js keeps the session in memory
+    // only, so every page load asks again.
+    if (window.LoginUI && window.LoginUI.ensureAuthenticated) {
+      try { await window.LoginUI.ensureAuthenticated(); } catch (e) { /* modal handles its own errors */ }
+    }
+    if (!window.Auth || !window.Auth.isAuthenticated()) {
+      setState('bad', 'Sign in to see what is waiting for your verification.');
+      return;
+    }
+    try {
+      var q = await window.VerificationQueue.forCurrentUser();
+      render(q);
+      setState('ok', 'Queue loaded.');
+    } catch (e) {
+      console.error('verification queue failed', e);
+      setState('bad', 'Could not load the queue. If this device has no access key, ' +
+        'an empty queue does not mean there is nothing waiting — ' +
+        'set one on <a href="api-key.html">the API key page</a>.');
+    }
+  });
+})();
+</script>
+</body>
+</html>
