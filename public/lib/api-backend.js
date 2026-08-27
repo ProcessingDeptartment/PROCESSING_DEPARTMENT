@@ -188,6 +188,7 @@
           ok = res.ok;
         } catch (e) { ok = false; }
         if (!ok) break;
+        invalidate(key);
         // Re-read: a newer save for this key may have landed while the request was in flight.
         const latest = loadQueue();
         if (latest[key] && latest[key].ts === item.ts) { delete latest[key]; saveQueue(latest); }
@@ -204,23 +205,70 @@
     document.addEventListener('DOMContentLoaded', updateQueueBadge);
   }
 
+  /* ---- read coalescing ------------------------------------------------------------------------
+   * Page load was making the same request over and over, in series. Opening one SOP page fired
+   * eight calls back-to-back, five of them the identical `document_revision:<doc>` key, for about
+   * 2.9s of round trips against a warm API -- the header block, the revision footer and the
+   * sign-off block each fetch the revision independently, and none of them knows about the others.
+   *
+   * Rather than thread a shared read through every caller (they live across doc-header.js,
+   * sop-doc.js, signoff-block.js and the record engines), collapse it here:
+   *
+   *   - IN FLIGHT: concurrent reads of one key share a single request.
+   *   - JUST FETCHED: a read repeated within TTL_MS reuses the answer instead of re-asking.
+   *
+   * TTL is deliberately short. It exists to fold together the burst a single page load produces,
+   * not to cache facility data -- a record saved on another tablet must still show up promptly.
+   * Any write from THIS page drops the key immediately (see apiSet/apiRemove), so a save followed
+   * by a re-read never serves the pre-save value. The queue overlay below still runs first, so a
+   * pending offline write continues to win over both the cache and the API. */
+  const TTL_MS = 2000;
+  const inFlight = new Map();   // key -> Promise, cleared when the request settles
+  const recent = new Map();     // key -> { at, value }
+
+  function invalidate(key) {
+    recent.delete(key);
+    inFlight.delete(key);
+  }
+
   async function apiGet(key) {
     // A queued write is the newest state of this key -- serve it rather than the API's older copy.
     const q = loadQueue();
     if (q[key]) return q[key].op === 'remove' ? null : { value: q[key].value };
+
+    const hit = recent.get(key);
+    if (hit && Date.now() - hit.at < TTL_MS) return hit.value;
+
+    const pending = inFlight.get(key);
+    if (pending) return pending;
+
+    const p = (async function () {
+      try {
+        const res = await apiFetch('/api/storage/key/' + encodeURIComponent(key));
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        console.error('storage get failed (api)', e);
+        return null;
+      }
+    })();
+
+    inFlight.set(key, p);
     try {
-      const res = await apiFetch('/api/storage/key/' + encodeURIComponent(key));
-      if (!res.ok) return null;
-      return await res.json();
-    } catch (e) {
-      console.error('storage get failed (api)', e);
-      return null;
+      const value = await p;
+      recent.set(key, { at: Date.now(), value: value });
+      return value;
+    } finally {
+      inFlight.delete(key);
     }
   }
 
   // Returns true once the write is durable -- either accepted by the API, or safely in the outbox.
   // Only a queue that can't even be persisted counts as a real failure the caller must surface.
   async function apiSet(key, value) {
+    // Drop any coalesced read of this key up front, so nothing can serve the pre-save value --
+    // including a request already in flight, which would land after this write.
+    invalidate(key);
     let res = null;
     try {
       res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), {
@@ -241,6 +289,7 @@
   }
 
   async function apiRemove(key) {
+    invalidate(key);
     let res = null;
     try {
       res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), { method: 'DELETE' });

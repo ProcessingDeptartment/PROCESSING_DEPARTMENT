@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- The records API is a separate origin on Render's free tier: it sleeps after ~15 min idle and
+     takes 20-30s to wake. This page does not read from it, but almost every page linked below
+     does, so warm the connection here -- by the time a record is opened the API is already up. -->
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Processing Department</title>
@@ -53,8 +58,8 @@
 
 <div class="brand-bar">
   <div class="brand-inner">
-    <img class="brand-logo" src="assets/abagold-logo.png" alt="Abagold">
-    <img class="brand-mark" src="assets/ingot.png" alt="">
+    <img class="brand-logo" src="assets/abagold-logo.png" alt="Abagold" width="1608" height="200" decoding="async">
+    <img class="brand-mark" src="assets/ingot.png" alt="" width="413" height="200" decoding="async">
   </div>
 </div>
 
@@ -138,6 +143,20 @@
   </table>
 
 </div>
+
+<script>
+  /* Wake the records API while the user is still choosing where to go.
+   *
+   * The API sleeps after ~15 minutes idle on Render's free tier, so the first record page opened
+   * after a quiet spell used to sit there for 20-30s waiting on it. Firing a health check from the
+   * landing page moves that wait into the time someone spends reading this menu. Deliberately
+   * fire-and-forget: nothing on this page needs the answer, and a failure must not surface here.
+   * The scheduled ping in .github/workflows/keep-api-warm.yml normally means it is already awake. */
+  try {
+    fetch('https://processing-department-api.onrender.com/api/health',
+          { mode: 'cors', cache: 'no-store', keepalive: true }).catch(function () {});
+  } catch (e) { /* ignore -- purely an optimisation */ }
+</script>
 
 <script src="lib/auth.js?v=1"></script>
 <script src="lib/login-ui.js?v=1"></script>

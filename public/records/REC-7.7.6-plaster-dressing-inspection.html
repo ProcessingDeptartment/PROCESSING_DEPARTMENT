@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
+     second origin otherwise costs ~200ms on top of the first data read. -->
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.7.6 Plaster Issuing / Dressing Inspection</title>
