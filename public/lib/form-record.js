@@ -701,6 +701,64 @@
       </div>`;
     }
 
+    // RFC4180-ish parse: honours quoted cells, embedded commas/newlines and "" escapes,
+    // and tolerates both CRLF and LF files (Excel "Save as CSV" writes CRLF).
+    function parseCsvText(text) {
+      const rows = [];
+      let row = [], cell = '', inQuotes = false;
+      text = text.replace(/^\uFEFF/, '');
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+          else if (c === '"') inQuotes = false;
+          else cell += c;
+        } else if (c === '"') inQuotes = true;
+        else if (c === ',') { row.push(cell); cell = ''; }
+        else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+        else if (c !== '\r') cell += c;
+      }
+      row.push(cell);
+      rows.push(row);
+      return rows.filter(r => r.some(v => String(v).trim() !== ''));
+    }
+
+    // Maps CSV columns onto roster columns by header text -- matching either the column
+    // label ("Whole weight (kg)") or its key ("wholeWeight"), case- and space-insensitive.
+    // A file with no recognisable header falls back to positional order, so a plain
+    // basket-nr/weight export still imports.
+    function importRosterCsv(text, rosterContainer) {
+      const cells = parseCsvText(text);
+      if (!cells.length) { alert('That CSV is empty.'); return; }
+      const norm = s => String(s == null ? '' : s).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cols = config.roster.columns;
+      const header = cells[0].map(norm);
+      const mapping = header.map(h => {
+        const col = cols.find(c => norm(c.key) === h || norm(c.label) === h);
+        return col ? col.key : null;
+      });
+      const hasHeader = mapping.some(Boolean);
+      const body = hasHeader ? cells.slice(1) : cells;
+      const imported = [];
+      body.forEach(r => {
+        // Skip a trailing totals line, which the CSV export writes as a labelled row.
+        if (r.some(v => norm(v) === 'total' || norm(v) === 'totals')) return;
+        const row = {};
+        let any = false;
+        r.forEach((v, i) => {
+          const key = hasHeader ? mapping[i] : (cols[i] ? cols[i].key : null);
+          if (!key) return;
+          const val = String(v).trim();
+          row[key] = val;
+          if (val !== '') any = true;
+        });
+        if (any) imported.push(row);
+      });
+      if (!imported.length) { alert('No usable rows found in that CSV.'); return; }
+      rosterContainer._importRows(imported);
+      alert('Imported ' + imported.length + ' row' + (imported.length === 1 ? '' : 's') + '.');
+    }
+
     function renderRosterEditor(existingRows) {
       const container = el('fr_rosterRows');
       let rows = (existingRows || []).slice();
@@ -764,6 +822,20 @@
         });
         return rows;
       };
+      // Appends imported rows after syncing on-screen values, dropping the single blank
+      // starter row so an import into a fresh form doesn't leave an empty line at the top.
+      container._importRows = (newRows) => {
+        rows = rows.map((_, i) => {
+          const row = {};
+          config.roster.columns.forEach(c => {
+            const inp = el(`fr_roster_${i}_${c.key}`);
+            row[c.key] = inp ? inp.value : '';
+          });
+          return row;
+        }).filter(r => config.roster.columns.some(c => String(r[c.key] || '').trim() !== ''));
+        rows = rows.concat(newRows);
+        draw();
+      };
       container._addRow = () => {
         // sync existing inputs into `rows` before appending a blank one
         rows = rows.map((_, i) => {
@@ -802,6 +874,8 @@
         <div class="fr-section-title">${esc(config.roster.title)}</div>
         <div id="fr_rosterRows"></div>
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="fr_addRosterRowBtn">+ Add row</button>
+        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="fr_importCsvBtn">Import CSV</button>
+        <input type="file" id="fr_csvFile" accept=".csv,text/csv" style="display:none;">
         ${config.roster.totalsRow ? `<div id="fr_rosterTotals" class="fr-roster-totals"></div>` : ''}`;
       }
       // Show fields from old submissions that no longer exist in the current template
@@ -818,6 +892,16 @@
       if (hasRoster) {
         renderRosterEditor(existing ? existing.roster : null);
         el('fr_addRosterRowBtn').addEventListener('click', () => container.querySelector('#fr_rosterRows')._addRow());
+        el('fr_importCsvBtn').addEventListener('click', () => el('fr_csvFile').click());
+        el('fr_csvFile').addEventListener('change', function () {
+          const file = this.files && this.files[0];
+          this.value = '';
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => importRosterCsv(String(reader.result), container.querySelector('#fr_rosterRows'));
+          reader.onerror = () => alert('Could not read that file.');
+          reader.readAsText(file);
+        });
       }
       // Wire Yes/No button groups, job-number widgets, and cross-record autofill in the modal
       if (typeof wireYesNo === 'function') wireYesNo(container);
