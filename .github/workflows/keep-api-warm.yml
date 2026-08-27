@@ -9,11 +9,21 @@
 #
 # Note: GitHub's scheduler is best-effort and can run late under load, so the schedule is a bit
 # tighter than the 15-minute window to absorb a skipped tick.
+#
+# WHY NOT AROUND THE CLOCK: Render's free tier also caps monthly instance-hours, and a service
+# that never sleeps burns them overnight for nobody's benefit. So this runs on weekday working
+# hours only and lets the API sleep the rest of the time.
+#
+# CRON IS UTC; the factory is SAST (UTC+2). Hours 3-16 UTC = 05:00-18:50 SAST, Mon-Fri. It starts
+# an hour before a 06:00 shift deliberately -- warming up exactly at 06:00 would leave the first
+# person of the day to absorb the cold start, which is the whole thing this is meant to prevent.
+#
+# If Saturday shifts are running, change the day field 1-5 to 1-6.
 name: Keep API warm
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/10 3-16 * * 1-5'
   workflow_dispatch:
 
 # Never let two pings overlap if one runs long.
