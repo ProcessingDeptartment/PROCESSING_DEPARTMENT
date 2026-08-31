@@ -97,6 +97,20 @@
   .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
     font-weight:700; border-bottom:1px solid var(--palette-border,#e2e4e3); padding-bottom:4px; margin:12px 0 2px; }
   .ml-grouphead:first-child{ margin-top:0; }
+  .ml-continue{ border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; padding:10px; margin-bottom:12px;
+    background:var(--palette-paper,#f4f5f3); display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+  .ml-continue{ display:block; }
+  .ml-continue-title{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;
+    color:var(--palette-heading,#2f4356); margin-bottom:8px; }
+  .ml-continue-row{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+  .ml-continue-row label.ml-field{ flex:1 1 190px; min-width:150px; }
+  .ml-continue .ml-muted{ font-size:11.5px; margin-top:8px; }
+  @media (max-width:600px){ .ml-continue-row label.ml-field{ flex:1 1 100%; } .ml-continue-row .ml-btn{ width:100%; } }
+  .ml-stagehead{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .ml-stage-state{ font-weight:600; text-transform:none; letter-spacing:0; font-size:11px; display:inline-flex; align-items:center; gap:6px; }
+  .ml-stage-open{ color:var(--palette-ok,#2e6b45); }
+  .ml-app label.ml-field input:disabled,.ml-app label.ml-field select:disabled,.ml-app label.ml-field textarea:disabled{
+    background:var(--palette-paper,#f4f5f3); color:var(--palette-ink,#1b2330); opacity:1; cursor:not-allowed; }
   .ml-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
   .ml-notice.show{ display:block; }
   .ml-notice-due{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); border:1px solid #e8b8b3; }
@@ -466,7 +480,41 @@
 
   // ---- one controller per log (primary + optional secondary share this factory) ----
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey, autofill } = opts;
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey, autofill } = opts
+    // Staged entries: one row that is filled in over several separate visits, each visit
+    // submitted and locked on its own. Opt-in -- a record without `entryStages` behaves
+    // exactly as before, which is every other record in the system.
+    const entryStages = opts.entryStages && opts.entryStages.length ? opts.entryStages : null;
+    // Narrowing search for getting back into a batch: job no., then AG code, then description.
+    // A job can have several batches in the incubator at once, so one level is never enough.
+    const continueChain = (entryStages && opts.continueChain && opts.continueChain.length)
+      ? opts.continueChain : null;
+    // Set while the chain itself is opening an entry, so openForm doesn't wipe the very
+    // selection the operator just made.
+    let chainDriving = false;
+    const chainValue = (entryRow, level) => level.keys
+      .map(k => String(entryRow.values[k] == null ? '' : entryRow.values[k]).trim())
+      .filter(Boolean).join(' · ');
+    // Stages the operator has unlocked (reason + name given) during THIS open of the form.
+    // Deliberately not persisted: closing the form re-locks everything.
+    let unlockedStages = new Set();
+    let keepUnlocked = false;
+    // Attribution for an unlock, held until the correction is actually saved.
+    let pendingStageEdits = [];
+
+    function stagesOf(entryRow) { return (entryRow && entryRow.stages) || {}; }
+    function stageDone(entryRow, key) { return !!stagesOf(entryRow)[key]; }
+    // The stage the operator is here to fill in: the first one not yet submitted.
+    function activeStageKey(entryRow) {
+      if (!entryStages) return null;
+      const done = stagesOf(entryRow);
+      const next = entryStages.find((st) => !done[st.key]);
+      return next ? next.key : null;
+    }
+    function stageIsEditable(entryRow, key) {
+      if (!entryStages) return true;
+      return !stageDone(entryRow, key) || unlockedStages.has(key);
+    }
     let entries = [];
     let editingId = null;
 
@@ -476,6 +524,10 @@
      * every one of them out of the verifier's pick list. They lock like any other
      * submitted entry -- a correction is a new entry, not a silent edit. */
     function isSubmitted(entryRow) {
+      // A staged entry is only finished -- and only locked outright -- once every stage has
+      // been submitted. Until then it is still open for the next visit, even though the
+      // stages already done are individually locked.
+      if (entryStages) return submitFlow && entryStages.every((st) => stageDone(entryRow, st.key));
       return submitFlow && (entryRow.status == null || entryRow.status === 'submitted');
     }
 
@@ -551,7 +603,73 @@
       }).sort((a, b) => (b.values.date || '').localeCompare(a.values.date || '') || b.createdAt - a.createdAt);
     }
 
+    // Each level offers only the values still reachable given the levels above it, so the
+    // operator narrows job -> AG code -> description until exactly one batch is left.
+    function openBatches() {
+      return entries.filter(e => !isSubmitted(e) && continueChain.every(lv => chainValue(e, lv) !== ''));
+    }
+    function chainSelections() {
+      return continueChain.map((lv, i) => {
+        const sel = el(`${ns}_continue${i}`);
+        return sel ? sel.value : '';
+      });
+    }
+    function chainMatches(sels) {
+      return openBatches().filter(e => continueChain.every((lv, i) =>
+        !sels[i] || chainValue(e, lv) === sels[i]));
+    }
+    function renderContinuePicker() {
+      if (!continueChain) return;
+      const sels = chainSelections();
+      continueChain.forEach((lv, i) => {
+        const sel = el(`${ns}_continue${i}`);
+        if (!sel) return;
+        // Options at this level are constrained by everything chosen above it only.
+        const pool = openBatches().filter(e => continueChain.every((lv2, j) =>
+          j >= i || !sels[j] || chainValue(e, lv2) === sels[j]));
+        const vals = [];
+        pool.forEach(e => { const v = chainValue(e, lv); if (v && vals.indexOf(v) === -1) vals.push(v); });
+        vals.sort();
+        const keep = vals.indexOf(sels[i]) !== -1 ? sels[i] : '';
+        sel.innerHTML = '<option value="">— any —</option>' +
+          vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+        sel.value = keep;
+        sels[i] = keep;
+      });
+      const hint = el(`${ns}_continueHint`);
+      if (!hint) return;
+      const open = openBatches();
+      const matches = chainMatches(sels);
+      if (!open.length) { hint.textContent = 'No batches part-way through — fill in section 1 below to start one.'; return; }
+      if (matches.length === 1 && sels.some(Boolean)) {
+        const next = entryStages.find(st => !stageDone(matches[0], st.key));
+        hint.textContent = `Showing this batch — next section to fill in: ${next ? next.label : 'none'}.`;
+      } else {
+        hint.textContent = `${open.length} batch${open.length === 1 ? '' : 'es'} part-way through, ${matches.length} matching. Narrow it down to one, or press "Start a new entry".`;
+      }
+    }
+    // Called whenever any level changes: rebuild the levels below it, then open the batch if
+    // the search has narrowed to exactly one.
+    function continueChainChanged() {
+      const sels = chainSelections();
+      renderContinuePicker();
+      const matches = chainMatches(chainSelections());
+      chainDriving = true;
+      try {
+        if (matches.length === 1 && sels.some(Boolean)) openForm(matches[0].id);
+        else openForm(null);
+      } finally { chainDriving = false; }
+      renderContinuePicker();
+    }
+    function resetContinueChain() {
+      if (!continueChain) return;
+      continueChain.forEach((lv, i) => { const sel = el(`${ns}_continue${i}`); if (sel) sel.value = ''; });
+      renderContinuePicker();
+      openForm(null);
+    }
+
     function renderTable() {
+      renderContinuePicker();
       const list = filteredEntries();
       const table = tableWrap;
       if (!list.length) {
@@ -615,8 +733,77 @@
       });
     }
 
+    // A stage heading carries its own state: submitted stages show when they were done and
+    // offer an Edit button, which is the only way back into them (and costs a reason + name).
+    function stageHeadHtml(field, existing, activeKey) {
+      const plain = `<div class="ml-grouphead">${esc(field.group)}</div>`;
+      if (!entryStages || !field.stage) return plain;
+      const st = entryStages.find((x) => x.key === field.stage);
+      if (!st) return plain;
+      const done = stagesOf(existing)[field.stage];
+      let state = '';
+      if (done) {
+        const when = done.at ? new Date(done.at).toLocaleDateString() : '';
+        state = unlockedStages.has(field.stage)
+          ? `<span class="ml-stage-state ml-stage-open">Unlocked for editing</span>`
+          : `<span class="ml-stage-state">✓ Submitted ${esc(when)}` +
+            (isSubmitted(existing) ? '' : ` <button type="button" class="ml-btn ml-btn-flat ml-btn-sm" data-unlock="${esc(field.stage)}">Edit</button>`) +
+            `</span>`;
+      } else if (field.stage === activeKey) {
+        state = `<span class="ml-stage-state ml-stage-open">Fill in now</span>`;
+      } else {
+        state = `<span class="ml-stage-state ml-muted">Later</span>`;
+      }
+      return `<div class="ml-grouphead ml-stagehead"><span>${esc(field.group)}</span>${state}</div>`;
+    }
+
+    // Disables every field belonging to a stage that is submitted and not unlocked, and to a
+    // stage whose turn has not come yet -- so the form only ever offers the one visit's work.
+    function applyStageLocks(container, existing) {
+      if (!entryStages) return;
+      const activeKey = activeStageKey(existing);
+      entryFields.forEach((f) => {
+        if (!f.stage) return;
+        const inp = container.querySelector('#' + ns + '_f_' + f.key);
+        if (!inp) return;
+        const editable = stageIsEditable(existing, f.stage)
+          && (f.stage === activeKey || unlockedStages.has(f.stage));
+        inp.disabled = !editable;
+        const grp = container.querySelector(`[data-yesno-for="${ns}_f_${f.key}"]`);
+        if (grp) grp.querySelectorAll('button').forEach((b) => { b.disabled = !editable; });
+      });
+      container.querySelectorAll('[data-unlock]').forEach((btn) => {
+        btn.addEventListener('click', () => promptUnlock(btn.dataset.unlock, existing));
+      });
+    }
+
+    // Editing something already submitted is a deliberate act that has to be attributable --
+    // same reason/name attribution the thresholds editor asks for.
+    function promptUnlock(stageKey, existing) {
+      const st = entryStages.find((x) => x.key === stageKey);
+      const reason = window.prompt(`Reason for changing "${st ? st.label : stageKey}" after it was submitted:`);
+      if (reason == null) return;
+      if (!reason.trim()) { toast('A reason is required to edit a submitted section.'); return; }
+      const who = window.prompt('Your name:');
+      if (who == null) return;
+      if (!who.trim()) { toast('Your name is required to edit a submitted section.'); return; }
+      pendingStageEdits.push({ stage: stageKey, reason: reason.trim(), by: who.trim(), at: Date.now() });
+      unlockedStages.add(stageKey);
+      keepUnlocked = true;
+      openForm(existing.id);
+      toast('Section unlocked — the change will be recorded against your name.');
+    }
+
     function openForm(id) {
+      // Any fresh open of the form re-locks everything; only the re-render fired by
+      // promptUnlock itself carries the unlocked stages over.
+      if (keepUnlocked) keepUnlocked = false; else unlockedStages = new Set();
       editingId = id || null;
+      // Keep the picker honest about what the form is actually showing -- a blank form after
+      // Clear must not still read as the batch that was open a moment ago.
+      if (continueChain && !chainDriving && !id) {
+        continueChain.forEach((lv, i) => { const sel = el(`${ns}_continue${i}`); if (sel) sel.value = ''; });
+      }
       const existing = id ? entries.find(e => e.id === id) : null;
       const locked = existing ? isSubmitted(existing) : false;
       el(modalIds.title).textContent = !id ? 'New entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
@@ -624,9 +811,10 @@
       // Fields carrying a `group` get a heading when the group changes, so near-identical
       // start-up and shut-down questions read as distinct steps rather than duplicates.
       let lastGroup = null;
+      const activeKey = entryStages ? activeStageKey(existing) : null;
       container.innerHTML = entryFields.map(f => {
         let head = '';
-        if (f.group && f.group !== lastGroup) { head = `<div class="ml-grouphead">${esc(f.group)}</div>`; lastGroup = f.group; }
+        if (f.group && f.group !== lastGroup) { head = stageHeadHtml(f, existing, activeKey); lastGroup = f.group; }
         return head + `
         <label class="ml-field">${fieldLabel(f)}
           ${fieldInputHtml(ns, f, existing ? existing.values[f.key] : (f.default || ''))}
@@ -640,17 +828,43 @@
         existing.provisionalFields.forEach((k) => markProvisional(container.querySelector('#' + ns + '_f_' + k), true));
         renderProvisionalNotice(container, ns);
       }
+      // `autoToday` fields stamp themselves with today's date whenever they are opened empty.
+      // This has to run on reopen too, not just on a new entry: the micro and clearance dates
+      // belong to the visit that fills them in, which is days after the entry was created.
+      entryFields.forEach(f => {
+        if (!f.autoToday) return;
+        // Only the stage being worked on gets stamped. Stamping a later stage would save
+        // today's date against a check that has not happened yet, and it would still be
+        // sitting there, wrong, when that stage is finally filled in weeks later.
+        if (entryStages && f.stage && f.stage !== activeKey && !unlockedStages.has(f.stage)) return;
+        const inp = el(`${ns}_f_${f.key}`);
+        if (!inp || inp.value) return;
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        inp.value = f.type === 'datetime' ? `${day}T${pad(now.getHours())}:${pad(now.getMinutes())}` : day;
+      });
       container.querySelectorAll('input,select,textarea').forEach(inp => {
         inp.addEventListener('input', recalcComputedInModal);
         inp.addEventListener('change', recalcComputedInModal);
       });
       recalcComputedInModal();
+      if (entryStages) {
+        const fixing = unlockedStages.size ? Array.from(unlockedStages)[0] : null;
+        const st = entryStages.find((x) => x.key === (fixing || activeKey));
+        const submitBtn = el(`${ns}_submitBtn`);
+        if (submitBtn) submitBtn.textContent = !st ? 'Submit'
+          : (fixing ? `Save correction — ${st.label}` : `Submit — ${st.label}`);
+      }
       if (submitFlow) {
         container.querySelectorAll('input,select,textarea,.ml-yesno button').forEach(inp => { inp.disabled = locked; });
         const saveBtn = el(`${ns}_saveBtn`), submitBtn = el(`${ns}_submitBtn`);
         if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
         if (submitBtn) submitBtn.style.display = locked ? 'none' : '';
       }
+      // Must come after the submitFlow block above, which resets `disabled` on every input
+      // in the form and would otherwise undo the per-stage locks.
+      applyStageLocks(container, existing);
       if (!inline) el(modalIds.overlay).style.display = 'flex';
     }
     // Inline mode has no overlay to hide -- "Cancel" instead resets the always-visible
@@ -668,10 +882,22 @@
       const raw = {};
       let missingRequired = null;
       let badPattern = null;
+      // On a staged record only the stage being worked on is checked. The later stages are
+      // required too, but not yet -- holding this visit to them would make the record
+      // impossible to fill in at all.
+      const existingForStage = editingId ? entries.find(e => e.id === editingId) : null;
+      // Correcting an already-submitted section is not the same act as moving the entry on to
+      // its next section: it re-saves the section that was unlocked and leaves the entry's
+      // progress exactly where it was.
+      const correctingStage = (entryStages && unlockedStages.size) ? Array.from(unlockedStages)[0] : null;
+      const savingStage = entryStages ? (correctingStage || activeStageKey(existingForStage)) : null;
+      const stageInPlay = (f) => !entryStages || !f.stage
+        || (correctingStage ? unlockedStages.has(f.stage) : f.stage === savingStage);
       entryFields.forEach(f => {
         if (f.type === 'computed') return;
         const inp = el(`${ns}_f_${f.key}`);
         raw[f.key] = inp ? inp.value : '';
+        if (!stageInPlay(f)) return;
         if (f.required && !String(raw[f.key] || '').trim()) missingRequired = f.label;
         // An empty value is left to the required check above -- only a value that was
         // actually typed is held to the field's pattern.
@@ -687,7 +913,20 @@
       const values = computeAll(raw);
       const inSpec = evaluateEntry(values);
 
-      const status = submitFlow ? (finalize ? 'submitted' : 'draft') : undefined;
+      // Submitting on a staged record closes THIS stage, not the whole entry. The entry only
+      // becomes 'submitted' -- and so read-only, and eligible for verification -- once the
+      // last stage is in.
+      let stageMap = null;
+      if (entryStages && finalize && savingStage && !correctingStage) {
+        stageMap = Object.assign({}, stagesOf(existingForStage));
+        stageMap[savingStage] = { at: Date.now() };
+      }
+      const allStagesDone = entryStages
+        ? entryStages.every((st) => (stageMap || stagesOf(existingForStage))[st.key])
+        : true;
+      const status = submitFlow
+        ? ((finalize && allStagesDone) ? 'submitted' : 'draft')
+        : undefined;
       let savedEntry;
       if (editingId) {
         const existing = entries.find(e => e.id === editingId);
@@ -697,6 +936,11 @@
         existing.values = values;
         existing.inSpec = inSpec;
         existing.updatedAt = Date.now();
+        if (stageMap) existing.stages = stageMap;
+        if (pendingStageEdits.length) {
+          existing.stageEdits = (existing.stageEdits || []).concat(pendingStageEdits);
+          pendingStageEdits = [];
+        }
         if (submitFlow) { existing.status = status; if (finalize) existing.submittedAt = Date.now(); }
         savedEntry = existing;
       } else {
@@ -705,6 +949,7 @@
           values,
           inSpec,
           status,
+          stages: stageMap || undefined,
           submittedAt: finalize ? Date.now() : undefined,
           source: 'manual', // future device/AI feeds set 'device' + a deviceId here
           createdAt: Date.now(),
@@ -727,7 +972,17 @@
       renderTable();
       // Submitting an entry adds it to the verifier's pick list, so that has to redraw too.
       if (onEntriesChanged) onEntriesChanged();
-      if (submitFlow) toast(finalize ? 'Entry submitted.' : 'Draft saved.');
+      if (submitFlow) {
+        if (entryStages && finalize && correctingStage) {
+          const st = entryStages.find((x) => x.key === correctingStage);
+          toast(`Correction saved to ${st ? st.label : 'that section'} — recorded against your name.`);
+        } else if (entryStages && finalize) {
+          const st = entryStages.find((x) => x.key === savingStage);
+          toast(allStagesDone
+            ? 'Final section submitted — this entry is now complete and locked.'
+            : `${st ? st.label : 'Section'} submitted. Come back by job no. for the next section.`);
+        } else toast(finalize ? 'Entry submitted.' : 'Draft saved.');
+      }
       else toast(editingId ? 'Entry updated.' : 'Entry added.');
     }
 
@@ -897,7 +1152,7 @@
         safeKey(docCode) + '_' + stamp + '.json');
     }
 
-    return { load, renderTable, openForm, closeForm, saveForm, exportCsv, exportJson, printPdf,
+    return { load, renderTable, openForm, closeForm, saveForm, exportCsv, exportJson, printPdf, continueChainChanged, resetContinueChain,
       printEntry, exportEntryJson,
       submittedEntries: () => entries.filter(isSubmitted).slice()
         .sort((a, b) => (b.values.date || '').localeCompare(a.values.date || '')),
@@ -1013,7 +1268,21 @@
     // behind a "+ Add entry" button and modal. Same field-rendering code path
     // (fieldInputHtml, openForm, saveForm); only the container and the trigger differ.
     function logBlockHtml(ns, blockTitle, inline) {
-      const fieldsAndActions = `
+      // On a staged record the operator's way back in is the job number, not hunting the
+      // entries table for the right row -- so the picker sits above the form.
+      const chain = config.entryStages && config.continueChain ? config.continueChain : null;
+      const continueHtml = chain ? `
+          <div class="ml-continue no-print">
+            <div class="ml-continue-title">Continue a job</div>
+            <div class="ml-continue-row">
+              ${chain.map((lv, i) => `<label class="ml-field">${esc(lv.label)}
+                <select id="${ns}_continue${i}"><option value="">— any —</option></select>
+              </label>`).join('')}
+              <button type="button" class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_continueReset">Start a new entry</button>
+            </div>
+            <div class="ml-muted" id="${ns}_continueHint"></div>
+          </div>` : '';
+      const fieldsAndActions = continueHtml + `
           <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>
           <div class="ml-actions">
             <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">${inline ? 'Clear' : 'Cancel'}</button>
@@ -1143,6 +1412,8 @@
       toast,
       tableWrap: el('ml_p_table'),
       modalIds: { overlay: 'ml_p_modal', title: 'ml_p_modalTitle', fields: 'ml_p_modalFields' },
+      entryStages: config.entryStages,
+      continueChain: config.continueChain,
       deviationLabel: config.deviationLabel || 'Deviation',
       deviationPolarity: config.deviationPolarity || 'deviation',
       submitFlow,
@@ -1198,6 +1469,14 @@
         cancelBtn.textContent = 'Tap again to clear';
         armTimer = setTimeout(disarm, 4000);
       });
+      if (config.continueChain && config.entryStages) {
+        config.continueChain.forEach((lv, i) => {
+          const sel = el(`${ns}_continue${i}`);
+          if (sel) sel.addEventListener('change', () => ctrl.continueChainChanged());
+        });
+        const resetBtn = el(`${ns}_continueReset`);
+        if (resetBtn) resetBtn.addEventListener('click', () => ctrl.resetContinueChain());
+      }
       el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm(!submitFlow));
       if (submitFlow) el(`${ns}_submitBtn`).addEventListener('click', () => ctrl.saveForm(true));
       el(`${ns}_exportCsvBtn`).addEventListener('click', () => ctrl.exportCsv());

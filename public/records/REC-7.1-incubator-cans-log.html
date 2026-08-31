@@ -19,13 +19,14 @@
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/api-backend.js?v=5"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=11"></script>
+<script src="../lib/monitoring-log.js?v=13"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -35,21 +36,46 @@
     title: 'Incubator Cans Log',
     docRevisionStart: 1,
     instructions: [
-      { label: 'Purpose', text: 'Track cans sent for incubation/micro testing until they are cleared.' }
+      { label: 'Purpose', text: 'Track cans sent for incubation/micro testing until they are cleared.' },
+      { label: 'How to fill this in', text: 'The three sections are done at different times on the same job. Fill in section 1 when the cans go in and submit it — that section then locks. When you come back, pick the job no. under "Continue a job" to reopen it and fill in the next section. A section already submitted can still be corrected, but you must give a reason and your name.' }
     ],
     showVerificationStrip: false,
+    // Each section is submitted and locked on its own; the entry as a whole only closes
+    // once section 3 is in. `continueBy` is the field the operator picks to reopen a job.
+    entryStages: [
+      { key: 'entry', label: '1. New entry — cans in' },
+      { key: 'micro', label: '2. Micro testing' },
+      { key: 'cleared', label: '3. Cans cleared' }
+    ],
+    // Getting back into a batch narrows in three steps. A job can have several batches in the
+    // incubator at once, so job no. alone never identifies one.
+    continueChain: [
+      { label: 'Job no.', keys: ['jobNo'] },
+      { label: 'AG code', keys: ['productionCode'] },
+      { label: 'Description', keys: ['productDescription', 'pieces'] }
+    ],
+    // The three groups below are three separate visits to the same entry, hours or days
+    // apart -- cans in, cans out for micro, cans cleared. `required` is only enforced on
+    // Submit, never on Save draft, so section 1 can be saved on its own and sections 2
+    // and 3 filled in later without the earlier save being blocked.
     entryFields: [
-      { key: 'dateIn', label: 'Date in', type: 'datetime', required: true },
-      { key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
-      { key: 'productionCode', label: 'Production code', type: 'text', required: true,
+      { stage: 'entry', group: '1. New entry — cans in', key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
+      { stage: 'entry', group: '1. New entry — cans in', key: 'dateIn', label: 'Date in', type: 'datetime', required: true, autoToday: true },
+      { stage: 'entry', group: '1. New entry — cans in', key: 'productionCode', label: 'Production code', type: 'text', required: true,
         pattern: '^AG[0-9]{6}$', patternMessage: 'Production code must be AG followed by 6 digits, e.g. AG123456.' },
-      { key: 'pieces', label: 'Pieces', type: 'textarea' },
-      { key: 'quantity', label: 'Quantity', type: 'number' },
-      { key: 'dateOutForMicro', label: 'Date out for micro', type: 'date' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
-      { key: 'dateCleared', label: 'Date cleared', type: 'date' },
-      { key: 'clearedByName', label: 'Cleared by — name', type: 'text' },
-      { key: 'clearedByDate', label: 'Cleared by — date', type: 'date' }
+      // Empty list for now -- renders as free text, turns into a dropdown the moment
+      // productDescriptions is populated in lookups.js. No change needed here.
+      Object.assign({ stage: 'entry', group: '1. New entry — cans in', required: true },
+        Lookups.field({ key: 'productDescription', label: 'Product description', list: 'productDescriptions' })),
+      { stage: 'entry', group: '1. New entry — cans in', key: 'pieces', label: 'Pieces', type: 'textarea', required: true },
+      { stage: 'entry', group: '1. New entry — cans in', key: 'quantity', label: 'Quantity', type: 'number', required: true },
+      { stage: 'entry', group: '1. New entry — cans in', key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+
+      { stage: 'micro', group: '2. Micro testing', key: 'dateOutForMicro', label: 'Date out for micro', type: 'date', required: true, autoToday: true },
+      { stage: 'micro', group: '2. Micro testing', key: 'checkedByMicro', label: 'Micro — checked by', type: 'text', required: true },
+
+      { stage: 'cleared', group: '3. Cans cleared', key: 'dateCleared', label: 'Date cleared', type: 'date', required: true, autoToday: true },
+      { stage: 'cleared', group: '3. Cans cleared', key: 'clearedByName', label: 'Clearance — checked by', type: 'text', required: true }
     ],
     specFields: [],
     deviationLabel: 'Deviation',

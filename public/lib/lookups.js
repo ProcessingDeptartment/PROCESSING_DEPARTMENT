@@ -59,6 +59,12 @@
 
     allergens: ['Molluscs', 'Crustaceans', 'Fish', 'Egg', 'Milk', 'Soy', 'Gluten', 'Tree nuts', 'Peanuts', 'Sulphites', 'Other'],
 
+    // Product descriptions for the incubator cans log (REC 7.1). The list itself is
+    // still to be supplied -- while it is empty the field renders as a free-text box
+    // and becomes a dropdown the moment the first entry is added here, exactly like
+    // `farms` above. Values already captured as text stay readable either way.
+    productDescriptions: [],
+
     jobPrefixes: ['3CP', '3DP', 'CPR', 'DPR'],
 
     palettes: [
