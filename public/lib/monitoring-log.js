@@ -614,6 +614,14 @@
     }
 
     function checkField(field, value) {
+      // Opt-in: a yes/no that is answered the bad way is a deviation in its own right --
+      // "product not cleared" is exactly what the deviation column is for. Left off by
+      // default so the yes/no fields on every other record keep their current meaning.
+      if (field.type === 'yesno' && field.flagsDeviation) {
+        const v = String(value == null ? '' : value).trim();
+        if (!v) return null;
+        return v === (field.good === 'No' ? 'No' : 'Yes') ? 'ok' : 'fail';
+      }
       if (!field.specKey) return null;
       const v = num(value);
       if (v === null) return null;
@@ -879,6 +887,31 @@
       toast('Section unlocked — the change will be recorded against your name.');
     }
 
+    // `showWhen: { field, equals }` -- a follow-up question that only exists once the answer
+    // above it calls for it. Hidden means not asked: its value is cleared and it is not
+    // required, so an entry can never be blocked by a question it never showed.
+    function conditionMet(f) {
+      if (!f.showWhen) return true;
+      const src = el(`${ns}_f_${f.showWhen.field}`);
+      if (!src) return false;
+      const want = f.showWhen.equals;
+      const have = String(src.value == null ? '' : src.value).trim();
+      return Array.isArray(want) ? want.indexOf(have) !== -1 : have === want;
+    }
+    function applyConditionalFields(container) {
+      entryFields.forEach((f) => {
+        if (!f.showWhen) return;
+        const wrap = container.querySelector(`label.ml-field[data-field="${f.key}"]`);
+        if (!wrap) return;
+        const show = conditionMet(f);
+        wrap.style.display = show ? '' : 'none';
+        if (!show) {
+          const inp = el(`${ns}_f_${f.key}`);
+          if (inp && inp.value) inp.value = '';
+        }
+      });
+    }
+
     function openForm(id) {
       // Any fresh open of the form re-locks everything; only the re-render fired by
       // promptUnlock itself carries the unlocked stages over.
@@ -906,7 +939,7 @@
         if (entryStages && f.stage && f.stage !== activeKey
             && !stageDone(existing, f.stage) && !unlockedStages.has(f.stage)) return head;
         return head + `
-        <label class="ml-field">${fieldLabel(f)}
+        <label class="ml-field" data-field="${esc(f.key)}">${fieldLabel(f)}
           ${fieldInputHtml(ns, f, existing ? existing.values[f.key] : (f.default || ''))}
         </label>`;
       }).join('');
@@ -923,8 +956,11 @@
       container.querySelectorAll('input,select,textarea').forEach(inp => {
         inp.addEventListener('input', recalcComputedInModal);
         inp.addEventListener('change', recalcComputedInModal);
+        inp.addEventListener('input', () => applyConditionalFields(container));
+        inp.addEventListener('change', () => applyConditionalFields(container));
       });
       recalcComputedInModal();
+      applyConditionalFields(container);
       if (entryStages) {
         const fixing = unlockedStages.size ? Array.from(unlockedStages)[0] : null;
         const st = entryStages.find((x) => x.key === (fixing || activeKey));
@@ -977,6 +1013,8 @@
         raw[f.key] = inp ? inp.value
           : (existingForStage && existingForStage.values[f.key] != null ? existingForStage.values[f.key] : '');
         if (!stageInPlay(f)) return;
+        // Not asked -> not answered, and never a reason to block the save.
+        if (f.showWhen && !conditionMet(f)) { raw[f.key] = ''; return; }
         // A timestamp is stamped by the system once this save is known to be good, so it is
         // never the operator's job to fill and never counts as missing.
         if (f.type === 'timestamp') return;

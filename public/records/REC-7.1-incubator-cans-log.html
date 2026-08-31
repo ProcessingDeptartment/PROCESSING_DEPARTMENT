@@ -26,7 +26,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=15"></script>
+<script src="../lib/monitoring-log.js?v=17"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -75,8 +75,14 @@
       { stage: 'entry', group: '1. New entry — cans in', key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
 
       { stage: 'micro', group: '2. Micro testing', key: 'dateOutForMicro', label: 'Date out for micro', type: 'timestamp', required: true },
+      { stage: 'micro', group: '2. Micro testing', key: 'qtyOutForTesting', label: 'Qty out for testing', type: 'digits', required: true },
       { stage: 'micro', group: '2. Micro testing', key: 'checkedByMicro', label: 'Micro — checked by', type: 'text', required: true },
 
+      // A "No" here is a deviation in its own right, and it is the only thing that asks for
+      // a reason -- the reason field does not exist until the answer calls for it.
+      { stage: 'cleared', group: '3. Cans cleared', key: 'productCleared', label: 'Product cleared?', type: 'yesno', good: 'Yes', required: true, flagsDeviation: true },
+      { stage: 'cleared', group: '3. Cans cleared', key: 'notClearedReason', label: 'Reason not cleared', type: 'textarea', required: true,
+        showWhen: { field: 'productCleared', equals: 'No' } },
       { stage: 'cleared', group: '3. Cans cleared', key: 'dateCleared', label: 'Date cleared', type: 'timestamp', required: true },
       { stage: 'cleared', group: '3. Cans cleared', key: 'clearedByName', label: 'Clearance — checked by', type: 'text', required: true }
     ],
