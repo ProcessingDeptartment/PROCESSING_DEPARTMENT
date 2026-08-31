@@ -18,13 +18,14 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=5"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=10"></script>
+<script src="../lib/monitoring-log.js?v=11"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -36,11 +37,13 @@
     instructions: [
       { label: 'Purpose', text: 'Track cans sent for incubation/micro testing until they are cleared.' }
     ],
+    showVerificationStrip: false,
     entryFields: [
-      { key: 'dateIn', label: 'Date in', type: 'date', required: true },
-      { key: 'time', label: 'Time', type: 'text' },
-      { key: 'productionCode', label: 'Production code', type: 'text' },
-      { key: 'pieces', label: 'Pieces', type: 'number' },
+      { key: 'dateIn', label: 'Date in', type: 'datetime', required: true },
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
+      { key: 'productionCode', label: 'Production code', type: 'text', required: true,
+        pattern: '^AG[0-9]{6}$', patternMessage: 'Production code must be AG followed by 6 digits, e.g. AG123456.' },
+      { key: 'pieces', label: 'Pieces', type: 'textarea' },
       { key: 'quantity', label: 'Quantity', type: 'number' },
       { key: 'dateOutForMicro', label: 'Date out for micro', type: 'date' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },

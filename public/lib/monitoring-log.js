@@ -266,6 +266,12 @@
     if (field.type === 'date') {
       return `<input type="date" id="${id}" value="${esc(v)}">`;
     }
+    // One field for a date and a clock time that belong together. Stored as the
+    // browser's own "YYYY-MM-DDTHH:MM" -- it sorts and compares as a plain string,
+    // and its first 10 characters are still the date any date filter reads.
+    if (field.type === 'datetime') {
+      return `<input type="datetime-local" id="${id}" value="${esc(v)}">`;
+    }
     if (field.type === 'time') {
       return `<input type="time" id="${id}" value="${esc(v)}">`;
     }
@@ -282,7 +288,12 @@
         (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
         `</select>`;
     }
-    return `<input type="text" id="${id}" value="${esc(v)}">`;
+    // A `pattern` field is still a free-text box -- the constraint is checked on save
+    // (see saveForm) rather than blocking keystrokes, so a half-typed code is allowed.
+    const patternAttrs = field.pattern
+      ? ` pattern="${esc(field.pattern)}"${field.patternMessage ? ` title="${esc(field.patternMessage)}"` : ''}`
+      : '';
+    return `<input type="text" id="${id}" value="${esc(v)}"${patternAttrs}>`;
   }
 
   function fieldLabel(field) {
@@ -656,14 +667,23 @@
 
       const raw = {};
       let missingRequired = null;
+      let badPattern = null;
       entryFields.forEach(f => {
         if (f.type === 'computed') return;
         const inp = el(`${ns}_f_${f.key}`);
         raw[f.key] = inp ? inp.value : '';
         if (f.required && !String(raw[f.key] || '').trim()) missingRequired = f.label;
+        // An empty value is left to the required check above -- only a value that was
+        // actually typed is held to the field's pattern.
+        if (f.pattern && !badPattern && String(raw[f.key] || '').trim()
+            && !new RegExp(f.pattern).test(String(raw[f.key]).trim())) {
+          badPattern = f.patternMessage || `"${f.label}" is not in the expected format.`;
+        }
       });
       // A draft may be incomplete; a submission may not.
       if (missingRequired && (finalize || !submitFlow)) { toast(`"${missingRequired}" is required.`); return; }
+      // A wrongly-formatted value is wrong in a draft too, so this one always blocks.
+      if (badPattern) { toast(badPattern); return; }
       const values = computeAll(raw);
       const inSpec = evaluateEntry(values);
 
