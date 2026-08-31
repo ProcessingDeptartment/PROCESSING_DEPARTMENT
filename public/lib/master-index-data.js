@@ -222,13 +222,11 @@ window.MasterIndexData = {
     {
         "docNo": "REC 7.1.0",
         "name": "Daily Weight Sampling",
-        "details": "New document",
+        "details": "Not in use",
         "revision": 1,
         "obsoleteRetrieved": "N/A",
         "distributed": "Y",
-        "dateOfIssue": "26/01/2021",
-        "recordKey": "daily-weight-sampling",
-        "href": "REC-7.1.0-daily-weight-sampling.html"
+        "dateOfIssue": "26/01/2021"
     },
     {
         "docNo": "REC 7.1.00",
