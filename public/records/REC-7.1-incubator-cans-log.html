@@ -26,7 +26,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=14"></script>
+<script src="../lib/monitoring-log.js?v=15"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -74,10 +74,10 @@
       { stage: 'entry', group: '1. New entry — cans in', key: 'quantity', label: 'Quantity', type: 'number', required: true },
       { stage: 'entry', group: '1. New entry — cans in', key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
 
-      { stage: 'micro', group: '2. Micro testing', key: 'dateOutForMicro', label: 'Date out for micro', type: 'date', required: true, autoToday: true },
+      { stage: 'micro', group: '2. Micro testing', key: 'dateOutForMicro', label: 'Date out for micro', type: 'timestamp', required: true },
       { stage: 'micro', group: '2. Micro testing', key: 'checkedByMicro', label: 'Micro — checked by', type: 'text', required: true },
 
-      { stage: 'cleared', group: '3. Cans cleared', key: 'dateCleared', label: 'Date cleared', type: 'date', required: true, autoToday: true },
+      { stage: 'cleared', group: '3. Cans cleared', key: 'dateCleared', label: 'Date cleared', type: 'timestamp', required: true },
       { stage: 'cleared', group: '3. Cans cleared', key: 'clearedByName', label: 'Clearance — checked by', type: 'text', required: true }
     ],
     specFields: [],

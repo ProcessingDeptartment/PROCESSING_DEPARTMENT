@@ -920,22 +920,6 @@
         existing.provisionalFields.forEach((k) => markProvisional(container.querySelector('#' + ns + '_f_' + k), true));
         renderProvisionalNotice(container, ns);
       }
-      // `autoToday` fields stamp themselves with today's date whenever they are opened empty.
-      // This has to run on reopen too, not just on a new entry: the micro and clearance dates
-      // belong to the visit that fills them in, which is days after the entry was created.
-      entryFields.forEach(f => {
-        if (!f.autoToday) return;
-        // Only the stage being worked on gets stamped. Stamping a later stage would save
-        // today's date against a check that has not happened yet, and it would still be
-        // sitting there, wrong, when that stage is finally filled in weeks later.
-        if (entryStages && f.stage && f.stage !== activeKey && !unlockedStages.has(f.stage)) return;
-        const inp = el(`${ns}_f_${f.key}`);
-        if (!inp || inp.value) return;
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-        inp.value = f.type === 'datetime' ? `${day}T${pad(now.getHours())}:${pad(now.getMinutes())}` : day;
-      });
       container.querySelectorAll('input,select,textarea').forEach(inp => {
         inp.addEventListener('input', recalcComputedInModal);
         inp.addEventListener('change', recalcComputedInModal);
