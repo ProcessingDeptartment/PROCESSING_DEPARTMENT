@@ -97,15 +97,27 @@
   .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
     font-weight:700; border-bottom:1px solid var(--palette-border,#e2e4e3); padding-bottom:4px; margin:12px 0 2px; }
   .ml-grouphead:first-child{ margin-top:0; }
-  .ml-continue{ border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; padding:10px; margin-bottom:12px;
-    background:var(--palette-paper,#f4f5f3); display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
-  .ml-continue{ display:block; }
-  .ml-continue-title{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;
-    color:var(--palette-heading,#2f4356); margin-bottom:8px; }
-  .ml-continue-row{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
-  .ml-continue-row label.ml-field{ flex:1 1 190px; min-width:150px; }
+  .ml-instr-toggle{ display:none; }
+  @media (max-width:768px){
+    /* On a phone the instructions push the actual work off the screen. Collapsed by default,
+       one tap to read them. */
+    .ml-instr-toggle{ display:inline-block; }
+    .ml-instr-panel .ml-panel-body{ display:none; }
+    .ml-instr-panel.ml-open .ml-panel-body{ display:block; }
+  }
+  .ml-stamp{ display:block; }
+  .ml-prefixed{ display:flex; align-items:stretch; }
+  .ml-prefix{ display:flex; align-items:center; padding:5px 9px; border:1px solid #c9cdd1; border-right:none;
+    border-radius:3px 0 0 3px; background:var(--palette-paper,#f4f5f3); font-family:'IBM Plex Mono','SF Mono',Consolas,monospace;
+    font-size:12.5px; font-weight:700; color:var(--palette-heading,#2f4356); }
+  .ml-prefixed input[type=text]{ border-radius:0 3px 3px 0; letter-spacing:.12em; }
+  .ml-continue-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; align-items:end; }
   .ml-continue .ml-muted{ font-size:11.5px; margin-top:8px; }
-  @media (max-width:600px){ .ml-continue-row label.ml-field{ flex:1 1 100%; } .ml-continue-row .ml-btn{ width:100%; } }
+  .ml-continue > .ml-btn{ margin-top:10px; }
+  @media (max-width:700px){
+    .ml-continue-row{ grid-template-columns:1fr; }
+    .ml-continue > .ml-btn{ width:100%; }
+  }
   .ml-stagehead{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
   .ml-stage-state{ font-weight:600; text-transform:none; letter-spacing:0; font-size:11px; display:inline-flex; align-items:center; gap:6px; }
   .ml-stage-open{ color:var(--palette-ok,#2e6b45); }
@@ -302,12 +314,49 @@
         (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
         `</select>`;
     }
+    // Fixed prefix + a fixed number of digits, e.g. AG + 6 -> AG123456. The operator can only
+    // type the digits; the prefix is printed, not editable, so the code cannot come out wrong.
+    // The canonical full value lives in the hidden input under the field's own id, so every
+    // reader (saveForm, computed fields, the table) is unchanged -- same trick as yesno.
+    if (field.prefix && field.digits) {
+      const digits = String(v).startsWith(field.prefix) ? String(v).slice(field.prefix.length) : '';
+      return `<span class="ml-prefixed" data-prefix-for="${id}">
+        <span class="ml-prefix">${esc(field.prefix)}</span>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="${field.digits}"
+               id="${id}__digits" value="${esc(digits)}" placeholder="${esc('0'.repeat(field.digits))}">
+        <input type="hidden" id="${id}" value="${esc(v)}">
+      </span>`;
+    }
+    // Whole numbers only -- a count, never a decimal or a description.
+    if (field.type === 'digits') {
+      return `<input type="text" inputmode="numeric" pattern="[0-9]*" id="${id}" value="${esc(v)}">`;
+    }
+    // Stamped automatically when its section is submitted, never picked. Shown read-only so
+    // the operator can see what was recorded without being able to backdate it.
+    if (field.type === 'timestamp') {
+      // Read-only, and shown the way a person reads a date. The machine-readable ISO value
+      // stays in the hidden input under the field's own id, so what gets stored, sorted,
+      // filtered and exported is unchanged.
+      return `<span class="ml-stamp" data-stamp-for="${id}">
+        <input type="text" id="${id}__shown" value="${esc(stampText(v))}" disabled
+               placeholder="stamped on submit">
+        <input type="hidden" id="${id}" value="${esc(v)}">
+      </span>`;
+    }
     // A `pattern` field is still a free-text box -- the constraint is checked on save
     // (see saveForm) rather than blocking keystrokes, so a half-typed code is allowed.
     const patternAttrs = field.pattern
       ? ` pattern="${esc(field.pattern)}"${field.patternMessage ? ` title="${esc(field.patternMessage)}"` : ''}`
       : '';
     return `<input type="text" id="${id}" value="${esc(v)}"${patternAttrs}>`;
+  }
+
+  // "2026-08-31T12:00" -> "31/08/2026 12:00". Anything unexpected is passed through as-is
+  // rather than guessed at.
+  function stampText(v) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(String(v || ''));
+    if (!m) return v || '';
+    return `${m[3]}/${m[2]}/${m[1]}` + (m[4] ? ` ${m[4]}:${m[5]}` : '');
   }
 
   function fieldLabel(field) {
@@ -317,6 +366,34 @@
   // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
   // listening for a normal field change (computed fields) still sees it. Clicking the
   // active choice again clears it -- there is no other way back to "not answered".
+  function wirePrefixed(container) {
+    container.querySelectorAll('.ml-prefixed').forEach(group => {
+      const digitsInput = group.querySelector('input[type=text]');
+      const hidden = group.querySelector('input[type=hidden]');
+      const prefix = group.querySelector('.ml-prefix').textContent;
+      const sync = () => {
+        const clean = digitsInput.value.replace(/\D/g, '');
+        if (clean !== digitsInput.value) digitsInput.value = clean;
+        hidden.value = clean ? prefix + clean : '';
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      digitsInput.addEventListener('input', sync);
+      digitsInput.addEventListener('blur', sync);
+    });
+  }
+
+  // Digit-only text boxes: strip anything else as it is typed. `type=number` is deliberately
+  // not used -- it allows "1e5" and decimals, and its spinners are awkward on a phone.
+  function wireDigits(container) {
+    container.querySelectorAll('input[inputmode="numeric"]').forEach(inp => {
+      if (inp.closest('.ml-prefixed')) return;
+      inp.addEventListener('input', () => {
+        const clean = inp.value.replace(/\D/g, '');
+        if (clean !== inp.value) inp.value = clean;
+      });
+    });
+  }
+
   function wireYesNo(container) {
     container.querySelectorAll('.ml-yesno').forEach(group => {
       const hidden = group.querySelector('input[type=hidden]');
@@ -686,6 +763,7 @@
         html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
         cols.forEach(f => {
           let v = entryRow.values[f.key];
+          if (f.type === 'timestamp') v = stampText(v);
           if (f.type === 'yesno' || f.type === 'select') v = v || '—';
           else if (v === '' || v == null) v = '—';
           html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${esc(v)}</td>`;
@@ -771,6 +849,13 @@
         inp.disabled = !editable;
         const grp = container.querySelector(`[data-yesno-for="${ns}_f_${f.key}"]`);
         if (grp) grp.querySelectorAll('button').forEach((b) => { b.disabled = !editable; });
+        const pre = container.querySelector(`[data-prefix-for="${ns}_f_${f.key}"]`);
+        if (pre) pre.querySelectorAll('input').forEach((i) => { i.disabled = !editable; });
+        // A timestamp is never typed into, whatever stage it belongs to.
+        if (f.type === 'timestamp') {
+          const shown = container.querySelector('#' + ns + '_f_' + f.key + '__shown');
+          if (shown) shown.disabled = true;
+        }
       });
       container.querySelectorAll('[data-unlock]').forEach((btn) => {
         btn.addEventListener('click', () => promptUnlock(btn.dataset.unlock, existing));
@@ -815,12 +900,19 @@
       container.innerHTML = entryFields.map(f => {
         let head = '';
         if (f.group && f.group !== lastGroup) { head = stageHeadHtml(f, existing, activeKey); lastGroup = f.group; }
+        // A stage that has not come round yet holds nothing and cannot be typed into, so only
+        // its heading is drawn. On a phone this is the difference between the section you are
+        // actually filling in being on screen and being three scrolls down.
+        if (entryStages && f.stage && f.stage !== activeKey
+            && !stageDone(existing, f.stage) && !unlockedStages.has(f.stage)) return head;
         return head + `
         <label class="ml-field">${fieldLabel(f)}
           ${fieldInputHtml(ns, f, existing ? existing.values[f.key] : (f.default || ''))}
         </label>`;
       }).join('');
       wireYesNo(container);
+      wirePrefixed(container);
+      wireDigits(container);
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); }
       // Restore provisional markers saved with this entry, so a draft reopened later still shows
       // which values came from an unfinished record and still gets them refreshed on save.
@@ -896,8 +988,14 @@
       entryFields.forEach(f => {
         if (f.type === 'computed') return;
         const inp = el(`${ns}_f_${f.key}`);
-        raw[f.key] = inp ? inp.value : '';
+        // Stages not yet reached are not rendered at all -- keep whatever is already stored
+        // rather than wiping it to ''.
+        raw[f.key] = inp ? inp.value
+          : (existingForStage && existingForStage.values[f.key] != null ? existingForStage.values[f.key] : '');
         if (!stageInPlay(f)) return;
+        // A timestamp is stamped by the system once this save is known to be good, so it is
+        // never the operator's job to fill and never counts as missing.
+        if (f.type === 'timestamp') return;
         if (f.required && !String(raw[f.key] || '').trim()) missingRequired = f.label;
         // An empty value is left to the required check above -- only a value that was
         // actually typed is held to the field's pattern.
@@ -910,6 +1008,22 @@
       if (missingRequired && (finalize || !submitFlow)) { toast(`"${missingRequired}" is required.`); return; }
       // A wrongly-formatted value is wrong in a draft too, so this one always blocks.
       if (badPattern) { toast(badPattern); return; }
+      // Every check has passed, so this save is definitely happening -- only now is the clock
+      // read. Stamping earlier would record the time of a rejected attempt. Set once and kept:
+      // resubmitting a section as a correction does not move its original time.
+      if (finalize) {
+        entryFields.forEach(f => {
+          if (f.type !== 'timestamp' || !stageInPlay(f) || String(raw[f.key] || '').trim()) return;
+          const now = new Date();
+          const pad = (n) => String(n).padStart(2, '0');
+          raw[f.key] = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+            + `T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+          const inp = el(`${ns}_f_${f.key}`);
+          if (inp) inp.value = raw[f.key];
+          const shown = el(`${ns}_f_${f.key}__shown`);
+          if (shown) shown.value = stampText(raw[f.key]);
+        });
+      }
       const values = computeAll(raw);
       const inSpec = evaluateEntry(values);
 
@@ -1248,8 +1362,9 @@
 
     // ---------- top-level skeleton ----------
     const instructionsHtml = (config.instructions || []).length ? `
-      <div class="ml-panel no-print"><div class="ml-panel-head"><h2>Work instructions</h2></div>
-        <div class="ml-panel-body ml-instructions">
+      <div class="ml-panel no-print ml-instr-panel"><div class="ml-panel-head"><h2>Work instructions</h2>
+          <button class="ml-btn ml-btn-flat ml-btn-sm ml-instr-toggle" id="ml_instrToggle" type="button">Show</button></div>
+        <div class="ml-panel-body ml-instructions" id="ml_instrBody">
           ${config.instructions.map(i => `<div class="instr-item"><strong>${esc(i.label)}</strong>${esc(i.text)}</div>`).join('')}
         </div></div>` : '';
 
@@ -1268,21 +1383,25 @@
     // behind a "+ Add entry" button and modal. Same field-rendering code path
     // (fieldInputHtml, openForm, saveForm); only the container and the trigger differ.
     function logBlockHtml(ns, blockTitle, inline) {
-      // On a staged record the operator's way back in is the job number, not hunting the
-      // entries table for the right row -- so the picker sits above the form.
+      // Finding the batch you are here for comes BEFORE filling anything in, so this is its
+      // own panel above the entry form rather than a strip inside it.
       const chain = config.entryStages && config.continueChain ? config.continueChain : null;
-      const continueHtml = chain ? `
-          <div class="ml-continue no-print">
-            <div class="ml-continue-title">Continue a job</div>
+      const continuePanel = chain ? `
+      <div class="ml-panel no-print ml-continue-panel">
+        <div class="ml-panel-head"><h2>Continue a job</h2></div>
+        <div class="ml-panel-body">
+          <div class="ml-continue">
             <div class="ml-continue-row">
               ${chain.map((lv, i) => `<label class="ml-field">${esc(lv.label)}
                 <select id="${ns}_continue${i}"><option value="">— any —</option></select>
               </label>`).join('')}
-              <button type="button" class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_continueReset">Start a new entry</button>
             </div>
+            <button type="button" class="ml-btn ml-btn-flat" id="${ns}_continueReset">Start a new entry</button>
             <div class="ml-muted" id="${ns}_continueHint"></div>
-          </div>` : '';
-      const fieldsAndActions = continueHtml + `
+          </div>
+        </div>
+      </div>` : '';
+      const fieldsAndActions = `
           <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>
           <div class="ml-actions">
             <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">${inline ? 'Clear' : 'Cancel'}</button>
@@ -1310,6 +1429,7 @@
       </div>`;
       if (inline) {
         return `
+      ${continuePanel}
       <div class="ml-panel no-print">
         <div class="ml-panel-head"><h2 id="${ns}_modalTitle">${esc(blockTitle)}</h2></div>
         <div class="ml-panel-body">${fieldsAndActions}</div>
@@ -1317,6 +1437,7 @@
       ${entriesPanel}`;
       }
       return `
+      ${continuePanel}
       ${entriesPanel}
       <div id="${ns}_modal" class="ml-modal-overlay no-print" style="display:none;">
         <div class="ml-modal-inner">
@@ -1488,6 +1609,14 @@
     }
     wireLog(primary, 'ml_p');
     if (secondary) wireLog(secondary, 'ml_s');
+    const instrToggle = el('ml_instrToggle');
+    if (instrToggle) {
+      instrToggle.addEventListener('click', () => {
+        const panel = instrToggle.closest('.ml-instr-panel');
+        const open = panel.classList.toggle('ml-open');
+        instrToggle.textContent = open ? 'Hide' : 'Show';
+      });
+    }
     if (topAddEntry) el('ml_topAddEntryBtn').addEventListener('click', () => primary.openForm(null));
     if (inlineEntryForm) {
       primary.openForm(null);

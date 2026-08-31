@@ -26,7 +26,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=13"></script>
+<script src="../lib/monitoring-log.js?v=14"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -60,14 +60,17 @@
     // and 3 filled in later without the earlier save being blocked.
     entryFields: [
       { stage: 'entry', group: '1. New entry — cans in', key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
-      { stage: 'entry', group: '1. New entry — cans in', key: 'dateIn', label: 'Date in', type: 'datetime', required: true, autoToday: true },
-      { stage: 'entry', group: '1. New entry — cans in', key: 'productionCode', label: 'Production code', type: 'text', required: true,
-        pattern: '^AG[0-9]{6}$', patternMessage: 'Production code must be AG followed by 6 digits, e.g. AG123456.' },
+      { stage: 'entry', group: '1. New entry — cans in', key: 'dateIn', label: 'Date in', type: 'timestamp', required: true },
+      // "AG" is printed, not typed -- only the 6 digits are enterable. The pattern stays as a
+      // backstop so a short code (AG123) still cannot be submitted.
+      { stage: 'entry', group: '1. New entry — cans in', key: 'productionCode', label: 'Production code', required: true,
+        prefix: 'AG', digits: 6,
+        pattern: '^AG[0-9]{6}$', patternMessage: 'Production code needs all 6 digits after AG, e.g. AG123456.' },
       // Empty list for now -- renders as free text, turns into a dropdown the moment
       // productDescriptions is populated in lookups.js. No change needed here.
       Object.assign({ stage: 'entry', group: '1. New entry — cans in', required: true },
         Lookups.field({ key: 'productDescription', label: 'Product description', list: 'productDescriptions' })),
-      { stage: 'entry', group: '1. New entry — cans in', key: 'pieces', label: 'Pieces', type: 'textarea', required: true },
+      { stage: 'entry', group: '1. New entry — cans in', key: 'pieces', label: 'Pieces', type: 'digits', required: true },
       { stage: 'entry', group: '1. New entry — cans in', key: 'quantity', label: 'Quantity', type: 'number', required: true },
       { stage: 'entry', group: '1. New entry — cans in', key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
 
