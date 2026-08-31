@@ -1368,7 +1368,6 @@
         <div class="ml-topline no-print">
           ${topAddEntry ? `<button class="ml-btn ml-btn-ghost" id="ml_topAddEntryBtn">+ Add entry</button>` : ''}
           ${showThresholds ? `<button class="ml-btn ml-btn-ghost" id="ml_thresholdsBtn">Thresholds</button>` : ''}
-          ${canManageTemplates ? `<button class="ml-btn ml-btn-ghost" id="ml_editTemplateBtn">Edit Template</button>` : ''}
         </div>
       </div>
       <div class="ml-body">
@@ -1549,28 +1548,28 @@
       el('ml_thresholdsModal').remove();
     }
 
-    // ---------- edit template button ----------
-    if (canManageTemplates && el('ml_editTemplateBtn')) {
-      el('ml_editTemplateBtn').addEventListener('click', function () {
-        function doOpen() {
-          window.TemplateEditor.open({
-            recordKey: config.recordKey,
-            engine: 'monitoring-log',
-            currentConfig: {
-              entryFields: JSON.parse(JSON.stringify(config.entryFields || [])),
-              specFields: JSON.parse(JSON.stringify(config.specFields || []))
-            },
-            inlineConfig: null,
-            docRevisionStart: config.docRevisionStart,
-            onSave: () => location.reload()
-          });
-        }
-        if (window.TemplateEditor) { doOpen(); return; }
+    // ---------- edit template (opened via ?editTemplate=1 from the index, not a button here) ----------
+    if (canManageTemplates && new URLSearchParams(location.search).get('editTemplate') === '1') {
+      function doOpen() {
+        window.TemplateEditor.open({
+          recordKey: config.recordKey,
+          engine: 'monitoring-log',
+          currentConfig: {
+            entryFields: JSON.parse(JSON.stringify(config.entryFields || [])),
+            specFields: JSON.parse(JSON.stringify(config.specFields || []))
+          },
+          inlineConfig: null,
+          docRevisionStart: config.docRevisionStart,
+          onSave: () => location.reload()
+        });
+      }
+      if (window.TemplateEditor) { doOpen(); }
+      else {
         const s = document.createElement('script');
         s.src = '../lib/template-editor.js';
         s.onload = doOpen;
         document.head.appendChild(s);
-      });
+      }
     }
 
     // ---------- verification strip ----------

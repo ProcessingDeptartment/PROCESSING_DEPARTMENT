@@ -584,7 +584,6 @@
           <span class="doc-rev" id="fr_docRev"></span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;" class="no-print">
-          ${canManageTemplates ? '<button class="fr-btn fr-btn-flat fr-btn-sm" id="fr_editTemplateBtn">Edit Template</button>' : ''}
         </div>
       </div>
       <div class="fr-body">
@@ -1235,29 +1234,29 @@
     // Open the record straight onto a blank entry form.
     openForm(null);
 
-    // Wire Edit Template button (dynamically loads template-editor.js if needed)
-    if (canManageTemplates && el('fr_editTemplateBtn')) {
-      el('fr_editTemplateBtn').addEventListener('click', function openEditor() {
-        function doOpen() {
-          window.TemplateEditor.open({
-            recordKey: config.recordKey,
-            engine: 'form-record',
-            currentConfig: {
-              sections: JSON.parse(JSON.stringify(config.sections || [])),
-              roster: config.roster ? JSON.parse(JSON.stringify(config.roster)) : null,
-              listColumns: config.listColumns ? config.listColumns.slice() : undefined
-            },
-            inlineConfig,
-            docRevisionStart: config.docRevisionStart,
-            onSave: () => location.reload()
-          });
-        }
-        if (window.TemplateEditor) { doOpen(); return; }
+    // ---------- edit template (opened via ?editTemplate=1 from the index, not a button here) ----------
+    if (canManageTemplates && new URLSearchParams(location.search).get('editTemplate') === '1') {
+      function doOpen() {
+        window.TemplateEditor.open({
+          recordKey: config.recordKey,
+          engine: 'form-record',
+          currentConfig: {
+            sections: JSON.parse(JSON.stringify(config.sections || [])),
+            roster: config.roster ? JSON.parse(JSON.stringify(config.roster)) : null,
+            listColumns: config.listColumns ? config.listColumns.slice() : undefined
+          },
+          inlineConfig,
+          docRevisionStart: config.docRevisionStart,
+          onSave: () => location.reload()
+        });
+      }
+      if (window.TemplateEditor) { doOpen(); }
+      else {
         const s = document.createElement('script');
         s.src = (config.libPath || '../lib/') + 'template-editor.js';
         s.onload = doOpen;
         document.head.appendChild(s);
-      });
+      }
     }
 
     /* Header first, then the badge FROM it: the on-screen badge and the printed block

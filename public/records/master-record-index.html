@@ -16,6 +16,10 @@
         font-size:13px; line-height:1.4; margin:0; }
   *{ box-sizing:border-box; }
 
+  /* Edit Template column: only shown to users with manageTemplates permission --
+     toggled by the .no-manage-templates class set on <body> during init(). */
+  body.no-manage-templates .col-edit-template{ display:none; }
+
   /* ---- Document control header, mirroring the paper REC 01 title block ---- */
   /* Typography for .doc-code / h1 / .doc-rev comes from record-theme.css so this
      index reads at the same weight as the records it lists -- only the code chip's
@@ -227,6 +231,7 @@
           <th style="width:96px;">Obsolete revision<br>retrieved? Y/N</th>
           <th style="width:96px;">New revision<br>distributed? Y/N</th>
           <th style="width:96px;">New date<br>of issue</th>
+          <th class="col-edit-template" style="width:110px;">Edit Template</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -631,6 +636,7 @@
         + `<td class="c-yn">${ynSelect(id, 'obsoleteRetrieved', obs)}</td>`
         + `<td class="c-yn">${ynSelect(id, 'distributed', dist)}</td>`
         + `<td class="c-date">${esc(issued || '')}</td>`
+        + `<td class="c-edit-template col-edit-template">${(online && r.recordKey) ? `<a href="${esc(r.href)}?editTemplate=1">Edit Template</a>` : ''}</td>`
         + `</tr>`;
     }
     tableBody.innerHTML = html;
@@ -1009,6 +1015,9 @@
     canEdit = !window.PermissionRules || window.PermissionRules.can('manageMasterIndex');
     $('addRecordBtn').disabled = !canEdit;
     $('addRecordBtn').title = canEdit ? '' : 'Document control roles may add records to the index.';
+
+    const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
+    document.body.classList.toggle('no-manage-templates', !canManageTemplates);
 
     $('hdrCode').textContent = DATA.header.docNumber || 'REC 01';
     $('hdrRev').textContent = 'Rev ' + (DATA.header.revision || '?')
