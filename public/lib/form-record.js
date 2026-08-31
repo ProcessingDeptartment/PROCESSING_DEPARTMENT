@@ -68,6 +68,11 @@
   .fr-instructions{ display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
   .fr-instructions .instr-item{ background:var(--palette-head-bg,#fbfbfa); border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; padding:8px 10px; }
   .fr-instructions .instr-item strong{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--palette-label,#54606b); margin-bottom:3px; }
+  /* Work instructions are collapsed by default on every viewport -- they are reference
+     text, not the task, and push the actual form down the page. One click to read them. */
+  .fr-instr-toggle{ display:inline-block; }
+  .fr-instr-panel > .fr-panel-body{ display:none; }
+  .fr-instr-panel.fr-open > .fr-panel-body{ display:block; }
   .fr-grid{ display:grid; gap:10px; }
   .fr-grid-2{ grid-template-columns:repeat(2,1fr); }
   .fr-grid-3{ grid-template-columns:repeat(3,1fr); }
@@ -541,7 +546,8 @@
     }
 
     const instructionsHtml = (config.instructions || []).length ? `
-      <div class="fr-panel no-print"><div class="fr-panel-head"><h2>Work instructions</h2></div>
+      <div class="fr-panel no-print fr-instr-panel"><div class="fr-panel-head"><h2>Work instructions</h2>
+          <button class="fr-btn fr-btn-flat fr-btn-sm fr-instr-toggle" id="fr_instrToggle" type="button">Show</button></div>
         <div class="fr-panel-body fr-instructions">
           ${config.instructions.map(i => `<div class="instr-item"><strong>${esc(i.label)}</strong>${esc(i.text)}</div>`).join('')}
         </div></div>` : '';
@@ -1227,6 +1233,14 @@
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
     el('fr_exportJsonBtn').addEventListener('click', exportJson);
     el('fr_printBtn').addEventListener('click', printPdf);
+    const instrToggle = el('fr_instrToggle');
+    if (instrToggle) {
+      instrToggle.addEventListener('click', () => {
+        const panel = instrToggle.closest('.fr-instr-panel');
+        const open = panel.classList.toggle('fr-open');
+        instrToggle.textContent = open ? 'Hide' : 'Show';
+      });
+    }
     ['filterFrom', 'filterTo', 'filterSearch'].forEach(suffix => {
       el(`fr_${suffix}`).addEventListener('input', renderTable);
     });

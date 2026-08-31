@@ -97,14 +97,11 @@
   .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
     font-weight:700; border-bottom:1px solid var(--palette-border,#e2e4e3); padding-bottom:4px; margin:12px 0 2px; }
   .ml-grouphead:first-child{ margin-top:0; }
-  .ml-instr-toggle{ display:none; }
-  @media (max-width:768px){
-    /* On a phone the instructions push the actual work off the screen. Collapsed by default,
-       one tap to read them. */
-    .ml-instr-toggle{ display:inline-block; }
-    .ml-instr-panel .ml-panel-body{ display:none; }
-    .ml-instr-panel.ml-open .ml-panel-body{ display:block; }
-  }
+  /* Work instructions are collapsed by default on every viewport -- they are reference
+     text, not the task, and push the actual work down the page. One click to read them. */
+  .ml-instr-toggle{ display:inline-block; }
+  .ml-instr-panel .ml-panel-body{ display:none; }
+  .ml-instr-panel.ml-open .ml-panel-body{ display:block; }
   .ml-stamp{ display:block; }
   .ml-prefixed{ display:flex; align-items:stretch; }
   .ml-prefix{ display:flex; align-items:center; padding:5px 9px; border:1px solid #c9cdd1; border-right:none;
