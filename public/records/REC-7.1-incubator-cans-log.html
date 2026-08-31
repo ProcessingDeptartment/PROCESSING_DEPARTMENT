@@ -26,7 +26,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=17"></script>
+<script src="../lib/monitoring-log.js?v=18"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -71,7 +71,7 @@
       Object.assign({ stage: 'entry', group: '1. New entry — cans in', required: true },
         Lookups.field({ key: 'productDescription', label: 'Product description', list: 'productDescriptions' })),
       { stage: 'entry', group: '1. New entry — cans in', key: 'pieces', label: 'Pieces', type: 'digits', required: true },
-      { stage: 'entry', group: '1. New entry — cans in', key: 'quantity', label: 'Quantity', type: 'number', required: true },
+      { stage: 'entry', group: '1. New entry — cans in', key: 'quantity', label: 'Quantity', type: 'digits', required: true },
       { stage: 'entry', group: '1. New entry — cans in', key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
 
       { stage: 'micro', group: '2. Micro testing', key: 'dateOutForMicro', label: 'Date out for micro', type: 'timestamp', required: true },

@@ -366,13 +366,23 @@
   // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
   // listening for a normal field change (computed fields) still sees it. Clicking the
   // active choice again clears it -- there is no other way back to "not answered".
+  // Whole-number cleanup for digit-only fields. A decimal part is DROPPED, not deleted:
+  // stripping the point out of "48.5" would silently store 485, a ten-fold overcount that
+  // still looks like a plausible quantity. Spaces and thousands separators are just noise.
+  function digitsOnly(value) {
+    return String(value == null ? '' : value)
+      .replace(/[\s,']/g, '')
+      .replace(/[.].*$/, '')
+      .replace(/\D/g, '');
+  }
+
   function wirePrefixed(container) {
     container.querySelectorAll('.ml-prefixed').forEach(group => {
       const digitsInput = group.querySelector('input[type=text]');
       const hidden = group.querySelector('input[type=hidden]');
       const prefix = group.querySelector('.ml-prefix').textContent;
       const sync = () => {
-        const clean = digitsInput.value.replace(/\D/g, '');
+        const clean = digitsOnly(digitsInput.value);
         if (clean !== digitsInput.value) digitsInput.value = clean;
         hidden.value = clean ? prefix + clean : '';
         hidden.dispatchEvent(new Event('input', { bubbles: true }));
@@ -388,7 +398,7 @@
     container.querySelectorAll('input[inputmode="numeric"]').forEach(inp => {
       if (inp.closest('.ml-prefixed')) return;
       inp.addEventListener('input', () => {
-        const clean = inp.value.replace(/\D/g, '');
+        const clean = digitsOnly(inp.value);
         if (clean !== inp.value) inp.value = clean;
       });
     });
