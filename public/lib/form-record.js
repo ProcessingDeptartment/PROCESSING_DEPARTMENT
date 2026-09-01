@@ -65,6 +65,11 @@
   .fr-panel-head{ padding:9px 14px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; background:var(--palette-head-bg,#fbfbfa); border-radius:6px 6px 0 0; gap:10px; flex-wrap:wrap; }
   .fr-panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--palette-heading,#2f4356); }
   .fr-panel-body{ padding:14px; }
+  /* Long lists (submissions, verification queue, verification history) are collapsed
+     behind a reveal button so a record opens as a form, not as a wall of rows. */
+  .fr-collapsible{ display:none; }
+  .fr-collapsible.ml-open, .fr-collapsible.fr-open{ display:block; }
+  .fr-reveal-btn{ margin:0 0 10px; }
   .fr-instructions{ display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
   .fr-instructions .instr-item{ background:var(--palette-head-bg,#fbfbfa); border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; padding:8px 10px; }
   .fr-instructions .instr-item strong{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--palette-label,#54606b); margin-bottom:3px; }
@@ -571,14 +576,14 @@
           <div class="fr-panel-head"><h2>Verification</h2></div>
           <div class="fr-panel-body">
             <div class="fr-notice fr-notice-due" id="fr_verifyNotice"></div>
-            <h3 class="fr-section-title" style="margin-top:0;">Entries to verify</h3>
-            <div class="fr-history-list" id="fr_verifySelect" style="margin-bottom:10px;"></div>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verifySelect" data-label="entries to verify">View entries to verify</button>
+            <div class="fr-history-list fr-collapsible" id="fr_verifySelect" style="margin-bottom:10px;"></div>
             ${window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'fr_verified', gridClass: 'fr-grid fr-grid-4', fieldClass: 'fr-field' })}
             <div class="fr-actions" style="justify-content:flex-start; margin-top:0;">
               <button class="fr-btn fr-btn-primary fr-btn-sm" id="fr_saveVerificationBtn">Log verification</button>
             </div>
-            <h3 class="fr-section-title">Verification history</h3>
-            <div class="fr-history-list" id="fr_verificationHistory"></div>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verificationHistory" data-label="verification history">View verification history</button>
+            <div class="fr-history-list fr-collapsible" id="fr_verificationHistory"></div>
           </div>
         </div>` : '';
 
@@ -614,8 +619,9 @@
         <div class="fr-panel no-print">
           <div class="fr-panel-head">
             <h2>Submissions</h2>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_submissionsBody" data-label="entries">View entries</button>
           </div>
-          <div class="fr-panel-body">
+          <div class="fr-panel-body fr-collapsible" id="fr_submissionsBody">
             <div class="fr-filters">
               <label>From <input type="date" id="fr_filterFrom"></label>
               <label>To <input type="date" id="fr_filterTo"></label>
@@ -1302,6 +1308,22 @@
         revisionStart: config.docRevisionStart || 1
       });
     } catch (e) { console.error('title block unavailable', e); return null; }
+  }
+
+  /* One delegated handler drives every reveal button on the page: the button owns
+     the id of the element it shows and the noun that goes in its own label. */
+  if (!window.__revealToggleWired) {
+    window.__revealToggleWired = true;
+    document.addEventListener('click', function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest('[data-reveal]') : null;
+      if (!btn) return;
+      var target = document.getElementById(btn.getAttribute('data-reveal'));
+      if (!target) return;
+      ev.preventDefault();
+      var open = target.classList.toggle('ml-open');
+      target.classList.toggle('fr-open', open);
+      btn.textContent = (open ? 'Hide ' : 'View ') + btn.getAttribute('data-label');
+    });
   }
 
   window.FormRecord = { init };

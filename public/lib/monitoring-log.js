@@ -61,6 +61,11 @@
   .ml-panel-head{ padding:9px 14px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; background:var(--palette-head-bg,#fbfbfa); border-radius:6px 6px 0 0; gap:10px; flex-wrap:wrap; }
   .ml-panel-head h2{ font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--palette-heading,#2f4356); }
   .ml-panel-body{ padding:14px; }
+  /* Long lists (entries, verification queue, verification history) are collapsed
+     behind a reveal button so a record opens as a form, not as a wall of rows. */
+  .ml-collapsible{ display:none; }
+  .ml-collapsible.ml-open{ display:block; }
+  .ml-reveal-btn{ margin:0 0 10px; }
   .ml-instructions{ display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
   .ml-instructions .instr-item{ background:var(--palette-head-bg,#fbfbfa); border:1px solid var(--palette-border,#e2e4e3); border-radius:4px; padding:8px 10px; }
   .ml-instructions .instr-item strong{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--palette-label,#54606b); margin-bottom:3px; }
@@ -1441,9 +1446,12 @@
       <div class="ml-panel no-print">
         <div class="ml-panel-head">
           <h2>${esc(blockTitle)}</h2>
-          ${inline ? '' : `<button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>`}
+          <span>
+            <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="${ns}_entriesBody" data-label="entries">View entries</button>
+            ${inline ? '' : `<button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>`}
+          </span>
         </div>
-        <div class="ml-panel-body">
+        <div class="ml-panel-body ml-collapsible" id="${ns}_entriesBody">
           <div class="ml-filters">
             <label>From <input type="date" id="${ns}_filterFrom"></label>
             <label>To <input type="date" id="${ns}_filterTo"></label>
@@ -1483,14 +1491,14 @@
         <div class="ml-panel-body">
           <div class="ml-notice ml-notice-due" id="ml_verifyNotice"></div>
           ${submitFlow ? `
-          <h3 style="margin-top:0;">Entries to verify</h3>
-          <div class="ml-history-list" id="ml_verifySelect" style="margin-bottom:10px;"></div>` : ''}
+          <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verifySelect" data-label="entries to verify">View entries to verify</button>
+          <div class="ml-history-list ml-collapsible" id="ml_verifySelect" style="margin-bottom:10px;"></div>` : ''}
           ${window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'ml_verified', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}
           <div class="ml-actions" style="justify-content:flex-start; margin-top:0;">
             <button class="ml-btn ml-btn-primary ml-btn-sm" id="ml_saveVerificationBtn">Log verification</button>
           </div>
-          <h3>Verification history</h3>
-          <div class="ml-history-list" id="ml_verificationHistory"></div>
+          <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verificationHistory" data-label="verification history">View verification history</button>
+          <div class="ml-history-list ml-collapsible" id="ml_verificationHistory"></div>
         </div>
       </div>` : '';
 
@@ -1889,6 +1897,22 @@
         revisionStart: config.docRevisionStart || 1
       });
     } catch (e) { console.error('title block unavailable', e); }
+  }
+
+  /* One delegated handler drives every reveal button on the page: the button owns
+     the id of the element it shows and the noun that goes in its own label. */
+  if (!window.__revealToggleWired) {
+    window.__revealToggleWired = true;
+    document.addEventListener('click', function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest('[data-reveal]') : null;
+      if (!btn) return;
+      var target = document.getElementById(btn.getAttribute('data-reveal'));
+      if (!target) return;
+      ev.preventDefault();
+      var open = target.classList.toggle('ml-open');
+      target.classList.toggle('fr-open', open);
+      btn.textContent = (open ? 'Hide ' : 'View ') + btn.getAttribute('data-label');
+    });
   }
 
   window.MonitoringLog = { init };
