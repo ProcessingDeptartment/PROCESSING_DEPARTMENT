@@ -18,25 +18,73 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/traceability.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=11"></script>
 <script>
 (function () {
+  function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
+
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'live-production-pack',
     docCode: 'REC 7.5.1',
     title: 'Live Production Pack',
     docRevisionStart: 4,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2). Live packing had no
+    // job number at all, which is the root of the purge-loss problem reported for July 2026:
+    // bags confirmed for a pack get changed and end up captured against a different job, so the
+    // loss lands on the wrong batch. Picking the job here ties the pack to the intake it came
+    // from and puts live on the same traceability spine as canning and drying.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
+    batchField: 'jobNumber',
+    stage: 'live-packing',
     entryFields: [
       { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
+      { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
       { key: 'idnsPacked', label: 'IDNs packed', type: 'text' },
       { key: 'livePackChecklistAttached', label: 'Live pack checklist (REC 7.5.2) attached?', type: 'yesno' },
+
+      // --- Purging -------------------------------------------------------------------------
+      // Purge loss is reported monthly but has never been captured anywhere, so the figure has
+      // to be rebuilt by hand and cannot be split by job. Mass in and mass out are the two
+      // numbers it actually needs; the percentage is derived so it cannot drift from them.
+      { key: 'purgeStartDate', label: 'Purge started', type: 'date' },
+      { key: 'purgeEndDate', label: 'Purge ended', type: 'date' },
+      {
+        key: 'purgeDays', label: 'Purging time', type: 'computed', unit: 'days', specKey: 'purgeDays',
+        compute: (v) => {
+          const a = Date.parse(v.purgeStartDate), b = Date.parse(v.purgeEndDate);
+          return (isNaN(a) || isNaN(b)) ? '' : Math.round((b - a) / 86400000);
+        }
+      },
+      { key: 'bagsIntoPurge', label: 'Bags into purge', type: 'number' },
+      { key: 'massIntoPurge', label: 'Mass into purge', type: 'number', unit: 'kg' },
+      { key: 'massOutOfPurge', label: 'Mass out of purge', type: 'number', unit: 'kg' },
+      {
+        key: 'purgeLoss', label: 'Purge loss', type: 'computed', unit: '%', specKey: 'purgeLoss',
+        compute: (v) => {
+          const inKg = num(v.massIntoPurge), outKg = num(v.massOutOfPurge);
+          if (inKg === null || outKg === null || inKg <= 0) return '';
+          return Math.round((inKg - outKg) / inKg * 1000) / 10;
+        }
+      },
+
+      // --- Pack output ---------------------------------------------------------------------
+      // Volume packed was previously only countable off the signed packing lists by hand.
+      { key: 'bagsPacked', label: 'Bags packed', type: 'number' },
+      { key: 'boxesPacked', label: 'Boxes packed', type: 'number' },
+      { key: 'massPacked', label: 'Mass packed', type: 'number', unit: 'kg' },
+
       { key: 'oxygenBatchNumber', label: 'Oxygen — batch number', type: 'text' },
       { key: 'spongesBatchNumber', label: 'Sponges — batch number', type: 'text' },
       { key: 'bagsBoxFlatBoardBatchNumber', label: 'Plastic bags, box, flat board — batch number', type: 'text' },
@@ -45,7 +93,10 @@
       { key: 'completedBySupervisor', label: 'Completed by (Supervisor)', type: 'text', required: true },
       { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' }
     ],
-    specFields: [],
+    specFields: [
+      { key: 'purgeDays', label: 'Purging time', unit: 'days', ...Thresholds.get('live-production-pack', 'purgeDays') },
+      { key: 'purgeLoss', label: 'Purge loss', unit: '%', ...Thresholds.get('live-production-pack', 'purgeLoss') }
+    ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'
   });
