@@ -190,10 +190,10 @@
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
       if (field.type === 'yesno') {
-        return `<span class="ml-yesno" data-yesno-for="${id}">
-            <button type="button" data-v="" class="${v === '' ? 'on' : ''}">None</button>
-            <button type="button" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}">Y</button>
-            <button type="button" data-v="No" class="${v === 'No' ? 'on' : ''}">N</button>
+          return `<span class="ml-yesno" data-yesno-for="${id}" role="radiogroup">
+              <button type="button" role="radio" data-v="" class="${v === '' ? 'on' : ''}" aria-checked="${v === '' ? 'true' : 'false'}" tabindex="${v === '' ? 0 : -1}">None</button>
+              <button type="button" role="radio" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}" aria-checked="${v === 'Yes' ? 'true' : 'false'}" tabindex="${v === 'Yes' ? 0 : -1}">Y</button>
+              <button type="button" role="radio" data-v="No" class="${v === 'No' ? 'on' : ''}" aria-checked="${v === 'No' ? 'true' : 'false'}" tabindex="${v === 'No' ? 0 : -1}">N</button>
             <input type="hidden" id="${id}" value="${esc(v)}">
           </span>`;
       }

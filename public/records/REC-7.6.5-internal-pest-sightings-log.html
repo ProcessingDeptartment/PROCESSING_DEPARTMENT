@@ -33,7 +33,7 @@
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'areaOfSighting', label: 'Area of pest / activity sighting (incl. brief description)', type: 'textarea', required: true },
-      { key: 'typeOfPest', label: 'Type of pest sighted', type: 'text' },
+      { key: 'typeOfPest', label: 'Type of pest sighted', type: 'select', options: ['Rat/mouse', 'Fly', 'Cockroach', 'Bird', 'Ant', 'Moth', 'Other'] },
       { key: 'reportedBy', label: 'Pest sighting reported by', type: 'text' },
       { key: 'carCompleted', label: 'CAR completed?', type: 'yesno' },
       { key: 'pestControlCompanyNotified', label: 'Pest control company notified?', type: 'yesno' },

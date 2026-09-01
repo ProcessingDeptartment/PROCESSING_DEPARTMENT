@@ -93,7 +93,7 @@
   // Everything else (records still on paper) lives on the Master Record Index.
   const RECORDS = window.MasterIndexData.rows
     .filter(r => r.href)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
