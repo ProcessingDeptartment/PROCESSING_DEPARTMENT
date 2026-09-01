@@ -260,6 +260,23 @@
             <input type="hidden" id="${id}" value="${esc(v)}">
           </span>`;
       }
+      // Pick an existing record instead of typing a code/name by hand.
+      //
+      // With `source: 'jobtrace'` the options are the ACTUAL submissions filed against the job
+      // number in `jobField` (via Traceability.trace), so a recall links the exact record instance
+      // — value is "<recordKey>::<submissionId>", which resolves back to one submission. Until a
+      // job number is chosen (or if nothing was indexed against it) it falls back to the Master
+      // Index list, where the value is the document number ("REC 7.1.2").
+      // `fillName` / `fillCode` name sibling roster columns to receive the title and REC code.
+      if (field.type === 'recordpick') {
+        const trace = field.source === 'jobtrace';
+        return `<select id="${id}" data-recordpick="1"` +
+          ` data-fill-name="${esc(field.fillName || '')}" data-fill-code="${esc(field.fillCode || '')}"` +
+          ` data-jobtrace="${trace ? '1' : ''}" data-job-field="${esc(field.jobField || '')}"` +
+          ` data-value="${esc(v)}">` +
+          (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
+          `</select>`;
+      }
       if (field.type === 'select') {
         const opts = ['', ...(field.options || [])];
         // Keep a stored value that is no longer an option (e.g. an option list
@@ -322,6 +339,94 @@
       });
     }
 
+    // Master Index fallback list: every REC, code + title, for when there is no job number to
+    // trace against yet.
+    function masterIndexOptions() {
+      return ((window.MasterIndexData && window.MasterIndexData.rows) || [])
+        .map(r => ({
+          value: String(r.docNo || '').trim(),
+          code: String(r.docNo || '').trim(),
+          name: String(r.name || '').trim()
+        }))
+        .filter(o => o.value)
+        .map(o => Object.assign(o, { label: o.code + (o.name ? ' — ' + o.name : '') }));
+    }
+
+    // The real thing: one option per submission actually filed against this job number, newest
+    // stage order first as the trace returns it. record_key is mapped back to a REC code through
+    // the Master Index so the printed record still shows a document number a reviewer recognises.
+    async function jobTraceOptions(jobNo) {
+      if (!jobNo || !window.Traceability) return [];
+      let rows = [];
+      try { rows = await window.Traceability.trace(jobNo); } catch (e) { return []; }
+      const byKey = {};
+      ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(r => {
+        if (r.recordKey) byKey[r.recordKey] = String(r.docNo || '').trim();
+      });
+      return rows.map(r => {
+        const code = byKey[r.record_key] || '';
+        const name = r.record_title || r.record_key || '';
+        const when = r.occurred_on || '';
+        return {
+          value: r.record_key + '::' + r.submission_id,
+          code: code,
+          name: name,
+          href: r.href || '',
+          label: (code ? code + ' — ' : '') + name + (when ? ' · ' + when : '') + (r.stage ? ' [' + r.stage + ']' : '')
+        };
+      });
+    }
+
+    // Fills every recordpick select, then keeps the sibling code/name columns in step with what
+    // was actually picked. Re-run whenever the job number changes -- the option list IS the trace,
+    // so a different job means a different set of real records.
+    async function wireRecordPick(container, config) {
+      const sels = Array.from(container.querySelectorAll('select[data-recordpick]'));
+      if (!sels.length) return;
+
+      const traceCache = {};
+      for (const sel of sels) {
+        const current = sel.dataset.value || sel.value || '';
+        let opts = [];
+        if (sel.dataset.jobtrace) {
+          const jobField = sel.dataset.jobField || ((config && config.batchField) || '');
+          const jobInput = jobField ? el('fr_f_' + jobField) : null;
+          const jobNo = jobInput ? String(jobInput.value || '').trim() : '';
+          if (jobNo) {
+            if (!(jobNo in traceCache)) traceCache[jobNo] = await jobTraceOptions(jobNo);
+            opts = traceCache[jobNo];
+          }
+        }
+        // No job number, or nothing indexed against it yet -> the plain Master Index list.
+        if (!opts.length) opts = masterIndexOptions();
+        // Whatever was captured before is always kept selectable, even if that submission has
+        // since been re-filed under another job number.
+        if (current && !opts.some(o => o.value === current)) {
+          opts = [{ value: current, code: current, name: '', label: current }].concat(opts);
+        }
+        sel.innerHTML = '<option value="">—</option>' + opts.map(o =>
+          `<option value="${esc(o.value)}" data-code="${esc(o.code || '')}" data-name="${esc(o.name || '')}" data-href="${esc(o.href || '')}"` +
+          `${o.value === current ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
+        sel.value = current;
+
+        if (!sel._recordPickWired) {
+          sel._recordPickWired = true;
+          sel.addEventListener('change', () => {
+            sel.dataset.value = sel.value;
+            const opt = sel.options[sel.selectedIndex];
+            const row = sel.closest('[data-roster-row]') || container;
+            [['fillName', 'name'], ['fillCode', 'code']].forEach(([attr, dataKey]) => {
+              const colKey = sel.dataset[attr === 'fillName' ? 'fillName' : 'fillCode'];
+              if (!colKey) return;
+              const target = row.querySelector(`[id$="_${colKey}"]`);
+              if (!target) return;
+              target.value = (opt && opt.dataset[dataKey]) || '';
+              target.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+          });
+        }
+      }
+    }
 
     // Prefix select + digits box combine into one hidden value ("3CP000123"). Digits are
     // scrubbed to numeric-only as typed; validation (when data-validate="true") uses the
@@ -844,6 +949,7 @@
               // Wire Yes/No button groups and job-number widgets inside roster rows
               if (typeof wireYesNo === 'function') wireYesNo(container);
               if (typeof wireJobNumber === 'function') wireJobNumber(container);
+              if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
               renderRosterTotals();
               container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -953,7 +1059,18 @@
       // Wire Yes/No button groups, job-number widgets, and cross-record autofill in the modal
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
+      if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); }
+      // The recordpick option list IS the trace of the job number, so a change of job means a
+      // different set of real submissions to choose from -- rebuild every picker on the form.
+      const pickFields = allFields(config).concat((config.roster && config.roster.columns) || []);
+      const traceJobField = (pickFields.find(f => f.type === 'recordpick' && f.jobField) || {}).jobField
+        || config.batchField;
+      const traceJobInput = traceJobField ? el('fr_f_' + traceJobField) : null;
+      if (traceJobInput && container.querySelector('select[data-recordpick][data-jobtrace="1"]')) {
+        ['change', 'input'].forEach(ev =>
+          traceJobInput.addEventListener(ev, () => wireRecordPick(container, config)));
+      }
       // Restore provisional markers saved with this submission, so a draft reopened later still
       // shows which values came from an unfinished record and still gets them refreshed on save.
       if (existing && Array.isArray(existing.provisionalFields)) {

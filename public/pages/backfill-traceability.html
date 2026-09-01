@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backfill Traceability Index</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+<style>
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #54606b; font-size: 13px; margin-bottom: 16px; }
+  .card { border: 1px solid var(--palette-border, #e2e4e3); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  button { font: inherit; padding: 7px 14px; border-radius: 4px; border: 1px solid var(--palette-border, #cfd4d2); background: #fff; cursor: pointer; }
+  button.primary { background: #1f6f43; border-color: #1f6f43; color: #fff; }
+  button[disabled] { opacity: .5; cursor: default; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #eef0ef; vertical-align: top; }
+  th { font-weight: 600; color: #54606b; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .muted { color: #8b9499; }
+  .warn { color: #a3541c; }
+  .ok { color: #1f6f43; font-weight: 600; }
+  #log { font-family: ui-monospace, Consolas, monospace; font-size: 12px; white-space: pre-wrap;
+         max-height: 320px; overflow: auto; background: #f7f8f8; border-radius: 4px; padding: 10px; }
+  .totals { font-size: 13px; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Backfill traceability index</h1>
+  <div class="sub">
+    Records write a <code>batch_link</code> entry when they are saved. Submissions filed
+    <em>before</em> a record opted into traceability have no entry, so a recall will not find them.
+    This re-indexes those, reading each record's existing submissions and writing the index entries
+    they would have written at save time. It never modifies a submission.
+  </div>
+
+  <div class="card">
+    <div class="actions">
+      <button id="scanBtn" class="primary">Scan (dry run)</button>
+      <button id="runBtn" disabled>Write missing entries</button>
+      <span id="status" class="muted">Not scanned yet.</span>
+    </div>
+    <div class="totals" id="totals"></div>
+    <table id="tbl"><thead><tr>
+      <th>REC</th><th>Record</th><th class="n">Submissions</th>
+      <th class="n">Already indexed</th><th class="n">Missing</th><th>Notes</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="sub" style="margin:0 0 8px;">Log</div>
+    <div id="log">—</div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/traceability.js?v=4"></script>
+<script src="../lib/traced-records.js?v=1"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+  let lines = [];
+  function log(msg) {
+    lines.push(msg);
+    logEl.textContent = lines.join('\n');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  let plan = null;
+
+  // Submissions live in one of two shapes depending on which engine owns the record, plus the
+  // one custom page that stores each inspection under its own record:<id> key.
+  async function loadSubmissions(rec) {
+    if (rec.store === 'custom') {
+      const map = await window.storage.getByPrefix('record:', true);
+      const subs = [];
+      Object.keys(map || {}).forEach(k => {
+        try {
+          const s = JSON.parse(map[k]);
+          // The custom page keeps its fields under `header`; present them as `values` so the
+          // shared indexer sees the same shape it gets from the engines.
+          if (s && s.id) subs.push({ id: s.id, values: s.header || {} });
+        } catch (e) { /* skip unreadable */ }
+      });
+      return subs;
+    }
+    try {
+      const raw = await window.storage.get(rec.store, true);
+      const list = raw ? JSON.parse(raw.value) : [];
+      return Array.isArray(list) ? list : [];
+    } catch (e) { return []; }
+  }
+
+  // A submission counts as indexed when an entry already exists for its batch number. Comparing
+  // by (batchNo, recordKey, submissionId) is exactly the key traceability.js writes.
+  const seg = s => encodeURIComponent(String(s == null ? '' : s));
+
+  // An unauthorised read comes back empty, not as an error -- so without this check the scan would
+  // report "0 submissions, nothing to backfill" on a device with no access key, which is
+  // indistinguishable from a genuinely clean index and is exactly the wrong thing to tell someone
+  // preparing for an audit. Probe the API directly and refuse to report anything if it says 401.
+  async function assertAuthorised() {
+    if (!window.FacilityApi) return { ok: true, note: 'local storage only' };
+    if (!window.FacilityApi.getKey()) {
+      return { ok: false, why: 'This device has no access key, so every read returns nothing.' };
+    }
+    try {
+      const res = await window.FacilityApi.fetch('/api/health');
+      if (!res.ok) return { ok: false, why: 'The records API answered ' + res.status + '.' };
+    } catch (e) {
+      return { ok: false, why: 'The records API is unreachable from this device.' };
+    }
+    if (window.FacilityApi.authFailed && window.FacilityApi.authFailed()) {
+      return { ok: false, why: 'The records API rejected this device’s access key (401).' };
+    }
+    return { ok: true };
+  }
+
+  function blockUnauthorised(why) {
+    plan = null;
+    $('tbl').querySelector('tbody').innerHTML = '';
+    $('totals').innerHTML = '<span class="warn"><strong>Cannot report.</strong> ' + why +
+      ' A scan run now would say &ldquo;nothing to backfill&rdquo; whether or not that is true — ' +
+      'that is not a result you can rely on. ' +
+      '<a href="api-key.html">Enter the access key</a>, then scan again.</span>';
+    $('status').innerHTML = '<span class="warn">Not authorised — no result.</span>';
+    $('runBtn').disabled = true;
+    $('scanBtn').disabled = false;
+    log('REFUSED: ' + why);
+  }
+
+  async function scan() {
+    $('scanBtn').disabled = true;
+    $('runBtn').disabled = true;
+    $('status').textContent = 'Scanning…';
+    lines = [];
+
+    const auth = await assertAuthorised();
+    if (!auth.ok) { blockUnauthorised(auth.why); return; }
+    if (auth.note) log('Note: ' + auth.note);
+
+    log('Reading existing index…');
+
+    const existing = await window.storage.getByPrefix('batch_link:', true);
+    const have = new Set(Object.keys(existing || {}));
+    log('Index holds ' + have.size + ' entries.');
+
+    plan = [];
+    for (const rec of (window.TracedRecords || [])) {
+      const subs = await loadSubmissions(rec);
+      let indexed = 0, missing = [], noBatch = 0;
+      for (const sub of subs) {
+        const batchNo = String((sub.values || {})[rec.batchField] || '').trim();
+        if (!batchNo) { noBatch++; continue; }
+        const key = 'batch_link:' + seg(batchNo) + ':' + seg(rec.recordKey) + ':' + seg(sub.id);
+        if (have.has(key)) indexed++;
+        else missing.push(sub);
+      }
+      plan.push({ rec, total: subs.length, indexed, missing, noBatch });
+      log(rec.docCode + ' — ' + subs.length + ' submissions, ' + missing.length + ' missing');
+    }
+    render();
+    $('scanBtn').disabled = false;
+    const totalMissing = plan.reduce((n, p) => n + p.missing.length, 0);
+    $('runBtn').disabled = totalMissing === 0;
+    $('status').textContent = totalMissing
+      ? totalMissing + ' entries to write.'
+      : 'Nothing to backfill — every submission with a batch number is already indexed.';
+  }
+
+  function render() {
+    const body = $('tbl').querySelector('tbody');
+    body.innerHTML = plan.map(p => {
+      const notes = [];
+      if (p.noBatch) notes.push('<span class="warn">' + p.noBatch + ' with no ' + p.rec.batchField + '</span>');
+      if (p.rec.store === 'custom') notes.push('<span class="muted">custom store</span>');
+      if (!p.total) notes.push('<span class="muted">no submissions</span>');
+      return '<tr><td>' + (p.rec.docCode || '') + '</td><td>' + p.rec.title + '</td>' +
+        '<td class="n">' + p.total + '</td><td class="n">' + p.indexed + '</td>' +
+        '<td class="n">' + (p.missing.length ? '<strong>' + p.missing.length + '</strong>' : '0') + '</td>' +
+        '<td>' + notes.join(' · ') + '</td></tr>';
+    }).join('');
+    const t = plan.reduce((a, p) => ({
+      subs: a.subs + p.total, idx: a.idx + p.indexed,
+      miss: a.miss + p.missing.length, nb: a.nb + p.noBatch
+    }), { subs: 0, idx: 0, miss: 0, nb: 0 });
+    $('totals').innerHTML = t.subs + ' submissions across ' + plan.length + ' records · ' +
+      t.idx + ' already indexed · <strong>' + t.miss + ' missing</strong> · ' +
+      t.nb + ' carry no batch number (skipped).';
+  }
+
+  async function run() {
+    $('runBtn').disabled = true;
+    $('scanBtn').disabled = true;
+    $('status').textContent = 'Writing…';
+
+    const auth = await assertAuthorised();
+    if (!auth.ok) { blockUnauthorised(auth.why); return; }
+
+    let written = 0, failed = 0;
+    for (const p of plan) {
+      if (!p.missing.length) continue;
+      // pageFile makes the index link back to the record's OWN page rather than this tool.
+      const config = {
+        recordKey: p.rec.recordKey,
+        title: p.rec.title,
+        batchField: p.rec.batchField,
+        batchDateField: p.rec.batchDateField,
+        extraBatchFields: p.rec.extraBatchFields,
+        stage: p.rec.stage,
+        pageFile: '../records/' + p.rec.pageFile
+      };
+      for (const sub of p.missing) {
+        try { await window.Traceability.indexSubmission(config, sub); written++; }
+        catch (e) { failed++; log('FAILED ' + p.rec.docCode + ' ' + sub.id + ': ' + e); }
+      }
+      log('Wrote ' + p.missing.length + ' for ' + p.rec.docCode);
+    }
+    // indexSubmission swallows write failures by contract, so "no exception" is not proof the
+    // entries landed. If the key was rejected at any point during the run, say so instead of
+    // claiming success -- the re-scan is what actually confirms it either way.
+    const after = await assertAuthorised();
+    if (!after.ok) {
+      log('Authorisation lost during the run: ' + after.why);
+      $('status').innerHTML = '<span class="warn">Interrupted — authorisation failed partway through. ' +
+        'Some or all entries may not have been written. Fix the access key and scan again.</span>';
+      $('scanBtn').disabled = false;
+      return;
+    }
+
+    log('Done. ' + written + ' written, ' + failed + ' failed.');
+    $('status').innerHTML = '<span class="ok">Backfill complete — ' + written + ' entries written.</span>' +
+      (failed ? ' <span class="warn">' + failed + ' failed.</span>' : '') + ' Re-scan to confirm.';
+    $('scanBtn').disabled = false;
+  }
+
+  $('scanBtn').addEventListener('click', () => scan().catch(e => { log('ERROR ' + e); $('scanBtn').disabled = false; }));
+  $('runBtn').addEventListener('click', () => run().catch(e => { log('ERROR ' + e); $('scanBtn').disabled = false; }));
+})();
+</script>
+</body>
+</html>

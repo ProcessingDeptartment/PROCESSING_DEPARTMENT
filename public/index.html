@@ -139,9 +139,7 @@
     <div class="gaps">
       <h3>Reported monthly but not captured in any record yet</h3>
       <ul>
-        <li><strong>Purge loss %</strong> &mdash; reported at 16% and under investigation, but live purging has no record capturing bags in, bags out and purge days. Without it the figure cannot be split by job or reconciled.</li>
-        <li><strong>Boxes packed (live)</strong> &mdash; Live Production Pack (REC 7.5.1) records IDNs and consumable batches, not box or bag counts, so packed volume has to be counted off packing lists by hand.</li>
-        <li><strong>Dry room occupancy</strong> &mdash; the 20t monthly ceiling is a room-capacity limit, but nothing on the system shows how full the room is right now.</li>
+                        <li><strong>Dry room occupancy</strong> &mdash; the 20t monthly ceiling is a room-capacity limit, but nothing on the system shows how full the room is right now.</li>
         <li><strong>Labour, overtime and absenteeism</strong> &mdash; the R/kg split (OPEX / labour / cost of sales) and FTE count come from finance and HR, not from here.</li>
         <li><strong>Rework batches</strong> &mdash; damaged cans are recorded, but a batch sent for rework is not flagged as such, so rework volume cannot be trended.</li>
       </ul>
@@ -287,6 +285,7 @@
   // they are corrected in one place when the standard moves.
   var TARGET_CANS_PER_100KG = 118;   // July 2026 actual on the lower drained weight New Moon order
   var DRY_YIELD_STANDARD    = 10;    // % -- the stated standard; July achieved 11%
+  var PURGE_DAYS_MIN = 2, PURGE_DAYS_MAX = 12;  // the window live purging is held to
 
   var STREAMS = [
     { key: 'canning', label: 'Canning', colour: '#15803d', match: /can/i },
@@ -411,9 +410,20 @@
     var maxSteam = steamTurns.length ? Math.max.apply(null, steamTurns) : null;
 
     // ---- Live -----------------------------------------------------------------------------
-    var livePacks = data.live.filter(function (e) {
-      return monthOf(e.values || {}, ['packingDate']) === month;
-    }).length;
+    // Purge loss is weighted by mass rather than averaged across packs: a small pack with a bad
+    // loss would otherwise pull the month as hard as the biggest one.
+    var livePacks = 0, boxes = 0, purgeIn = 0, purgeOut = 0, purgeJobs = 0, longPurges = 0;
+    data.live.forEach(function (e) {
+      var v = e.values || {};
+      if (monthOf(v, ['packingDate']) !== month) return;
+      livePacks++;
+      boxes += num(v.boxesPacked) || 0;
+      var i = num(v.massIntoPurge), o = num(v.massOutOfPurge);
+      if (i && o != null) { purgeIn += i; purgeOut += o; purgeJobs++; }
+      var d = num(v.purgeDays);
+      if (d != null && (d < PURGE_DAYS_MIN || d > PURGE_DAYS_MAX)) longPurges++;
+    });
+    var purgeLoss = purgeIn ? ((purgeIn - purgeOut) / purgeIn * 100) : null;
 
     // ---- Tiles ----------------------------------------------------------------------------
     var t = [];
@@ -455,9 +465,21 @@
       avgSteam == null ? 'No steam dates logged this month'
         : 'highest ' + maxSteam + ' of 14 &middot; ' + steamTurns.length + ' job(s) drying'));
 
-    t.push(tile('production', 'Live packs',
-      livePacks || null, '',
-      'Pack records signed off &mdash; box counts not captured'));
+    t.push(tile('production', 'Boxes packed',
+      boxes ? boxes.toLocaleString() : null, '',
+      livePacks + ' pack record' + (livePacks === 1 ? '' : 's') + ' this month'));
+
+    t.push(tile('production', 'Purge loss',
+      purgeLoss != null ? purgeLoss.toFixed(1) : null, ' %',
+      purgeLoss == null
+        ? 'Needs mass in and mass out on a live pack'
+        : Math.round(purgeIn).toLocaleString() + ' kg in, ' + Math.round(purgeOut).toLocaleString()
+          + ' kg out over ' + purgeJobs + ' pack(s)'));
+
+    t.push(tile('quality', 'Purges outside 2–12 days',
+      longPurges, '',
+      longPurges ? '<span class="bad">' + longPurges + ' of ' + livePacks + ' outside the window</span>'
+                 : 'All recorded purges within the window'));
 
     $('dashTiles').innerHTML = t.join('');
 

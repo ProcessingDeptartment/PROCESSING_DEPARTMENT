@@ -18,25 +18,33 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=15"></script>
+<script src="../lib/form-record.js?v=17"></script>
 <script>
 (function () {
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'grading-boxing-traceability',
+    batchField: 'jobNo',
+    stage: 'grading-boxing',
     docCode: 'REC 7.4.4',
     title: 'Grading, Boxing & Traceability',
     docRevisionStart: 1,
     listColumns: ['dateCreated', 'binCode', 'sizeGrade'],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     sections: [
       { title: 'Grading & boxing', fields: [
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'dateCreated', label: 'Date created', type: 'date', required: true },
         { key: 'binCode', label: 'Bin code', type: 'text' },
         { key: 'sizeGrade', label: 'Size grade', type: 'text' },

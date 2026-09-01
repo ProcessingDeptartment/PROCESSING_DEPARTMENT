@@ -173,12 +173,13 @@
       <div class="panel-head"><h2>Header</h2></div>
       <div class="panel-body">
         <div class="grid grid-4" style="margin-bottom:10px;">
+          <label class="field">Job no.<select id="h_jobNo"><option value="">—</option></select></label>
           <label class="field">AG Code<input id="h_agCode"></label>
           <label class="field">Date<input id="h_reportDate" type="date"></label>
           <label class="field">Can size<input id="h_canSize"></label>
-          <label class="field">Date produced<input id="h_dateProduced" type="date"></label>
         </div>
-        <div class="grid grid-2" style="margin-bottom:10px;">
+        <div class="grid grid-4" style="margin-bottom:10px;">
+          <label class="field">Date produced<input id="h_dateProduced" type="date"></label>
           <label class="field">Fujian batch code (cans)<input id="h_batchCans"></label>
           <label class="field">Fujian batch code (can ends)<input id="h_batchEnds"></label>
         </div>
@@ -306,13 +307,15 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/thresholds.js?v=1"></script>
+<script src="../lib/thresholds.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/traceability.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script>
 (function(){
@@ -359,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return {
       id: null, revision: 1, status:'draft',
       specProfileId: 'fujian-73x119-eoa', specVersionAtSave: null,
-      header:{ agCode:'', reportDate:'', canSize:'', dateProduced:'', batchCans:'', batchEnds:'',
+      header:{ jobNo:'', agCode:'', reportDate:'', canSize:'', dateProduced:'', batchCans:'', batchEnds:'',
         microSerial:'', microVerified:'', gauge121:'', gauge300:'' },
       stages:{ before: blankStage(), during: blankStage(), after: blankStage() },
       comments:'',
@@ -383,6 +386,30 @@ function toast(msg){
   }
   function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
   function num(v){ const n = parseFloat(v); return (v===''||v==null||isNaN(n)) ? null : n; }
+
+  // This page predates the shared record engines and keeps its own state shape, so it hands
+  // Traceability a config of the same shape those engines pass.
+  const TRACE_CONFIG = {
+    recordKey: 'double-seam-inspection-report',
+    title: 'Double Seam Inspection Report',
+    batchField: 'jobNo',
+    batchDateField: 'reportDate',
+    stage: 'canning'
+  };
+
+  // Same rule as the shared jobsearch field: pick from OPEN jobs rather than typing a number
+  // nothing downstream can resolve. An already-captured job stays selectable once closed.
+  async function fillJobNumbers(){
+    const sel = $('h_jobNo');
+    if(!sel || !window.JobStatus) return;
+    let open = [];
+    try{ open = await window.JobStatus.openJobNumbers(); }catch(e){ return; }
+    const current = state.header.jobNo || '';
+    if(current && open.indexOf(current) === -1) open = [current].concat(open);
+    sel.innerHTML = '<option value="">—</option>' +
+      open.map(j=>`<option value="${j}"${j===current?' selected':''}>${j}</option>`).join('');
+    sel.value = current;
+  }
 
   // ---------- storage helpers ----------
   async function storeGet(key, shared){
@@ -730,6 +757,7 @@ function toast(msg){
   }
 
   function renderHeader(){
+    $('h_jobNo').value = state.header.jobNo || '';
     $('h_agCode').value = state.header.agCode;
     $('h_reportDate').value = state.header.reportDate;
     $('h_canSize').value = state.header.canSize;
@@ -754,7 +782,7 @@ function toast(msg){
 
   function bindHeaderInputs(){
     const map = {
-      h_agCode:'agCode', h_reportDate:'reportDate', h_canSize:'canSize', h_dateProduced:'dateProduced',
+      h_jobNo:'jobNo', h_agCode:'agCode', h_reportDate:'reportDate', h_canSize:'canSize', h_dateProduced:'dateProduced',
       h_batchCans:'batchCans', h_batchEnds:'batchEnds', h_microSerial:'microSerial',
       h_microVerified:'microVerified', h_gauge121:'gauge121', h_gauge300:'gauge300'
     };
@@ -779,6 +807,7 @@ function toast(msg){
   function renderAll(){
     ensureSpecVersionBaseline();
     renderHeader();
+    fillJobNumbers();
     renderStageTabs();
     renderStageContent();
     renderIssues();
@@ -834,6 +863,16 @@ function toast(msg){
       reportDate: state.header.reportDate, completedBy: state.completedBy, updatedAt: state.updatedAt
     });
     await storeSet('batch_index:'+batchCode, JSON.stringify(idx), true);
+
+    // Feed the shared batch traceability index too, so a recall on the job number finds THIS
+    // inspection. The Fujian batch codes above are the can/end supplier's, not the product job --
+    // they stay in this page's own batch_index and are deliberately not the traced key.
+    if(window.Traceability){
+      await window.Traceability.indexSubmission(TRACE_CONFIG, {
+        id: state.id,
+        values: { jobNo: state.header.jobNo, reportDate: state.header.reportDate }
+      });
+    }
 
     toast(finalize ? 'Submitted as complete.' : 'Draft saved.');
     renderAll();

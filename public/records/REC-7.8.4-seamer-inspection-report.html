@@ -18,7 +18,7 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
@@ -30,10 +30,18 @@
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'seamer-inspection-report',
+    batchField: 'jobNo',
+    stage: 'canning',
     docCode: 'REC 7.8.4',
     title: 'Seamer Inspection Report',
     docRevisionStart: 7,
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     entryFields: [
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'equipmentName', label: 'Equipment name', type: 'text', required: true },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'preCleaningDone', label: 'Before production — pre-cleaning of seamer done?', type: 'yesno' },

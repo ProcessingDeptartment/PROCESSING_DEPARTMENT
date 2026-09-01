@@ -59,8 +59,11 @@
     return d ? d.key : null;
   }
 
-  function hrefForThisPage(sub) {
-    const file = location.pathname.split('/').pop() || '';
+  // Normally the record indexes itself from its own page, so the current filename IS the link.
+  // A config may name `pageFile` instead, for the one caller that indexes on another record's
+  // behalf -- the backfill tool, which runs from pages/ and must still link back to records/.
+  function hrefForThisPage(config, sub) {
+    const file = (config && config.pageFile) || location.pathname.split('/').pop() || '';
     return sub && sub.id ? file + '#' + sub.id : file;
   }
 
@@ -89,7 +92,7 @@
         submission_id: sub.id,
         stage: config.stage || null,
         occurred_on: occurredOn || null,
-        href: hrefForThisPage(sub),
+        href: hrefForThisPage(config, sub),
         summary: summary || null,
         updated_at: new Date().toISOString()
       };

@@ -18,25 +18,36 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=15"></script>
+<script src="../lib/form-record.js?v=17"></script>
 <script>
 (function () {
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'ingredient-weighing',
+    batchField: 'jobNo',
+    stage: 'sauce-ingredients',
+    // Ingredient/consumable codes on the same submission: searchable, but never the
+    // product batch -- they are cross-linked back to the job number, not used as it.
+    extraBatchFields: ['chickenFlavourBatchCode', 'vegetableBaseBatchCode', 'gelatineBatchCode', 'xanthanGumBatchCode', 'maltSugarBatchCode', 'tapiocaStarchBatchCode', 'brownSugarBatchCode', 'sherloneSauceBatchCode'],
     docCode: 'REC 7.3.2',
     title: 'Ingredient Weighing',
     docRevisionStart: 1,
     listColumns: ['date', 'weighedBy'],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     sections: [
       { title: 'Ingredients (1)', fields: [
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'chickenFlavourWeight', label: 'Chicken flavour weight', type: 'number' },
         { key: 'chickenFlavourBatchCode', label: 'Chicken flavour batch code', type: 'text' },

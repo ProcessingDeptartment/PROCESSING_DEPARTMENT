@@ -20,7 +20,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/lookups.js?v=1"></script>
-<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
@@ -32,6 +32,8 @@
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'incubator-cans-log',
+    batchField: 'jobNo',
+    stage: 'incubation',
     docCode: 'REC 7.1',
     title: 'Incubator Cans Log',
     docRevisionStart: 1,
