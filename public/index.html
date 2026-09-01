@@ -50,6 +50,45 @@
   .session-bar #loginBtnTop{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
   .session-bar #loginBtnTop:hover{ background:#1d3a9e; }
 
+
+  /* ---- Production dashboard ------------------------------------------------------------
+     Metric selection follows the Processing monthly report (July 2026): harvest tonnage and
+     its can/dry/live split, canning yield in cans/100kg, dry yield against the 10% standard,
+     and can damage/rework. Everything here is derived from records already being captured --
+     nothing new is asked of the floor. Report metrics with no record behind them yet are
+     listed in the gaps note rather than silently omitted. */
+  .dash{ display:none; margin-bottom:26px; }
+  body.authenticated .dash{ display:block; }
+  .dash-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 10px; }
+  .dash-head input[type=month]{ font:inherit; font-size:12px; padding:3px 6px; border:1px solid #d0d5db; border-radius:4px; background:#fff; color:#1b2330; }
+  .dash-note{ font-size:11px; color:#5c6771; margin:8px 0 0; }
+
+  .tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; }
+  .tile{ background:#fff; border:1px solid #e2e4e3; border-top:3px solid #a9763a; border-radius:6px; padding:12px 14px; }
+  .tile.production{ border-top-color:#15803d; }
+  .tile.quality{ border-top-color:#7c3aed; }
+  .tile-label{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#5c6771; font-weight:700; }
+  .tile-value{ font-size:24px; font-weight:600; color:#1d2b38; margin:6px 0 2px; line-height:1.1; }
+  .tile-value .unit{ font-size:12px; font-weight:500; color:#5c6771; margin-left:2px; }
+  .tile-sub{ font-size:11px; color:#5c6771; }
+  .tile-sub .good{ color:#15803d; font-weight:600; }
+  .tile-sub .bad{ color:#b91c1c; font-weight:600; }
+  .tile.empty .tile-value{ color:#9aa4ad; font-weight:500; font-size:18px; }
+
+  /* Harvest stream split -- the report leads with can/dry/live because the three lines compete
+     for the same intake, so the split matters as much as the total. */
+  .split{ margin-top:10px; background:#fff; border:1px solid #e2e4e3; border-radius:6px; padding:12px 14px; }
+  .split-bar{ display:flex; height:16px; border-radius:3px; overflow:hidden; background:#eceeed; margin:8px 0 6px; }
+  .split-bar span{ display:block; }
+  .split-legend{ display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:#5c6771; }
+  .split-legend b{ color:#1b2330; }
+  .swatch{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:baseline; }
+
+  .gaps{ margin-top:10px; background:#fbfaf7; border:1px solid #e6e0d4; border-left:3px solid #a9763a; border-radius:6px; padding:10px 14px; }
+  .gaps h3{ margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#5c6771; }
+  .gaps ul{ margin:0; padding-left:18px; font-size:11px; color:#5c6771; }
+  .gaps li{ margin-bottom:3px; }
+
   tr.auth-only{ display:none; }
   body.authenticated tr.auth-only{ display:table-row; }
 </style>
@@ -77,6 +116,37 @@
 </div>
 
 <div class="container">
+
+
+  <section class="dash" id="dash">
+    <div class="dash-head">
+      <h2 class="section-title" style="margin:0;">Production &mdash; <span id="dashPeriodLabel">this month</span></h2>
+      <label style="font-size:11px;color:#5c6771;">Month
+        <input type="month" id="dashMonth">
+      </label>
+    </div>
+
+    <div class="tiles" id="dashTiles"></div>
+
+    <div class="split" id="dashSplit" hidden>
+      <div class="tile-label">Harvest by stream</div>
+      <div class="split-bar" id="dashSplitBar"></div>
+      <div class="split-legend" id="dashSplitLegend"></div>
+    </div>
+
+    <p class="dash-note" id="dashStatus">Loading&hellip;</p>
+
+    <div class="gaps">
+      <h3>Reported monthly but not captured in any record yet</h3>
+      <ul>
+        <li><strong>Purge loss %</strong> &mdash; reported at 16% and under investigation, but live purging has no record capturing bags in, bags out and purge days. Without it the figure cannot be split by job or reconciled.</li>
+        <li><strong>Boxes packed (live)</strong> &mdash; Live Production Pack (REC 7.5.1) records IDNs and consumable batches, not box or bag counts, so packed volume has to be counted off packing lists by hand.</li>
+        <li><strong>Dry room occupancy</strong> &mdash; the 20t monthly ceiling is a room-capacity limit, but nothing on the system shows how full the room is right now.</li>
+        <li><strong>Labour, overtime and absenteeism</strong> &mdash; the R/kg split (OPEX / labour / cost of sales) and FTE count come from finance and HR, not from here.</li>
+        <li><strong>Rework batches</strong> &mdash; damaged cans are recorded, but a batch sent for rework is not flagged as such, so rework volume cannot be trended.</li>
+      </ul>
+    </div>
+  </section>
 
   <h2 class="section-title">Categories</h2>
   <table class="nav-table">
@@ -170,6 +240,8 @@
   } catch (e) { /* ignore -- purely an optimisation */ }
 </script>
 
+<script src="lib/data-store.js?v=5"></script>
+<script src="lib/api-backend.js?v=6"></script>
 <script src="lib/auth.js?v=1"></script>
 <script src="lib/login-ui.js?v=1"></script>
 <script>
@@ -193,6 +265,260 @@
   document.addEventListener('authSuccess', refreshSessionBar);
 
   refreshSessionBar();
+</script>
+
+<script>
+/* Production dashboard ---------------------------------------------------------------------
+ *
+ * Read-only. Reads the same four record stores the floor already fills in and derives the
+ * figures the monthly Processing report leads with, so the month-end write-up starts from
+ * captured data instead of a spreadsheet rebuilt by hand:
+ *
+ *   formrecord:abalone-receiving        -> harvest tonnage, and its can/dry/live split
+ *   formrecord:cans-produced            -> cans, damaged cans; cans/100kg once joined to intake
+ *   monitoring_log:drying-process       -> dry yield %, steam turns per job
+ *   monitoring_log:live-production-pack -> live packs recorded
+ *
+ * Four parallel get() calls rather than getByPrefix: 'formrecord:' would drag every record in
+ * the facility across the wire to read two of them.
+ */
+(function () {
+  // Targets come from the monthly report, not from a spec document. Kept together and named so
+  // they are corrected in one place when the standard moves.
+  var TARGET_CANS_PER_100KG = 118;   // July 2026 actual on the lower drained weight New Moon order
+  var DRY_YIELD_STANDARD    = 10;    // % -- the stated standard; July achieved 11%
+
+  var STREAMS = [
+    { key: 'canning', label: 'Canning', colour: '#15803d', match: /can/i },
+    { key: 'dry',     label: 'Dry',     colour: '#a9763a', match: /dry|dried/i },
+    { key: 'live',    label: 'Live',    colour: '#1d4ed8', match: /live/i }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  // A record's month is whichever of its date fields actually got filled in -- older entries
+  // predate some of the later fields, and dropping them would understate the month.
+  function monthOf(values, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var d = String(values[keys[i]] || '');
+      if (/^\d{4}-\d{2}/.test(d)) return d.slice(0, 7);
+    }
+    return null;
+  }
+
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+  // An empty first read can just mean window.storage hasn't switched off localStorage yet
+  // (the api-backend health-check race) -- retry once before accepting the blank.
+  async function readList(key) {
+    var raw = await window.storage.get(key, true);
+    if (!raw) { await sleep(2000); raw = await window.storage.get(key, true); }
+    if (!raw) return [];
+    try {
+      var parsed = JSON.parse(raw.value != null ? raw.value : raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) { return []; }
+  }
+
+  var data = null;
+
+  function tile(cls, label, value, unit, sub) {
+    if (value == null) {
+      return '<div class="tile empty ' + cls + '"><div class="tile-label">' + esc(label) + '</div>'
+        + '<div class="tile-value">No data</div><div class="tile-sub">'
+        + (sub || 'Nothing captured this month') + '</div></div>';
+    }
+    return '<div class="tile ' + cls + '"><div class="tile-label">' + esc(label) + '</div>'
+      + '<div class="tile-value">' + value + (unit ? '<span class="unit">' + esc(unit) + '</span>' : '') + '</div>'
+      + '<div class="tile-sub">' + (sub || '') + '</div></div>';
+  }
+
+  function render(month) {
+    if (!data) return;
+    $('dashPeriodLabel').textContent = month;
+
+    // ---- Harvest --------------------------------------------------------------------------
+    // Latest submission wins per job: a job re-submitted with a corrected intake weight would
+    // otherwise be counted twice.
+    var byJob = {};
+    data.receiving.forEach(function (sub) {
+      var v = sub.values || {};
+      var job = String(v.jobNo || '').trim();
+      if (!job) return;
+      var kg = num(v.intakeWeight);
+      if (kg == null) {
+        // Submissions predating the finalised intakeWeight field carry only the basket roster.
+        kg = (sub.roster || []).reduce(function (a, r) {
+          var n = num(r && r.wholeWeight); return a + (n || 0);
+        }, 0) || null;
+      }
+      var stamp = sub.submittedAt || sub.updatedAt || sub.createdAt || 0;
+      if (byJob[job] && byJob[job].stamp > stamp) return;
+      byJob[job] = {
+        stamp: stamp, kg: kg,
+        month: monthOf(v, ['receivingDate']),
+        stream: String(v.toBeProcessedFor || '')
+      };
+    });
+
+    var harvestKg = 0, splitKg = { canning: 0, dry: 0, live: 0 }, unclassified = 0, jobCount = 0;
+    Object.keys(byJob).forEach(function (job) {
+      var j = byJob[job];
+      if (j.month !== month || j.kg == null) return;
+      harvestKg += j.kg;
+      jobCount++;
+      var hit = STREAMS.filter(function (s) { return s.match.test(j.stream); })[0];
+      if (hit) splitKg[hit.key] += j.kg; else unclassified += j.kg;
+    });
+
+    // ---- Canning --------------------------------------------------------------------------
+    // Period-filtered on the canning entry, not on intake: a job received in one month is
+    // routinely canned in the next, and the yield belongs to the month the cans were made.
+    var cans = 0, damaged = 0, canJobs = {}, canBatches = 0;
+    data.cansProduced.forEach(function (sub) {
+      var v = sub.values || {};
+      if (monthOf(v, ['intakeDate']) !== month) return;
+      canBatches++;
+      cans += num(v.numberOfCans) || 0;
+      damaged += (num(v.totalDamagedCans) != null ? num(v.totalDamagedCans) : (num(v.damagedCans) || 0));
+      var job = String(v.jobNumber || '').trim();
+      if (job) canJobs[job] = true;
+    });
+    var canIntakeKg = Object.keys(canJobs).reduce(function (a, job) {
+      return a + ((byJob[job] && byJob[job].kg) || 0);
+    }, 0);
+    var cansPer100 = (cans && canIntakeKg) ? (cans / canIntakeKg * 100) : null;
+    var damagePct = cans ? (damaged / (cans + damaged) * 100) : null;
+
+    // ---- Drying ---------------------------------------------------------------------------
+    var wholeKg = 0, dryKg = 0, steamTurns = [];
+    data.drying.forEach(function (e) {
+      var v = e.values || {};
+      // Yield belongs to the month the job finished drying, so grading date leads the fallbacks.
+      if (monthOf(v, ['dateGraded', 'movementToGradingRoomDate', 'movementToContainerDate', 'intakeDate']) !== month) return;
+      var w = num(v.wholeWeight), d = num(v.dryWeight);
+      if (w && d) { wholeKg += w; dryKg += d; }
+      var turns = 0;
+      for (var i = 1; i <= 14; i++) { if (String(v['steam' + i + 'Date'] || '')) turns++; }
+      if (turns) steamTurns.push(turns);
+    });
+    var dryYield = (wholeKg && dryKg) ? (dryKg / wholeKg * 100) : null;
+    var avgSteam = steamTurns.length
+      ? steamTurns.reduce(function (a, b) { return a + b; }, 0) / steamTurns.length : null;
+    var maxSteam = steamTurns.length ? Math.max.apply(null, steamTurns) : null;
+
+    // ---- Live -----------------------------------------------------------------------------
+    var livePacks = data.live.filter(function (e) {
+      return monthOf(e.values || {}, ['packingDate']) === month;
+    }).length;
+
+    // ---- Tiles ----------------------------------------------------------------------------
+    var t = [];
+    t.push(tile('production', 'Harvest received',
+      harvestKg ? (harvestKg / 1000).toFixed(1) : null, ' t',
+      jobCount + ' job' + (jobCount === 1 ? '' : 's') + ' &middot; ' + Math.round(harvestKg).toLocaleString() + ' kg'));
+
+    t.push(tile('production', 'Canning yield',
+      cansPer100 != null ? cansPer100.toFixed(0) : null, ' cans/100kg',
+      cansPer100 == null
+        ? 'Needs cans produced and a matching job intake'
+        : '<span class="' + (cansPer100 >= TARGET_CANS_PER_100KG ? 'good' : 'bad') + '">'
+          + (cansPer100 >= TARGET_CANS_PER_100KG ? '+' : '') + (cansPer100 - TARGET_CANS_PER_100KG).toFixed(0)
+          + '</span> vs ' + TARGET_CANS_PER_100KG + ' reference &middot; '
+          + Math.round(canIntakeKg).toLocaleString() + ' kg over ' + Object.keys(canJobs).length + ' job(s)'));
+
+    t.push(tile('production', 'Cans produced',
+      cans ? cans.toLocaleString() : null, '',
+      canBatches + ' batch' + (canBatches === 1 ? '' : 'es') + ' recorded'));
+
+    t.push(tile('quality', 'Can damage rate',
+      damagePct != null ? damagePct.toFixed(2) : null, ' %',
+      damaged.toLocaleString() + ' damaged of ' + (cans + damaged).toLocaleString() + ' filled'));
+
+    t.push(tile('production', 'Dry yield',
+      dryYield != null ? dryYield.toFixed(1) : null, ' %',
+      dryYield == null
+        ? 'Needs whole and dry weight on a graded job'
+        : '<span class="' + (dryYield >= DRY_YIELD_STANDARD ? 'good' : 'bad') + '">'
+          + (dryYield >= DRY_YIELD_STANDARD ? 'above' : 'below') + '</span> the ' + DRY_YIELD_STANDARD
+          + '% standard &middot; ' + Math.round(wholeKg).toLocaleString() + ' kg in, '
+          + Math.round(dryKg).toLocaleString() + ' kg out'));
+
+    // Over-steaming is what darkened the product before July, and it is visible in the record
+    // long before colour is judged in the grading room. No pass/fail here -- the standard number
+    // of turns is not written down anywhere on the system yet.
+    t.push(tile('production', 'Steam turns per job',
+      avgSteam != null ? avgSteam.toFixed(1) : null, ' avg',
+      avgSteam == null ? 'No steam dates logged this month'
+        : 'highest ' + maxSteam + ' of 14 &middot; ' + steamTurns.length + ' job(s) drying'));
+
+    t.push(tile('production', 'Live packs',
+      livePacks || null, '',
+      'Pack records signed off &mdash; box counts not captured'));
+
+    $('dashTiles').innerHTML = t.join('');
+
+    // ---- Stream split ---------------------------------------------------------------------
+    var splitTotal = splitKg.canning + splitKg.dry + splitKg.live + unclassified;
+    $('dashSplit').hidden = !splitTotal;
+    if (splitTotal) {
+      var bar = '', legend = '';
+      STREAMS.forEach(function (s) {
+        var kg = splitKg[s.key];
+        var pct = kg / splitTotal * 100;
+        if (pct > 0) bar += '<span style="width:' + pct.toFixed(2) + '%;background:' + s.colour + '"></span>';
+        legend += '<span><i class="swatch" style="background:' + s.colour + '"></i>' + s.label
+          + ' <b>' + (kg / 1000).toFixed(1) + ' t</b> (' + pct.toFixed(0) + '%)</span>';
+      });
+      if (unclassified > 0) {
+        bar += '<span style="width:' + (unclassified / splitTotal * 100).toFixed(2) + '%;background:#9aa4ad"></span>';
+        legend += '<span><i class="swatch" style="background:#9aa4ad"></i>Not stated <b>'
+          + (unclassified / 1000).toFixed(1) + ' t</b></span>';
+      }
+      $('dashSplitBar').innerHTML = bar;
+      $('dashSplitLegend').innerHTML = legend;
+    }
+
+    $('dashStatus').textContent = 'Derived from Abalone Receiving, Cans Produced, Drying Process and '
+      + 'Live Production Pack. Canning and drying figures are dated by production, not by intake, '
+      + 'so a job received last month lands in the month it was worked.';
+  }
+
+  async function load() {
+    $('dashStatus').textContent = 'Loading…';
+    try {
+      var res = await Promise.all([
+        readList('formrecord:abalone-receiving'),
+        readList('formrecord:cans-produced'),
+        readList('monitoring_log:drying-process'),
+        readList('monitoring_log:live-production-pack')
+      ]);
+      data = { receiving: res[0], cansProduced: res[1], drying: res[2], live: res[3] };
+      render($('dashMonth').value);
+    } catch (e) {
+      // A dashboard failing must never take the landing page down with it -- every link below
+      // still has to work.
+      console.error('dashboard load failed', e);
+      $('dashStatus').textContent = 'Could not load production figures. The links below still work.';
+    }
+  }
+
+  function start() {
+    if (!window.storage) return;
+    var input = $('dashMonth');
+    if (input.value) return;              // already started
+    input.value = new Date().toISOString().slice(0, 7);
+    input.addEventListener('change', function () { render(input.value); });
+    load();
+  }
+
+  // The dashboard is facility data, so it waits for a session exactly like the auth-only links.
+  document.addEventListener('authSuccess', start);
+  if (window.Auth && window.Auth.getCurrentUser()) start();
+})();
 </script>
 
 </body>
