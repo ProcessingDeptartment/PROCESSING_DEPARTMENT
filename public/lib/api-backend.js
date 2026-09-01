@@ -67,6 +67,10 @@
 
   // A 401 means this device has no key (or the wrong one) -- every read comes back empty and every
   // write fails, which otherwise looks exactly like "the database is empty". Say so, once, plainly.
+  // Also recorded as a flag: a banner tells a person, but a tool that REPORTS on the data (the
+  // traceability backfill) has to be able to tell "read nothing" from "was not allowed to read",
+  // and must refuse to draw a conclusion in the second case.
+  let authFailed = false;
   let bannerShown = false;
   function showAuthBanner() {
     if (bannerShown || typeof document === 'undefined') return;
@@ -84,11 +88,13 @@
     const o = Object.assign({}, opts || {});
     o.headers = headers(o.headers);
     const res = await fetch(API_BASE + path, o);
-    if (res.status === 401) showAuthBanner();
+    if (res.status === 401) { authFailed = true; showAuthBanner(); }
+    else if (res.ok) authFailed = false;
     return res;
   }
 
-  window.FacilityApi = { base: () => API_BASE, getKey, setKey, clearKey, headers, fetch: apiFetch };
+  window.FacilityApi = { base: () => API_BASE, getKey, setKey, clearKey, headers, fetch: apiFetch,
+    authFailed: () => authFailed };
 
   /* ---- write-ahead queue ----------------------------------------------------------------------
    * Factory wifi drops. Before this, a write that failed fell back to localStorage and reported

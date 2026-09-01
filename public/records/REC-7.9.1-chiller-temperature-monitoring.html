@@ -18,7 +18,7 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/api-backend.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
@@ -31,6 +31,8 @@
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'chiller-temperature-monitoring',
+    batchField: 'jobNo',
+    stage: 'chilling',
     docCode: 'REC 7.9.1',
     title: 'Chiller Temperature Monitoring',
     docRevisionStart: 9,
@@ -39,7 +41,13 @@
       { label: 'Frequency of monitoring', text: 'Start of shift, lunch break and end of shift.' },
       { label: 'If out of spec', text: 'If the temperature varies by more than 0.5°C from the accepted parameters, corrective action must be recorded and the temperature checked again within 1 hour.' }
     ],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+    ],
     entryFields: [
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
       { key: 'timeOfCheck', label: 'Time', type: 'select', options: ['Start of shift', 'Lunch break', 'End of shift'] },
