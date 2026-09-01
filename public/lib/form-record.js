@@ -253,9 +253,10 @@
           </span>`;
       }
       if (field.type === 'yesno') {
-        return `<span class="ml-yesno" data-yesno-for="${id}" data-good="${field.good === 'No' ? 'No' : 'Yes'}">
-            <button type="button" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}">Y</button>
-            <button type="button" data-v="No" class="${v === 'No' ? 'on' : ''}">N</button>
+        return `<span class="ml-yesno" data-yesno-for="${id}" data-good="${field.good === 'No' ? 'No' : 'Yes'}" role="radiogroup">
+            <button type="button" role="radio" data-v="" class="${v === '' ? 'on' : ''}" aria-checked="${v === '' ? 'true' : 'false'}" tabindex="${v === '' ? 0 : -1}">None</button>
+            <button type="button" role="radio" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}" aria-checked="${v === 'Yes' ? 'true' : 'false'}" tabindex="${v === 'Yes' ? 0 : -1}">Y</button>
+            <button type="button" role="radio" data-v="No" class="${v === 'No' ? 'on' : ''}" aria-checked="${v === 'No' ? 'true' : 'false'}" tabindex="${v === 'No' ? 0 : -1}">N</button>
             <input type="hidden" id="${id}" value="${esc(v)}">
           </span>`;
       }
@@ -273,22 +274,54 @@
     }
 
     // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
-    // listening for a normal field change (computed fields) still sees it. Clicking the
-    // active choice again clears it -- there is no other way back to "not answered".
+    // listening for a normal field change (computed fields) still sees it. None is the way
+    // back to "not answered" once a choice has been made.
     function wireYesNo(container) {
       container.querySelectorAll('.ml-yesno').forEach(group => {
         const hidden = group.querySelector('input[type=hidden]');
-        group.querySelectorAll('button').forEach(btn => {
+        const buttons = Array.from(group.querySelectorAll('button'));
+        const current = hidden ? String(hidden.value) : '';
+        group.setAttribute('role', 'radiogroup');
+        buttons.forEach((btn, i) => {
+          btn.setAttribute('role', 'radio');
+          const is = String(btn.dataset.v) === current;
+          btn.classList.toggle('on', is);
+          btn.setAttribute('aria-checked', is ? 'true' : 'false');
+          btn.tabIndex = is ? 0 : -1;
+
           btn.addEventListener('click', () => {
             if (btn.disabled) return;
-            const next = btn.dataset.v;
-            hidden.value = next;
-            group.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
-            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+            const v = btn.dataset.v;
+            if (hidden) hidden.value = v;
+            buttons.forEach(b => {
+              const on = b.dataset.v === v;
+              b.classList.toggle('on', on);
+              b.setAttribute('aria-checked', on ? 'true' : 'false');
+              b.tabIndex = on ? 0 : -1;
+            });
+            if (hidden) hidden.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+
+          btn.addEventListener('keydown', (ev) => {
+            if (btn.disabled) return;
+            const key = ev.key;
+            let nextIndex = null;
+            if (key === 'ArrowRight' || key === 'ArrowDown') nextIndex = (i + 1) % buttons.length;
+            else if (key === 'ArrowLeft' || key === 'ArrowUp') nextIndex = (i - 1 + buttons.length) % buttons.length;
+            else if (key === 'Home') nextIndex = 0;
+            else if (key === 'End') nextIndex = buttons.length - 1;
+            else if (key === 'Enter' || key === ' ' || key === 'Spacebar') { ev.preventDefault(); btn.click(); return; }
+            if (nextIndex !== null) {
+              ev.preventDefault();
+              const nb = buttons[nextIndex];
+              try { nb.focus(); } catch (e) {}
+              nb.click();
+            }
           });
         });
       });
     }
+
 
     // Prefix select + digits box combine into one hidden value ("3CP000123"). Digits are
     // scrubbed to numeric-only as typed; validation (when data-validate="true") uses the

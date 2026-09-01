@@ -52,7 +52,8 @@
         { key: 'nameOfSupervisor', label: 'Name of supervisor', type: 'text' },
         { key: 'bagNumber', label: 'Bag number', type: 'text' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-        { key: 'gradeRange', label: 'Grade range', type: 'text' },
+        Lookups.field({ key: 'gradeRange', label: 'Grade range', list: 'sizeRanges' }),
+
         { key: 'individualWeights', label: 'Individual weights (1-24, comma-separated)', type: 'textarea' },
         { key: 'approved', label: 'Approved?', type: 'yesno' }
       ]
