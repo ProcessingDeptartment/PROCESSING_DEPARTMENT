@@ -573,8 +573,11 @@
     const showVerification = config.showVerificationStrip !== false;
     const verificationHtml = showVerification ? `
         <div class="fr-panel no-print">
-          <div class="fr-panel-head"><h2>Verification</h2></div>
-          <div class="fr-panel-body">
+          <div class="fr-panel-head">
+            <h2>Verification</h2>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verificationBody" data-label="verification">View verification</button>
+          </div>
+          <div class="fr-panel-body fr-collapsible" id="fr_verificationBody">
             <div class="fr-notice fr-notice-due" id="fr_verifyNotice"></div>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verifySelect" data-label="entries to verify">View entries to verify</button>
             <div class="fr-history-list fr-collapsible" id="fr_verifySelect" style="margin-bottom:10px;"></div>

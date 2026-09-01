@@ -1487,8 +1487,11 @@
     const showVerification = config.showVerificationStrip !== false;
     const verificationHtml = showVerification ? `
       <div class="ml-panel no-print">
-        <div class="ml-panel-head"><h2>Verification</h2></div>
-        <div class="ml-panel-body">
+        <div class="ml-panel-head">
+          <h2>Verification</h2>
+          <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verificationBody" data-label="verification">View verification</button>
+        </div>
+        <div class="ml-panel-body ml-collapsible" id="ml_verificationBody">
           <div class="ml-notice ml-notice-due" id="ml_verifyNotice"></div>
           ${submitFlow ? `
           <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verifySelect" data-label="entries to verify">View entries to verify</button>
