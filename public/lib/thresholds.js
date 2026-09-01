@@ -44,6 +44,14 @@
     },
     'thermometer-correction-factors': {
       diffTolerance: { min: -0.5, max: 0.5 }
+    },
+    'live-production-pack': {
+      // Purging outside 2-12 days is the window the department works to.
+      purgeDays: { min: 2, max: 12 },
+      // Purge loss has no agreed limit yet -- July 2026 ran at 16% and was called elevated,
+      // but nothing states what good looks like. Left open so it is recorded and trended
+      // rather than judged against a guessed number; set it here once the standard is agreed.
+      purgeLoss: { min: null, max: null }
     }
   };
 
