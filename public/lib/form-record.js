@@ -530,9 +530,10 @@
   }
 
   /* Writes one autofilled value. On a <select> a value the list doesn't offer is NOT forced in:
-   * several records word the same idea differently (receiving says 'Dried', shucking says 'Dry'),
-   * and silently inventing an option would put a word on a compliance record that its own preset
-   * list doesn't recognise. The operator picks in that case. */
+   * where two records word the same idea differently, silently inventing an option would put a
+   * word on a compliance record that its own preset list doesn't recognise. The operator picks in
+   * that case. (A field that stays blank on a job it should have filled means the two lists have
+   * drifted apart -- align the wording rather than forcing the value through here.) */
   function setAutofilled(targetEl, value) {
     if (targetEl.tagName === 'SELECT') {
       const has = [...targetEl.options].some((o) => String(o.value).toLowerCase() === String(value).toLowerCase());

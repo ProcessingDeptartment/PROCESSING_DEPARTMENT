@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=19"></script>
+<script src="../lib/form-record.js?v=20"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -41,19 +41,17 @@
     submitStamp: true,
     listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
     // Selecting a job number that was already received on Abalone Receiving (REC 7.1.2) pulls in
-    // its receiving date, so it doesn't need to be re-typed. Only fills empty fields.
-    // NOTE: doesn't also autofill processingFor -- this page's options ('Dry') don't match
-    // Abalone Receiving's ('Dried'), so it would silently fail to select on the common case.
-    // Fix the option spelling here to match before wiring that field.
+    // its receiving date and processing destination, so neither needs to be re-typed. Only fills
+    // empty fields. The size range picker is narrowed to the sizes actually received on that job.
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate' },
+        fill: { intakeDate: 'receivingDate', processingFor: 'toBeProcessedFor' },
         restrict: { sizeRange: 'sizeRange' } }
     ],
     sections: [
       { title: 'Intake & processing info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dry', 'Other'] },
+        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
