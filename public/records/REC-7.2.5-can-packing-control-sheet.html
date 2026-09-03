@@ -18,6 +18,7 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/auth.js?v=1"></script>
@@ -35,11 +36,21 @@
     title: 'Can Packing Control Sheet',
     docRevisionStart: 1,
     listColumns: ['date', 'trackingOrJobNo', 'sizeRange'],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    // The free-text 'Tracking/job no.' line is kept as captured -- it also carries tracking
+    // numbers, which the picker does not.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: {},
+        restrict: { sizeRange: 'sizeRange' } }
+    ],
     sections: [
       { title: 'Packing details', fields: [
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'time', label: 'Time', type: 'text' },
         { key: 'trackingOrJobNo', label: 'Tracking/job no.', type: 'text' },
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
         { key: 'qualityOfAbalone', label: 'Quality of abalone', type: 'text' },
         { key: 'piecesSizes', label: 'Pieces/sizes', type: 'text' }

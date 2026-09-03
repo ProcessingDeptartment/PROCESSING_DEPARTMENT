@@ -18,6 +18,7 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -36,9 +37,18 @@
     instructions: [
       { label: 'Purpose', text: 'Record any product samples taken (AG code / DW / dry job number / live tag / ranched incoming date) and why.' }
     ],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    // The free-text product information line is kept as captured -- a sample can be
+    // identified by AG code, live tag or ranched incoming date as well as a job number.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: {} }
+    ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'productInfo', label: 'Product information (AG code, DW / dry job no. / live tag / ranched incoming date)', type: 'text', required: true },
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'pieces', label: 'Pieces', type: 'number' },
       { key: 'quantity', label: 'Quantity (amount or grams)', type: 'number' },
       { key: 'reason', label: 'Reason for sampling', type: 'select', options: ['QC check', 'Customer request', 'Investigation', 'Other'] },

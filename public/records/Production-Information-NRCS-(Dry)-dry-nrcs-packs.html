@@ -18,6 +18,7 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -33,11 +34,21 @@
     title: 'Dry NRCS Packs — Production Information NRCS',
     docRevisionStart: 1,
     listColumns: ['jobNumberProductionDate', 'nrcsAgCode'],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    // Picking one also fills in the receiving date of that job, where this form's own
+    // field is still empty. The free-text 'Job number / production date' line is kept as
+    // captured -- it carries a production date too, which the picker does not.
+    autofill: [
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: { receivingDate: 'receivingDate' } }
+    ],
     sections: [
       { title: 'Batch details', fields: [
         { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
         { key: 'dateOfInspection', label: 'Date of inspection', type: 'date' },
         { key: 'jobNumberProductionDate', label: 'Job number / production date', type: 'text' },
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         { key: 'nrcsAgCode', label: 'NRCS AG code', type: 'text' },
         { key: 'productDescription', label: 'Product description', type: 'text' }
       ]},

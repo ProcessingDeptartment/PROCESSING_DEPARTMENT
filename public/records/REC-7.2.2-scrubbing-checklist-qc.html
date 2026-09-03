@@ -19,6 +19,7 @@
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/lookups.js?v=1"></script>
 <script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -37,10 +38,20 @@
     instructions: [
       { label: 'Purpose', text: 'QC check of scrubbing quality — crates inspected, damage, and whether abalone is scrubbed clean.' }
     ],
+    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
+    // actually been received instead of typing blind.
+    // The free-text 'Tracking no. or Job no.' line is kept as captured -- it also carries
+    // tracking numbers, which the picker does not.
+    autofill: [
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: {},
+        restrict: { sizeRange: 'sizeRange' } }
+    ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'time', label: 'Time', type: 'text' },
       { key: 'trackingOrJobNo', label: 'Tracking no. or Job no.', type: 'text' },
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'noOfCratesInspected', label: 'No. of crates inspected', type: 'number' },
       { key: 'damagedAbalone', label: 'Damaged abalone?', type: 'yesno' },
