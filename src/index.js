@@ -228,6 +228,24 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
           for (const [k, sum] of Object.entries(sums)) {
             if (!(k in values)) values[k] = String(sum);
           }
+          // Distinct text values per roster column, e.g. the size ranges actually received on
+          // this job. Downstream forms use it to narrow their own size-range picker to what the
+          // job contains, so a grader can't pick a size that was never received. Capped so a
+          // free-text column (comments) can't turn into a thousand-entry payload -- over the cap
+          // the column is dropped, and the client falls back to the full preset list.
+          const distinct = {};
+          for (const row of entry.roster) {
+            for (const [k, v] of Object.entries(row || {})) {
+              const text = String(v == null ? '' : v).trim();
+              if (!text) continue;
+              (distinct[k] = distinct[k] || new Set()).add(text);
+            }
+          }
+          const options = {};
+          for (const [k, set] of Object.entries(distinct)) {
+            if (set.size <= 50) options[k] = [...set];
+          }
+          values.__rosterOptions = options;
         }
         if (String(values[field] || '').trim().toUpperCase() !== needle) continue;
         // Drafts are matched on purpose: a job number is created on Abalone Receiving at the start

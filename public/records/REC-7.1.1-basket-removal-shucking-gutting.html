@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=17"></script>
+<script src="../lib/form-record.js?v=19"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -37,6 +37,8 @@
     docCode: 'REC 7.1.1',
     title: 'Basket Removal, Shucking & Gutting',
     docRevisionStart: 1,
+    // Submission is stamped with date and time, not date alone.
+    submitStamp: true,
     listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
     // Selecting a job number that was already received on Abalone Receiving (REC 7.1.2) pulls in
     // its receiving date, so it doesn't need to be re-typed. Only fills empty fields.
@@ -44,7 +46,9 @@
     // Abalone Receiving's ('Dried'), so it would silently fail to select on the common case.
     // Fix the option spelling here to match before wiring that field.
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate' } }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: { intakeDate: 'receivingDate' },
+        restrict: { sizeRange: 'sizeRange' } }
     ],
     sections: [
       { title: 'Intake & processing info', fields: [

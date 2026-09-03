@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=17"></script>
+<script src="../lib/form-record.js?v=19"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -38,8 +38,13 @@
     docRevisionStart: 1,
     // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
     // actually been received instead of typing blind.
+    // Picking one also fills in what that job already carries (intakeDate, harvestFarm),
+    // only where this form's own field is still empty.
+    // The size range picker is narrowed to the sizes actually received on that job.
     autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom' },
+        restrict: { sizeRange: 'sizeRange' } }
     ],
     listColumns: ['intakeDate', 'jobNumber', 'sizeRange'],
     batchField: 'jobNumber',

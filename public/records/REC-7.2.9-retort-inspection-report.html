@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=17"></script>
+<script src="../lib/form-record.js?v=19"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -41,7 +41,8 @@
     // Search-select only (no date autofill) -- by this point in the process "intake date" means
     // intake into retort, not the original Abalone Receiving date, so it can't be inferred here.
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: { harvestFarm: 'receivedFrom' } }
     ],
     sections: [
       { title: 'Batch info', fields: [

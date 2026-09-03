@@ -529,6 +529,61 @@
     }
   }
 
+  /* Writes one autofilled value. On a <select> a value the list doesn't offer is NOT forced in:
+   * several records word the same idea differently (receiving says 'Dried', shucking says 'Dry'),
+   * and silently inventing an option would put a word on a compliance record that its own preset
+   * list doesn't recognise. The operator picks in that case. */
+  function setAutofilled(targetEl, value) {
+    if (targetEl.tagName === 'SELECT') {
+      const has = [...targetEl.options].some((o) => String(o.value).toLowerCase() === String(value).toLowerCase());
+      if (!has) return false;
+      const match = [...targetEl.options].find((o) => String(o.value).toLowerCase() === String(value).toLowerCase());
+      targetEl.value = match.value;
+      return true;
+    }
+    targetEl.value = value;
+    return true;
+  }
+
+  /* Optional per-page config: autofill: [{ ..., restrict: { <targetKey>: <sourceRosterColumn> } }].
+   * Narrows a dropdown to the values the picked job actually carries -- size range is the one that
+   * matters: a job received as 100-150g and 150-200g must not offer 400-450g on a downstream form.
+   * The job's roster values come back from /api/lookup as __rosterOptions (see src/index.js).
+   *
+   * Fails OPEN on purpose: no job picked, no roster data, or nothing in common with the preset
+   * list all restore the full list. A picker with nothing in it stops the shift; a slightly wide
+   * picker doesn't. A value already captured is always kept selectable so old entries still read.
+   */
+  function applyRestrict(container, rule, found) {
+    if (!rule.restrict) return;
+    Object.entries(rule.restrict).forEach(([targetKey, sourceCol]) => {
+      const sel = container.querySelector('#fr_f_' + targetKey);
+      if (!sel || sel.tagName !== 'SELECT') return;
+      if (!sel._frAllOptions) {
+        sel._frAllOptions = [...sel.options].map((o) => ({ value: o.value, text: o.textContent }));
+      }
+      const all = sel._frAllOptions;
+      const current = sel.value;
+      const allowed = found && found.__rosterOptions && found.__rosterOptions[sourceCol];
+      let keep = all;
+      if (Array.isArray(allowed) && allowed.length) {
+        const want = new Set(allowed.map((v) => String(v).trim().toLowerCase()));
+        const narrowed = all.filter((o) => o.value === '' || want.has(String(o.value).trim().toLowerCase()));
+        // '' is the placeholder, so "nothing matched" is length <= 1.
+        if (narrowed.filter((o) => o.value !== '').length) keep = narrowed;
+      }
+      if (current && !keep.some((o) => o.value === current)) keep = keep.concat([{ value: current, text: current }]);
+      sel.innerHTML = '';
+      keep.forEach((o) => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.text;
+        sel.appendChild(opt);
+      });
+      sel.value = current;
+    });
+  }
+
   function wireAutofill(container, config) {
     if (!Array.isArray(config.autofill) || !config.autofill.length) return;
     config.autofill.forEach((rule) => {
@@ -537,16 +592,20 @@
       let lastValue = '';
       const onPick = async () => {
         const value = watchEl.value;
-        if (!value || value === lastValue) return;
+        if (value === lastValue) return;
         lastValue = value;
+        if (!value) { applyRestrict(container, rule, null); return; }
         try {
           const found = await autofillLookup(rule, value);
+          // Restriction is applied either way: clearing the job (or picking one nothing is known
+          // about) must put the full preset list back rather than leave the last job's narrowing.
+          applyRestrict(container, rule, found);
           if (!found) return;
           const provisional = found.__status && found.__status !== 'submitted';
-          Object.entries(rule.fill).forEach(([targetKey, sourceKey]) => {
+          Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
             const targetEl = container.querySelector('#fr_f_' + targetKey);
-            if (targetEl && !targetEl.value && found[sourceKey] != null) {
-              targetEl.value = found[sourceKey];
+            if (targetEl && !targetEl.value && found[sourceKey] != null && found[sourceKey] !== '') {
+              if (!setAutofilled(targetEl, found[sourceKey])) return;
               markProvisional(targetEl, provisional);
               targetEl.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -578,6 +637,7 @@
       let found = null;
       try { found = await autofillLookup(rule, watchEl.value); } catch (e) { found = null; }
       if (!found) continue;
+      applyRestrict(container, rule, found);
       const nowProvisional = found.__status && found.__status !== 'submitted';
       if (nowProvisional) stillDraft = true;
       Object.entries(rule.fill).forEach(([targetKey, sourceKey]) => {
@@ -585,8 +645,8 @@
         if (!targetEl || targetEl.dataset.provisional !== '1') return;
         const latest = found[sourceKey];
         if (latest != null && String(latest) !== String(targetEl.value)) {
-          changed.push(`${targetKey}: ${targetEl.value} → ${latest}`);
-          targetEl.value = latest;
+          const before = targetEl.value;
+          if (setAutofilled(targetEl, latest)) changed.push(`${targetKey}: ${before} → ${latest}`);
         }
         markProvisional(targetEl, nowProvisional);
       });
@@ -1264,14 +1324,26 @@
         <tbody>${body}${totalsRowHtml}</tbody></table>`;
     }
 
+    /* dd/mm/yyyy HH:MM in local time -- same shape as DocHeader.fmtDate, with the clock. */
+    function fmtDateTime(ts) {
+      const d = new Date(ts);
+      if (isNaN(d)) return '';
+      return window.DocHeader.fmtDate(d) + ' ' +
+        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
     /* Signature line. A draft prints an empty one: an unsubmitted form is not evidence,
      * and pre-printing a name beside "Signature" would assert a sign-off nobody made. */
     function sheetSignHtml(sub) {
       const done = isSubmitted(sub);
       const signOff = (sub.signOffs || []).filter(s => s.action === 'submitted').slice(-1)[0];
       const who = done && signOff ? (signOff.by || '') : '';
+      /* config.submitStamp prints the submission time next to the date. Off by default:
+       * most sheets are a day's record and a time beside "Date:" reads as noise. Records
+       * where the moment of submission is itself the evidence turn it on. */
       const when = done && sub.submittedAt
-        ? window.DocHeader.fmtDate(new Date(sub.submittedAt)) : '';
+        ? (config.submitStamp ? fmtDateTime(sub.submittedAt)
+                              : window.DocHeader.fmtDate(new Date(sub.submittedAt))) : '';
       return `<table class="fr-sheet-sign"><tbody>
         <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(who)}</td>
             <td class="fr-sheet-lbl">Title:</td><td></td>

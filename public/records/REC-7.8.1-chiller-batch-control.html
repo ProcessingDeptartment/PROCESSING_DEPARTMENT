@@ -25,7 +25,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=11"></script>
+<script src="../lib/monitoring-log.js?v=20"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -38,8 +38,13 @@
     docRevisionStart: 4,
     // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
     // actually been received instead of typing blind.
+    // Picking one also fills in what that job already carries (harvestFarm),
+    // only where this form's own field is still empty.
+    // The size range picker is narrowed to the sizes actually received on that job.
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
+        fill: { harvestFarm: 'receivedFrom' },
+        restrict: { sizeRange: 'sizeRange' } }
     ],
     entryFields: [
       { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },

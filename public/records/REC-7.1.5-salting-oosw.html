@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=17"></script>
+<script src="../lib/form-record.js?v=19"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -44,7 +44,8 @@
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
         intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', wholeWeight: 'intakeWeight'
-      } }
+      },
+        restrict: { sizeRange: 'sizeRange' } }
     ],
     sections: [
       { title: 'Batch info', fields: [

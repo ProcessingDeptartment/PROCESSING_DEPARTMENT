@@ -503,6 +503,7 @@
       let found = null;
       try { found = await autofillLookup(rule, watchEl.value); } catch (e) { found = null; }
       if (!found) continue;
+      applyRestrict(container, ns, rule, found);
       const nowProvisional = found.__status && found.__status !== 'submitted';
       if (nowProvisional) stillDraft = true;
       Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
@@ -510,8 +511,8 @@
         if (!targetEl || targetEl.dataset.provisional !== '1') return;
         const latest = found[sourceKey];
         if (latest != null && String(latest) !== String(targetEl.value)) {
-          changed.push(`${targetKey}: ${targetEl.value} → ${latest}`);
-          targetEl.value = latest;
+          const before = targetEl.value;
+          if (setAutofilled(targetEl, latest)) changed.push(`${targetKey}: ${before} → ${latest}`);
         }
         markProvisional(targetEl, nowProvisional);
       });
@@ -549,6 +550,49 @@
   // field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
   // record's recordKey) whose `matchField` matches, and copies `fill` (target key -> source key)
   // into this entry's still-empty fields. Never overwrites something already typed in.
+  // Same two rules as form-record.js, kept in step with it: a <select> is never given a value its
+  // own preset list doesn't offer, and `restrict` narrows a dropdown to what the picked job
+  // actually carries (see the comments there for why each fails the way it does).
+  function setAutofilled(targetEl, value) {
+    if (targetEl.tagName === 'SELECT') {
+      const match = [...targetEl.options].find((o) => String(o.value).toLowerCase() === String(value).toLowerCase());
+      if (!match) return false;
+      targetEl.value = match.value;
+      return true;
+    }
+    targetEl.value = value;
+    return true;
+  }
+
+  function applyRestrict(container, ns, rule, found) {
+    if (!rule.restrict) return;
+    Object.entries(rule.restrict).forEach(([targetKey, sourceCol]) => {
+      const sel = container.querySelector('#' + ns + '_f_' + targetKey);
+      if (!sel || sel.tagName !== 'SELECT') return;
+      if (!sel._mlAllOptions) {
+        sel._mlAllOptions = [...sel.options].map((o) => ({ value: o.value, text: o.textContent }));
+      }
+      const all = sel._mlAllOptions;
+      const current = sel.value;
+      const allowed = found && found.__rosterOptions && found.__rosterOptions[sourceCol];
+      let keep = all;
+      if (Array.isArray(allowed) && allowed.length) {
+        const want = new Set(allowed.map((v) => String(v).trim().toLowerCase()));
+        const narrowed = all.filter((o) => o.value === '' || want.has(String(o.value).trim().toLowerCase()));
+        if (narrowed.filter((o) => o.value !== '').length) keep = narrowed;
+      }
+      if (current && !keep.some((o) => o.value === current)) keep = keep.concat([{ value: current, text: current }]);
+      sel.innerHTML = '';
+      keep.forEach((o) => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.text;
+        sel.appendChild(opt);
+      });
+      sel.value = current;
+    });
+  }
+
   function wireAutofill(container, ns, autofillRules) {
     (autofillRules || []).forEach((rule) => {
       const watchEl = container.querySelector('#' + ns + '_f_' + rule.watch);
@@ -556,17 +600,19 @@
       let lastValue = '';
       const onPick = async () => {
         const value = watchEl.value;
-        if (!value || value === lastValue) return;
+        if (value === lastValue) return;
         lastValue = value;
+        if (!value) { applyRestrict(container, ns, rule, null); return; }
         try {
           // Through FacilityApi so the access key is attached (see api-backend.js).
           const found = await autofillLookup(rule, value);
+          applyRestrict(container, ns, rule, found);
           if (!found) return;
           const provisional = found.__status && found.__status !== 'submitted';
           Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
             const targetEl = container.querySelector('#' + ns + '_f_' + targetKey);
-            if (targetEl && !targetEl.value && found[sourceKey] != null) {
-              targetEl.value = found[sourceKey];
+            if (targetEl && !targetEl.value && found[sourceKey] != null && found[sourceKey] !== '') {
+              if (!setAutofilled(targetEl, found[sourceKey])) return;
               markProvisional(targetEl, provisional);
               targetEl.dispatchEvent(new Event('input', { bubbles: true }));
             }
