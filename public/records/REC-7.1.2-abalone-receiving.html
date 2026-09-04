@@ -40,7 +40,7 @@
     sections: [
       { title: 'Receiving info', fields: [
         { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
-        { key: 'receivedFrom', label: 'Received from', type: 'select', options: ['Abagold', 'Third party', 'Other'] },
+        Lookups.field({ key: 'receivedFrom', label: 'Received from', list: 'farms' }),
         { key: 'toBeProcessedFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'] },
         { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
         { key: 'intakeWeight', label: 'Intake weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
