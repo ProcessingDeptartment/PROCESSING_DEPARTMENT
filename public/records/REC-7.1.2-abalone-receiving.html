@@ -50,14 +50,258 @@
       title: 'Baskets received',
       totalsRow: ['wholeWeight', 'farmCount', 'mortalityCount'],
       columns: [
-        { key: 'basketNr', label: 'Basket nr.', type: 'number' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
+        { key: 'basketNr', label: 'Basket nr.', type: 'number' },
         { key: 'wholeWeight', label: 'Whole weight (kg)', type: 'number' },
         { key: 'farmCount', label: 'Count', type: 'number' },
         { key: 'mortalityCount', label: 'Mortality count', type: 'number' }
       ]
     }
   });
+})();
+</script>
+
+<!-- ============================================================================
+     Page-specific enhancements for the BASKETS RECEIVED roster.
+     form-record.js is the shared engine for 100+ forms, so this stays out of it:
+     everything below hooks the DOM the engine renders, from outside.
+
+       1. Persistent size range  - a chosen size auto-fills every NEW basket row
+                                    until "Change size" is clicked.
+       2. Barcode scanner        - scan populates Size range (10g->custom band),
+                                    Basket nr. and Count, then focuses Whole weight.
+       3. Connected scale        - a weight pushed from a scale fills Whole weight
+                                    on the active row. It never submits the form.
+
+     The engine rebuilds #fr_modalSections.innerHTML on every clear/submit and
+     rebuilds #fr_rosterRows on every add/remove row, so a MutationObserver
+     re-applies all of this after each rebuild. Nothing here is persisted as a
+     record field - the barcode/scale inputs live outside #fr_rosterRows and the
+     engine only ever saves the roster columns declared in the config above.
+============================================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  // Size for baskets scanned/added next. Kept for the whole session (a shift
+  // usually receives one grade at a time); cleared only by "Change size".
+  var persistentSize = null;
+  // Row the scale weight should land on - the last one a barcode populated.
+  var activeRowIndex = -1;
+
+  function $(id) { return document.getElementById(id); }
+  function cellInput(row, key) { return row.querySelector('[id$="_' + key + '"]'); }
+  function cellVal(row, key) { var i = cellInput(row, key); return i ? String(i.value || '').trim() : ''; }
+
+  function setCell(row, key, val) {
+    var inp = cellInput(row, key);
+    if (!inp) return;
+    if (inp.tagName === 'SELECT' && !Array.prototype.some.call(inp.options, function (o) { return o.value === val; })) {
+      var o = document.createElement('option');
+      o.value = val; o.textContent = val;
+      inp.appendChild(o);
+    }
+    inp.value = val;
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  /* ---- barcode ---------------------------------------------------------- */
+
+  // 10g band (e.g. "20-30g", or "450g+") -> the facility's custom size bands
+  // (0-50g, 50-100g, ... , 450g+). Banded on the LOWER bound: 0..49->0-50g,
+  // 50..99->50-100g, and anything >=450 -> 450g+.
+  function convertSize(lower) {
+    if (lower >= 450) return '450g+';
+    var start = Math.floor(lower / 50) * 50;
+    return start + '-' + (start + 50) + 'g';
+  }
+
+  // Tolerant parser: the exact scanner payload/delimiter isn't finalised, so
+  // this accepts labelled tokens (basket=.., count=.., size=..) OR, failing
+  // that, a size band anywhere in the string plus the first two bare integers
+  // as basket number then count. Adjust here once the real symbology is known.
+  function parseBarcode(raw) {
+    raw = String(raw || '').trim();
+    if (!raw) return null;
+    var out = { basketNr: '', farmCount: '', sizeRange: '' };
+
+    var sizeM = raw.match(/(\d{1,3})\s*[-–]\s*(\d{1,3})\s*g/i) || raw.match(/(\d{3})\s*g\s*\+/);
+    if (sizeM) out.sizeRange = convertSize(parseInt(sizeM[1], 10));
+
+    var bM = raw.match(/(?:basket|bkt)\D*(\d+)/i);
+    var cM = raw.match(/(?:count|cnt|qty)\D*(\d+)/i);
+    if (bM) out.basketNr = bM[1];
+    if (cM) out.farmCount = cM[1];
+
+    if (!bM || !cM) {
+      var rest = raw;
+      if (sizeM) rest = rest.replace(sizeM[0], ' ');
+      if (bM) rest = rest.replace(bM[0], ' ');
+      if (cM) rest = rest.replace(cM[0], ' ');
+      var nums = rest.match(/\d+/g) || [];
+      if (!bM && nums.length) out.basketNr = nums.shift();
+      if (!cM && nums.length) out.farmCount = nums.shift();
+    }
+    return out;
+  }
+
+  function rosterRows() {
+    var host = $('fr_rosterRows');
+    return host ? Array.prototype.slice.call(host.querySelectorAll('.fr-roster-row')) : [];
+  }
+
+  // First blank row, or a freshly added one.
+  function targetRow() {
+    var rows = rosterRows();
+    var blank = rows.filter(function (r) {
+      return !cellVal(r, 'basketNr') && !cellVal(r, 'wholeWeight') && !cellVal(r, 'farmCount');
+    })[0];
+    if (blank) return blank;
+    var addBtn = $('fr_addRosterRowBtn');
+    if (addBtn) { addBtn.click(); rows = rosterRows(); }
+    return rows[rows.length - 1] || null;
+  }
+
+  function applyBarcode(raw) {
+    var msg = $('recBarcodeMsg');
+    var data = parseBarcode(raw);
+    if (!data) return;
+    var row = targetRow();
+    if (!row) return;
+
+    var size = data.sizeRange || persistentSize || '';
+    if (size) {
+      setCell(row, 'sizeRange', size);
+      if (!persistentSize) { persistentSize = size; renderToolbar(); }
+    }
+    if (data.basketNr) setCell(row, 'basketNr', data.basketNr);
+    if (data.farmCount) setCell(row, 'farmCount', data.farmCount);
+
+    activeRowIndex = rosterRows().indexOf(row);
+
+    var w = cellInput(row, 'wholeWeight');
+    if (w) { try { w.focus(); w.select(); } catch (e) {} }
+    if (msg) {
+      msg.textContent = 'Scanned: basket ' + (data.basketNr || '?') +
+        ', count ' + (data.farmCount || '?') + ', size ' + (size || '?') + ' - enter weight.';
+    }
+  }
+
+  /* ---- connected scale ------------------------------------------------- */
+
+  // Called by the scale integration, or fired from the hidden #recScaleWeight
+  // input. Fills Whole weight on the active row and stops - the operator still
+  // clicks Submit.
+  function applyScaleWeight(kg) {
+    var n = parseFloat(kg);
+    if (isNaN(n)) return;
+    var rows = rosterRows();
+    var row = rows[activeRowIndex] ||
+      rows.filter(function (r) { return !cellVal(r, 'wholeWeight'); })[0] ||
+      rows[rows.length - 1];
+    if (!row) return;
+    setCell(row, 'wholeWeight', String(n));
+    var w = cellInput(row, 'wholeWeight');
+    if (w) { try { w.focus(); } catch (e) {} }
+  }
+  window.RecScale = { submitWeight: applyScaleWeight };
+
+  /* ---- persistent size + toolbar ------------------------------------- */
+
+  function renderToolbar() {
+    var lbl = $('recPersistSize');
+    if (lbl) lbl.textContent = persistentSize || 'not set';
+    var btn = $('recChangeSize');
+    if (btn) btn.disabled = !persistentSize;
+  }
+
+  function bindRows() {
+    rosterRows().forEach(function (row) {
+      var sel = cellInput(row, 'sizeRange');
+      if (!sel) return;
+      if (!sel._recBound) {
+        sel._recBound = true;
+        sel.addEventListener('change', function () {
+          if (sel.value) { persistentSize = sel.value; renderToolbar(); }
+        });
+      }
+      // Auto-fill only rows that are still empty - never overwrite a filled one.
+      if (persistentSize && !sel.value) {
+        sel.value = persistentSize;
+        sel.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  }
+
+  function buildToolbar() {
+    var bar = document.createElement('div');
+    bar.id = 'recEnhToolbar';
+    bar.className = 'no-print';
+    bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;' +
+      'margin:6px 0 12px;padding:10px 12px;border:1px solid var(--palette-border,#e2e4e3);' +
+      'border-radius:6px;background:var(--palette-head-bg,#fbfbfa);';
+    bar.innerHTML =
+      '<label class="fr-field" style="flex:1 1 220px;">Scan basket barcode' +
+        '<input type="text" id="recBarcode" autocomplete="off" ' +
+        'placeholder="Scan or type barcode, then Enter">' +
+      '</label>' +
+      '<div class="fr-field" style="flex:0 0 auto;">Size for new baskets' +
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+          '<strong id="recPersistSize" style="font-family:\'IBM Plex Mono\',monospace;">not set</strong>' +
+          '<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="recChangeSize">Change size</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="recBarcodeMsg" class="fr-muted" style="flex:1 1 100%;font-size:11px;"></div>' +
+      '<input type="hidden" id="recScaleWeight">';
+    return bar;
+  }
+
+  function wireToolbar(bar) {
+    var bc = bar.querySelector('#recBarcode');
+    bc.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); applyBarcode(bc.value); bc.value = ''; }
+    });
+    bc.addEventListener('change', function () {
+      if (bc.value.trim()) { applyBarcode(bc.value); bc.value = ''; }
+    });
+    bar.querySelector('#recChangeSize').addEventListener('click', function () {
+      persistentSize = null;
+      renderToolbar();
+      var first = rosterRows()[0];
+      var sel = first && cellInput(first, 'sizeRange');
+      if (sel) { try { sel.focus(); } catch (e) {} }
+    });
+    var scale = bar.querySelector('#recScaleWeight');
+    scale.addEventListener('change', function () {
+      if (scale.value !== '') { applyScaleWeight(scale.value); scale.value = ''; }
+    });
+  }
+
+  function enhance() {
+    var rowsHost = $('fr_rosterRows');
+    if (!rowsHost) return;
+    var bar = $('recEnhToolbar');
+    if (!bar || !bar.isConnected) {
+      bar = buildToolbar();
+      rowsHost.parentNode.insertBefore(bar, rowsHost);
+      wireToolbar(bar);
+    }
+    renderToolbar();
+    bindRows();
+  }
+
+  (function boot() {
+    var host = $('fr_modalSections');
+    if (!host) { setTimeout(boot, 200); return; }
+    var pending = false;
+    new MutationObserver(function () {
+      if (pending) return;
+      pending = true;
+      setTimeout(function () { pending = false; enhance(); }, 0);
+    }).observe(host, { childList: true, subtree: true });
+    enhance();
+  })();
 })();
 </script>
 </body>
