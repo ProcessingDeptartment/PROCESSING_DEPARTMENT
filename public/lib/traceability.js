@@ -114,6 +114,23 @@
           true
         );
       }
+
+      // Per-batch roster rows: a record like Salting & Tumbling runs many batches under one job,
+      // each row carrying its own short batch id ("<job>/<n>") in config.roster.batchIdColumn.
+      // Each gets its own index entry, cross-linked to the job, so that id can be traced on its
+      // own later. removeSubmission's ':<recordKey>:<subId>%3A...' match cleans these up too.
+      const rbCol = config.roster && config.roster.batchIdColumn;
+      if (rbCol && Array.isArray(sub.roster)) {
+        for (let i = 0; i < sub.roster.length; i++) {
+          const rowNo = String((sub.roster[i] || {})[rbCol] || '').trim();
+          if (!rowNo || rowNo === batchNo) continue;
+          await window.storage.set(
+            keyFor(rowNo, config.recordKey, sub.id + ':row' + i),
+            JSON.stringify(Object.assign({ batch_no: rowNo, linked_batch: batchNo }, baseRow)),
+            true
+          );
+        }
+      }
     } catch (e) {
       console.warn('[traceability] index failed (record still saved)', e);
     }

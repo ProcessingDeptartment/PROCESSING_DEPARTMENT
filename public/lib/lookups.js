@@ -8,7 +8,7 @@
  * Adding a farm or a size range = edit LISTS below. Nothing else changes.
  *
  * Usage
- *   <script src="../lib/lookups.js?v=1"></script>
+ *   <script src="../lib/lookups.js?v=2"></script>
  *
  *   // form-record.js / monitoring-log.js configs:
  *   window.Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' })
@@ -43,6 +43,24 @@
       '400-450g',
       '450g+'
     ],
+
+    // Standard salting time per size range, for REC 7.1.3 (Salting and Tumbling).
+    // Fill in the "HH:MM" values below when confirmed -- the salting-and-tumbling
+    // form auto-populates each batch's "standard salting time" from its size range
+    // by reading this map. Keys MUST match the sizeRanges strings above exactly.
+    // A range left as '' just means the field starts blank for that size (no error).
+    saltingStandardTimes: {
+      '0-50g': '',
+      '50-100g': '',
+      '100-150g': '',
+      '150-200g': '',
+      '200-250g': '',
+      '250-300g': '',
+      '300-350g': '',
+      '350-400g': '',
+      '400-450g': '',
+      '450g+': ''
+    },
 
     // Harvest farms / suppliers. Add the names here — every record's farm
     // field is already wired to this list and switches from a free-text box

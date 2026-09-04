@@ -223,6 +223,35 @@
     return m ? { prefix: m[1], digits: m[2] } : { prefix: '', digits: '' };
   }
 
+  // "HH:MM" difference to->from, wrapping past midnight so a batch that finishes 00:30 after a
+  // 23:00 start reads 01:30, not a negative. Blank unless both ends parse.
+  function diffHHMM(from, to) {
+    const mins = (s) => {
+      const m = /^(\d{1,2}):(\d{2})$/.exec(String(s == null ? '' : s).trim());
+      return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : null;
+    };
+    const a = mins(from), b = mins(to);
+    if (a == null || b == null) return '';
+    let d = b - a;
+    if (d < 0) d += 24 * 60;
+    return String(Math.floor(d / 60)).padStart(2, '0') + ':' + String(d % 60).padStart(2, '0');
+  }
+
+  // Value from a named Lookups map (e.g. saltingStandardTimes) keyed by another field's value.
+  function lookupMapValue(mapName, key) {
+    try {
+      const m = window.Lookups && window.Lookups.lists && window.Lookups.lists[mapName];
+      return (m && key != null && m[String(key)]) || '';
+    } catch (e) { return ''; }
+  }
+
+  // One roster cell's derived value from the rest of that row.
+  function computeRowDerived(col, row) {
+    if (col.deriveDuration) return diffHHMM(row[col.deriveDuration.from], row[col.deriveDuration.to]);
+    if (col.deriveLookup) return lookupMapValue(col.deriveLookup.map, row[col.deriveLookup.from]);
+    return row[col.key] || '';
+  }
+
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
       // Pick-only list of OPEN job numbers (filled in async by wireJobSearch). A job number has to
@@ -287,6 +316,17 @@
       if (field.type === 'textarea') return `<textarea id="${id}" rows="3">${esc(v)}</textarea>`;
       if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}">`;
       if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}">`;
+      // hh:mm wall-clock picker. Stored as "HH:MM" text -- read/display/print paths treat it as a
+      // plain string, so a value typed on an older copy of the form stays readable.
+      if (field.type === 'time') return `<input type="time" id="${id}" value="${esc(v)}">`;
+      // Read-only cells whose value is filled in by row wiring, never typed:
+      //   'batchseq' - the per-batch id ("3CP000123/2"), set from job no. + row position
+      //   'derived'  - a duration between two time columns, or a lookup keyed off another column
+      // Both are recomputed authoritatively from the saved rows at submit (see saveForm), so a
+      // stale display can never be what gets filed.
+      if (field.type === 'batchseq' || field.type === 'derived') {
+        return `<input type="text" id="${id}" value="${esc(v)}" readonly tabindex="-1">`;
+      }
       return `<input type="text" id="${id}" value="${esc(v)}">`;
     }
 
@@ -1005,6 +1045,30 @@
         });
       }
 
+      // Live-fills the read-only 'batchseq' / 'derived' cells in every roster row from the rest of
+      // that row (and, for the batch id, the job number on the form). Cheap, and re-run on any
+      // roster input; saveForm recomputes the same values authoritatively before the record is filed.
+      function renderRosterDerived() {
+        const specials = (config.roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived');
+        if (!specials.length) return;
+        const jobEl = el('fr_f_' + (config.batchField || 'jobNo'));
+        const jobNo = jobEl ? String(jobEl.value || '').trim() : '';
+        rows.forEach((_, i) => {
+          const cur = {};
+          config.roster.columns.forEach(c => {
+            const inp = el(`fr_roster_${i}_${c.key}`);
+            cur[c.key] = inp ? inp.value : '';
+          });
+          specials.forEach(c => {
+            const inp = el(`fr_roster_${i}_${c.key}`);
+            if (!inp) return;
+            inp.value = c.type === 'batchseq'
+              ? (jobNo ? jobNo + '/' + (i + 1) : '#' + (i + 1))
+              : computeRowDerived(c, cur);
+          });
+        });
+      }
+
       function draw() {
         container.innerHTML = rows.map((r, i) => rosterRowHtml('fr', i, r)).join('');
               // Wire Yes/No button groups and job-number widgets inside roster rows
@@ -1012,6 +1076,7 @@
               if (typeof wireJobNumber === 'function') wireJobNumber(container);
               if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
               renderRosterTotals();
+              renderRosterDerived();
               container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
                 btn.addEventListener('click', () => {
                   const i = Number(btn.dataset.removeRosterRow);
@@ -1023,6 +1088,10 @@
             }
       // Attached once (not inside draw()) since container itself is never replaced.
       container.addEventListener('input', renderRosterTotals);
+      container.addEventListener('input', renderRosterDerived);
+      // The batch id also depends on the job number, which lives outside the roster container.
+      const jobWatch = el('fr_f_' + (config.batchField || 'jobNo'));
+      if (jobWatch) ['input', 'change'].forEach(ev => jobWatch.addEventListener(ev, renderRosterDerived));
       draw();
       container._getRows = () => {
         // capture current input values before returning
@@ -1194,6 +1263,16 @@
             return sum + (isNaN(n) ? 0 : n);
           }, 0);
           values[f.key] = total.toFixed(2);
+        });
+        // Stamp each row's read-only cells from the row's own data, not the live display:
+        // the per-batch id ("<job>/<n>") and any derived duration/lookup column.
+        const rosterCols = (config.roster && config.roster.columns) || [];
+        const jobNo = String(values[config.batchField] || '').trim();
+        rosterRows.forEach((r, i) => {
+          rosterCols.forEach((c) => {
+            if (c.type === 'batchseq') r[c.key] = jobNo ? jobNo + '/' + (i + 1) : '#' + (i + 1);
+            else if (c.type === 'derived') r[c.key] = computeRowDerived(c, r);
+          });
         });
       }
 

@@ -20,67 +20,74 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/lookups.js?v=1"></script>
+<script src="../lib/lookups.js?v=2"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/traceability.js?v=4"></script>
+<script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=20"></script>
+<script src="../lib/form-record.js?v=21"></script>
 <script>
 (function () {
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'salting-and-tumbling',
     batchField: 'jobNo',
-    // The salt/baking soda/sugar batch codes used on this job become searchable in their own
-    // right (batch-trace.html), cross-linked back to the job number.
-    extraBatchFields: ['saltBatchCode', 'bakingSodaBatchCode', 'sugarBatchCode'],
     docCode: 'REC 7.1.3',
     title: 'Salting and Tumbling',
     docRevisionStart: 1,
+    stage: 'salting',
     // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
-    // actually been received instead of typing blind.
-    // Picking one also fills in what that job already carries (processingFor),
-    // only where this form's own field is still empty.
-    // The size range picker is narrowed to the sizes actually received on that job.
+    // actually been received instead of typing blind. Picking one also fills in what that job
+    // already carries (processingFor), only where this form's own field is still empty.
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { processingFor: 'toBeProcessedFor' },
-        restrict: { sizeRange: 'sizeRange' } }
+        fill: { processingFor: 'toBeProcessedFor' } }
     ],
-    listColumns: ['date', 'jobNo', 'sizeRange'],
+    listColumns: ['date', 'jobNo', 'processingFor'],
     sections: [
-      { title: 'Batch info', fields: [
+      { title: 'Job info', fields: [
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
-        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-        { key: 'noOfCrates', label: 'No. of crates', type: 'number' },
-        { key: 'standardSaltingTime', label: 'Standard salting time', type: 'text' }
+        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] }
       ]},
-      { title: 'Process timeline', newPage: true, fields: [
-        { key: 'startTime', label: 'Start time', type: 'text' },
-        { key: 'finishTime', label: 'Finish time', type: 'text' },
-        { key: 'shuckWeight', label: 'Shuck weight (kg)', type: 'number' },
-        { key: 'totalTumblingTime', label: 'Total tumbling time', type: 'text' }
-      ]},
-      { title: 'Salting mix', fields: [
-        { key: 'saltKg', label: 'Salt (kg)', type: 'number' },
-        { key: 'saltPercent', label: 'Salt (%)', type: 'number' },
-        { key: 'saltBatchCode', label: 'Salt batch code', type: 'text' },
-        { key: 'bakingSodaG', label: 'Baking soda (g)', type: 'number' },
-        { key: 'bakingSodaBatchCode', label: 'Baking soda batch code', type: 'text' },
-        { key: 'sugarKg', label: 'Sugar (kg)', type: 'number' },
-        { key: 'sugarPercent', label: 'Sugar (%)', type: 'number' },
-        { key: 'sugarBatchCode', label: 'Sugar batch code', type: 'text' }
-      ]},
-      { title: 'Sign-off', fields: [
+      // One sign-off covers every batch on the job (see roster below).
+      { title: 'Sign-off', newPage: true, fields: [
         { key: 'qualityController', label: 'Quality controller', type: 'text' },
         { key: 'processDeviation', label: 'Process deviation', type: 'textarea', wide: true }
       ]}
-    ]
+    ],
+    // A job runs many salting/tumbling batches before sign-off. Each row is one batch with its
+    // own short id, size, times and salting mix.
+    roster: {
+      title: 'Salting batches',
+      batchIdColumn: 'batchId',
+      columns: [
+        // "<job no>/<n>" -- read-only, set from the job number + row position.
+        { key: 'batchId', label: 'Batch', type: 'batchseq' },
+        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
+        // Auto-populated from the size range via Lookups.lists.saltingStandardTimes
+        // (fill those values in lookups.js). Read-only.
+        { key: 'standardSaltingTime', label: 'Standard salting time', type: 'derived',
+          deriveLookup: { from: 'sizeRange', map: 'saltingStandardTimes' } },
+        { key: 'noOfCrates', label: 'No. of crates', type: 'number' },
+        { key: 'startTime', label: 'Start time', type: 'time' },
+        { key: 'finishTime', label: 'Finish time', type: 'time' },
+        // finishTime - startTime (hh:mm), wrapping past midnight. Read-only.
+        { key: 'totalTumblingTime', label: 'Total tumbling time', type: 'derived',
+          deriveDuration: { from: 'startTime', to: 'finishTime' } },
+        { key: 'shuckWeight', label: 'Shuck weight (kg)', type: 'number' },
+        { key: 'saltKg', label: 'Salt (kg)', type: 'number' },
+        { key: 'saltPercentUsed', label: 'Salt % used', type: 'number' },
+        { key: 'saltBatchCode', label: 'Salt batch code', type: 'text' },
+        { key: 'bakingSodaKg', label: 'Baking soda (kg)', type: 'number' },
+        { key: 'bakingSodaBatchCode', label: 'Baking soda batch code', type: 'text' },
+        { key: 'sugarKg', label: 'Sugar (kg)', type: 'number' },
+        { key: 'sugarPercentUsed', label: 'Sugar % used', type: 'number' },
+        { key: 'sugarBatchCode', label: 'Sugar batch code', type: 'text' }
+      ]
+    }
   });
 })();
 </script>
