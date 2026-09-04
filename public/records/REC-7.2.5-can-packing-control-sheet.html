@@ -47,10 +47,10 @@
     ],
     sections: [
       { title: 'Packing details', fields: [
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'time', label: 'Time', type: 'text' },
         { key: 'trackingOrJobNo', label: 'Tracking/job no.', type: 'text' },
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
         { key: 'qualityOfAbalone', label: 'Quality of abalone', type: 'text' },
         { key: 'piecesSizes', label: 'Pieces/sizes', type: 'text' }

@@ -49,10 +49,10 @@
       } }
     ],
     entryFields: [
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
       Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
-      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'abaloneSize', label: 'Abalone size', type: 'number', unit: 'g' },
       { key: 'date', label: 'Date', type: 'date' },
       { key: 'time', label: 'Time', type: 'text' },

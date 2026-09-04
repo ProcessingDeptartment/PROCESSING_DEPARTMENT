@@ -49,12 +49,12 @@
     ],
     sections: [
       { title: 'Batch info', fields: [
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
         { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
         { key: 'wholeWeight', label: 'Whole weight', type: 'number' },
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' }
       ]},
       { title: 'Sign-off', fields: [
         { key: 'supervisor', label: 'Supervisor', type: 'text' },

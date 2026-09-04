@@ -51,11 +51,11 @@
     stage: 'precooking',
     sections: [
       { title: 'Batch info', fields: [
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
         { key: 'trackingNo', label: 'Tracking no.', type: 'text' },
         { key: 'precookingDate', label: 'Precooking date', type: 'date' },
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
       { title: 'Precooking process', newPage: true, fields: [

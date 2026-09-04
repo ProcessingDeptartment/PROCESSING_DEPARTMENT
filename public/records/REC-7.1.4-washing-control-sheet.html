@@ -48,9 +48,9 @@
     listColumns: ['date', 'jobNo', 'sizeRange'],
     sections: [
       { title: 'Batch info', fields: [
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'timeStarted', label: 'Time started', type: 'text' },
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'washNumber', label: 'Wash number', type: 'select', options: ['First', 'Second'] },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},

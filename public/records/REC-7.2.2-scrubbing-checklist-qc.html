@@ -48,10 +48,10 @@
         restrict: { sizeRange: 'sizeRange' } }
     ],
     entryFields: [
+      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'time', label: 'Time', type: 'text' },
       { key: 'trackingOrJobNo', label: 'Tracking no. or Job no.', type: 'text' },
-      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'noOfCratesInspected', label: 'No. of crates inspected', type: 'number' },
       { key: 'damagedAbalone', label: 'Damaged abalone?', type: 'yesno' },

@@ -50,9 +50,9 @@
     ],
     sections: [
       { title: 'Intake & processing info', fields: [
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
       { title: 'Incoming check', newPage: true, fields: [

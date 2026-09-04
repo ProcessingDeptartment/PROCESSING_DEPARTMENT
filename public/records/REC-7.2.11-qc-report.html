@@ -49,11 +49,11 @@
     stage: 'quality',
     sections: [
       { title: 'Batch info', fields: [
+        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
         { key: 'productionCode', label: 'Production code', type: 'text' },
         { key: 'productDescription', label: 'Product description', type: 'text' },
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' }
       ]},
       { title: 'Measurements', newPage: true, fields: [
         { key: 'canPieces', label: 'Can pieces', type: 'number' },

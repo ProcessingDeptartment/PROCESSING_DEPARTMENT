@@ -39,10 +39,10 @@
     listColumns: ['receivingDate', 'jobNo', 'toBeProcessedFor', 'intakeWeight'],
     sections: [
       { title: 'Receiving info', fields: [
+        { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
         { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
         Lookups.field({ key: 'receivedFrom', label: 'Received from', list: 'farms' }),
         { key: 'toBeProcessedFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'] },
-        { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
         { key: 'intakeWeight', label: 'Intake weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
       ]}
     ],

@@ -54,8 +54,8 @@
         restrict: { sizeRange: 'sizeRange' } }
     ],
     entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+      { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'] },
       { key: 'stage', label: 'Stage', type: 'select', options: ['0', '1', '2', '3'] },
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
