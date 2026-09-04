@@ -40,7 +40,7 @@
     sections: [
       { title: 'Receiving info', fields: [
         { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
-        Lookups.field({ key: 'receivedFrom', label: 'Received from', list: 'farms' }),
+        { key: 'receivedFrom', label: 'Received from', type: 'select', options: ['Abagold', 'Third party', 'Other'] },
         { key: 'toBeProcessedFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'] },
         { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
         { key: 'intakeWeight', label: 'Intake weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
@@ -66,51 +66,44 @@
      form-record.js is the shared engine for 100+ forms, so this stays out of it:
      everything below hooks the DOM the engine renders, from outside.
 
-       1. Persistent size range  - a chosen size auto-fills every NEW basket row
-                                    until "Change size" is clicked.
-       2. Barcode scanner        - scan populates Size range (10g->custom band),
-                                    Basket nr. and Count, then focuses Whole weight.
-       3. Connected scale        - a weight pushed from a scale fills Whole weight
-                                    on the active row. It never submits the form.
+     TWO-PART CAPTURE - one job = one record, many basket lines:
+       * "+ Add basket"   commits the CURRENT BASKET panel as one line in the
+                          list below, then clears it (ready for the next basket).
+       * "+ Submit record" (the engine's own Submit, relabelled) files the whole
+                          record - every basket line - once, at the end.
+
+     Current basket panel:
+       1. Barcode scanner  - one scan fills Size range (10g band -> facility
+                             band), Basket nr. and Count, then focuses Whole
+                             weight.
+       2. Persistent size  - the chosen Size range stays put for every following
+                             basket until "Change size" is pressed.
+       3. Connected scale  - window.RecScale.submitWeight(kg) (or the hidden
+                             #recScaleWeight input) fills Whole weight. It never
+                             adds the basket or submits - the operator does that.
 
      The engine rebuilds #fr_modalSections.innerHTML on every clear/submit and
      rebuilds #fr_rosterRows on every add/remove row, so a MutationObserver
      re-applies all of this after each rebuild. Nothing here is persisted as a
-     record field - the barcode/scale inputs live outside #fr_rosterRows and the
-     engine only ever saves the roster columns declared in the config above.
+     record field - the panel inputs live outside #fr_rosterRows and the engine
+     only ever saves the roster columns declared in the config above.
 ============================================================================ -->
 <script>
 (function () {
   'use strict';
 
-  // Size for baskets scanned/added next. Kept for the whole session (a shift
-  // usually receives one grade at a time); cleared only by "Change size".
-  var persistentSize = null;
-  // Row the scale weight should land on - the last one a barcode populated.
-  var activeRowIndex = -1;
+  var COLS = ['sizeRange', 'basketNr', 'wholeWeight', 'farmCount', 'mortalityCount'];
+  // Size range carried from one basket to the next. Survives "+ Add basket" and
+  // a record submit (a shift usually receives one grade for a while); cleared
+  // only by "Change size".
+  var stickySize = '';
 
   function $(id) { return document.getElementById(id); }
-  function cellInput(row, key) { return row.querySelector('[id$="_' + key + '"]'); }
-  function cellVal(row, key) { var i = cellInput(row, key); return i ? String(i.value || '').trim() : ''; }
 
-  function setCell(row, key, val) {
-    var inp = cellInput(row, key);
-    if (!inp) return;
-    if (inp.tagName === 'SELECT' && !Array.prototype.some.call(inp.options, function (o) { return o.value === val; })) {
-      var o = document.createElement('option');
-      o.value = val; o.textContent = val;
-      inp.appendChild(o);
-    }
-    inp.value = val;
-    inp.dispatchEvent(new Event('input', { bubbles: true }));
-    inp.dispatchEvent(new Event('change', { bubbles: true }));
-  }
+  /* ---- barcode -------------------------------------------------------- */
 
-  /* ---- barcode ---------------------------------------------------------- */
-
-  // 10g band (e.g. "20-30g", or "450g+") -> the facility's custom size bands
-  // (0-50g, 50-100g, ... , 450g+). Banded on the LOWER bound: 0..49->0-50g,
-  // 50..99->50-100g, and anything >=450 -> 450g+.
+  // 10g band ("20-30g", or "450g+") -> facility band (0-50g ... 450g+),
+  // banded on the LOWER bound: 0..49 -> 0-50g, 50..99 -> 50-100g, >=450 -> 450g+.
   function convertSize(lower) {
     if (lower >= 450) return '450g+';
     var start = Math.floor(lower / 50) * 50;
@@ -146,149 +139,208 @@
     return out;
   }
 
-  function rosterRows() {
-    var host = $('fr_rosterRows');
-    return host ? Array.prototype.slice.call(host.querySelectorAll('.fr-roster-row')) : [];
+  /* ---- current-basket panel ----------------------------------------- */
+
+  function cbInput(key) { return $('cb_' + key); }
+  function cbVal(key) { var i = cbInput(key); return i ? String(i.value || '').trim() : ''; }
+
+  function cbSet(key, val) {
+    var inp = cbInput(key);
+    if (!inp) return;
+    if (inp.tagName === 'SELECT' && !Array.prototype.some.call(inp.options, function (o) { return o.value === val; })) {
+      var o = document.createElement('option');
+      o.value = val; o.textContent = val;
+      inp.appendChild(o);
+    }
+    inp.value = val;
   }
 
-  // First blank row, or a freshly added one.
-  function targetRow() {
-    var rows = rosterRows();
-    var blank = rows.filter(function (r) {
-      return !cellVal(r, 'basketNr') && !cellVal(r, 'wholeWeight') && !cellVal(r, 'farmCount');
-    })[0];
-    if (blank) return blank;
-    var addBtn = $('fr_addRosterRowBtn');
-    if (addBtn) { addBtn.click(); rows = rosterRows(); }
-    return rows[rows.length - 1] || null;
-  }
+  function setMsg(text) { var m = $('cb_msg'); if (m) m.textContent = text || ''; }
 
   function applyBarcode(raw) {
-    var msg = $('recBarcodeMsg');
     var data = parseBarcode(raw);
     if (!data) return;
-    var row = targetRow();
-    if (!row) return;
-
-    var size = data.sizeRange || persistentSize || '';
-    if (size) {
-      setCell(row, 'sizeRange', size);
-      if (!persistentSize) { persistentSize = size; renderToolbar(); }
-    }
-    if (data.basketNr) setCell(row, 'basketNr', data.basketNr);
-    if (data.farmCount) setCell(row, 'farmCount', data.farmCount);
-
-    activeRowIndex = rosterRows().indexOf(row);
-
-    var w = cellInput(row, 'wholeWeight');
+    var size = data.sizeRange || stickySize || '';
+    if (size) { stickySize = size; cbSet('sizeRange', size); }
+    if (data.basketNr) cbSet('basketNr', data.basketNr);
+    if (data.farmCount) cbSet('farmCount', data.farmCount);
+    var w = cbInput('wholeWeight');
     if (w) { try { w.focus(); w.select(); } catch (e) {} }
-    if (msg) {
-      msg.textContent = 'Scanned: basket ' + (data.basketNr || '?') +
-        ', count ' + (data.farmCount || '?') + ', size ' + (size || '?') + ' - enter weight.';
-    }
+    setMsg('Scanned basket ' + (data.basketNr || '?') + ', count ' + (data.farmCount || '?') +
+      ', size ' + (size || '?') + ' - enter/confirm weight, then + Add basket.');
   }
 
-  /* ---- connected scale ------------------------------------------------- */
-
-  // Called by the scale integration, or fired from the hidden #recScaleWeight
-  // input. Fills Whole weight on the active row and stops - the operator still
-  // clicks Submit.
+  // Called by the connected scale, or fired from the hidden #recScaleWeight
+  // input. Fills Whole weight only - never adds the basket, never submits.
   function applyScaleWeight(kg) {
     var n = parseFloat(kg);
     if (isNaN(n)) return;
-    var rows = rosterRows();
-    var row = rows[activeRowIndex] ||
-      rows.filter(function (r) { return !cellVal(r, 'wholeWeight'); })[0] ||
-      rows[rows.length - 1];
-    if (!row) return;
-    setCell(row, 'wholeWeight', String(n));
-    var w = cellInput(row, 'wholeWeight');
+    cbSet('wholeWeight', String(n));
+    var w = cbInput('wholeWeight');
     if (w) { try { w.focus(); } catch (e) {} }
+    setMsg('Weight ' + n + ' kg from scale - press + Add basket to record it.');
   }
   window.RecScale = { submitWeight: applyScaleWeight };
 
-  /* ---- persistent size + toolbar ------------------------------------- */
+  function rosterHost() { return $('fr_rosterRows'); }
+  function rosterRows() {
+    var h = rosterHost();
+    return h ? Array.prototype.slice.call(h.querySelectorAll('.fr-roster-row')) : [];
+  }
+  function rowVal(row, key) {
+    var i = row.querySelector('[id$="_' + key + '"]');
+    return i ? String(i.value || '').trim() : '';
+  }
+  function rowIsBlank(row) { return COLS.every(function (k) { return !rowVal(row, k); }); }
+  function basketCount() { return rosterRows().filter(function (r) { return !rowIsBlank(r); }).length; }
 
-  function renderToolbar() {
-    var lbl = $('recPersistSize');
-    if (lbl) lbl.textContent = persistentSize || 'not set';
-    var btn = $('recChangeSize');
-    if (btn) btn.disabled = !persistentSize;
+  function addBasket() {
+    if (!cbVal('sizeRange')) { setMsg('Pick a size range before adding the basket.'); return; }
+    if (!cbVal('wholeWeight')) { setMsg('Enter the whole weight before adding the basket.'); return; }
+    var host = rosterHost();
+    if (!host || typeof host._importRows !== 'function') { setMsg('Basket list not ready - try again.'); return; }
+
+    var line = {};
+    COLS.forEach(function (k) { line[k] = cbVal(k); });
+    stickySize = line.sizeRange;             // keep the size for the next basket
+    host._importRows([line]);                // append; the engine drops the blank starter row
+
+    ['basketNr', 'wholeWeight', 'farmCount', 'mortalityCount'].forEach(function (k) { cbSet(k, ''); });
+    cbSet('sizeRange', stickySize);
+    renderPanel();
+    var bc = $('recBarcode');
+    if (bc) { try { bc.focus(); } catch (e) {} }
+    setMsg('Basket added (' + basketCount() + ' on this record). Scan or enter the next one.');
   }
 
-  function bindRows() {
-    rosterRows().forEach(function (row) {
-      var sel = cellInput(row, 'sizeRange');
-      if (!sel) return;
-      if (!sel._recBound) {
-        sel._recBound = true;
-        sel.addEventListener('change', function () {
-          if (sel.value) { persistentSize = sel.value; renderToolbar(); }
-        });
-      }
-      // Auto-fill only rows that are still empty - never overwrite a filled one.
-      if (persistentSize && !sel.value) {
-        sel.value = persistentSize;
-        sel.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    });
+  function renderPanel() {
+    var lbl = $('cb_stickyLabel');
+    if (lbl) lbl.textContent = stickySize || 'not set';
+    var chg = $('recChangeSize');
+    if (chg) chg.disabled = !stickySize;
+    var n = $('cb_count');
+    if (n) n.textContent = basketCount() + (basketCount() === 1 ? ' basket' : ' baskets') + ' on this record';
   }
 
-  function buildToolbar() {
-    var bar = document.createElement('div');
-    bar.id = 'recEnhToolbar';
-    bar.className = 'no-print';
-    bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;' +
-      'margin:6px 0 12px;padding:10px 12px;border:1px solid var(--palette-border,#e2e4e3);' +
+  function sizeOptionsHtml() {
+    var list = (window.Lookups && window.Lookups.get('sizeRanges')) || [];
+    return '<option value="">—</option>' + list.map(function (v) {
+      return '<option value="' + v + '">' + v + '</option>';
+    }).join('');
+  }
+
+  function buildPanel() {
+    var box = document.createElement('div');
+    box.id = 'recBasketPanel';
+    box.className = 'no-print';
+    box.style.cssText = 'margin:6px 0 14px;padding:12px;border:1px solid var(--palette-border,#e2e4e3);' +
       'border-radius:6px;background:var(--palette-head-bg,#fbfbfa);';
-    bar.innerHTML =
-      '<label class="fr-field" style="flex:1 1 220px;">Scan basket barcode' +
-        '<input type="text" id="recBarcode" autocomplete="off" ' +
-        'placeholder="Scan or type barcode, then Enter">' +
-      '</label>' +
-      '<div class="fr-field" style="flex:0 0 auto;">Size for new baskets' +
-        '<div style="display:flex;gap:8px;align-items:center;">' +
-          '<strong id="recPersistSize" style="font-family:\'IBM Plex Mono\',monospace;">not set</strong>' +
-          '<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="recChangeSize">Change size</button>' +
-        '</div>' +
+    box.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;">' +
+        '<strong style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--palette-label,#54606b);">Current basket</strong>' +
+        '<span id="cb_count" class="fr-muted" style="font-size:11px;"></span>' +
       '</div>' +
-      '<div id="recBarcodeMsg" class="fr-muted" style="flex:1 1 100%;font-size:11px;"></div>' +
+      '<label class="fr-field" style="margin-bottom:8px;">Scan basket barcode' +
+        '<input type="text" id="recBarcode" autocomplete="off" placeholder="Scan or type barcode, then Enter">' +
+      '</label>' +
+      '<div class="fr-grid fr-grid-3" style="margin-bottom:8px;">' +
+        '<label class="fr-field">Size range' +
+          '<select id="cb_sizeRange">' + sizeOptionsHtml() + '</select>' +
+        '</label>' +
+        '<label class="fr-field">Basket nr.' +
+          '<input type="number" step="1" id="cb_basketNr">' +
+        '</label>' +
+        '<label class="fr-field">Whole weight (kg)' +
+          '<input type="number" step="0.01" id="cb_wholeWeight">' +
+        '</label>' +
+        '<label class="fr-field">Count' +
+          '<input type="number" step="1" id="cb_farmCount">' +
+        '</label>' +
+        '<label class="fr-field">Mortality count' +
+          '<input type="number" step="1" id="cb_mortalityCount">' +
+        '</label>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+        '<button type="button" class="fr-btn fr-btn-primary fr-btn-sm" id="cb_addBtn">+ Add basket</button>' +
+        '<span class="fr-muted" style="font-size:11px;">Size for next basket:</span>' +
+        '<strong id="cb_stickyLabel" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;">not set</strong>' +
+        '<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="recChangeSize">Change size</button>' +
+      '</div>' +
+      '<div id="cb_msg" class="fr-muted" style="font-size:11px;margin-top:6px;"></div>' +
       '<input type="hidden" id="recScaleWeight">';
-    return bar;
+    return box;
   }
 
-  function wireToolbar(bar) {
-    var bc = bar.querySelector('#recBarcode');
+  function wirePanel(box) {
+    var bc = box.querySelector('#recBarcode');
     bc.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); applyBarcode(bc.value); bc.value = ''; }
     });
     bc.addEventListener('change', function () {
       if (bc.value.trim()) { applyBarcode(bc.value); bc.value = ''; }
     });
-    bar.querySelector('#recChangeSize').addEventListener('click', function () {
-      persistentSize = null;
-      renderToolbar();
-      var first = rosterRows()[0];
-      var sel = first && cellInput(first, 'sizeRange');
-      if (sel) { try { sel.focus(); } catch (e) {} }
+
+    var sizeSel = box.querySelector('#cb_sizeRange');
+    sizeSel.addEventListener('change', function () {
+      if (sizeSel.value) stickySize = sizeSel.value;
+      renderPanel();
     });
-    var scale = bar.querySelector('#recScaleWeight');
+
+    box.querySelector('#cb_addBtn').addEventListener('click', addBasket);
+
+    box.querySelector('#recChangeSize').addEventListener('click', function () {
+      stickySize = '';
+      cbSet('sizeRange', '');
+      renderPanel();
+      try { sizeSel.focus(); } catch (e) {}
+    });
+
+    var scale = box.querySelector('#recScaleWeight');
     scale.addEventListener('change', function () {
       if (scale.value !== '') { applyScaleWeight(scale.value); scale.value = ''; }
     });
   }
 
   function enhance() {
-    var rowsHost = $('fr_rosterRows');
-    if (!rowsHost) return;
-    var bar = $('recEnhToolbar');
-    if (!bar || !bar.isConnected) {
-      bar = buildToolbar();
-      rowsHost.parentNode.insertBefore(bar, rowsHost);
-      wireToolbar(bar);
+    var host = rosterHost();
+    if (!host) return;
+
+    var box = $('recBasketPanel');
+    if (!box || !box.isConnected) {
+      box = buildPanel();
+      host.parentNode.insertBefore(box, host);
+      wirePanel(box);
+      // The panel is now the way baskets are added; the engine's own per-row
+      // "+ Add row" would bypass the sticky-size / barcode flow, so hide it.
+      var addRow = $('fr_addRosterRowBtn');
+      if (addRow) addRow.style.display = 'none';
+      var submit = $('fr_submitBtn');
+      if (submit) submit.textContent = '+ Submit record';
     }
-    renderToolbar();
-    bindRows();
+    if (stickySize && !cbVal('sizeRange')) cbSet('sizeRange', stickySize);
+
+    // The roster below is the list of baskets ADDED so far. The engine always
+    // keeps one blank starter row - hide it (and any other fully-blank row) so
+    // the list reads as "what's on the record", not an editable grid. Filled
+    // rows stay visible and editable for corrections.
+    var rows = rosterRows();
+    var anyFilled = rows.some(function (r) { return !rowIsBlank(r); });
+    rows.forEach(function (r) { r.style.display = (anyFilled && rowIsBlank(r)) ? 'none' : ''; });
+    var note = $('recNoBaskets');
+    if (!anyFilled) {
+      if (!note) {
+        note = document.createElement('div');
+        note.id = 'recNoBaskets';
+        note.className = 'fr-muted no-print';
+        note.style.cssText = 'font-size:11px;margin:2px 0 8px;';
+        note.textContent = 'No baskets added yet - use the Current basket panel above.';
+        host.parentNode.insertBefore(note, host);
+      }
+      note.style.display = '';
+    } else if (note) {
+      note.style.display = 'none';
+    }
+    renderPanel();
   }
 
   (function boot() {
