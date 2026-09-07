@@ -110,8 +110,8 @@
   .fr-section-collapsible:first-child{ margin-top:0; }
   .fr-section-collapsible > .fr-section-title{ cursor:pointer; margin:0 0 8px; list-style:none; }
   .fr-section-collapsible > .fr-section-title::-webkit-details-marker{ display:none; }
-  .fr-section-collapsible > .fr-section-title::before{ content:'\25B8'; display:inline-block; width:1em; transition:transform .15s; }
-  .fr-section-collapsible[open] > .fr-section-title::before{ content:'\25BE'; }
+  .fr-section-collapsible > .fr-section-title::before{ content:'\\25B8'; display:inline-block; width:1em; transition:transform .15s; }
+  .fr-section-collapsible[open] > .fr-section-title::before{ content:'\\25BE'; }
   .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; }
   .fr-roster-row .fr-field{ flex:1; }
   .fr-modal-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center; }
