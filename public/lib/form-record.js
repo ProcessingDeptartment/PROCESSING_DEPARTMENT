@@ -127,6 +127,15 @@
     .fr-grid-3{ grid-template-columns:repeat(2,1fr); }
     .fr-grid-4{ grid-template-columns:repeat(2,1fr); }
     .fr-body{ padding:14px 14px 60px; }
+    /* Tablet type scale + finger-sized tap targets (iPad portrait sits above
+       the 768px phone breakpoint). */
+    .fr-app{ font-size:14px; }
+    .fr-field{ font-size:13.5px; }
+    .fr-field span.hint{ font-size:12px; }
+    .fr-panel-head h2{ font-size:13.5px; }
+    .fr-app input,.fr-app select,.fr-app textarea{ font-size:15px; min-height:44px; }
+    .fr-app table.fr-table input,.fr-app table.fr-table select,.fr-app table.fr-table textarea{ font-size:13px; min-height:0; }
+    .fr-btn{ min-height:44px; }
   }
   @media (max-width:900px){ .fr-grid-2,.fr-grid-3,.fr-grid-4{grid-template-columns:1fr;} }
   @media (max-width:768px){
@@ -136,9 +145,17 @@
     .fr-panel-body{ padding:10px; }
     /* >=16px stops iOS Safari zooming the page on focus. Inputs inside the
        submissions table stay compact -- that table scrolls instead. */
-    .fr-app input,.fr-app select,.fr-app textarea{ font-size:16px; padding:8px; }
-    .fr-app table.fr-table input,.fr-app table.fr-table select,.fr-app table.fr-table textarea{ font-size:13px; padding:4px; }
-    .fr-btn{ min-height:40px; }
+    .fr-app input,.fr-app select,.fr-app textarea{ font-size:16px; padding:8px; min-height:44px; }
+    .fr-app table.fr-table input,.fr-app table.fr-table select,.fr-app table.fr-table textarea{ font-size:13px; padding:4px; min-height:0; }
+    /* Label text, section titles and instructions scale up too -- 11-12px is
+       unreadable on a phone without zooming. */
+    .fr-app{ font-size:15px; }
+    .fr-field{ font-size:14px; }
+    .fr-field span.hint{ font-size:12.5px; }
+    .fr-panel-head h2{ font-size:14px; }
+    .fr-section-title{ font-size:13px; }
+    .fr-instructions .instr-item strong{ font-size:12.5px; }
+    .fr-btn{ min-height:44px; font-size:14px; }
     .fr-btn-sm{ min-height:32px; padding:6px 10px; font-size:11.5px; }
     .fr-filters{ gap:6px; }
     .fr-filters label,.fr-filters input[type=text]{ flex:1 1 140px; max-width:none; }

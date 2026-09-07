@@ -64,6 +64,19 @@ body {
   /* Hub link rows: left-align once they wrap onto several lines, centred
      ragged rows read badly. */
   .report-list { justify-content: flex-start; }
+
+  /* Bespoke record type scale: nudge up on tablets. The ~28 hand-written
+     pages that reference these vars (and any that later adopt them) inherit
+     the change without each page being touched. */
+  :root {
+    --form-fs-root: 14px;
+    --form-fs-input: 15px;
+    --form-fs-button: 14px;
+    --form-fs-small: 12.5px;
+    --form-fs-label: 13px;
+    --form-fs-hint: 12.5px;
+    --form-fs-panel-head: 13px;
+  }
 }
 
 /* --------------------------------------------------------------- <=768px -- */
@@ -102,11 +115,39 @@ body {
   .signoff-grid,
   .footer-grid { grid-template-columns: 1fr !important; }
 
+  /* Bespoke record type scale on phones: 16px inputs (no iOS zoom-on-focus),
+     readable labels/titles/hints. */
+  :root {
+    --form-fs-root: 16px;
+    --form-fs-input: 16px;
+    --form-fs-button: 15px;
+    --form-fs-small: 13px;
+    --form-fs-label: 14px;
+    --form-fs-hint: 13px;
+    --form-fs-panel-head: 14px;
+  }
+
   /* --- controls: touch targets and no iOS zoom-on-focus --- */
   input, select, textarea,
   label.field input, label.field select, label.field textarea {
     font-size: 16px !important;
     padding: 8px !important;
+    min-height: 44px;
+  }
+  table input, table select, table textarea { min-height: 0; }
+
+  /* Label text, section titles, hints and form instructions on hand-written
+     pages -- 11-12px is unreadable on a phone. Table cells keep their own
+     compact sizing (those tables scroll). */
+  .field, .field > label, label.field,
+  .panel-body:not(:has(table)) { font-size: 15px; }
+  .panel-head h2, .panel-head h3 { font-size: 14px; }
+  .hint, .field-hint, small { font-size: 13px; }
+
+  /* Checkboxes / radios need a finger-sized hit area. */
+  input[type="checkbox"], input[type="radio"] {
+    min-width: 22px;
+    min-height: 22px;
   }
   /* Grid cells inside data tables stay compact -- a 16px input in a 12-column
      readings table would make the row unusable. Those tables scroll instead. */
@@ -121,8 +162,8 @@ body {
   table.meas { min-width: 420px; }
 
   .btn, .ml-btn, .fr-btn, button {
-    min-height: 40px;
-    font-size: 13px;
+    min-height: 44px;
+    font-size: 14px;
   }
   .btn-sm, .ml-btn-sm, .fr-btn-sm {
     min-height: 32px;
@@ -198,6 +239,20 @@ body {
  */
 
 @media print {
+  /* A4 content width (~726px) matches the <=768px block above, so its mobile
+     type-scale bump would otherwise reach printed PDFs. Re-pin the bespoke
+     record scale to the 12px controlled-copy size (matches record-theme.css,
+     which loads before this file). */
+  :root {
+    --form-fs-root: 12px;
+    --form-fs-input: 12px;
+    --form-fs-button: 12px;
+    --form-fs-small: 12px;
+    --form-fs-label: 12px;
+    --form-fs-hint: 12px;
+    --form-fs-panel-head: 12px;
+  }
+
   .rs-scroll,
   .panel-body,
   .ml-panel-body,
@@ -218,6 +273,14 @@ body {
     padding: 1px 3px !important;
     min-height: 0 !important;
   }
+
+  /* Undo the <=768px label/hint bump on paper -- controlled copies stay 12px. */
+  .field, .field > label, label.field,
+  .panel-body:not(:has(table)),
+  .hint, .field-hint, small {
+    font-size: 12px !important;
+  }
+  .btn, .ml-btn, .fr-btn, button { min-height: 0 !important; }
 
   /* Ensure panel headers remain legible in printed PDF output. */
   header h1,

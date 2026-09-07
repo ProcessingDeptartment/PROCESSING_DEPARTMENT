@@ -145,6 +145,15 @@
      than letting it stretch the page. Applies at every width. */
   .ml-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
   @media (max-width:1024px){
+    /* Tablet type scale + finger-sized tap targets (iPad portrait sits above
+       the 768px phone breakpoint). */
+    .ml-app{ font-size:14px; }
+    .ml-field{ font-size:13.5px; }
+    .ml-field span.hint{ font-size:12px; }
+    .ml-panel-head h2{ font-size:13.5px; }
+    .ml-app input,.ml-app select,.ml-app textarea{ font-size:15px; min-height:44px; }
+    .ml-app table.ml-table input,.ml-app table.ml-table select,.ml-app table.ml-table textarea{ font-size:13px; min-height:0; }
+    .ml-btn{ min-height:44px; }
     .ml-grid-3{ grid-template-columns:repeat(2,1fr); }
     .ml-grid-4{ grid-template-columns:repeat(2,1fr); }
     .ml-body{ padding:14px 14px 60px; }
@@ -159,9 +168,17 @@
     .ml-panel-body{ padding:10px; }
     /* >=16px stops iOS Safari zooming the page on focus. Inputs inside the
        entries table stay compact -- that table scrolls instead. */
-    .ml-app input,.ml-app select,.ml-app textarea{ font-size:16px; padding:8px; }
-    .ml-app table.ml-table input,.ml-app table.ml-table select,.ml-app table.ml-table textarea{ font-size:13px; padding:4px; }
-    .ml-btn{ min-height:40px; }
+    .ml-app input,.ml-app select,.ml-app textarea{ font-size:16px; padding:8px; min-height:44px; }
+    .ml-app table.ml-table input,.ml-app table.ml-table select,.ml-app table.ml-table textarea{ font-size:13px; padding:4px; min-height:0; }
+    /* Label text, section titles and instructions scale up too -- 11-12px is
+       unreadable on a phone without zooming. */
+    .ml-app{ font-size:15px; }
+    .ml-field{ font-size:14px; }
+    .ml-field span.hint{ font-size:12.5px; }
+    .ml-panel-head h2{ font-size:14px; }
+    .ml-grouphead{ font-size:13px; }
+    .ml-instructions .instr-item strong{ font-size:12.5px; }
+    .ml-btn{ min-height:44px; font-size:14px; }
     .ml-btn-sm{ min-height:32px; padding:6px 10px; font-size:11.5px; }
     .ml-filters{ gap:6px; }
     .ml-filters label,.ml-filters input[type=text]{ flex:1 1 140px; max-width:none; }
