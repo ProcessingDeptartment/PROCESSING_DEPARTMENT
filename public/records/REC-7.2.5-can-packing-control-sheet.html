@@ -35,11 +35,9 @@
     docCode: 'REC 7.2.5',
     title: 'Can Packing Control Sheet',
     docRevisionStart: 1,
-    listColumns: ['date', 'trackingOrJobNo', 'sizeRange'],
+    listColumns: ['date', 'jobNo', 'sizeRange'],
     // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
     // actually been received instead of typing blind.
-    // The free-text 'Tracking/job no.' line is kept as captured -- it also carries tracking
-    // numbers, which the picker does not.
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
         fill: {
@@ -61,7 +59,6 @@
       { title: 'Packing details', fields: [
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'time', label: 'Time', type: 'text' },
-        { key: 'trackingOrJobNo', label: 'Tracking/job no.', type: 'text' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
         { key: 'qualityOfAbalone', label: 'Quality of abalone', type: 'text' },
         { key: 'piecesSizes', label: 'Pieces/sizes', type: 'text' }

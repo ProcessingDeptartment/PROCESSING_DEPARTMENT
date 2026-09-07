@@ -40,8 +40,6 @@
     ],
     // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
     // actually been received instead of typing blind.
-    // The free-text 'Tracking no. or Job no.' line is kept as captured -- it also carries
-    // tracking numbers, which the picker does not.
     jobInfoGroup: 'Job info',
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
@@ -56,7 +54,6 @@
       { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'time', label: 'Time', type: 'text' },
-      { key: 'trackingOrJobNo', label: 'Tracking no. or Job no.', type: 'text' },
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'noOfCratesInspected', label: 'No. of crates inspected', type: 'number' },
       { key: 'damagedAbalone', label: 'Damaged abalone?', type: 'yesno' },
