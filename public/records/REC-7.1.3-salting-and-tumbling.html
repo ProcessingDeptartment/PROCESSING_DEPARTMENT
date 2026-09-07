@@ -43,14 +43,15 @@
     // already carries (processingFor), only where this form's own field is still empty.
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor' } }
+        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
     listColumns: ['date', 'jobNo', 'intakeDate', 'processingFor'],
     sections: [
-      { title: 'Job info', collapsible: true, fields: [
+      { title: 'Job info', collapsible: true, summaryField: 'jobNo', fields: [
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'intakeDate', label: 'Intake date', type: 'date' },
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] }
       ]},

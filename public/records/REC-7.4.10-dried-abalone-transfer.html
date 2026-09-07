@@ -25,7 +25,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=21"></script>
+<script src="../lib/form-record.js?v=22"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -42,11 +42,17 @@
     // only where this form's own field is still empty.
     autofill: [
       { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', intakeWeight: 'intakeWeight' } }
+        fill: { intakeDate: 'receivingDate', intakeWeight: 'intakeWeight',
+          jiReceivedFrom: 'receivedFrom',
+          jiProcessingFor: 'toBeProcessedFor' } }
     ],
     sections: [
-      { title: 'Batch details', fields: [
+      { title: 'Job info', collapsible: true, summaryField: 'jobNumber', fields: [
         { key: 'jobNumber', label: 'Job number', type: 'jobsearch', required: true },
+        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
+        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
+      ]},
+      { title: 'Batch details', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'intakeWeight', label: 'Intake weight', type: 'number' },
         { key: 'actualDriedDate', label: 'Actual dried date', type: 'date' }

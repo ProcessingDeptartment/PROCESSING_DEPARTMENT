@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=21"></script>
+<script src="../lib/form-record.js?v=22"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -42,14 +42,23 @@
     // only where this form's own field is still empty.
     autofill: [
       { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate' } }
+        fill: { intakeDate: 'receivingDate',
+          jiReceivedFrom: 'receivedFrom',
+          jiProcessingFor: 'toBeProcessedFor',
+          jiIntakeWeight: 'intakeWeight'
+        } }
     ],
     listColumns: ['intakeDate', 'jobNumber', 'numberOfCans'],
     batchField: 'jobNumber',
     stage: 'canning',
     sections: [
-      { title: 'Batch info', fields: [
+      { title: 'Job info', collapsible: true, summaryField: 'jobNumber', fields: [
         { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
+        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
+        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
+        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
+      ]},
+      { title: 'Batch info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'trackingNo', label: 'Tracking no.', type: 'text' },
         { key: 'productionCode', label: 'Production code', type: 'text' },

@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=21"></script>
+<script src="../lib/form-record.js?v=22"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -42,14 +42,17 @@
     // its receiving date, harvest farm, processing destination, and finalised intake weight, so
     // none of it needs to be re-typed. Only fills empty fields.
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-        intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', wholeWeight: 'intakeWeight'
-      },
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', wholeWeight: 'intakeWeight',
+          jiIntakeWeight: 'intakeWeight'
+        },
         restrict: { sizeRange: 'sizeRange' } }
     ],
     sections: [
-      { title: 'Batch info', fields: [
+      { title: 'Job info', collapsible: true, summaryField: 'jobNo', fields: [
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
+      ]},
+      { title: 'Batch info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
         { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },

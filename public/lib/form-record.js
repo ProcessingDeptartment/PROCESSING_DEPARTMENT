@@ -112,6 +112,8 @@
   .fr-section-collapsible > .fr-section-title::-webkit-details-marker{ display:none; }
   .fr-section-collapsible > .fr-section-title::before{ content:'\\25B8'; display:inline-block; width:1em; transition:transform .15s; }
   .fr-section-collapsible[open] > .fr-section-title::before{ content:'\\25BE'; }
+  .fr-section-summary{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; text-transform:none; letter-spacing:0; color:var(--palette-ink,#1b2330); font-weight:700; }
+  .fr-section-summary:not(:empty){ margin-left:8px; }
   .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; }
   .fr-roster-row .fr-field{ flex:1; }
   .fr-modal-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center; }
@@ -277,6 +279,10 @@
 
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
+      // Read-only fields are still submitted (unlike `disabled`) -- used for the job-info
+      // snapshot pulled from Abalone Receiving, which is filed on the downstream record so a
+      // printed copy and the traceability index carry it without a second lookup.
+      const ro = field.readOnly ? ' readonly' : '';
       // Pick-only list of OPEN job numbers (filled in async by wireJobSearch). A job number has to
       // already exist on Abalone Receiving to be picked -- free-typing one would create a dangling
       // reference nothing downstream can resolve, so this is deliberately a select, not a datalist.
@@ -336,9 +342,9 @@
         if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
         return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
       }
-      if (field.type === 'textarea') return `<textarea id="${id}" rows="3">${esc(v)}</textarea>`;
-      if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}">`;
-      if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}">`;
+      if (field.type === 'textarea') return `<textarea id="${id}" rows="3"${ro}>${esc(v)}</textarea>`;
+      if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
+      if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
       // hh:mm wall-clock picker. Stored as "HH:MM" text -- read/display/print paths treat it as a
       // plain string, so a value typed on an older copy of the form stays readable.
       if (field.type === 'time') return `<input type="time" id="${id}" value="${esc(v)}">`;
@@ -350,7 +356,7 @@
       if (field.type === 'batchseq' || field.type === 'derived') {
         return `<input type="text" id="${id}" value="${esc(v)}" readonly tabindex="-1">`;
       }
-      return `<input type="text" id="${id}" value="${esc(v)}">`;
+      return `<input type="text" id="${id}" value="${esc(v)}"${ro}>`;
     }
 
     // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
@@ -525,6 +531,20 @@
         sync();
       });
     }
+
+  // Keeps a collapsible section's header showing one field's current value (the job number),
+  // so it stays readable while the section is collapsed. Re-runs on input/change of that field.
+  function wireSectionSummaries(container) {
+    container.querySelectorAll('.fr-section-summary[data-summary-for]').forEach((span) => {
+      const key = span.getAttribute('data-summary-for');
+      const src = key && container.querySelector('#fr_f_' + key);
+      if (!src) return;
+      const paint = () => { span.textContent = String(src.value || '').trim() ? '— ' + src.value : ''; };
+      src.addEventListener('input', paint);
+      src.addEventListener('change', paint);
+      paint();
+    });
+  }
 
   // Fills every jobsearch select with the OPEN job numbers. Closed jobs are deliberately absent --
   // that's what closing a job does. An already-captured value is re-added even if it's now closed,
@@ -1175,8 +1195,11 @@
           </label>`).join('')}
         </div>`;
         if (sec.collapsible) {
+          // summaryField keeps one field's value (the job number) visible in the header when the
+          // section is collapsed, so "job info collapsible with job number remaining visible" holds.
+          const sfyd = sec.summaryField ? ` data-summary-for="${esc(sec.summaryField)}"` : '';
           return `<details class="fr-section-collapsible"${sec.collapsedByDefault ? '' : ' open'}>
-            <summary class="fr-section-title">${esc(sec.title)}</summary>
+            <summary class="fr-section-title">${esc(sec.title)}<span class="fr-section-summary"${sfyd}></span></summary>
             ${fieldsHtml}
           </details>`;
         }
@@ -1220,6 +1243,7 @@
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
       if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
+      wireSectionSummaries(container);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); }
       // The recordpick option list IS the trace of the job number, so a change of job means a
       // different set of real submissions to choose from -- rebuild every picker on the form.

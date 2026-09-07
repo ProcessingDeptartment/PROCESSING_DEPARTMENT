@@ -25,7 +25,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=20"></script>
+<script src="../lib/monitoring-log.js?v=21"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -41,12 +41,17 @@
     // actually been received instead of typing blind.
     // The free-text product information line is kept as captured -- a sample can be
     // identified by AG code, live tag or ranched incoming date as well as a job number.
+    jobInfoGroup: 'Job info',
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: {} }
+        fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
     entryFields: [
-      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
+      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
+      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
+      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'productInfo', label: 'Product information (AG code, DW / dry job no. / live tag / ranched incoming date)', type: 'text', required: true },
       { key: 'pieces', label: 'Pieces', type: 'number' },

@@ -27,7 +27,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=20"></script>
+<script src="../lib/monitoring-log.js?v=21"></script>
 <script>
 (function () {
   function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
@@ -43,13 +43,18 @@
     // bags confirmed for a pack get changed and end up captured against a different job, so the
     // loss lands on the wrong batch. Picking the job here ties the pack to the intake it came
     // from and puts live on the same traceability spine as canning and drying.
+    jobInfoGroup: 'Job info',
     autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
     batchField: 'jobNumber',
     stage: 'live-packing',
     entryFields: [
-      { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
+      { group: 'Job info', key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
+      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
+      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
+      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
+      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
       { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
       { key: 'idnsPacked', label: 'IDNs packed', type: 'text' },
       { key: 'livePackChecklistAttached', label: 'Live pack checklist (REC 7.5.2) attached?', type: 'yesno' },

@@ -26,7 +26,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=20"></script>
+<script src="../lib/monitoring-log.js?v=21"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -38,11 +38,15 @@
     docRevisionStart: 3,
     // Search-select only (no date autofill) -- by this point in the process "intake date" means
     // intake into dry stock, not the original Abalone Receiving date, so it can't be inferred here.
+    jobInfoGroup: 'Job info',
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
     entryFields: [
-      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
+      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
+      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
       { key: 'month', label: 'Month', type: 'month', required: true },
       { key: 'intakeDate', label: 'Intake date', type: 'date' },
       { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },

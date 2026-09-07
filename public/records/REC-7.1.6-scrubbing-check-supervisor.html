@@ -27,7 +27,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=20"></script>
+<script src="../lib/monitoring-log.js?v=21"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -43,13 +43,13 @@
     // Selecting a job number that was already received on Abalone Receiving (REC 7.1.2) pulls in
     // its receiving date, harvest farm, and processing destination, so none of it needs to be
     // re-typed. Only fills empty fields.
+    jobInfoGroup: 'Job info',
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-        intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor'
-      } }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
     entryFields: [
-      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
       { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
       Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },

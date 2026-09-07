@@ -25,7 +25,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=21"></script>
+<script src="../lib/form-record.js?v=22"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -43,11 +43,22 @@
     // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
     // actually been received instead of typing blind.
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {} }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
+          jiReceivingDate: 'receivingDate',
+          jiReceivedFrom: 'receivedFrom',
+          jiProcessingFor: 'toBeProcessedFor',
+          jiIntakeWeight: 'intakeWeight'
+        } }
     ],
     sections: [
+      { title: 'Job info', collapsible: true, summaryField: 'jobNo', fields: [
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
+        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
+        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
+        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
+      ]},
       { title: 'Broth info', fields: [
-      { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'brothBatchDate', label: 'Broth batch date', type: 'date' },
         { key: 'potNo', label: 'Pot no.', type: 'text' },

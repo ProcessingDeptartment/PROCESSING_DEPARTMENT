@@ -102,6 +102,16 @@
   .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
     font-weight:700; border-bottom:1px solid var(--palette-border,#e2e4e3); padding-bottom:4px; margin:12px 0 2px; }
   .ml-grouphead:first-child{ margin-top:0; }
+  /* Collapsible job-info block: the group's heading becomes the summary and the job number
+     stays visible in it while collapsed. */
+  .ml-section-collapsible{ grid-column:1/-1; margin:12px 0 2px; }
+  .ml-section-collapsible > summary.ml-grouphead{ cursor:pointer; list-style:none; margin:0 0 8px; }
+  .ml-section-collapsible > summary.ml-grouphead::-webkit-details-marker{ display:none; }
+  .ml-section-collapsible > summary.ml-grouphead::before{ content:'\\25B8'; display:inline-block; width:1em; }
+  .ml-section-collapsible[open] > summary.ml-grouphead::before{ content:'\\25BE'; }
+  .ml-section-collapsible > label.ml-field{ display:flex; margin-bottom:8px; }
+  .ml-section-summary{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; text-transform:none; letter-spacing:0; color:var(--palette-ink,#1b2330); font-weight:700; }
+  .ml-section-summary:not(:empty){ margin-left:8px; }
   /* Work instructions are collapsed by default on every viewport -- they are reference
      text, not the task, and push the actual work down the page. One click to read them. */
   .ml-instr-toggle{ display:inline-block; }
@@ -300,17 +310,20 @@
       if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
       return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
     }
+    // Read-only fields are still submitted (unlike `disabled`) -- used for the job-info snapshot
+    // pulled from Abalone Receiving and filed on the downstream record.
+    const ro = field.readOnly ? ' readonly' : '';
     if (field.type === 'textarea') {
-      return `<textarea id="${id}" rows="2">${esc(v)}</textarea>`;
+      return `<textarea id="${id}" rows="2"${ro}>${esc(v)}</textarea>`;
     }
     if (field.type === 'number') {
-      return `<input type="number" step="0.01" id="${id}" value="${esc(v)}">`;
+      return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
     }
     if (field.type === 'computed') {
       return `<input type="text" id="${id}" value="${esc(v)}" disabled>`;
     }
     if (field.type === 'date') {
-      return `<input type="date" id="${id}" value="${esc(v)}">`;
+      return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
     }
     // One field for a date and a clock time that belong together. Stored as the
     // browser's own "YYYY-MM-DDTHH:MM" -- it sorts and compares as a plain string,
@@ -368,7 +381,7 @@
     const patternAttrs = field.pattern
       ? ` pattern="${esc(field.pattern)}"${field.patternMessage ? ` title="${esc(field.patternMessage)}"` : ''}`
       : '';
-    return `<input type="text" id="${id}" value="${esc(v)}"${patternAttrs}>`;
+    return `<input type="text" id="${id}" value="${esc(v)}"${patternAttrs}${ro}>`;
   }
 
   // "2026-08-31T12:00" -> "31/08/2026 12:00". Anything unexpected is passed through as-is
@@ -381,6 +394,48 @@
 
   function fieldLabel(field) {
     return field.label + (field.unit ? ` <span class="hint">(${esc(field.unit)})</span>` : '');
+  }
+
+  // Wraps the fields of one `group` (the job-info snapshot from Abalone Receiving) in a
+  // collapsible <details>, turning that group's heading into the summary and keeping the job
+  // number visible in it while collapsed. No-op unless the record declares `jobInfoGroup`.
+  function wireJobInfoCollapsible(container, ns, entryFields, groupName) {
+    if (!groupName || container.querySelector('details.ml-section-collapsible')) return;
+    const heads = Array.prototype.slice.call(container.querySelectorAll('.ml-grouphead'));
+    const head = heads.find((h) => h.textContent.trim() === groupName);
+    if (!head) return;
+    const det = document.createElement('details');
+    det.className = 'ml-section-collapsible';
+    det.open = true;
+    const sum = document.createElement('summary');
+    sum.className = 'ml-grouphead';
+    sum.textContent = groupName;
+    const span = document.createElement('span');
+    span.className = 'ml-section-summary';
+    sum.appendChild(span);
+    det.appendChild(sum);
+    head.parentNode.insertBefore(det, head);
+    head.remove();
+    const inGroup = new Set((entryFields || []).filter((f) => f.group === groupName).map((f) => f.key));
+    let node = det.nextSibling;
+    while (node) {
+      const next = node.nextSibling;
+      if (node.nodeType === 1 && node.classList.contains('ml-field')
+          && inGroup.has(node.getAttribute('data-field'))) {
+        det.appendChild(node);
+      } else if (node.nodeType === 1) {
+        break;
+      }
+      node = next;
+    }
+    const jobF = (entryFields || []).find((f) => f.type === 'jobsearch' && f.group === groupName);
+    const src = jobF && container.querySelector('#' + ns + '_f_' + jobF.key);
+    if (src) {
+      const paint = () => { span.textContent = String(src.value || '').trim() ? '— ' + src.value : ''; };
+      src.addEventListener('input', paint);
+      src.addEventListener('change', paint);
+      paint();
+    }
   }
 
   // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
@@ -665,7 +720,7 @@
 
   // ---- one controller per log (primary + optional secondary share this factory) ----
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey, autofill } = opts
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey, autofill, jobInfoGroup } = opts
     // Staged entries: one row that is filled in over several separate visits, each visit
     // submitted and locked on its own. Opt-in -- a record without `entryStages` behaves
     // exactly as before, which is every other record in the system.
@@ -1054,6 +1109,7 @@
       wireYesNo(container);
       wirePrefixed(container);
       wireDigits(container);
+      wireJobInfoCollapsible(container, ns, entryFields, jobInfoGroup);
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); }
       // Restore provisional markers saved with this entry, so a draft reopened later still shows
       // which values came from an unfinished record and still gets them refreshed on save.
@@ -1674,7 +1730,8 @@
       deviationPolarity: config.deviationPolarity || 'deviation',
       submitFlow,
       inline: inlineEntryForm,
-      autofill: config.autofill
+      autofill: config.autofill,
+      jobInfoGroup: config.jobInfoGroup
     });
     let secondary = null;
     if (config.secondaryLog) {
