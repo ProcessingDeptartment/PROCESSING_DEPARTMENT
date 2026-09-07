@@ -150,15 +150,21 @@
     .fr-app input,.fr-app select,.fr-app textarea{ font-size:16px; padding:8px; min-height:44px; }
     .fr-app table.fr-table input,.fr-app table.fr-table select,.fr-app table.fr-table textarea{ font-size:13px; padding:4px; min-height:0; }
     /* Label text, section titles and instructions scale up too -- 11-12px is
-       unreadable on a phone without zooming. */
-    .fr-app{ font-size:15px; }
-    .fr-field{ font-size:14px; }
-    .fr-field span.hint{ font-size:12.5px; }
-    .fr-panel-head h2{ font-size:14px; }
-    .fr-section-title{ font-size:13px; }
-    .fr-instructions .instr-item strong{ font-size:12.5px; }
-    .fr-btn{ min-height:44px; font-size:14px; }
-    .fr-btn-sm{ min-height:32px; padding:6px 10px; font-size:11.5px; }
+       unreadable on a phone without zooming. Field labels hit the 16px
+       readable-without-zooming floor; hints/headers step down but stay legible. */
+    .fr-app{ font-size:16px; }
+    .fr-field{ font-size:16px; }
+    .fr-field span.hint{ font-size:13px; }
+    .fr-panel-head h2{ font-size:15px; }
+    .fr-section-title{ font-size:14px; }
+    .fr-instructions .instr-item strong{ font-size:13px; }
+    .fr-btn{ min-height:44px; font-size:16px; }
+    /* Small/secondary buttons still get a 44px tap target -- padding makes
+       up the difference rather than the visible box growing. */
+    .fr-btn-sm{ min-height:44px; padding:10px 14px; font-size:14px; }
+    /* Y/N/None toggle buttons -- undersized (32px/12px) at the default scale;
+       give them the same 44px tap target as every other button on a phone. */
+    .ml-yesno button{ min-height:44px; font-size:15px; padding:10px; }
     .fr-filters{ gap:6px; }
     .fr-filters label,.fr-filters input[type=text]{ flex:1 1 140px; max-width:none; }
     .fr-filters input[type=date]{ width:100%; }
@@ -208,7 +214,7 @@
   }
   /* Yes/No button group styles copied from monitoring-log.js to match appearance */
   .ml-yesno{ display:flex; gap:10px; }
-  .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
+  .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; min-height:32px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
   .ml-yesno button:hover:not(:disabled){ border-color:#8a939b !important; }
   /* Which answer is "good" (green) vs "bad" (red) varies by question -- set via
      data-good="Yes"|"No" on the .ml-yesno span (defaults to Yes when absent). */

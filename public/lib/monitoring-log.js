@@ -92,7 +92,7 @@
   .ml-badge-muted{ background:#eee; color:#777; }
   .ml-muted{ color:#8a939b; }
   .ml-yesno{ display:flex; gap:10px; }
-  .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
+  .ml-yesno button{ flex:1; padding:7px 10px; font-size:12px; min-height:32px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
   .ml-yesno button:hover:not(:disabled){ border-color:#8a939b !important; }
   /* Which answer is "good" (green) vs "bad" (red) varies by question -- set via
      data-good="Yes"|"No" on the .ml-yesno span (defaults to Yes when absent). */
@@ -164,6 +164,7 @@
     .ml-app input,.ml-app select,.ml-app textarea{ font-size:15px; min-height:44px; }
     .ml-app table.ml-table input,.ml-app table.ml-table select,.ml-app table.ml-table textarea{ font-size:13px; min-height:0; }
     .ml-btn{ min-height:44px; }
+    .ml-yesno button{ min-height:44px; font-size:14px; }
     .ml-grid-3{ grid-template-columns:repeat(2,1fr); }
     .ml-grid-4{ grid-template-columns:repeat(2,1fr); }
     .ml-body{ padding:14px 14px 60px; }
@@ -181,15 +182,21 @@
     .ml-app input,.ml-app select,.ml-app textarea{ font-size:16px; padding:8px; min-height:44px; }
     .ml-app table.ml-table input,.ml-app table.ml-table select,.ml-app table.ml-table textarea{ font-size:13px; padding:4px; min-height:0; }
     /* Label text, section titles and instructions scale up too -- 11-12px is
-       unreadable on a phone without zooming. */
-    .ml-app{ font-size:15px; }
-    .ml-field{ font-size:14px; }
-    .ml-field span.hint{ font-size:12.5px; }
-    .ml-panel-head h2{ font-size:14px; }
-    .ml-grouphead{ font-size:13px; }
-    .ml-instructions .instr-item strong{ font-size:12.5px; }
-    .ml-btn{ min-height:44px; font-size:14px; }
-    .ml-btn-sm{ min-height:32px; padding:6px 10px; font-size:11.5px; }
+       unreadable on a phone without zooming. Field labels hit the 16px
+       readable-without-zooming floor; hints/headers step down but stay legible. */
+    .ml-app{ font-size:16px; }
+    .ml-field{ font-size:16px; }
+    .ml-field span.hint{ font-size:13px; }
+    .ml-panel-head h2{ font-size:15px; }
+    .ml-grouphead{ font-size:14px; }
+    .ml-instructions .instr-item strong{ font-size:13px; }
+    .ml-btn{ min-height:44px; font-size:16px; }
+    /* Small/secondary buttons still get a 44px tap target -- padding makes
+       up the difference rather than the visible box growing. */
+    .ml-btn-sm{ min-height:44px; padding:10px 14px; font-size:14px; }
+    /* Y/N/None toggle buttons -- undersized (32px/12px) at the default scale;
+       give them the same 44px tap target as every other button on a phone. */
+    .ml-yesno button{ min-height:44px; font-size:15px; padding:10px; }
     .ml-filters{ gap:6px; }
     .ml-filters label,.ml-filters input[type=text]{ flex:1 1 140px; max-width:none; }
     .ml-filters input[type=date]{ width:100%; }
