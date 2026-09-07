@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=23"></script>
+<script src="../lib/form-record.js?v=24"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -43,7 +43,10 @@
     // already carries (processingFor), only where this form's own field is still empty.
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
+        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' },
+        // Roster "Size range" is narrowed to the sizes this job was actually received as
+        // (form-record.js applies restrict: to roster columns as well as top-level fields).
+        restrict: { sizeRange: 'sizeRange' } }
     ],
     listColumns: ['date', 'jobNo', 'intakeDate', 'processingFor'],
     sections: [
@@ -156,13 +159,20 @@
     if (current && !keep.some(function (o) { return o.value === current; })) {
       keep = keep.concat([{ value: current, text: current }]);
     }
-    sel.innerHTML = '';
-    keep.forEach(function (o) {
-      var opt = document.createElement('option');
-      opt.value = o.value; opt.textContent = o.text;
-      sel.appendChild(opt);
-    });
-    sel.value = current;
+    // Idempotent: only rebuild the <option>s when the set actually changed.
+    // A blind rebuild here is a childList mutation that re-triggers the observer
+    // below -> busy loop.
+    var nextSig = keep.map(function (o) { return o.value; }).join('');
+    if (sel._optSig !== nextSig) {
+      sel._optSig = nextSig;
+      sel.innerHTML = '';
+      keep.forEach(function (o) {
+        var opt = document.createElement('option');
+        opt.value = o.value; opt.textContent = o.text;
+        sel.appendChild(opt);
+      });
+    }
+    if (sel.value !== current) sel.value = current;
   }
 
   function apply() {
@@ -190,5 +200,7 @@
   })();
 })();
 </script>
+<!-- Collapsing a finished salting-batch row to a summary line is now handled by
+     the shared engine (form-record.js) for every roster. -->
 </body>
 </html>

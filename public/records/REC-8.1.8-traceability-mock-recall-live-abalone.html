@@ -23,7 +23,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=23"></script>
+<script src="../lib/form-record.js?v=24"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -34,7 +34,7 @@
     docRevisionStart: 3,
     listColumns: ['recallInitiationDate', 'packingDate'],
     instructions: [
-      { label: 'Note', text: 'Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
+      { label: 'Note', text: 'Static reference checklist â€” each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
     ],
     sections: [
       { title: 'Batch details', fields: [
@@ -43,7 +43,7 @@
       ]}
     ],
     roster: {
-      title: 'Records — covers Live Production Pack (7.5.1), Live Pack Checklist / Bag Checks (7.5.2/7.5.3), IDN/Customer Order, NRCS Health Certificate, and related cleaning/hygiene records',
+      title: 'Records â€” covers Live Production Pack (7.5.1), Live Pack Checklist / Bag Checks (7.5.2/7.5.3), IDN/Customer Order, NRCS Health Certificate, and related cleaning/hygiene records',
       columns: [
         { key: 'recordName', label: 'Record', type: 'text' },
         { key: 'recordCode', label: 'QC record / REC code', type: 'text' },

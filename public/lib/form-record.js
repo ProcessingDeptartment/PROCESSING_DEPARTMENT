@@ -114,8 +114,16 @@
   .fr-section-collapsible[open] > .fr-section-title::before{ content:'\\25BE'; }
   .fr-section-summary{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; text-transform:none; letter-spacing:0; color:var(--palette-ink,#1b2330); font-weight:700; }
   .fr-section-summary:not(:empty){ margin-left:8px; }
-  .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; }
+  .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; flex-wrap:wrap; }
   .fr-roster-row .fr-field{ flex:1; }
+  /* A row the operator has finished collapses to a one-line summary; "Edit" reopens it. */
+  .fr-roster-row-collapsed > .fr-field,
+  .fr-roster-row-collapsed > [data-remove-roster-row]{ display:none; }
+  .fr-roster-summary{ flex:1 1 100%; display:flex; gap:12px; align-items:center; padding:3px 0;
+    font-size:12.5px; color:var(--palette-ink,#1b2330); }
+  .fr-roster-summary-text{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; }
+  @media print{ .fr-roster-summary{ display:none; }
+    .fr-roster-row-collapsed > .fr-field, .fr-roster-row-collapsed > [data-remove-roster-row]{ display:block; } }
   .fr-modal-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center; }
   .fr-modal-inner{ background:#fff; border-radius:8px; width:min(880px,94vw); max-height:90vh; overflow:auto; padding:16px; }
   .fr-modal-inner h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356); margin-bottom:10px; }
@@ -645,33 +653,45 @@
    * list all restore the full list. A picker with nothing in it stops the shift; a slightly wide
    * picker doesn't. A value already captured is always kept selectable so old entries still read.
    */
+  // Narrows one <select> to `allowed` (case-insensitive), keeping the placeholder and whatever is
+  // currently selected. Fails OPEN: allowed empty / no overlap restores the full list. The full
+  // list is captured once on the element so repeated calls are reversible.
+  function restrictSelect(sel, allowed) {
+    if (!sel || sel.tagName !== 'SELECT') return;
+    if (!sel._frAllOptions) {
+      sel._frAllOptions = [...sel.options].map((o) => ({ value: o.value, text: o.textContent }));
+    }
+    const all = sel._frAllOptions;
+    const current = sel.value;
+    let keep = all;
+    if (Array.isArray(allowed) && allowed.length) {
+      const want = new Set(allowed.map((v) => String(v).trim().toLowerCase()));
+      const narrowed = all.filter((o) => o.value === '' || want.has(String(o.value).trim().toLowerCase()));
+      // '' is the placeholder, so "nothing matched" is length <= 1.
+      if (narrowed.filter((o) => o.value !== '').length) keep = narrowed;
+    }
+    if (current && !keep.some((o) => o.value === current)) keep = keep.concat([{ value: current, text: current }]);
+    sel.innerHTML = '';
+    keep.forEach((o) => {
+      const opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.text;
+      sel.appendChild(opt);
+    });
+    sel.value = current;
+  }
+
+  /* A restrict target key can be a top-level field OR a roster column -- size range is a roster
+   * column on REC 7.1.3 (one row per salting batch) and a plain field elsewhere. Narrow every
+   * matching select either way. Roster rows are rebuilt on add/remove, so this is re-run from the
+   * roster's draw() with the rule's last lookup result (rule.__lastFound). */
   function applyRestrict(container, rule, found) {
     if (!rule.restrict) return;
     Object.entries(rule.restrict).forEach(([targetKey, sourceCol]) => {
-      const sel = container.querySelector('#fr_f_' + targetKey);
-      if (!sel || sel.tagName !== 'SELECT') return;
-      if (!sel._frAllOptions) {
-        sel._frAllOptions = [...sel.options].map((o) => ({ value: o.value, text: o.textContent }));
-      }
-      const all = sel._frAllOptions;
-      const current = sel.value;
       const allowed = found && found.__rosterOptions && found.__rosterOptions[sourceCol];
-      let keep = all;
-      if (Array.isArray(allowed) && allowed.length) {
-        const want = new Set(allowed.map((v) => String(v).trim().toLowerCase()));
-        const narrowed = all.filter((o) => o.value === '' || want.has(String(o.value).trim().toLowerCase()));
-        // '' is the placeholder, so "nothing matched" is length <= 1.
-        if (narrowed.filter((o) => o.value !== '').length) keep = narrowed;
-      }
-      if (current && !keep.some((o) => o.value === current)) keep = keep.concat([{ value: current, text: current }]);
-      sel.innerHTML = '';
-      keep.forEach((o) => {
-        const opt = document.createElement('option');
-        opt.value = o.value;
-        opt.textContent = o.text;
-        sel.appendChild(opt);
-      });
-      sel.value = current;
+      restrictSelect(container.querySelector('#fr_f_' + targetKey), allowed);
+      container.querySelectorAll('#fr_rosterRows select[id$="_' + targetKey + '"]')
+        .forEach((sel) => restrictSelect(sel, allowed));
     });
   }
 
@@ -685,11 +705,13 @@
         const value = watchEl.value;
         if (value === lastValue) return;
         lastValue = value;
-        if (!value) { applyRestrict(container, rule, null); return; }
+        if (!value) { rule.__lastFound = null; applyRestrict(container, rule, null); return; }
         try {
           const found = await autofillLookup(rule, value);
           // Restriction is applied either way: clearing the job (or picking one nothing is known
           // about) must put the full preset list back rather than leave the last job's narrowing.
+          // Stashed so a roster redraw (new rows) can re-narrow without another lookup.
+          rule.__lastFound = found;
           applyRestrict(container, rule, found);
           if (!found) return;
           const provisional = found.__status && found.__status !== 'submitted';
@@ -737,6 +759,7 @@
       let found = null;
       try { found = await autofillLookup(rule, watchEl.value); } catch (e) { found = null; }
       if (!found) continue;
+      rule.__lastFound = found;
       applyRestrict(container, rule, found);
       const nowProvisional = found.__status && found.__status !== 'submitted';
       if (nowProvisional) stillDraft = true;
@@ -1128,12 +1151,67 @@
         });
       }
 
+      /* ---- collapse a finished row to a one-line summary -----------------
+       * Once the operator moves off a row that has data, it shows as a single
+       * summary line with an "Edit" button, instead of a full strip of inputs -
+       * so a record with 20 batches stays readable. State lives here (not the
+       * DOM, which draw() rebuilds) as a set of collapsed row indices. Inputs
+       * are only hidden, never detached, so _getRows()/save still see them.
+       * Opt out per form with `roster.collapseRows: false`. */
+      const canCollapse = config.roster.collapseRows !== false && config.roster.columns.length > 2;
+      const collapsedRows = new Set();
+      const dataCols = config.roster.columns.filter(c => c.type !== 'batchseq');
+
+      function rowHasData(i) {
+        return dataCols.some(c => {
+          const inp = el(`fr_roster_${i}_${c.key}`);
+          return inp && String(inp.value || '').trim() !== '';
+        });
+      }
+      function rowSummaryHtml(i) {
+        const bits = [];
+        config.roster.columns.forEach(c => {
+          const inp = el(`fr_roster_${i}_${c.key}`);
+          const v = inp ? String(inp.value || '').trim() : '';
+          if (!v) return;
+          bits.push(c.type === 'batchseq' ? esc(v) : `${esc(c.label)}: ${esc(v)}`);
+        });
+        const shown = bits.slice(0, 5).join('  ·  ') + (bits.length > 5 ? '  ·  …' : '');
+        return `<span class="fr-roster-summary-text">${shown || '(empty row)'}</span>`
+          + `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-roster-edit="${i}">Edit</button>`;
+      }
+      function applyCollapse() {
+        if (!canCollapse) return;
+        container.querySelectorAll('.fr-roster-row').forEach(rowEl => {
+          const i = Number(rowEl.dataset.rosterRow);
+          const collapse = collapsedRows.has(i) && rowHasData(i);
+          let sum = rowEl.querySelector(':scope > .fr-roster-summary');
+          if (collapse) {
+            if (!sum) {
+              sum = document.createElement('div');
+              sum.className = 'fr-roster-summary';
+              rowEl.insertBefore(sum, rowEl.firstChild);
+            }
+            const html = rowSummaryHtml(i);
+            if (sum.innerHTML !== html) sum.innerHTML = html;
+            rowEl.classList.add('fr-roster-row-collapsed');
+          } else {
+            if (sum) sum.remove();
+            rowEl.classList.remove('fr-roster-row-collapsed');
+          }
+        });
+      }
+
       function draw() {
         container.innerHTML = rows.map((r, i) => rosterRowHtml('fr', i, r)).join('');
               // Wire Yes/No button groups and job-number widgets inside roster rows
               if (typeof wireYesNo === 'function') wireYesNo(container);
               if (typeof wireJobNumber === 'function') wireJobNumber(container);
               if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
+              // Re-narrow any restricted roster column (e.g. Size range) on freshly drawn rows,
+              // using the job lookup already done for the top-level fields.
+              (config.autofill || []).forEach((rule) =>
+                applyRestrict(el('fr_modalSections'), rule, rule.__lastFound || null));
               renderRosterTotals();
               renderRosterDerived();
               container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
@@ -1141,17 +1219,48 @@
                   const i = Number(btn.dataset.removeRosterRow);
                   rows.splice(i, 1);
                   if (!rows.length) rows.push({});
+                  // Shift collapsed indices down past the removed row.
+                  const next = new Set();
+                  collapsedRows.forEach(x => { if (x < i) next.add(x); else if (x > i) next.add(x - 1); });
+                  collapsedRows.clear(); next.forEach(x => collapsedRows.add(x));
                   draw();
                 });
               });
+              applyCollapse();
             }
       // Attached once (not inside draw()) since container itself is never replaced.
       container.addEventListener('input', renderRosterTotals);
       container.addEventListener('input', renderRosterDerived);
+      // Collapse a row once focus leaves it (and it has something in it).
+      container.addEventListener('focusout', (e) => {
+        if (!canCollapse) return;
+        const rowEl = e.target.closest && e.target.closest('.fr-roster-row');
+        if (!rowEl) return;
+        const i = Number(rowEl.dataset.rosterRow);
+        setTimeout(() => {
+          if (rowEl.contains(document.activeElement)) return;   // moved within the same row
+          if (rowHasData(i)) { collapsedRows.add(i); applyCollapse(); }
+        }, 0);
+      });
+      // "Edit" on a collapsed row reopens it.
+      container.addEventListener('click', (e) => {
+        const btn = e.target.closest && e.target.closest('[data-roster-edit]');
+        if (!btn) return;
+        const i = Number(btn.dataset.rosterEdit);
+        collapsedRows.delete(i);
+        applyCollapse();
+        const first = el(`fr_roster_${i}_${(dataCols[0] || config.roster.columns[0]).key}`);
+        if (first) { try { first.focus(); } catch (err) {} }
+      });
       // The batch id also depends on the job number, which lives outside the roster container.
       const jobWatch = el('fr_f_' + (config.batchField || 'jobNo'));
       if (jobWatch) ['input', 'change'].forEach(ev => jobWatch.addEventListener(ev, renderRosterDerived));
       draw();
+      // A reopened draft starts with its already-filled rows collapsed.
+      if (canCollapse) {
+        rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
+        applyCollapse();
+      }
       container._getRows = () => {
         // capture current input values before returning
         rows = rows.map((_, i) => {
@@ -1177,6 +1286,11 @@
         }).filter(r => config.roster.columns.some(c => String(r[c.key] || '').trim() !== ''));
         rows = rows.concat(newRows);
         draw();
+        // Imported / panel-committed rows arrive complete - show them collapsed.
+        if (canCollapse) {
+          rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
+          applyCollapse();
+        }
       };
       container._addRow = () => {
         // sync existing inputs into `rows` before appending a blank one

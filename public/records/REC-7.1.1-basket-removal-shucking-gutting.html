@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=23"></script>
+<script src="../lib/form-record.js?v=24"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -63,7 +63,7 @@
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
       { title: 'Incoming check', newPage: true, fields: [
-        { key: 'incomingTemp', label: 'Incoming abalone temp (°C)', type: 'number' },
+        { key: 'incomingTemp', label: 'Incoming abalone temp (Â°C)', type: 'number' },
         { key: 'noOfMortalities', label: 'No. of mortalities', type: 'number' },
         { key: 'signsOfParasites', label: 'Signs of parasites?', type: 'yesno', good: 'No' },
         { key: 'foreignObjects', label: 'Foreign/physical objects?', type: 'yesno', good: 'No' },
