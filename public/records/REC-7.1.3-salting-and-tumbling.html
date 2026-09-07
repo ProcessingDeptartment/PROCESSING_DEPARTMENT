@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=21"></script>
+<script src="../lib/form-record.js?v=22"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -43,12 +43,14 @@
     // already carries (processingFor), only where this form's own field is still empty.
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { processingFor: 'toBeProcessedFor' } }
+        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor' } }
     ],
-    listColumns: ['date', 'jobNo', 'processingFor'],
+    listColumns: ['date', 'jobNo', 'intakeDate', 'processingFor'],
     sections: [
-      { title: 'Job info', fields: [
+      { title: 'Job info', collapsible: true, fields: [
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+        { key: 'intakeDate', label: 'Intake date', type: 'date' },
+        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] }
       ]},

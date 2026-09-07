@@ -106,6 +106,12 @@
   .fr-history-item:last-child{ border-bottom:none; }
   .fr-section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-label,#54606b); margin:14px 0 8px; }
   .fr-section-title:first-child{ margin-top:0; }
+  .fr-section-collapsible{ margin:14px 0 8px; }
+  .fr-section-collapsible:first-child{ margin-top:0; }
+  .fr-section-collapsible > .fr-section-title{ cursor:pointer; margin:0 0 8px; list-style:none; }
+  .fr-section-collapsible > .fr-section-title::-webkit-details-marker{ display:none; }
+  .fr-section-collapsible > .fr-section-title::before{ content:'\25B8'; display:inline-block; width:1em; transition:transform .15s; }
+  .fr-section-collapsible[open] > .fr-section-title::before{ content:'\25BE'; }
   .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; }
   .fr-roster-row .fr-field{ flex:1; }
   .fr-modal-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center; }
@@ -1145,13 +1151,20 @@
         ? `<div class="fr-locked">Submitted${existing.submittedAt
             ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.</div>`
         : '';
-      html += (config.sections || []).map(sec => `
-        <div class="fr-section-title">${esc(sec.title)}</div>
-        <div class="fr-grid fr-grid-2">
+      html += (config.sections || []).map(sec => {
+        const fieldsHtml = `<div class="fr-grid fr-grid-2">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
             ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}
           </label>`).join('')}
-        </div>`).join('');
+        </div>`;
+        if (sec.collapsible) {
+          return `<details class="fr-section-collapsible"${sec.collapsedByDefault ? '' : ' open'}>
+            <summary class="fr-section-title">${esc(sec.title)}</summary>
+            ${fieldsHtml}
+          </details>`;
+        }
+        return `<div class="fr-section-title">${esc(sec.title)}</div>${fieldsHtml}`;
+      }).join('');
       if (hasRoster) {
         html += `
         <div class="fr-section-title">${esc(config.roster.title)}</div>
