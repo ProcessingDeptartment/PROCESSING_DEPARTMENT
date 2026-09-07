@@ -69,13 +69,25 @@ body {
      pages that reference these vars (and any that later adopt them) inherit
      the change without each page being touched. */
   :root {
-    --form-fs-root: 14px;
-    --form-fs-input: 15px;
-    --form-fs-button: 14px;
-    --form-fs-small: 12.5px;
-    --form-fs-label: 13px;
-    --form-fs-hint: 12.5px;
-    --form-fs-panel-head: 13px;
+    --form-fs-root: 15px;
+    --form-fs-input: 16px;
+    --form-fs-button: 15px;
+    --form-fs-small: 13px;
+    --form-fs-label: 14px;
+    --form-fs-hint: 13px;
+    --form-fs-panel-head: 14px;
+  }
+
+  /* Tablets are touch devices too -- give buttons and checkboxes the same
+     44px tap target as the phone breakpoint below, even though the layout
+     itself doesn't need to collapse to a single column yet. */
+  .btn, .ml-btn, .fr-btn, button {
+    min-height: 44px;
+  }
+  input[type="checkbox"], input[type="radio"] {
+    min-width: 22px;
+    min-height: 22px;
+    margin: 8px;
   }
 }
 
@@ -116,15 +128,16 @@ body {
   .footer-grid { grid-template-columns: 1fr !important; }
 
   /* Bespoke record type scale on phones: 16px inputs (no iOS zoom-on-focus),
-     readable labels/titles/hints. */
+     16px labels to meet the readable-without-zooming minimum, hints a step
+     down but still legible. */
   :root {
     --form-fs-root: 16px;
     --form-fs-input: 16px;
-    --form-fs-button: 15px;
-    --form-fs-small: 13px;
-    --form-fs-label: 14px;
-    --form-fs-hint: 13px;
-    --form-fs-panel-head: 14px;
+    --form-fs-button: 16px;
+    --form-fs-small: 14px;
+    --form-fs-label: 16px;
+    --form-fs-hint: 14px;
+    --form-fs-panel-head: 15px;
   }
 
   /* --- controls: touch targets and no iOS zoom-on-focus --- */
@@ -137,17 +150,28 @@ body {
   table input, table select, table textarea { min-height: 0; }
 
   /* Label text, section titles, hints and form instructions on hand-written
-     pages -- 11-12px is unreadable on a phone. Table cells keep their own
-     compact sizing (those tables scroll). */
+     pages -- 11-12px is unreadable on a phone. Meets the 16px minimum base
+     font for body/label text; hints stay a step down but still legible.
+     Table cells keep their own compact sizing (those tables scroll). */
   .field, .field > label, label.field,
-  .panel-body:not(:has(table)) { font-size: 15px; }
-  .panel-head h2, .panel-head h3 { font-size: 14px; }
-  .hint, .field-hint, small { font-size: 13px; }
+  .panel-body:not(:has(table)) { font-size: 16px; }
+  .panel-head h2, .panel-head h3 { font-size: 15px; }
+  .hint, .field-hint, small { font-size: 14px; }
 
-  /* Checkboxes / radios need a finger-sized hit area. */
+  /* Checkboxes / radios need a finger-sized hit area -- 44px including
+     spacing, not just the visible box, so adjacent controls don't crowd
+     the tap target. */
   input[type="checkbox"], input[type="radio"] {
-    min-width: 22px;
-    min-height: 22px;
+    min-width: 24px;
+    min-height: 24px;
+    margin: 10px;
+  }
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]) {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
   /* Grid cells inside data tables stay compact -- a 16px input in a 12-column
      readings table would make the row unusable. Those tables scroll instead. */
@@ -163,14 +187,23 @@ body {
 
   .btn, .ml-btn, .fr-btn, button {
     min-height: 44px;
-    font-size: 14px;
+    font-size: 16px;
+    padding: 10px 16px;
   }
+  /* Small/secondary buttons still need a 44px tap target even though their
+     visible box and label stay compact -- padding makes up the difference
+     rather than the box itself growing. */
   .btn-sm, .ml-btn-sm, .fr-btn-sm {
-    min-height: 32px;
-    font-size: 12px;
+    min-height: 44px;
+    font-size: 14px;
+    padding: 10px 14px;
   }
+  /* Buttons inside data-table cells are the deliberate exception: those
+     tables already scroll horizontally and a 44px row would blow out
+     every row's height, so they keep a smaller, tappable-but-compact size. */
   table .btn, table .ml-btn, table .fr-btn, table button {
-    min-height: 28px;
+    min-height: 36px;
+    font-size: 14px;
   }
 
   /* Action rows read better full-width than right-aligned on a phone. */
@@ -187,7 +220,8 @@ body {
   .report-link {
     display: block;
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: 16px;
+    min-height: 44px;
     text-align: center;
   }
   .report-list li { flex: 1 1 200px; }
