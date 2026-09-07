@@ -606,9 +606,10 @@
     }
     note.classList.toggle('show', !!any);
     if (any) {
-      note.textContent = 'Some values came from a record that is still a draft (highlighted below) — '
-        + 'they are provisional and will be refreshed when you save. This entry can be saved as a draft, '
-        + 'but not submitted as final until the source record is submitted.';
+      note.textContent = 'Warning: the Abalone Receiving record (REC 7.1.2) for this job is still a '
+        + 'draft. The highlighted fields are provisional — they will be refreshed when you save. This '
+        + 'entry can be saved as a draft, but not submitted as final until that receiving record is '
+        + 'submitted.';
     }
   }
 
@@ -688,11 +689,20 @@
           const provisional = found.__status && found.__status !== 'submitted';
           Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
             const targetEl = container.querySelector('#fr_f_' + targetKey);
-            if (targetEl && !targetEl.value && found[sourceKey] != null && found[sourceKey] !== '') {
+            if (!targetEl) return;
+            let filledNow = false;
+            if (!targetEl.value && found[sourceKey] != null && found[sourceKey] !== '') {
               if (!setAutofilled(targetEl, found[sourceKey])) return;
-              markProvisional(targetEl, provisional);
+              filledNow = true;
               targetEl.dispatchEvent(new Event('input', { bubbles: true }));
             }
+            // Flag the field yellow whenever the job's source record is still a draft -- not only
+            // the ones we just filled. The read-only Job info snapshot fields (jiReceivingDate etc.)
+            // already carry the job's values, and on some pages nothing new is filled at all, but
+            // the whole block is still provisional until REC 7.1.2 for this job is submitted.
+            // A field the operator typed into (not read-only, already has a value) is left alone.
+            if (provisional && (filledNow || targetEl.readOnly)) markProvisional(targetEl, true);
+            else if (!provisional) markProvisional(targetEl, false);
           });
           renderProvisionalNotice(container);
         } catch (e) {

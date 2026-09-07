@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=22"></script>
+<script src="../lib/form-record.js?v=23"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -38,29 +38,29 @@
     docRevisionStart: 1,
     // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
     // actually been received instead of typing blind.
-    // Picking one also fills in what that job already carries (intakeDate, harvestFarm),
-    // only where this form's own field is still empty.
+    // Picking one also fills the receiving snapshot (date, farm, processing destination,
+    // intake weight) as locked read-only fields inside the Job info block.
     // The size range picker is narrowed to the sizes actually received on that job.
     autofill: [
       { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom',
+        fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom',
           jiProcessingFor: 'toBeProcessedFor',
           jiIntakeWeight: 'intakeWeight'
         },
         restrict: { sizeRange: 'sizeRange' } }
     ],
-    listColumns: ['intakeDate', 'jobNumber', 'sizeRange'],
+    listColumns: ['jiReceivingDate', 'jobNumber', 'sizeRange'],
     batchField: 'jobNumber',
     stage: 'precooking',
     sections: [
       { title: 'Job info', collapsible: true, summaryField: 'jobNumber', fields: [
         { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
+        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
+        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
         { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
         { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
       ]},
       { title: 'Batch info', fields: [
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
         { key: 'precookingDate', label: 'Precooking date', type: 'date' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
