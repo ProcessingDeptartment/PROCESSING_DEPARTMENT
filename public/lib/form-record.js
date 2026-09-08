@@ -1231,14 +1231,28 @@
       // Attached once (not inside draw()) since container itself is never replaced.
       container.addEventListener('input', renderRosterTotals);
       container.addEventListener('input', renderRosterDerived);
-      // Collapse a row once focus leaves it (and it has something in it).
+      // Editing model: at most one row is open at a time. Focusing into any row
+      // collapses every other row that has data; the row you're in stays open.
+      function collapseAllExcept(openIdx) {
+        if (!canCollapse) return;
+        collapsedRows.clear();
+        rows.forEach((_, i) => { if (i !== openIdx && rowHasData(i)) collapsedRows.add(i); });
+        applyCollapse();
+      }
+      container.addEventListener('focusin', (e) => {
+        if (!canCollapse) return;
+        const rowEl = e.target.closest && e.target.closest('.fr-roster-row');
+        if (!rowEl) return;
+        collapseAllExcept(Number(rowEl.dataset.rosterRow));
+      });
+      // Focus leaving the roster entirely collapses the row that was open too.
       container.addEventListener('focusout', (e) => {
         if (!canCollapse) return;
         const rowEl = e.target.closest && e.target.closest('.fr-roster-row');
         if (!rowEl) return;
         const i = Number(rowEl.dataset.rosterRow);
         setTimeout(() => {
-          if (rowEl.contains(document.activeElement)) return;   // moved within the same row
+          if (container.contains(document.activeElement)) return;   // moved to another row/field
           if (rowHasData(i)) { collapsedRows.add(i); applyCollapse(); }
         }, 0);
       });
@@ -1303,7 +1317,11 @@
           return row;
         });
         rows.push({});
+        // Starting a new row means the operator is done with the others.
+        if (canCollapse) rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
         draw();
+        const first = el(`fr_roster_${rows.length - 1}_${(dataCols[0] || config.roster.columns[0]).key}`);
+        if (first) { try { first.focus(); } catch (err) {} }
       };
     }
 
