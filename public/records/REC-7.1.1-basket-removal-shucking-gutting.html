@@ -59,7 +59,7 @@
       ]},
       { title: 'Intake & processing info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
+        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'], matchJobRoute: 'jobNo' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
       ]},
       { title: 'Incoming check', newPage: true, fields: [

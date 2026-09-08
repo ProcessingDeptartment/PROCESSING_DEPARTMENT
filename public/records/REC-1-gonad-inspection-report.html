@@ -27,7 +27,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=22"></script>
+<script src="../lib/monitoring-log.js?v=23"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -60,7 +60,7 @@
       { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
       { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
       { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'] },
+      { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'], matchJobRoute: 'jobNo' },
       { key: 'stage', label: 'Stage', type: 'select', options: ['0', '1', '2', '3'] },
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'sex', label: 'Sex', type: 'select', options: ['Male', 'Female'] },

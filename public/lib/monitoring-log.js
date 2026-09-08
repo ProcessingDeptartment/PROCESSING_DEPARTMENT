@@ -406,6 +406,34 @@
   // Wraps the fields of one `group` (the job-info snapshot from Abalone Receiving) in a
   // collapsible <details>, turning that group's heading into the summary and keeping the job
   // number visible in it while collapsed. No-op unless the record declares `jobInfoGroup`.
+  // Live check for a field with `matchJobRoute: '<jobFieldKey>'`: inline warning the moment
+  // "processing for" disagrees with the route the job-number prefix fixes. Submit is also blocked
+  // in saveForm; this makes the conflict visible first. Mirrors form-record.js.
+  function wireJobRouteCheck(container, ns, entryFields) {
+    (entryFields || []).forEach((f) => {
+      if (!f.matchJobRoute || !window.Lookups || !window.Lookups.batch) return;
+      const target = container.querySelector('#' + ns + '_f_' + f.key);
+      const jobEl = container.querySelector('#' + ns + '_f_' + f.matchJobRoute);
+      if (!target || !jobEl) return;
+      const wrap = target.closest('.ml-field') || target.parentNode;
+      let warn = wrap.querySelector('.ml-route-warn');
+      if (!warn) {
+        warn = document.createElement('div');
+        warn.className = 'ml-notice ml-notice-due ml-route-warn';
+        warn.style.marginTop = '4px';
+        wrap.appendChild(warn);
+      }
+      const check = () => {
+        const bad = target.value && jobEl.value
+          && !window.Lookups.batch.routeMatches(jobEl.value, target.value);
+        warn.textContent = bad ? window.Lookups.batch.routeError(jobEl.value) : '';
+        warn.classList.toggle('show', !!bad);
+      };
+      [target, jobEl].forEach((e) => { e.addEventListener('input', check); e.addEventListener('change', check); });
+      check();
+    });
+  }
+
   function wireJobInfoCollapsible(container, ns, entryFields, groupName) {
     if (!groupName || container.querySelector('details.ml-section-collapsible')) return;
     const heads = Array.prototype.slice.call(container.querySelectorAll('.ml-grouphead'));
@@ -1126,7 +1154,7 @@
       wirePrefixed(container);
       wireDigits(container);
       wireJobInfoCollapsible(container, ns, entryFields, jobInfoGroup);
-      if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); }
+      if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
       // Restore provisional markers saved with this entry, so a draft reopened later still shows
       // which values came from an unfinished record and still gets them refreshed on save.
       if (existing && Array.isArray(existing.provisionalFields)) {
@@ -1174,6 +1202,7 @@
       const raw = {};
       let missingRequired = null;
       let badPattern = null;
+      let routeConflict = null;
       // On a staged record only the stage being worked on is checked. The later stages are
       // required too, but not yet -- holding this visit to them would make the record
       // impossible to fill in at all.
@@ -1205,11 +1234,23 @@
             && !new RegExp(f.pattern).test(String(raw[f.key]).trim())) {
           badPattern = f.patternMessage || `"${f.label}" is not in the expected format.`;
         }
+        // `matchJobRoute: '<jobFieldKey>'`: the value must agree with the route the job-number
+        // prefix fixes (3CP/CPR -> canning, 3DP/DPR -> dry). Same check as form-record.js.
+        if (f.matchJobRoute && window.Lookups && window.Lookups.batch && stageInPlay(f)) {
+          const jobVal = raw[f.matchJobRoute]
+            || (el(`${ns}_f_${f.matchJobRoute}`) ? el(`${ns}_f_${f.matchJobRoute}`).value : '');
+          if (jobVal && raw[f.key] && !window.Lookups.batch.routeMatches(jobVal, raw[f.key])) {
+            routeConflict = window.Lookups.batch.routeError(jobVal);
+          }
+        }
       });
       // A draft may be incomplete; a submission may not.
       if (missingRequired && (finalize || !submitFlow)) { toast(`"${missingRequired}" is required.`); return; }
       // A wrongly-formatted value is wrong in a draft too, so this one always blocks.
       if (badPattern) { toast(badPattern); return; }
+      // A processing route that contradicts the job prefix is an operator error -- block submit
+      // (a draft is still allowed through, like elsewhere).
+      if (routeConflict && (finalize || !submitFlow)) { toast(routeConflict); return; }
       // Every check has passed, so this save is definitely happening -- only now is the clock
       // read. Stamping earlier would record the time of a rejected attempt. Set once and kept:
       // resubmitting a section as a correction does not move its original time.

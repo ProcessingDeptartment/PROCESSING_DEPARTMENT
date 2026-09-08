@@ -55,7 +55,7 @@
       { title: 'Batch info', fields: [
         { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] },
+        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'], matchJobRoute: 'jobNo' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
         { key: 'wholeWeight', label: 'Whole weight', type: 'number' },
       ]},

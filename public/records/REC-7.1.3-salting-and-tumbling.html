@@ -56,7 +56,7 @@
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
         { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
         { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'] }
+        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'], matchJobRoute: 'jobNo' }
       ]},
       // One sign-off covers every batch on the job (see roster below).
       { title: 'Sign-off', newPage: true, fields: [
