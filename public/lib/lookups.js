@@ -149,6 +149,38 @@
       examples.join(', ') + ')';
   }
 
+  /*
+   * The job-number prefix fixes the processing route, so "processing for" can be checked
+   * against it rather than free-picked (rule from Michaela, 2026-09-07):
+   *   3CP / CPR  -> canning  ("Can")
+   *   3DP / DPR  -> dry      ("Dried")
+   * Returns the required processing-for value, or null when the prefix carries no rule.
+   * The returned strings match the option labels used on REC 7.1.2 and downstream forms.
+   */
+  const PREFIX_ROUTE = { '3CP': 'Can', 'CPR': 'Can', '3DP': 'Dried', 'DPR': 'Dried' };
+  function batchPrefix(value) {
+    const v = String(value == null ? '' : value).trim().toUpperCase();
+    for (const p in PREFIX_ROUTE) if (v.indexOf(p) === 0) return p;
+    return '';
+  }
+  function routeForBatch(value) {
+    const p = batchPrefix(value);
+    return p ? PREFIX_ROUTE[p] : null;
+  }
+  // True when `processingFor` is allowed for `batch`'s prefix (or the prefix has no rule,
+  // or either value is blank -- presence is the field's own concern).
+  function routeMatches(batch, processingFor) {
+    const want = routeForBatch(batch);
+    if (!want || !processingFor) return true;
+    return String(processingFor).trim().toLowerCase() === want.toLowerCase();
+  }
+  function routeError(batch) {
+    const want = routeForBatch(batch);
+    return want
+      ? `Job ${batchPrefix(batch)} must be processed for ${want === 'Can' ? 'canning' : 'dry'} — check "Processing for".`
+      : '';
+  }
+
   /* -------------------------------------------------------------- helpers */
 
   function get(name) {
@@ -282,7 +314,10 @@
       isValid: isValidBatchNumber,
       getFormats: getValidBatchFormats,
       getPatternLabel: getPatternLabel,
-      formatError: batchFormatError
+      formatError: batchFormatError,
+      route: routeForBatch,
+      routeMatches: routeMatches,
+      routeError: routeError
     }
   };
 

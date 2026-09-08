@@ -560,6 +560,38 @@
     });
   }
 
+  // Live check for a field that declares `matchJobRoute: '<jobFieldKey>'`: shows an inline
+  // warning the moment "processing for" disagrees with the route fixed by the job-number prefix
+  // (3CP/CPR -> canning, 3DP/DPR -> dry). Submit is also blocked in saveForm; this just makes
+  // the conflict visible before then.
+  function wireJobRouteCheck(container, config) {
+    (allFields(config) || []).forEach((f) => {
+      if (!f.matchJobRoute || !window.Lookups || !window.Lookups.batch) return;
+      const target = container.querySelector('#fr_f_' + f.key);
+      const jobEl = container.querySelector('#fr_f_' + f.matchJobRoute);
+      if (!target || !jobEl) return;
+      let warn = container.querySelector('#fr_routeWarn_' + f.key);
+      if (!warn) {
+        warn = document.createElement('div');
+        warn.id = 'fr_routeWarn_' + f.key;
+        warn.className = 'fr-notice fr-notice-due';
+        warn.style.marginTop = '4px';
+        (target.closest('.fr-field') || target.parentNode).appendChild(warn);
+      }
+      const check = () => {
+        const bad = target.value && jobEl.value
+          && !window.Lookups.batch.routeMatches(jobEl.value, target.value);
+        warn.textContent = bad ? window.Lookups.batch.routeError(jobEl.value) : '';
+        warn.classList.toggle('show', !!bad);
+      };
+      [target, jobEl].forEach((el) => {
+        el.addEventListener('input', check);
+        el.addEventListener('change', check);
+      });
+      check();
+    });
+  }
+
   // Fills every jobsearch select with the OPEN job numbers. Closed jobs are deliberately absent --
   // that's what closing a job does. An already-captured value is re-added even if it's now closed,
   // so opening an old submission still shows the job it was filed against.
@@ -1392,7 +1424,7 @@
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
       if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
       wireSectionSummaries(container);
-      if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); }
+      if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); wireJobRouteCheck(container, config); }
       // The recordpick option list IS the trace of the job number, so a change of job means a
       // different set of real submissions to choose from -- rebuild every picker on the form.
       const pickFields = allFields(config).concat((config.roster && config.roster.columns) || []);
@@ -1434,6 +1466,7 @@
       const values = {};
       let missingRequired = null;
       let invalidJobNumber = null;
+      let routeConflict = null;
       allFields(config).forEach(f => {
         const inp = el(`fr_f_${f.key}`);
         values[f.key] = inp ? inp.value : '';
@@ -1443,8 +1476,19 @@
           invalidJobNumber = f.label;
         }
       });
+      // A field can declare `matchJobRoute: '<jobFieldKey>'` -- its value must agree with the
+      // route fixed by that job number's prefix (3CP/CPR -> canning, 3DP/DPR -> dry). This is
+      // the check on Abalone Receiving, where the job number and "processing for" are first set.
+      allFields(config).forEach(f => {
+        if (!f.matchJobRoute || !window.Lookups || !window.Lookups.batch) return;
+        const jobVal = values[f.matchJobRoute];
+        if (jobVal && values[f.key] && !window.Lookups.batch.routeMatches(jobVal, values[f.key])) {
+          routeConflict = window.Lookups.batch.routeError(jobVal);
+        }
+      });
       if (missingRequired && finalize) { toast(`"${missingRequired}" is required.`); return; }
       if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
+      if (routeConflict && finalize) { toast(routeConflict); return; }
       // Validate batch number format if this record has a batchField
       if (config.batchField && window.BatchValidation) {
         const batchValue = values[config.batchField];
