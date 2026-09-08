@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migrate bespoke record stores</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+<style>
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #54606b; font-size: 13px; margin-bottom: 16px; }
+  .card { border: 1px solid var(--palette-border, #e2e4e3); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  button { font: inherit; padding: 7px 14px; border-radius: 4px; border: 1px solid var(--palette-border, #cfd4d2); background: #fff; cursor: pointer; }
+  button.primary { background: #1f6f43; border-color: #1f6f43; color: #fff; }
+  button[disabled] { opacity: .5; cursor: default; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #eef0ef; vertical-align: top; }
+  th { font-weight: 600; color: #54606b; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .muted { color: #8b9499; }
+  .warn { color: #a3541c; }
+  .ok { color: #1f6f43; font-weight: 600; }
+  #log { font-family: ui-monospace, Consolas, monospace; font-size: 12px; white-space: pre-wrap;
+         max-height: 340px; overflow: auto; background: #f7f8f8; border-radius: 4px; padding: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Migrate bespoke record stores</h1>
+  <div class="sub">
+    Two records used to save under ad-hoc <code>record:&lt;id&gt;</code> keys instead of the shared
+    engine store, so they never appeared in the Master Record Index and were skipped by
+    engine-wide changes. This copies those saved records into the
+    <code>monitoring_log:&lt;recordKey&gt;</code> format the engine reads.
+    It never deletes the old keys - re-run it safely; already-copied records are skipped.
+  </div>
+
+  <div class="card">
+    <div class="actions">
+      <button id="scanBtn" class="primary">Scan (dry run)</button>
+      <button id="runBtn" disabled>Copy records into the engine store</button>
+      <span id="status" class="muted">Not scanned yet.</span>
+    </div>
+    <table id="tbl"><thead><tr>
+      <th>REC</th><th class="n">Old records found</th><th class="n">Rows expected</th>
+      <th class="n">Already migrated</th><th class="n">To copy</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="sub" style="margin:0 0 8px;">Log</div>
+    <div id="log">-</div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
+<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script>(function () {
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+  let lines = [];
+  function log(msg) { lines.push(msg); logEl.textContent = lines.join('\n'); logEl.scrollTop = logEl.scrollHeight; }
+  function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
+  function uid(p) { return p + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+
+  // ---- REC 7.2.4 reshape -------------------------------------------------------
+  function cookoutFrac(x, y) { return (x === null || y === null || y === 0) ? null : x / y; }
+  function ceilOrBlank(n) { return (n === null || !isFinite(n)) ? '' : Math.ceil(n); }
+
+  function packingCalcValues(row) {
+    const x = num(row.drainedWeight), y = num(row.ingoWeight);
+    const f = cookoutFrac(x, y);
+    const minS = num(row.minSpec), maxS = num(row.maxSpec);
+    return {
+      pcs: row.pcs || '', drainedWeight: row.drainedWeight || '', ingoWeight: row.ingoWeight || '',
+      minSpec: row.minSpec || '', maxSpec: row.maxSpec || '',
+      cookoutPct: f === null ? '' : Math.round(f * 10000) / 100,
+      newMinIngo: (f === null || minS === null) ? '' : ceilOrBlank(minS / f),
+      newMaxIngo: (f === null || maxS === null) ? '' : ceilOrBlank(maxS / f),
+      comments: ''
+    };
+  }
+  function packingSummaryValues(r) {
+    return {
+      dateEffective: r.dateEffective || '', pcs: r.pcs || '', drainedWeight: r.drainedWeight || '',
+      minIngo: r.minIngo == null ? '' : r.minIngo, maxIngo: r.maxIngo == null ? '' : r.maxIngo,
+      checkedBy: r.checkedBy || '', checkedByDate: r.checkedByDate || '', comments: r.comments || ''
+    };
+  }
+
+  const MIGRATORS = [{
+    docCode: 'REC 7.2.4',
+    recordKey: 'abalone-packing-specification',
+    // old records: record:abalone_packing_<ts>
+    matchOld: (s) => s && typeof s.id === 'string' && s.id.indexOf('abalone_packing_') === 0,
+    primaryKey: 'monitoring_log:abalone-packing-specification',
+    secondaryKey: 'monitoring_log:abalone-packing-specification__ingo-weights',
+    build(old, existingPrimary, existingSecondary) {
+      const submitted = old.status === 'submitted';
+      const tag = 'record:' + old.id;
+      const newP = [], newS = [];
+      (old.rows || []).forEach(row => {
+        const srcId = tag + ':' + row.id;
+        if (existingPrimary.some(e => e.migratedFrom === srcId)) return;
+        newP.push({
+          id: uid('entry'), migratedFrom: srcId, values: packingCalcValues(row),
+          inSpec: null, status: submitted ? 'submitted' : 'draft',
+          submittedAt: submitted ? (old.updatedAt || old.createdAt || Date.now()) : undefined,
+          source: 'migrated', createdAt: old.createdAt || Date.now(), updatedAt: old.updatedAt || Date.now(), history: []
+        });
+      });
+      (old.specRefRows || []).forEach(r => {
+        const srcId = tag + ':' + r.id;
+        if (existingSecondary.some(e => e.migratedFrom === srcId)) return;
+        const signed = !!(r.checkedBy && r.checkedByDate);
+        newS.push({
+          id: uid('entry'), migratedFrom: srcId, values: packingSummaryValues(r),
+          inSpec: null, status: signed ? 'submitted' : 'draft',
+          submittedAt: signed ? (r.enteredAt || Date.now()) : undefined,
+          source: 'migrated', createdAt: r.enteredAt || Date.now(), updatedAt: r.enteredAt || Date.now(), history: []
+        });
+      });
+      const verifs = (old.verifications || []).map(v => ({
+        entryIds: [], verifiedBy: v.verifiedBy || '', verifiedSig: v.verifiedSig || '',
+        verifiedDate: v.verifiedDate || '', verifiedSignature: v.verifiedSig || '',
+        loggedAt: v.loggedAt || Date.now(), migratedFrom: tag + ':' + v.id
+      }));
+      return { newP, newS, verifs };
+    }
+  }, {
+    docCode: 'REC 7.2.12',
+    recordKey: 'double-seam-inspection-report',
+    // old records: record:dsir_<batchcode>_<ts> ; one old record == one engine entry
+    matchOld: (s) => s && typeof s.id === 'string' && s.id.indexOf('dsir_') === 0,
+    primaryKey: 'monitoring_log:double-seam-inspection-report',
+    secondaryKey: null,
+    build(old, existingPrimary) {
+      const srcId = 'record:' + old.id;
+      const newP = [], newS = [], verifs = [];
+      if (!existingPrimary.some(e => e.migratedFrom === srcId)) {
+        const complete = old.status === 'complete' || old.status === 'submitted';
+        const h = old.header || {};
+        newP.push({
+          id: uid('entry'), migratedFrom: srcId,
+          values: {
+            jobNo: h.jobNo || '', reportDate: h.reportDate || '', date: h.reportDate || '',
+            batchCans: h.batchCans || '',
+            specProfileId: old.specProfileId || '', specProfileName: (specNameById[old.specProfileId] || ''),
+            specVersionAtSave: old.specVersionAtSave == null ? null : old.specVersionAtSave,
+            header: h, stages: old.stages || {}, comments: old.comments || '',
+            completedBy: old.completedBy || '', completedSig: old.completedSig || '',
+            completedDate: old.completedDate || '', completedBySignature: old.completedBySignature || ''
+          },
+          inSpec: null, status: complete ? 'submitted' : 'draft',
+          submittedAt: complete ? (old.updatedAt || old.createdAt || Date.now()) : undefined,
+          verification: old.verification || undefined,
+          source: 'migrated', createdAt: old.createdAt || Date.now(), updatedAt: old.updatedAt || Date.now(), history: []
+        });
+        if (old.verifiedBy || old.verifiedDate) {
+          verifs.push({
+            entryIds: [], verifiedBy: old.verifiedBy || '', verifiedSig: old.verifiedSig || '',
+            verifiedDate: old.verifiedDate || '', verifiedSignature: old.verifiedSignature || '',
+            loggedAt: old.updatedAt || Date.now(), migratedFrom: srcId + ':verify'
+          });
+        }
+      }
+      return { newP, newS, verifs };
+    }
+  }];
+
+  // spec profile names, loaded once in scan() for the 7.2.12 migrator's specProfileName
+  let specNameById = {};
+
+  async function readList(key) {
+    if (!key) return [];
+    try { const r = await window.storage.get(key, true); const l = r ? JSON.parse(r.value) : []; return Array.isArray(l) ? l : []; }
+    catch (e) { return []; }
+  }
+
+  async function assertAuthorised() {
+    if (!window.FacilityApi) return { ok: true };
+    if (!window.FacilityApi.getKey()) return { ok: false, why: 'This device has no access key - every read returns nothing.' };
+    try { const res = await window.FacilityApi.fetch('/api/health'); if (!res.ok) return { ok: false, why: 'The records API answered ' + res.status + '.' }; }
+    catch (e) { return { ok: false, why: 'The records API is unreachable from this device.' }; }
+    if (window.FacilityApi.authFailed && window.FacilityApi.authFailed()) return { ok: false, why: 'The records API rejected this device access key (401).' };
+    return { ok: true };
+  }
+
+  let plan = null;
+
+  async function scan() {
+    $('scanBtn').disabled = true; $('runBtn').disabled = true; $('status').textContent = 'Scanning...'; lines = [];
+    const auth = await assertAuthorised();
+    if (!auth.ok) { $('status').innerHTML = '<span class="warn">Not authorised - ' + auth.why + ' <a href="api-key.html">Enter the access key</a>.</span>'; log('REFUSED: ' + auth.why); $('scanBtn').disabled = false; return; }
+
+    const oldMap = await window.storage.getByPrefix('record:', true);
+    const olds = [];
+    Object.keys(oldMap || {}).forEach(k => { try { olds.push(JSON.parse(oldMap[k])); } catch (e) {} });
+    log('Found ' + olds.length + ' record:* entries in total.');
+
+    specNameById = {};
+    try {
+      const idx = JSON.parse((await window.storage.get('spec_profiles_index', true) || {}).value || '[]');
+      idx.forEach(s => { specNameById[s.id] = s.name; });
+    } catch (e) {}
+
+    plan = [];
+    for (const m of MIGRATORS) {
+      const mine = olds.filter(m.matchOld);
+      const existingP = await readList(m.primaryKey);
+      const existingS = await readList(m.secondaryKey);
+      let expected = 0, toCopyP = 0, toCopyS = 0;
+      const staged = [];
+      for (const old of mine) {
+        const b = m.build(old, existingP, existingS);
+        expected += m.secondaryKey
+          ? ((old.rows || []).length + (old.specRefRows || []).length)
+          : 1;
+        toCopyP += b.newP.length; toCopyS += b.newS.length;
+        staged.push({ old, b });
+      }
+      const toCopy = toCopyP + toCopyS;
+      plan.push({ m, count: mine.length, calcRows: expected, sumRows: 0, already: Math.max(0, expected - toCopy), toCopy, staged, existingP, existingS });
+      log(m.docCode + ' - ' + mine.length + ' old records, ' + toCopy + ' rows to copy');
+    }
+    render();
+    const total = plan.reduce((n, p) => n + p.toCopy, 0);
+    $('scanBtn').disabled = false;
+    $('runBtn').disabled = total === 0;
+    $('status').textContent = total ? total + ' rows to copy.' : 'Nothing to migrate - all up to date.';
+  }
+
+  function render() {
+    $('tbl').querySelector('tbody').innerHTML = plan.map(p =>
+      '<tr><td>' + p.m.docCode + '</td><td class="n">' + p.count + '</td><td class="n">' + p.calcRows +
+      '</td><td class="n">' + p.already + '</td><td class="n">' +
+      (p.toCopy ? '<strong>' + p.toCopy + '</strong>' : '0') + '</td></tr>').join('');
+  }
+
+  async function run() {
+    $('runBtn').disabled = true; $('scanBtn').disabled = true; $('status').textContent = 'Copying...';
+    const auth = await assertAuthorised();
+    if (!auth.ok) { $('status').innerHTML = '<span class="warn">Not authorised - ' + auth.why + '</span>'; return; }
+
+    let wrote = 0;
+    for (const p of plan) {
+      if (!p.toCopy) continue;
+      const primary = p.existingP.slice();
+      const secondary = p.existingS.slice();
+      let verifHist = await readList('verification_log:' + p.m.recordKey.replace(/^monitoring_log:/, ''));
+      verifHist = Array.isArray(verifHist) ? verifHist : [];
+      const haveVerif = new Set(verifHist.map(v => v.migratedFrom).filter(Boolean));
+      for (const { b } of p.staged) {
+        b.newP.forEach(e => { primary.push(e); wrote++; });
+        b.newS.forEach(e => { secondary.push(e); wrote++; });
+        b.verifs.forEach(v => { if (!haveVerif.has(v.migratedFrom)) { verifHist.push(v); haveVerif.add(v.migratedFrom); } });
+      }
+      const okP = await window.storage.set(p.m.primaryKey, JSON.stringify(primary), true);
+      const okS = p.m.secondaryKey ? await window.storage.set(p.m.secondaryKey, JSON.stringify(secondary), true) : true;
+      await window.storage.set('verification_log:' + p.m.recordKey, JSON.stringify(verifHist), true);
+      log(p.m.docCode + ': primary ' + (okP !== false ? 'ok' : 'FAILED') + (p.m.secondaryKey ? ', secondary ' + (okS !== false ? 'ok' : 'FAILED') : ''));
+    }
+    log('Done. ' + wrote + ' rows written.');
+    $('status').innerHTML = '<span class="ok">Migration complete - ' + wrote + ' rows copied.</span> Re-scan to confirm, then open REC 7.2.4 / REC 7.2.12 to check.';
+    $('scanBtn').disabled = false;
+  }
+
+  $('scanBtn').addEventListener('click', () => scan().catch(e => { log('ERROR ' + e); $('scanBtn').disabled = false; }));
+  $('runBtn').addEventListener('click', () => run().catch(e => { log('ERROR ' + e); $('scanBtn').disabled = false; }));
+})();
+</script>
+</body>
+</html>

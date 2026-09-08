@@ -5,6 +5,27 @@
     NS + seg(batchNo) + ':' + seg(recordKey) + ':' + seg(subId);
   const batchPrefix = batchNo => NS + seg(batchNo) + ':';
 
+  // Link direction. Every stored row carries `rel`, the relationship of THIS row's batch_no to the
+  // record's primary batch (`linked_batch`):
+  //   'self'   -- this row IS the record's own product/job batch (no linked_batch)
+  //   'input'  -- this batch_no was consumed INTO linked_batch (salt lot, receiving lot, sub-batch)
+  //   'output' -- this batch_no was produced FROM linked_batch (a rework/split job number)
+  // Default for extra + roster links is 'input': ingredient and consumable batches, and roster
+  // sub-batches rolling up into a job, are overwhelmingly inputs. A record that splits or reworks
+  // one batch into a new one declares rel:'output' explicitly.
+  const REL_INPUT = 'input';
+  const REL_OUTPUT = 'output';
+  const REL_SELF = 'self';
+
+  function normExtraFields(config) {
+    // Accepts ['saltBatchCode', ...] or [{ field:'saltBatchCode', rel:'input' }, ...] or a mix.
+    return (config.extraBatchFields || []).map(function (e) {
+      if (typeof e === 'string') return { field: e, rel: REL_INPUT };
+      if (e && e.field) return { field: e.field, rel: e.rel === REL_OUTPUT ? REL_OUTPUT : REL_INPUT };
+      return null;
+    }).filter(Boolean);
+  }
+
   function parseRows(map) {
     const rows = [];
     Object.keys(map || {}).forEach(function (k) {
@@ -14,6 +35,14 @@
       } catch (e) {  }
     });
     return rows;
+  }
+
+  function sortRows(rows) {
+    return rows.sort((a, b) => {
+      const da = a.occurred_on || '', db = b.occurred_on || '';
+      if (da && db && da !== db) return da < db ? -1 : 1;
+      return (a.updated_at || '') < (b.updated_at || '') ? -1 : 1;
+    });
   }
 
   function firstDateField(config) {
@@ -61,30 +90,38 @@
       };
       await window.storage.set(
         keyFor(batchNo, config.recordKey, sub.id),
-        JSON.stringify(Object.assign({ batch_no: batchNo }, baseRow)),
+        JSON.stringify(Object.assign({ batch_no: batchNo, rel: REL_SELF }, baseRow)),
         true
       );
 
 
-      for (const field of (config.extraBatchFields || [])) {
-        const extraNo = String(values[field] || '').trim();
+      for (const spec of normExtraFields(config)) {
+        const extraNo = String(values[spec.field] || '').trim();
         if (!extraNo || extraNo === batchNo) continue;
         await window.storage.set(
-          keyFor(extraNo, config.recordKey, sub.id + ':' + field),
-          JSON.stringify(Object.assign({ batch_no: extraNo, linked_batch: batchNo }, baseRow)),
+          keyFor(extraNo, config.recordKey, sub.id + ':' + spec.field),
+          JSON.stringify(Object.assign(
+            { batch_no: extraNo, linked_batch: batchNo, rel: spec.rel, link_field: spec.field },
+            baseRow
+          )),
           true
         );
       }
 
 
-      const rbCol = config.roster && config.roster.batchIdColumn;
+      const rosterCfg = config.roster || {};
+      const rbCol = rosterCfg.batchIdColumn;
+      const rbRel = rosterCfg.batchIdRel === REL_OUTPUT ? REL_OUTPUT : REL_INPUT;
       if (rbCol && Array.isArray(sub.roster)) {
         for (let i = 0; i < sub.roster.length; i++) {
           const rowNo = String((sub.roster[i] || {})[rbCol] || '').trim();
           if (!rowNo || rowNo === batchNo) continue;
           await window.storage.set(
             keyFor(rowNo, config.recordKey, sub.id + ':row' + i),
-            JSON.stringify(Object.assign({ batch_no: rowNo, linked_batch: batchNo }, baseRow)),
+            JSON.stringify(Object.assign(
+              { batch_no: rowNo, linked_batch: batchNo, rel: rbRel, link_field: rbCol },
+              baseRow
+            )),
             true
           );
         }
@@ -109,13 +146,67 @@
   }
 
 
-  async function trace(batchNo) {
+  // Local prefix scan over the batch_link index. Kept as the fallback and offline path; when the
+  // API is reachable `trace` below merges the server's relational answer over the top so that
+  // records still draining from the write-ahead queue are not lost.
+  async function traceLocal(batchNo) {
     const map = await window.storage.getByPrefix(batchPrefix(String(batchNo).trim()), true);
-    return parseRows(map).sort((a, b) => {
-      const da = a.occurred_on || '', db = b.occurred_on || '';
-      if (da && db && da !== db) return da < db ? -1 : 1;
-      return (a.updated_at || '') < (b.updated_at || '') ? -1 : 1;
+    return sortRows(parseRows(map));
+  }
+
+  function rowId(r) {
+    return (r.record_key || '') + '|' + (r.submission_id || '') + '|' + (r.link_field || '');
+  }
+
+  async function traceRemote(batchNo) {
+    if (!window.FacilityApi) return null;
+    try {
+      const res = await window.FacilityApi.fetch('/api/trace/' + encodeURIComponent(String(batchNo).trim()));
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data && Array.isArray(data.records) ? data : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function trace(batchNo) {
+    const local = await traceLocal(batchNo);
+    const remote = await traceRemote(batchNo);
+    if (!remote) return local;
+    const byId = new Map();
+    remote.records.forEach(r => byId.set(rowId(r), r));
+    // keep any local row the server hasn't seen yet (unsynced write-ahead queue)
+    local.forEach(r => { if (!byId.has(rowId(r))) byId.set(rowId(r), r); });
+    return sortRows([...byId.values()]);
+  }
+
+  // One-up / one-down genealogy, computed locally from the full index. `rel` on a row is the
+  // relationship of that row's batch_no to its linked_batch; the queried batch can be on either
+  // side of a link (its own ingredient rows, or another batch's row that names it as linked_batch).
+  async function genealogyLocal(batchNo) {
+    const all = parseRows(await window.storage.getByPrefix(NS, true));
+    const direct = all.filter(r => r.batch_no === batchNo);
+    const reverse = all.filter(r => r.linked_batch === batchNo && r.batch_no !== batchNo);
+    const inputs = new Set(), outputs = new Set();
+    direct.forEach(r => {
+      if (!r.linked_batch || r.linked_batch === batchNo) return;
+      (r.rel === REL_OUTPUT ? inputs : outputs).add(r.linked_batch);
     });
+    reverse.forEach(r => (r.rel === REL_OUTPUT ? outputs : inputs).add(r.batch_no));
+    return {
+      batch: batchNo,
+      records: sortRows(direct.concat(reverse)),
+      inputs: [...inputs],
+      outputs: [...outputs]
+    };
+  }
+
+  async function traceGraph(batchNo) {
+    const b = String(batchNo).trim();
+    const remote = await traceRemote(b);
+    if (remote) return remote;
+    return genealogyLocal(b);
   }
 
 
@@ -132,5 +223,5 @@
     }
   }
 
-  window.Traceability = { indexSubmission, removeSubmission, trace, knownBatches };
+  window.Traceability = { indexSubmission, removeSubmission, trace, traceGraph, knownBatches };
 })();

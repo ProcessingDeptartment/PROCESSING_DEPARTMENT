@@ -685,7 +685,15 @@
 
 
   function makeLogController(opts) {
-    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey, autofill, jobInfoGroup } = opts
+    const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, afterSave, inline, recordKey, autofill, jobInfoGroup, customBody, traceConfig } = opts
+
+    // A page can hand the engine its own entry-form body (render/read/validate/
+    // summary/listColumns/sheetHtml) via config.customBody. The engine still owns
+    // the entry list, the monitoring_log:* store, the draft/submit lifecycle,
+    // verification, print, traceability and the doc-revision badge — only the
+    // fields inside the form are the page's. Used where a flat entryFields list
+    // cannot express the record (e.g. the double-seam measurement matrix).
+    let customBodyReady = false;
 
     const entryStages = opts.entryStages && opts.entryStages.length ? opts.entryStages : null;
 
@@ -874,14 +882,20 @@
         table.innerHTML = `<div class="ml-empty">No entries yet${entries.length ? ' matching these filters' : ''}.</div>`;
         return;
       }
-      const cols = entryFields.filter(f => f.showInTable !== false);
+      const cols = customBody && Array.isArray(customBody.listColumns)
+        ? customBody.listColumns.map(c => ({ label: c.label, custom: true, get: c.get }))
+        : entryFields.filter(f => f.showInTable !== false);
 
       let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}${submitFlow ? '<th class="no-print">Submission</th>' : ''}<th>Status</th><th class="no-print"></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
         html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
         cols.forEach(f => {
-          let v = entryRow.values[f.key];
-          if (f.type === 'timestamp') v = stampText(v);
+          let v;
+          if (f.custom) { try { v = f.get(entryRow.values, entryRow); } catch (e) { v = ''; } }
+          else {
+            v = entryRow.values[f.key];
+            if (f.type === 'timestamp') v = stampText(v);
+          }
           if (f.type === 'yesno' || f.type === 'select') v = v || '—';
           else if (v === '' || v == null) v = '—';
           html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${esc(v)}</td>`;
@@ -1030,6 +1044,25 @@
       el(modalIds.title).textContent = !id ? 'New entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
       const container = el(modalIds.fields);
 
+      if (customBody) {
+        container.innerHTML = '';
+        const ctx = {
+          mode: id ? 'edit' : 'new', locked, recordKey, docCode, toast,
+          onChange: () => {},
+          setSubmitDisabled: (v) => { const b = el(`${ns}_submitBtn`); if (b) b.disabled = !!v; },
+          reopen: () => openForm(editingId),
+          refresh: () => { renderTable(); if (onEntriesChanged) onEntriesChanged(); }
+        };
+        try { customBody.render(container, existing || null, ctx); } catch (e) { console.error('customBody.render failed', e); }
+        if (submitFlow) {
+          const saveBtn = el(`${ns}_saveBtn`), submitBtn = el(`${ns}_submitBtn`);
+          if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
+          if (submitBtn) submitBtn.style.display = locked ? 'none' : '';
+        }
+        if (!inline) el(modalIds.overlay).style.display = 'flex';
+        return;
+      }
+
       let lastGroup = null;
       const activeKey = entryStages ? activeStageKey(existing) : null;
       container.innerHTML = entryFields.map(f => {
@@ -1088,15 +1121,29 @@
 
       if (!await refreshProvisional(el(modalIds.fields), ns, autofill, finalize, toast)) return;
 
+      const existingForStage = editingId ? entries.find(e => e.id === editingId) : null;
+      let values, inSpec;
+      let correctingStage = null, savingStage = null;
+
+      if (customBody) {
+        try { values = customBody.read(el(modalIds.fields)) || {}; }
+        catch (e) { console.error('customBody.read failed', e); toast('Could not read the form.'); return; }
+        let problems = [];
+        if (typeof customBody.validate === 'function') {
+          try { problems = customBody.validate(values, finalize) || []; } catch (e) { problems = []; }
+        }
+        if (problems.length && (finalize || !submitFlow)) { toast(problems[0]); return; }
+        inSpec = customBody.summary ? (customBody.summary(values) || {}).inSpec : null;
+        if (inSpec === undefined) inSpec = null;
+      } else {
+
       const raw = {};
       let missingRequired = null;
       let badPattern = null;
       let routeConflict = null;
 
-      const existingForStage = editingId ? entries.find(e => e.id === editingId) : null;
-
-      const correctingStage = (entryStages && unlockedStages.size) ? Array.from(unlockedStages)[0] : null;
-      const savingStage = entryStages ? (correctingStage || activeStageKey(existingForStage)) : null;
+      correctingStage = (entryStages && unlockedStages.size) ? Array.from(unlockedStages)[0] : null;
+      savingStage = entryStages ? (correctingStage || activeStageKey(existingForStage)) : null;
       const stageInPlay = (f) => !entryStages || !f.stage
         || (correctingStage ? unlockedStages.has(f.stage) : f.stage === savingStage);
       entryFields.forEach(f => {
@@ -1145,8 +1192,9 @@
           if (shown) shown.value = stampText(raw[f.key]);
         });
       }
-      const values = computeAll(raw);
-      const inSpec = evaluateEntry(values);
+      values = computeAll(raw);
+      inSpec = evaluateEntry(values);
+      } // end non-customBody field gathering
 
 
       let stageMap = null;
@@ -1199,10 +1247,14 @@
       const ok = await persist();
       if (!ok) { toast('Save failed — please retry.'); return; }
 
-      if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedEntry);
+      if (window.Traceability && traceConfig && traceConfig.batchField) {
+        try { window.Traceability.indexSubmission(traceConfig, savedEntry); }
+        catch (e) { console.error('traceability index failed', e); }
+      }
       closeForm();
       renderTable();
 
+      if (afterSave) { try { await afterSave(savedEntry, finalize); } catch (e) { console.error('afterSave failed', e); } }
       if (onEntriesChanged) onEntriesChanged();
       if (submitFlow) {
         if (entryStages && finalize && correctingStage) {
@@ -1308,6 +1360,10 @@
       const v = entryRow.values || {};
       const dateF = roleField('date'), opF = roleField('operator');
       const m = sheetMeta || {};
+      if (customBody && typeof customBody.sheetHtml === 'function') {
+        try { return customBody.sheetHtml(entryRow, { docCode, docTitle, meta: m }); }
+        catch (e) { console.error('customBody.sheetHtml failed', e); }
+      }
       const rows = sheetRowFields().map(f => {
         const raw = v[f.key];
         const shown = (raw === '' || raw == null) ? '' : String(raw);
@@ -1374,6 +1430,34 @@
 
     return { load, renderTable, openForm, closeForm, saveForm, exportCsv, exportJson, printPdf, continueChainChanged, resetContinueChain,
       printEntry, exportEntryJson,
+      // Find-or-create a row in this log keyed by matchKeys, merging in `row`.
+      // Used by a primary log's `deriveInto` to keep a summary/secondary log in
+      // step. A row that has already been submitted is left untouched.
+      upsertDerived: async (matchKeys, row) => {
+        const same = (a, b) => String(a == null ? '' : a).trim() === String(b == null ? '' : b).trim();
+        const match = entries.find(e => matchKeys.every(k => same(e.values[k], row[k])));
+        if (match) {
+          if (isSubmitted(match)) return false;
+          const merged = computeAll(Object.assign({}, match.values, row));
+          match.history = match.history || [];
+          match.history.push({ ts: Date.now(), previousValues: match.values });
+          match.values = merged;
+          match.inSpec = evaluateEntry(merged);
+          match.updatedAt = Date.now();
+          match.source = 'derived';
+        } else {
+          const values = computeAll(row);
+          entries.push({
+            id: uid('entry'), values, inSpec: evaluateEntry(values),
+            status: submitFlow ? 'draft' : undefined, source: 'derived',
+            createdAt: Date.now(), updatedAt: Date.now(), history: []
+          });
+        }
+        const ok = await persist();
+        renderTable();
+        if (onEntriesChanged) onEntriesChanged();
+        return ok;
+      },
       submittedEntries: () => entries.filter(isSubmitted).slice()
         .sort((a, b) => (b.values.date || '').localeCompare(a.values.date || '')),
       applyVerification: async (ids, record) => {
@@ -1432,6 +1516,9 @@
     }
 
     async function loadSpec() {
+      // A customBody page owns its own spec system (e.g. multiple named
+      // profiles) — the engine must not seed or bind a single spec for it.
+      if (config.customBody) return;
       let published = await SpecRegistry.getPublished(specKey);
       if (!published) {
         published = await SpecRegistry.proposeVersion(specKey, defaultSpecObject(), {
@@ -1628,6 +1715,19 @@
       recordKey: config.recordKey,
       sheetMeta: config.docMeta, docCode: config.docCode, docTitle: config.title,
       onEntriesChanged: () => refreshVerification(),
+      afterSave: config.deriveInto ? async (savedEntry) => {
+        if (!secondary) return;
+        const d = config.deriveInto;
+        const row = {};
+        Object.entries(d.map || {}).forEach(([to, from]) => {
+          row[to] = savedEntry.values[from] == null ? '' : savedEntry.values[from];
+        });
+        if (d.matchKeys.some((k) => String(row[k] == null ? '' : row[k]).trim() === '')) return;
+        Object.entries(d.stampFields || {}).forEach(([to, kind]) => {
+          if (kind === 'today') row[to] = new Date().toISOString().slice(0, 10);
+        });
+        await secondary.upsertDerived(d.matchKeys, row);
+      } : null,
       specGetter: () => currentSpec,
       toast,
       tableWrap: el('ml_p_table'),
@@ -1639,7 +1739,9 @@
       submitFlow,
       inline: inlineEntryForm,
       autofill: config.autofill,
-      jobInfoGroup: config.jobInfoGroup
+      jobInfoGroup: config.jobInfoGroup,
+      customBody: config.customBody || null,
+      traceConfig: config
     });
     let secondary = null;
     if (config.secondaryLog) {
@@ -1929,6 +2031,18 @@
     primary.renderTable();
     if (secondary) { await secondary.load(); secondary.renderTable(); }
     refreshVerification();
+
+    if (config.customBody && typeof config.customBody.init === 'function') {
+      try {
+        await config.customBody.init({
+          recordKey: config.recordKey, docCode: config.docCode, docTitle: config.title,
+          docRevisionStart: config.docRevisionStart, toast,
+          refresh: () => { primary.renderTable(); refreshVerification(); },
+          reopen: () => primary.openForm(null)
+        });
+      } catch (e) { console.error('customBody.init failed', e); }
+      primary.openForm(null);
+    }
   }
 
 

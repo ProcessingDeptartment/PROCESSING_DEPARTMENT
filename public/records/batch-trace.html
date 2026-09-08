@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -25,6 +25,12 @@
   .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
   .status { margin: 18px 2px; color: var(--muted); }
   .status.err { color: #b3261e; }
+  .genealogy { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 2px 4px; }
+  .genealogy .box { flex: 1 1 220px; background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; }
+  .genealogy .box h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .genealogy .box a { display: inline-block; margin: 3px 6px 0 0; font-size: 13px; color: var(--orange); text-decoration: none; }
+  .genealogy .box a:hover { text-decoration: underline; }
+  .genealogy .box .none { color: var(--muted); font-size: 13px; }
   .count { font-size: 13px; color: var(--muted); margin: 20px 2px 8px; }
   ol.timeline { list-style: none; margin: 0; padding: 0; position: relative; }
   ol.timeline::before { content: ""; position: absolute; left: 14px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
@@ -84,6 +90,10 @@
   <div class="hint" id="hint"></div>
 
   <div class="status" id="status"></div>
+  <div class="genealogy" id="genealogy" hidden>
+    <div class="box"><h3>Made from (one up)</h3><div id="inputs"></div></div>
+    <div class="box"><h3>Went into (one down)</h3><div id="outputs"></div></div>
+  </div>
   <div class="count" id="count" hidden></div>
   <ol class="timeline" id="timeline"></ol>
 </div>
@@ -92,7 +102,7 @@
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/traceability.js?v=5"></script>
+<script src="../lib/traceability.js?v=6"></script>
 <script>  const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -134,20 +144,31 @@
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+  function renderGenealogy(graph) {
+    const cell = (list) => list.length
+      ? list.map(b => `<a href="?batch=${encodeURIComponent(b)}">${esc(b)}</a>`).join('')
+      : '<span class="none">—</span>';
+    $('inputs').innerHTML = cell(graph.inputs || []);
+    $('outputs').innerHTML = cell(graph.outputs || []);
+    $('genealogy').hidden = false;
+  }
+
   async function doTrace() {
     const batchNo = $('batchInput').value.trim();
     $('timeline').innerHTML = '';
     $('count').hidden = true;
+    $('genealogy').hidden = true;
     if (!batchNo) { setStatus('Enter a batch number to trace.'); return; }
     setStatus('Tracing…');
     $('traceBtn').disabled = true;
     try {
-      let rows = await window.Traceability.trace(batchNo);
+      let graph = await window.Traceability.traceGraph(batchNo);
 
-      if (!rows.length) { await sleep(2000); rows = await window.Traceability.trace(batchNo); }
-      if (!rows.length) { setStatus(`No records reference batch “${batchNo}” yet.`); return; }
+      if (!graph.records.length) { await sleep(2000); graph = await window.Traceability.traceGraph(batchNo); }
+      if (!graph.records.length) { setStatus(`No records reference batch “${batchNo}” yet.`); return; }
       setStatus('');
-      render(rows, batchNo);
+      renderGenealogy(graph);
+      render(graph.records, batchNo);
     } catch (e) {
       setStatus(e && e.message ? e.message : 'Trace failed.', true);
     } finally {

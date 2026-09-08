@@ -9,659 +9,91 @@
 <title>REC 7.2.4 Abalone Packing Specification</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
-<style>
-  :root{
-    --ink:var(--palette-ink); --steel:var(--palette-heading); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
-    --line:#c9cdd1; --line-soft:var(--palette-border); --ok:var(--palette-ok); --ok-bg:var(--palette-ok-bg);
-    --warn:#b8791c; --warn-bg:#fbf0dc; --fail:var(--palette-fail); --fail-bg:var(--palette-fail-bg);
-    --accent:var(--palette-primary); --mono: 'IBM Plex Mono','SF Mono',Consolas,monospace;
-    --sans: 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
-  }
-  #ap-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:var(--form-fs-root); line-height:1.4; }
-  #ap-root *{ box-sizing:border-box; }
-  #ap-root h1,#ap-root h2,#ap-root h3{ margin:0; font-weight:700; }
-  #ap-root input, #ap-root select, #ap-root textarea{
-    font-family:var(--mono); font-size:var(--form-fs-input); border:1px solid var(--line); border-radius:3px;
-    padding:4px 6px; background:#fff; color:var(--ink); width:100%;
-  }
-  #ap-root input:focus, #ap-root select:focus, #ap-root textarea:focus{ outline:2px solid var(--steel); outline-offset:-1px; }
-  #ap-root button{ font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
-  .dc-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-  .dc-topline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .dc-topline input{ width:120px; padding:3px 5px; font-size:var(--form-fs-small); }
-  .btn{ padding:5px 11px; font-size:var(--form-fs-button); }
-  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
-  .btn-primary:hover{ background:var(--palette-primary-hover); }
-  .btn-flat{ background:var(--line-soft); color:var(--ink); }
-  .btn-flat:hover{ background:#d5d8d6; }
-  .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-  .dc-body{ padding:12px 14px 40px; max-width:1000px; margin:0 auto; }
-  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:5px; margin-bottom:10px; }
-  .panel-head{ padding:7px 11px; border-bottom:1px solid var(--line-soft); background:var(--palette-head-bg); border-radius:5px 5px 0 0; }
-  .panel-head h2{ font-size:var(--form-fs-panel-head); text-transform:uppercase; letter-spacing:.05em; color:var(--steel); margin:0; }
-  .panel-body{ padding:11px; }
-
-  .grid{ display:grid; gap:8px; }
-  .grid-6{ grid-template-columns:repeat(6,1fr); }
-  .grid-5{ grid-template-columns:repeat(5,1fr); }
-  .grid-4{ grid-template-columns:repeat(4,1fr); }
-  .grid-3{ grid-template-columns:repeat(3,1fr); }
-  .grid-2{ grid-template-columns:repeat(2,1fr); }
-  label.field{ display:flex; flex-direction:column; gap:2px; font-size:var(--form-fs-label); color:var(--palette-label); font-weight:600; }
-  label.field input, label.field select, label.field textarea{ font-size:var(--form-fs-button); padding:3px 5px; }
-
-  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; align-items:center; }
-  .status-line{ font-size:10px; color:#8a939b; font-family:var(--mono); margin-right:auto; }
-  .record-status{ font-size:10px; color:var(--palette-label); font-weight:600; padding:4px 8px; background:var(--palette-border); border-radius:3px; }
-  .muted{ color:#8a939b; }
-  .toast{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--steel-dk); color:#fff; padding:8px 16px; border-radius:20px; font-size:var(--form-fs-small); z-index:999; opacity:0; pointer-events:none; transition:opacity .25s; }
-  .toast.show{ opacity:1; }
-
-  .entry-table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:var(--form-fs-small); }
-  .entry-table th, .entry-table td{ padding:5px 6px; text-align:left; }
-  .entry-table thead tr{ border-bottom:1px solid var(--line-soft); color:var(--palette-label); }
-  .entry-table tbody tr{ border-bottom:1px solid var(--line-soft); }
-  .entry-table .calc-col{ color:var(--steel); font-weight:600; }
-
-  @media (max-width:900px){
-    .grid-6{grid-template-columns:repeat(3,1fr);}
-    .grid-5{grid-template-columns:repeat(3,1fr);}
-    .grid-4{grid-template-columns:repeat(2,1fr);}
-  }
-
-  @media print{
-    .dc-body{ display:flex; flex-direction:column; max-width:none; padding:0; }
-    #panelSpecRef{ order:1; }
-  }
-</style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div id="ap-root">
-  <div class="dc-top">
-    <div class="doc-line"><span class="doc-code">REC 7.2.4</span><h1>Abalone Packing Specification</h1><span class="doc-rev">Rev 3 &middot; Rev date not set</span></div>
-    <div class="dc-topline no-print"><button class="btn btn-flat" id="saveDraftBtn">Save</button>
-      <button class="btn btn-primary" id="submitBtn">Submit</button>
-    </div>
-  </div>
-
-  <div class="dc-body">
-
-    <div class="panel" id="panelSpecRef">
-      <div class="panel-head"><h2>Ingo Weights</h2></div>
-      <div class="panel-body">
-        <div class="muted" style="font-size:10.5px; margin-bottom:6px;">Rows are added and updated automatically from the Packing Specification Calculation table below (matched by Pcs + Drained weight). Use Edit only to correct a line or record sign-off.</div>
-
-        
-        <div id="specRefCapture" class="no-print" style="display:none;">
-          <div class="grid grid-6">
-            <label class="field">Pcs<input id="r_pcs" type="number"></label>
-            <label class="field">Drained weight<input id="r_drainedWeight" type="number" step="0.01"></label>
-            <label class="field">Ingo weight — min<input id="r_minIngo" type="number" step="1"></label>
-            <label class="field">Ingo weight — max<input id="r_maxIngo" type="number" step="1"></label>
-            <label class="field">Checked by (QC)<input id="r_checkedBy"></label>
-            <label class="field">Sign-off date<input id="r_checkedByDate" type="date"></label>
-            <label class="field">Date effective<input id="r_dateEffective" type="date"></label>
-            <label class="field" style="grid-column:span 2;">Comments<input id="r_comments"></label>
-          </div>
-        </div>
-        <div class="actions no-print" style="margin-top:8px;">
-          <span class="status-line" id="specRefEditNotice"></span>
-          <button class="btn btn-flat" id="cancelSpecRefBtn" style="display:none;">Cancel edit</button>
-          <button class="btn btn-primary" id="addSpecRefBtn" style="display:none;">Save changes</button>
-        </div>
-
-        <div class="actions no-print" style="margin-top:8px; justify-content:flex-start; gap:10px;">
-          <label class="field" style="max-width:110px;">Filter Pcs<input id="flt_pcs" type="number"></label>
-          <label class="field" style="max-width:150px;">Filter drained wt<input id="flt_dw" type="number" step="0.01"></label>
-          <button class="btn btn-flat" id="applyFilterBtn" style="align-self:flex-end;">Filter</button>
-          <button class="btn btn-flat" id="clearFilterBtn" style="align-self:flex-end;">Clear filter</button>
-        </div>
-
-        <table class="entry-table" id="specRefTable">
-          <thead>
-            <tr>
-              <th>Date effective</th>
-              <th>Pcs</th>
-              <th>Drained weight</th>
-              <th>Ingo weight (min-max)</th>
-              <th>Checked by</th>
-              <th>Sign-off date</th>
-              <th>Comments</th>
-              <th class="no-print"></th>
-            </tr>
-          </thead>
-          <tbody id="specRefTableBody"></tbody>
-        </table>
-        <div class="muted" id="specRefTableEmpty" style="padding:8px 2px; font-size:11px;">No rows added yet.</div>
-      </div>
-    </div>
-
-    <div class="panel no-print" id="panelSpecCalc">
-      <div class="panel-head"><h2>Packing Specification Calculation</h2></div>
-      <div class="panel-body">
-        
-        <div id="rowCapture" class="no-print">
-          <div class="grid grid-5">
-            <label class="field">Pcs<input id="h_pcs" type="number"></label>
-            <label class="field">Drained weight (X)<input id="h_drainedWeight" type="number" step="0.01"></label>
-            <label class="field">Ingo weight (Y)<input id="h_ingoWeight" type="number" step="0.01"></label>
-            <label class="field">Min spec<input id="h_minSpec" type="number" step="0.01"></label>
-            <label class="field">Max spec<input id="h_maxSpec" type="number" step="0.01"></label>
-          </div>
-        </div>
-        <div class="actions no-print" style="margin-top:8px;">
-          <span class="status-line" id="entryEditNotice"></span>
-          <button class="btn btn-flat" id="cancelEntryBtn" style="display:none;">Cancel edit</button>
-          <button class="btn btn-primary" id="confirmEntryBtn">Confirm & add row</button>
-        </div>
-
-        <table class="entry-table" id="specTable">
-          <thead>
-            <tr>
-              <th>Pcs</th>
-              <th>Drained wt (X)</th>
-              <th>Ingo wt (Y)</th>
-              <th>Cookout %</th>
-              <th>Min spec</th>
-              <th>Max spec</th>
-              <th>New min ingo</th>
-              <th>New max ingo</th>
-              <th class="no-print"></th>
-            </tr>
-          </thead>
-          <tbody id="specTableBody"></tbody>
-        </table>
-        <div class="muted" id="specTableEmpty" style="padding:8px 2px; font-size:11px;">No rows added yet.</div>
-      </div>
-    </div>
-
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Comments</h2></div>
-      <div class="panel-body">
-        <textarea id="h_comments" rows="2" placeholder="Comments…" style="font-size:11px;"></textarea>
-      </div>
-    </div>
-
-    <div class="actions no-print">
-      <span class="record-status" id="recordStatus"></span>
-      <span class="status-line" id="statusLine"></span>
-      <button class="btn btn-flat" id="exportBtn">Export JSON</button>
-      <button class="btn btn-flat" id="generatePdfBtn">Print PDF</button>
-    </div>
-
-    <div class="panel no-print">
-      <div class="panel-head"><h2>Verification</h2></div>
-      <div class="panel-body">
-        <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
-        <div id="verifySelect" style="margin-bottom:10px;"></div>
-        <div id="verifyFields"></div>
-        <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
-          <button class="btn btn-primary" id="logVerificationBtn">Log verification</button>
-        </div>
-        <div class="muted" style="margin:10px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Verification history</div>
-        <div id="verificationHistory"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast no-print" id="toast"></div>
-</div>
+<div id="mlRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>window.RecordDoc = { docCode: 'REC 7.2.4', recordKey: 'abalone-packing-specification' };
-document.addEventListener('DOMContentLoaded', function () {
-  if (!window.DocHeader) return;
-  window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
-    .then(function () {
-      var badge = document.querySelector('.doc-rev');
-      if (badge) badge.textContent = window.DocHeader.badgeText(window.RecordDoc.recordKey);
-    })
-    .catch(function (e) { console.error('title block failed to mount', e); });
-});
-</script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/thresholds.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script>(async function(){
-  const $ = id => document.getElementById(id);
+<script src="../lib/monitoring-log.js?v=25"></script>
+<script>(function () {
+  function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
+  function ceilOrBlank(n) { return (n === null || n === undefined || !isFinite(n)) ? '' : Math.ceil(n); }
 
-  function newRecord(){
-    return {
-      id: null, revision: 1, status:'draft',
-      specRefRows: [], rows: [], comments:'',
-      verifications: [],
-      createdAt: null, updatedAt: null
-    };
+  // Cookout fraction: drained weight (X) over ingo weight (Y).
+  function cookoutFrac(v) {
+    const x = num(v.drainedWeight), y = num(v.ingoWeight);
+    return (x === null || y === null || y === 0) ? null : x / y;
   }
 
-  function todayISO(){
-    return new Date().toISOString().slice(0,10);
-  }
-
-  let state = newRecord();
-  let editingRowId = null;
-  let editingSpecRefId = null;
-  let specFilter = { pcs:'', dw:'' };
-
-  function toast(msg){
-    const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
-  }
-  function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
-
-  async function storeGet(key, shared){
-    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
-    catch(e){ return null; }
-  }
-  async function storeSet(key, value, shared){
-    try{ await window.storage.set(key, value, shared); return true; }
-    catch(e){ return false; }
-  }
-
-  const ROW_FIELDS = ['pcs','drainedWeight','ingoWeight','minSpec','maxSpec'];
-  const SPEC_REF_FIELDS = ['pcs','drainedWeight','minIngo','maxIngo','checkedBy','checkedByDate','dateEffective','comments'];
-
-  function emptyRowInputs(){
-    ROW_FIELDS.forEach(f=>{ $('h_'+f).value = ''; });
-  }
-
-  function emptySpecRefInputs(){
-    SPEC_REF_FIELDS.forEach(f=>{ $('r_'+f).value = ''; });
-  }
-
-  function fmt(n){
-    return (n === null || n === undefined || !isFinite(n)) ? '—' : n.toFixed(2);
-  }
-
-  function roundUp(n){
-    return (n === null || n === undefined || !isFinite(n)) ? null : Math.ceil(n);
-  }
-
-  function fmtInt(n){
-    const r = roundUp(n);
-    return r === null ? '—' : String(r);
-  }
-
-  function fmtDate(ts){
-    return ts ? new Date(ts).toLocaleDateString() : '—';
-  }
-
-
-  function calcRow(entry){
-    const x = parseFloat(entry.drainedWeight);
-    const y = parseFloat(entry.ingoWeight);
-    const minSpec = parseFloat(entry.minSpec);
-    const maxSpec = parseFloat(entry.maxSpec);
-    const cookoutPct = (isFinite(x) && isFinite(y) && y !== 0) ? (x / y) * 100 : null;
-    const cookoutFrac = cookoutPct !== null ? cookoutPct / 100 : null;
-    const newMinIngo = (cookoutFrac && isFinite(minSpec)) ? minSpec / cookoutFrac : null;
-    const newMaxIngo = (cookoutFrac && isFinite(maxSpec)) ? maxSpec / cookoutFrac : null;
-    return { cookoutPct, newMinIngo, newMaxIngo };
-  }
-
-  function renderForm(){
-    $('h_comments').value = state.comments;
-  }
-
-  function bindInputs(){
-    $('h_comments').addEventListener('input', ()=>{ state.comments = $('h_comments').value; });
-  }
-
-  function renderRowTable(){
-    const body = $('specTableBody');
-    const empty = $('specTableEmpty');
-    body.innerHTML = '';
-    if(!state.rows.length){
-      empty.style.display = 'block';
-      return;
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'abalone-packing-specification',
+    docCode: 'REC 7.2.4',
+    title: 'Abalone Packing Specification',
+    docRevisionStart: 3,
+    batchField: 'jobNo',
+    instructions: [
+      { label: 'Packing specification calculation', text: 'For each pcs / drained-weight line, enter the drained weight (X), the ingo weight (Y) and the customer min/max drained-weight spec. Cookout % and the new min/max ingo weights are worked out for you.' },
+      { label: 'Ingo weights', text: 'Each confirmed calculation line is copied into the Ingo Weights table below, matched on pcs + drained weight. Sign a line off there once QC has checked it.' },
+      { label: 'Frequency', text: 'On each new pack specification or customer spec change.' }
+    ],
+    // Calculation table.
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true, role: 'date' },
+      { key: 'jobNo', label: 'Job number', type: 'jobsearch' },
+      { key: 'pcs', label: 'Pcs', type: 'number' },
+      { key: 'drainedWeight', label: 'Drained weight (X)', type: 'number', unit: 'g' },
+      { key: 'ingoWeight', label: 'Ingo weight (Y)', type: 'number', unit: 'g' },
+      { key: 'minSpec', label: 'Min spec', type: 'number', unit: 'g' },
+      { key: 'maxSpec', label: 'Max spec', type: 'number', unit: 'g' },
+      {
+        key: 'cookoutPct', label: 'Cookout %', type: 'computed', unit: '%',
+        compute: (v) => { const f = cookoutFrac(v); return f === null ? '' : Math.round(f * 10000) / 100; }
+      },
+      {
+        key: 'newMinIngo', label: 'New min ingo', type: 'computed', unit: 'g',
+        compute: (v) => { const f = cookoutFrac(v), m = num(v.minSpec); return (f === null || m === null) ? '' : ceilOrBlank(m / f); }
+      },
+      {
+        key: 'newMaxIngo', label: 'New max ingo', type: 'computed', unit: 'g',
+        compute: (v) => { const f = cookoutFrac(v), m = num(v.maxSpec); return (f === null || m === null) ? '' : ceilOrBlank(m / f); }
+      },
+      { key: 'comments', label: 'Comments', type: 'textarea', showInTable: false }
+    ],
+    // Confirmed calculation rows feed the Ingo Weights table, matched on pcs + drained weight.
+    deriveInto: {
+      matchKeys: ['pcs', 'drainedWeight'],
+      map: { pcs: 'pcs', drainedWeight: 'drainedWeight', minIngo: 'newMinIngo', maxIngo: 'newMaxIngo' },
+      stampFields: { dateEffective: 'today' }
+    },
+    secondaryLog: {
+      key: 'ingo-weights',
+      title: 'Ingo Weights',
+      deviationLabel: 'Deviation',
+      entryFields: [
+        { key: 'dateEffective', label: 'Date effective', type: 'date', role: 'date' },
+        { key: 'pcs', label: 'Pcs', type: 'number' },
+        { key: 'drainedWeight', label: 'Drained weight', type: 'number', unit: 'g' },
+        { key: 'minIngo', label: 'Ingo weight - min', type: 'number', unit: 'g' },
+        { key: 'maxIngo', label: 'Ingo weight - max', type: 'number', unit: 'g' },
+        { key: 'checkedBy', label: 'Checked by (QC)', type: 'text' },
+        { key: 'checkedByDate', label: 'Sign-off date', type: 'date' },
+        { key: 'comments', label: 'Comments', type: 'text', showInTable: false }
+      ]
     }
-    empty.style.display = 'none';
-    state.rows.forEach(row=>{
-      const calc = calcRow(row);
-      const tr = document.createElement('tr');
-      if(row.id === editingRowId) tr.style.background = '#fbf0dc';
-      tr.innerHTML = `
-        <td>${row.pcs || ''}</td>
-        <td>${row.drainedWeight || ''}</td>
-        <td>${row.ingoWeight || ''}</td>
-        <td class="calc-col">${fmt(calc.cookoutPct)}</td>
-        <td>${row.minSpec || ''}</td>
-        <td>${row.maxSpec || ''}</td>
-        <td class="calc-col">${fmtInt(calc.newMinIngo)}</td>
-        <td class="calc-col">${fmtInt(calc.newMaxIngo)}</td>
-        <td class="no-print"><button class="btn btn-flat editRowBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Edit</button> <button class="btn btn-flat deleteRowBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Delete</button></td>
-      `;
-      body.appendChild(tr);
-    });
-
-    body.querySelectorAll('.editRowBtn').forEach(btn=>{
-      btn.addEventListener('click', ()=>startEditRow(btn.getAttribute('data-id')));
-    });
-    body.querySelectorAll('.deleteRowBtn').forEach(btn=>{
-      btn.addEventListener('click', ()=>deleteRow(btn.getAttribute('data-id')));
-    });
-  }
-
-  function filteredSpecRefRows(){
-    return state.specRefRows.filter(r=>{
-      if(specFilter.pcs && String(r.pcs) !== String(specFilter.pcs)) return false;
-      if(specFilter.dw && String(r.drainedWeight) !== String(specFilter.dw)) return false;
-      return true;
-    });
-  }
-
-  function renderSpecRefTable(){
-    const body = $('specRefTableBody');
-    const empty = $('specRefTableEmpty');
-    body.innerHTML = '';
-    const rows = filteredSpecRefRows();
-    if(!rows.length){
-      empty.style.display = 'block';
-      empty.textContent = state.specRefRows.length ? 'No rows match the current filter.' : 'No rows added yet.';
-      return;
-    }
-    empty.style.display = 'none';
-    rows.forEach(row=>{
-      const tr = document.createElement('tr');
-      if(row.id === editingSpecRefId) tr.style.background = '#fbf0dc';
-      const min = row.minIngo === null || row.minIngo === undefined || row.minIngo === '' ? '' : row.minIngo;
-      const max = row.maxIngo === null || row.maxIngo === undefined || row.maxIngo === '' ? '' : row.maxIngo;
-      const range = (min !== '' || max !== '') ? `${min}-${max}` : '';
-      tr.innerHTML = `
-        <td>${row.dateEffective || fmtDate(row.enteredAt)}</td>
-        <td>${row.pcs || ''}</td>
-        <td>${row.drainedWeight || ''}</td>
-        <td>${range}</td>
-        <td>${row.checkedBy || ''}</td>
-        <td>${row.checkedByDate || '—'}</td>
-        <td>${row.comments || ''}</td>
-        <td class="no-print"><button class="btn btn-flat editSpecRefBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Edit</button> <button class="btn btn-flat deleteSpecRefBtn" data-id="${row.id}" style="padding:3px 8px; font-size:10.5px;">Delete</button></td>
-      `;
-      body.appendChild(tr);
-    });
-
-    body.querySelectorAll('.editSpecRefBtn').forEach(btn=>{
-      btn.addEventListener('click', ()=>startEditSpecRef(btn.getAttribute('data-id')));
-    });
-    body.querySelectorAll('.deleteSpecRefBtn').forEach(btn=>{
-      btn.addEventListener('click', ()=>deleteSpecRef(btn.getAttribute('data-id')));
-    });
-  }
-
-  function setSpecRefEditNotice(){
-    const notice = $('specRefEditNotice');
-    const cancelBtn = $('cancelSpecRefBtn');
-    const saveBtn = $('addSpecRefBtn');
-    const capture = $('specRefCapture');
-    if(editingSpecRefId){
-      notice.textContent = `Editing row — updating will overwrite this line.`;
-      cancelBtn.style.display = '';
-      saveBtn.style.display = '';
-      saveBtn.textContent = 'Save changes';
-      capture.style.display = '';
-    } else {
-      notice.textContent = '';
-      cancelBtn.style.display = 'none';
-      saveBtn.style.display = 'none';
-      capture.style.display = 'none';
-    }
-  }
-
-
-  function upsertSpecRef(pcs, drainedWeight, minIngo, maxIngo){
-    const existing = state.specRefRows.find(r=>String(r.pcs) === String(pcs) && String(r.drainedWeight) === String(drainedWeight));
-    const now = Date.now();
-    if(existing){
-      existing.minIngo = minIngo;
-      existing.maxIngo = maxIngo;
-      existing.enteredAt = now;
-      existing.dateEffective = todayISO();
-    } else {
-      state.specRefRows.push({
-        id: 'specref_' + now + '_' + Math.random().toString(36).slice(2,7),
-        pcs, drainedWeight, minIngo, maxIngo,
-        checkedBy: '', checkedByDate: '', comments: '',
-        dateEffective: todayISO(),
-        enteredAt: now
-      });
-    }
-  }
-
-  function saveSpecRefEdit(){
-    if(!editingSpecRefId) return;
-    const idx = state.specRefRows.findIndex(r=>r.id === editingSpecRefId);
-    if(idx === -1){ toast('Row no longer exists.'); editingSpecRefId = null; setSpecRefEditNotice(); renderSpecRefTable(); return; }
-    const values = {};
-    SPEC_REF_FIELDS.forEach(f=>{ values[f] = $('r_'+f).value; });
-    state.specRefRows[idx] = { ...state.specRefRows[idx], ...values };
-    editingSpecRefId = null;
-    emptySpecRefInputs();
-    setSpecRefEditNotice();
-    renderSpecRefTable();
-    toast('Row updated.');
-  }
-
-  function startEditSpecRef(rowId){
-    const row = state.specRefRows.find(r=>r.id === rowId);
-    if(!row) return;
-    editingSpecRefId = rowId;
-    SPEC_REF_FIELDS.forEach(f=>{ $('r_'+f).value = row[f] || ''; });
-    setSpecRefEditNotice();
-    renderSpecRefTable();
-  }
-
-  function cancelSpecRefEdit(){
-    editingSpecRefId = null;
-    emptySpecRefInputs();
-    setSpecRefEditNotice();
-    renderSpecRefTable();
-  }
-
-  function deleteSpecRef(rowId){
-    state.specRefRows = state.specRefRows.filter(r=>r.id !== rowId);
-    if(editingSpecRefId === rowId){ editingSpecRefId = null; emptySpecRefInputs(); setSpecRefEditNotice(); }
-    renderSpecRefTable();
-  }
-
-  function applySpecFilter(){
-    specFilter.pcs = $('flt_pcs').value;
-    specFilter.dw = $('flt_dw').value;
-    renderSpecRefTable();
-  }
-
-  function clearSpecFilter(){
-    specFilter = { pcs:'', dw:'' };
-    $('flt_pcs').value = '';
-    $('flt_dw').value = '';
-    renderSpecRefTable();
-  }
-
-  function updateRecordStatus(){
-    const submitted = state.status === 'submitted';
-    $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${state.rows.length} row${state.rows.length===1?'':'s'} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
-  }
-
-  function renderAll(){
-    renderForm();
-    renderSpecRefTable();
-    renderRowTable();
-    renderVerifySelect();
-    updateRecordStatus();
-    $('statusLine').textContent = state.updatedAt ? `Last saved ${new Date(state.updatedAt).toLocaleString()}` : 'Not yet saved';
-  }
-
-  async function saveRecord(finalize){
-    const now = Date.now();
-    if(!state.id){
-      state.id = `abalone_packing_${now}`;
-      state.createdAt = now;
-    }
-    state.updatedAt = now;
-    state.status = finalize ? 'submitted' : 'draft';
-
-    const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
-    if(!ok){ toast('Save failed.'); return; }
-    toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
-    renderAll();
-  }
-
-  function generatePdf(){
-    document.title = `REC_7.2.4_ABALONE_PACKING_${state.id||'draft'}`;
-    window.print();
-  }
-
-  function readRowInputs(){
-    const entry = {};
-    ROW_FIELDS.forEach(f=>{ entry[f] = $('h_'+f).value; });
-    return entry;
-  }
-
-  function setEditNotice(){
-    const notice = $('entryEditNotice');
-    const cancelBtn = $('cancelEntryBtn');
-    const confirmBtn = $('confirmEntryBtn');
-    if(editingRowId){
-      notice.textContent = `Editing row — updating will overwrite this line.`;
-      cancelBtn.style.display = '';
-      confirmBtn.textContent = 'Confirm edit';
-    } else {
-      notice.textContent = '';
-      cancelBtn.style.display = 'none';
-      confirmBtn.textContent = 'Confirm & add row';
-    }
-  }
-
-  function confirmRow(){
-    const values = readRowInputs();
-    if(!values.drainedWeight || !values.ingoWeight){ toast('Enter drained weight and ingo weight first.'); return; }
-
-    if(editingRowId){
-      const idx = state.rows.findIndex(r=>r.id === editingRowId);
-      if(idx === -1){ toast('Row no longer exists.'); }
-      else{
-        state.rows[idx] = { ...state.rows[idx], ...values };
-        toast('Row updated.');
-      }
-      editingRowId = null;
-    } else {
-      state.rows.push({ id: 'row_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), ...values });
-      toast('Row added.');
-    }
-
-    const calc = calcRow(values);
-    upsertSpecRef(values.pcs, values.drainedWeight, roundUp(calc.newMinIngo), roundUp(calc.newMaxIngo));
-
-    emptyRowInputs();
-    setEditNotice();
-    renderRowTable();
-    renderSpecRefTable();
-    renderVerifySelect();
-    updateRecordStatus();
-  }
-
-  function startEditRow(rowId){
-    const row = state.rows.find(r=>r.id === rowId);
-    if(!row) return;
-    editingRowId = rowId;
-    ROW_FIELDS.forEach(f=>{ $('h_'+f).value = row[f] || ''; });
-    setEditNotice();
-    renderRowTable();
-  }
-
-  function cancelRowEdit(){
-    editingRowId = null;
-    emptyRowInputs();
-    setEditNotice();
-    renderRowTable();
-  }
-
-  function deleteRow(rowId){
-    state.rows = state.rows.filter(r=>r.id !== rowId);
-    if(editingRowId === rowId){ editingRowId = null; emptyRowInputs(); setEditNotice(); }
-    renderRowTable();
-    renderVerifySelect();
-    updateRecordStatus();
-  }
-
-  function renderVerifySelect(){
-    const box = $('verifySelect');
-    if(!state.rows.length){
-      box.innerHTML = '<div class="muted" style="font-size:11px;">No calculation rows to verify yet.</div>';
-      return;
-    }
-    box.innerHTML = state.rows.map(row=>{
-      const calc = calcRow(row);
-      return `<label style="display:flex; align-items:center; gap:6px; font-size:11px; padding:2px 0;">
-        <input type="checkbox" class="verifyRowChk" value="${row.id}">
-        Pcs ${row.pcs || '—'} · DW ${row.drainedWeight || '—'} · Ingo ${row.ingoWeight || '—'} · Cookout ${fmt(calc.cookoutPct)}%
-      </label>`;
-    }).join('');
-  }
-
-  function logVerification(){
-    const checked = Array.from(document.querySelectorAll('.verifyRowChk:checked')).map(c=>c.value);
-    const verifiedBy = $('v_verified_by').value.trim();
-    const verifiedSig = $('v_verified_signature').value.trim();
-    const verifiedDate = $('v_verified_date').value;
-    if(!checked.length){ toast('Select at least one row to verify.'); return; }
-    if(!verifiedBy || !verifiedSig || !verifiedDate){ toast('Enter verified by, signature and date.'); return; }
-    state.verifications.push({
-      id: 'verify_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-      rowIds: checked, verifiedBy, verifiedSig, verifiedDate,
-      loggedAt: Date.now()
-    });
-    $('v_verified_by').value = '';
-    $('v_verified_signature').value = '';
-    $('v_verified_date').value = '';
-    document.querySelectorAll('.verifyRowChk:checked').forEach(c=>{ c.checked = false; });
-    renderVerificationHistory();
-    toast('Verification logged.');
-  }
-
-  function renderVerificationHistory(){
-    renderVerifySelect();
-    const box = $('verificationHistory');
-    if(!state.verifications.length){
-      box.innerHTML = '<div class="muted" style="font-size:11px;">No verifications logged yet.</div>';
-      return;
-    }
-    box.innerHTML = state.verifications.slice().reverse().map(v=>`
-      <div style="font-size:11px; padding:4px 0; border-bottom:1px solid var(--line-soft);">
-        ${v.rowIds.length} row${v.rowIds.length===1?'':'s'} verified by <strong>${v.verifiedBy}</strong> (sig: ${v.verifiedSig}) on ${v.verifiedDate}
-      </div>
-    `).join('');
-  }
-
-  function wire(){
-$('logVerificationBtn').addEventListener('click', logVerification);
-    bindInputs();
-    $('saveDraftBtn').addEventListener('click', ()=>saveRecord(false));
-    $('submitBtn').addEventListener('click', ()=>saveRecord(true));
-    $('confirmEntryBtn').addEventListener('click', confirmRow);
-    $('cancelEntryBtn').addEventListener('click', cancelRowEdit);
-    $('addSpecRefBtn').addEventListener('click', saveSpecRefEdit);
-    $('cancelSpecRefBtn').addEventListener('click', cancelSpecRefEdit);
-    $('applyFilterBtn').addEventListener('click', applySpecFilter);
-    $('clearFilterBtn').addEventListener('click', clearSpecFilter);
-    $('exportBtn').addEventListener('click', ()=>{
-      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `abalone_packing_${state.id||'draft'}.json`;
-      a.click();
-    });
-    $('generatePdfBtn').addEventListener('click', generatePdf);
-  }
-
-  $('verifyFields').innerHTML = window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'v_verified', gridClass: 'grid grid-3', fields: ['by', 'date', 'signature'] });
-  wire();
-  renderAll();
-  renderVerificationHistory();
+  });
 })();
 </script>
 </body>

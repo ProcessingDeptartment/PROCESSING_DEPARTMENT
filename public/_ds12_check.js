@@ -1,92 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
-<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REC 7.2.12 Double Seam Inspection Report</title>
-<script src="../lib/palette-map.js"></script>
-<link rel="stylesheet" href="../styles/record-theme.css">
-<style>
-  /* Matrix + spec-editor styles, scoped to the engine's mount. */
-  #mlRoot .ds-toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
-  #mlRoot .ds-toolbar select{ width:auto; min-width:220px; }
-  #mlRoot .ds-panel{ background:#fff; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; margin-bottom:12px; }
-  #mlRoot .ds-panel-head{ padding:8px 12px; border-bottom:1px solid var(--palette-border,#e2e4e3); background:var(--palette-head-bg,#fbfbfa); border-radius:6px 6px 0 0; }
-  #mlRoot .ds-panel-head h3{ margin:0; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356); }
-  #mlRoot .ds-panel-body{ padding:12px; }
-  #mlRoot .ds-grid{ display:grid; gap:10px; grid-template-columns:repeat(4,1fr); }
-  #mlRoot .ds-grid-2{ grid-template-columns:repeat(2,1fr); }
-  #mlRoot label.ds-field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; font-weight:600; color:var(--palette-label,#54606b); }
-  #mlRoot label.ds-field span.hint{ font-weight:400; color:#8a939b; font-size:10.5px; }
-  #mlRoot .ds-stage-tabs{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
-  #mlRoot .ds-stage-tab{ padding:7px 14px; background:var(--palette-border,#e2e4e3); border-radius:4px 4px 0 0; font-size:12px; font-weight:700; color:#5c6771; cursor:pointer; }
-  #mlRoot .ds-stage-tab.active{ background:var(--palette-heading,#2f4356); color:#fff; }
-  #mlRoot table.ds-meas{ width:100%; border-collapse:collapse; }
-  #mlRoot table.ds-meas th, #mlRoot table.ds-meas td{ border:1px solid var(--palette-border,#e2e4e3); padding:4px 6px; text-align:center; vertical-align:middle; }
-  #mlRoot table.ds-meas th{ background:var(--palette-head-bg,#fbfbfa); font-size:10px; text-transform:uppercase; color:#5c6771; font-weight:700; }
-  #mlRoot table.ds-meas td.row-label{ text-align:left; font-size:11.5px; font-weight:600; color:#33404a; background:#fcfcfb; white-space:nowrap; }
-  #mlRoot table.ds-meas td.row-label span.spec{ display:block; font-weight:400; color:#8a939b; font-size:10px; }
-  #mlRoot table.ds-meas input{ text-align:center; padding:3px 2px; }
-  #mlRoot table.ds-meas td.oor input{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d); color:var(--palette-fail,#a3352d); font-weight:700; }
-  #mlRoot .ds-calc-row td{ background:#f2f6f4; font-family:'IBM Plex Mono',monospace; font-weight:700; }
-  #mlRoot .ds-calc-row td.fail-calc{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); }
-  #mlRoot .ds-can-block{ margin-bottom:16px; }
-  #mlRoot .ds-can-block h4{ margin:0 0 6px; font-size:12.5px; color:var(--palette-heading,#2f4356); display:flex; gap:10px; align-items:center; }
-  #mlRoot .ds-vac-row{ display:flex; gap:10px; align-items:center; margin-bottom:8px; }
-  #mlRoot .ds-vac-row label{ font-size:11.5px; font-weight:600; color:var(--palette-label,#54606b); white-space:nowrap; }
-  #mlRoot .ds-vac-row input{ max-width:120px; }
-  #mlRoot .ds-badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; }
-  #mlRoot .ds-badge-ok{ background:var(--palette-ok-bg,#e8f3ec); color:var(--palette-ok,#2f7a52); }
-  #mlRoot .ds-badge-fail{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); }
-  #mlRoot .ds-issues{ border:1px solid var(--palette-fail,#a3352d); background:var(--palette-fail-bg,#fbe8e6); border-radius:6px; padding:10px 14px; margin-bottom:12px; color:var(--palette-fail,#a3352d); font-size:12px; }
-  #mlRoot .ds-issues.ok{ border-color:var(--palette-ok,#2f7a52); background:var(--palette-ok-bg,#e8f3ec); color:var(--palette-ok,#2f7a52); }
-  #mlRoot .ds-issues.warn{ border-color:#b8791c; background:#fbf0dc; color:#7a5310; }
-  #mlRoot .ds-issues h4{ margin:0 0 6px; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; }
-  #mlRoot .ds-issues ul{ margin:0; padding-left:18px; }
-  .ds-modal-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:600; display:none; align-items:center; justify-content:center; }
-  .ds-modal-overlay.open{ display:flex; }
-  .ds-modal-inner{ background:#fff; border-radius:8px; width:min(760px,94vw); max-height:90vh; overflow:auto; padding:16px; font-family:'Segoe UI',system-ui,sans-serif; }
-  .ds-modal-inner h2{ font-size:14px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; margin:0 0 10px; }
-  .ds-modal-inner h3{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#5c6771; margin:14px 0 6px; }
-  .ds-modal-inner input{ width:100%; padding:5px 7px; border:1px solid #c9cdd1; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; }
-  .ds-modal-inner .ds-grid{ display:grid; gap:10px; grid-template-columns:repeat(3,1fr); }
-  .ds-modal-inner .ds-grid-2{ grid-template-columns:repeat(2,1fr); }
-  .ds-modal-inner label{ display:flex; flex-direction:column; gap:3px; font-size:11px; font-weight:600; color:#54606b; }
-  .ds-modal-inner table{ width:100%; border-collapse:collapse; }
-  .ds-modal-inner table th, .ds-modal-inner table td{ border:1px solid #e2e4e3; padding:4px 6px; font-size:11px; }
-  .ds-modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
-  .ds-modal-inner button{ padding:6px 12px; border:none; border-radius:3px; font-weight:600; cursor:pointer; font-family:'Segoe UI',system-ui,sans-serif; }
-  .ds-btn-primary{ background:var(--palette-primary,#c9832b); color:#241a0a; }
-  .ds-btn-flat{ background:#e2e4e3; color:#1b2330; }
-  .ds-history-list{ max-height:200px; overflow:auto; border:1px solid #e2e4e3; border-radius:4px; margin-top:6px; }
-  .ds-history-item{ padding:6px 10px; border-bottom:1px solid #e2e4e3; font-size:11.5px; }
-  .ds-history-item:last-child{ border-bottom:none; }
-  .ds-muted{ color:#8a939b; }
-  @media (max-width:900px){ #mlRoot .ds-grid{ grid-template-columns:repeat(2,1fr); } .ds-modal-inner .ds-grid{ grid-template-columns:1fr; } }
-</style>
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
-</head>
-<body>
-<div id="mlRoot"></div>
-
-<script src="../lib/doc-header.js?v=5"></script>
-<script src="../lib/master-index-data.js?v=2"></script>
-<script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
-<script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/permission-rules.js?v=6"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/thresholds.js?v=2"></script>
-<script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/job-status.js?v=2"></script>
-<script src="../lib/traceability.js?v=6"></script>
-<script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
-<script>(function () {
+(function(){
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const num = v => { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; };
   const safeKey = s => String(s == null ? '' : s).trim().replace(/[\s\/\\'"]+/g, '_');
@@ -728,7 +640,7 @@
     deviationPolarity: 'accurate',
     instructions: [
       { label: 'Measurement matrix', text: 'Record 2 cans x 3 points for each production stage (before / during / after). % B.H.B. and freespace are calculated from the point readings; % overlap and actual overlap are calculated per can.' },
-      { label: 'Spec profiles', text: 'Choose the can-type spec profile (e.g. Fujian EOA vs NEO) at the top of the form. Manage specs adds or edits a profile and bumps this record document revision.' },
+      { label: 'Spec profiles', text: 'Choose the can-type spec profile (e.g. Fujian EOA vs NEO) at the top of the form. Manage specs adds or edits a profile and bumps this record's document revision.' },
       { label: 'Submitting', text: 'A record with any out-of-spec item, or an unacknowledged spec update, cannot be submitted as complete.' }
     ],
     customBody: {
@@ -746,6 +658,3 @@
     }
   });
 })();
-</script>
-</body>
-</html>

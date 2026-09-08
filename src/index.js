@@ -285,6 +285,59 @@ app.get('/api/dates', async (req, res) => {
   }
 });
 
+// Relational batch trace: every record touchpoint for one batch/job/lot number, plus the
+// one-up/one-down genealogy (batches consumed INTO this one, and produced FROM it). Mirrors the
+// client-side prefix scan in public/lib/traceability.js but runs it in Postgres so a recall query
+// does not depend on the querying device having synced. Keys are
+// 'batch_link:<encodeURIComponent(batch)>:<record>:<submission>' -- match that encoding exactly.
+app.get('/api/trace/:batch', async (req, res) => {
+  const batch = String(req.params.batch || '').trim();
+  try {
+    const [directRaw, reverseRaw] = await Promise.all([
+      // Rows filed under this batch's own prefix: its own record touchpoints, and links where
+      // THIS batch is an ingredient/sub-batch of some other batch.
+      prisma.keyValue.findMany({ where: { key: { startsWith: 'batch_link:' + encodeURIComponent(batch) + ':' } } }),
+      // Rows filed under OTHER batches that name this one as their linked_batch -- i.e. batches
+      // that fed into, or were split out of, this one. LIKE scan over the index; fine at this
+      // scale (index rows are small and number in the thousands, not millions).
+      prisma.keyValue.findMany({ where: { key: { startsWith: 'batch_link:' }, value: { contains: '"linked_batch":"' + batch + '"' } } }),
+    ]);
+    const parse = (list) => {
+      const out = [];
+      for (const row of list) {
+        try { const v = JSON.parse(row.value); if (v && typeof v === 'object') out.push(v); }
+        catch { /* skip unparseable index row */ }
+      }
+      return out;
+    };
+    const direct = parse(directRaw);
+    const reverse = parse(reverseRaw).filter(r => r.linked_batch === batch); // contains-match can over-match
+
+    // `rel` on a row is the relationship of that row's batch_no to its linked_batch.
+    const inputs = new Set(), outputs = new Set();
+    for (const r of direct) {
+      if (!r.linked_batch || r.linked_batch === batch) continue;
+      // queried batch -> linked_batch: consumed-into means linked_batch is downstream (an output)
+      (r.rel === 'output' ? inputs : outputs).add(r.linked_batch);
+    }
+    for (const r of reverse) {
+      if (!r.batch_no || r.batch_no === batch) continue;
+      // other batch -> queried batch: consumed-into means the other batch is upstream (an input)
+      (r.rel === 'output' ? outputs : inputs).add(r.batch_no);
+    }
+
+    const records = direct.concat(reverse).sort((a, b) => {
+      const da = a.occurred_on || '', db = b.occurred_on || '';
+      if (da && db && da !== db) return da < db ? -1 : 1;
+      return (a.updated_at || '') < (b.updated_at || '') ? -1 : 1;
+    });
+    res.json({ batch, records, inputs: [...inputs], outputs: [...outputs] });
+  } catch (e) {
+    console.error('GET trace failed', e);
+    res.status(500).json({ batch, records: [], inputs: [], outputs: [] });
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {

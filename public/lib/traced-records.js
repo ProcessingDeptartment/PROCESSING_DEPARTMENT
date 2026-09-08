@@ -158,7 +158,18 @@ window.TracedRecords = [
     "batchDateField": "reportDate",
     "stage": "canning",
     "extraBatchFields": [],
-    "store": "custom"
+    "store": "monitoring_log:double-seam-inspection-report"
+  },
+  {
+    "recordKey": "abalone-packing-specification",
+    "pageFile": "REC-7.2.4-abalone-packing-specification.html",
+    "docCode": "REC 7.2.4",
+    "title": "Abalone Packing Specification",
+    "batchField": "jobNo",
+    "batchDateField": "date",
+    "stage": null,
+    "extraBatchFields": [],
+    "store": "monitoring_log:abalone-packing-specification"
   },
   {
     "recordKey": "rework-log",
