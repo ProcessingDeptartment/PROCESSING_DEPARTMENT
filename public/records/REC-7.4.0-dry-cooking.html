@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=26"></script>
+<script src="../lib/form-record.js?v=27"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -50,14 +50,14 @@
     ],
     listColumns: ['intakeDate', 'jobNumber', 'potNumber'],
     sections: [
-      { title: 'Job info', collapsible: true, summaryField: 'jobNumber', fields: [
+      { title: 'Job info', collapsible: true, summaryField: ['jobNumber', 'jiProcessingFor'], fields: [
         { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
         { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
+        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
+        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true }
       ]},
       { title: 'Batch & cooking info', fields: [
-        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'cookingDate', label: 'Cooking date', type: 'date' },
         { key: 'potNumber', label: 'Pot number', type: 'text' },
         { key: 'abaloneKg', label: 'Abalone (kg)', type: 'number' }

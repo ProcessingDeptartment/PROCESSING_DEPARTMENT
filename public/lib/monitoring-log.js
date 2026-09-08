@@ -463,12 +463,17 @@
       }
       node = next;
     }
-    const jobF = (entryFields || []).find((f) => f.type === 'jobsearch' && f.group === groupName);
-    const src = jobF && container.querySelector('#' + ns + '_f_' + jobF.key);
-    if (src) {
-      const paint = () => { span.textContent = String(src.value || '').trim() ? '— ' + src.value : ''; };
-      src.addEventListener('input', paint);
-      src.addEventListener('change', paint);
+    // Keep the job number AND processing-for visible in the collapsed header.
+    const groupFields = (entryFields || []).filter((f) => f.group === groupName);
+    const summaryKeys = groupFields.filter((f) =>
+      f.type === 'jobsearch' || /processingfor|processedfor/i.test(f.key)).map((f) => f.key);
+    const srcs = summaryKeys.map((k) => container.querySelector('#' + ns + '_f_' + k)).filter(Boolean);
+    if (srcs.length) {
+      const paint = () => {
+        const parts = srcs.map((s) => String(s.value || '').trim()).filter(Boolean);
+        span.textContent = parts.length ? '— ' + parts.join('  ·  ') : '';
+      };
+      srcs.forEach((s) => { s.addEventListener('input', paint); s.addEventListener('change', paint); });
       paint();
     }
   }

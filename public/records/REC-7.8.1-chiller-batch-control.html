@@ -25,7 +25,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=23"></script>
+<script src="../lib/monitoring-log.js?v=24"></script>
 <script>
 (function () {
   MonitoringLog.init({
@@ -52,7 +52,7 @@
       { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
       { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
       { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      Lookups.field({ key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
+      Lookups.field({ group: 'Job info', key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
       { key: 'processingStep', label: 'Processing step', type: 'select', options: ['After first wash', 'After second wash', 'After scrubbing'] },
       { key: 'trackingNo', label: 'Tracking no.', type: 'text', required: true },
       { key: 'date', label: 'Date', type: 'date', required: true },

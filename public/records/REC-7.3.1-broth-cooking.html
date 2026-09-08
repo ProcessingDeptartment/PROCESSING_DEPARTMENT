@@ -26,7 +26,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=26"></script>
+<script src="../lib/form-record.js?v=27"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -50,7 +50,7 @@
         } }
     ],
     sections: [
-      { title: 'Job info', collapsible: true, summaryField: 'jobNo', fields: [
+      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
         { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },

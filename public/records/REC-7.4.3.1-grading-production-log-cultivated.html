@@ -25,7 +25,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=26"></script>
+<script src="../lib/form-record.js?v=27"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -49,14 +49,14 @@
         } }
     ],
     sections: [
-      { title: 'Job info', collapsible: true, summaryField: 'jobNumber', fields: [
+      { title: 'Job info', collapsible: true, summaryField: ['jobNumber', 'jiProcessingFor'], fields: [
         { key: 'jobNumber', label: 'Job number', type: 'jobsearch', required: true },
         { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
         { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
+        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true }
       ]},
       { title: 'Batch details', fields: [
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
         { key: 'driedWeightReceived', label: 'Dried weight received (with strings)', type: 'number' },
         { key: 'actualDriedWeight', label: 'Actual dried weight (no strings)', type: 'number' },
         { key: 'dateIntoGradingRoom', label: 'Date into grading room', type: 'date' },

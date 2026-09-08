@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=26"></script>
+<script src="../lib/form-record.js?v=27"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -50,7 +50,7 @@
     ],
     listColumns: ['date', 'jobNo', 'intakeDate', 'processingFor'],
     sections: [
-      { title: 'Job info', collapsible: true, summaryField: 'jobNo', fields: [
+      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'processingFor'], fields: [
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'intakeDate', label: 'Intake date', type: 'date' },
         { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },

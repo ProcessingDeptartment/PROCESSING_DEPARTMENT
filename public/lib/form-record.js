@@ -546,16 +546,19 @@
       });
     }
 
-  // Keeps a collapsible section's header showing one field's current value (the job number),
-  // so it stays readable while the section is collapsed. Re-runs on input/change of that field.
+  // Keeps a collapsed section's header showing one or more fields' current values (the job number
+  // and processing-for), so they stay readable while the section is shut. `data-summary-for` is a
+  // comma-separated list of field keys. Re-runs on input/change of any of them.
   function wireSectionSummaries(container) {
     container.querySelectorAll('.fr-section-summary[data-summary-for]').forEach((span) => {
-      const key = span.getAttribute('data-summary-for');
-      const src = key && container.querySelector('#fr_f_' + key);
-      if (!src) return;
-      const paint = () => { span.textContent = String(src.value || '').trim() ? '— ' + src.value : ''; };
-      src.addEventListener('input', paint);
-      src.addEventListener('change', paint);
+      const keys = (span.getAttribute('data-summary-for') || '').split(',').map((k) => k.trim()).filter(Boolean);
+      const srcs = keys.map((k) => container.querySelector('#fr_f_' + k)).filter(Boolean);
+      if (!srcs.length) return;
+      const paint = () => {
+        const parts = srcs.map((s) => String(s.value || '').trim()).filter(Boolean);
+        span.textContent = parts.length ? '— ' + parts.join('  ·  ') : '';
+      };
+      srcs.forEach((s) => { s.addEventListener('input', paint); s.addEventListener('change', paint); });
       paint();
     });
   }
@@ -1375,9 +1378,10 @@
           </label>`).join('')}
         </div>`;
         if (sec.collapsible) {
-          // summaryField keeps one field's value (the job number) visible in the header when the
-          // section is collapsed, so "job info collapsible with job number remaining visible" holds.
-          const sfyd = sec.summaryField ? ` data-summary-for="${esc(sec.summaryField)}"` : '';
+          // summaryField (a key, or an array of keys) keeps those fields' values — the job number
+          // and processing-for — visible in the header while the section is collapsed.
+          const sfyd = sec.summaryField
+            ? ` data-summary-for="${esc([].concat(sec.summaryField).join(','))}"` : '';
           return `<details class="fr-section-collapsible"${sec.collapsedByDefault ? '' : ' open'}>
             <summary class="fr-section-title">${esc(sec.title)}<span class="fr-section-summary"${sfyd}></span></summary>
             ${fieldsHtml}

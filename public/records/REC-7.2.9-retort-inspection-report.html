@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=26"></script>
+<script src="../lib/form-record.js?v=27"></script>
 <script>
 (function () {
   FormRecord.init({
@@ -48,14 +48,14 @@
         } }
     ],
     sections: [
-      { title: 'Job info', collapsible: true, summaryField: 'jobNo', fields: [
+      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
         { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
         { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
+        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
+        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
+        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' }
       ]},
       { title: 'Batch info', fields: [
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
         { key: 'retortCode', label: 'Retort code', type: 'text' },
         { key: 'timeTrolleyIn', label: 'Time trolley in', type: 'text' },
         { key: 'product', label: 'Product', type: 'text' },
