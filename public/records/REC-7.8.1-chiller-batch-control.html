@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -26,8 +25,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=24"></script>
-<script>
-(function () {
+<script>(function () {
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'chiller-batch-control',
@@ -36,11 +34,7 @@
     docCode: 'REC 7.8.1',
     title: 'Chiller Batch Control (Canning)',
     docRevisionStart: 4,
-    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
-    // actually been received instead of typing blind.
-    // Picking one also fills in what that job already carries (harvestFarm),
-    // only where this form's own field is still empty.
-    // The size range picker is narrowed to the sizes actually received on that job.
+
     jobInfoGroup: 'Job info',
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',

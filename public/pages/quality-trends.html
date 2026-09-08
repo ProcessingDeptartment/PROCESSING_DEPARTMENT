@@ -110,8 +110,7 @@
 
 <div id="tooltip"></div>
 
-<script>
-(function () {
+<script>(function () {
   'use strict';
 
   var SVG = 'http://www.w3.org/2000/svg';
@@ -150,7 +149,7 @@
     return Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2).replace(/\.00$/, '');
   }
 
-  // ------------------------------------------------------------ filtering
+
 
   function visiblePoints(trend) {
     var pts = trend.points;
@@ -162,7 +161,7 @@
     return out.length ? out : pts;
   }
 
-  // --------------------------------------------------------------- charts
+
 
   function drawChart(trend, pts) {
     var svg = document.getElementById('chart');
@@ -199,7 +198,7 @@
       return L + (new Date(p.d + 'T00:00:00').getTime() - t0) / (t1 - t0) * iw;
     }
 
-    // gridlines + y axis
+
     for (var g = 0; g <= 4; g++) {
       var vy = lo + (hi - lo) * g / 4, py = y(vy);
       svg.appendChild(svgEl('line', { x1: L, x2: W - R, y1: py, y2: py, stroke: '#eceeef' }));
@@ -208,7 +207,7 @@
       svg.appendChild(lab);
     }
 
-    // spec band
+
     if (spec.min != null || spec.max != null) {
       var top = y(spec.max != null ? spec.max : hi);
       var bot = y(spec.min != null ? spec.min : lo);
@@ -227,7 +226,7 @@
       }
     }
 
-    // x labels
+
     var step = Math.max(1, Math.ceil(pts.length / 8));
     pts.forEach(function (p, i) {
       if (i % step && i !== pts.length - 1) return;
@@ -272,7 +271,7 @@
       });
     }
 
-    // hover targets
+
     pts.forEach(function (p, i) {
       var hw = iw / pts.length;
       var hit = svgEl('rect', { x: x(p, i) - hw / 2, y: T, width: hw, height: ih,
@@ -293,7 +292,7 @@
     });
   }
 
-  // -------------------------------------------------------------- summary
+
 
   function drawSummary(trend, pts) {
     var box = document.getElementById('summary');
@@ -309,8 +308,7 @@
 
     card(String(pts.length), trend.chart === 'bar' ? 'Months shown' : 'Days shown');
 
-    // one card per series -- averaging a temperature against a humidity would
-    // be meaningless, so each reading keeps its own summary
+
     trend.series.filter(function (s) { return !s.dashed; }).forEach(function (s) {
       var vals = [], last = null, lastDate = null;
       pts.forEach(function (p) {
@@ -321,8 +319,7 @@
       });
       if (!vals.length) return;
       var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
-      // canning trends carry a single 'Daily average' series -- name its cards
-      // after the measurement instead of "average daily average"
+
       if (s.key === 'avg') s = { key: 'avg', label: trend.title.replace(/^Can(ned product)? ?/i, '') || trend.unit };
       if (trend.chart === 'bar') {
         card(String(vals.reduce(function (a, b) { return a + b; }, 0)), 'Total ' + s.label.toLowerCase());
@@ -368,7 +365,7 @@
     if (trend.note) noteBox.appendChild(el('p', { 'class': 'note' }, trend.note));
   }
 
-  // --------------------------------------------------------------- tables
+
 
   function head(cells) {
     var thead = el('thead'), tr = el('tr');
@@ -487,7 +484,7 @@
     table.appendChild(tb);
   }
 
-  // -------------------------------------------------------------- wiring
+
 
   function select(id) {
     current = data.trends.filter(function (t) { return t.id === id; })[0];
@@ -496,7 +493,7 @@
       b.setAttribute('aria-pressed', b.dataset.id === id ? 'true' : 'false');
     });
     render();
-    try { history.replaceState(null, '', '#' + id); } catch (e) { /* file:// */ }
+    try { history.replaceState(null, '', '#' + id); } catch (e) {  }
   }
 
   function render() {
@@ -567,7 +564,7 @@
       'Refresh this page after the workbooks change by running: python scripts/extract_quality_trends.py'));
   }
 
-  // cache-busted so a fresh extract shows up without a hard reload
+
   fetch('../data/quality-trends.json?t=' + Date.now())
     .then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);

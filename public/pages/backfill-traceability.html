@@ -65,8 +65,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/traced-records.js?v=1"></script>
-<script>
-(function () {
+<script>(function () {
   const $ = id => document.getElementById(id);
   const logEl = $('log');
   let lines = [];
@@ -78,8 +77,6 @@
 
   let plan = null;
 
-  // Submissions live in one of two shapes depending on which engine owns the record, plus the
-  // one custom page that stores each inspection under its own record:<id> key.
   async function loadSubmissions(rec) {
     if (rec.store === 'custom') {
       const map = await window.storage.getByPrefix('record:', true);
@@ -87,10 +84,9 @@
       Object.keys(map || {}).forEach(k => {
         try {
           const s = JSON.parse(map[k]);
-          // The custom page keeps its fields under `header`; present them as `values` so the
-          // shared indexer sees the same shape it gets from the engines.
+
           if (s && s.id) subs.push({ id: s.id, values: s.header || {} });
-        } catch (e) { /* skip unreadable */ }
+        } catch (e) {  }
       });
       return subs;
     }
@@ -101,14 +97,8 @@
     } catch (e) { return []; }
   }
 
-  // A submission counts as indexed when an entry already exists for its batch number. Comparing
-  // by (batchNo, recordKey, submissionId) is exactly the key traceability.js writes.
   const seg = s => encodeURIComponent(String(s == null ? '' : s));
 
-  // An unauthorised read comes back empty, not as an error -- so without this check the scan would
-  // report "0 submissions, nothing to backfill" on a device with no access key, which is
-  // indistinguishable from a genuinely clean index and is exactly the wrong thing to tell someone
-  // preparing for an audit. Probe the API directly and refuse to report anything if it says 401.
   async function assertAuthorised() {
     if (!window.FacilityApi) return { ok: true, note: 'local storage only' };
     if (!window.FacilityApi.getKey()) {
@@ -210,7 +200,7 @@
     let written = 0, failed = 0;
     for (const p of plan) {
       if (!p.missing.length) continue;
-      // pageFile makes the index link back to the record's OWN page rather than this tool.
+
       const config = {
         recordKey: p.rec.recordKey,
         title: p.rec.title,
@@ -226,9 +216,7 @@
       }
       log('Wrote ' + p.missing.length + ' for ' + p.rec.docCode);
     }
-    // indexSubmission swallows write failures by contract, so "no exception" is not proof the
-    // entries landed. If the key was rejected at any point during the run, say so instead of
-    // claiming success -- the re-scan is what actually confirms it either way.
+
     const after = await assertAuthorised();
     if (!after.ok) {
       log('Authorisation lost during the run: ' + after.why);

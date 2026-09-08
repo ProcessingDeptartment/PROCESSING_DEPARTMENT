@@ -1,14 +1,3 @@
-/*
- * Tracks the document control revision of a RECORD TEMPLATE itself (e.g. "REC 7.2.12 ·
- * Rev 11") 
- * Not the count of no. of records submitted.
- * Revision bumps are required when the record template changes, a specification is updated, or tolerances are changed. This is a document control requirement for the Abagold Processing Facility. (FSSC) 
- * Every bump requires a reason, the name of who made the change, and their title, per the system overview's change-management rules ("every new publish requires a reason... and must indicate who made the change").  
- * Will automatically increment the revision number and record the date of the bump.
- * Will push to master index.html and the record template's HTML file, so the next user will see the new revision number and date.
- * Backed by window.storage (see data-store.js), keyed by an arbitrary recordKey so any
- * record in this system can use it (e.g. 'double-seam-inspection-report').
- */
 (function () {
   async function loadHistory(recordKey) {
     const raw = await window.storage.get('document_revision:' + recordKey, true);
@@ -20,17 +9,14 @@
     }
   }
 
-  // Current revision number, or `startAt` (default 1) if this record has never bumped.
+
   async function getCurrent(recordKey, startAt) {
     const history = await loadHistory(recordKey);
     if (!history.length) return startAt || 1;
     return history[history.length - 1].revisionNumber;
   }
 
-  // Date the current revision took effect, as YYYY-MM-DD. Null when the record has
-  // never been bumped here -- the baseline revision came off paper, so its date is
-  // only known if the caller supplies `baselineDate`. Never guess one: an invented
-  // revision date on a printed record is a document-control failure.
+
   async function getCurrentDate(recordKey, baselineDate) {
     const history = await loadHistory(recordKey);
     if (!history.length) return baselineDate || null;
@@ -42,7 +28,7 @@
     return (await loadHistory(recordKey)).slice().reverse();
   }
 
-  // meta: { reason, changedBy, changedByTitle }. Throws if any are missing.
+
   async function bump(recordKey, meta, startAt) {
     meta = meta || {};
     if (!meta.reason || !String(meta.reason).trim()) {
@@ -68,11 +54,7 @@
     return entry;
   }
 
-  // Bump every record in `items` ([{ recordKey, startAt }]) with the same reason/name/
-  // title -- the master index's "update all revisions" action, for when one document
-  // change (e.g. reissuing the whole index) legitimately moves every record's revision
-  // together rather than one at a time. Sequential for the same reason as saveFieldsAll:
-  // a shared-storage write failing partway through should stop, not race the rest.
+
   async function bumpAll(items, meta) {
     const out = {};
     for (const item of items) {
@@ -81,9 +63,7 @@
     return out;
   }
 
-  // Latest revision entry for EVERY record that has ever been bumped, in one round trip.
-  // Returns { recordKey: { revisionNumber, reason, changedBy, changedByTitle, changedAt } }.
-  // Index-style pages must use this instead of calling getCurrent() per record.
+
   async function latestAll() {
     const raw = await window.storage.getByPrefix('document_revision:', true);
     const out = {};
@@ -92,7 +72,7 @@
       try {
         const hist = JSON.parse(raw[key]);
         if (Array.isArray(hist) && hist.length) out[recordKey] = hist[hist.length - 1];
-      } catch (e) { /* a corrupt entry must not hide every other record */ }
+      } catch (e) {  }
     });
     return out;
   }

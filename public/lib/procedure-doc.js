@@ -1,19 +1,3 @@
-/*
- * Engine for Procedure pages (public/procedures/*.html).
- *
- * Mirrors sop-doc.js exactly, but scoped to Procedures:
- *   - Permission gate: PermissionRules.can('manageProcedures')
- *   - Storage key prefix: procedure_doc:<recordKey>
- *   - Back link: procedure-list.html
- *
- * Sections are a per-document array (title + html), not a fixed set of four --
- * each Procedure's sections mirror the headings of its original Word document,
- * since procedures don't all share the same structure the way SOPs do.
- *
- * Storage layout, keyed by recordKey:
- *   procedure_doc:<recordKey>      -- { procNo, name, sections: [{title, html}], relatedDocs: [{code,name}] }
- *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision
- */
 (function () {
   const KEY = k => 'procedure_doc:' + k;
 
@@ -158,8 +142,6 @@
     document.head.appendChild(s);
   }
 
-  // cfg: { recordKey, procNo, name, area, startRev, backHref, sections:[{title,html}],
-  //        relatedDocs:[{code,name}], baselineHistory:[{rev,reason,date}] }
   async function mount(cfg) {
     injectStyles();
     const root = document.getElementById('procedure-root');

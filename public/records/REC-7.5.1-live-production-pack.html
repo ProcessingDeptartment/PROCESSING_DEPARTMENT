@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -28,8 +27,7 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=24"></script>
-<script>
-(function () {
+<script>(function () {
   function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
 
   MonitoringLog.init({
@@ -38,11 +36,7 @@
     docCode: 'REC 7.5.1',
     title: 'Live Production Pack',
     docRevisionStart: 4,
-    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2). Live packing had no
-    // job number at all, which is the root of the purge-loss problem reported for July 2026:
-    // bags confirmed for a pack get changed and end up captured against a different job, so the
-    // loss lands on the wrong batch. Picking the job here ties the pack to the intake it came
-    // from and puts live on the same traceability spine as canning and drying.
+
     jobInfoGroup: 'Job info',
     autofill: [
       { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
@@ -59,10 +53,6 @@
       { key: 'idnsPacked', label: 'IDNs packed', type: 'text' },
       { key: 'livePackChecklistAttached', label: 'Live pack checklist (REC 7.5.2) attached?', type: 'yesno' },
 
-      // --- Purging -------------------------------------------------------------------------
-      // Purge loss is reported monthly but has never been captured anywhere, so the figure has
-      // to be rebuilt by hand and cannot be split by job. Mass in and mass out are the two
-      // numbers it actually needs; the percentage is derived so it cannot drift from them.
       { key: 'purgeStartDate', label: 'Purge started', type: 'date' },
       { key: 'purgeEndDate', label: 'Purge ended', type: 'date' },
       {
@@ -84,8 +74,6 @@
         }
       },
 
-      // --- Pack output ---------------------------------------------------------------------
-      // Volume packed was previously only countable off the signed packing lists by hand.
       { key: 'bagsPacked', label: 'Bags packed', type: 'number' },
       { key: 'boxesPacked', label: 'Boxes packed', type: 'number' },
       { key: 'massPacked', label: 'Mass packed', type: 'number', unit: 'kg' },

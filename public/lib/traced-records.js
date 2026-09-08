@@ -1,12 +1,3 @@
-/*
- * GENERATED -- do not hand-edit. Run: node scripts/build-traced-records.js
- *
- * Every record that declares a batchField, with the storage key its submissions live under.
- * Used only by pages/backfill-traceability.html to re-index submissions saved before the record
- * opted into traceability. During a normal save each record indexes itself from its own page.
- *
- * Generated 2026-09-01 from 47 record pages.
- */
 window.TracedRecords = [
   {
     "recordKey": "dry-export-pack-front-page",

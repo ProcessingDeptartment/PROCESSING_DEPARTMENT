@@ -1,15 +1,3 @@
-/*
- * Engine for PRP pages (public/prps/*.html).
- *
- * Mirrors sop-doc.js exactly, but scoped to Pre-Requisite Programmes (PRPs):
- *   - Permission gate: PermissionRules.can('managePRPs')
- *   - Storage key prefix: prp_doc:<recordKey>
- *   - Back link: prp-list.html
- *
- * Storage layout, keyed by recordKey:
- *   prp_doc:<recordKey>            -- { prpNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
- *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision
- */
 (function () {
   const KEY = k => 'prp_doc:' + k;
 
@@ -154,8 +142,6 @@
     document.head.appendChild(s);
   }
 
-  // cfg: { recordKey, prpNo, name, area, startRev, backHref, sections:{objective,roles,process,review},
-  //        relatedDocs:[{code,name}], baselineHistory:[{rev,reason,date}] }
   async function mount(cfg) {
     injectStyles();
     const root = document.getElementById('prp-root');

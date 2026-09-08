@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -92,8 +91,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/verification-queue.js?v=1"></script>
-<script>
-(function () {
+<script>(function () {
   'use strict';
 
   var el = function (id) { return document.getElementById(id); };
@@ -132,9 +130,7 @@
     if (!q.total) {
       el('emptyPanel').style.display = '';
       el('listPanel').style.display = 'none';
-      // A role that never verifies anything is a different situation from a role with an
-      // empty queue -- saying "nothing waiting" to someone who will never see anything
-      // would just be misleading.
+
       el('emptyMsg').textContent = q.canVerify
         ? 'There are no submitted entries awaiting verification for your role.'
         : 'Your role does not carry verification duties, so nothing will appear here.';
@@ -158,10 +154,9 @@
   }
 
   window.addEventListener('load', async function () {
-    // The login modal IS the "user logs in" moment -- auth.js keeps the session in memory
-    // only, so every page load asks again.
+
     if (window.LoginUI && window.LoginUI.ensureAuthenticated) {
-      try { await window.LoginUI.ensureAuthenticated(); } catch (e) { /* modal handles its own errors */ }
+      try { await window.LoginUI.ensureAuthenticated(); } catch (e) {  }
     }
     if (!window.Auth || !window.Auth.isAuthenticated()) {
       setState('bad', 'Sign in to see what is waiting for your verification.');

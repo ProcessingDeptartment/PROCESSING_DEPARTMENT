@@ -1,15 +1,3 @@
-/*
- * Engine for Policy pages (public/policies/*.html).
- *
- * Mirrors sop-doc.js exactly, but scoped to Policies:
- *   - Permission gate: PermissionRules.can('managePolicies')
- *   - Storage key prefix: policy_doc:<recordKey>
- *   - Back link: policy-list.html
- *
- * Storage layout, keyed by recordKey:
- *   policy_doc:<recordKey>         -- { polNo, name, sections: { <sectionKey>: html, ... }, relatedDocs: [{code,name}] }
- *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision
- */
 (function () {
   const KEY = k => 'policy_doc:' + k;
 
@@ -29,7 +17,6 @@
     await window.storage.set(KEY(recordKey), JSON.stringify(obj), true);
   }
 
-  // Headings used when a page still supplies the old fixed four-section object.
   const LEGACY_HEADINGS = {
     objective: '1. Objective',
     roles: '2. Roles and Responsibilities',
@@ -37,10 +24,6 @@
     review: '4. Review'
   };
 
-  // Policies do not share one layout -- each page declares its own ordered sections,
-  // mirroring the headings of the source policy. `heading` may be omitted for a body
-  // block that carries no heading of its own (e.g. a signature block).
-  //   sections: [ { key, heading, html }, ... ]
   function normalizeSections(input) {
     if (Array.isArray(input)) {
       return input.map((s, i) => ({
@@ -187,8 +170,6 @@
     document.head.appendChild(s);
   }
 
-  // cfg: { recordKey, polNo, name, area, startRev, backHref, sections:[{key,heading,html}],
-  //        relatedDocs:[{code,name}], baselineHistory:[{rev,reason,date}] }
   async function mount(cfg) {
     injectStyles();
     const root = document.getElementById('policy-root');
@@ -308,7 +289,7 @@
     function setupProcessTableControls(editing) {
       document.querySelectorAll('#pd-sections .pd-section table').forEach(table => {
         const tbody = table.querySelector('tbody') || table;
-        // strip any previously injected controls first (idempotent)
+
         table.querySelectorAll('.pd-row-rm-cell').forEach(td => td.remove());
         table.querySelectorAll('.pd-row-rm-head').forEach(th => th.remove());
         let next = table.nextElementSibling;

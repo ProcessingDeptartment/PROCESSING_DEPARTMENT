@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -93,8 +92,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/sop-index-data.js?v=1"></script>
-<script>
-(function () {
+<script>(function () {
   const SOPS = window.SopIndexData.rows.slice().sort((a, b) => {
     const na = parseFloat(a.sopNo.replace(/[^\d.]/g, '')) || 0;
     const nb = parseFloat(b.sopNo.replace(/[^\d.]/g, '')) || 0;
@@ -111,8 +109,7 @@
 
   totalCount.textContent = SOPS.length;
 
-  // Live revision (post any online edit) beats the paper baseline, same convention
-  // record-list.html uses via document-revision.js -- one prefix read for every row.
+
   let latest = {};
 
   function render() {

@@ -1,13 +1,3 @@
-/*
- * Baseline data for the SOP list, transcribed from the docx files in
- * "2. SOP's" (paper/Word originals). Revision numbers here are the PAPER
- * baseline only -- the live current revision of any row that has a `recordKey`
- * comes from document-revision.js at render time, same convention as
- * master-index-data.js for records.
- *
- * "Archived" subfolder is intentionally excluded -- only current SOPs are listed.
- * Regenerate rather than hand-edit when SOPs are added, renumbered, or reissued.
- */
 window.SopIndexData = {
   rows: [
     {sopNo:'SOP New', name: 'Create New SOP', area: 'New SOP', revision: 0, recordKey: 'sop-new-create-new-sop', href: 'SOP-Create.html'},

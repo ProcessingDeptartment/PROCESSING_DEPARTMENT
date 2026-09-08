@@ -1,8 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="utf-8">
@@ -45,8 +44,7 @@
     header { padding: 14px 16px; }
     header h1 { font-size: 18px; }
     .wrap { padding: 16px; }
-    /* The search row is input + button side by side on desktop; on a phone the
-       240px input alone is wider than the viewport, so both go full width. */
+    
     .search { padding: 14px; gap: 8px; }
     .search > div { flex: 1 1 100%; }
     .search input { min-width: 0; width: 100%; font-size: 16px; }
@@ -95,8 +93,7 @@
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/traceability.js?v=5"></script>
-<script>
-  const $ = id => document.getElementById(id);
+<script>  const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   function setStatus(msg, isErr) {
@@ -146,10 +143,7 @@
     $('traceBtn').disabled = true;
     try {
       let rows = await window.Traceability.trace(batchNo);
-      // An empty result on the very first call this page makes doesn't necessarily mean nothing
-      // is indexed -- window.storage may not have finished switching off localStorage yet (the
-      // API health-check race), especially on a deep link that traces immediately on load. Retry
-      // once before reporting "not found".
+
       if (!rows.length) { await sleep(2000); rows = await window.Traceability.trace(batchNo); }
       if (!rows.length) { setStatus(`No records reference batch “${batchNo}” yet.`); return; }
       setStatus('');
@@ -164,7 +158,6 @@
   $('traceBtn').addEventListener('click', doTrace);
   $('batchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doTrace(); });
 
-  // Deep-link support: batch-trace.html?batch=XXXX traces immediately.
   const q = new URLSearchParams(location.search).get('batch');
   if (q) { $('batchInput').value = q; doTrace(); }
   loadKnownBatches();

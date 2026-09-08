@@ -1,12 +1,3 @@
-/*
- * Central registry of default spec thresholds (min/max) for monitoring-log records.
- * Each record's specFields pulls its defaults from here via Thresholds.get(recordKey, fieldKey)
- * instead of hardcoding numbers inline, so all thresholds live in one place.
- *
- * These are only the starting defaults shown the first time a document opens -- users can
- * still edit them per-document through the Thresholds modal (see monitoring-log.js), which
- * saves its own values separately and does not write back here.
- */
 (function () {
   const REGISTRY = {
     'water-monitoring': {
@@ -46,11 +37,9 @@
       diffTolerance: { min: -0.5, max: 0.5 }
     },
     'live-production-pack': {
-      // Purging outside 2-12 days is the window the department works to.
+
       purgeDays: { min: 2, max: 12 },
-      // Purge loss has no agreed limit yet -- July 2026 ran at 16% and was called elevated,
-      // but nothing states what good looks like. Left open so it is recorded and trended
-      // rather than judged against a guessed number; set it here once the standard is agreed.
+
       purgeLoss: { min: null, max: null }
     }
   };
@@ -61,13 +50,7 @@
     return rec[fieldKey];
   }
 
-  // Seeded from "3. Production/3. CAN/73 dia. double seam inspection report.xls".
-  // That sheet only gave one dataset, so EOA and NEO start identical -- use Specs ->
-  // Edit to enter the real NEO-specific tolerances when known. Seam length, cover hook,
-  // internal and tightness% weren't specified there either, so they're left as
-  // "record only" rather than guessed; the seam-thickness cell in that sheet (0.19/0.03)
-  // matches the Free space row exactly and looks like a copy-paste artifact, so it was
-  // NOT carried over -- fill it in via Specs -> Edit once confirmed.
+
   const DOUBLE_SEAM_DEFAULT_SPEC_EOA = {
     name: 'Fujian 73x119mm EOA',
     vacuum: { op: 'gt', value: -10, label: '>-10 kPa' },

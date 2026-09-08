@@ -5,8 +5,7 @@
   const UNSAVED_PREFIX = STORAGE_PREFIX + 'unsaved:';
   const SYNC_QUEUE_KEY = STORAGE_PREFIX + 'sync-queue';
 
-  // URL of the standalone handover-backend service (separate container/deploy).
-  // Override before this script loads with: window.HANDOVER_BACKEND_URL = '...'
+
   const BACKEND_URL = window.HANDOVER_BACKEND_URL || 'https://handover-backend.onrender.com';
 
   const pageConfigs = [
@@ -376,7 +375,7 @@
       try {
         const state = JSON.parse(raw);
         await syncToBackend(recordId, state);
-      } catch { /* will retry next time */ }
+      } catch {  }
     }
   }
 

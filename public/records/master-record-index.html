@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -16,14 +15,11 @@
         font-size:13px; line-height:1.4; margin:0; }
   *{ box-sizing:border-box; }
 
-  /* Edit Template column: only shown to users with manageTemplates permission --
-     toggled by the .no-manage-templates class set on <body> during init(). */
+  
   body.no-manage-templates .col-edit-template{ display:none; }
 
-  /* ---- Document control header, mirroring the paper REC 01 title block ---- */
-  /* Typography for .doc-code / h1 / .doc-rev comes from record-theme.css so this
-     index reads at the same weight as the records it lists -- only the code chip's
-     background is local. */
+  
+  
   .dc-top{ background:var(--palette-dark); color:var(--palette-dark-text); padding:14px 18px; }
   .doc-line .doc-code{ background:rgba(255,255,255,.12); padding:2px 8px; border-radius:3px; }
   .dc-meta{ display:flex; gap:22px; flex-wrap:wrap; margin-top:10px; font-size:11px;
@@ -105,7 +101,7 @@
   .back-link:hover{ text-decoration:underline; }
   .save-state{ font-size:11.5px; color:var(--palette-ok); font-weight:600; }
 
-  /* ---- document header editor ---- */
+  
   .dh-modal{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:600;
              align-items:center; justify-content:center; }
   .dh-modal.open{ display:flex !important; }
@@ -137,7 +133,7 @@
   .dh-modal .btn-ghost:hover{ background:#dfe2e4; }
   @media (max-width:768px){ .dh-grid{ grid-template-columns:1fr; } }
 
-  /* ---- add-record flow ---- */
+  
   .nr-q{ background:var(--palette-head-bg); border:1px solid var(--palette-border);
          border-radius:4px; padding:14px; margin-bottom:14px; }
   .nr-q p{ margin:0 0 10px; font-size:13.5px; font-weight:600; color:var(--palette-heading); }
@@ -242,12 +238,7 @@
   <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
 </div>
 
-<!-- Add a record to the register. A record added here is a REGISTER entry only: it lists
-     the record on REC 01 with its paper revision and date of issue. It does not create an
-     online fill-in page (those are built as files under public/records), so a new row shows
-     as "not digitised" until one exists. Straight after it is added the SOP question is
-     asked, because "which SOP does this record belong to" is the answer that is available
-     at that moment and almost never chased afterwards. -->
+
 <div id="nrModal" class="dh-modal" style="display:none;">
   <div class="dh-modal-inner">
     <h2 id="nrTitle">Add a new record</h2>
@@ -288,8 +279,7 @@
   </div>
 </div>
 
-<!-- Controlled-copy title block editor. The block prints on every page of a record, so
-     it is edited here in one place rather than inside each record. -->
+
 <div id="dhModal" class="dh-modal" style="display:none;">
   <div class="dh-modal-inner">
     <h2>Document header — printed title block</h2>
@@ -358,42 +348,21 @@
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/sop-index-data.js?v=1"></script>
-<script>
-(function () {
+<script>(function () {
   const DATA = window.MasterIndexData;
   const ROWS = DATA.rows;
 
-  // Distribution control (the two Y/N columns) is captured here rather than in each
-  // record, because retrieving and distributing controlled copies is a document-control
-  // action performed against the index itself. One shared blob keeps it to one write.
   const CONTROL_KEY = 'master_index_control';
 
-  // The colour palette a record's page is themed with. Stored one key per file name
-  // (not per row/recordKey) because that's what public/lib/palette-map.js matches
-  // against at render time -- see the comment at the top of that file. '' means
-  // "explicitly set to Default"; a row with no key at all falls back to whatever
-  // palette-map.js's static list already assigns it (see CATEGORIES below).
-  // A record's document number as issued on paper (r.docNo, from master-index-data.js)
-  // occasionally needs correcting or renumbering online -- e.g. a REC gets folded under
-  // a new section. Stored per recordKey rather than edited in the spreadsheet import, so
-  // the override survives the next sync from tools/build-master-index-data.py.
   const RECORD_NUMBER_PREFIX = 'record_number_override:';
 
   const CATEGORY_PREFIX = 'record_category:';
 
-  // Records added to the register from this page (rather than from the issued spreadsheet).
-  // One shared blob: they are read together on every load and there are only ever a handful
-  // between spreadsheet reissues.
   const ADDED_KEY = 'master_index_added_rows';
 
-  // The SOP a record belongs to, keyed by rowId. The reverse half of the link is written to
-  // sop_record_links:<sopKey>, which public/lib/sop-doc.js merges into that SOP's related
-  // documents -- see the storage layout comment at the top of that file.
   const SOP_LINK_PREFIX = 'record_sop_link:';
   const SOP_LINKS_BY_SOP = 'sop_record_links:';
 
-  // Use palette names from Lookups.lists.palettes where available so the
-  // category dropdown stays in sync with the central palette list.
   function labelForPalette(p) {
     if (!p) return 'Default';
     return String(p).replace(/\//g, ' / ').replace(/[-_]/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
@@ -403,9 +372,7 @@
     .map(p => [p, labelForPalette(p)]));
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-  // An added row carries its own id so renumbering it later does not orphan its SOP link or
-  // its Y/N control state (rows from the spreadsheet have neither addedId nor, often, a
-  // recordKey, so they keep falling back to the document number as before).
+
   function rowId(r) { return r.addedId || r.recordKey || ('doc:' + r.docNo); }
   function fmtDate(ms) {
     const d = new Date(ms);
@@ -418,12 +385,12 @@
   const statusFilter = $('statusFilter');
   const noResults = $('noResults');
 
-  let control = {};     // rowId -> { obsoleteRetrieved, distributed, updatedAt, updatedBy }
-  let live = {};        // rowId -> { revision, reason, dateOfIssue, bumped }
-  let categories = {};  // file name (lower-case) -> category override, '' included
-  let recordNumbers = {}; // recordKey -> overridden Document No.
-  let addedRows = [];     // rows added through this page
-  let sopLinks = {};      // rowId -> { sopNo, name, href, recordKey }
+  let control = {};
+  let live = {};
+  let categories = {};
+  let recordNumbers = {};
+  let addedRows = [];
+  let sopLinks = {};
   let canEdit = false;
 
   async function loadControl() {
@@ -439,8 +406,6 @@
     setTimeout(() => { $('saveState').textContent = ''; }, 1800);
   }
 
-  // One round trip for every category override, keyed by file name -- matches how
-  // palette-map.js reads them back on the record's own page.
   async function loadCategories() {
     categories = {};
     try {
@@ -478,9 +443,7 @@
       const parsed = raw ? JSON.parse(raw.value) : [];
       if (Array.isArray(parsed)) arr = parsed;
     } catch (e) { arr = []; }
-    // ROWS is the single list the whole page renders, sorts and counts from, so added rows
-    // are merged into it rather than tracked separately. Drop the previous merge first so a
-    // reload does not duplicate them.
+
     for (let i = ROWS.length - 1; i >= 0; i--) if (ROWS[i].addedId) ROWS.splice(i, 1);
     addedRows = arr;
     arr.forEach(r => ROWS.push(r));
@@ -500,8 +463,6 @@
     } catch (e) { sopLinks = {}; }
   }
 
-  // Writes both halves of the link: the record -> SOP side this page renders, and the
-  // SOP -> record side that shows up in the SOP's related documents table.
   async function saveSopLink(id, rec, sop) {
     const link = {
       sopNo: sop.sopNo,
@@ -527,15 +488,10 @@
     }
   }
 
-  // The docNo shown everywhere on this page: the online override if one has been saved,
-  // otherwise the paper baseline from the spreadsheet import.
   function displayDocNo(r) {
     return (r.recordKey && recordNumbers[r.recordKey]) || r.docNo;
   }
 
-  // Overlay the paper baseline with anything that has been revised inside the app.
-  // A record bumped online is the authority for its own current revision -- the
-  // spreadsheet baseline is only the starting point.
   async function loadLive() {
     let latest = {};
     try { latest = await window.DocumentRevision.latestAll(); } catch (e) { latest = {}; }
@@ -555,9 +511,6 @@
     });
   }
 
-  // The record's current effective category: an override this page has loaded wins,
-  // otherwise fall back to whatever palette-map.js's static list already assigns the
-  // file (so a record nobody has touched via this dropdown still shows its real palette).
   function currentCategory(file) {
     if (Object.prototype.hasOwnProperty.call(categories, file)) return categories[file];
     return (window.PaletteMap && window.PaletteMap.categoryFor(file)) || '';
@@ -581,8 +534,7 @@
 
   function render() {
     let html = '';
-    // Sort by the record's effective document number (override-aware) rather than
-    // its name, so renumbering a record online also re-sorts it in the register.
+
     const sortedRows = ROWS.slice().sort((a, b) =>
       displayDocNo(a).localeCompare(displayDocNo(b), undefined, { numeric: true, sensitivity: 'base' }));
     for (const r of sortedRows) {
@@ -590,11 +542,9 @@
       const l = live[id] || {};
       const c = control[id] || {};
       const online = !!r.href;
-      // Before the live overlay arrives, `live` is empty -- fall back to the issued
-      // baseline rather than rendering an empty revision column.
+
       const rev = l.revision != null ? l.revision : r.revision;
 
-      // A bump inside the record supersedes the spreadsheet's reason and issue date.
       const details = l.bumped ? l.reason : r.details;
       const detailSub = l.bumped
         ? `<span class="sub">Changed by ${esc(l.changedBy || '')}${l.changedByTitle ? ', ' + esc(l.changedByTitle) : ''} &middot; was: ${esc(r.details || '—')}</span>`
@@ -716,16 +666,10 @@
     URL.revokeObjectURL(a.href);
   });
 
-  /* ---- add a record to the register --------------------------------------------
-   * Two steps in one modal: the record's own details, then the SOP question. The
-   * question is not optional-looking on purpose -- it is asked every time, and "No SOP"
-   * is an explicit answer rather than a dialog someone can walk away from. */
   const nrModal = $('nrModal');
   let nrStep = 1;
-  let nrAdded = null;   // the row just added, carried into step 2
+  let nrAdded = null;
 
-  // The Create-New-SOP template row is a page, not a procedure -- never offer it as the
-  // SOP a record belongs to.
   function nrSopRows() {
     return ((window.SopIndexData && window.SopIndexData.rows) || [])
       .filter(r => r.recordKey && r.href && r.recordKey !== 'sop-new-create-new-sop');
@@ -738,8 +682,6 @@
                    : kind === 'ok' ? 'var(--palette-ok)' : 'var(--palette-label)';
   }
 
-  // dd/mm/yyyy is what every other row in this register carries (it is transcribed from
-  // the paper index), so the date input's ISO value is converted rather than stored raw.
   function nrUkDate(iso) {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
     return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
@@ -767,7 +709,7 @@
     } else {
       $('nrTitle').textContent = 'Link this record to an SOP';
       $('nrPrimary').textContent = 'Link SOP';
-      $('nrPrimary').style.display = 'none';   // shown once "Yes" is chosen
+      $('nrPrimary').style.display = 'none';
       $('nrCancel').textContent = 'Close';
       $('nrQName').textContent = (nrAdded ? nrAdded.docNo + ' ' + nrAdded.name : 'this record');
     }
@@ -854,18 +796,11 @@
     run.catch(e => nrSetState(e.message, 'error'));
   });
 
-  /* ---- controlled-copy title block editor ------------------------------------
-   * Only rows with a recordKey can have one: the block is printed by a digitised
-   * record, and recordKey is what both DocHeader and DocumentRevision key off. */
   const dhModal = $('dhModal');
   let dhCurrentKey = null;
 
   function dhRow(key) { return ROWS.find(r => r.recordKey === key); }
 
-  // The date input only accepts YYYY-MM-DD. A stored value already in that shape (every
-  // date saved through this input) passes through; a dd/mm/yyyy value from before this
-  // field was editable is converted so it still shows instead of silently blanking out
-  // (which would otherwise overwrite the real date with nothing on the next save).
   function isoDate(v) {
     if (!v) return '';
     if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
@@ -899,7 +834,7 @@
     dhCurrentKey = key;
     const r = dhRow(key) || {};
     dhSetState('Loading…');
-    // Same resolve the record itself uses, so the preview is what will actually print.
+
     const h = await window.DocHeader.resolve(key, {
       document: r.name || '',
       docNumber: displayDocNo(r) || '',
@@ -926,8 +861,7 @@
     const all = $('dhApplyAll').checked;
     $('dhRecordWrap').style.display = all ? 'none' : '';
     $('dhBumpWrap').style.display = all ? '' : 'none';
-    // Document/doc number are per-record (each record names itself); bulk mode only
-    // makes sense for the document-control roles, which are the same for every row.
+
     ['dhDocument', 'dhDocNumber', 'dhEffectiveDate'].forEach(id => { $(id).disabled = all || !canEdit; });
     if (all) dhSetState(canEdit ? '' : 'Read-only — document control roles may edit this.');
   }
@@ -1027,11 +961,8 @@
     $('hdrRevDate').textContent = DATA.header.revisionDate || '—';
     $('hdrCounts').textContent = ROWS.length + ' (' + ROWS.filter(r => r.href).length + ' online)';
 
-    // Draw the paper baseline first so the register is readable even if shared storage
-    // is slow or unreachable, then overlay the live revision/distribution state.
     render();
-    // A read that never settles must not leave the register blank forever, so the
-    // overlay is bounded -- worst case the page stays on the issued baseline.
+
     const withTimeout = p => Promise.race([
       p, new Promise((_, rej) => setTimeout(() => rej(new Error('storage timeout')), 15000))
     ]);

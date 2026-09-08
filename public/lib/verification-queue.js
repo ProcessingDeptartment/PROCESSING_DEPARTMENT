@@ -1,54 +1,13 @@
-/**
- * Verification queue — what is waiting for THIS role to verify.
- *
- * A record entry is awaiting verification when it has been submitted and carries no
- * verification block. That is the same test both engines already use on their own pages
- * (form-record.js `isSubmitted(s) && !s.verification`); this lib does it across every
- * record at once so a person can see their whole queue in one place.
- *
- * Usage
- *   const q = await VerificationQueue.forCurrentUser();   // [] when not logged in
- *   q.total          -> number awaiting this role
- *   q.records        -> [{ recordKey, name, docNo, href, count, oldest }]
- *   q.canVerify      -> false when this role never verifies anything
- *
- *   VerificationQueue.flagOnLogin();   // call after LoginUI.ensureAuthenticated()
- *
- * Requires (in this order): master-index-data.js, data-store.js, api-backend.js,
- * permission-rules.js, auth.js.
- *
- * === WHAT THIS IS AND ISN'T ===
- * This is a WORK QUEUE, not an access control and not an audit trail. auth.js holds
- * eight in-memory users, one per role, all with the password "test", and
- * permission-rules.js runs with ENFORCE_ROLES = false. So "different users see different
- * flags" today means "different ROLES see different flags" — it cannot tell two people
- * holding the same role apart, and nothing stops someone selecting another role.
- * For a QA verification sign-off that an auditor will scrutinise, real per-person
- * identity is required (Entra ID). Until then, treat this as a prompt, and keep the
- * signed verification record itself as the evidence.
- */
 (function () {
   'use strict';
 
-  /* ----------------------------------------------------------- who verifies what
-   * FIRST PASS — edit freely as the real policy is defined; this is the only place
-   * that needs changing.
-   *
-   * Base set: whoever permission-rules.js says may perform 'verifyRecord'. Narrow a
-   * specific record by adding it below, so (for example) a production role sees the
-   * production records it owns and the QA Manager is not shown all 148.
-   *
-   *   'retorting-control-sheet': ['QA_MANAGER', 'QUALITY_SUPERVISOR'],
-   *
-   * A record not listed here falls back to the base set. */
   var BY_RECORD = {
-    // intentionally empty until the verification policy is confirmed
+
   };
 
   function baseVerifierRoles() {
     var rules = window.PermissionRules && window.PermissionRules.RULES;
-    // Fall back to the quality/management roles if permission-rules.js is absent, rather
-    // than to "everyone" — over-showing a QA queue is worse than showing nothing.
+
     return (rules && rules.verifyRecord) ||
       ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'];
   }
@@ -57,9 +16,6 @@
     return BY_RECORD[recordKey] || baseVerifierRoles();
   }
 
-  /* --------------------------------------------------------------------- helpers */
-
-  // recordKey -> { name, docNo, href } from the Master Index.
   function indexByKey() {
     var out = {};
     ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (row) {
@@ -68,8 +24,6 @@
     return out;
   }
 
-  // Older entries predate the draft/submitted lifecycle and carry no status — those count
-  // as submitted, matching both engines.
   function isAwaiting(entry) {
     if (!entry) return false;
     var submitted = entry.status == null || entry.status === 'submitted';
@@ -80,15 +34,10 @@
     return entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
   }
 
-  /* ------------------------------------------------------------------ the queue */
-
   async function forRole(role) {
     var empty = { total: 0, records: [], canVerify: false, role: role || null };
     if (!role) return empty;
 
-    // Two round trips total, never one per record — see data-store.js on getByPrefix.
-    // (After the per-submission migration these return one key per entry rather than one
-    // per record type; the shape below already handles both.)
     var pair = await Promise.all([
       window.storage.getByPrefix('formrecord:', true),
       window.storage.getByPrefix('monitoring_log:', true)
@@ -101,8 +50,7 @@
     pair.forEach(function (rows, i) {
       var prefix = i === 0 ? 'formrecord:' : 'monitoring_log:';
       Object.keys(rows || {}).forEach(function (key) {
-        // Tolerates both shapes: 'formrecord:<record>' (array) and, after the migration,
-        // 'formrecord:<record>:<id>' (single entry).
+
         var recordKey = key.slice(prefix.length).split(':')[0];
         if (!recordKey) return;
 
@@ -111,7 +59,7 @@
         anyVerifiable = true;
 
         var parsed;
-        try { parsed = JSON.parse(rows[key]); } catch (e) { return; }  // don't die on one bad row
+        try { parsed = JSON.parse(rows[key]); } catch (e) { return; }
         var entries = Array.isArray(parsed) ? parsed : [parsed];
 
         entries.forEach(function (entry) {
@@ -133,7 +81,7 @@
     });
 
     var records = Object.keys(byRecord).map(function (k) { return byRecord[k]; })
-      // Oldest waiting first — that is the one at risk of being missed.
+
       .sort(function (a, b) { return (a.oldest || Infinity) - (b.oldest || Infinity); });
 
     return {
@@ -149,10 +97,6 @@
     return forRole(role);
   }
 
-  /* ------------------------------------------------------------ the login flag
-   * Call after LoginUI.ensureAuthenticated(). Renders a dismissible bar naming the
-   * count and linking to the queue. Silent when there is nothing waiting — a flag
-   * that appears every login stops being read. */
   var flagShown = false;
 
   async function flagOnLogin(opts) {
@@ -160,7 +104,7 @@
     var o = opts || {};
     var q;
     try { q = await forCurrentUser(); }
-    catch (e) { console.error('verification queue failed', e); return null; }   // never break a page
+    catch (e) { console.error('verification queue failed', e); return null; }
 
     if (!q.total) return q;
     flagShown = true;

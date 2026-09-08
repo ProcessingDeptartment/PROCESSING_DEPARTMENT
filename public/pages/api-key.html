@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -73,8 +72,7 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script>
-(function () {
+<script>(function () {
   const $ = (id) => document.getElementById(id);
 
   function setState(msg, cls) {
@@ -83,8 +81,7 @@
     el.className = 'state' + (cls ? ' ' + cls : '');
   }
 
-  // A key is "good" if an authenticated route accepts it. /api/health is deliberately exempt from
-  // auth, so testing against that would pass with no key at all -- use a real route instead.
+
   async function test() {
     try {
       const res = await window.FacilityApi.fetch('/api/storage/prefix/' + encodeURIComponent('__keycheck__'));

@@ -1,9 +1,3 @@
-/*
- * In-app template editor for record forms. Authorized users (manageTemplates)
- * can add, remove, reorder, and rename sections/fields directly in the browser.
- * Overrides are stored at 'record_template:<recordKey>' (shared:true) and
- * replace the inline HTML config at init time. Each save bumps DocumentRevision.
- */
 (function () {
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function uid() { return 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
@@ -70,7 +64,6 @@
     document.head.appendChild(s);
   }
 
-  // ---- storage helpers ----
   async function storeGet(key) {
     try { const r = await window.storage.get(key, true); return r ? r.value : null; } catch (e) { return null; }
   }
@@ -83,8 +76,6 @@
 
   function storageKey(recordKey) { return 'record_template:' + recordKey; }
 
-  // ---- public API ----
-
   async function load(recordKey) {
     const raw = await storeGet(storageKey(recordKey));
     if (!raw) return null;
@@ -95,7 +86,6 @@
     return null;
   }
 
-  // ---- field row HTML ----
   function fieldRowHtml(f, idx, prefix, opts) {
     const isComputed = f.type === 'computed';
     const locked = isComputed ? ' te-locked' : '';
@@ -129,13 +119,10 @@
     return html;
   }
 
-  // ---- editor modal ----
-
   function open(options) {
     injectStyle();
     const { recordKey, engine, currentConfig, inlineConfig, docRevisionStart, onSave } = options;
 
-    // Deep clone working copy
     let working = JSON.parse(JSON.stringify(currentConfig));
 
     const overlay = document.createElement('div');
@@ -212,7 +199,6 @@
         html += `<button type="button" class="te-btn-flat" id="te_addRosterBtn" style="margin-bottom:12px;">+ Add roster</button>`;
       }
 
-      // listColumns picker
       const allKeys = [];
       (w.sections || []).forEach(sec => (sec.fields || []).forEach(f => { if (f.key) allKeys.push(f); }));
       const lc = new Set(w.listColumns || []);
@@ -252,7 +238,6 @@
       </div>`;
     }
 
-    // ---- resolve prefix to array reference ----
     function getArray(prefix) {
       if (prefix === 'roster') return working.roster ? working.roster.columns : null;
       if (prefix === 'entry') return working.entryFields;
@@ -265,17 +250,16 @@
       return null;
     }
 
-    // ---- read current input values back into working model ----
     function sync() {
-      // section titles
+
       overlay.querySelectorAll('[data-sectitle]').forEach(inp => {
         const si = Number(inp.dataset.sectitle);
         if (working.sections && working.sections[si]) working.sections[si].title = inp.value;
       });
-      // roster title
+
       const rt = overlay.querySelector('#te_rosterTitle');
       if (rt && working.roster) working.roster.title = rt.value;
-      // field properties
+
       overlay.querySelectorAll('[data-prop]').forEach(inp => {
         const [prefix, idxStr, prop] = inp.dataset.prop.split(',');
         const arr = getArray(prefix);
@@ -290,7 +274,7 @@
           arr[idx][prop] = inp.value;
         }
       });
-      // listColumns
+
       if (engine === 'form-record') {
         const cols = [];
         overlay.querySelectorAll('[data-listcol]').forEach(cb => {
@@ -301,17 +285,14 @@
     }
 
     function wireEvents() {
-      // Cancel
+
       overlay.querySelector('#te_cancelBtn').addEventListener('click', close);
       overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
-      // Save
       overlay.querySelector('#te_saveBtn').addEventListener('click', doSave);
 
-      // Reset
       overlay.querySelector('#te_resetBtn').addEventListener('click', doReset);
 
-      // Add section (form-record)
       const addSecBtn = overlay.querySelector('#te_addSectionBtn');
       if (addSecBtn) addSecBtn.addEventListener('click', () => {
         sync();
@@ -320,7 +301,6 @@
         rerender();
       });
 
-      // Add roster (form-record)
       const addRostBtn = overlay.querySelector('#te_addRosterBtn');
       if (addRostBtn) addRostBtn.addEventListener('click', () => {
         sync();
@@ -328,7 +308,6 @@
         rerender();
       });
 
-      // Remove roster
       const remRostBtn = overlay.querySelector('#te_removeRosterBtn');
       if (remRostBtn) remRostBtn.addEventListener('click', () => {
         sync();
@@ -336,7 +315,6 @@
         rerender();
       });
 
-      // Move section
       overlay.querySelectorAll('[data-movesec]').forEach(btn => {
         btn.addEventListener('click', () => {
           sync();
@@ -350,7 +328,6 @@
         });
       });
 
-      // Remove section
       overlay.querySelectorAll('[data-remsec]').forEach(btn => {
         btn.addEventListener('click', () => {
           sync();
@@ -359,7 +336,6 @@
         });
       });
 
-      // Move field
       overlay.querySelectorAll('[data-move]').forEach(btn => {
         btn.addEventListener('click', () => {
           sync();
@@ -374,7 +350,6 @@
         });
       });
 
-      // Remove field
       overlay.querySelectorAll('[data-remove]').forEach(btn => {
         btn.addEventListener('click', () => {
           sync();
@@ -386,7 +361,6 @@
         });
       });
 
-      // Add field
       overlay.querySelectorAll('[data-addfield]').forEach(btn => {
         btn.addEventListener('click', () => {
           sync();
@@ -403,7 +377,6 @@
         });
       });
 
-      // Type change shows/hides options textarea -- handled by rerender on change
       overlay.querySelectorAll('select[data-prop$=",type"]').forEach(sel => {
         sel.addEventListener('change', () => { sync(); rerender(); });
       });
@@ -436,7 +409,6 @@
       const changedBy = overlay.querySelector('#te_changedBy').value.trim();
       const changedByTitle = overlay.querySelector('#te_changedByTitle').value.trim();
 
-      // Validate fields have keys and labels
       const allFields = [];
       if (engine === 'form-record') {
         (working.sections || []).forEach(s => (s.fields || []).forEach(f => allFields.push(f)));
@@ -458,12 +430,10 @@
         return;
       }
 
-      // Bump document revision (validates attribution)
       try {
         await window.DocumentRevision.bump(recordKey, { reason, changedBy, changedByTitle }, docRevisionStart || 1);
       } catch (e) { showToast(e.message); return; }
 
-      // Ensure sections have stable IDs
       if (engine === 'form-record') {
         (working.sections || []).forEach(s => { if (!s.id) s.id = uid(); });
       }

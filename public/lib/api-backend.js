@@ -1,28 +1,11 @@
-/*
- * Real backend for window.storage (see BACKEND_INTEGRATION.md).
- *
- * Talks to the Express API in src/index.js, which persists to Postgres (Neon) via Prisma.
- * Load this AFTER data-store.js on any page that should use the shared backend instead
- * of localStorage. Never throws -- failures are swallowed and logged, per the contract.
- *
- * Also exposes window.FacilityApi, the one place every API call goes through, so the access key
- * and the "not authorised" handling live in a single spot rather than at each call site (the
- * job-number pickers, autofill lookups and job-status all call the API directly too).
- */
 (function () {
   const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
 
-  // Tell data-store to hold whenReady() until the health check below resolves, so pages that read
-  // on load don't race it and mistake an empty localStorage for an empty database.
+
   if (window.storage && window.storage.expectBackend) window.storage.expectBackend();
   const KEY_STORE = 'facility_api_key';
 
-  /* Not every device gives us localStorage -- private windows, locked-down browsers and a full
-   * quota all block it. Degrade localStorage -> sessionStorage -> memory rather than break.
-   * `durable` is the part that matters: it says whether what we store survives a page reload.
-   * The access key can live in memory (worst case it's re-entered each session), but the write
-   * queue CANNOT -- telling someone their record is "waiting to sync" when a refresh would
-   * evaporate it is worse than refusing the save outright. See enqueue(). */
+
   const memStore = {};
   function pickStore() {
     for (const name of ['localStorage', 'sessionStorage']) {
@@ -31,7 +14,7 @@
         s.setItem('__probe__', '1');
         s.removeItem('__probe__');
         return { s: s, durable: true, name: name };
-      } catch (e) { /* blocked or full -- try the next one */ }
+      } catch (e) {  }
     }
     return {
       s: {
@@ -46,7 +29,7 @@
   const STORE = pickStore();
   if (!STORE.durable) console.warn('[api-backend] no persistent storage on this device — offline saves cannot be queued');
 
-  // The access key is per-device, entered once (see pages/api-key.html), never in the repo.
+
   function getKey() {
     try { return STORE.s.getItem(KEY_STORE) || ''; } catch (e) { return ''; }
   }
@@ -65,11 +48,7 @@
     return h;
   }
 
-  // A 401 means this device has no key (or the wrong one) -- every read comes back empty and every
-  // write fails, which otherwise looks exactly like "the database is empty". Say so, once, plainly.
-  // Also recorded as a flag: a banner tells a person, but a tool that REPORTS on the data (the
-  // traceability backfill) has to be able to tell "read nothing" from "was not allowed to read",
-  // and must refuse to draw a conclusion in the second case.
+
   let authFailed = false;
   let bannerShown = false;
   function showAuthBanner() {
@@ -96,23 +75,7 @@
   window.FacilityApi = { base: () => API_BASE, getKey, setKey, clearKey, headers, fetch: apiFetch,
     authFailed: () => authFailed };
 
-  /* ---- write-ahead queue ----------------------------------------------------------------------
-   * Factory wifi drops. Before this, a write that failed fell back to localStorage and reported
-   * "Draft saved" -- the record looked captured but was stranded on one tablet, which is exactly
-   * how a pile of orphaned local keys accumulates. Now a failed write goes into a durable outbox
-   * and replays when the connection returns.
-   *
-   * COLLAPSED BY KEY, LAST WRITE WINS. Both engines persist the WHOLE submissions array for a
-   * record on every save, so an older queued write for the same key is not a missing change -- it
-   * is a strictly older copy of the same array. Keeping only the newest is both correct and what
-   * stops the queue growing without bound over a long shift.
-   *
-   * READS OVERLAY THE QUEUE. Otherwise you save while offline, the list re-reads from the API, and
-   * your own entry vanishes until it syncs. Since a queued value is the complete current state of
-   * that key, serving it back is exactly right.
-   *
-   * This is an outbox, not an offline cache: records saved on another device while this one is
-   * offline are still not readable until the connection returns. */
+
   const QUEUE_STORE = 'facility_api_queue';
   let draining = false;
 
@@ -126,9 +89,7 @@
   }
   function queueCount() { return Object.keys(loadQueue()).length; }
 
-  // Returns false when the write could not be made durable -- the caller must then report a real
-  // failure rather than a false "saved". On a device with no persistent storage that is every
-  // offline write, which is the honest answer: we cannot promise to deliver it later.
+
   function enqueue(op, key, value) {
     if (!STORE.durable) {
       showNoStorageBanner();
@@ -172,8 +133,7 @@
       + ' saved on this device and waiting to sync. Leave this page open until it clears.';
   }
 
-  // Replays the outbox oldest-first. Stops at the first failure so a still-down API doesn't burn
-  // through every entry, and so ordering is preserved.
+
   async function drain() {
     if (draining) return;
     draining = true;
@@ -195,7 +155,7 @@
         } catch (e) { ok = false; }
         if (!ok) break;
         invalidate(key);
-        // Re-read: a newer save for this key may have landed while the request was in flight.
+
         const latest = loadQueue();
         if (latest[key] && latest[key].ts === item.ts) { delete latest[key]; saveQueue(latest); }
       }
@@ -211,26 +171,10 @@
     document.addEventListener('DOMContentLoaded', updateQueueBadge);
   }
 
-  /* ---- read coalescing ------------------------------------------------------------------------
-   * Page load was making the same request over and over, in series. Opening one SOP page fired
-   * eight calls back-to-back, five of them the identical `document_revision:<doc>` key, for about
-   * 2.9s of round trips against a warm API -- the header block, the revision footer and the
-   * sign-off block each fetch the revision independently, and none of them knows about the others.
-   *
-   * Rather than thread a shared read through every caller (they live across doc-header.js,
-   * sop-doc.js, signoff-block.js and the record engines), collapse it here:
-   *
-   *   - IN FLIGHT: concurrent reads of one key share a single request.
-   *   - JUST FETCHED: a read repeated within TTL_MS reuses the answer instead of re-asking.
-   *
-   * TTL is deliberately short. It exists to fold together the burst a single page load produces,
-   * not to cache facility data -- a record saved on another tablet must still show up promptly.
-   * Any write from THIS page drops the key immediately (see apiSet/apiRemove), so a save followed
-   * by a re-read never serves the pre-save value. The queue overlay below still runs first, so a
-   * pending offline write continues to win over both the cache and the API. */
+
   const TTL_MS = 2000;
-  const inFlight = new Map();   // key -> Promise, cleared when the request settles
-  const recent = new Map();     // key -> { at, value }
+  const inFlight = new Map();
+  const recent = new Map();
 
   function invalidate(key) {
     recent.delete(key);
@@ -238,7 +182,7 @@
   }
 
   async function apiGet(key) {
-    // A queued write is the newest state of this key -- serve it rather than the API's older copy.
+
     const q = loadQueue();
     if (q[key]) return q[key].op === 'remove' ? null : { value: q[key].value };
 
@@ -269,11 +213,9 @@
     }
   }
 
-  // Returns true once the write is durable -- either accepted by the API, or safely in the outbox.
-  // Only a queue that can't even be persisted counts as a real failure the caller must surface.
+
   async function apiSet(key, value) {
-    // Drop any coalesced read of this key up front, so nothing can serve the pre-save value --
-    // including a request already in flight, which would land after this write.
+
     invalidate(key);
     let res = null;
     try {
@@ -286,7 +228,7 @@
       console.warn('storage set failed, queueing (api)', e);
     }
     if (res && res.ok) {
-      // Opportunistic: the connection is clearly up, so flush anything waiting behind this.
+
       if (queueCount()) drain();
       return true;
     }
@@ -318,7 +260,7 @@
     } catch (e) {
       console.error('storage getByPrefix failed (api)', e);
     }
-    // Overlay pending writes so a record saved while offline still appears in its own list.
+
     const q = loadQueue();
     Object.keys(q).forEach(function (k) {
       if (k.indexOf(prefix) !== 0) return;
@@ -328,13 +270,7 @@
     return out;
   }
 
-  /* Register unconditionally -- including when the API is unreachable.
-   *
-   * This used to fall back to localStorage on a failed health check, so an outage quietly turned
-   * every save into a device-local write that reported success and was then stranded there. With
-   * the outbox above, staying registered is the safer behaviour: writes queue durably, the badge
-   * says so, and they replay on reconnect. The health check now only decides whether to attempt an
-   * immediate drain, not whether the backend is used at all. */
+
   window.storage.useBackend({
     name: 'api',
     get: apiGet,

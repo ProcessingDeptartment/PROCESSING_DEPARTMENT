@@ -1,50 +1,3 @@
-/*
- * Single source of truth for sign-off / verification UI and logic, used by bespoke record
- * pages directly (mountVerification) and by form-record.js / monitoring-log.js (which own
- * their own panel chrome -- notice banners, section headings -- but call the exported
- * field/logic helpers below instead of hand-rolling the Verified by/Title/Date/Signature
- * inputs, storage, validation and history formatting). Storage convention is
- * verification_log:<recordKey>, same shared-storage key across all three callers.
- *
- * Usage:
- *   SignOffBlock.completedByHtml({ byId, titleId, dateId, signatureId, byLabel })
- *     -> markup for the on-screen "Completed by / Title / Date / Signature" row (grid-4).
- *      Caller keeps wiring byId/dateId into its own state exactly as before; it only
- *      needs to also read/write titleId/signatureId alongside them.
- *
- *   SignOffBlock.printRow({ label, by, title, date, signature })
- *     -> one <tr> of a print-sheet sign-off table, consistent label set for both the
- *        Completed-by and Verified-by rows. Values are already-escaped or plain strings
- *        (this module HTML-escapes them).
- *
- *   SignOffBlock.mountVerification({
- *     recordKey,            // storage key suffix, same value the page's own record uses
- *     mount,                // selector or element for the whole Verification panel
- *     getPending,           // () => [{id, label}] entries awaiting verification right now
- *     onLogged              // (record, pickedIds) => void, called after a verification is saved
- *   })
- *     -> renders the full interactive panel (entries-to-verify list, Verified by/Title/
- *        Date/Signature inputs, Log verification button, verification history) and
- *        returns { refresh() } so the caller can re-render the pending list after its own
- *        state changes (e.g. a new entry gets submitted).
- *
- *   Lower-level helpers for callers that own their own panel markup (form-record.js,
- *   monitoring-log.js):
- *     verifyIds(idPrefix)              -> { by, title, date, signature } element ids
- *     verifyFieldsHtml({ idPrefix, gridClass, fieldClass })
- *                                       -> the 4 label/input elements only, no panel chrome
- *     printOnlyVerifyFieldsHtml({ gridClass })
- *                                       -> print-only ruled-line variant (Verified by/Title/
- *                                          Date/Signature) for pages where verification is a
- *                                          wet-ink signature against the printed copy, not a
- *                                          capturable on-screen field.
- *     readVerifyInputs(idPrefix)       -> { verifiedBy, verifiedSig, verifiedDate, verifiedSignature }
- *     validateVerifyInputs(values)     -> bool, all 4 fields required
- *     clearVerifyInputs(idPrefix)
- *     historyLine(v)                  -> formatted inner-HTML string for one history entry
- *     logVerification({ recordKey, values, picked }) -> appends to storage, returns the record
- *     getVerificationHistory(recordKey) -> stored history array
- */
 (function () {
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -67,19 +20,14 @@
       <td class="sheet-lbl">Signature:</td><td>${esc(opts.signature || '')}</td></tr>`;
   }
 
-  // Shared verification field ids for a given idPrefix, so markup and logic never drift apart.
+
   function verifyIds(idPrefix) {
     return { by: idPrefix + '_by', title: idPrefix + '_title', date: idPrefix + '_date', signature: idPrefix + '_signature' };
   }
 
   const VERIFY_FIELD_LABELS = { by: 'Verified by', title: 'Title', date: 'Date', signature: 'Signature' };
 
-  // Renders the Verified by / Title / Date / Signature inputs so callers (bespoke pages via
-  // mountVerification, or FormRecord/monitoring-log which own their surrounding panel markup)
-  // share one field set. `gridClass`/`fieldClass` let each page family keep its own CSS look.
-  // `fields` narrows which of the four fields to render (default all four, in that order) --
-  // for pages that never captured a separate Title, so the shared source doesn't silently add
-  // a field the page never asked for.
+
   function verifyFieldsHtml(opts) {
     const ids = verifyIds(opts.idPrefix);
     const gridClass = opts.gridClass || 'grid grid-4';
@@ -89,12 +37,7 @@
       ${fields.map(f => `<label class="${fieldClass}">${VERIFY_FIELD_LABELS[f]}<input id="${ids[f]}"${f === 'date' ? ' type="date"' : ''}></label>`).join('\n      ')}
     </div>`;
   }
-  // Print-only ruled-line variant of the Verified by/Title/Date/Signature row,
-  // for pages where verification is done with a wet-ink signature against the
-  // printed copy rather than a capturable on-screen field. Callers add the
-  // `print-only` class themselves so the block stays hidden on screen; this
-  // just keeps the same 4-field label set as verifyFieldsHtml so a field can
-  // never be dropped from one of the two without the other noticing.
+
   function printOnlyVerifyFieldsHtml(opts) {
     const gridClass = (opts && opts.gridClass) || 'grid grid-4';
     return `<div class="${gridClass} print-only" style="margin-top:8px;">
@@ -124,7 +67,7 @@
     return !!(v.verifiedBy && v.verifiedSig && v.verifiedDate && v.verifiedSignature);
   }
 
-  // One line of formatted verification-history text (caller supplies the wrapping element/class).
+
   function historyLine(v) {
     const entryNote = v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : '';
     return `${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} `

@@ -97,11 +97,9 @@
 </div>
 
 <script src="../lib/master-index-data.js"></script>
-<script>
-(function () {
+<script>(function () {
   const STORAGE_PREFIX = 'facility_records:';
 
-  // Map recordKey -> { name, docNo, href } from the Master Index, for nice labels/links.
   const indexByKey = {};
   (window.MasterIndexData && window.MasterIndexData.rows || []).forEach(function (row) {
     if (row.recordKey) {
@@ -118,9 +116,8 @@
     try { return new Date(ts).toLocaleString(); } catch (e) { return '—'; }
   }
 
-  // Scan localStorage directly (device-local view, no async round trip needed).
   function collectRecords() {
-    const records = {}; // recordKey -> { engine, name, docNo, href, entries: [] }
+    const records = {};
 
     for (let i = 0; i < window.localStorage.length; i++) {
       const rawKey = window.localStorage.key(i);
@@ -152,11 +149,6 @@
     return records;
   }
 
-  // Normalise status across form-record (status/verification) and monitoring-log
-  // (status is implicit; entries carry verifiedAt-style fields on some records) --
-  // form-record is the shape with an explicit draft/submitted lifecycle, so that is
-  // what "awaiting verification" is computed from. Monitoring-log entries are always
-  // counted as activity but not split into draft/pending since they don't carry that state.
   function classify(rec) {
     let drafts = 0, pending = 0, verified = 0, other = 0, lastAt = 0;
     rec.entries.forEach(function (e) {
@@ -196,7 +188,6 @@
     document.getElementById('sumVerified').textContent = totalVerified;
     document.getElementById('sumActive').textContent = rows.length;
 
-    // Needs attention: only records with a nonzero pending count, worst first.
     const pendingRows = rows.filter(function (r) { return r.pending > 0; })
       .sort(function (a, b) { return b.pending - a.pending; });
     const pendingWrap = document.getElementById('pendingTableWrap');
@@ -211,7 +202,6 @@
         }).join('') + '</tbody></table>';
     }
 
-    // All records table, sorted by most recent activity.
     const allRows = rows.slice().sort(function (a, b) { return b.lastAt - a.lastAt; });
     function renderAll(filterText) {
       const ft = (filterText || '').toLowerCase();

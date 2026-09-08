@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -28,8 +27,7 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=27"></script>
-<script>
-(function () {
+<script>(function () {
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'salting-and-tumbling',
@@ -38,14 +36,11 @@
     title: 'Salting and Tumbling',
     docRevisionStart: 1,
     stage: 'salting',
-    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
-    // actually been received instead of typing blind. Picking one also fills in what that job
-    // already carries (processingFor), only where this form's own field is still empty.
+
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
         fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' },
-        // Roster "Size range" is narrowed to the sizes this job was actually received as
-        // (form-record.js applies restrict: to roster columns as well as top-level fields).
+
         restrict: { sizeRange: 'sizeRange' } }
     ],
     listColumns: ['date', 'jobNo', 'intakeDate', 'processingFor'],
@@ -58,29 +53,27 @@
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'], matchJobRoute: 'jobNo' }
       ]},
-      // One sign-off covers every batch on the job (see roster below).
+
       { title: 'Sign-off', newPage: true, fields: [
         { key: 'qualityController', label: 'Quality controller', type: 'text' },
         { key: 'processDeviation', label: 'Process deviation', type: 'textarea', wide: true }
       ]}
     ],
-    // A job runs many salting/tumbling batches before sign-off. Each row is one batch with its
-    // own short id, size, times and salting mix.
+
     roster: {
       title: 'Salting batches',
       batchIdColumn: 'batchId',
       columns: [
-        // "<job no>/<n>" -- read-only, set from the job number + row position.
+
         { key: 'batchId', label: 'Batch', type: 'batchseq' },
         Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-        // Auto-populated from the size range via Lookups.lists.saltingStandardTimes
-        // (fill those values in lookups.js). Read-only.
+
         { key: 'standardSaltingTime', label: 'Standard salting time', type: 'derived',
           deriveLookup: { from: 'sizeRange', map: 'saltingStandardTimes' } },
         { key: 'noOfCrates', label: 'No. of crates', type: 'number' },
         { key: 'startTime', label: 'Start time', type: 'time' },
         { key: 'finishTime', label: 'Finish time', type: 'time' },
-        // finishTime - startTime (hh:mm), wrapping past midnight. Read-only.
+
         { key: 'totalTumblingTime', label: 'Total tumbling time', type: 'derived',
           deriveDuration: { from: 'startTime', to: 'finishTime' } },
         { key: 'shuckWeight', label: 'Shuck weight (kg)', type: 'number' },
@@ -98,8 +91,6 @@
 })();
 </script>
 
-<!-- Roster "Size range" is narrowed to the job's received sizes by the shared engine
-     (form-record.js applies restrict: to roster columns, not just top-level fields).
-     Row collapsing is the engine's too. -->
+
 </body>
 </html>

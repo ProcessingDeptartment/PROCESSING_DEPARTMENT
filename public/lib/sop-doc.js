@@ -1,28 +1,3 @@
-/*
- * Shared engine for SOP pages (public/sops/*.html).
- *
- * Unlike a REC, a SOP is a controlled PROCEDURE, not a fill-in form -- there is no
- * signature block or save-state for a completed instance. The HTML page itself is the
- * controlled copy (there is no separate original file to fall back to), so editing it
- * in place -- code, name, body sections, related documents -- IS the document-control
- * action, gated the same way master-record-index.html gates its own edits: only
- * PermissionRules.can('manageSOPs') may edit, and every save requires a reason, who
- * made it, and their title (enforced by document-revision.js, not re-implemented here).
- *
- * Each SOP page is a thin config calling SopDoc.mount({...}) rather than duplicating
- * this markup/JS 55 times -- see monitoring-log.js for the same config-driven pattern
- * applied to the monitoring logs.
- *
- * Storage layout, keyed by recordKey (e.g. 'sop-02-basket-receiving'):
- *   sop_doc:<recordKey>            -- { sopNo, name, sections: { objective, roles, process, review }, relatedDocs: [{code,name}] }
- *   sop_record_links:<recordKey>   -- [{code,name}] written by the Master Record Index when a
- *                                     record is linked to this SOP. Kept in its own key rather
- *                                     than folded into sop_doc so the index never has to write
- *                                     (and so never risks blanking) the SOP's own body/related
- *                                     list, which only this file knows the page defaults for.
- *                                     Merged into relatedDocs at resolve time, de-duped by code.
- *   document_revision:<recordKey>  -- revision history, via window.DocumentRevision (existing engine)
- */
 (function () {
   const KEY = k => 'sop_doc:' + k;
   const LINKS_KEY = k => 'sop_record_links:' + k;
@@ -43,8 +18,6 @@
     await window.storage.set(KEY(recordKey), JSON.stringify(obj), true);
   }
 
-  // Records linked to this SOP from the Master Record Index. Read-only here -- the index
-  // owns this key.
   async function loadRecordLinks(recordKey) {
     try {
       const raw = await window.storage.get(LINKS_KEY(recordKey), true);
@@ -56,8 +29,7 @@
   async function resolve(recordKey, defaults) {
     const stored = await loadOverrides(recordKey);
     const related = (stored.relatedDocs || defaults.relatedDocs || []).slice();
-    // A linked record that an editor has already saved into relatedDocs (the SOP's save
-    // re-collects every reference row, linked ones included) must not appear twice.
+
     const seen = new Set(related.map(d => String(d.code || '').trim().toLowerCase()));
     for (const link of await loadRecordLinks(recordKey)) {
       const code = String(link.code || '').trim();

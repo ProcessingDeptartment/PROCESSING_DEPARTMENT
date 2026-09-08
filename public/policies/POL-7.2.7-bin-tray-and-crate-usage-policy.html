@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -23,8 +22,7 @@
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/policy-doc.js?v=2"></script>
-<script>
-PolicyDoc.mount({
+<script>PolicyDoc.mount({
   "recordKey": "pol-7.2.7-bin-tray-and-crate-usage-policy",
   "polNo": "POL 7.2.7",
   "name": "Bin, Tray and Crate Usage Policy",

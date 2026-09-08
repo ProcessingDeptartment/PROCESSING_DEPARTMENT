@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -62,16 +61,13 @@
   <div class="sr-body">
     <div class="state" id="state">Checking…</div>
 
-    <!-- Coverage: which schemes have a current document registered. This is the view that
-         matters -- an auditor agent can only cite what is registered here. -->
+    
     <div class="panel">
       <h2>Coverage</h2>
       <div id="coverage"></div>
     </div>
 
-    <!-- Register a document. The FILE ITSELF IS NOT UPLOADED -- see the note. The drop zone
-         reads it locally to capture name, size and a SHA-256 fingerprint, so a finding can
-         later be tied to the exact document version it was based on. -->
+    
     <div class="panel">
       <h2>Register a standard</h2>
       <div class="drop" id="drop">
@@ -132,7 +128,7 @@
       </div>
     </div>
 
-    <!-- Everything registered, newest first. -->
+    
     <div class="panel">
       <h2>Registered documents</h2>
       <table>
@@ -147,8 +143,7 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script>
-(function () {
+<script>(function () {
   'use strict';
 
   var KEY_PREFIX = 'standard:';
@@ -165,14 +160,12 @@
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
     });
   };
-  var pending = null;   // the file the user dropped, not yet registered
+  var pending = null;
 
-  /* A stable id per document so re-registering the same file updates rather than duplicates.
-     Scheme + fingerprint is the natural key: the same PDF in the same shelf is the same entry. */
+
   function docId(scheme, hash) { return scheme + '_' + hash.slice(0, 16); }
 
-  /* SHA-256 of the file bytes. This is the point of reading the file at all: it lets a finding
-     say WHICH document it was based on, and catches a silently-replaced file later. */
+
   async function fingerprint(file) {
     var buf = await file.arrayBuffer();
     var digest = await crypto.subtle.digest('SHA-256', buf);
@@ -193,10 +186,9 @@
     s.textContent = text;
   }
 
-  /* ---- reading the register ---------------------------------------------------------------- */
 
-  /* The register as last read, kept in memory so a save can update the view without
-     re-reading. See save() for why re-reading straight after a write is wrong. */
+
+
   var docs = [];
 
   function sortDocs(list) {
@@ -204,13 +196,12 @@
   }
 
   async function loadAll() {
-    var rows = await window.storage.getByPrefix(KEY_PREFIX, true);  // ONE round trip
+    var rows = await window.storage.getByPrefix(KEY_PREFIX, true);
     var out = [];
     Object.keys(rows || {}).forEach(function (k) {
       var d;
-      try { d = JSON.parse(rows[k]); } catch (e) { return; }  // corrupt entry: skip, don't die
-      // Anything under this prefix that isn't a register entry (a stray key, a half-written
-      // record) would otherwise render as a blank row that looks like a real document.
+      try { d = JSON.parse(rows[k]); } catch (e) { return; }
+
       if (!d || !d.id || !d.scheme) return;
       out.push(d);
     });
@@ -259,7 +250,7 @@
     render();
   }
 
-  /* ---- registering ------------------------------------------------------------------------- */
+
 
   async function takeFile(file) {
     if (!file) return;
@@ -267,7 +258,7 @@
     pending = { name: file.name, size: file.size, sha256: await fingerprint(file) };
     el('fileInfo').innerHTML = '<strong>' + esc(pending.name) + '</strong> — ' +
       humanSize(pending.size) + ' · <span class="mono">' + esc(pending.sha256.slice(0, 16)) + '…</span>';
-    // The publisher's filename usually carries the version, so seed the title from it.
+
     if (!el('title').value) el('title').value = pending.name.replace(/\.(pdf|docx?|DOCX?|PDF)$/, '');
     el('save').disabled = false;
   }
@@ -294,18 +285,14 @@
     el('save').disabled = true;
     el('saveMsg').textContent = 'Saving…';
     var ok = await window.storage.set(KEY_PREFIX + doc.id, JSON.stringify(doc), true);
-    // A failed save must say so plainly -- a register that silently lost an entry is worse
-    // than one that never had it, because you would stop checking.
+
     el('save').disabled = false;
     if (ok === false) {
       el('saveMsg').textContent = 'Could not save — nothing was recorded.';
       return;
     }
     el('saveMsg').textContent = 'Registered.';
-    /* Update from what we just wrote rather than re-reading. A read issued immediately after
-       a write can land before the write is visible on the read path, which made a successful
-       save render as "Nothing registered yet." -- worse than an error, because it says
-       "Registered." at the same time. We know exactly what was stored; use it. */
+
     docs = sortDocs(docs.filter(function (d) { return d.id !== doc.id; }).concat([doc]));
     clearForm();
     render();
@@ -319,7 +306,7 @@
     el('save').disabled = true;
   }
 
-  /* ---- wiring ------------------------------------------------------------------------------ */
+
 
   el('drop').addEventListener('click', function () { el('file').click(); });
   el('file').addEventListener('change', function (e) { takeFile(e.target.files[0]); });
@@ -344,12 +331,11 @@
     if (!id) return;
     if (!confirm('Remove this document from the register?\n\nThe file itself is not touched.')) return;
     await window.storage.remove(KEY_PREFIX + id, true);
-    docs = docs.filter(function (d) { return d.id !== id; });   // same reason as save()
+    docs = docs.filter(function (d) { return d.id !== id; });
     render();
   });
 
-  /* Let api-backend.js register first, so a facility-wide view isn't rendered off this
-     device's localStorage and then silently replaced a moment later. */
+
   window.addEventListener('load', async function () {
     try {
       await refresh();

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -27,8 +26,7 @@
 <script src="../lib/batch-validation.js?v=1"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=27"></script>
-<script>
-(function () {
+<script>(function () {
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'traceability-mock-recall-canned-abalone',
@@ -42,8 +40,7 @@
       { label: 'How to fill this in', text: 'Choose the job number first â€” each roster row then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
       { label: 'Records not traced by job number', text: 'Cleaning (REC 7.6.1, 7.6.2), Staff Hygiene (REC 7.6.7), Glass & Plastic (REC 7.7.2) and Utensil Issue (REC 7.7.4) are daily, weekly or per-shift records covering many jobs at once, so they are deliberately NOT filed against a job number and will not appear in the picker. Retrieve them by DATE RANGE for the production dates of this job and record them as Master Index picks.' }
     ],
-    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
-    // actually been received instead of typing blind.
+
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { } }
     ],

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -26,13 +25,11 @@
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=24"></script>
-<script>
-(function () {
+<script>(function () {
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'salt-issuing-register',
-    // Makes this salt batch searchable on its own (batch-trace.html), separate from whichever job
-    // it later gets used on (that cross-link is indexed from the job-side record instead).
+
     batchField: 'batchNumber',
     stage: 'salt issued',
     docCode: 'REC 7.7.7',

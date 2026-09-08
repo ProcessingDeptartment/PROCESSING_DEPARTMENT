@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -292,14 +291,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>
-/* Controlled-copy title block, repeated on every printed page.
- * docCode/recordKey are also what tools/build-master-index-data.py keys this page
- * to in the Master Index. Without them the build falls back to the file name, which
- * silently re-keys the record and orphans its stored revision history.
- * The paper revision is deliberately not stated here -- mountPrintHeader takes it
- * from the record's index row, so the issued index stays the single source. */
-window.RecordDoc = { docCode: 'REC 7.2.12', recordKey: 'double-seam-inspection-report' };
+<script>window.RecordDoc = { docCode: 'REC 7.2.12', recordKey: 'double-seam-inspection-report' };
 document.addEventListener('DOMContentLoaded', function () {
   if (!window.DocHeader) return;
   window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
@@ -317,8 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/traceability.js?v=5"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script>
-(function(){
+<script>(function(){
   const $ = id => document.getElementById(id);
   const STAGES = [
     {key:'before', label:'Before production'},
@@ -344,10 +335,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const RANGE_ROWS = ROWS.filter(r=>r.key!=='tightnessPct');
 
   const DOC_REVISION_KEY = 'double-seam-inspection-report';
-  const DOC_REVISION_START = 11; // paper REC 7.2.12 is currently at Rev 11
+  const DOC_REVISION_START = 11;
 
-  // Defaults live in thresholds.js (DOUBLE_SEAM_DEFAULT_SPEC_EOA/NEO) -- use Specs ->
-  // Edit to enter the real NEO-specific tolerances when known.
   const DEFAULT_SPEC_EOA = Thresholds.DOUBLE_SEAM_DEFAULT_SPEC_EOA;
   const DEFAULT_SPEC_NEO = Thresholds.DOUBLE_SEAM_DEFAULT_SPEC_NEO;
 
@@ -374,8 +363,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let state = newRecord();
   let activeStage = 'before';
-  let specProfiles = {}; // id -> spec (latest published version content)
-  let specIndex = []; // [{id,name}]
+  let specProfiles = {};
+  let specIndex = [];
   let docRevisionNumber = DOC_REVISION_START;
   let specFormEditingId = null;
   let specFormPdfDataUrl = null;
@@ -387,8 +376,6 @@ function toast(msg){
   function safeKey(s){ return String(s).trim().replace(/[\s\/\\'"]+/g,'_'); }
   function num(v){ const n = parseFloat(v); return (v===''||v==null||isNaN(n)) ? null : n; }
 
-  // This page predates the shared record engines and keeps its own state shape, so it hands
-  // Traceability a config of the same shape those engines pass.
   const TRACE_CONFIG = {
     recordKey: 'double-seam-inspection-report',
     title: 'Double Seam Inspection Report',
@@ -397,8 +384,6 @@ function toast(msg){
     stage: 'canning'
   };
 
-  // Same rule as the shared jobsearch field: pick from OPEN jobs rather than typing a number
-  // nothing downstream can resolve. An already-captured job stays selectable once closed.
   async function fillJobNumbers(){
     const sel = $('h_jobNo');
     if(!sel || !window.JobStatus) return;
@@ -411,7 +396,6 @@ function toast(msg){
     sel.value = current;
   }
 
-  // ---------- storage helpers ----------
   async function storeGet(key, shared){
     try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
     catch(e){ return null; }
@@ -421,7 +405,6 @@ function toast(msg){
     catch(e){ console.error('storage set failed', e); return false; }
   }
 
-  // ---------- document revision (record-template level, not per-inspection) ----------
   async function renderDocRevBadge(){
     docRevisionNumber = await DocumentRevision.getCurrent(DOC_REVISION_KEY, DOC_REVISION_START);
     const docRevisionDate = await DocumentRevision.getCurrentDate(DOC_REVISION_KEY);
@@ -439,7 +422,6 @@ function toast(msg){
       </div>`).join('');
   }
 
-  // ---------- spec profiles (versioned via SpecRegistry) ----------
   async function loadSpecProfiles(){
     const idxRaw = await storeGet('spec_profiles_index', true);
     if(idxRaw){
@@ -474,9 +456,6 @@ function toast(msg){
   function currentSpec(){ return specProfiles[state.specProfileId] || DEFAULT_SPEC_EOA; }
   function currentProfileName(){ return (specIndex.find(s=>s.id===state.specProfileId) || {}).name || 'Unknown profile'; }
 
-  // If this record has never been checked against a spec version yet (brand new,
-  // or profile was just switched), adopt whatever is currently published as the
-  // baseline -- there is nothing to "re-validate" against on first contact.
   function ensureSpecVersionBaseline(){
     if(state.specVersionAtSave == null){
       const s = currentSpec();
@@ -484,8 +463,6 @@ function toast(msg){
     }
   }
 
-  // Returns the current published spec if it is newer than what this record was
-  // last validated against, else null.
   function specMismatchInfo(){
     const spec = currentSpec();
     if(!spec || spec.versionNumber == null) return null;
@@ -503,19 +480,8 @@ function toast(msg){
     renderAll();
   }
 
-  // ---------- calculations ----------
-  // Standard double-seam formulae, as used by the seamschool.com seam calculator and by
-  // the historic "Seam concerns 0924 - 1024" workbook (verified against 162 sample sets):
-  //   Overlap        = BH + CH + 1.1*Te - SL
-  //   Overlap %      = Overlap / (SL - 2.2*Te - 1.1*Tb)
-  //   % B.H. butting = (BH - 1.1*Tb) / (SL - 2.2*Te - 1.1*Tb)
-  //   Free space     = ST - 3*Te - 2*Tb
-  // Te = tin-end (cover) plate thickness, Tb = tin-body plate thickness.
-  // The 1.1 factors compensate for plate compression in the seam -- omitting them
-  // understates overlap by ~0.1*Te and % overlap by ~2 percentage points.
   function overlapDenom(SL, Te, Tb){ return SL - (2.2*Te) - (1.1*Tb); }
 
-  // Per-point derived values (% B.H.B. and free space) -- these are calculated, not keyed in.
   const DERIVED_ROWS = ['bhbPct','freespace'];
   function calcPoint(p){
     const SL = num(p.seamLength), ST = num(p.seamThickness), BH = num(p.bodyHook),
@@ -530,8 +496,6 @@ function toast(msg){
     return { bhbPct, freespace };
   }
 
-  // Write the derived values back into state so saved records, exports and printouts
-  // carry the same numbers that are shown on screen.
   function syncDerived(){
     for(const stage of STAGES){
       for(const canKey of CANS){
@@ -544,7 +508,6 @@ function toast(msg){
     }
   }
 
-  // worst-case across the 3 points: min BH, min CH, min Te, min Tb, max SL
   function calcOverlapForCan(can){
     const pts = can.points;
     const bh = pts.map(p=>num(p.bodyHook)).filter(v=>v!==null);
@@ -572,12 +535,11 @@ function toast(msg){
     return val >= min ? 'ok' : 'fail';
   }
 
-  // returns list of issue strings; refreshes the derived (calculated) point values first
   function evaluateRecord(){
     syncDerived();
     const spec = currentSpec();
     const issues = [];
-    // gauges
+
     const g121 = num(state.header.gauge121), g300 = num(state.header.gauge300);
     if(g121!==null && Math.abs(g121 - spec.gauge121Target) > spec.gaugeTolerance)
       issues.push('1.21mm gauge block reading out of tolerance (±'+spec.gaugeTolerance+'mm).');
@@ -618,7 +580,6 @@ function toast(msg){
     return issues;
   }
 
-  // ---------- rendering ----------
   function renderStageTabs(){
     $('stageTabs').innerHTML = STAGES.map(s=>
       `<div class="stage-tab ${s.key===activeStage?'active':''}" data-stage="${s.key}">${s.label}</div>`
@@ -719,7 +680,7 @@ function toast(msg){
   }
 
   function renderIssuesAndCalcOnly(){
-    // re-render just the active stage's calc rows / cell highlighting + issues, without losing focus on other inputs
+
     const active = document.activeElement;
     const activePath = active && active.dataset ? active.dataset.path : null;
     renderStageContent();
@@ -817,7 +778,6 @@ function toast(msg){
     $('recordStatus').textContent = `${submitted ? '✓ Submitted' : 'Draft'} · ${state.id ? 'ID: ' + state.id.slice(-8) : 'Unsaved'}`;
   }
 
-  // ---------- save / recall ----------
   async function saveRecord(finalize){
     if(finalize && !PermissionRules.can('completeRecord')){
       toast('Your current role cannot submit a record as complete.');
@@ -853,7 +813,6 @@ function toast(msg){
     const ok = await storeSet('record:'+state.id, JSON.stringify(state), true);
     if(!ok){ toast('Save failed — please retry.'); return; }
 
-    // update batch index
     let idxRaw = await storeGet('batch_index:'+batchCode, true);
     let idx = [];
     try{ idx = idxRaw ? JSON.parse(idxRaw) : []; }catch(e){ idx = []; }
@@ -864,9 +823,6 @@ function toast(msg){
     });
     await storeSet('batch_index:'+batchCode, JSON.stringify(idx), true);
 
-    // Feed the shared batch traceability index too, so a recall on the job number finds THIS
-    // inspection. The Fujian batch codes above are the can/end supplier's, not the product job --
-    // they stay in this page's own batch_index and are deliberately not the traced key.
     if(window.Traceability){
       await window.Traceability.indexSubmission(TRACE_CONFIG, {
         id: state.id,
@@ -906,9 +862,6 @@ function toast(msg){
     });
   }
 
-  // ---------- PDF generation (separate from Submit) ----------
-  // Page 1 = header (prints natively) + issues + this spec/comments/signoff block, all
-  // on one page. Each stage then gets its own page (before/during/after = 4 pages total).
   function buildSpecSummaryHtml(){
     const spec = currentSpec();
     const pairs = [
@@ -959,7 +912,6 @@ function toast(msg){
     window.print();
   }
 
-  // ---------- spec management (list + structured add/edit form) ----------
   async function renderSpecListing(){
     const el = $('specListing');
     const canManage = PermissionRules.can('manageSpecs');
@@ -1105,7 +1057,6 @@ $('specForm_changedByTitle').value = PermissionRules.ROLE_LABELS[PermissionRules
     await renderDocRevHistory();
   }
 
-  // ---------- wiring ----------
   function mountSignoff(){
     $('signoffCompletedBy').innerHTML = window.SignOffBlock.completedByHtml({
       byId: 'f_completedBy', titleId: 'f_completedSig', dateId: 'f_completedDate', signatureId: 'f_completedBySignature', byLabel: 'Completed by'
@@ -1151,7 +1102,7 @@ bindHeaderInputs();
       renderAll();
     });
     $('quickCalcBtn').addEventListener('click', ()=>{
-      // standalone working tool -- opened in a new tab so an in-progress record is never lost
+
       window.location.href = 'seam-quick-calculator.html';
     });
     $('manageSpecsBtn').addEventListener('click', openSpecManager);

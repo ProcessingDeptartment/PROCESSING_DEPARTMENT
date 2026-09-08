@@ -1,31 +1,3 @@
-/*
- * Shared engine for "periodic monitoring log" online records (temperature, humidity,
- * pH, thermometer verification, water chemistry, etc.) -- the family of paper logs that
- * are all shaped the same way: date/shift rows of readings, an auto-flagged deviation,
- * a corrective-action note, who checked it, and a periodic verify.
- *
- * A page calls MonitoringLog.init(config) once. Everything (entries table, add/edit
- * modal, thresholds modal, verification strip) is generated from that one config object
- * -- see any file in public/records/ for a real config, e.g. REC-7.9.1-chiller-temperature-monitoring.html.
- *
- * Reuses the existing shared libs exactly like the Double Seam Inspection Report does:
- *  - data-store.js     window.storage.get/set(key, shared) -- the localStorage-now /
- *                      real-backend-later shim. Entries live under
- *                      'monitoring_log:<recordKey>' (or '__<suffix>' for a secondary log).
- *  - spec-registry.js  versioned tolerances (SpecRegistry.proposeVersion/getPublished),
- *                      one flat spec object per recordKey (key -> {min,max}), no can/point
- *                      nesting needed for these simple logs.
- *  - document-revision.js  the record TEMPLATE's own revision badge, bumped whenever
- *                      thresholds are edited (reason + name + title required).
- *
- * === SWAP POINT for hardware/AI ingestion ===
- * Every entry carries `source` ('manual' today). A future sensor/PLC feed or AI vision
- * check would call the same saveEntry() path (or POST to whatever REST endpoint
- * data-store.js's storeSet() becomes once the real backend lands) with source:'device'
- * and a deviceId, landing in the exact same entries array and getting the same
- * auto-deviation flagging for free -- nothing about the schema below needs to change.
- * No such endpoint exists yet; this comment marks where it plugs in.
- */
 (function () {
   const NS_ROOT = 'ml';
 
@@ -251,8 +223,7 @@
     #ml-list-print-header-row td{ padding:0; border:none; }
   }`;
 
-  // @page can't be toggled by a class, so the rule is swapped before each print:
-  // the entries log wants landscape, a single-entry sheet wants portrait like the Word form.
+
   function setPageOrientation(orientation) {
     let s = document.getElementById('ml-page-style');
     if (!s) { s = document.createElement('style'); s.id = 'ml-page-style'; document.head.appendChild(s); }
@@ -271,21 +242,13 @@
   async function storeGet(key, shared) {
     try { const r = await window.storage.get(key, shared); return r ? r.value : null; } catch (e) { return null; }
   }
-  /* Returns what the backend actually reported. This used to discard it and return true unless
-   * something threw -- but api-backend.js never throws by contract (it swallows and returns false),
-   * so every failed write reported success and the "Save failed" guard below was dead code. */
+
   async function storeSet(key, value, shared) {
     try { return await window.storage.set(key, value, shared) !== false; }
     catch (e) { console.error('storage set failed', e); return false; }
   }
 
-  /* === SWAP POINT for notifications ===
-   * No notification transport exists yet (no backend, no mail relay). Everything that
-   * would notify someone routes through notify() so wiring it up later is a one-liner:
-   * define window.RecordNotifications.send(payload) -> Promise, and every call site
-   * below starts delivering. Until then payloads are logged and dropped.
-   * payload = { type, recordKey, docCode, title, message, recipients, dueSince, meta }
-   */
+
   function notify(payload) {
     try {
       if (window.RecordNotifications && typeof window.RecordNotifications.send === 'function') {
@@ -299,9 +262,7 @@
   function fieldInputHtml(ns, field, value) {
     const id = `${ns}_f_${field.key}`;
     const v = value == null ? '' : value;
-    // Yes/No is a two-button toggle rather than a dropdown -- one tap on the floor
-    // instead of open-scroll-pick. The real value still lives in a hidden input under
-    // the same id, so every reader (saveForm, computed fields) is unchanged.
+
     if (field.type === 'yesno') {
       return `<span class="ml-yesno" data-yesno-for="${id}" data-good="${field.good === 'No' ? 'No' : 'Yes'}" role="radiogroup">
         <button type="button" role="radio" data-v="" class="${v === '' ? 'on' : ''}" aria-checked="${v === '' ? 'true' : 'false'}" tabindex="${v === '' ? 0 : -1}">None</button>
@@ -312,13 +273,11 @@
     }
     if (field.type === 'select') {
       const opts = ['', ...(field.options || [])];
-      // Keep a stored value that is no longer an option (e.g. an option list
-      // that was since renamed) so old records still show what was captured.
+
       if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
       return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
     }
-    // Read-only fields are still submitted (unlike `disabled`) -- used for the job-info snapshot
-    // pulled from Abalone Receiving and filed on the downstream record.
+
     const ro = field.readOnly ? ' readonly' : '';
     if (field.type === 'textarea') {
       return `<textarea id="${id}" rows="2"${ro}>${esc(v)}</textarea>`;
@@ -332,9 +291,7 @@
     if (field.type === 'date') {
       return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
     }
-    // One field for a date and a clock time that belong together. Stored as the
-    // browser's own "YYYY-MM-DDTHH:MM" -- it sorts and compares as a plain string,
-    // and its first 10 characters are still the date any date filter reads.
+
     if (field.type === 'datetime') {
       return `<input type="datetime-local" id="${id}" value="${esc(v)}">`;
     }
@@ -344,20 +301,13 @@
     if (field.type === 'month') {
       return `<input type="month" id="${id}" value="${esc(v)}">`;
     }
-    // Pick-only list of OPEN job numbers (filled in async by wireJobSearch). A job number has to
-    // already exist on Abalone Receiving to be picked -- free-typing one would create a dangling
-    // reference nothing downstream can resolve, so this is deliberately a select, not a datalist.
-    // The already-captured value is always kept as an option so an existing entry still shows what
-    // it recorded even after that job has been closed.
+
     if (field.type === 'jobsearch') {
       return `<select id="${id}" data-jobsearch="1">` +
         (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
         `</select>`;
     }
-    // Fixed prefix + a fixed number of digits, e.g. AG + 6 -> AG123456. The operator can only
-    // type the digits; the prefix is printed, not editable, so the code cannot come out wrong.
-    // The canonical full value lives in the hidden input under the field's own id, so every
-    // reader (saveForm, computed fields, the table) is unchanged -- same trick as yesno.
+
     if (field.prefix && field.digits) {
       const digits = String(v).startsWith(field.prefix) ? String(v).slice(field.prefix.length) : '';
       return `<span class="ml-prefixed" data-prefix-for="${id}">
@@ -367,32 +317,27 @@
         <input type="hidden" id="${id}" value="${esc(v)}">
       </span>`;
     }
-    // Whole numbers only -- a count, never a decimal or a description.
+
     if (field.type === 'digits') {
       return `<input type="text" inputmode="numeric" pattern="[0-9]*" id="${id}" value="${esc(v)}">`;
     }
-    // Stamped automatically when its section is submitted, never picked. Shown read-only so
-    // the operator can see what was recorded without being able to backdate it.
+
     if (field.type === 'timestamp') {
-      // Read-only, and shown the way a person reads a date. The machine-readable ISO value
-      // stays in the hidden input under the field's own id, so what gets stored, sorted,
-      // filtered and exported is unchanged.
+
       return `<span class="ml-stamp" data-stamp-for="${id}">
         <input type="text" id="${id}__shown" value="${esc(stampText(v))}" disabled
                placeholder="stamped on submit">
         <input type="hidden" id="${id}" value="${esc(v)}">
       </span>`;
     }
-    // A `pattern` field is still a free-text box -- the constraint is checked on save
-    // (see saveForm) rather than blocking keystrokes, so a half-typed code is allowed.
+
     const patternAttrs = field.pattern
       ? ` pattern="${esc(field.pattern)}"${field.patternMessage ? ` title="${esc(field.patternMessage)}"` : ''}`
       : '';
     return `<input type="text" id="${id}" value="${esc(v)}"${patternAttrs}${ro}>`;
   }
 
-  // "2026-08-31T12:00" -> "31/08/2026 12:00". Anything unexpected is passed through as-is
-  // rather than guessed at.
+
   function stampText(v) {
     const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(String(v || ''));
     if (!m) return v || '';
@@ -403,12 +348,7 @@
     return field.label + (field.unit ? ` <span class="hint">(${esc(field.unit)})</span>` : '');
   }
 
-  // Wraps the fields of one `group` (the job-info snapshot from Abalone Receiving) in a
-  // collapsible <details>, turning that group's heading into the summary and keeping the job
-  // number visible in it while collapsed. No-op unless the record declares `jobInfoGroup`.
-  // Live check for a field with `matchJobRoute: '<jobFieldKey>'`: inline warning the moment
-  // "processing for" disagrees with the route the job-number prefix fixes. Submit is also blocked
-  // in saveForm; this makes the conflict visible first. Mirrors form-record.js.
+
   function wireJobRouteCheck(container, ns, entryFields) {
     (entryFields || []).forEach((f) => {
       if (!f.matchJobRoute || !window.Lookups || !window.Lookups.batch) return;
@@ -463,7 +403,7 @@
       }
       node = next;
     }
-    // Keep the job number AND processing-for visible in the collapsed header.
+
     const groupFields = (entryFields || []).filter((f) => f.group === groupName);
     const summaryKeys = groupFields.filter((f) =>
       f.type === 'jobsearch' || /processingfor|processedfor/i.test(f.key)).map((f) => f.key);
@@ -478,12 +418,7 @@
     }
   }
 
-  // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
-  // listening for a normal field change (computed fields) still sees it. Clicking the
-  // active choice again clears it -- there is no other way back to "not answered".
-  // Whole-number cleanup for digit-only fields. A decimal part is DROPPED, not deleted:
-  // stripping the point out of "48.5" would silently store 485, a ten-fold overcount that
-  // still looks like a plausible quantity. Spaces and thousands separators are just noise.
+
   function digitsOnly(value) {
     return String(value == null ? '' : value)
       .replace(/[\s,']/g, '')
@@ -507,8 +442,7 @@
     });
   }
 
-  // Digit-only text boxes: strip anything else as it is typed. `type=number` is deliberately
-  // not used -- it allows "1e5" and decimals, and its spinners are awkward on a phone.
+
   function wireDigits(container) {
     container.querySelectorAll('input[inputmode="numeric"]').forEach(inp => {
       if (inp.closest('.ml-prefixed')) return;
@@ -523,7 +457,7 @@
     container.querySelectorAll('.ml-yesno').forEach(group => {
       const hidden = group.querySelector('input[type=hidden]');
       const buttons = Array.from(group.querySelectorAll('button'));
-      // Ensure ARIA roles and tabindex reflect current value
+
       const current = hidden ? String(hidden.value) : '';
       group.setAttribute('role', 'radiogroup');
       buttons.forEach((btn, i) => {
@@ -566,7 +500,7 @@
     });
   }
 
-  // One lookup against the source record, shared by the live autofill and the pre-save re-check.
+
   async function autofillLookup(rule, value) {
     const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
     const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
@@ -575,10 +509,7 @@
     return await res.json();
   }
 
-  /* Values copied from a source record that is still a DRAFT are provisional -- see the matching
-   * block in form-record.js. Intake weight in particular keeps rising as baskets are weighed, so
-   * anything pulled from an unfinished record is flagged, refreshed on save, and blocked from being
-   * submitted as final until the source is submitted. */
+
   function markProvisional(elm, isProvisional) {
     if (!elm) return;
     if (isProvisional) elm.dataset.provisional = '1';
@@ -639,9 +570,7 @@
     return true;
   }
 
-  // Fills every jobsearch select with the OPEN job numbers. Closed jobs are deliberately absent --
-  // that's what closing a job does. An already-captured value is re-added even if it's now closed,
-  // so opening an old entry still shows the job it was filed against.
+
   function wireJobSearch(container, ns, entryFields, autofillRules) {
     const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
     if (!fields.length || !window.JobStatus) return;
@@ -659,13 +588,7 @@
     }).catch((e) => console.error('job list load failed', e));
   }
 
-  // Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
-  // field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
-  // record's recordKey) whose `matchField` matches, and copies `fill` (target key -> source key)
-  // into this entry's still-empty fields. Never overwrites something already typed in.
-  // Same two rules as form-record.js, kept in step with it: a <select> is never given a value its
-  // own preset list doesn't offer, and `restrict` narrows a dropdown to what the picked job
-  // actually carries (see the comments there for why each fails the way it does).
+
   function setAutofilled(targetEl, value) {
     if (targetEl.tagName === 'SELECT') {
       const match = [...targetEl.options].find((o) => String(o.value).toLowerCase() === String(value).toLowerCase());
@@ -717,7 +640,7 @@
         lastValue = value;
         if (!value) { applyRestrict(container, ns, rule, null); return; }
         try {
-          // Through FacilityApi so the access key is attached (see api-backend.js).
+
           const found = await autofillLookup(rule, value);
           applyRestrict(container, ns, rule, found);
           if (!found) return;
@@ -731,10 +654,7 @@
               filledNow = true;
               targetEl.dispatchEvent(new Event('input', { bubbles: true }));
             }
-            // Flag the field yellow whenever the job's source record is still a draft -- not only
-            // the ones we just filled. The read-only Job info snapshot fields already carry the job's
-            // values and nothing new may be filled, but the block stays provisional until REC 7.1.2
-            // for this job is submitted. A field the operator typed into is left alone.
+
             if (provisional && (filledNow || targetEl.readOnly)) markProvisional(targetEl, true);
             else if (!provisional) markProvisional(targetEl, false);
           });
@@ -743,17 +663,13 @@
           console.error('autofill lookup failed', e);
         }
       };
-      // jobsearch is a <select> now -- listen for both so this works whether the watched field is
-      // a dropdown or an ordinary typed input.
+
       watchEl.addEventListener('input', onPick);
       watchEl.addEventListener('change', onPick);
     });
   }
 
-  /* The paper forms put a Comments column beside every checklist line. A field marked
-   * withComment gets a synthetic sibling field here, so the modal, save, CSV and JSON
-   * paths all handle it as an ordinary field -- only the printed sheet treats it
-   * specially, pulling it into the third column where the paper has it. */
+
   function expandCommentFields(fields) {
     const out = [];
     (fields || []).forEach(f => {
@@ -767,33 +683,28 @@
     return out;
   }
 
-  // ---- one controller per log (primary + optional secondary share this factory) ----
+
   function makeLogController(opts) {
     const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, inline, recordKey, autofill, jobInfoGroup } = opts
-    // Staged entries: one row that is filled in over several separate visits, each visit
-    // submitted and locked on its own. Opt-in -- a record without `entryStages` behaves
-    // exactly as before, which is every other record in the system.
+
     const entryStages = opts.entryStages && opts.entryStages.length ? opts.entryStages : null;
-    // Narrowing search for getting back into a batch: job no., then AG code, then description.
-    // A job can have several batches in the incubator at once, so one level is never enough.
+
     const continueChain = (entryStages && opts.continueChain && opts.continueChain.length)
       ? opts.continueChain : null;
-    // Set while the chain itself is opening an entry, so openForm doesn't wipe the very
-    // selection the operator just made.
+
     let chainDriving = false;
     const chainValue = (entryRow, level) => level.keys
       .map(k => String(entryRow.values[k] == null ? '' : entryRow.values[k]).trim())
       .filter(Boolean).join(' · ');
-    // Stages the operator has unlocked (reason + name given) during THIS open of the form.
-    // Deliberately not persisted: closing the form re-locks everything.
+
     let unlockedStages = new Set();
     let keepUnlocked = false;
-    // Attribution for an unlock, held until the correction is actually saved.
+
     let pendingStageEdits = [];
 
     function stagesOf(entryRow) { return (entryRow && entryRow.stages) || {}; }
     function stageDone(entryRow, key) { return !!stagesOf(entryRow)[key]; }
-    // The stage the operator is here to fill in: the first one not yet submitted.
+
     function activeStageKey(entryRow) {
       if (!entryStages) return null;
       const done = stagesOf(entryRow);
@@ -807,15 +718,9 @@
     let entries = [];
     let editingId = null;
 
-    /* Entries predating the draft/submit lifecycle have no status. They are read as
-     * SUBMITTED: they were saved through a single "Save entry" button with no draft to
-     * come back to, so they are finished records, and reading them as drafts would drop
-     * every one of them out of the verifier's pick list. They lock like any other
-     * submitted entry -- a correction is a new entry, not a silent edit. */
+
     function isSubmitted(entryRow) {
-      // A staged entry is only finished -- and only locked outright -- once every stage has
-      // been submitted. Until then it is still open for the next visit, even though the
-      // stages already done are individually locked.
+
       if (entryStages) return submitFlow && entryStages.every((st) => stageDone(entryRow, st.key));
       return submitFlow && (entryRow.status == null || entryRow.status === 'submitted');
     }
@@ -826,9 +731,7 @@
     }
 
     function checkField(field, value) {
-      // Opt-in: a yes/no that is answered the bad way is a deviation in its own right --
-      // "product not cleared" is exactly what the deviation column is for. Left off by
-      // default so the yes/no fields on every other record keep their current meaning.
+
       if (field.type === 'yesno' && field.flagsDeviation) {
         const v = String(value == null ? '' : value).trim();
         if (!v) return null;
@@ -851,7 +754,7 @@
         if (r) { anyChecked = true; if (r === 'fail') anyFail = true; }
       });
       if (!anyChecked) return null;
-      return !anyFail; // true = in spec
+      return !anyFail;
     }
 
     function statusBadge(inSpec) {
@@ -900,8 +803,7 @@
       }).sort((a, b) => (b.values.date || '').localeCompare(a.values.date || '') || b.createdAt - a.createdAt);
     }
 
-    // Each level offers only the values still reachable given the levels above it, so the
-    // operator narrows job -> AG code -> description until exactly one batch is left.
+
     function openBatches() {
       return entries.filter(e => !isSubmitted(e) && continueChain.every(lv => chainValue(e, lv) !== ''));
     }
@@ -921,7 +823,7 @@
       continueChain.forEach((lv, i) => {
         const sel = el(`${ns}_continue${i}`);
         if (!sel) return;
-        // Options at this level are constrained by everything chosen above it only.
+
         const pool = openBatches().filter(e => continueChain.every((lv2, j) =>
           j >= i || !sels[j] || chainValue(e, lv2) === sels[j]));
         const vals = [];
@@ -945,8 +847,7 @@
         hint.textContent = `${open.length} batch${open.length === 1 ? '' : 'es'} part-way through, ${matches.length} matching. Narrow it down to one, or press "Start a new entry".`;
       }
     }
-    // Called whenever any level changes: rebuild the levels below it, then open the batch if
-    // the search has narrowed to exactly one.
+
     function continueChainChanged() {
       const sels = chainSelections();
       renderContinuePicker();
@@ -974,10 +875,7 @@
         return;
       }
       const cols = entryFields.filter(f => f.showInTable !== false);
-      /* The Submission column (draft/submitted) and the row buttons are the app's own
-       * workflow furniture, not captured data, so they come off the printed controlled
-       * copy. The in-spec Status column stays -- that IS a recorded result. Header and
-       * cell carry the same class so the printed columns stay aligned. */
+
       let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}${submitFlow ? '<th class="no-print">Submission</th>' : ''}<th>Status</th><th class="no-print"></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
         html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
@@ -1031,8 +929,7 @@
       });
     }
 
-    // A stage heading carries its own state: submitted stages show when they were done and
-    // offer an Edit button, which is the only way back into them (and costs a reason + name).
+
     function stageHeadHtml(field, existing, activeKey) {
       const plain = `<div class="ml-grouphead">${esc(field.group)}</div>`;
       if (!entryStages || !field.stage) return plain;
@@ -1055,8 +952,7 @@
       return `<div class="ml-grouphead ml-stagehead"><span>${esc(field.group)}</span>${state}</div>`;
     }
 
-    // Disables every field belonging to a stage that is submitted and not unlocked, and to a
-    // stage whose turn has not come yet -- so the form only ever offers the one visit's work.
+
     function applyStageLocks(container, existing) {
       if (!entryStages) return;
       const activeKey = activeStageKey(existing);
@@ -1071,7 +967,7 @@
         if (grp) grp.querySelectorAll('button').forEach((b) => { b.disabled = !editable; });
         const pre = container.querySelector(`[data-prefix-for="${ns}_f_${f.key}"]`);
         if (pre) pre.querySelectorAll('input').forEach((i) => { i.disabled = !editable; });
-        // A timestamp is never typed into, whatever stage it belongs to.
+
         if (f.type === 'timestamp') {
           const shown = container.querySelector('#' + ns + '_f_' + f.key + '__shown');
           if (shown) shown.disabled = true;
@@ -1082,8 +978,7 @@
       });
     }
 
-    // Editing something already submitted is a deliberate act that has to be attributable --
-    // same reason/name attribution the thresholds editor asks for.
+
     function promptUnlock(stageKey, existing) {
       const st = entryStages.find((x) => x.key === stageKey);
       const reason = window.prompt(`Reason for changing "${st ? st.label : stageKey}" after it was submitted:`);
@@ -1099,9 +994,7 @@
       toast('Section unlocked — the change will be recorded against your name.');
     }
 
-    // `showWhen: { field, equals }` -- a follow-up question that only exists once the answer
-    // above it calls for it. Hidden means not asked: its value is cleared and it is not
-    // required, so an entry can never be blocked by a question it never showed.
+
     function conditionMet(f) {
       if (!f.showWhen) return true;
       const src = el(`${ns}_f_${f.showWhen.field}`);
@@ -1125,12 +1018,10 @@
     }
 
     function openForm(id) {
-      // Any fresh open of the form re-locks everything; only the re-render fired by
-      // promptUnlock itself carries the unlocked stages over.
+
       if (keepUnlocked) keepUnlocked = false; else unlockedStages = new Set();
       editingId = id || null;
-      // Keep the picker honest about what the form is actually showing -- a blank form after
-      // Clear must not still read as the batch that was open a moment ago.
+
       if (continueChain && !chainDriving && !id) {
         continueChain.forEach((lv, i) => { const sel = el(`${ns}_continue${i}`); if (sel) sel.value = ''; });
       }
@@ -1138,16 +1029,13 @@
       const locked = existing ? isSubmitted(existing) : false;
       el(modalIds.title).textContent = !id ? 'New entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
       const container = el(modalIds.fields);
-      // Fields carrying a `group` get a heading when the group changes, so near-identical
-      // start-up and shut-down questions read as distinct steps rather than duplicates.
+
       let lastGroup = null;
       const activeKey = entryStages ? activeStageKey(existing) : null;
       container.innerHTML = entryFields.map(f => {
         let head = '';
         if (f.group && f.group !== lastGroup) { head = stageHeadHtml(f, existing, activeKey); lastGroup = f.group; }
-        // A stage that has not come round yet holds nothing and cannot be typed into, so only
-        // its heading is drawn. On a phone this is the difference between the section you are
-        // actually filling in being on screen and being three scrolls down.
+
         if (entryStages && f.stage && f.stage !== activeKey
             && !stageDone(existing, f.stage) && !unlockedStages.has(f.stage)) return head;
         return head + `
@@ -1160,8 +1048,7 @@
       wireDigits(container);
       wireJobInfoCollapsible(container, ns, entryFields, jobInfoGroup);
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
-      // Restore provisional markers saved with this entry, so a draft reopened later still shows
-      // which values came from an unfinished record and still gets them refreshed on save.
+
       if (existing && Array.isArray(existing.provisionalFields)) {
         existing.provisionalFields.forEach((k) => markProvisional(container.querySelector('#' + ns + '_f_' + k), true));
         renderProvisionalNotice(container, ns);
@@ -1187,34 +1074,27 @@
         if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
         if (submitBtn) submitBtn.style.display = locked ? 'none' : '';
       }
-      // Must come after the submitFlow block above, which resets `disabled` on every input
-      // in the form and would otherwise undo the per-stage locks.
+
       applyStageLocks(container, existing);
       if (!inline) el(modalIds.overlay).style.display = 'flex';
     }
-    // Inline mode has no overlay to hide -- "Cancel" instead resets the always-visible
-    // form back to a blank "Add entry" so it's ready for the next one.
+
     function closeForm() {
       if (inline) { editingId = null; openForm(null); return; }
       el(modalIds.overlay).style.display = 'none';
     }
 
     async function saveForm(finalize) {
-      // Re-pull anything copied from a still-draft source before reading the fields, so a value
-      // picked up hours ago isn't saved stale. Aborts a submit whose source is still a draft.
+
       if (!await refreshProvisional(el(modalIds.fields), ns, autofill, finalize, toast)) return;
 
       const raw = {};
       let missingRequired = null;
       let badPattern = null;
       let routeConflict = null;
-      // On a staged record only the stage being worked on is checked. The later stages are
-      // required too, but not yet -- holding this visit to them would make the record
-      // impossible to fill in at all.
+
       const existingForStage = editingId ? entries.find(e => e.id === editingId) : null;
-      // Correcting an already-submitted section is not the same act as moving the entry on to
-      // its next section: it re-saves the section that was unlocked and leaves the entry's
-      // progress exactly where it was.
+
       const correctingStage = (entryStages && unlockedStages.size) ? Array.from(unlockedStages)[0] : null;
       const savingStage = entryStages ? (correctingStage || activeStageKey(existingForStage)) : null;
       const stageInPlay = (f) => !entryStages || !f.stage
@@ -1222,25 +1102,21 @@
       entryFields.forEach(f => {
         if (f.type === 'computed') return;
         const inp = el(`${ns}_f_${f.key}`);
-        // Stages not yet reached are not rendered at all -- keep whatever is already stored
-        // rather than wiping it to ''.
+
         raw[f.key] = inp ? inp.value
           : (existingForStage && existingForStage.values[f.key] != null ? existingForStage.values[f.key] : '');
         if (!stageInPlay(f)) return;
-        // Not asked -> not answered, and never a reason to block the save.
+
         if (f.showWhen && !conditionMet(f)) { raw[f.key] = ''; return; }
-        // A timestamp is stamped by the system once this save is known to be good, so it is
-        // never the operator's job to fill and never counts as missing.
+
         if (f.type === 'timestamp') return;
         if (f.required && !String(raw[f.key] || '').trim()) missingRequired = f.label;
-        // An empty value is left to the required check above -- only a value that was
-        // actually typed is held to the field's pattern.
+
         if (f.pattern && !badPattern && String(raw[f.key] || '').trim()
             && !new RegExp(f.pattern).test(String(raw[f.key]).trim())) {
           badPattern = f.patternMessage || `"${f.label}" is not in the expected format.`;
         }
-        // `matchJobRoute: '<jobFieldKey>'`: the value must agree with the route the job-number
-        // prefix fixes (3CP/CPR -> canning, 3DP/DPR -> dry). Same check as form-record.js.
+
         if (f.matchJobRoute && window.Lookups && window.Lookups.batch && stageInPlay(f)) {
           const jobVal = raw[f.matchJobRoute]
             || (el(`${ns}_f_${f.matchJobRoute}`) ? el(`${ns}_f_${f.matchJobRoute}`).value : '');
@@ -1249,16 +1125,13 @@
           }
         }
       });
-      // A draft may be incomplete; a submission may not.
+
       if (missingRequired && (finalize || !submitFlow)) { toast(`"${missingRequired}" is required.`); return; }
-      // A wrongly-formatted value is wrong in a draft too, so this one always blocks.
+
       if (badPattern) { toast(badPattern); return; }
-      // A processing route that contradicts the job prefix is an operator error -- block submit
-      // (a draft is still allowed through, like elsewhere).
+
       if (routeConflict && (finalize || !submitFlow)) { toast(routeConflict); return; }
-      // Every check has passed, so this save is definitely happening -- only now is the clock
-      // read. Stamping earlier would record the time of a rejected attempt. Set once and kept:
-      // resubmitting a section as a correction does not move its original time.
+
       if (finalize) {
         entryFields.forEach(f => {
           if (f.type !== 'timestamp' || !stageInPlay(f) || String(raw[f.key] || '').trim()) return;
@@ -1275,9 +1148,7 @@
       const values = computeAll(raw);
       const inSpec = evaluateEntry(values);
 
-      // Submitting on a staged record closes THIS stage, not the whole entry. The entry only
-      // becomes 'submitted' -- and so read-only, and eligible for verification -- once the
-      // last stage is in.
+
       let stageMap = null;
       if (entryStages && finalize && savingStage && !correctingStage) {
         stageMap = Object.assign({}, stagesOf(existingForStage));
@@ -1313,26 +1184,25 @@
           status,
           stages: stageMap || undefined,
           submittedAt: finalize ? Date.now() : undefined,
-          source: 'manual', // future device/AI feeds set 'device' + a deviceId here
+          source: 'manual',
           createdAt: Date.now(),
           updatedAt: Date.now(),
           history: []
         };
         entries.push(savedEntry);
       }
-      // Which values are still provisional has to survive the save: the marker lives in the DOM,
-      // so without this a draft reopened tomorrow would show a stale value that looks typed in.
+
       const provisionalKeys = Array.from(el(modalIds.fields).querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.slice((ns + '_f_').length));
       if (provisionalKeys.length) savedEntry.provisionalFields = provisionalKeys;
       else delete savedEntry.provisionalFields;
       const ok = await persist();
       if (!ok) { toast('Save failed — please retry.'); return; }
-      // Best-effort batch traceability index (only if this record declares a batchField).
+
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedEntry);
       closeForm();
       renderTable();
-      // Submitting an entry adds it to the verifier's pick list, so that has to redraw too.
+
       if (onEntriesChanged) onEntriesChanged();
       if (submitFlow) {
         if (entryStages && finalize && correctingStage) {
@@ -1368,8 +1238,7 @@
       download(new Blob([csv], { type: 'text/csv' }), safeKey(title) + '.csv');
     }
 
-    // Full-fidelity export -- unlike the CSV this keeps hidden columns, edit history
-    // and submission timestamps, so it round-trips into the future backend.
+
     function exportJson() {
       const payload = {
         record: title,
@@ -1381,16 +1250,8 @@
       download(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), safeKey(title) + '.json');
     }
 
-    /* The whole-log list is a native <table> that itself needs to paginate (it can run
-     * to many pages), so the shared repeating-header mechanism (doc-header.js wrapping
-     * the whole document in an outer table) doesn't work here -- a table nested inside
-     * another table's cell loses reliable thead-repeat behaviour in print. Instead the
-     * header is injected as an extra row in THIS table's own thead, so it repeats using
-     * the same native pagination as the column-label row beside it. */
-    // Returns true if it actually injected something. A log with no entries yet never
-    // builds table.ml-table at all (renderTable renders an empty-state div instead), so
-    // there is nothing to inject into -- the caller must fall back to the standard
-    // once-per-document header in that case, not hide it and leave nothing printed.
+
+
     function injectListPrintHeader() {
       const table = tableWrap && tableWrap.querySelector('table.ml-table');
       const thead = table && table.querySelector('thead');
@@ -1400,7 +1261,7 @@
       const tr = document.createElement('tr');
       tr.id = 'ml-list-print-header-row';
       const td = document.createElement('td');
-      td.colSpan = 99; // spans every column regardless of how many this record has
+      td.colSpan = 99;
       td.innerHTML = window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png');
       tr.appendChild(td);
       thead.insertBefore(tr, thead.firstChild);
@@ -1414,9 +1275,7 @@
 
     function printPdf() {
       setPageOrientation('landscape');
-      // Only switch to the injected-into-the-table header (and hide the standard one)
-      // when the injection actually found a table to put it in -- an empty log has no
-      // table.ml-table yet, and hiding the fallback there would print no header at all.
+
       const injected = injectListPrintHeader();
       if (injected) {
         document.body.classList.add('ml-printing-list');
@@ -1432,17 +1291,16 @@
 
     function withPrintTitle(name, fn) {
       const previousTitle = document.title;
-      document.title = name; // browsers use the document title as the PDF filename
+      document.title = name;
       fn();
       document.title = previousTitle;
     }
 
-    // ---- single-entry outputs: one entry = one sheet of the paper record ----
+
     function roleField(role) { return entryFields.find(f => f.role === role) || null; }
 
     function sheetRowFields() {
-      // Everything that is a checklist line on the paper: not the date header, not the
-      // operator signature block, and not a comment companion (that's the third column).
+
       return entryFields.filter(f => !f.role && !f.isComment);
     }
 
@@ -1521,27 +1379,25 @@
       applyVerification: async (ids, record) => {
         const set = new Set(ids);
         entries.forEach(e => { if (set.has(e.id)) e.verification = record; });
-        // A verification that didn't persist must not report success -- this is the QA sign-off
-        // on a compliance record, so a silent failure here is the worst kind.
+
         const ok = await persist();
         renderTable();
         if (!ok) { toast('Verification could not be saved — please retry.'); return false; }
         return true;
       },
-      // Drafts aren't finished work and already-verified entries are done, so neither
-      // makes a verification due.
+
       verifiableCount: () => submitFlow ? entries.filter(e => isSubmitted(e) && !e.verification).length : entries.length };
   }
 
   async function init(config) {
-    // Require authentication before showing the record
+
     if (window.LoginUI) {
       await window.LoginUI.ensureAuthenticated();
     }
 
     injectStyleOnce();
 
-    // Template override: load saved customizations before rendering
+
     try {
       const _teRaw = await (async () => { try { const r = await window.storage.get('record_template:' + config.recordKey, true); return r ? r.value : null; } catch (e) { return null; } })();
       if (_teRaw) {
@@ -1585,8 +1441,7 @@
       currentSpec = published;
     }
 
-    /* Reads the resolved title block rather than resolving the revision a second time,
-     * so the badge and the printed copy can never disagree. See doc-header.js. */
+
     async function renderDocRevBadge() {
       el('ml_docRev').textContent =
         window.DocHeader.badgeText(docRevisionKey, config.docRevisionStart);
@@ -1601,14 +1456,14 @@
     }
     async function renderDocRevHistory() {
       const target = el('ml_docRevHistoryList');
-      if (!target) return; // thresholds modal (its only home) is switched off
+      if (!target) return;
       const hist = await DocumentRevision.history(docRevisionKey);
       if (!hist.length) { target.innerHTML = `<div class="ml-history-item ml-muted">No revisions logged yet (currently Rev ${config.docRevisionStart || 1}).</div>`; return; }
       target.innerHTML = hist.map(h => `
         <div class="ml-history-item"><span>Rev ${h.revisionNumber} · ${new Date(h.changedAt).toLocaleString()} · ${esc(h.changedBy)} (${esc(h.changedByTitle)})<br><span class="ml-muted">${esc(h.reason)}</span></span></div>`).join('');
     }
 
-    // ---------- top-level skeleton ----------
+
     const instructionsHtml = (config.instructions || []).length ? `
       <div class="ml-panel no-print ml-instr-panel"><div class="ml-panel-head"><h2>Work instructions</h2>
           <button class="ml-btn ml-btn-flat ml-btn-sm ml-instr-toggle" id="ml_instrToggle" type="button">Show</button></div>
@@ -1621,18 +1476,12 @@
         ${config.relatedLinks.map(l => `<a href="${esc(l.href)}">→ ${esc(l.label)}</a>`).join('<br>')}
       </div></div>` : '';
 
-    /* Per-entry lifecycle: entries save as 'draft' and lock once submitted. On by default
-     * -- every controlled record needs the submit step -- so a log opts OUT with
-     * entryWorkflow:'save-only' rather than opting in. */
+
     const submitFlow = config.entryWorkflow !== 'save-only';
 
-    // A record can opt into showing its entry fields directly on the page --
-    // the form IS the page, matching the paper form -- instead of hiding them
-    // behind a "+ Add entry" button and modal. Same field-rendering code path
-    // (fieldInputHtml, openForm, saveForm); only the container and the trigger differ.
+
     function logBlockHtml(ns, blockTitle, inline) {
-      // Finding the batch you are here for comes BEFORE filling anything in, so this is its
-      // own panel above the entry form rather than a strip inside it.
+
       const chain = config.entryStages && config.continueChain ? config.continueChain : null;
       const continuePanel = chain ? `
       <div class="ml-panel no-print ml-continue-panel">
@@ -1719,12 +1568,9 @@
         </div>
       </div>` : '';
 
-    // Thresholds button removed from all records.
+
     const showThresholds = false;
-    // The "+ Add entry" button is gone from every record: opening a record shows the
-    // entry fields ready to complete. This is a system-wide rule, not per record, so
-    // the old per-record opt-outs (config.topAddEntry, config.inlineEntryForm) are
-    // deliberately ignored rather than read.
+
     const topAddEntry = false;
     const entriesAtBottom = config.entriesPosition === 'bottom';
     const inlineEntryForm = true;
@@ -1773,7 +1619,7 @@
       <div class="ml-sheet" id="ml_printSheet"></div>
     `;
 
-    // ---------- primary + optional secondary log controllers ----------
+
     const primary = makeLogController({
       ns: 'ml_p',
       title: config.title,
@@ -1819,9 +1665,7 @@
     function wireLog(ctrl, ns) {
       const addBtn = el(`${ns}_addEntryBtn`);
       if (addBtn) addBtn.addEventListener('click', () => ctrl.openForm(null));
-      /* "Clear" sits permanently beside Submit now that the form is always open, so a
-       * mis-tap on a factory tablet could wipe a part-filled entry. First tap arms it,
-       * a second within 4 seconds clears. An empty or read-only form clears at once. */
+
       const cancelBtn = el(`${ns}_cancelBtn`);
       const baseLabel = cancelBtn.textContent;
       let armed = false, armTimer = null;
@@ -1878,7 +1722,7 @@
       if (secondary) secondary.openForm(null);
     }
 
-    // ---------- thresholds modal ----------
+
     function buildThresholdsTable() {
       const fields = config.specFields || [];
       el('ml_thresholdsTable').innerHTML = `<thead><tr><th style="text-align:left;">Reading</th><th>Low</th><th>High</th></tr></thead><tbody>` +
@@ -1932,7 +1776,7 @@
       el('ml_thresholdsModal').remove();
     }
 
-    // ---------- edit template (opened via ?editTemplate=1 from the index, not a button here) ----------
+
     if (canManageTemplates && new URLSearchParams(location.search).get('editTemplate') === '1') {
       function doOpen() {
         window.TemplateEditor.open({
@@ -1956,17 +1800,14 @@
       }
     }
 
-    // ---------- verification strip ----------
+
     let refreshVerification = () => {};
     if (showVerification) {
-      // config.verificationNotify = { intervalDays, recipients:[], message }
-      // Opt-in: without it the strip behaves exactly as before.
+
       const notifyCfg = config.verificationNotify || null;
       const operatorField = (config.entryFields || []).find(f => f.role === 'operator') || null;
 
-      // Flags a log that has entries but no (or a stale) verification, shows the banner
-      // and fires one notification per page load. Delivery is a no-op until a transport
-      // is registered -- see notify() at the top of this file.
+
       function checkVerificationDue(hist) {
         if (!notifyCfg) return;
         const notice = el('ml_verifyNotice');
@@ -2009,8 +1850,7 @@
         return primary.verifiableCount() + (secondary ? secondary.verifiableCount() : 0);
       }
 
-      // The verifier signs off named entries, not "the log" in the abstract -- so they
-      // pick exactly which submitted entries this signature covers.
+
       function pendingForVerification() {
         const tag = (ctrl, which) => ctrl.submittedEntries()
           .filter(e => !e.verification)
@@ -2051,8 +1891,7 @@
         const values = window.SignOffBlock.readVerifyInputs('ml_verified');
         if (!window.SignOffBlock.validateVerifyInputs(values)) { toast('Verified by, title, date and signature are all required.'); return; }
 
-        // With the draft/submit flow the signature is attached to the entries the
-        // verifier ticked, so each printed sheet carries its own verifier line.
+
         let picked = [];
         if (submitFlow) {
           picked = [...document.querySelectorAll('.ml-verify-pick:checked')]
@@ -2065,8 +1904,7 @@
         const record = await window.SignOffBlock.logVerification({ recordKey: config.recordKey, values, picked: picked.map(p => p.id) });
 
         if (picked.length) {
-          // applyVerification reports its own failure -- bail rather than following it with a
-          // success toast that contradicts it.
+
           const okP = await primary.applyVerification(picked.filter(p => p.which === 'primary').map(p => p.id), record);
           const okS = secondary
             ? await secondary.applyVerification(picked.filter(p => p.which === 'secondary').map(p => p.id), record)
@@ -2077,17 +1915,14 @@
         window.SignOffBlock.clearVerifyInputs('ml_verified');
         renderVerificationHistory();
       });
-      // Deliberately not called here -- the due check counts entries, so it runs at the
-      // end of boot once the logs have loaded.
+
       refreshVerification = renderVerificationHistory;
     }
 
-    // ---------- boot ----------
-    // Header first: the badge reads the block it resolves.
+
     await mountDocHeader(config);
     await renderDocRevBadge();
-    // Wait for the backend decision before the first read -- otherwise this races
-    // api-backend.js and reads an empty localStorage, so saved work silently does not appear.
+
     if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await loadSpec();
     await primary.load();
@@ -2096,12 +1931,7 @@
     refreshVerification();
   }
 
-  /* Controlled-copy title block on every printed page -- both the whole-log printout and
-   * the single-entry paper replica, which is why it is mounted outside .ml-top/.ml-body
-   * and survives the printing-entry class swap. The paper baseline comes from the Master
-   * Index List via DocHeader; what the record declares is only the fallback for a row the
-   * index doesn't carry. Non-fatal by design -- a record that can't resolve its header
-   * still prints, it just prints without the block. */
+
   async function mountDocHeader(config) {
     if (!window.DocHeader) return;
     try {
@@ -2117,8 +1947,7 @@
     } catch (e) { console.error('title block unavailable', e); }
   }
 
-  /* One delegated handler drives every reveal button on the page: the button owns
-     the id of the element it shows and the noun that goes in its own label. */
+
   if (!window.__revealToggleWired) {
     window.__revealToggleWired = true;
     document.addEventListener('click', function (ev) {

@@ -1,4 +1,3 @@
-// Replace Yes/No <select> elements with three-button radio-like groups (None, Y, N) on page load
 (function(){
   function focusButton(btn) { try { btn.focus(); } catch (e) {} }
 
@@ -12,9 +11,7 @@
     const span = document.createElement('span');
     span.className = 'ml-yesno';
     span.setAttribute('data-yesno-for', id);
-    // Which answer counts as "good" (colored green) varies by question -- e.g. "No
-    // damages?" wants No=green, "Correct?" wants Yes=green. Mark it on the original
-    // select with data-good="No"; defaults to Yes when not specified.
+
     span.setAttribute('data-good', sel.dataset.good === 'No' ? 'No' : 'Yes');
     span.setAttribute('role', 'radiogroup');
 
@@ -24,7 +21,7 @@
       b.dataset.v = v;
       b.textContent = label;
       b.setAttribute('role','radio');
-      // aria-checked reflects whether this matches currentVal
+
       const checked = String(currentVal) === String(v);
       b.setAttribute('aria-checked', checked ? 'true' : 'false');
       b.tabIndex = checked ? 0 : -1;
@@ -131,14 +128,14 @@
     });
   }
 
-  // expose for other scripts to wire dynamically created content
+
   window.wireYesNo = wireYesNo;
 
   function run() {
     document.querySelectorAll('select').forEach(sel => {
       try { createYesNoForSelect(sel); } catch (e) { console.error('yesno-replace failed for select', sel, e); }
     });
-    // wire any inlined groups now
+
     wireYesNo(document);
   }
 

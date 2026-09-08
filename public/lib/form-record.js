@@ -1,33 +1,3 @@
-/*
- * Shared engine for "single-event structured form" online records -- the family of
- * paper forms that are filled once per incident/event/batch rather than accumulating
- * daily table rows (Internal CAR, Disposition Investigation, Training Register,
- * Supplier Questionnaire, Traceability & Mock Recall Checklists, etc.). Sits alongside
- * monitoring-log.js (see public/lib/monitoring-log.js) which covers the other shape --
- * periodic date/shift entry logs.
- *
- * A page calls FormRecord.init(config) once. Config declares one or more field
- * `sections` (grouped fields shown together in the form) and an optional `roster`
- * block (a repeatable sub-table, e.g. a training attendee list). Each save is one
- * whole submission, browsable in a list (not a wide table of columns like
- * monitoring-log, since a submission has far more fields than fit as columns).
- *
- * Reuses the same shared libs as monitoring-log.js:
- *  - data-store.js       window.storage.get/set(key, shared).  Submissions live under
- *                        'formrecord:<recordKey>'.
- *  - document-revision.js  the record TEMPLATE's own revision badge. Unlike
- *                        monitoring-log/double-seam there is no in-app editing flow
- *                        that bumps it (no spec/tolerances here) -- it just displays
- *                        config.docRevisionStart as a read-only badge.
- * Deliberately skips spec-registry.js (no numeric tolerances in this shape) and
- * permission-rules.js (role-gated login is deferred -- see memory).
- *
- * === SWAP POINT for hardware/AI ingestion ===
- * Every submission carries `source` ('manual' today), exactly like monitoring-log.js,
- * so a future automated feed (e.g. an auto-generated QC/NRCS report) can write into
- * the same array with source:'device' without a schema change. No such endpoint
- * exists yet; this comment marks where it plugs in.
- */
 (function () {
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -247,23 +217,19 @@
   async function storeGet(key, shared) {
     try { const r = await window.storage.get(key, shared); return r ? r.value : null; } catch (e) { return null; }
   }
-  /* Returns what the backend actually reported. This used to discard it and return true unless
-   * something threw -- but api-backend.js never throws by contract (it swallows and returns false),
-   * so every failed write reported success and the "Save failed" guard below was dead code. */
+
   async function storeSet(key, value, shared) {
     try { return await window.storage.set(key, value, shared) !== false; }
     catch (e) { console.error('storage set failed', e); return false; }
   }
 
-  // Job/batch number: PREFIX (from Lookups jobPrefixes) + up to 8 digits, stored as one
-  // string ("3CP000123") in a hidden input, same shape hand-rolled pages used before.
+
   function splitJobNo(value) {
     const m = String(value || '').trim().toUpperCase().match(/^([A-Z]{2,3})(\d*)$/);
     return m ? { prefix: m[1], digits: m[2] } : { prefix: '', digits: '' };
   }
 
-  // "HH:MM" difference to->from, wrapping past midnight so a batch that finishes 00:30 after a
-  // 23:00 start reads 01:30, not a negative. Blank unless both ends parse.
+
   function diffHHMM(from, to) {
     const mins = (s) => {
       const m = /^(\d{1,2}):(\d{2})$/.exec(String(s == null ? '' : s).trim());
@@ -276,7 +242,7 @@
     return String(Math.floor(d / 60)).padStart(2, '0') + ':' + String(d % 60).padStart(2, '0');
   }
 
-  // Value from a named Lookups map (e.g. saltingStandardTimes) keyed by another field's value.
+
   function lookupMapValue(mapName, key) {
     try {
       const m = window.Lookups && window.Lookups.lists && window.Lookups.lists[mapName];
@@ -284,7 +250,7 @@
     } catch (e) { return ''; }
   }
 
-  // One roster cell's derived value from the rest of that row.
+
   function computeRowDerived(col, row) {
     if (col.deriveDuration) return diffHHMM(row[col.deriveDuration.from], row[col.deriveDuration.to]);
     if (col.deriveLookup) return lookupMapValue(col.deriveLookup.map, row[col.deriveLookup.from]);
@@ -293,23 +259,15 @@
 
   function fieldInputHtml(id, field, value) {
     const v = value == null ? '' : value;
-      // Read-only fields are still submitted (unlike `disabled`) -- used for the job-info
-      // snapshot pulled from Abalone Receiving, which is filed on the downstream record so a
-      // printed copy and the traceability index carry it without a second lookup.
+
       const ro = field.readOnly ? ' readonly' : '';
-      // Pick-only list of OPEN job numbers (filled in async by wireJobSearch). A job number has to
-      // already exist on Abalone Receiving to be picked -- free-typing one would create a dangling
-      // reference nothing downstream can resolve, so this is deliberately a select, not a datalist.
-      // The already-captured value is always kept as an option so an existing submission still
-      // shows what it recorded even after that job has been closed.
+
       if (field.type === 'jobsearch') {
         return `<select id="${id}" data-jobsearch="1">` +
           (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
           `</select>`;
       }
-      // Read-only, derived from the roster (see sumRosterColumn) -- kept live as rows change and
-      // recalculated authoritatively from the actual roster at save time, not just trusted off
-      // whatever this display last showed.
+
       if (field.type === 'computed') {
         return `<input type="text" id="${id}" value="${esc(v)}" disabled>`;
       }
@@ -332,14 +290,7 @@
             <input type="hidden" id="${id}" value="${esc(v)}">
           </span>`;
       }
-      // Pick an existing record instead of typing a code/name by hand.
-      //
-      // With `source: 'jobtrace'` the options are the ACTUAL submissions filed against the job
-      // number in `jobField` (via Traceability.trace), so a recall links the exact record instance
-      // — value is "<recordKey>::<submissionId>", which resolves back to one submission. Until a
-      // job number is chosen (or if nothing was indexed against it) it falls back to the Master
-      // Index list, where the value is the document number ("REC 7.1.2").
-      // `fillName` / `fillCode` name sibling roster columns to receive the title and REC code.
+
       if (field.type === 'recordpick') {
         const trace = field.source === 'jobtrace';
         return `<select id="${id}" data-recordpick="1"` +
@@ -351,31 +302,23 @@
       }
       if (field.type === 'select') {
         const opts = ['', ...(field.options || [])];
-        // Keep a stored value that is no longer an option (e.g. an option list
-        // that was since renamed) so old records still show what was captured.
+
         if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
         return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
       }
       if (field.type === 'textarea') return `<textarea id="${id}" rows="3"${ro}>${esc(v)}</textarea>`;
       if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
       if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
-      // hh:mm wall-clock picker. Stored as "HH:MM" text -- read/display/print paths treat it as a
-      // plain string, so a value typed on an older copy of the form stays readable.
+
       if (field.type === 'time') return `<input type="time" id="${id}" value="${esc(v)}">`;
-      // Read-only cells whose value is filled in by row wiring, never typed:
-      //   'batchseq' - the per-batch id ("3CP000123/2"), set from job no. + row position
-      //   'derived'  - a duration between two time columns, or a lookup keyed off another column
-      // Both are recomputed authoritatively from the saved rows at submit (see saveForm), so a
-      // stale display can never be what gets filed.
+
       if (field.type === 'batchseq' || field.type === 'derived') {
         return `<input type="text" id="${id}" value="${esc(v)}" readonly tabindex="-1">`;
       }
       return `<input type="text" id="${id}" value="${esc(v)}"${ro}>`;
     }
 
-    // Clicking a Yes/No button writes the hidden input and re-fires 'input' so anything
-    // listening for a normal field change (computed fields) still sees it. None is the way
-    // back to "not answered" once a choice has been made.
+
     function wireYesNo(container) {
       container.querySelectorAll('.ml-yesno').forEach(group => {
         const hidden = group.querySelector('input[type=hidden]');
@@ -422,8 +365,7 @@
       });
     }
 
-    // Master Index fallback list: every REC, code + title, for when there is no job number to
-    // trace against yet.
+
     function masterIndexOptions() {
       return ((window.MasterIndexData && window.MasterIndexData.rows) || [])
         .map(r => ({
@@ -435,9 +377,7 @@
         .map(o => Object.assign(o, { label: o.code + (o.name ? ' — ' + o.name : '') }));
     }
 
-    // The real thing: one option per submission actually filed against this job number, newest
-    // stage order first as the trace returns it. record_key is mapped back to a REC code through
-    // the Master Index so the printed record still shows a document number a reviewer recognises.
+
     async function jobTraceOptions(jobNo) {
       if (!jobNo || !window.Traceability) return [];
       let rows = [];
@@ -460,9 +400,7 @@
       });
     }
 
-    // Fills every recordpick select, then keeps the sibling code/name columns in step with what
-    // was actually picked. Re-run whenever the job number changes -- the option list IS the trace,
-    // so a different job means a different set of real records.
+
     async function wireRecordPick(container, config) {
       const sels = Array.from(container.querySelectorAll('select[data-recordpick]'));
       if (!sels.length) return;
@@ -480,10 +418,9 @@
             opts = traceCache[jobNo];
           }
         }
-        // No job number, or nothing indexed against it yet -> the plain Master Index list.
+
         if (!opts.length) opts = masterIndexOptions();
-        // Whatever was captured before is always kept selectable, even if that submission has
-        // since been re-filed under another job number.
+
         if (current && !opts.some(o => o.value === current)) {
           opts = [{ value: current, code: current, name: '', label: current }].concat(opts);
         }
@@ -511,9 +448,7 @@
       }
     }
 
-    // Prefix select + digits box combine into one hidden value ("3CP000123"). Digits are
-    // scrubbed to numeric-only as typed; validation (when data-validate="true") uses the
-    // same Lookups.batch.isValid format check hand-rolled pages used before migration.
+
     function wireJobNumber(container) {
       container.querySelectorAll('.fr-jobnumber').forEach(group => {
         const hidden = group.querySelector('input[type=hidden]');
@@ -546,9 +481,7 @@
       });
     }
 
-  // Keeps a collapsed section's header showing one or more fields' current values (the job number
-  // and processing-for), so they stay readable while the section is shut. `data-summary-for` is a
-  // comma-separated list of field keys. Re-runs on input/change of any of them.
+
   function wireSectionSummaries(container) {
     container.querySelectorAll('.fr-section-summary[data-summary-for]').forEach((span) => {
       const keys = (span.getAttribute('data-summary-for') || '').split(',').map((k) => k.trim()).filter(Boolean);
@@ -563,10 +496,7 @@
     });
   }
 
-  // Live check for a field that declares `matchJobRoute: '<jobFieldKey>'`: shows an inline
-  // warning the moment "processing for" disagrees with the route fixed by the job-number prefix
-  // (3CP/CPR -> canning, 3DP/DPR -> dry). Submit is also blocked in saveForm; this just makes
-  // the conflict visible before then.
+
   function wireJobRouteCheck(container, config) {
     (allFields(config) || []).forEach((f) => {
       if (!f.matchJobRoute || !window.Lookups || !window.Lookups.batch) return;
@@ -595,9 +525,7 @@
     });
   }
 
-  // Fills every jobsearch select with the OPEN job numbers. Closed jobs are deliberately absent --
-  // that's what closing a job does. An already-captured value is re-added even if it's now closed,
-  // so opening an old submission still shows the job it was filed against.
+
   function wireJobSearch(container, config) {
     const fields = allFields(config).filter((f) => f.type === 'jobsearch');
     if (!fields.length || !window.JobStatus) return;
@@ -615,9 +543,9 @@
     }).catch((e) => console.error('job list load failed', e));
   }
 
-  // One lookup against the source record, shared by the live autofill and the pre-submit re-check.
+
   async function autofillLookup(rule, value) {
-    // Through FacilityApi so the access key is attached (see api-backend.js).
+
     const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
     const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
       : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
@@ -625,17 +553,7 @@
     return await res.json();
   }
 
-  /* Optional per-page config: autofill: [{ watch, source, matchField, fill }]. When the `watch`
-   * field (e.g. a job number) gets a value, looks up the most recent entry in `source` (another
-   * record's recordKey) whose `matchField` matches, and copies `fill` (target key -> source key)
-   * into this form's still-empty fields. Never overwrites something already typed in.
-   *
-   * PROVISIONAL VALUES: a job number is created on Abalone Receiving at the start of a shift and
-   * downstream records legitimately start before it's finished -- but intake weight keeps rising
-   * as baskets are weighed. So anything pulled from a source that is still a DRAFT is marked
-   * provisional: flagged in the form, refreshed on save, and blocked from being submitted as
-   * final (see checkProvisional). Signing a compliance record off against a half-counted weight is
-   * exactly the failure this is here to prevent. */
+
   function markProvisional(el, isProvisional) {
     if (!el) return;
     if (isProvisional) el.dataset.provisional = '1';
@@ -662,11 +580,7 @@
     }
   }
 
-  /* Writes one autofilled value. On a <select> a value the list doesn't offer is NOT forced in:
-   * where two records word the same idea differently, silently inventing an option would put a
-   * word on a compliance record that its own preset list doesn't recognise. The operator picks in
-   * that case. (A field that stays blank on a job it should have filled means the two lists have
-   * drifted apart -- align the wording rather than forcing the value through here.) */
+
   function setAutofilled(targetEl, value) {
     if (targetEl.tagName === 'SELECT') {
       const has = [...targetEl.options].some((o) => String(o.value).toLowerCase() === String(value).toLowerCase());
@@ -679,18 +593,8 @@
     return true;
   }
 
-  /* Optional per-page config: autofill: [{ ..., restrict: { <targetKey>: <sourceRosterColumn> } }].
-   * Narrows a dropdown to the values the picked job actually carries -- size range is the one that
-   * matters: a job received as 100-150g and 150-200g must not offer 400-450g on a downstream form.
-   * The job's roster values come back from /api/lookup as __rosterOptions (see src/index.js).
-   *
-   * Fails OPEN on purpose: no job picked, no roster data, or nothing in common with the preset
-   * list all restore the full list. A picker with nothing in it stops the shift; a slightly wide
-   * picker doesn't. A value already captured is always kept selectable so old entries still read.
-   */
-  // Narrows one <select> to `allowed` (case-insensitive), keeping the placeholder and whatever is
-  // currently selected. Fails OPEN: allowed empty / no overlap restores the full list. The full
-  // list is captured once on the element so repeated calls are reversible.
+
+
   function restrictSelect(sel, allowed) {
     if (!sel || sel.tagName !== 'SELECT') return;
     if (!sel._frAllOptions) {
@@ -702,7 +606,7 @@
     if (Array.isArray(allowed) && allowed.length) {
       const want = new Set(allowed.map((v) => String(v).trim().toLowerCase()));
       const narrowed = all.filter((o) => o.value === '' || want.has(String(o.value).trim().toLowerCase()));
-      // '' is the placeholder, so "nothing matched" is length <= 1.
+
       if (narrowed.filter((o) => o.value !== '').length) keep = narrowed;
     }
     if (current && !keep.some((o) => o.value === current)) keep = keep.concat([{ value: current, text: current }]);
@@ -716,10 +620,7 @@
     sel.value = current;
   }
 
-  /* A restrict target key can be a top-level field OR a roster column -- size range is a roster
-   * column on REC 7.1.3 (one row per salting batch) and a plain field elsewhere. Narrow every
-   * matching select either way. Roster rows are rebuilt on add/remove, so this is re-run from the
-   * roster's draw() with the rule's last lookup result (rule.__lastFound). */
+
   function applyRestrict(container, rule, found) {
     if (!rule.restrict) return;
     Object.entries(rule.restrict).forEach(([targetKey, sourceCol]) => {
@@ -743,9 +644,7 @@
         if (!value) { rule.__lastFound = null; applyRestrict(container, rule, null); return; }
         try {
           const found = await autofillLookup(rule, value);
-          // Restriction is applied either way: clearing the job (or picking one nothing is known
-          // about) must put the full preset list back rather than leave the last job's narrowing.
-          // Stashed so a roster redraw (new rows) can re-narrow without another lookup.
+
           rule.__lastFound = found;
           applyRestrict(container, rule, found);
           if (!found) return;
@@ -759,11 +658,7 @@
               filledNow = true;
               targetEl.dispatchEvent(new Event('input', { bubbles: true }));
             }
-            // Flag the field yellow whenever the job's source record is still a draft -- not only
-            // the ones we just filled. The read-only Job info snapshot fields (jiReceivingDate etc.)
-            // already carry the job's values, and on some pages nothing new is filled at all, but
-            // the whole block is still provisional until REC 7.1.2 for this job is submitted.
-            // A field the operator typed into (not read-only, already has a value) is left alone.
+
             if (provisional && (filledNow || targetEl.readOnly)) markProvisional(targetEl, true);
             else if (!provisional) markProvisional(targetEl, false);
           });
@@ -772,17 +667,13 @@
           console.error('autofill lookup failed', e);
         }
       };
-      // jobsearch is a <select> now -- listen for both so this works whether the watched field is
-      // a dropdown or an ordinary typed input.
+
       watchEl.addEventListener('input', onPick);
       watchEl.addEventListener('change', onPick);
     });
   }
 
-  /* Re-reads every provisional value straight before saving, so a draft picked up at 06:00 doesn't
-   * get saved at 14:00 still carrying the 06:00 intake weight. Returns false to abort a SUBMIT
-   * whose source record is still a draft -- drafts of this record are always allowed through, which
-   * is what lets work start before receiving is finished. */
+
   async function refreshProvisional(container, config, finalize, toast) {
     const stale = container.querySelectorAll('[data-provisional="1"]');
     if (!stale.length) return true;
@@ -825,14 +716,14 @@
   }
 
   async function init(config) {
-    // Require authentication before showing the record
+
     if (window.LoginUI) {
       await window.LoginUI.ensureAuthenticated();
     }
 
     injectStyleOnce();
 
-    // Template override: load saved customizations before rendering
+
     const inlineConfig = {
       sections: JSON.parse(JSON.stringify(config.sections || [])),
       roster: config.roster ? JSON.parse(JSON.stringify(config.roster)) : null,
@@ -865,10 +756,7 @@
     const storageKey = 'formrecord:' + config.recordKey;
     let submissions = [];
     let editingId = null;
-    /* The entry form is always open, so "Clear" sits permanently beside Submit and a
-     * mis-tap on a factory tablet would silently wipe a part-filled entry. It therefore
-     * arms on the first tap and only clears on a second one within 4 seconds. An empty
-     * or read-only form has nothing to lose and skips the confirmation. */
+
     let formLocked = false;
     let clearArmed = false;
     let clearTimer = null;
@@ -898,9 +786,7 @@
     }
     async function persist() { return storeSet(storageKey, JSON.stringify(submissions), true); }
 
-    /* Reads the resolved title block rather than resolving the revision a second time --
-     * it used to pass a baseline date no record sets, so it always said "not set" while
-     * the block beside it printed the real date off the Master Index. */
+
     function renderDocBadge() {
       el('fr_docRev').textContent =
         window.DocHeader.badgeText(config.recordKey, config.docRevisionStart);
@@ -924,8 +810,7 @@
       return f ? f.label : key;
     }
 
-    // On by default -- every controlled record needs a verification step -- so a
-    // record opts OUT with showVerificationStrip:false rather than opting in.
+
     const showVerification = config.showVerificationStrip !== false;
     const verificationHtml = showVerification ? `
         <div class="fr-panel no-print">
@@ -997,11 +882,7 @@
       <div class="fr-toast no-print" id="fr_toast"></div>
     `;
 
-    /* Submissions saved before the draft/submit lifecycle existed carry no `status`.
-     * They are read as SUBMITTED -- the same call monitoring-log.js makes -- because they
-     * were saved through a single "Save" button with no draft to come back to, and the
-     * old code signed each one off as 'submitted'. They lock like any other submitted
-     * record; a correction is a new submission, not a silent edit. */
+
     function isSubmitted(sub) { return !!sub && (sub.status == null || sub.status === 'submitted'); }
 
     function dateOf(values) {
@@ -1033,9 +914,7 @@
         return;
       }
       const cols = listCols.length ? listCols : allFields(config).slice(0, 4).map(f => f.key);
-      /* Status and the open button are screen-only affordances -- a printed controlled
-       * copy should carry the captured values, not the app's draft/submitted workflow
-       * state or a button. Header and cell are both tagged so columns stay aligned. */
+
       let html = `<table class="fr-table"><thead><tr>${cols.map(k => `<th>${esc(labelFor(k))}</th>`).join('')}<th class="no-print">Status</th><th class="no-print"></th></tr></thead><tbody>`;
       list.forEach(sub => {
         html += `<tr>`;
@@ -1071,8 +950,7 @@
       </div>`;
     }
 
-    // RFC4180-ish parse: honours quoted cells, embedded commas/newlines and "" escapes,
-    // and tolerates both CRLF and LF files (Excel "Save as CSV" writes CRLF).
+
     function parseCsvText(text) {
       const rows = [];
       let row = [], cell = '', inQuotes = false;
@@ -1093,10 +971,7 @@
       return rows.filter(r => r.some(v => String(v).trim() !== ''));
     }
 
-    // Maps CSV columns onto roster columns by header text -- matching either the column
-    // label ("Whole weight (kg)") or its key ("wholeWeight"), case- and space-insensitive.
-    // A file with no recognisable header falls back to positional order, so a plain
-    // basket-nr/weight export still imports.
+
     function importRosterCsv(text, rosterContainer) {
       const cells = parseCsvText(text);
       if (!cells.length) { alert('That CSV is empty.'); return; }
@@ -1111,7 +986,7 @@
       const body = hasHeader ? cells.slice(1) : cells;
       const imported = [];
       body.forEach(r => {
-        // Skip a trailing totals line, which the CSV export writes as a labelled row.
+
         if (r.some(v => norm(v) === 'total' || norm(v) === 'totals')) return;
         const row = {};
         let any = false;
@@ -1134,9 +1009,7 @@
       let rows = (existingRows || []).slice();
       if (!rows.length) rows.push({});
 
-      // Sums the roster.totalsRow numeric columns across current on-screen row values, and keeps
-      // any top-level `computed` field with a matching sumRosterColumn in sync as rows change
-      // (e.g. an "Intake weight" field mirroring the roster's wholeWeight total live).
+
       function renderRosterTotals() {
         if (!config.roster.totalsRow) return;
         const totals = {};
@@ -1162,9 +1035,7 @@
         });
       }
 
-      // Live-fills the read-only 'batchseq' / 'derived' cells in every roster row from the rest of
-      // that row (and, for the batch id, the job number on the form). Cheap, and re-run on any
-      // roster input; saveForm recomputes the same values authoritatively before the record is filed.
+
       function renderRosterDerived() {
         const specials = (config.roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived');
         if (!specials.length) return;
@@ -1186,13 +1057,7 @@
         });
       }
 
-      /* ---- collapse a finished row to a one-line summary -----------------
-       * Once the operator moves off a row that has data, it shows as a single
-       * summary line with an "Edit" button, instead of a full strip of inputs -
-       * so a record with 20 batches stays readable. State lives here (not the
-       * DOM, which draw() rebuilds) as a set of collapsed row indices. Inputs
-       * are only hidden, never detached, so _getRows()/save still see them.
-       * Opt out per form with `roster.collapseRows: false`. */
+
       const canCollapse = config.roster.collapseRows !== false && config.roster.columns.length > 2;
       const collapsedRows = new Set();
       const dataCols = config.roster.columns.filter(c => c.type !== 'batchseq');
@@ -1239,12 +1104,11 @@
 
       function draw() {
         container.innerHTML = rows.map((r, i) => rosterRowHtml('fr', i, r)).join('');
-              // Wire Yes/No button groups and job-number widgets inside roster rows
+
               if (typeof wireYesNo === 'function') wireYesNo(container);
               if (typeof wireJobNumber === 'function') wireJobNumber(container);
               if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
-              // Re-narrow any restricted roster column (e.g. Size range) on freshly drawn rows,
-              // using the job lookup already done for the top-level fields.
+
               (config.autofill || []).forEach((rule) =>
                 applyRestrict(el('fr_modalSections'), rule, rule.__lastFound || null));
               renderRosterTotals();
@@ -1254,7 +1118,7 @@
                   const i = Number(btn.dataset.removeRosterRow);
                   rows.splice(i, 1);
                   if (!rows.length) rows.push({});
-                  // Shift collapsed indices down past the removed row.
+
                   const next = new Set();
                   collapsedRows.forEach(x => { if (x < i) next.add(x); else if (x > i) next.add(x - 1); });
                   collapsedRows.clear(); next.forEach(x => collapsedRows.add(x));
@@ -1263,11 +1127,10 @@
               });
               applyCollapse();
             }
-      // Attached once (not inside draw()) since container itself is never replaced.
+
       container.addEventListener('input', renderRosterTotals);
       container.addEventListener('input', renderRosterDerived);
-      // Editing model: at most one row is open at a time. Focusing into any row
-      // collapses every other row that has data; the row you're in stays open.
+
       function collapseAllExcept(openIdx) {
         if (!canCollapse) return;
         collapsedRows.clear();
@@ -1280,18 +1143,18 @@
         if (!rowEl) return;
         collapseAllExcept(Number(rowEl.dataset.rosterRow));
       });
-      // Focus leaving the roster entirely collapses the row that was open too.
+
       container.addEventListener('focusout', (e) => {
         if (!canCollapse) return;
         const rowEl = e.target.closest && e.target.closest('.fr-roster-row');
         if (!rowEl) return;
         const i = Number(rowEl.dataset.rosterRow);
         setTimeout(() => {
-          if (container.contains(document.activeElement)) return;   // moved to another row/field
+          if (container.contains(document.activeElement)) return;
           if (rowHasData(i)) { collapsedRows.add(i); applyCollapse(); }
         }, 0);
       });
-      // "Edit" on a collapsed row reopens it.
+
       container.addEventListener('click', (e) => {
         const btn = e.target.closest && e.target.closest('[data-roster-edit]');
         if (!btn) return;
@@ -1301,17 +1164,17 @@
         const first = el(`fr_roster_${i}_${(dataCols[0] || config.roster.columns[0]).key}`);
         if (first) { try { first.focus(); } catch (err) {} }
       });
-      // The batch id also depends on the job number, which lives outside the roster container.
+
       const jobWatch = el('fr_f_' + (config.batchField || 'jobNo'));
       if (jobWatch) ['input', 'change'].forEach(ev => jobWatch.addEventListener(ev, renderRosterDerived));
       draw();
-      // A reopened draft starts with its already-filled rows collapsed.
+
       if (canCollapse) {
         rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
         applyCollapse();
       }
       container._getRows = () => {
-        // capture current input values before returning
+
         rows = rows.map((_, i) => {
           const row = {};
           config.roster.columns.forEach(c => {
@@ -1322,8 +1185,7 @@
         });
         return rows;
       };
-      // Appends imported rows after syncing on-screen values, dropping the single blank
-      // starter row so an import into a fresh form doesn't leave an empty line at the top.
+
       container._importRows = (newRows) => {
         rows = rows.map((_, i) => {
           const row = {};
@@ -1335,14 +1197,14 @@
         }).filter(r => config.roster.columns.some(c => String(r[c.key] || '').trim() !== ''));
         rows = rows.concat(newRows);
         draw();
-        // Imported / panel-committed rows arrive complete - show them collapsed.
+
         if (canCollapse) {
           rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
           applyCollapse();
         }
       };
       container._addRow = () => {
-        // sync existing inputs into `rows` before appending a blank one
+
         rows = rows.map((_, i) => {
           const row = {};
           config.roster.columns.forEach(c => {
@@ -1352,7 +1214,7 @@
           return row;
         });
         rows.push({});
-        // Starting a new row means the operator is done with the others.
+
         if (canCollapse) rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
         draw();
         const first = el(`fr_roster_${rows.length - 1}_${(dataCols[0] || config.roster.columns[0]).key}`);
@@ -1378,8 +1240,7 @@
           </label>`).join('')}
         </div>`;
         if (sec.collapsible) {
-          // summaryField (a key, or an array of keys) keeps those fields' values — the job number
-          // and processing-for — visible in the header while the section is collapsed.
+
           const sfyd = sec.summaryField
             ? ` data-summary-for="${esc([].concat(sec.summaryField).join(','))}"` : '';
           return `<details class="fr-section-collapsible"${sec.collapsedByDefault ? '' : ' open'}>
@@ -1398,7 +1259,7 @@
         <input type="file" id="fr_csvFile" accept=".csv,text/csv" style="display:none;">
         ${config.roster.totalsRow ? `<div id="fr_rosterTotals" class="fr-roster-totals"></div>` : ''}`;
       }
-      // Show fields from old submissions that no longer exist in the current template
+
       if (existing && existing.values) {
         const currentKeys = new Set(allFields(config).map(f => f.key));
         const removed = Object.entries(existing.values).filter(([k, v]) => !currentKeys.has(k) && v !== '' && v != null);
@@ -1423,14 +1284,13 @@
           reader.readAsText(file);
         });
       }
-      // Wire Yes/No button groups, job-number widgets, and cross-record autofill in the modal
+
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
       if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
       wireSectionSummaries(container);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); wireJobRouteCheck(container, config); }
-      // The recordpick option list IS the trace of the job number, so a change of job means a
-      // different set of real submissions to choose from -- rebuild every picker on the form.
+
       const pickFields = allFields(config).concat((config.roster && config.roster.columns) || []);
       const traceJobField = (pickFields.find(f => f.type === 'recordpick' && f.jobField) || {}).jobField
         || config.batchField;
@@ -1439,14 +1299,12 @@
         ['change', 'input'].forEach(ev =>
           traceJobInput.addEventListener(ev, () => wireRecordPick(container, config)));
       }
-      // Restore provisional markers saved with this submission, so a draft reopened later still
-      // shows which values came from an unfinished record and still gets them refreshed on save.
+
       if (existing && Array.isArray(existing.provisionalFields)) {
         existing.provisionalFields.forEach((k) => markProvisional(container.querySelector('#fr_f_' + k), true));
         renderProvisionalNotice(container);
       }
-      // A submitted record is evidence -- it opens to be read, never to be re-typed. `computed`
-      // fields are always read-only, locked or not -- don't let this blanket pass re-enable them.
+
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked || computedIds.has(i.id); });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
@@ -1455,16 +1313,12 @@
       formLocked = locked;
       disarmClear();
     }
-    // There is no overlay to hide: "Clear"/"Close" resets the always-visible form back
-    // to a blank new submission, ready for the next one.
+
     function closeForm() { editingId = null; openForm(null); }
 
-    /* finalize=false saves a draft, finalize=true submits. A draft is a part-filled shift
-     * that someone comes back to, so required fields are only enforced on submit -- the
-     * same rule monitoring-log.js applies. */
+
     async function saveForm(finalize) {
-      // Before reading the fields: re-pull anything copied from a still-draft source, so a value
-      // picked up hours ago isn't saved stale. Aborts a submit whose source is still a draft.
+
       if (!await refreshProvisional(el('fr_modalSections'), config, finalize, toast)) return;
 
       const values = {};
@@ -1480,9 +1334,7 @@
           invalidJobNumber = f.label;
         }
       });
-      // A field can declare `matchJobRoute: '<jobFieldKey>'` -- its value must agree with the
-      // route fixed by that job number's prefix (3CP/CPR -> canning, 3DP/DPR -> dry). This is
-      // the check on Abalone Receiving, where the job number and "processing for" are first set.
+
       allFields(config).forEach(f => {
         if (!f.matchJobRoute || !window.Lookups || !window.Lookups.batch) return;
         const jobVal = values[f.matchJobRoute];
@@ -1493,7 +1345,7 @@
       if (missingRequired && finalize) { toast(`"${missingRequired}" is required.`); return; }
       if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
       if (routeConflict && finalize) { toast(routeConflict); return; }
-      // Validate batch number format if this record has a batchField
+
       if (config.batchField && window.BatchValidation) {
         const batchValue = values[config.batchField];
         if (batchValue && !window.BatchValidation.isValid(batchValue)) {
@@ -1503,8 +1355,7 @@
       }
       const rosterRows = hasRoster ? el('fr_rosterRows')._getRows() : undefined;
 
-      // Authoritative recompute from the actual roster rows being saved -- "finalised on
-      // submission" means this, not whatever the live display last happened to show.
+
       if (rosterRows) {
         allFields(config).forEach((f) => {
           if (f.type !== 'computed' || !f.sumRosterColumn) return;
@@ -1514,8 +1365,7 @@
           }, 0);
           values[f.key] = total.toFixed(2);
         });
-        // Stamp each row's read-only cells from the row's own data, not the live display:
-        // the per-batch id ("<job>/<n>") and any derived duration/lookup column.
+
         const rosterCols = (config.roster && config.roster.columns) || [];
         const jobNo = String(values[config.batchField] || '').trim();
         rosterRows.forEach((r, i) => {
@@ -1544,7 +1394,7 @@
           id: uid('sub'),
           values,
           status,
-          source: 'manual', // future automated feeds set 'device' here
+          source: 'manual',
           createdAt: Date.now(),
           updatedAt: Date.now(),
           history: [],
@@ -1555,15 +1405,12 @@
         submissions.push(sub);
         savedSub = sub;
       }
-      // Which values are still provisional has to survive the save: the marker lives in the DOM,
-      // so without this a draft reopened tomorrow would show a stale intake weight that looks like
-      // someone typed it, and refreshProvisional would have nothing to refresh.
+
       const provisionalKeys = Array.from(el('fr_modalSections').querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.replace(/^fr_f_/, ''));
       if (provisionalKeys.length) savedSub.provisionalFields = provisionalKeys;
       else delete savedSub.provisionalFields;
-      // Sign-off records the action that was actually taken. It used to log 'submitted'
-      // on every save, back when a save was the only action there was.
+
       if (window.Auth && window.Auth.isAuthenticated()) {
         const signOff = window.Auth.createSignOff(status);
         if (signOff && savedSub.signOffs) {
@@ -1572,18 +1419,16 @@
       }
       const ok = await persist();
       if (!ok) { toast('Save failed — please retry.'); return; }
-      // Best-effort batch traceability index (only if this record declares a batchField).
+
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       closeForm();
       renderTable();
-      // Submitting adds it to the verifier's pick list, so that has to redraw too.
+
       refreshVerification();
       toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
     }
 
-    /* Full-fidelity export: keeps edit history, sign-offs and timestamps that the printed
-     * form drops, so a submission round-trips into the future backend. Exports what the
-     * filters currently show, which is what the person is looking at. */
+
     function exportJson() {
       const list = filtered();
       const payload = {
@@ -1598,15 +1443,7 @@
         safeKey(config.title) + '_' + new Date().toISOString().slice(0, 10) + '.json');
     }
 
-    /* ---- printed output: one submission = one sheet of the paper form ----
-     *
-     * The on-screen body is a submissions BROWSER (filters, list, row buttons), so it is
-     * all no-print -- which left window.print() emitting a page carrying nothing but the
-     * controlled-copy header. The captured values were never on the printed page at all.
-     * These build the actual form, the same way monitoring-log.js builds ml-sheet.
-     *
-     * The sheet deliberately does not restate document name/number/revision: the
-     * controlled-copy block from doc-header.js already prints those at the top. */
+
 
     function displayValue(field, raw) {
       if (raw === '' || raw == null) return '';
@@ -1620,8 +1457,7 @@
           `<tr><td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td>
              <td>${esc(displayValue(f, sub.values[f.key]))}</td></tr>`).join('');
         if (!rows) return '';
-        // newPage forces this section onto a fresh printed page -- used by records whose
-        // paper form spans several sheets (batch info on page 1, detail panels after).
+
         const pageBreak = sec.newPage ? ' style="page-break-before:always;"' : '';
         return `<div${pageBreak}><h3>${esc(sec.title)}</h3><table><tbody>${rows}</tbody></table></div>`;
       }).join('');
@@ -1632,8 +1468,7 @@
       const cols = config.roster.columns || [];
       const rows = (sub.roster || []).filter(r =>
         cols.some(c => String(r[c.key] || '').trim() !== ''));
-      // An empty roster still prints its ruled grid -- the paper form has blank lines to
-      // sign on, and a printed copy is often completed by hand.
+
       const body = (rows.length ? rows : [{}, {}, {}]).map(r =>
         `<tr>${cols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
       let totalsRowHtml = '';
@@ -1654,7 +1489,7 @@
         <tbody>${body}${totalsRowHtml}</tbody></table>`;
     }
 
-    /* dd/mm/yyyy HH:MM in local time -- same shape as DocHeader.fmtDate, with the clock. */
+
     function fmtDateTime(ts) {
       const d = new Date(ts);
       if (isNaN(d)) return '';
@@ -1662,15 +1497,12 @@
         String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
-    /* Signature line. A draft prints an empty one: an unsubmitted form is not evidence,
-     * and pre-printing a name beside "Signature" would assert a sign-off nobody made. */
+
     function sheetSignHtml(sub) {
       const done = isSubmitted(sub);
       const signOff = (sub.signOffs || []).filter(s => s.action === 'submitted').slice(-1)[0];
       const who = done && signOff ? (signOff.by || '') : '';
-      /* config.submitStamp prints the submission time next to the date. Off by default:
-       * most sheets are a day's record and a time beside "Date:" reads as noise. Records
-       * where the moment of submission is itself the evidence turn it on. */
+
       const when = done && sub.submittedAt
         ? (config.submitStamp ? fmtDateTime(sub.submittedAt)
                               : window.DocHeader.fmtDate(new Date(sub.submittedAt))) : '';
@@ -1694,7 +1526,7 @@
 
     function withPrintTitle(name, fn) {
       const previousTitle = document.title;
-      document.title = name; // browsers use the document title as the PDF filename
+      document.title = name;
       try { fn(); } finally { document.title = previousTitle; }
     }
 
@@ -1706,7 +1538,7 @@
       finally { document.body.classList.remove('fr-printing'); }
     }
 
-    // The toolbar button prints what the filters currently show, matching Export JSON.
+
     function printPdf() {
       printSheets(filtered(),
         safeKey(config.title) + '_' + new Date().toISOString().slice(0, 10));
@@ -1719,10 +1551,7 @@
       printSheets([sub], safeKey(config.docCode) + '_' + safeKey(config.title) + '_' + safeKey(stamp));
     }
 
-    // ---------- verification strip ----------
-    // Mirrors monitoring-log.js's verification strip: the verifier signs off named
-    // submissions, not "the record" in the abstract, so they pick exactly which
-    // submitted entries this signature covers.
+
     let refreshVerification = () => {};
     if (showVerification) {
       function pendingForVerification() {
@@ -1777,8 +1606,7 @@
         if (picked.length) {
           const set = new Set(picked);
           submissions.forEach(s => { if (set.has(s.id)) s.verification = record; });
-          // A verification that didn't persist must not report success -- this is the QA sign-off
-          // on a compliance record, so a silent failure here is the worst kind.
+
           if (!await persist()) { toast('Verification could not be saved — please retry.'); return; }
           renderTable();
         }
@@ -1806,10 +1634,10 @@
       el(`fr_${suffix}`).addEventListener('input', renderTable);
     });
 
-    // Open the record straight onto a blank entry form.
+
     openForm(null);
 
-    // ---------- edit template (opened via ?editTemplate=1 from the index, not a button here) ----------
+
     if (canManageTemplates && new URLSearchParams(location.search).get('editTemplate') === '1') {
       function doOpen() {
         window.TemplateEditor.open({
@@ -1834,10 +1662,8 @@
       }
     }
 
-    /* Header first, then the badge FROM it: the on-screen badge and the printed block
-     * state the same revision, so they can never disagree. */
-    // Wait for the backend decision before the first read -- otherwise this races
-    // api-backend.js and reads an empty localStorage, so saved work silently does not appear.
+
+
     if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await mountDocHeader(config);
     renderDocBadge();
@@ -1846,10 +1672,7 @@
     refreshVerification();
   }
 
-  /* Controlled-copy title block on every printed page. The paper baseline comes from the
-   * Master Index List via DocHeader; what the record declares is only the fallback for a
-   * row the index doesn't carry. Non-fatal by design -- a record that can't resolve its
-   * header still prints, it just prints without the block. */
+
   async function mountDocHeader(config) {
     if (!window.DocHeader) return null;
     try {
@@ -1865,8 +1688,7 @@
     } catch (e) { console.error('title block unavailable', e); return null; }
   }
 
-  /* One delegated handler drives every reveal button on the page: the button owns
-     the id of the element it shows and the noun that goes in its own label. */
+
   if (!window.__revealToggleWired) {
     window.__revealToggleWired = true;
     document.addEventListener('click', function (ev) {

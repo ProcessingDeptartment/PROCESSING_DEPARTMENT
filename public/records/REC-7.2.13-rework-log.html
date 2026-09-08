@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -28,8 +27,7 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=27"></script>
-<script>
-(function () {
+<script>(function () {
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'rework-log',
@@ -37,8 +35,7 @@
     docCode: 'REC 7.2.13',
     title: 'Rework Log',
     docRevisionStart: 1,
-    // Job number search-select, sourced from Abalone Receiving (REC 7.1.2) -- pick from what's
-    // actually been received instead of typing blind.
+
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
           jiReceivingDate: 'receivingDate',

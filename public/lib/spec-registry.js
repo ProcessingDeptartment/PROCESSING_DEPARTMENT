@@ -1,19 +1,3 @@
-/*
- * Versioned specification storage, shared by any record that needs manufacturer/
- * product specs (tolerances, minimums, etc.) with a real revision history.
- *
- * Each spec profile is identified by a specKey (e.g. a profile id). Every change to
- * a profile's data creates a new, numbered version with a required change reason and
- * publisher -- it does not overwrite history. The previously published version is kept
- * (marked OBSOLETE) so "what did the spec say on date X" can always be answered later.
- *
- * This does not yet implement an approve-before-publish queue (see System overview's
- * "apply / approve function") -- proposeVersion() publishes immediately. Gate who is
- * allowed to call it using PermissionRules.can('publishSpecVersion') in the caller.
- *
- * Backed by window.storage (see data-store.js), so it inherits the same swap point
- * when server-side storage replaces localStorage.
- */
 (function () {
   async function loadIndex(specKey) {
     const raw = await window.storage.get('spec_versions_index:' + specKey, true);
@@ -45,17 +29,12 @@
     return idx.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
   }
 
-  // Latest published spec content, or null if this specKey has never been published.
   async function getPublished(specKey) {
     const entry = await getLatestEntry(specKey);
     if (!entry) return null;
     return await getVersion(specKey, entry.versionNumber);
   }
 
-  // data: the spec JSON object (may itself carry a pdfDataUrl for the original doc).
-  // meta: { changeReason, publishedBy, changedByTitle }.
-  // Throws if any of those is missing -- every version must be attributable (who, what
-  // title, and why), per the system overview's change-management rules.
   async function proposeVersion(specKey, data, meta) {
     meta = meta || {};
     if (!meta.changeReason || !String(meta.changeReason).trim()) {

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -134,8 +133,7 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script>
-(function () {
+<script>(function () {
   var STORE_KEY = 'quick_abalone_receiving_jobs';
   var baskets = [];
   var jobsCache = [];
@@ -143,9 +141,7 @@
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  // Goes through window.storage (data-store.js), shared:true -- same seam every other
-  // record uses, so this data moves to the real backend automatically once one is
-  // registered, instead of being stuck in a page-private localStorage key.
+
   async function loadJobs() {
     try {
       var r = await window.storage.get(STORE_KEY, true);

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -27,8 +26,7 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=27"></script>
-<script>
-(function () {
+<script>(function () {
   FormRecord.init({
     mount: '#frRoot',
     recordKey: 'abalone-receiving',
@@ -42,8 +40,7 @@
         { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
         { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
         Lookups.field({ key: 'receivedFrom', label: 'Received from', list: 'farms' }),
-        // The job-number prefix fixes this: 3CP/CPR -> Can, 3DP/DPR -> Dried. Mismatch warns
-        // live and blocks Submit (form-record.js matchJobRoute + Lookups.batch.route).
+
         { key: 'toBeProcessedFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'], matchJobRoute: 'jobNo' },
         { key: 'intakeWeight', label: 'Intake weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
       ]}
@@ -63,59 +60,22 @@
 })();
 </script>
 
-<!-- ============================================================================
-     Page-specific enhancements for the BASKETS RECEIVED roster.
-     form-record.js is the shared engine for 100+ forms, so this stays out of it:
-     everything below hooks the DOM the engine renders, from outside.
 
-     TWO-PART CAPTURE - one job = one record, many basket lines:
-       * "+ Add basket"   commits the CURRENT BASKET panel as one line in the
-                          list below, then clears it (ready for the next basket).
-       * "+ Submit record" (the engine's own Submit, relabelled) files the whole
-                          record - every basket line - once, at the end.
-
-     Current basket panel:
-       1. Barcode scanner  - one scan fills Size range (10g band -> facility
-                             band), Basket nr. and Count, then focuses Whole
-                             weight.
-       2. Persistent size  - the chosen Size range stays put for every following
-                             basket until "Change size" is pressed.
-       3. Connected scale  - window.RecScale.submitWeight(kg) (or the hidden
-                             #recScaleWeight input) fills Whole weight. It never
-                             adds the basket or submits - the operator does that.
-
-     The engine rebuilds #fr_modalSections.innerHTML on every clear/submit and
-     rebuilds #fr_rosterRows on every add/remove row, so a MutationObserver
-     re-applies all of this after each rebuild. Nothing here is persisted as a
-     record field - the panel inputs live outside #fr_rosterRows and the engine
-     only ever saves the roster columns declared in the config above.
-============================================================================ -->
-<script>
-(function () {
+<script>(function () {
   'use strict';
 
   var COLS = ['sizeRange', 'basketNr', 'wholeWeight', 'farmCount', 'mortalityCount'];
-  // Size range carried from one basket to the next. Survives "+ Add basket" and
-  // a record submit (a shift usually receives one grade for a while); cleared
-  // only by "Change size".
+
   var stickySize = '';
 
   function $(id) { return document.getElementById(id); }
 
-  /* ---- barcode -------------------------------------------------------- */
-
-  // 10g band ("20-30g", or "450g+") -> facility band (0-50g ... 450g+),
-  // banded on the LOWER bound: 0..49 -> 0-50g, 50..99 -> 50-100g, >=450 -> 450g+.
   function convertSize(lower) {
     if (lower >= 450) return '450g+';
     var start = Math.floor(lower / 50) * 50;
     return start + '-' + (start + 50) + 'g';
   }
 
-  // Tolerant parser: the exact scanner payload/delimiter isn't finalised, so
-  // this accepts labelled tokens (basket=.., count=.., size=..) OR, failing
-  // that, a size band anywhere in the string plus the first two bare integers
-  // as basket number then count. Adjust here once the real symbology is known.
   function parseBarcode(raw) {
     raw = String(raw || '').trim();
     if (!raw) return null;
@@ -140,8 +100,6 @@
     }
     return out;
   }
-
-  /* ---- current-basket panel ----------------------------------------- */
 
   function cbInput(key) { return $('cb_' + key); }
   function cbVal(key) { var i = cbInput(key); return i ? String(i.value || '').trim() : ''; }
@@ -172,8 +130,6 @@
       ', size ' + (size || '?') + ' - enter/confirm weight, then + Add basket.');
   }
 
-  // Called by the connected scale, or fired from the hidden #recScaleWeight
-  // input. Fills Whole weight only - never adds the basket, never submits.
   function applyScaleWeight(kg) {
     var n = parseFloat(kg);
     if (isNaN(n)) return;
@@ -204,8 +160,8 @@
 
     var line = {};
     COLS.forEach(function (k) { line[k] = cbVal(k); });
-    stickySize = line.sizeRange;             // keep the size for the next basket
-    host._importRows([line]);                // append; the engine drops the blank starter row
+    stickySize = line.sizeRange;
+    host._importRows([line]);
 
     ['basketNr', 'wholeWeight', 'farmCount', 'mortalityCount'].forEach(function (k) { cbSet(k, ''); });
     cbSet('sizeRange', stickySize);
@@ -215,13 +171,6 @@
     setMsg('Basket added (' + basketCount() + ' on this record). Scan or enter the next one.');
   }
 
-  // Committed baskets collapse to a one-line summary with an "Edit" button -
-  // that behaviour now lives in the shared engine (form-record.js applies it to
-  // every roster; _importRows marks panel-committed rows collapsed on arrival).
-
-  // The Receiving info section must be complete before a draft can be saved -
-  // this record is the source snapshot for every job-scoped form, so a
-  // half-identified draft is worse than none.
   function receivingComplete() {
     return ['jobNo', 'receivingDate', 'receivedFrom', 'toBeProcessedFor'].every(function (k) {
       var i = $('fr_f_' + k);
@@ -229,9 +178,6 @@
     });
   }
 
-  // Text writes here replace a text node = a childList mutation the enhance()
-  // observer is watching, so only write when the value actually changed - else
-  // enhance -> renderPanel -> mutation -> enhance busy-loops.
   function setText(el, txt) { if (el && el.textContent !== txt) el.textContent = txt; }
   function renderPanel() {
     setText($('cb_stickyLabel'), stickySize || 'not set');
@@ -329,8 +275,7 @@
       box = buildPanel();
       host.parentNode.insertBefore(box, host);
       wirePanel(box);
-      // The panel is now the way baskets are added; the engine's own per-row
-      // "+ Add row" would bypass the sticky-size / barcode flow, so hide it.
+
       var addRow = $('fr_addRosterRowBtn');
       if (addRow) addRow.style.display = 'none';
       var submit = $('fr_submitBtn');
@@ -338,10 +283,6 @@
     }
     if (stickySize && !cbVal('sizeRange')) cbSet('sizeRange', stickySize);
 
-    // The roster below is the list of baskets ADDED so far. The engine always
-    // keeps one blank starter row - hide it (and any other fully-blank row) so
-    // the list reads as "what's on the record", not an editable grid. Filled
-    // rows stay visible and editable for corrections.
     var rows = rosterRows();
     var anyFilled = rows.some(function (r) { return !rowIsBlank(r); });
     rows.forEach(function (r) { r.style.display = (anyFilled && rowIsBlank(r)) ? 'none' : ''; });
@@ -362,9 +303,6 @@
     renderPanel();
   }
 
-  // Block "Save draft" until the Receiving info section is complete. Capture
-  // phase + stopImmediatePropagation so it runs before the engine's own
-  // click -> saveForm(false) handler.
   document.addEventListener('click', function (e) {
     var b = e.target && e.target.closest && e.target.closest('#fr_saveBtn');
     if (!b || receivingComplete()) return;

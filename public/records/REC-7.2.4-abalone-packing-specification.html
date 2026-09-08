@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -94,8 +93,7 @@
       <div class="panel-body">
         <div class="muted" style="font-size:10.5px; margin-bottom:6px;">Rows are added and updated automatically from the Packing Specification Calculation table below (matched by Pcs + Drained weight). Use Edit only to correct a line or record sign-off.</div>
 
-        <!-- Capture widget only: the confirmed table below is the record, so this whole
-             block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
+        
         <div id="specRefCapture" class="no-print" style="display:none;">
           <div class="grid grid-6">
             <label class="field">Pcs<input id="r_pcs" type="number"></label>
@@ -143,8 +141,7 @@
     <div class="panel no-print" id="panelSpecCalc">
       <div class="panel-head"><h2>Packing Specification Calculation</h2></div>
       <div class="panel-body">
-        <!-- Capture widget only: the confirmed table below is the record, so this whole
-             block is no-print -- otherwise the PDF carries a row of blank input boxes. -->
+        
         <div id="rowCapture" class="no-print">
           <div class="grid grid-5">
             <label class="field">Pcs<input id="h_pcs" type="number"></label>
@@ -214,14 +211,7 @@
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
-<script>
-/* Controlled-copy title block, repeated on every printed page.
- * docCode/recordKey are also what tools/build-master-index-data.py keys this page
- * to in the Master Index. Without them the build falls back to the file name, which
- * silently re-keys the record and orphans its stored revision history.
- * The paper revision is deliberately not stated here -- mountPrintHeader takes it
- * from the record's index row, so the issued index stays the single source. */
-window.RecordDoc = { docCode: 'REC 7.2.4', recordKey: 'abalone-packing-specification' };
+<script>window.RecordDoc = { docCode: 'REC 7.2.4', recordKey: 'abalone-packing-specification' };
 document.addEventListener('DOMContentLoaded', function () {
   if (!window.DocHeader) return;
   window.DocHeader.mountPrintHeader({ recordKey: window.RecordDoc.recordKey })
@@ -237,8 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script>
-(async function(){
+<script>(async function(){
   const $ = id => document.getElementById(id);
 
   function newRecord(){
@@ -302,10 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return ts ? new Date(ts).toLocaleDateString() : '—';
   }
 
-  /* Cookout % = drained weight (X) ÷ ingo weight (Y), taken on the can product
-   * as opened. It is then applied to the row's own min/max drained-weight spec
-   * to back out the equivalent ingo-weight range -- the range the packer should
-   * actually target so the finished can lands inside the drained-weight spec. */
+
   function calcRow(entry){
     const x = parseFloat(entry.drainedWeight);
     const y = parseFloat(entry.ingoWeight);
@@ -426,9 +412,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  /* Rows in this table are not added by hand -- they're upserted whenever a
-   * Packing Specification Calculation row is confirmed, keyed on Pcs + Drained
-   * weight, since the same pack line gets re-specced over multiple days. */
+
   function upsertSpecRef(pcs, drainedWeight, minIngo, maxIngo){
     const existing = state.specRefRows.find(r=>String(r.pcs) === String(pcs) && String(r.drainedWeight) === String(drainedWeight));
     const now = Date.now();

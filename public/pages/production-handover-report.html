@@ -155,26 +155,23 @@ body {
 .print-only { display: none; }
 .status-icon { display: none; }
 
-/* Tailwind handles the section grids (grid-cols-2 md:grid-cols-4 etc.); what it
-   cannot reach is the hand-written CSS above. */
+
 @media (max-width: 768px) {
     body { padding: 12px; }
     .section-card { padding: 14px; border-radius: 10px; }
     .section-title { font-size: 15px; margin-bottom: 12px; }
-    /* The report header is a flex row of title + GENERATE PDF; it must wrap
-       instead of squashing the button off-screen. */
+    
     .report-header { flex-wrap: wrap; gap: 12px; }
     .report-header > * { flex: 1 1 100%; }
     .report-header h1 { font-size: 22px; }
     .report-header button { width: 100%; padding: 14px 16px; }
     .bubble-block { max-width: none; }
-    /* Below 16px iOS zooms the page when the operator taps a value field. */
+    
     .bubble-val-input { font-size: 16px !important; }
     .bubble-btn { padding: 12px; font-size: 13px; }
     .compliance-row { padding: 10px; }
     .compliance-row label { padding: 8px 12px; font-size: 12px; }
-    /* Compliance rows are label + Yes/No on one line. Two of those per row
-       leaves ~150px for the label, so give each its own row. */
+    
     .grid.grid-cols-2:has(> .compliance-row) { grid-template-columns: 1fr !important; }
     .yesno-toggle button { padding: 8px 14px; font-size: 12px; }
     .live-op-panel { padding: 10px; }
@@ -233,7 +230,7 @@ body {
             </div>
         </div>
 
-        <!-- 2. Staffing & Attendance -->
+        
         <div class="section-card" id="sec-2">
             <div class="section-title"><span id="status-2" class="status-icon">⚪</span>1. Staffing & Attendance</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
@@ -258,7 +255,7 @@ body {
             <div id="print-notes-2" class="print-only section-print-notes"></div>
         </div>
 
-        <!-- 1. Processes on shift -->
+        
         <div class="section-card" id="sec-1">
             <div class="section-title"><span id="status-1" class="status-icon">⚪</span>2. Processes on shift</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
@@ -275,7 +272,7 @@ body {
             <div id="print-notes-1" class="print-only section-print-notes"></div>
         </div>
 
-        <!-- 3. Harvesting -->
+        
         <div class="section-card" id="sec-3">
             <div class="section-title"><span id="status-3" class="status-icon">⚪</span>3. Harvesting</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
@@ -356,7 +353,7 @@ body {
             <div id="print-notes-3" class="print-only section-print-notes"></div>
         </div>
 
-        <!-- 4. Live -->
+        
         <div class="section-card" id="sec-4">
             <div class="section-title"><span id="status-4" class="status-icon">⚪</span>4. Live</div>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
@@ -400,7 +397,7 @@ body {
             <div id="print-notes-4" class="print-only section-print-notes"></div>
         </div>
 
-        <!-- 5. Canning -->
+        
         <div class="section-card" id="sec-5">
             <div class="section-title"><span id="status-5" class="status-icon">⚪</span>5. Canning</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
@@ -472,7 +469,7 @@ body {
             <div id="print-notes-5" class="print-only section-print-notes"></div>
         </div>
 
-        <!-- 6. Drying -->
+        
         <div class="section-card" id="sec-6">
             <div class="section-title"><span id="status-6" class="status-icon">⚪</span>6. Drying</div>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
@@ -595,12 +592,11 @@ body {
             <div class="signature-line"></div>
         </div>
 
-        <!-- Annexure removed: job details are included in each section's print summary -->
+        
 
     </div>
 
-    <script>
-function init() {
+    <script>function init() {
     updateComplianceIcons();
     validatePrint();
 }
@@ -870,7 +866,7 @@ function updateComplianceIcons() {
         const hasActive = sectionEl.querySelectorAll(sec.activeSelector).length > 0;
         const hasJobRows = sec.id === 'sec-3' && document.getElementById('harvest-job-list').children.length > 0;
         const icon = document.getElementById(sec.statusId);
-        // Remove visual emoji/status text - keep icons empty per user preference
+
         if (icon) {
             icon.innerText = '';
             icon.style.color = '';
@@ -910,11 +906,8 @@ async function preparePrint() {
         if (printNode) printNode.innerHTML = sectionSummaries[key];
     });
 
-    // Job details are included in each section's summary; annex removed.
-
     document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || 'No additional comments recorded.';
-    // Temporarily hide interactive-only elements (those already marked 'no-print' in markup)
-    // Avoid adding no-print to entire .section-card to preserve print-only summaries
+
     const interactiveEls = Array.from(document.querySelectorAll('.section-card .p-4, .section-card .bubble-block, .section-card .grid, .section-card .yesno-toggle, .section-card input, .section-card textarea, .section-card select, .section-card button'));
     const toRestore = [];
     interactiveEls.forEach(el => {
@@ -930,7 +923,6 @@ async function preparePrint() {
       return;
     }
 
-    // Print and then restore the interactive elements
     window.print();
     setTimeout(() => {
         toRestore.forEach(el => {
@@ -1118,7 +1110,7 @@ function buildDryingSummary() {
 
     return html || '<div class="print-empty">--</div>';
 }
-    </script>
+</script>
     <script src="../lib/handover-db.js"></script>
 </body>
 </html>

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Warm the connection to the records API before any script asks for it: DNS + TLS to a
-     second origin otherwise costs ~200ms on top of the first data read. -->
+
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -104,22 +103,18 @@
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=1"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script>
-(function () {
+<script>(function () {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   let rows = [];
 
-  // Receiving detail per job comes from the Abalone Receiving record itself. This page pulls the
-  // whole record once (unlike the pickers, which use the API's small read view) because it needs
-  // the farm / date / weight behind each job number, not just the numbers.
+
   async function receivingByJob() {
     const byJob = new Map();
     let raw = await window.storage.get('formrecord:abalone-receiving', true);
-    // An empty first read can just mean window.storage hasn't switched off localStorage yet
-    // (the api-backend health-check race) -- retry once before accepting it.
+
     if (!raw) { await sleep(2000); raw = await window.storage.get('formrecord:abalone-receiving', true); }
     if (!raw) return byJob;
     let subs;
@@ -130,8 +125,7 @@
       const jobNo = String(v.jobNo || '').trim();
       if (!jobNo) continue;
       let intake = v.intakeWeight;
-      // Older submissions predate the finalised intakeWeight field -- fall back to summing the
-      // basket roster so they still show a weight rather than a blank.
+
       if (intake == null || intake === '') {
         const sum = (sub.roster || []).reduce((a, r) => {
           const n = parseFloat(r && r.wholeWeight);
@@ -207,8 +201,7 @@
 
   async function toggleJob(jobNo, isClosed) {
     const verb = isClosed ? 'Reopen' : 'Close';
-    // Closing pulls the job out of every downstream picker, so make it a deliberate act rather
-    // than a single mis-tap on a factory tablet.
+
     if (!window.confirm(`${verb} job ${jobNo}?` + (isClosed ? '' : '\n\nIt will no longer be selectable on any record.'))) return;
     const note = window.prompt(`Reason / note for ${verb.toLowerCase()}ing ${jobNo} (optional):`, '') || null;
     const res = isClosed

@@ -1,8 +1,3 @@
-/*
- * Shared login UI for all records.
- * Call LoginUI.ensureAuthenticated() at record load to prompt for login if needed.
- * Once authenticated, Auth.getCurrentUsername() / Auth.getCurrentRole() are available.
- */
 (function () {
   const STYLE = `
   .login-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; }
@@ -122,7 +117,7 @@
   }
 
   function ensureAuthenticated() {
-    // Login interface disabled - code preserved
+
     return new Promise((resolve) => {
       resolve();
     });

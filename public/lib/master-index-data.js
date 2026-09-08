@@ -1,14 +1,3 @@
-/*
- * Baseline data for REC 01 Master Index List, transcribed from
- * "6. RECORDS/FINAL/_____REC 01 Master Index List_06.2026.xlsx" (sheet REC,
- * Rev 16, revision date 19/06/2026).
- *
- * This is the PAPER baseline only. The live current revision of any row that has
- * a `recordKey` comes from document-revision.js at render time -- never read
- * `revision` here as the current value for a digitised record.
- *
- * Regenerate rather than hand-edit when a newer Master Index List is issued.
- */
 window.MasterIndexData = {
   header: {
     "document": "Master Index List",

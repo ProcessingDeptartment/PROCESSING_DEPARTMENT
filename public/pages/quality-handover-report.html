@@ -98,26 +98,23 @@
         .print-only { display: none; }
         .status-icon { display: none; }
 
-        /* Tailwind handles the section grids (grid-cols-2 md:grid-cols-4 etc.);
-           what it cannot reach is the hand-written CSS above. */
+        
         @media (max-width: 768px) {
             body { padding: 12px; }
             .section-card { padding: 14px; border-radius: 10px; }
             .section-title { font-size: 15px; margin-bottom: 12px; }
-            /* The report header is a flex row of title + GENERATE PDF; it must
-               wrap instead of squashing the button off-screen. */
+            
             .report-header { flex-wrap: wrap; gap: 12px; }
             .report-header > * { flex: 1 1 100%; }
             .report-header h1 { font-size: 22px; }
             .report-header button { width: 100%; padding: 14px 16px; }
             .bubble-block { max-width: none; }
-            /* Below 16px iOS zooms the page when the operator taps a value field. */
+            
             .bubble-val-input { font-size: 16px !important; }
             .bubble-btn { padding: 12px; font-size: 13px; }
             .compliance-row { padding: 10px; }
             .compliance-row label { padding: 8px 12px; font-size: 12px; }
-            /* Compliance rows are label + Yes/No on one line. Two of those per
-               row leaves ~150px for the label, so give each its own row. */
+            
             .grid.grid-cols-2:has(> .compliance-row) { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 480px) {
@@ -178,7 +175,7 @@
             </div>
         </div>
 
-        <!-- 1. Cleaning -->
+        
         <div class="section-card" id="sec-1">
             <div class="section-title"><span id="status-1" class="status-icon">⚪</span>1. Cleaning Inspection (REC 7.6.1)</div>
             <div class="flex justify-between items-center compliance-row mb-3" id="row-conf1">
@@ -203,7 +200,7 @@
             <div id="print-notes-1" class="print-only section-print-notes"></div>
         </div>
 
-        <!-- 2. Hygiene -->
+        
         <div class="section-card" id="sec-2">
             <div class="section-title"><span id="status-2" class="status-icon">⚪</span>2. Hygiene + PPE (REC 7.7.1)</div>
             <div class="flex justify-between items-center compliance-row mb-3" id="row-conf2">
@@ -225,7 +222,7 @@
             <div id="print-notes-2" class="print-only section-print-notes"></div>
         </div>
 
-        <!-- 3. Control Points -->
+        
         <div class="section-card" id="sec-3">
             <div class="section-title"><span id="status-3" class="status-icon">⚪</span>3. Control Points Monitoring</div>
             <div class="flex flex-wrap justify-start gap-3">
@@ -361,7 +358,7 @@
                 </div>
             </div>
 
-            <!-- Removed sec-7 specific comment textarea as requested -->
+            
 
             <div id="nrcs-container" class="space-y-3 no-print">
                 <div class="nrcs-row space-y-2 pb-3 border-b last:border-0">
@@ -436,8 +433,7 @@
 
     </div>
 
-    <script>
-        function init() {
+    <script>        function init() {
             updateComplianceIcons();
             validatePrint();
         }
@@ -534,9 +530,9 @@
                 const isNC = sectionEl.querySelectorAll(sec.ncSelector).length > 0;
                 const hasInput = sectionEl.querySelectorAll(sec.anySelector).length > 0;
                 const icon = document.getElementById(sec.statusId);
-                
-                if (!hasInput) { icon.innerText = '⚪'; icon.style.color = '#94a3b8'; } 
-                else if (isNC) { icon.innerText = 'âŒ'; icon.style.color = '#ef4444'; } 
+
+                if (!hasInput) { icon.innerText = '⚪'; icon.style.color = '#94a3b8'; }
+                else if (isNC) { icon.innerText = 'âŒ'; icon.style.color = '#ef4444'; }
                 else { icon.innerText = '✅'; icon.style.color = '#22c55e'; }
 
                 const commentBox = document.getElementById(`comment-${sec.id}`);
@@ -590,11 +586,11 @@
         async function preparePrint() {
             const dateVal = document.getElementById('hDate').value;
             const shiftVal = document.getElementById('hShift').value;
-            
+
 document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HANDOVER REPORT ${shiftVal} SHIFT - ${dateVal}`;
             document.getElementById('dynamicPrintName').innerText = `COMPLETED BY: ${document.getElementById('hName').value || '---'}`;
             document.title = `REC_9.9.2_Quality_Handover_${shiftVal}SHIFT_${dateVal}`;
-            
+
             document.getElementById('p-ag-code').innerText = document.getElementById('ag-code').value || "---";
             document.getElementById('p-batch-code').innerText = document.getElementById('batch-code').value || "---";
 
@@ -636,14 +632,14 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
             const detailContainer = document.getElementById('nrcs-detail-print');
             detailContainer.innerHTML = "";
             let batchCount = 0;
-            
+
             document.querySelectorAll('.nrcs-row').forEach(row => {
                 const code = row.querySelector('.nrcs-code-input').value.trim();
                 const desc = row.querySelector('.nrcs-desc-input').value;
                 const conform = row.querySelector('.nrcs-conform-input').value === 'YES' ? "✅" : "âŒ";
                 const retortChecked = row.querySelector('.nrcs-retort').checked ? "✅" : "âŒ";
                 const seamChecked = row.querySelector('.nrcs-seam').checked ? "✅" : "âŒ";
-                
+
                 if(code) {
                     batchCount++;
                     const detailRow = document.createElement('div');
@@ -660,14 +656,14 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
             });
             document.getElementById('nrcs-count-val').innerText = batchCount;
             document.getElementById('print-gen-comments').innerText = document.getElementById('gen-comments').value || "No additional comments recorded.";
-            
+
             const finalized = await window.HandoverDB.finalizeAndExport();
             if (!finalized) {
                 return;
             }
             window.print();
         }
-    </script>
+</script>
     <script src="../lib/handover-db.js"></script>
 </body>
 </html>
