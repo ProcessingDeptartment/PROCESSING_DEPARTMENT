@@ -26,34 +26,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'final-sauce-mix',
-    docCode: 'REC 7.3.4',
-    title: 'Final Sauce Mix',
-    docRevisionStart: 1,
-    listColumns: ['date', 'potNo', 'batchCodeSauce'],
-    sections: [
-      { title: 'Batch info', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'potNo', label: 'Pot no.', type: 'text' },
-        { key: 'batchCodeSauce', label: 'Batch code (sauce)', type: 'text' }
-      ]},
-      { title: 'Measurements', newPage: true, fields: [
-        { key: 'ph', label: 'pH', type: 'number' },
-        { key: 'salt', label: 'Salt', type: 'number' },
-        { key: 'brix', label: 'Brix', type: 'number' }
-      ]},
-      { title: 'Adjustments', fields: [
-        { key: 'saltAdjustment', label: 'Salt adjustment', type: 'text' },
-        { key: 'brownSugarAdjustment', label: 'Brown sugar adjustment', type: 'text' },
-        { key: 'maltAdjustment', label: 'Malt adjustment', type: 'text' }
-      ]},
-      { title: 'Notes', fields: [
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/final-sauce-mix
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'final-sauce-mix' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

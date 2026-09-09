@@ -26,26 +26,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'sauce-batch-coding',
-    docCode: 'REC 7.3.5',
-    title: 'Sauce Batch Coding',
-    docRevisionStart: 1,
-    listColumns: ['dateOfMix', 'potCode', 'bucketNumber'],
-    sections: [
-      { title: 'Batch coding', fields: [
-        { key: 'dateOfMix', label: 'Date of mix', type: 'date', required: true },
-        { key: 'potCode', label: 'Pot code', type: 'select', options: ['A', 'B', 'C', 'D', 'E', 'F', 'G'] },
-        { key: 'bucketNumber', label: 'Bucket number', type: 'number' },
-        { key: 'weightOfBucket', label: 'Weight of bucket', type: 'number' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'supervisor', label: 'Supervisor', type: 'text' },
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/sauce-batch-coding
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'sauce-batch-coding' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

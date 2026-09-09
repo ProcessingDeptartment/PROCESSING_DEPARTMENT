@@ -26,60 +26,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'sauce-mixing',
-    batchField: 'jobNo',
-    stage: 'sauce-mixing',
-
-    extraBatchFields: ['brothBatchDate', 'chickenLiquidBatchCode', 'smokeyFlavourBatchCode', 'cvgMixBatchCode', 'mdMixBatchCode', 'tsMixBatchCode', 'soMixBatchCode'],
-    docCode: 'REC 7.3.3',
-    title: 'Sauce Mixing',
-    docRevisionStart: 1,
-    listColumns: ['date', 'potNo', 'brothBatchDate'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Broth info', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'brothBatchDate', label: 'Broth batch date', type: 'date' },
-        { key: 'potNo', label: 'Pot no.', type: 'text' },
-        { key: 'litres', label: 'Litres', type: 'number' },
-        { key: 'phBroth', label: 'pH (broth)', type: 'number' },
-        { key: 'brixBroth', label: 'Brix (broth)', type: 'number' },
-        { key: 'saltBroth', label: 'Salt (broth)', type: 'number' }
-      ]},
-      { title: 'Liquids added', newPage: true, fields: [
-        { key: 'chickenLiquidWeight', label: 'Chicken liquid weight', type: 'number' },
-        { key: 'chickenLiquidBatchCode', label: 'Chicken liquid batch code', type: 'text' },
-        { key: 'smokeyFlavourWeight', label: 'Smokey flavour weight', type: 'number' },
-        { key: 'smokeyFlavourBatchCode', label: 'Smokey flavour batch code', type: 'text' }
-      ]},
-      { title: 'Batch codes', fields: [
-        { key: 'cvgMixBatchCode', label: 'CVG mix batch code', type: 'text' },
-        { key: 'xg1BatchCode', label: 'XG1 batch code', type: 'text' },
-        { key: 'xg2BatchCode', label: 'XG2 batch code', type: 'text' },
-        { key: 'xg3BatchCode', label: 'XG3 batch code', type: 'text' },
-        { key: 'mdMixBatchCode', label: 'MD mix batch code', type: 'text' },
-        { key: 'tsMixBatchCode', label: 'TS mix batch code', type: 'text' },
-        { key: 'soMixBatchCode', label: 'SO mix batch code', type: 'text' }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/sauce-mixing
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'sauce-mixing' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

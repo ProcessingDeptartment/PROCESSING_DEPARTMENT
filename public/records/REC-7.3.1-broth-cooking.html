@@ -27,53 +27,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'broth-cooking',
-    docCode: 'REC 7.3.1',
-    title: 'Broth Cooking',
-    docRevisionStart: 1,
-    listColumns: ['date', 'potNo', 'finalBrothLitres'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { abaloneShellsIntakeDate: 'receivingDate',
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Cooking batch', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'potNo', label: 'Pot no.', type: 'text' },
-        { key: 'waterLitres', label: 'Water (litres)', type: 'number' },
-        { key: 'abaloneShellsIntakeDate', label: 'Abalone shells intake date', type: 'date' }
-      ]},
-      { title: 'Ingredients', newPage: true, fields: [
-        { key: 'driedKelpWeight', label: 'Dried kelp weight', type: 'number' },
-        { key: 'scallopJuiceWeight', label: 'Scallop juice weight', type: 'number' }
-      ]},
-      { title: 'Final product', fields: [
-        { key: 'finalBrothLitres', label: 'Final broth (litres)', type: 'number' },
-        { key: 'ph', label: 'pH', type: 'number' },
-        { key: 'salt', label: 'Salt', type: 'number' },
-        { key: 'brix', label: 'Brix', type: 'number' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'cookedBy', label: 'Cooked by', type: 'text' },
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/broth-cooking
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'broth-cooking' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

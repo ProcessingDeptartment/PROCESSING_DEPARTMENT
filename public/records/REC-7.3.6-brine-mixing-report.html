@@ -28,62 +28,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'brine-mixing-report',
-    batchField: 'jobNumber',
-    docCode: 'REC 7.3.6',
-    title: 'Brine Mixing Report',
-    docRevisionStart: 1,
-
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    listColumns: ['date', 'jobNumber', 'productDescription'],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNumber', 'jiProcessingFor'], fields: [
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Batch info', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'sample', label: 'Sample', type: 'text' },
-        { key: 'productDescription', label: 'Product description', type: 'text' },
-        { key: 'productionDateIngo', label: 'Production date (ingo)', type: 'date' },
-        { key: 'canPieces', label: 'Can pieces', type: 'number' }
-      ]},
-      { title: 'Product specs', newPage: true, fields: [
-        { key: 'nettWeightMin', label: 'Nett weight min', type: 'number' },
-        { key: 'drainMassMin', label: 'Drain mass min', type: 'number' },
-        { key: 'drainMassMax', label: 'Drain mass max', type: 'number' }
-      ]},
-      { title: 'Salt', fields: [
-        { key: 'saltG', label: 'Salt (g)', type: 'number' },
-        { key: 'saltBatchNo', label: 'Salt batch no.', type: 'text' },
-        { key: 'saltPercent', label: 'Salt (%)', type: 'number' }
-      ]},
-      { title: 'Sugar', fields: [
-        { key: 'sugarG', label: 'Sugar (g)', type: 'number' },
-        { key: 'sugarBatchNo', label: 'Sugar batch no.', type: 'text' },
-        { key: 'sugarPercent', label: 'Sugar (%)', type: 'number' }
-      ]},
-      { title: 'Malt', fields: [
-        { key: 'maltG', label: 'Malt (g)', type: 'number' },
-        { key: 'maltBatchNo', label: 'Malt batch no.', type: 'text' }
-      ]},
-      { title: 'Notes', fields: [
-        { key: 'commentsDeviations', label: 'Comments/deviations', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/brine-mixing-report
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'brine-mixing-report' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>
