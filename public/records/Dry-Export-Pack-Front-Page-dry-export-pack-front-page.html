@@ -24,39 +24,14 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
+  // Definition (fields, sections, autofill, batchField...) lives in the DB and is fetched by
+  // the engine from GET /api/record-def/dry-export-pack-front-page. Was inline until 2026-09-09;
+  // see Claude outputs/relational-all-records-plan.md and scripts/extract-definitions.mjs.
   FormRecord.init({
     mount: '#frRoot',
-    recordKey: 'dry-export-pack-front-page',
-    batchField: 'jobNumber',
-    docCode: 'Dry Export Pack Front Page',
-    title: 'Dry Export Pack Front Page',
-    docRevisionStart: 1,
-    listColumns: ['packingDate', 'jobNumber'],
-
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: { } }
-    ],
-    sections: [
-      { title: 'Shipment details', fields: [
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-        { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
-        { key: 'noOfBoxesExported', label: 'No. of boxes exported', type: 'number' }
-      ]},
-      { title: 'Attachments checklist', fields: [
-        { key: 'rec747Attached', label: 'REC 7.4.7 Labelling of Dry Boxes attached?', type: 'yesno' },
-        { key: 'rec748Attached', label: 'REC 7.4.8 Dry Labelling List attached?', type: 'yesno' },
-        { key: 'rec749Attached', label: 'REC 7.4.9 Dry Stock Transfers attached?', type: 'yesno' },
-        { key: 'signedPackingListsAttached', label: 'Signed packing lists attached?', type: 'yesno' },
-        { key: 'healthCertificatesAttached', label: 'Health certificates attached?', type: 'yesno' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'completedBySupervisor', label: 'Completed by (Supervisor)', type: 'text', required: true },
-        { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' },
-        { key: 'verificationBy', label: 'Verification by', type: 'text' }
-      ]}
-    ]
+    recordKey: 'dry-export-pack-front-page'
   });
 })();
 </script>

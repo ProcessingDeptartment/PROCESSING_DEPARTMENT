@@ -1473,6 +1473,17 @@
       verifiableCount: () => submitFlow ? entries.filter(e => isSubmitted(e) && !e.verification).length : entries.length };
   }
 
+  // Definition source of truth is the DB -- see form-record.js's fetchRecordDef note.
+  async function fetchRecordDef(recordKey) {
+    if (!window.FacilityApi) return null;
+    try {
+      const res = await window.FacilityApi.fetch('/api/record-def/' + encodeURIComponent(recordKey));
+      if (!res.ok) { console.error('monitoring-log: record-def ' + recordKey + ' -> HTTP ' + res.status); return null; }
+      const body = await res.json();
+      return body && body.config ? body.config : null;
+    } catch (e) { console.error('monitoring-log: record-def ' + recordKey + ' fetch failed', e); return null; }
+  }
+
   async function init(config) {
 
     if (window.LoginUI) {
@@ -1481,6 +1492,16 @@
 
     injectStyleOnce();
 
+    if (!config.entryFields && config.recordKey) {
+      const fetched = await fetchRecordDef(config.recordKey);
+      if (fetched) Object.assign(config, fetched);
+    }
+    if (!config.entryFields && !config.customBody) {
+      const m = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
+      if (m) m.innerHTML = '<p style="padding:20px;font:600 14px system-ui;color:#9c241d">'
+        + 'Could not load this record’s definition. The records API may be starting up — reload in a moment.</p>';
+      return;
+    }
 
     try {
       const _teRaw = await (async () => { try { const r = await window.storage.get('record_template:' + config.recordKey, true); return r ? r.value : null; } catch (e) { return null; } })();
