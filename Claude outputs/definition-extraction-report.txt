@@ -1,87 +1,41 @@
 
-=== extract-definitions report — 131 record pages ===
+=== extract-definitions — 131 record pages ===
 
-clean (map with no manual review):        124
-flagged (need a look):                    7
-  of which unparseable / no init:         0
-records with declarative autofill:        45 (handled by RecordAutofillDef)
-form-record: 78   monitoring-log: 53
+clean (map with no manual review):   124
+flagged:                             7
+  unparseable / no init:             0
+records with declarative autofill:   45
+engines: 78 form-record · 53 monitoring-log
 
-field types seen across all records:
-    text           686
-    number         293
-    yesno          282
-    date           227
-    select         121
-    textarea       96
-    jobsearch      47
-    computed       9
-    month          5
-    recordpick     4
-    timestamp      3
-    digits         3
-    derived        2
-    time           2
-    jobnumber      1
-    batchseq       1
+--- flagged ---
 
-flag kinds:
-    1  bespoke
-    1  hardware/window.Rec* integration
-    1  computed field 'intakeWeight' has no declarative expression
-    1  derived field 'standardSaltingTime' has no declarative expression
-    1  derived field 'totalTumblingTime' has no declarative expression
-    1  field 'coldDeviation' has a function (compute)
-    1  field 'hotDeviation' has a function (compute)
-    1  field 'difference' has a function (compute)
-    1  customBody hook
-    1  no fields found (check parser)
-    1  deriveInto hook
-    1  field 'cookoutPct' has a function (compute)
-    1  field 'newMinIngo' has a function (compute)
-    1  field 'newMaxIngo' has a function (compute)
-    1  field 'purgeDays' has a function (compute)
-    1  field 'purgeLoss' has a function (compute)
-
---- flagged records ---
-
-REC-7.1.2-abalone-receiving.html
-   key=abalone-receiving  engine=form-record  fields=4  rosterTables=1
+REC-7.1.2-abalone-receiving.html  (key=abalone-receiving engine=form-record fields=10)
    - bespoke: 2 inline <script> blocks
    - hardware/window.Rec* integration
-   - computed field 'intakeWeight' has no declarative expression
+   - field 'intakeWeight' (computed) needs a computeFn in the registry (§6.1)
 
-REC-7.1.3-salting-and-tumbling.html
-   key=salting-and-tumbling  engine=form-record  fields=8  rosterTables=1
-   - derived field 'standardSaltingTime' has no declarative expression
-   - derived field 'totalTumblingTime' has no declarative expression
+REC-7.1.3-salting-and-tumbling.html  (key=salting-and-tumbling engine=form-record fields=24)
+   - field 'standardSaltingTime' (derived) needs a computeFn in the registry (§6.1)
+   - field 'totalTumblingTime' (derived) needs a computeFn in the registry (§6.1)
 
-REC-7.10.3-thermometer-verification.html
-   key=thermometer-verification  engine=monitoring-log  fields=12  rosterTables=0
-   - field 'coldDeviation' has a function (compute)
-   - field 'hotDeviation' has a function (compute)
+REC-7.10.3-thermometer-verification.html  (key=thermometer-verification engine=monitoring-log fields=12)
+   - field 'coldDeviation' (computed) needs a computeFn in the registry (§6.1)
+   - field 'hotDeviation' (computed) needs a computeFn in the registry (§6.1)
 
-REC-7.10.4-thermometer-correction-factors.html
-   key=thermometer-correction-factors  engine=monitoring-log  fields=9  rosterTables=0
-   - field 'difference' has a function (compute)
+REC-7.10.4-thermometer-correction-factors.html  (key=thermometer-correction-factors engine=monitoring-log fields=9)
+   - field 'difference' (computed) needs a computeFn in the registry (§6.1)
 
-REC-7.2.12-double-seam-inspection-report.html
-   key=double-seam-inspection-report  engine=monitoring-log  fields=0  rosterTables=0
+REC-7.2.12-double-seam-inspection-report.html  (key=double-seam-inspection-report engine=monitoring-log fields=0)
    - customBody hook
-   - no fields found (check parser)
+   - function-valued config: docRevisionStart()
 
-REC-7.2.4-abalone-packing-specification.html
-   key=abalone-packing-specification  engine=monitoring-log  fields=11  rosterTables=0
+REC-7.2.4-abalone-packing-specification.html  (key=abalone-packing-specification engine=monitoring-log fields=11)
    - deriveInto hook
-   - field 'cookoutPct' has a function (compute)
-   - field 'newMinIngo' has a function (compute)
-   - field 'newMaxIngo' has a function (compute)
+   - field 'cookoutPct' (computed) needs a computeFn in the registry (§6.1)
+   - field 'newMinIngo' (computed) needs a computeFn in the registry (§6.1)
+   - field 'newMaxIngo' (computed) needs a computeFn in the registry (§6.1)
 
-REC-7.5.1-live-production-pack.html
-   key=live-production-pack  engine=monitoring-log  fields=25  rosterTables=0
-   - field 'purgeDays' has a function (compute)
-   - field 'purgeLoss' has a function (compute)
-
---- clean records ---
-dry-export-pack-front-page, live-leftovers-log, master-cleaning-checklist, master-cleaning-plan, mortalities-log, mortality-counts-by-customer, production-information-nrcs, dry-nrcs-packs, production-information-nrcs-rework, qa1-damaged-cans-and-lids, cans-released-form, gonad-inspection-report, training-register, incubator-cans-log, fixed-reader-checks, basket-removal-shucking-gutting, bleeding-and-salting, washing-control-sheet, salting-oosw, scrubbing-check-supervisor, ph-verification, sampling-log, stock-loading, qc-report, rework-log, product-label-checklist, labelling-of-cans, stock-transfers, scrubbing-checklist-qc, precooking-check-sheet, can-packing-control-sheet, can-filling-and-printing, printing-control-sheet, cans-produced, retorting-control-sheet, retort-inspection-report, broth-cooking, ingredient-weighing, sauce-mixing, final-sauce-mix, sauce-batch-coding, brine-mixing-report, dry-cooking, drying-process, dried-abalone-transfer, dry-monitoring, grading-production-log-cultivated, grading-production-log-ranched, grading-boxing-traceability, boxing-and-labelling, dry-stock-control, labelling-of-dry-boxes, dry-labelling-list, dry-stock-transfers, live-pack-checklist, live-packing-bag-quality-check, individual-abalone-weight-checks, receiving-live-returns, production-areas-cleaning-record, live-product-areas-cleaning-record, personnel-facilities-cleaning-record, daily-cleaning-inspection, deep-cleaning-record-weekly, weekly-cleaning-record, dispatch-cleaning-inspection, facility-inspection, facility-inspection-nc-report, chemical-stock-issue-register, internal-pest-sightings-log, pest-inspection-record, staff-hygiene-inspection-weekends, staff-hygiene-inspection, allergen-cleaning-verification, daily-equipment-checklist, glass-plastic-equipment-inspection, glass-breakage-clearance-certificate, utensil-issue-record, safety-glass-register, goggles-register, knife-register, glove-issuing-register, plaster-dressing-inspection, first-aid-checklist-record, salt-issuing-register, chiller-batch-control, dry-chiller-batch-control, maintenance-job-card, water-tank-inspection, factory-maintenance-inspection, equipment-checklist-roof, daily-waste-removal, boiler-inspection-report, seamer-inspection-report, incoming-ppe-inspection, incoming-goods-inspection-log, cans-incoming-inspection, lids-incoming-inspection, lids-incoming-inspection-internal, incoming-goods-inspection, dispatch-loading-inspection-checklist, dispatch-receiving-checklist, water-monitoring, lha-water-monitoring, chiller-temperature-monitoring, incubator-temperature-check, dry-room-temp-humidity-log, grading-room-temp-humidity-log, internal-car, disposition-investigation-record, withdrawal-mock-recall-record, traceability, traceability-mock-recall-canned-braised-abalone, traceability-mock-recall-canned-abalone, traceability-mock-recall-canned-minced-abalone, traceability-mock-recall-dried-abalone, traceability-mock-recall-live-abalone, supplier-questionnaire, supplier-approval-record, rapid-food-handler-medicals, rfh-medical-result, emergency-evacuation-attendance-register, handling-of-emergencies-and-incidences, daily-factory-feedback-meeting, rtw-medical-questionnaire
+REC-7.5.1-live-production-pack.html  (key=live-production-pack engine=monitoring-log fields=25)
+   - field 'purgeDays' (computed) needs a computeFn in the registry (§6.1)
+   - field 'purgeLoss' (computed) needs a computeFn in the registry (§6.1)
 

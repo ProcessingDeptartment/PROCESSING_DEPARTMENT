@@ -89,7 +89,8 @@ model RecordFieldDef {
   options       String[]                         // select / enum values
   group         String?                          // job-info sub-grouping
   position      Int
-  computeExpr   String?                          // computed/derived: e.g. 'sum(roster.wholeWeight)'
+  computeFn     String?                          // name of a fn in public/lib/compute/registry.js (+ server mirror)
+  computeArgs   Json?                            // {"column":"wholeWeight"} | {"a":"coldReading","b":"coldStandard"}
   recordPickSource String?                       // recordpick: source recordKey
   linkField     String?                          // marks this field a join key: 'jobNo'|'rmLot'|
                                                   //   'exportBatch'|'agCode'|'person'|...  (extensible)
@@ -172,8 +173,8 @@ front-page feature — one consumer of the generic mechanism.
 1. load the `RecordDefinition`
 2. validate the payload against it — required present, types coercible, options in range,
    `validateJson` rules — **reject on failure** (today it only checks `typeof value === 'string'`)
-3. compute `computed` / `derived` values server-side from `computeExpr` (client value is
-   advisory only)
+3. compute `computed` / `derived` values server-side by calling `computeFn` with `computeArgs`
+   (client value is advisory only)
 4. `upsert` the Layer-2 row + roster rows
 5. upsert/prune Layer-3 `RecordLink` edges
 6. still write the `KeyValue` blob (rollback + mirror during transition)
@@ -246,9 +247,10 @@ Then `gen-submission-schema.mjs` builds Layer 2 from the now-authoritative Layer
   **Done 2026-09-09** — see `definition-extraction-report.md`. Result: **124 / 131 clean,
   7 flagged, 0 unparseable.** All 7 flags are the same root cause (computed/derived field
   backed by a JS function); 3 of those also keep a `clientHook` (7.1.2, 7.2.4, 7.2.12).
-- **`computeExpr` mechanism — the one real design choice.** ~15 formulas across 7 records.
-  Recommend a named-function registry (`public/lib/compute/<name>.js`, referenced by
-  `RecordFieldDef.computeExpr`) first; a small DSL later only if the list grows.
+- ~~`computeExpr` mechanism~~ **Decided (Consolidated Plan §6.1):** named-function registry —
+  `computeFn` (string) + `computeArgs` (JSON) columns on `RecordFieldDef`, functions in
+  `public/lib/compute/registry.js` + a server mirror. No DSL. Registry wiring for the ~15
+  formulas is a build step, not a design question.
 - `linkField` catalogue — enumerate the join-key kinds with Michaela (`jobNo`, `rmLot`,
   `exportBatch`, `agCode`, `person`, …) so normalisation rules per kind are defined once.
 - `select` fields that should be shared Postgres enums (grades, size ranges, "processing for").

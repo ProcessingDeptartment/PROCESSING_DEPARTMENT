@@ -35,7 +35,13 @@ const DEF_KEYS = new Set(['mount', 'recordKey', 'engine', 'docCode', 'title', 'd
   'jobInfoGroup', 'clientHook', 'sections', 'roster', 'entryFields', 'fields', 'autofill']);
 // field keys handled by an explicit column on RecordFieldDef
 const FIELD_KEYS = new Set(['key', 'label', 'type', 'required', 'readOnly', 'unit', 'options',
-  'group', 'computeExpr', 'recordPickSource', 'linkField', 'linkRelation', 'validateJson']);
+  'group', 'computeFn', 'computeArgs', 'recordPickSource', 'linkField', 'linkRelation', 'validateJson']);
+// bespoke pages: recordKey -> the named JS hook the page keeps (Consolidated Plan §6.3)
+const CLIENT_HOOKS = {
+  'abalone-receiving': 'abaloneReceivingScale',
+  'abalone-packing-specification': 'packingSpecDerive',
+  'double-seam-inspection-report': 'doubleSeamCustomBody',
+};
 
 const isFn = (v) => typeof v === 'function';
 const plain = (v) => v && typeof v === 'object' && !Array.isArray(v);
@@ -54,7 +60,8 @@ function fieldRow(f, sectionIndex, parentKey, position) {
     sectionIndex: sectionIndex ?? null,
     parentFieldKey: parentKey ?? null,
     position,
-    computeExpr: typeof f.computeExpr === 'string' ? f.computeExpr : (isFn(f.compute) ? '(fn)' : null),
+    computeFn: typeof f.computeFn === 'string' ? f.computeFn : null,
+    computeArgs: plain(f.computeArgs) ? f.computeArgs : null,
     recordPickSource: f.source ?? f.recordPickSource ?? null,
     linkField: f.linkField ?? null,
     linkRelation: f.linkRelation ?? null,
@@ -63,7 +70,7 @@ function fieldRow(f, sectionIndex, parentKey, position) {
   const extra = {};
   for (const [k, v] of Object.entries(f)) if (!FIELD_KEYS.has(k) && k !== 'source' && k !== 'compute' && k !== 'columns' && k !== 'fields' && !isFn(v)) extra[k] = v;
   if (Object.keys(extra).length) row.extraJson = extra;
-  if (isFn(f.compute)) row.hasComputeFn = true;
+  if (isFn(f.compute) && !row.computeFn) row.needsComputeFn = true; // inline compute() -> must be named in the registry (§6.1)
   return row;
 }
 
@@ -111,12 +118,8 @@ function build(file, src) {
     def.fields.push(row);
     if (!KNOWN_TYPES.has(row.type)) flags.push(`unknown field type: '${row.type}' (${row.key})`);
     if (row.type === 'select' && !row.options) flags.push(`select without options[]: ${row.key}`);
-    if ((row.type === 'computed' || row.type === 'derived') && row.computeExpr === '(fn)')
-      flags.push(`${row.type} field '${row.key}' computed by a JS function`);
-    else if ((row.type === 'computed' || row.type === 'derived') && !row.computeExpr)
-      flags.push(`${row.type} field '${row.key}' has no expression`);
-    if (row.hasComputeFn && row.type !== 'computed' && row.type !== 'derived')
-      flags.push(`field '${row.key}' has a compute() function`);
+    if ((row.type === 'computed' || row.type === 'derived' || row.needsComputeFn) && !row.computeFn)
+      flags.push(`field '${row.key}' (${row.type}) needs a computeFn in the registry (§6.1)`);
     const kids = Array.isArray(f.columns) ? f.columns : (f.type === 'roster' && Array.isArray(f.fields) ? f.fields : null);
     if (kids) kids.forEach((c) => addField(c, sIdx, f.key));
   };
@@ -167,8 +170,7 @@ function build(file, src) {
   }
   if (Array.isArray(cfg.extraBatchFields)) def.extraBatchFields = cfg.extraBatchFields;
 
-  if (flags.some((x) => x.startsWith('customBody') || x.startsWith('deriveInto') || x.startsWith('hardware') || x.startsWith('bespoke')))
-    def.clientHook = def.recordKey; // placeholder name; real hook wired during that record's migration
+  if (CLIENT_HOOKS[def.recordKey]) def.clientHook = CLIENT_HOOKS[def.recordKey];
 
   return { file, flags, def };
 }

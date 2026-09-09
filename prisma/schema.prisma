@@ -96,7 +96,8 @@ model RecordFieldDef {
   options          String[]
   group            String?
   position         Int
-  computeExpr      String? // 'sum(roster.wholeWeight)' | '(fn)' pending the compute registry
+  computeFn        String? // name of a function in public/lib/compute/registry.js (+ server mirror); null for ordinary fields
+  computeArgs      Json? // args that function needs, e.g. {"column":"wholeWeight"} or {"a":"coldReading","b":"coldStandard"}
   recordPickSource String?
   linkField        String? // marks a join key: 'jobNo'|'rmLot'|'exportBatch'|'agCode'|'person'|...
   linkRelation     String? // 'self' | 'input' | 'output'
