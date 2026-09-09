@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -68,7 +68,7 @@
       <h1>Drying Report</h1>
     </div>
     <div class="no-print">
-      <a class="btn btn-ghost" href="job-status.html">← Job status</a>
+      <a class="btn btn-ghost" href="job-status.html">â† Job status</a>
     </div>
   </div>
   <div class="cr-body">
@@ -91,14 +91,14 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script>(function () {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
-  const fmt = (n, d) => (n == null ? '—' : n.toFixed(d == null ? 2 : d));
+  const fmt = (n, d) => (n == null ? 'â€”' : n.toFixed(d == null ? 2 : d));
 
   let CACHE = {};
 
@@ -167,10 +167,10 @@
   ];
 
   const SIZE_GRADES = [
-    ['under8g', 'Under 8g'], ['g8to10', '8g–10g'], ['g11to13', '11g–13g'], ['g14to16', '14g–16g'],
-    ['g17to20', '17g–20g'], ['g21to23', '21g–23g'], ['g24to25', '24g–25g'], ['g26to28', '26g–28g'],
-    ['g29to31', '29g–31g'], ['g32to35', '32g–35g'], ['g36to39', '36g–39g'], ['g40to44', '40g–44g'],
-    ['g45to50', '45g–50g'], ['g51to55', '51g–55g'], ['g56to60', '56g–60g'], ['g60plus', '60g+']
+    ['under8g', 'Under 8g'], ['g8to10', '8gâ€“10g'], ['g11to13', '11gâ€“13g'], ['g14to16', '14gâ€“16g'],
+    ['g17to20', '17gâ€“20g'], ['g21to23', '21gâ€“23g'], ['g24to25', '24gâ€“25g'], ['g26to28', '26gâ€“28g'],
+    ['g29to31', '29gâ€“31g'], ['g32to35', '32gâ€“35g'], ['g36to39', '36gâ€“39g'], ['g40to44', '40gâ€“44g'],
+    ['g45to50', '45gâ€“50g'], ['g51to55', '51gâ€“55g'], ['g56to60', '56gâ€“60g'], ['g60plus', '60g+']
   ];
 
   async function loadAll() {
@@ -230,7 +230,7 @@
     const missing = [];
     if (!rep.counts.receiving) missing.push('Abalone Receiving (REC 7.1.2)');
     if (!rep.counts.drying) missing.push('Drying Process (REC 7.4.1)');
-    if (!rep.counts.grading) missing.push('Grading Production Log — Cultivated (REC 7.4.3.1)');
+    if (!rep.counts.grading) missing.push('Grading Production Log â€” Cultivated (REC 7.4.3.1)');
 
     $('reportPanel').innerHTML = `
       <div class="jobline">
@@ -242,9 +242,9 @@
       </div>
 
       <dl class="kv" style="margin-bottom:6px;">
-        <dt>Drying process for</dt><dd>${esc(h.toBeProcessedFor || '—')}</dd>
-        <dt>Received from</dt><dd>${esc(h.receivedFrom || '—')}</dd>
-        <dt>Receiving date</dt><dd>${esc(h.receivingDate || '—')}</dd>
+        <dt>Drying process for</dt><dd>${esc(h.toBeProcessedFor || 'â€”')}</dd>
+        <dt>Received from</dt><dd>${esc(h.receivedFrom || 'â€”')}</dd>
+        <dt>Receiving date</dt><dd>${esc(h.receivingDate || 'â€”')}</dd>
       </dl>
 
       <h2 class="sec">Yield summary</h2>
@@ -257,7 +257,7 @@
           <tr class="total"><td>Actual yield</td><td class="num statbig">${fmt(rep.actualYield)} %</td></tr>
         </tbody>
       </table>
-      <div class="muted" style="margin-top:4px;">Yield = dried weight ÷ whole weight × 100 (or the value recorded on REC 7.4.1 / 7.4.3.1 where present).</div>
+      <div class="muted" style="margin-top:4px;">Yield = dried weight Ã· whole weight Ã— 100 (or the value recorded on REC 7.4.1 / 7.4.3.1 where present).</div>
 
       <h2 class="sec">Harvest breakdown (receiving)</h2>
       <table>
@@ -267,17 +267,17 @@
         </tr></thead>
         <tbody>
           ${rep.harvest.length ? rep.harvest.map((r) => `<tr>
-            <td>${esc(r.date || '—')}</td>
-            <td>${esc(r.sizeRange || '—')}</td>
+            <td>${esc(r.date || 'â€”')}</td>
+            <td>${esc(r.sizeRange || 'â€”')}</td>
             <td class="num">${fmt(r.mass, 3)}</td>
-            <td class="num">${r.animals == null ? '—' : r.animals}</td>
-            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : '—'}</td>
+            <td class="num">${r.animals == null ? 'â€”' : r.animals}</td>
+            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : 'â€”'}</td>
           </tr>`).join('') : '<tr><td colspan="5" class="muted">No Abalone Receiving records for this job.</td></tr>'}
           ${rep.harvest.length ? `<tr class="total">
             <td>TOTAL</td><td></td>
             <td class="num">${fmt(rep.totalMass, 2)} kg</td>
-            <td class="num">${rep.totalAnimals || '—'}</td>
-            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : '—'}</td>
+            <td class="num">${rep.totalAnimals || 'â€”'}</td>
+            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : 'â€”'}</td>
           </tr>` : ''}
         </tbody>
       </table>
@@ -289,7 +289,7 @@
           ${rep.timeline.length ? rep.timeline.map((r) => `<tr>
             <td>${esc(r.label)}</td><td class="num">${esc(r.date)}</td>
           </tr>`).join('') : '<tr><td colspan="2" class="muted">No Drying Process dates recorded for this job.</td></tr>'}
-          <tr class="total"><td>Total drying time</td><td class="num">${rep.totalDryingTimeDays == null ? '—' : rep.totalDryingTimeDays + ' days'}</td></tr>
+          <tr class="total"><td>Total drying time</td><td class="num">${rep.totalDryingTimeDays == null ? 'â€”' : rep.totalDryingTimeDays + ' days'}</td></tr>
         </tbody>
       </table>
 
@@ -366,14 +366,14 @@
     const rep = buildReport(jobNo);
     render(rep, STATUSES.find((s) => String(s.job_no) === String(jobNo)));
     $('statusLine').textContent =
-      `${rep.counts.receiving} receiving · ${rep.counts.drying} drying process · ${rep.counts.grading} grading log record(s) for this job`;
+      `${rep.counts.receiving} receiving Â· ${rep.counts.drying} drying process Â· ${rep.counts.grading} grading log record(s) for this job`;
     const url = new URL(location.href);
     url.searchParams.set('job', jobNo);
     history.replaceState(null, '', url);
   }
 
   async function refresh() {
-    $('statusLine').textContent = 'Loading…';
+    $('statusLine').textContent = 'Loadingâ€¦';
     const keep = currentJob();
     [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
 

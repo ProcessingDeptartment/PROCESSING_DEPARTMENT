@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -18,7 +18,7 @@
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
@@ -38,7 +38,7 @@
       { key: 'dripTimeOfBags', label: 'Drip time of bags', type: 'text' },
       { key: 'startTime', label: 'Start time', type: 'text' },
       { key: 'scaleTareWeight', label: 'Scale tare weight', type: 'number' },
-      { key: 'waterTemp', label: 'Water temp', type: 'number', unit: '°C' },
+      { key: 'waterTemp', label: 'Water temp', type: 'number', unit: 'Â°C' },
       { key: 'cleaningInspectionBefore', label: 'Cleaning inspection before live packing', type: 'yesno' },
       { key: 'mortalitiesWhilePacking', label: 'Mortalities while packing?', type: 'yesno' },
       { key: 'noOfMortalities', label: 'No. of mortalities', type: 'number' },
@@ -53,8 +53,8 @@
       { key: 'allBoxesLoadedInTruck', label: 'All boxes loaded in truck?', type: 'yesno' },
       { key: 'truckLockedSealed', label: 'Truck locked & sealed?', type: 'yesno' },
       { key: 'cleaningInspectionAfter', label: 'Cleaning inspection after live packing', type: 'yesno' },
-      { key: 'leftoversSizeClass', label: 'Leftovers — size class(es)', type: 'select', options: ['30-40g', '40-50g', '50-60g', '60-70g', '70-90g', '90-110g', '110-150g', '150-200g', '350-500g', 'Wild'] },
-      { key: 'leftoversWeight', label: 'Leftovers — weight', type: 'number', unit: 'kg' },
+      { key: 'leftoversSizeClass', label: 'Leftovers â€” size class(es)', type: 'select', options: ['30-40g', '40-50g', '50-60g', '60-70g', '70-90g', '90-110g', '110-150g', '150-200g', '350-500g', 'Wild'] },
+      { key: 'leftoversWeight', label: 'Leftovers â€” weight', type: 'number', unit: 'kg' },
       { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
     ],
     specFields: [],

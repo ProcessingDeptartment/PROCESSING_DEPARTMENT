@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -19,7 +19,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/lookups.js?v=4"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=6"></script>
@@ -81,7 +81,7 @@
     if (!raw) return null;
     var out = { basketNr: '', farmCount: '', sizeRange: '' };
 
-    var sizeM = raw.match(/(\d{1,3})\s*[-Ã¢â‚¬â€œ]\s*(\d{1,3})\s*g/i) || raw.match(/(\d{3})\s*g\s*\+/);
+    var sizeM = raw.match(/(\d{1,3})\s*[-ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“]\s*(\d{1,3})\s*g/i) || raw.match(/(\d{3})\s*g\s*\+/);
     if (sizeM) out.sizeRange = convertSize(parseInt(sizeM[1], 10));
 
     var bM = raw.match(/(?:basket|bkt)\D*(\d+)/i);
@@ -189,7 +189,7 @@
 
   function sizeOptionsHtml() {
     var list = (window.Lookups && window.Lookups.get('sizeRanges')) || [];
-    return '<option value="">Ã¢â‚¬â€</option>' + list.map(function (v) {
+    return '<option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>' + list.map(function (v) {
       return '<option value="' + v + '">' + v + '</option>';
     }).join('');
   }

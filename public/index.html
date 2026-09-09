@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -192,7 +192,7 @@
 
 <script src="lib/data-store.js?v=5"></script>
 <script src="lib/api-backend.js?v=6"></script>
-<script src="lib/auth.js?v=1"></script>
+<script src="lib/auth.js?v=2"></script>
 <script src="lib/login-ui.js?v=1"></script>
 <script>  function refreshSessionBar() {
     var user = window.Auth.getCurrentUser();
@@ -401,7 +401,7 @@
         : Math.round(purgeIn).toLocaleString() + ' kg in, ' + Math.round(purgeOut).toLocaleString()
           + ' kg out over ' + purgeJobs + ' pack(s)'));
 
-    t.push(tile('quality', 'Purges outside 2–12 days',
+    t.push(tile('quality', 'Purges outside 2â€“12 days',
       longPurges, '',
       longPurges ? '<span class="bad">' + longPurges + ' of ' + livePacks + ' outside the window</span>'
                  : 'All recorded purges within the window'));
@@ -435,7 +435,7 @@
   }
 
   async function load() {
-    $('dashStatus').textContent = 'Loading…';
+    $('dashStatus').textContent = 'Loadingâ€¦';
     try {
       var res = await Promise.all([
         readList('formrecord:abalone-receiving'),

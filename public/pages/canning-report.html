@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -67,7 +67,7 @@
       <h1>Canning Report</h1>
     </div>
     <div class="no-print">
-      <a class="btn btn-ghost" href="job-status.html">← Job status</a>
+      <a class="btn btn-ghost" href="job-status.html">â† Job status</a>
     </div>
   </div>
   <div class="cr-body">
@@ -90,14 +90,14 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script>(function () {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
-  const fmt = (n, d) => (n == null ? '—' : n.toFixed(d == null ? 2 : d));
+  const fmt = (n, d) => (n == null ? 'â€”' : n.toFixed(d == null ? 2 : d));
 
 
   const TARGET_YIELD = 105.00;
@@ -228,16 +228,16 @@
 
       <div class="grid2">
         <dl class="kv">
-          <dt>Canning process for</dt><dd>${esc(h.toBeProcessedFor || '—')}</dd>
-          <dt>Received from</dt><dd>${esc(h.receivedFrom || '—')}</dd>
-          <dt>Receiving date</dt><dd>${esc(h.receivingDate || '—')}</dd>
-          <dt>Actual cans</dt><dd>${rep.totalCans || '—'}</dd>
+          <dt>Canning process for</dt><dd>${esc(h.toBeProcessedFor || 'â€”')}</dd>
+          <dt>Received from</dt><dd>${esc(h.receivedFrom || 'â€”')}</dd>
+          <dt>Receiving date</dt><dd>${esc(h.receivingDate || 'â€”')}</dd>
+          <dt>Actual cans</dt><dd>${rep.totalCans || 'â€”'}</dd>
         </dl>
         <dl class="kv">
           <dt>Actual yield</dt><dd>${fmt(rep.actualYield)} cans/100 kg</dd>
           <dt>Target yield</dt><dd>${TARGET_YIELD.toFixed(2)} cans/100 kg</dd>
-          <dt>${EQUIV_DRAINED_G}g equivalent cans</dt><dd>${rep.equivCans == null ? '—' : Math.round(rep.equivCans)}</dd>
-          <dt>Target cans</dt><dd>${rep.targetCans == null ? '—' : Math.round(rep.targetCans)}</dd>
+          <dt>${EQUIV_DRAINED_G}g equivalent cans</dt><dd>${rep.equivCans == null ? 'â€”' : Math.round(rep.equivCans)}</dd>
+          <dt>Target cans</dt><dd>${rep.targetCans == null ? 'â€”' : Math.round(rep.targetCans)}</dd>
         </dl>
       </div>
 
@@ -249,11 +249,11 @@
         </tr></thead>
         <tbody>
           ${rep.canRows.length ? rep.canRows.map((r) => `<tr>
-            <td>${esc(r.productionCode || '—')}</td>
-            <td class="num">${r.qty == null ? '—' : r.qty}</td>
-            <td class="num">${r.drained == null ? '—' : r.drained + 'g'}</td>
-            <td>${esc(r.medium || '—')}</td>
-            <td>${esc(r.agCode || '—')}</td>
+            <td>${esc(r.productionCode || 'â€”')}</td>
+            <td class="num">${r.qty == null ? 'â€”' : r.qty}</td>
+            <td class="num">${r.drained == null ? 'â€”' : r.drained + 'g'}</td>
+            <td>${esc(r.medium || 'â€”')}</td>
+            <td>${esc(r.agCode || 'â€”')}</td>
           </tr>`).join('') : '<tr><td colspan="5" class="muted">No Cans Produced records for this job.</td></tr>'}
           ${rep.canRows.length ? `<tr class="total"><td>TOTAL</td><td class="num">${rep.totalCans}</td><td colspan="3"></td></tr>` : ''}
         </tbody>
@@ -267,17 +267,17 @@
         </tr></thead>
         <tbody>
           ${rep.harvest.length ? rep.harvest.map((r) => `<tr>
-            <td>${esc(r.date || '—')}</td>
-            <td>${esc(r.sizeRange || '—')}</td>
+            <td>${esc(r.date || 'â€”')}</td>
+            <td>${esc(r.sizeRange || 'â€”')}</td>
             <td class="num">${fmt(r.mass, 3)}</td>
-            <td class="num">${r.animals == null ? '—' : r.animals}</td>
-            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : '—'}</td>
+            <td class="num">${r.animals == null ? 'â€”' : r.animals}</td>
+            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : 'â€”'}</td>
           </tr>`).join('') : '<tr><td colspan="5" class="muted">No Abalone Receiving records for this job.</td></tr>'}
           ${rep.harvest.length ? `<tr class="total">
             <td>TOTAL</td><td></td>
             <td class="num">${fmt(rep.totalMass, 2)} kg</td>
-            <td class="num">${rep.totalAnimals || '—'}</td>
-            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : '—'}</td>
+            <td class="num">${rep.totalAnimals || 'â€”'}</td>
+            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : 'â€”'}</td>
           </tr>` : ''}
         </tbody>
       </table>
@@ -286,9 +286,9 @@
       <table>
         <thead><tr><th>Measure</th><th class="num">Weight (kg)</th><th class="num">% of whole mass</th></tr></thead>
         <tbody>
-          <tr><td>Out of salt weight</td><td class="num">${fmt(rep.ooswWeight)}</td><td class="num">${rep.pct(rep.ooswWeight) == null ? '—' : fmt(rep.pct(rep.ooswWeight)) + '%'}</td></tr>
-          <tr><td>Clean weight</td><td class="num">${fmt(rep.cleanWeight)}</td><td class="num">${rep.pct(rep.cleanWeight) == null ? '—' : fmt(rep.pct(rep.cleanWeight)) + '%'}</td></tr>
-          <tr><td>Precook weight</td><td class="num">${fmt(rep.precookWeight)}</td><td class="num">${rep.pct(rep.precookWeight) == null ? '—' : fmt(rep.pct(rep.precookWeight)) + '%'}</td></tr>
+          <tr><td>Out of salt weight</td><td class="num">${fmt(rep.ooswWeight)}</td><td class="num">${rep.pct(rep.ooswWeight) == null ? 'â€”' : fmt(rep.pct(rep.ooswWeight)) + '%'}</td></tr>
+          <tr><td>Clean weight</td><td class="num">${fmt(rep.cleanWeight)}</td><td class="num">${rep.pct(rep.cleanWeight) == null ? 'â€”' : fmt(rep.pct(rep.cleanWeight)) + '%'}</td></tr>
+          <tr><td>Precook weight</td><td class="num">${fmt(rep.precookWeight)}</td><td class="num">${rep.pct(rep.precookWeight) == null ? 'â€”' : fmt(rep.pct(rep.precookWeight)) + '%'}</td></tr>
           <tr class="total"><td>Whole mass per can</td><td class="num">${fmt(rep.massPerCan)} kg</td><td class="num"></td></tr>
         </tbody>
       </table>
@@ -352,14 +352,14 @@
     const rep = buildReport(jobNo);
     render(rep, STATUSES.find((s) => String(s.job_no) === String(jobNo)));
     $('statusLine').textContent =
-      `${rep.counts.receiving} receiving · ${rep.counts.cans} cans produced · ${rep.counts.precook} precooking · ${rep.counts.oosw} OOSW record(s) for this job`;
+      `${rep.counts.receiving} receiving Â· ${rep.counts.cans} cans produced Â· ${rep.counts.precook} precooking Â· ${rep.counts.oosw} OOSW record(s) for this job`;
     const url = new URL(location.href);
     url.searchParams.set('job', jobNo);
     history.replaceState(null, '', url);
   }
 
   async function refresh() {
-    $('statusLine').textContent = 'Loading…';
+    $('statusLine').textContent = 'Loadingâ€¦';
     const keep = currentJob();
     [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
 

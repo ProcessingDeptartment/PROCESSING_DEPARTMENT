@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -19,7 +19,7 @@
 <script src="../lib/lookups.js?v=4"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
@@ -54,7 +54,7 @@
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'traysClearlyMarked', label: 'Trays clearly marked?', type: 'yesno' },
       { key: 'noOfTrays', label: 'No. of trays', type: 'number' },
-      { key: 'chillerTemp', label: 'Chiller temp', type: 'number', unit: '°C' },
+      { key: 'chillerTemp', label: 'Chiller temp', type: 'number', unit: 'Â°C' },
       { key: 'totalDaysInChiller', label: 'Total days in chiller', type: 'number' },
       { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
     ],

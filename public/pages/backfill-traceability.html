@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -55,13 +55,13 @@
 
   <div class="card">
     <div class="sub" style="margin:0 0 8px;">Log</div>
-    <div id="log">â€”</div>
+    <div id="log">Ã¢â‚¬â€</div>
   </div>
 </div>
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/traced-records.js?v=2"></script>
@@ -111,7 +111,7 @@
       return { ok: false, why: 'The records API is unreachable from this device.' };
     }
     if (window.FacilityApi.authFailed && window.FacilityApi.authFailed()) {
-      return { ok: false, why: 'The records API rejected this deviceâ€™s access key (401).' };
+      return { ok: false, why: 'The records API rejected this deviceÃ¢â‚¬â„¢s access key (401).' };
     }
     return { ok: true };
   }
@@ -120,10 +120,10 @@
     plan = null;
     $('tbl').querySelector('tbody').innerHTML = '';
     $('totals').innerHTML = '<span class="warn"><strong>Cannot report.</strong> ' + why +
-      ' A scan run now would say &ldquo;nothing to backfill&rdquo; whether or not that is true â€” ' +
+      ' A scan run now would say &ldquo;nothing to backfill&rdquo; whether or not that is true Ã¢â‚¬â€ ' +
       'that is not a result you can rely on. ' +
       '<a href="api-key.html">Enter the access key</a>, then scan again.</span>';
-    $('status').innerHTML = '<span class="warn">Not authorised â€” no result.</span>';
+    $('status').innerHTML = '<span class="warn">Not authorised Ã¢â‚¬â€ no result.</span>';
     $('runBtn').disabled = true;
     $('scanBtn').disabled = false;
     log('REFUSED: ' + why);
@@ -132,14 +132,14 @@
   async function scan() {
     $('scanBtn').disabled = true;
     $('runBtn').disabled = true;
-    $('status').textContent = 'Scanningâ€¦';
+    $('status').textContent = 'ScanningÃ¢â‚¬Â¦';
     lines = [];
 
     const auth = await assertAuthorised();
     if (!auth.ok) { blockUnauthorised(auth.why); return; }
     if (auth.note) log('Note: ' + auth.note);
 
-    log('Reading existing indexâ€¦');
+    log('Reading existing indexÃ¢â‚¬Â¦');
 
     const existing = await window.storage.getByPrefix('batch_link:', true);
     const have = new Set(Object.keys(existing || {}));
@@ -157,7 +157,7 @@
         else missing.push(sub);
       }
       plan.push({ rec, total: subs.length, indexed, missing, noBatch });
-      log(rec.docCode + ' â€” ' + subs.length + ' submissions, ' + missing.length + ' missing');
+      log(rec.docCode + ' Ã¢â‚¬â€ ' + subs.length + ' submissions, ' + missing.length + ' missing');
     }
     render();
     $('scanBtn').disabled = false;
@@ -165,7 +165,7 @@
     $('runBtn').disabled = totalMissing === 0;
     $('status').textContent = totalMissing
       ? totalMissing + ' entries to write.'
-      : 'Nothing to backfill â€” every submission with a batch number is already indexed.';
+      : 'Nothing to backfill Ã¢â‚¬â€ every submission with a batch number is already indexed.';
   }
 
   function render() {
@@ -178,21 +178,21 @@
       return '<tr><td>' + (p.rec.docCode || '') + '</td><td>' + p.rec.title + '</td>' +
         '<td class="n">' + p.total + '</td><td class="n">' + p.indexed + '</td>' +
         '<td class="n">' + (p.missing.length ? '<strong>' + p.missing.length + '</strong>' : '0') + '</td>' +
-        '<td>' + notes.join(' Â· ') + '</td></tr>';
+        '<td>' + notes.join(' Ã‚Â· ') + '</td></tr>';
     }).join('');
     const t = plan.reduce((a, p) => ({
       subs: a.subs + p.total, idx: a.idx + p.indexed,
       miss: a.miss + p.missing.length, nb: a.nb + p.noBatch
     }), { subs: 0, idx: 0, miss: 0, nb: 0 });
-    $('totals').innerHTML = t.subs + ' submissions across ' + plan.length + ' records Â· ' +
-      t.idx + ' already indexed Â· <strong>' + t.miss + ' missing</strong> Â· ' +
+    $('totals').innerHTML = t.subs + ' submissions across ' + plan.length + ' records Ã‚Â· ' +
+      t.idx + ' already indexed Ã‚Â· <strong>' + t.miss + ' missing</strong> Ã‚Â· ' +
       t.nb + ' carry no batch number (skipped).';
   }
 
   async function run() {
     $('runBtn').disabled = true;
     $('scanBtn').disabled = true;
-    $('status').textContent = 'Writingâ€¦';
+    $('status').textContent = 'WritingÃ¢â‚¬Â¦';
 
     const auth = await assertAuthorised();
     if (!auth.ok) { blockUnauthorised(auth.why); return; }
@@ -220,14 +220,14 @@
     const after = await assertAuthorised();
     if (!after.ok) {
       log('Authorisation lost during the run: ' + after.why);
-      $('status').innerHTML = '<span class="warn">Interrupted â€” authorisation failed partway through. ' +
+      $('status').innerHTML = '<span class="warn">Interrupted Ã¢â‚¬â€ authorisation failed partway through. ' +
         'Some or all entries may not have been written. Fix the access key and scan again.</span>';
       $('scanBtn').disabled = false;
       return;
     }
 
     log('Done. ' + written + ' written, ' + failed + ' failed.');
-    $('status').innerHTML = '<span class="ok">Backfill complete â€” ' + written + ' entries written.</span>' +
+    $('status').innerHTML = '<span class="ok">Backfill complete Ã¢â‚¬â€ ' + written + ' entries written.</span>' +
       (failed ? ' <span class="warn">' + failed + ' failed.</span>' : '') + ' Re-scan to confirm.';
     $('scanBtn').disabled = false;
   }

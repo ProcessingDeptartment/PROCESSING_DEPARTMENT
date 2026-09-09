@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -18,7 +18,7 @@
 <script src="../lib/master-index-data.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/thresholds.js?v=2"></script>
@@ -33,18 +33,18 @@
     title: 'Daily Incubator Temperature Check',
     docRevisionStart: 6,
     instructions: [
-      { label: 'Target range', text: '36.1°C – 37.8°C, recorded at start of shift, lunch and end of shift.' }
+      { label: 'Target range', text: '36.1Â°C â€“ 37.8Â°C, recorded at start of shift, lunch and end of shift.' }
     ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
+      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
+      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
+      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'incubatorTemp', label: 'Incubator temperature', unit: '°C', ...Thresholds.get('incubator-temperature-check', 'incubatorTemp') }
+      { key: 'incubatorTemp', label: 'Incubator temperature', unit: 'Â°C', ...Thresholds.get('incubator-temperature-check', 'incubatorTemp') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'

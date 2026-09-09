@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -20,7 +20,7 @@
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/lookups.js?v=4"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
@@ -37,12 +37,12 @@
     docRevisionStart: 1,
     instructions: [
       { label: 'Purpose', text: 'Track cans sent for incubation/micro testing until they are cleared.' },
-      { label: 'How to fill this in', text: 'The three sections are done at different times on the same job. Fill in section 1 when the cans go in and submit it — that section then locks. When you come back, pick the job no. under "Continue a job" to reopen it and fill in the next section. A section already submitted can still be corrected, but you must give a reason and your name.' }
+      { label: 'How to fill this in', text: 'The three sections are done at different times on the same job. Fill in section 1 when the cans go in and submit it â€” that section then locks. When you come back, pick the job no. under "Continue a job" to reopen it and fill in the next section. A section already submitted can still be corrected, but you must give a reason and your name.' }
     ],
     showVerificationStrip: false,
 
     entryStages: [
-      { key: 'entry', label: '1. New entry — cans in' },
+      { key: 'entry', label: '1. New entry â€” cans in' },
       { key: 'micro', label: '2. Micro testing' },
       { key: 'cleared', label: '3. Cans cleared' }
     ],
@@ -54,28 +54,28 @@
     ],
 
     entryFields: [
-      { stage: 'entry', group: '1. New entry — cans in', key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
-      { stage: 'entry', group: '1. New entry — cans in', key: 'dateIn', label: 'Date in', type: 'timestamp', required: true },
+      { stage: 'entry', group: '1. New entry â€” cans in', key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
+      { stage: 'entry', group: '1. New entry â€” cans in', key: 'dateIn', label: 'Date in', type: 'timestamp', required: true },
 
-      { stage: 'entry', group: '1. New entry — cans in', key: 'productionCode', label: 'Production code', required: true,
+      { stage: 'entry', group: '1. New entry â€” cans in', key: 'productionCode', label: 'Production code', required: true,
         prefix: 'AG', digits: 6,
         pattern: '^AG[0-9]{6}$', patternMessage: 'Production code needs all 6 digits after AG, e.g. AG123456.' },
 
-      Object.assign({ stage: 'entry', group: '1. New entry — cans in', required: true },
+      Object.assign({ stage: 'entry', group: '1. New entry â€” cans in', required: true },
         Lookups.field({ key: 'productDescription', label: 'Product description', list: 'productDescriptions' })),
-      { stage: 'entry', group: '1. New entry — cans in', key: 'pieces', label: 'Pieces', type: 'digits', required: true },
-      { stage: 'entry', group: '1. New entry — cans in', key: 'quantity', label: 'Quantity', type: 'digits', required: true },
-      { stage: 'entry', group: '1. New entry — cans in', key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+      { stage: 'entry', group: '1. New entry â€” cans in', key: 'pieces', label: 'Pieces', type: 'digits', required: true },
+      { stage: 'entry', group: '1. New entry â€” cans in', key: 'quantity', label: 'Quantity', type: 'digits', required: true },
+      { stage: 'entry', group: '1. New entry â€” cans in', key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
 
       { stage: 'micro', group: '2. Micro testing', key: 'dateOutForMicro', label: 'Date out for micro', type: 'timestamp', required: true },
       { stage: 'micro', group: '2. Micro testing', key: 'qtyOutForTesting', label: 'Qty out for testing', type: 'digits', required: true },
-      { stage: 'micro', group: '2. Micro testing', key: 'checkedByMicro', label: 'Micro — checked by', type: 'text', required: true },
+      { stage: 'micro', group: '2. Micro testing', key: 'checkedByMicro', label: 'Micro â€” checked by', type: 'text', required: true },
 
       { stage: 'cleared', group: '3. Cans cleared', key: 'productCleared', label: 'Product cleared?', type: 'yesno', good: 'Yes', required: true, flagsDeviation: true },
       { stage: 'cleared', group: '3. Cans cleared', key: 'notClearedReason', label: 'Reason not cleared', type: 'textarea', required: true,
         showWhen: { field: 'productCleared', equals: 'No' } },
       { stage: 'cleared', group: '3. Cans cleared', key: 'dateCleared', label: 'Date cleared', type: 'timestamp', required: true },
-      { stage: 'cleared', group: '3. Cans cleared', key: 'clearedByName', label: 'Clearance — checked by', type: 'text', required: true }
+      { stage: 'cleared', group: '3. Cans cleared', key: 'clearedByName', label: 'Clearance â€” checked by', type: 'text', required: true }
     ],
     specFields: [],
     deviationLabel: 'Deviation',

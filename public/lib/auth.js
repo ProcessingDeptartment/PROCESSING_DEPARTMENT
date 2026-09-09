@@ -14,9 +14,25 @@
 
   let currentUser = null;
 
+  const SESSION_KEY = 'processing.auth.username';
+
+  function safeSession(fn, fallback) {
+    try { return fn(); } catch (e) { return fallback; }
+  }
+
+  function applyRole(user) {
+    if (user && window.PermissionRules) {
+      window.PermissionRules.setCurrentRole(user.role);
+    }
+  }
 
   function restoreSession() {
-
+    const username = safeSession(() => window.sessionStorage.getItem(SESSION_KEY), null);
+    if (!username) return;
+    const user = USERS.find(u => u.username === username);
+    if (!user) return;
+    currentUser = user;
+    applyRole(user);
   }
 
   function login(username, password) {
@@ -26,15 +42,15 @@
       return { ok: false, error: 'Invalid username or password' };
     }
     currentUser = user;
-    if (window.PermissionRules) {
-      window.PermissionRules.setCurrentRole(user.role);
-    }
+    safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+    applyRole(user);
 
     return { ok: true, user };
   }
 
   function logout() {
     currentUser = null;
+    safeSession(() => window.sessionStorage.removeItem(SESSION_KEY));
   }
 
   function getCurrentUser() {
@@ -71,6 +87,11 @@
 
 
   restoreSession();
+
+  // PermissionRules may load after auth.js; re-apply the restored role once the DOM is ready.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function () { applyRole(currentUser); });
+  }
 
   window.Auth = {
     login,

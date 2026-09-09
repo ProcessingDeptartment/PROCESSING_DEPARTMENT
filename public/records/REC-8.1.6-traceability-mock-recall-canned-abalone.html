@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -19,7 +19,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=6"></script>
-<script src="../lib/auth.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=6"></script>
@@ -37,7 +37,7 @@
     stage: 'recall-canned',
     listColumns: ['date', 'agCode', 'jobNo'],
     instructions: [
-      { label: 'How to fill this in', text: 'Choose the job number first Ã¢â‚¬â€ each roster row then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
+      { label: 'How to fill this in', text: 'Choose the job number first ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â each roster row then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
       { label: 'Records not traced by job number', text: 'Cleaning (REC 7.6.1, 7.6.2), Staff Hygiene (REC 7.6.7), Glass & Plastic (REC 7.7.2) and Utensil Issue (REC 7.7.4) are daily, weekly or per-shift records covering many jobs at once, so they are deliberately NOT filed against a job number and will not appear in the picker. Retrieve them by DATE RANGE for the production dates of this job and record them as Master Index picks.' }
     ],
 
@@ -52,7 +52,7 @@
       ]}
     ],
     roster: {
-      title: 'Records Ã¢â‚¬â€ covers Stock on hold, Customer letter response, Recall communication, Shipment docs, Customer invoice, Abalone Receiving (7.1.2), Shucking & Gutting (7.1.1), Bleeding & Salting (7.1.3), Washing (7.1.4), OOSW (7.1.5), Chiller Monitoring (7.9.1), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Pre-cook Sheet (7.2.3), Retort Inspection (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming records & COA (7.8.6/7.8.7), Double Seam (7.2.12), Retort control sheet, Scale verification (7.10.5), Cans Printing & Filling (7.2.6), NRCS Clearance, QC Report, Dispatch (7.8.8), Glass & Plastic (7.7.2), Staff Hygiene (7.6.7), Utensil Record (7.7.4), Daily/Weekly Cleaning Inspection (7.6.1/7.6.2)',
+      title: 'Records ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â covers Stock on hold, Customer letter response, Recall communication, Shipment docs, Customer invoice, Abalone Receiving (7.1.2), Shucking & Gutting (7.1.1), Bleeding & Salting (7.1.3), Washing (7.1.4), OOSW (7.1.5), Chiller Monitoring (7.9.1), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Pre-cook Sheet (7.2.3), Retort Inspection (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming records & COA (7.8.6/7.8.7), Double Seam (7.2.12), Retort control sheet, Scale verification (7.10.5), Cans Printing & Filling (7.2.6), NRCS Clearance, QC Report, Dispatch (7.8.8), Glass & Plastic (7.7.2), Staff Hygiene (7.6.7), Utensil Record (7.7.4), Daily/Weekly Cleaning Inspection (7.6.1/7.6.2)',
       columns: [
         { key: 'submissionRef', label: 'Record for this job', type: 'recordpick', source: 'jobtrace', jobField: 'jobNo', fillCode: 'recordCode', fillName: 'recordName' },
         { key: 'recordCode', label: 'REC code', type: 'text' },
