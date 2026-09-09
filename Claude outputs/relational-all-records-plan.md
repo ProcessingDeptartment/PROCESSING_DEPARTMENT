@@ -13,26 +13,32 @@ skill `fsms-erp-bridge`
   validation, derived values, links, autofill — all of it lives in the **database as
   data**, not in 130 hand-written `.init({...})` config objects.
 - The **frontend layout is fine** — don't disturb how forms look or behave for the operator.
-- **No DB in use yet** — this is greenfield. Set it up correctly now.
-- Offline local-save-then-sync stays a hard requirement (rules out Frappe — ADR 07).
+- **This is a server-backed site, not an app** (confirmed 2026-09-09). Online-only. **No
+  offline mode, and no `localStorage` at all** — records save straight to Neon through the
+  API; a failed save is retried, not queued locally. The current `data-store.js`
+  `localStorage` fallback is to be removed.
+- Neon account exists and `facility-api` is deployed, but **Neon is not organised yet** —
+  this is effectively greenfield DB design.
+- Frappe stays out — by preference (don't move platforms, don't rewrite the repo, "an app
+  is too complex for this system"), not only by a constraint.
 
 ### What that means, precisely
 
 `form-record.js` / `monitoring-log.js` keep rendering forms exactly as they look today,
-but they stop *owning* what a record is. They **fetch the record's definition from the
-API** (and cache it for offline), then render from that. The definition — every field,
-type, rule, section, roster column, autofill, link — is rows in Postgres.
+but they stop *owning* what a record is. On page load they **fetch the record's
+definition from the API** and render from that — no client-side caching needed, since the
+site is online-only. The definition — every field, type, rule, section, roster column,
+autofill, link — is rows in Postgres.
 
-This is a Frappe-shaped design (DocType metadata + per-doc tables). You are building a
-minimal version of it because Frappe itself is out (offline; not rewriting the repo).
+This is a Frappe-shaped design (DocType metadata + per-doc tables), built as a minimal
+version inside the existing site rather than by adopting Frappe.
 
 ### Honest limit
 
-Zero record-specific JS is not reachable while offline and while hardware integrations
-exist (REC 7.1.2 barcode + scale; REC 7.2.4 / 7.2.12 derived-value hooks). Those keep a
-small amount of JS logic — but as **named hooks in a registry, referenced by the
-definition**, not authored inline per page. The definition says "record uses hook X";
-the DB still owns the field list and rules around it.
+Three records keep a small amount of real JS (REC 7.1.2 barcode + scale; REC 7.2.4
+`deriveInto`; REC 7.2.12 `customBody`) — but as **named hooks referenced by the
+definition** (`clientHook`), not authored inline per page. The DB still owns the field
+list and rules around them.
 
 ---
 
@@ -115,8 +121,9 @@ model RecordAutofillDef {
 }
 ```
 
-`GET /api/record-def/:recordKey` returns the whole thing assembled. The engines fetch it,
-cache it in IndexedDB keyed by `recordKey`+`version`, and render. Offline = use the cache.
+`GET /api/record-def/:recordKey` returns the whole thing assembled. The engines fetch it
+on page load and render. Online-only site — no client-side cache; `version` is for HTTP
+caching / cache-busting, not offline storage.
 
 ### Layer 2 — Submissions (per-record physical tables, generated from Layer 1)
 
@@ -177,7 +184,9 @@ front-page feature — one consumer of the generic mechanism.
    (client value is advisory only)
 4. `upsert` the Layer-2 row + roster rows
 5. upsert/prune Layer-3 `RecordLink` edges
-6. still write the `KeyValue` blob (rollback + mirror during transition)
+6. for any record that *already* holds `KeyValue` data, also write the blob for one
+   transition window (rollback + diff mirror). Records with no existing data skip this
+   and go straight relational.
 
 The engines keep a client-side copy of the same validation for UX, driven by the same
 definition — but it is no longer the authority.
@@ -194,7 +203,7 @@ job-info block, signoff block). The change is *where that object comes from*:
 |---|---|
 | `FormRecord.init({ recordKey, sections:[…], … })` inline in each HTML file | `FormRecord.init({ recordKey })` only — engine does `GET /api/record-def/<key>` |
 | config object literal | same object shape, assembled from `RecordDefinition` + children |
-| no offline definition concern (it's in the JS) | definition cached in IndexedDB by `recordKey`+`version` |
+| definition is in the JS bundle | definition fetched from the API on page load (online-only site) |
 | `computed`/`derived` done client-side | done server-side; client mirrors for live display |
 | bespoke `<script>` per page (7.1.2 etc.) | `clientHook` name in the definition → hook from a small registry |
 
@@ -235,11 +244,16 @@ Then `gen-submission-schema.mjs` builds Layer 2 from the now-authoritative Layer
 ## Sequencing (implementation is staged even though the target is the whole thing)
 
 1. **Slice #1 — the 4 export-batch records.** Build all three layers + server validation +
-   the engine's fetch-definition/cache path end to end on these four. Proves the design.
+   the engine's fetch-definition path end to end on these four. Proves the design.
 2. **Definition extraction** for the rest; manual-review backlog worked down.
 3. **Area batches** — receiving (7.1.x), canning (7.2.x), drying (7.4.x), … — flip each
    batch's engine to fetch-from-DB, generate its Layer-2 tables, strip its inline configs.
-4. `KeyValue` retained as rollback until ERP cutover (2027-07-01).
+4. Any `KeyValue` rows that predate this are diffed against their new relational rows,
+   then retired per record once the diff window is clean.
+
+Because almost nothing is in Neon yet, most records go straight to relational with no
+`KeyValue` step at all — check `GET /api/storage/prefix/formrecord:` and
+`monitoring_log:` first to see which (if any) already hold data.
 
 ## Open items
 
