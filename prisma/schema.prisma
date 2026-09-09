@@ -37,3 +37,108 @@ model SubmissionDateField {
   @@index([fieldKey])
   @@index([dateValue])
 }
+
+// ---------------------------------------------------------------------------------------------
+// Definition layer -- the DB, not the .js configs, is the source of truth for what a record IS.
+// Seeded once from the existing FormRecord.init / MonitoringLog.init configs by
+// scripts/extract-definitions.mjs; fidelity of that seed is gated by scripts/verify-definitions.mjs
+// (131/131 round-trip identical as of 2026-09-09). See Claude outputs/relational-all-records-plan.md.
+// `extraJson` on each model carries every config key without an explicit column, so a definition
+// round-trips to a byte-identical engine config.
+// ---------------------------------------------------------------------------------------------
+model RecordDefinition {
+  recordKey         String   @id // 'dry-monitoring'
+  engine            String // 'form-record' | 'monitoring-log'
+  mount             String? // '#frRoot' | '#mlRoot'
+  pageFile          String
+  docCode           String? // 'REC 7.4.2'
+  title             String?
+  docRevisionStart  Int?
+  jobInfoGroup      String?
+  clientHook        String? // named JS hook for bespoke pages (7.1.2 / 7.2.4 / 7.2.12), else null
+  primaryBatchField String? // config.batchField
+  extraBatchFields  String[] // config.extraBatchFields
+  extraJson         Json? // stage, listColumns, and any other config key
+  status            String   @default("active")
+  version           Int      @default(1) // bump on edit -> engines cache-bust
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  sections  RecordSectionDef[]
+  fields    RecordFieldDef[]
+  autofills RecordAutofillDef[]
+}
+
+model RecordSectionDef {
+  id         String           @id @default(cuid())
+  recordKey  String
+  definition RecordDefinition @relation(fields: [recordKey], references: [recordKey], onDelete: Cascade)
+  title      String?
+  kind       String           @default("fields") // 'fields' | 'roster'
+  position   Int
+  extraJson  Json? // collapsible, summaryField, newPage, ...
+
+  @@index([recordKey])
+}
+
+model RecordFieldDef {
+  id               String           @id @default(cuid())
+  recordKey        String
+  definition       RecordDefinition @relation(fields: [recordKey], references: [recordKey], onDelete: Cascade)
+  sectionIndex     Int? // null = top-level (monitoring-log entryFields / form fields)
+  parentFieldKey   String? // '@roster' or a parent field key = this is a child column
+  key              String
+  label            String?
+  type             String
+  required         Boolean          @default(false)
+  readOnly         Boolean          @default(false)
+  unit             String?
+  options          String[]
+  group            String?
+  position         Int
+  computeExpr      String? // 'sum(roster.wholeWeight)' | '(fn)' pending the compute registry
+  recordPickSource String?
+  linkField        String? // marks a join key: 'jobNo'|'rmLot'|'exportBatch'|'agCode'|'person'|...
+  linkRelation     String? // 'self' | 'input' | 'output'
+  validateJson     Json?
+  extraJson        Json? // wide, prefix, digits, pattern, showWhen, stage, flagsDeviation, ...
+
+  @@unique([recordKey, key, parentFieldKey], name: "field_key")
+  @@index([recordKey])
+  @@index([key])
+  @@index([linkField])
+}
+
+model RecordAutofillDef {
+  id              String           @id @default(cuid())
+  recordKey       String
+  definition      RecordDefinition @relation(fields: [recordKey], references: [recordKey], onDelete: Cascade)
+  watchKey        String?
+  sourceRecordKey String?
+  matchField      String?
+  fillMap         Json
+  extraJson       Json? // restrict, ...
+
+  @@index([recordKey])
+}
+
+// ---------------------------------------------------------------------------------------------
+// Generic cross-record link -- the relational successor to traceability.js's batch_link:* keys.
+// linkField is open-ended (job number is only the ERP reconciliation key). Written by the API on
+// every submission from each field whose RecordFieldDef.linkField is set. Dates stay in
+// SubmissionDateField, which is already typed.  GET /api/links/:value answers across all records.
+// ---------------------------------------------------------------------------------------------
+model RecordLink {
+  id         Int      @id @default(autoincrement())
+  linkValue  String // shared value, normalised trim + uppercase
+  linkField  String // 'jobNo' | 'exportBatch' | 'rmLot' | 'agCode' | 'person' | ...
+  recordName String
+  recordId   String // the submission's id in its own table
+  relation   String   @default("self") // 'self' | 'input' | 'output'
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([linkValue, linkField, recordName, recordId, relation], name: "record_link_edge")
+  @@index([linkValue, linkField])
+  @@index([recordName, recordId])
+}

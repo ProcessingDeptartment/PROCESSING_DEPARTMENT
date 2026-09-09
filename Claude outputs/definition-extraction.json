@@ -1,0 +1,2367 @@
+[
+  {
+    "file": "Dry-Export-Pack-Front-Page-dry-export-pack-front-page.html",
+    "recordKey": "dry-export-pack-front-page",
+    "engine": "form-record",
+    "docCode": "Dry Export Pack Front Page",
+    "title": "Dry Export Pack Front Page",
+    "fieldCount": 11,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 1,
+      "number": 1,
+      "yesno": 5,
+      "text": 3,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "Live-Leftovers-Log-live-leftovers-log.html",
+    "recordKey": "live-leftovers-log",
+    "engine": "monitoring-log",
+    "docCode": "Live Leftovers Log",
+    "title": "Live Leftovers Log",
+    "fieldCount": 3,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "select": 1,
+      "number": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "Master-Cleaning-Checklist-master-cleaning-checklist.html",
+    "recordKey": "master-cleaning-checklist",
+    "engine": "form-record",
+    "docCode": "Master Cleaning Checklist",
+    "title": "Master Cleaning Checklist (New Plant)",
+    "fieldCount": 2,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 3,
+      "select": 2,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "Master-Cleaning-Plan-master-cleaning-plan.html",
+    "recordKey": "master-cleaning-plan",
+    "engine": "form-record",
+    "docCode": "Master Cleaning Plan",
+    "title": "Master Cleaning Plan",
+    "fieldCount": 2,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 6,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "Mortalities-Log-mortalities-log.html",
+    "recordKey": "mortalities-log",
+    "engine": "monitoring-log",
+    "docCode": "Mortalities Log",
+    "title": "Mortalities Log",
+    "fieldCount": 4,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "number": 3
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "Mortality-Counts-by-Customer-mortality-counts-by-customer.html",
+    "recordKey": "mortality-counts-by-customer",
+    "engine": "form-record",
+    "docCode": "Mortality Counts by Customer",
+    "title": "Mortality Counts by Customer",
+    "fieldCount": 1,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 1,
+      "number": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "Production-Information-NRCS-(Canning)-production-information-nrcs.html",
+    "recordKey": "production-information-nrcs",
+    "engine": "form-record",
+    "docCode": "Production Information NRCS (Canning)",
+    "title": "Production Information NRCS (Canning)",
+    "fieldCount": 7,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 2,
+      "text": 7,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "Production-Information-NRCS-(Dry)-dry-nrcs-packs.html",
+    "recordKey": "dry-nrcs-packs",
+    "engine": "form-record",
+    "docCode": "Production Information NRCS (Dry)",
+    "title": "Dry NRCS Packs — Production Information NRCS",
+    "fieldCount": 8,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 7,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "Production-Information-NRCS-(Rework)-production-information-nrcs-rework.html",
+    "recordKey": "production-information-nrcs-rework",
+    "engine": "form-record",
+    "docCode": "Production Information NRCS (Rework)",
+    "title": "Production Information NRCS (Rework)",
+    "fieldCount": 8,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 2,
+      "text": 7,
+      "textarea": 1,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "QA-01-qa1-damaged-cans-and-lids.html",
+    "recordKey": "qa1-damaged-cans-and-lids",
+    "engine": "monitoring-log",
+    "docCode": "QA1",
+    "title": "Damaged Cans and Lids",
+    "fieldCount": 5,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "number": 1,
+      "text": 3
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-01-cans-released-form.html",
+    "recordKey": "cans-released-form",
+    "engine": "monitoring-log",
+    "docCode": "REC 01",
+    "title": "Cans Released Form (Awaiting NRCS Releases)",
+    "fieldCount": 7,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "number": 3,
+      "select": 1,
+      "text": 2,
+      "(batchField)": "agCode"
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-1-gonad-inspection-report.html",
+    "recordKey": "gonad-inspection-report",
+    "engine": "monitoring-log",
+    "docCode": "REC 1",
+    "title": "Gonad Inspection Report",
+    "fieldCount": 11,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 4,
+      "select": 3,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-6.1.2-training-register.html",
+    "recordKey": "training-register",
+    "engine": "form-record",
+    "docCode": "REC 6.1.2",
+    "title": "Training Register",
+    "fieldCount": 5,
+    "rosterTables": 1,
+    "typesUsed": {
+      "text": 8,
+      "date": 1,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.1-incubator-cans-log.html",
+    "recordKey": "incubator-cans-log",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.1",
+    "title": "Incubator Cans Log",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "timestamp": 3,
+      "text": 4,
+      "digits": 3,
+      "yesno": 1,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.1.00-fixed-reader-checks.html",
+    "recordKey": "fixed-reader-checks",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.1.00",
+    "title": "Fixed Reader Checks",
+    "fieldCount": 8,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "number": 1,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.1.1-basket-removal-shucking-gutting.html",
+    "recordKey": "basket-removal-shucking-gutting",
+    "engine": "form-record",
+    "docCode": "REC 7.1.1",
+    "title": "Basket Removal, Shucking & Gutting",
+    "fieldCount": 14,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 2,
+      "date": 1,
+      "select": 1,
+      "number": 2,
+      "yesno": 6,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.1.2-abalone-receiving.html",
+    "recordKey": "abalone-receiving",
+    "engine": "form-record",
+    "docCode": "REC 7.1.2",
+    "title": "Abalone Receiving",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobnumber": 1,
+      "date": 1,
+      "select": 1,
+      "computed": 1,
+      "number": 4,
+      "(batchField)": "jobNo"
+    },
+    "flags": [
+      "bespoke: 2 inline <script> blocks",
+      "hardware/window.Rec* integration",
+      "computed field 'intakeWeight' has no declarative expression"
+    ],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.1.3-salting-and-tumbling.html",
+    "recordKey": "salting-and-tumbling",
+    "engine": "form-record",
+    "docCode": "REC 7.1.3",
+    "title": "Salting and Tumbling",
+    "fieldCount": 8,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 6,
+      "select": 1,
+      "textarea": 1,
+      "batchseq": 1,
+      "derived": 2,
+      "number": 7,
+      "time": 2,
+      "(batchField)": "jobNo"
+    },
+    "flags": [
+      "derived field 'standardSaltingTime' has no declarative expression",
+      "derived field 'totalTumblingTime' has no declarative expression"
+    ],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.1.3.1-bleeding-and-salting.html",
+    "recordKey": "bleeding-and-salting",
+    "engine": "form-record",
+    "docCode": "REC 7.1.3.1",
+    "title": "Bleeding and Salting",
+    "fieldCount": 22,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 12,
+      "select": 1,
+      "number": 5,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.1.4-washing-control-sheet.html",
+    "recordKey": "washing-control-sheet",
+    "engine": "form-record",
+    "docCode": "REC 7.1.4",
+    "title": "Washing Control Sheet",
+    "fieldCount": 14,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 8,
+      "select": 1,
+      "yesno": 1,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.1.5-salting-oosw.html",
+    "recordKey": "salting-oosw",
+    "engine": "form-record",
+    "docCode": "REC 7.1.5",
+    "title": "Salting (OOSW)",
+    "fieldCount": 10,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 4,
+      "date": 2,
+      "select": 1,
+      "number": 2,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.1.6-scrubbing-check-supervisor.html",
+    "recordKey": "scrubbing-check-supervisor",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.1.6",
+    "title": "Scrubbing Check - Supervisor",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 5,
+      "number": 3,
+      "yesno": 2,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.10.2-ph-verification.html",
+    "recordKey": "ph-verification",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.10.2",
+    "title": "pH Verification",
+    "fieldCount": 7,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 2,
+      "number": 3,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.10.3-thermometer-verification.html",
+    "recordKey": "thermometer-verification",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.10.3",
+    "title": "Thermometer Verification",
+    "fieldCount": 12,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 2,
+      "text": 4,
+      "number": 4,
+      "computed": 2
+    },
+    "flags": [
+      "field 'coldDeviation' has a function (compute)",
+      "field 'hotDeviation' has a function (compute)"
+    ],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.10.4-thermometer-correction-factors.html",
+    "recordKey": "thermometer-correction-factors",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.10.4",
+    "title": "Thermometer Correction Factors",
+    "fieldCount": 9,
+    "rosterTables": 0,
+    "typesUsed": {
+      "month": 1,
+      "date": 1,
+      "text": 3,
+      "number": 2,
+      "computed": 1,
+      "yesno": 1
+    },
+    "flags": [
+      "field 'difference' has a function (compute)"
+    ],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.2-sampling-log.html",
+    "recordKey": "sampling-log",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.2",
+    "title": "Sampling Log",
+    "fieldCount": 11,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 5,
+      "number": 2,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.10-stock-loading.html",
+    "recordKey": "stock-loading",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.2.10",
+    "title": "Stock Loading",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 6,
+      "number": 3,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.11-qc-report.html",
+    "recordKey": "qc-report",
+    "engine": "form-record",
+    "docCode": "REC 7.2.11",
+    "title": "QC Report",
+    "fieldCount": 28,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 5,
+      "number": 9,
+      "yesno": 10,
+      "textarea": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.12-double-seam-inspection-report.html",
+    "recordKey": "double-seam-inspection-report",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.2.12",
+    "title": "Double Seam Inspection Report",
+    "fieldCount": 0,
+    "rosterTables": 0,
+    "typesUsed": {
+      "(batchField)": "jobNo"
+    },
+    "flags": [
+      "customBody hook",
+      "no fields found (check parser)"
+    ],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.2.13-rework-log.html",
+    "recordKey": "rework-log",
+    "engine": "form-record",
+    "docCode": "REC 7.2.13",
+    "title": "Rework Log",
+    "fieldCount": 14,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 4,
+      "text": 6,
+      "textarea": 1,
+      "number": 2,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.14-product-label-checklist.html",
+    "recordKey": "product-label-checklist",
+    "engine": "form-record",
+    "docCode": "REC 7.2.14",
+    "title": "Product Label Checklist",
+    "fieldCount": 14,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 4,
+      "number": 2,
+      "yesno": 6,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.2.15-labelling-of-cans.html",
+    "recordKey": "labelling-of-cans",
+    "engine": "form-record",
+    "docCode": "REC 7.2.15",
+    "title": "Labelling of Cans",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 3,
+      "number": 2,
+      "yesno": 6,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.2.16-stock-transfers.html",
+    "recordKey": "stock-transfers",
+    "engine": "form-record",
+    "docCode": "REC 7.2.16",
+    "title": "Stock Transfers",
+    "fieldCount": 17,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 10,
+      "number": 4,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.2-scrubbing-checklist-qc.html",
+    "recordKey": "scrubbing-checklist-qc",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.2.2",
+    "title": "Scrubbing Checklist",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 5,
+      "number": 1,
+      "yesno": 3,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.3-precooking-check-sheet.html",
+    "recordKey": "precooking-check-sheet",
+    "engine": "form-record",
+    "docCode": "REC 7.2.3",
+    "title": "Precooking Check Sheet",
+    "fieldCount": 20,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 5,
+      "number": 10,
+      "yesno": 2,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.4-abalone-packing-specification.html",
+    "recordKey": "abalone-packing-specification",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.2.4",
+    "title": "Abalone Packing Specification",
+    "fieldCount": 11,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "jobsearch": 1,
+      "number": 5,
+      "computed": 3,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [
+      "deriveInto hook",
+      "field 'cookoutPct' has a function (compute)",
+      "field 'newMinIngo' has a function (compute)",
+      "field 'newMaxIngo' has a function (compute)"
+    ],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.2.5-can-packing-control-sheet.html",
+    "recordKey": "can-packing-control-sheet",
+    "engine": "form-record",
+    "docCode": "REC 7.2.5",
+    "title": "Can Packing Control Sheet",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 7,
+      "number": 2,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.6-can-filling-and-printing.html",
+    "recordKey": "can-filling-and-printing",
+    "engine": "form-record",
+    "docCode": "REC 7.2.6",
+    "title": "Can Filling and Printing",
+    "fieldCount": 16,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 3,
+      "text": 6,
+      "number": 3,
+      "yesno": 2,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.6.1-printing-control-sheet.html",
+    "recordKey": "printing-control-sheet",
+    "engine": "form-record",
+    "docCode": "REC 7.2.6.1",
+    "title": "Printing Control Sheet",
+    "fieldCount": 8,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 2,
+      "text": 1,
+      "yesno": 1,
+      "select": 1,
+      "number": 2,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.2.7-cans-produced.html",
+    "recordKey": "cans-produced",
+    "engine": "form-record",
+    "docCode": "REC 7.2.7",
+    "title": "Cans Produced",
+    "fieldCount": 18,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 10,
+      "date": 1,
+      "number": 5,
+      "select": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.8-retorting-control-sheet.html",
+    "recordKey": "retorting-control-sheet",
+    "engine": "form-record",
+    "docCode": "REC 7.2.8",
+    "title": "Retorting Control Sheet",
+    "fieldCount": 19,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 11,
+      "number": 4,
+      "textarea": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.2.9-retort-inspection-report.html",
+    "recordKey": "retort-inspection-report",
+    "engine": "form-record",
+    "docCode": "REC 7.2.9",
+    "title": "Retort Inspection Report",
+    "fieldCount": 19,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 9,
+      "date": 1,
+      "yesno": 7,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.3.1-broth-cooking.html",
+    "recordKey": "broth-cooking",
+    "engine": "form-record",
+    "docCode": "REC 7.3.1",
+    "title": "Broth Cooking",
+    "fieldCount": 17,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 3,
+      "text": 5,
+      "number": 7,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.3.2-ingredient-weighing.html",
+    "recordKey": "ingredient-weighing",
+    "engine": "form-record",
+    "docCode": "REC 7.3.2",
+    "title": "Ingredient Weighing",
+    "fieldCount": 24,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 12,
+      "number": 8,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.3.3-sauce-mixing.html",
+    "recordKey": "sauce-mixing",
+    "engine": "form-record",
+    "docCode": "REC 7.3.3",
+    "title": "Sauce Mixing",
+    "fieldCount": 23,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 3,
+      "text": 13,
+      "number": 6,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.3.4-final-sauce-mix.html",
+    "recordKey": "final-sauce-mix",
+    "engine": "form-record",
+    "docCode": "REC 7.3.4",
+    "title": "Final Sauce Mix",
+    "fieldCount": 10,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "number": 3,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.3.5-sauce-batch-coding.html",
+    "recordKey": "sauce-batch-coding",
+    "engine": "form-record",
+    "docCode": "REC 7.3.5",
+    "title": "Sauce Batch Coding",
+    "fieldCount": 6,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "select": 1,
+      "number": 2,
+      "text": 1,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.3.6-brine-mixing-report.html",
+    "recordKey": "brine-mixing-report",
+    "engine": "form-record",
+    "docCode": "REC 7.3.6",
+    "title": "Brine Mixing Report",
+    "fieldCount": 22,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 3,
+      "text": 8,
+      "number": 9,
+      "textarea": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.0-dry-cooking.html",
+    "recordKey": "dry-cooking",
+    "engine": "form-record",
+    "docCode": "REC 7.4.0",
+    "title": "Dry Cooking",
+    "fieldCount": 30,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 13,
+      "date": 2,
+      "number": 13,
+      "textarea": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.1-drying-process.html",
+    "recordKey": "drying-process",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.4.1",
+    "title": "Drying Process",
+    "fieldCount": 31,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 22,
+      "text": 3,
+      "number": 5,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.10-dried-abalone-transfer.html",
+    "recordKey": "dried-abalone-transfer",
+    "engine": "form-record",
+    "docCode": "REC 7.4.10",
+    "title": "Dried Abalone Transfer",
+    "fieldCount": 10,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 4,
+      "date": 2,
+      "number": 5,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.2-dry-monitoring.html",
+    "recordKey": "dry-monitoring",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.4.2",
+    "title": "Dry Monitoring",
+    "fieldCount": 20,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 5,
+      "number": 2,
+      "date": 4,
+      "yesno": 6,
+      "textarea": 2,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.3.1-grading-production-log-cultivated.html",
+    "recordKey": "grading-production-log-cultivated",
+    "engine": "form-record",
+    "docCode": "REC 7.4.3.1",
+    "title": "Grading Production Log (Cultivated)",
+    "fieldCount": 32,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 7,
+      "date": 3,
+      "number": 25,
+      "textarea": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.3.2-grading-production-log-ranched.html",
+    "recordKey": "grading-production-log-ranched",
+    "engine": "form-record",
+    "docCode": "REC 7.4.3.2",
+    "title": "Grading Production Log (Ranched)",
+    "fieldCount": 24,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 7,
+      "date": 3,
+      "number": 17,
+      "textarea": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.4-grading-boxing-traceability.html",
+    "recordKey": "grading-boxing-traceability",
+    "engine": "form-record",
+    "docCode": "REC 7.4.4",
+    "title": "Grading, Boxing & Traceability",
+    "fieldCount": 10,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 6,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.5-boxing-and-labelling.html",
+    "recordKey": "boxing-and-labelling",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.4.5",
+    "title": "Boxing & Labelling",
+    "fieldCount": 10,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "number": 2,
+      "text": 3,
+      "yesno": 4
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.4.6-dry-stock-control.html",
+    "recordKey": "dry-stock-control",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.4.6",
+    "title": "Dry Stock Control",
+    "fieldCount": 17,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "text": 3,
+      "date": 4,
+      "month": 1,
+      "number": 8,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.4.7-labelling-of-dry-boxes.html",
+    "recordKey": "labelling-of-dry-boxes",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.4.7",
+    "title": "Labelling of Dry Boxes",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 6,
+      "number": 1,
+      "yesno": 4,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.4.8-dry-labelling-list.html",
+    "recordKey": "dry-labelling-list",
+    "engine": "form-record",
+    "docCode": "REC 7.4.8",
+    "title": "Dry Labelling List",
+    "fieldCount": 9,
+    "rosterTables": 1,
+    "typesUsed": {
+      "text": 9,
+      "date": 1,
+      "number": 3,
+      "select": 1,
+      "(batchField)": "agCode"
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.4.9-dry-stock-transfers.html",
+    "recordKey": "dry-stock-transfers",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.4.9",
+    "title": "Dry Stock Transfers",
+    "fieldCount": 5,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "number": 1,
+      "text": 3
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.5.1-live-production-pack.html",
+    "recordKey": "live-production-pack",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.5.1",
+    "title": "Live Production Pack",
+    "fieldCount": 25,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 4,
+      "text": 10,
+      "yesno": 2,
+      "computed": 2,
+      "number": 6,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [
+      "field 'purgeDays' has a function (compute)",
+      "field 'purgeLoss' has a function (compute)"
+    ],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.5.2-live-pack-checklist.html",
+    "recordKey": "live-pack-checklist",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.5.2",
+    "title": "Live Pack Checklist",
+    "fieldCount": 24,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 5,
+      "date": 1,
+      "number": 6,
+      "yesno": 11,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.5.3-live-packing-bag-quality-check.html",
+    "recordKey": "live-packing-bag-quality-check",
+    "engine": "form-record",
+    "docCode": "REC 7.5.3",
+    "title": "Live Packing - Bag Quality Check",
+    "fieldCount": 11,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 3,
+      "number": 6,
+      "textarea": 1,
+      "text": 8,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.5.4-individual-abalone-weight-checks.html",
+    "recordKey": "individual-abalone-weight-checks",
+    "engine": "form-record",
+    "docCode": "REC 7.5.4",
+    "title": "Individual Abalone Weight Checks - Quality",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 1,
+      "text": 6,
+      "textarea": 1,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.5.5-receiving-live-returns.html",
+    "recordKey": "receiving-live-returns",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.5.5",
+    "title": "Receiving Live Returns",
+    "fieldCount": 7,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "number": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.0a-production-areas-cleaning-record.html",
+    "recordKey": "production-areas-cleaning-record",
+    "engine": "form-record",
+    "docCode": "REC 7.6.0a",
+    "title": "Production Areas Cleaning Record",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 3,
+      "text": 4
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.0b-live-product-areas-cleaning-record.html",
+    "recordKey": "live-product-areas-cleaning-record",
+    "engine": "form-record",
+    "docCode": "REC 7.6.0b",
+    "title": "Live Product Areas Cleaning Record",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 3,
+      "text": 4
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.0c-personnel-facilities-cleaning-record.html",
+    "recordKey": "personnel-facilities-cleaning-record",
+    "engine": "form-record",
+    "docCode": "REC 7.6.0c",
+    "title": "Personnel Facilities Cleaning Record",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 3,
+      "text": 4
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.1-daily-cleaning-inspection.html",
+    "recordKey": "daily-cleaning-inspection",
+    "engine": "form-record",
+    "docCode": "REC 7.6.1",
+    "title": "Daily Cleaning Inspection",
+    "fieldCount": 2,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 3,
+      "text": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.1.1-deep-cleaning-record-weekly.html",
+    "recordKey": "deep-cleaning-record-weekly",
+    "engine": "form-record",
+    "docCode": "REC 7.6.1.1",
+    "title": "Deep Cleaning Record Weekly",
+    "fieldCount": 2,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 2,
+      "text": 4
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.2-weekly-cleaning-record.html",
+    "recordKey": "weekly-cleaning-record",
+    "engine": "form-record",
+    "docCode": "REC 7.6.2",
+    "title": "Weekly Cleaning Record",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 4,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.2.2-dispatch-cleaning-inspection.html",
+    "recordKey": "dispatch-cleaning-inspection",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.6.2.2",
+    "title": "Dispatch Cleaning Inspection",
+    "fieldCount": 12,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "yesno": 9,
+      "textarea": 1,
+      "text": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.3-facility-inspection.html",
+    "recordKey": "facility-inspection",
+    "engine": "form-record",
+    "docCode": "REC 7.6.3",
+    "title": "Facility Inspection",
+    "fieldCount": 2,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 2,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.3.1-facility-inspection-nc-report.html",
+    "recordKey": "facility-inspection-nc-report",
+    "engine": "form-record",
+    "docCode": "REC 7.6.3.1",
+    "title": "Facility Inspection NC Report",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "text": 3,
+      "date": 4,
+      "textarea": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.4-chemical-stock-issue-register.html",
+    "recordKey": "chemical-stock-issue-register",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.6.4",
+    "title": "Chemical Stock & Issue Register",
+    "fieldCount": 11,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 6,
+      "yesno": 2,
+      "date": 2,
+      "number": 1,
+      "(batchField)": "batchNumber"
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.5-internal-pest-sightings-log.html",
+    "recordKey": "internal-pest-sightings-log",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.6.5",
+    "title": "Internal Pest Sightings Log",
+    "fieldCount": 9,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "textarea": 2,
+      "select": 1,
+      "text": 3,
+      "yesno": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.6-pest-inspection-record.html",
+    "recordKey": "pest-inspection-record",
+    "engine": "form-record",
+    "docCode": "REC 7.6.6",
+    "title": "Pest Inspection Record",
+    "fieldCount": 7,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "yesno": 8,
+      "textarea": 2,
+      "text": 5
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.7-a-staff-hygiene-inspection-weekends.html",
+    "recordKey": "staff-hygiene-inspection-weekends",
+    "engine": "form-record",
+    "docCode": "REC 7.6.7a",
+    "title": "Staff Hygiene Inspection - Weekends",
+    "fieldCount": 2,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "yesno": 7
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.7-staff-hygiene-inspection.html",
+    "recordKey": "staff-hygiene-inspection",
+    "engine": "form-record",
+    "docCode": "REC 7.6.7",
+    "title": "Staff Hygiene Inspection",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 2,
+      "text": 4,
+      "yesno": 7
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.6.8-allergen-cleaning-verification.html",
+    "recordKey": "allergen-cleaning-verification",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.6.8",
+    "title": "Allergen Cleaning Verification",
+    "fieldCount": 12,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "yesno": 5,
+      "text": 2,
+      "select": 3,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.1-daily-equipment-checklist.html",
+    "recordKey": "daily-equipment-checklist",
+    "engine": "form-record",
+    "docCode": "REC 7.7.1",
+    "title": "Daily Equipment Checklist",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 2,
+      "text": 4,
+      "textarea": 1,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.2-glass-plastic-equipment-inspection.html",
+    "recordKey": "glass-plastic-equipment-inspection",
+    "engine": "form-record",
+    "docCode": "REC 7.7.2",
+    "title": "Glass, Plastic & Equipment Inspection",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 4,
+      "select": 3
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.3-glass-breakage-clearance-certificate.html",
+    "recordKey": "glass-breakage-clearance-certificate",
+    "engine": "form-record",
+    "docCode": "REC 7.7.3",
+    "title": "Glass Breakage Clearance Certificate",
+    "fieldCount": 28,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 11,
+      "yesno": 19,
+      "number": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.4-utensil-issue-record.html",
+    "recordKey": "utensil-issue-record",
+    "engine": "form-record",
+    "docCode": "REC 7.7.4",
+    "title": "Utensil Issue Record",
+    "fieldCount": 5,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 3,
+      "textarea": 1,
+      "text": 4,
+      "number": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.4.1.a-safety-glass-register.html",
+    "recordKey": "safety-glass-register",
+    "engine": "form-record",
+    "docCode": "REC 7.7.4.1a",
+    "title": "Safety Glass Register",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 2,
+      "text": 6,
+      "yesno": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.4.1.b-goggles-register.html",
+    "recordKey": "goggles-register",
+    "engine": "form-record",
+    "docCode": "REC 7.7.4.1b",
+    "title": "Goggles Register",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 4,
+      "text": 5
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.4.1.c-knife-register.html",
+    "recordKey": "knife-register",
+    "engine": "form-record",
+    "docCode": "REC 7.7.4c",
+    "title": "Knife Register",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "select": 2,
+      "text": 5,
+      "yesno": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.5-glove-issuing-register.html",
+    "recordKey": "glove-issuing-register",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.7.5",
+    "title": "Glove Issuing Register",
+    "fieldCount": 6,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 3,
+      "number": 1,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.6-plaster-dressing-inspection.html",
+    "recordKey": "plaster-dressing-inspection",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.7.6",
+    "title": "Plaster Issuing / Dressing Inspection",
+    "fieldCount": 10,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 8,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.6a-first-aid-checklist-record.html",
+    "recordKey": "first-aid-checklist-record",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.7.6a",
+    "title": "First Aid Checklist Record (Plaster/Dressing Inspection)",
+    "fieldCount": 9,
+    "rosterTables": 0,
+    "typesUsed": {
+      "select": 1,
+      "date": 1,
+      "text": 6,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.7.7-salt-issuing-register.html",
+    "recordKey": "salt-issuing-register",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.7.7",
+    "title": "Salt Issuing Register",
+    "fieldCount": 5,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 4,
+      "(batchField)": "batchNumber"
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.1-chiller-batch-control.html",
+    "recordKey": "chiller-batch-control",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.1",
+    "title": "Chiller Batch Control (Canning)",
+    "fieldCount": 13,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 5,
+      "select": 1,
+      "yesno": 1,
+      "number": 3,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.8.1-dry-chiller-batch-control.html",
+    "recordKey": "dry-chiller-batch-control",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.1",
+    "title": "Dry Chiller Batch Control",
+    "fieldCount": 14,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 5,
+      "select": 1,
+      "yesno": 1,
+      "number": 4,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.8.10-maintenance-job-card.html",
+    "recordKey": "maintenance-job-card",
+    "engine": "form-record",
+    "docCode": "REC 7.8.10",
+    "title": "Maintenance Job Card",
+    "fieldCount": 15,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 6,
+      "select": 1,
+      "date": 2,
+      "textarea": 3,
+      "yesno": 3
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.11-water-tank-inspection.html",
+    "recordKey": "water-tank-inspection",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.11",
+    "title": "Water Tank Inspection",
+    "fieldCount": 9,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 2,
+      "select": 3,
+      "yesno": 3,
+      "text": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.12-factory-maintenance-inspection.html",
+    "recordKey": "factory-maintenance-inspection",
+    "engine": "form-record",
+    "docCode": "REC 7.8.12",
+    "title": "Factory Maintenance Inspection",
+    "fieldCount": 4,
+    "rosterTables": 1,
+    "typesUsed": {
+      "month": 1,
+      "date": 1,
+      "text": 5,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.12.1-equipment-checklist-roof.html",
+    "recordKey": "equipment-checklist-roof",
+    "engine": "form-record",
+    "docCode": "REC 7.8.12.1",
+    "title": "Equipment Checklist - Roof (Daily Ozone & Compressor)",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 4,
+      "select": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.2-daily-waste-removal.html",
+    "recordKey": "daily-waste-removal",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.2",
+    "title": "Daily Waste Removal",
+    "fieldCount": 9,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 8
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.3-boiler-inspection-report.html",
+    "recordKey": "boiler-inspection-report",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.3",
+    "title": "Boiler Inspection Report",
+    "fieldCount": 16,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 3,
+      "yesno": 10,
+      "number": 1,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.4-seamer-inspection-report.html",
+    "recordKey": "seamer-inspection-report",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.4",
+    "title": "Seamer Inspection Report",
+    "fieldCount": 28,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 10,
+      "yesno": 13,
+      "textarea": 2,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.8.5-incoming-ppe-inspection.html",
+    "recordKey": "incoming-ppe-inspection",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.5",
+    "title": "Incoming PPE Inspection",
+    "fieldCount": 9,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "yesno": 2,
+      "number": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.5.1-incoming-goods-inspection-log.html",
+    "recordKey": "incoming-goods-inspection-log",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.5.1",
+    "title": "Incoming Goods Inspection (Log)",
+    "fieldCount": 9,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "yesno": 2,
+      "number": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.6-cans-incoming-inspection.html",
+    "recordKey": "cans-incoming-inspection",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.6",
+    "title": "Cans Incoming Inspection",
+    "fieldCount": 29,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 3,
+      "text": 9,
+      "number": 1,
+      "yesno": 13,
+      "textarea": 1,
+      "select": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.8.6.1-lids-incoming-inspection.html",
+    "recordKey": "lids-incoming-inspection",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.6.1",
+    "title": "Lids Incoming Inspection",
+    "fieldCount": 22,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "number": 1,
+      "yesno": 13,
+      "textarea": 1,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.6.2-lids-incoming-inspection-internal.html",
+    "recordKey": "lids-incoming-inspection-internal",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.6.2",
+    "title": "Lids Incoming Inspection (Internal Inspection)",
+    "fieldCount": 24,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "number": 1,
+      "yesno": 15,
+      "textarea": 1,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.7-incoming-goods-inspection.html",
+    "recordKey": "incoming-goods-inspection",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.7",
+    "title": "Incoming Goods Inspection",
+    "fieldCount": 18,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 2,
+      "text": 5,
+      "number": 1,
+      "yesno": 9,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.8-dispatch-loading-inspection-checklist.html",
+    "recordKey": "dispatch-loading-inspection-checklist",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.8",
+    "title": "Dispatch Loading Inspection Checklist",
+    "fieldCount": 21,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 8,
+      "number": 1,
+      "yesno": 8,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.8.8.1-dispatch-receiving-checklist.html",
+    "recordKey": "dispatch-receiving-checklist",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.8.1",
+    "title": "Dispatch Receiving Checklist",
+    "fieldCount": 20,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 7,
+      "number": 1,
+      "yesno": 8,
+      "textarea": 1,
+      "(batchField)": "jobNumber"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.8.9-water-monitoring.html",
+    "recordKey": "water-monitoring",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.9",
+    "title": "Water Monitoring",
+    "fieldCount": 7,
+    "rosterTables": 0,
+    "typesUsed": {
+      "month": 1,
+      "date": 1,
+      "number": 3,
+      "text": 1,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.8.9.1-lha-water-monitoring.html",
+    "recordKey": "lha-water-monitoring",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.8.9.1",
+    "title": "LHA Water Monitoring",
+    "fieldCount": 7,
+    "rosterTables": 0,
+    "typesUsed": {
+      "month": 1,
+      "date": 1,
+      "select": 1,
+      "text": 2,
+      "yesno": 1,
+      "number": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.9.1-chiller-temperature-monitoring.html",
+    "recordKey": "chiller-temperature-monitoring",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.9.1",
+    "title": "Chiller Temperature Monitoring",
+    "fieldCount": 16,
+    "rosterTables": 0,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 2,
+      "text": 4,
+      "select": 2,
+      "yesno": 1,
+      "number": 5,
+      "textarea": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-7.9.2-incubator-temperature-check.html",
+    "recordKey": "incubator-temperature-check",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.9.2",
+    "title": "Daily Incubator Temperature Check",
+    "fieldCount": 6,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "select": 1,
+      "number": 3,
+      "text": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.9.3.1-dry-room-temp-humidity-log.html",
+    "recordKey": "dry-room-temp-humidity-log",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.9.3.1",
+    "title": "Dry Room Temp & Humidity Log",
+    "fieldCount": 12,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 3,
+      "select": 1,
+      "date": 1,
+      "number": 6,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-7.9.3.2-grading-room-temp-humidity-log.html",
+    "recordKey": "grading-room-temp-humidity-log",
+    "engine": "monitoring-log",
+    "docCode": "REC 7.9.3.2",
+    "title": "Grading Room Temp & Humidity Log",
+    "fieldCount": 12,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 3,
+      "select": 1,
+      "date": 1,
+      "number": 6,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.1.1.a-internal-car.html",
+    "recordKey": "internal-car",
+    "engine": "form-record",
+    "docCode": "REC 8.1.1.a",
+    "title": "Internal CAR",
+    "fieldCount": 18,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 3,
+      "text": 8,
+      "select": 1,
+      "textarea": 6
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.1.3-disposition-investigation-record.html",
+    "recordKey": "disposition-investigation-record",
+    "engine": "form-record",
+    "docCode": "REC 8.1.3",
+    "title": "Disposition Investigation Record",
+    "fieldCount": 22,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 6,
+      "date": 2,
+      "select": 2,
+      "yesno": 12,
+      "(batchField)": "productionCode"
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.1.4-withdrawal-mock-recall-record.html",
+    "recordKey": "withdrawal-mock-recall-record",
+    "engine": "form-record",
+    "docCode": "REC 8.1.4",
+    "title": "Withdrawal (Mock Recall) Record",
+    "fieldCount": 17,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 2,
+      "text": 10,
+      "select": 2,
+      "textarea": 2,
+      "number": 5
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.1.5-traceability.html",
+    "recordKey": "traceability",
+    "engine": "form-record",
+    "docCode": "REC 8.1.5",
+    "title": "Traceability Exercise",
+    "fieldCount": 15,
+    "rosterTables": 0,
+    "typesUsed": {
+      "date": 1,
+      "text": 5,
+      "select": 1,
+      "number": 7,
+      "yesno": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.1.6-a-traceability-mock-recall-canned-braised-abalone.html",
+    "recordKey": "traceability-mock-recall-canned-braised-abalone",
+    "engine": "form-record",
+    "docCode": "REC 8.1.6a",
+    "title": "Traceability & Mock Recall Checklist for Canned Braised Abalone",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 1,
+      "text": 3,
+      "recordpick": 1,
+      "textarea": 1,
+      "select": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-8.1.6-traceability-mock-recall-canned-abalone.html",
+    "recordKey": "traceability-mock-recall-canned-abalone",
+    "engine": "form-record",
+    "docCode": "REC 8.1.6",
+    "title": "Traceability & Mock Recall Checklist for Canned Abalone",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 1,
+      "text": 3,
+      "recordpick": 1,
+      "textarea": 1,
+      "select": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-8.1.6b-traceability-mock-recall-canned-minced-abalone.html",
+    "recordKey": "traceability-mock-recall-canned-minced-abalone",
+    "engine": "form-record",
+    "docCode": "REC 8.1.6b",
+    "title": "Traceability & Mock Recall Checklist for Canned Minced Abalone",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 1,
+      "text": 3,
+      "recordpick": 1,
+      "textarea": 1,
+      "select": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-8.1.7-traceability-mock-recall-dried-abalone.html",
+    "recordKey": "traceability-mock-recall-dried-abalone",
+    "engine": "form-record",
+    "docCode": "REC 8.1.7",
+    "title": "Traceability & Mock Recall Checklist for Dried Abalone",
+    "fieldCount": 3,
+    "rosterTables": 1,
+    "typesUsed": {
+      "jobsearch": 1,
+      "date": 1,
+      "text": 3,
+      "recordpick": 1,
+      "textarea": 1,
+      "select": 1,
+      "(batchField)": "jobNo"
+    },
+    "flags": [],
+    "autofillRules": 1
+  },
+  {
+    "file": "REC-8.1.8-traceability-mock-recall-live-abalone.html",
+    "recordKey": "traceability-mock-recall-live-abalone",
+    "engine": "form-record",
+    "docCode": "REC 8.1.8",
+    "title": "Traceability & Mock Recall Checklist for Live Abalone",
+    "fieldCount": 2,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 2,
+      "text": 2,
+      "textarea": 1,
+      "select": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.2.1-supplier-questionnaire.html",
+    "recordKey": "supplier-questionnaire",
+    "engine": "form-record",
+    "docCode": "REC 8.2.1",
+    "title": "Supplier Questionnaire",
+    "fieldCount": 40,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 13,
+      "textarea": 3,
+      "yesno": 3,
+      "date": 3,
+      "select": 18
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.2.2-supplier-approval-record.html",
+    "recordKey": "supplier-approval-record",
+    "engine": "form-record",
+    "docCode": "REC 8.2.2",
+    "title": "Supplier Approval Record",
+    "fieldCount": 14,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 4,
+      "date": 2,
+      "select": 6,
+      "number": 1,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.2.8-rapid-food-handler-medicals.html",
+    "recordKey": "rapid-food-handler-medicals",
+    "engine": "form-record",
+    "docCode": "REC 8.2.8",
+    "title": "Rapid Food Handler Medicals",
+    "fieldCount": 24,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 13,
+      "date": 2,
+      "select": 8,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.2.8.1-rfh-medical-result.html",
+    "recordKey": "rfh-medical-result",
+    "engine": "form-record",
+    "docCode": "REC 8.2.8.1",
+    "title": "RFH Medical Result",
+    "fieldCount": 12,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 6,
+      "date": 3,
+      "yesno": 1,
+      "select": 1,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.4.a-emergency-evacuation-attendance-register.html",
+    "recordKey": "emergency-evacuation-attendance-register",
+    "engine": "form-record",
+    "docCode": "REC 8.4.a",
+    "title": "Emergency Evacuation Attendance Register",
+    "fieldCount": 8,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "text": 8,
+      "textarea": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-8.4.b-handling-of-emergencies-and-incidences.html",
+    "recordKey": "handling-of-emergencies-and-incidences",
+    "engine": "form-record",
+    "docCode": "REC 8.4.b",
+    "title": "Handling of Emergencies and Incidences (Emergency Drill Report)",
+    "fieldCount": 26,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 19,
+      "yesno": 5,
+      "date": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "REC-9.1-daily-factory-feedback-meeting.html",
+    "recordKey": "daily-factory-feedback-meeting",
+    "engine": "form-record",
+    "docCode": "REC 9.1",
+    "title": "Daily Factory Feedback Meeting",
+    "fieldCount": 15,
+    "rosterTables": 1,
+    "typesUsed": {
+      "date": 1,
+      "textarea": 11,
+      "text": 3,
+      "yesno": 2
+    },
+    "flags": [],
+    "autofillRules": 0
+  },
+  {
+    "file": "RTW-Medical-Questionnaire-rtw-medical-questionnaire.html",
+    "recordKey": "rtw-medical-questionnaire",
+    "engine": "form-record",
+    "docCode": "RTW Medical Questionnaire",
+    "title": "Return to Work Medical Questionnaire",
+    "fieldCount": 14,
+    "rosterTables": 0,
+    "typesUsed": {
+      "text": 8,
+      "yesno": 5,
+      "date": 1
+    },
+    "flags": [],
+    "autofillRules": 0
+  }
+]
