@@ -60,14 +60,14 @@
       <h1>Job Status Updates</h1>
     </div>
     <div class="no-print">
-      <a class="btn btn-ghost" href="../index.html">â† Home</a>
+      <a class="btn btn-ghost" href="../index.html">← Home</a>
     </div>
   </div>
   <div class="js-body">
     <div class="panel">
       <div class="toolbar no-print">
         <button class="btn btn-primary" id="refreshBtn">Refresh</button>
-        <input type="search" id="filterInput" placeholder="Filter job no. / farmâ€¦">
+        <input type="search" id="filterInput" placeholder="Filter job no. / farm…">
         <label class="muted"><input type="checkbox" id="showClosed"> Show closed</label>
         <span class="grow"></span>
         <button class="btn btn-flat" id="csvBtn">Export CSV</button>
@@ -76,7 +76,7 @@
       <div class="muted" id="statusLine" style="margin-top:10px;"></div>
       <div class="muted">
         Every job number captured on Abalone Receiving (REC 7.1.2). Closing a job removes it from
-        the job-number pickers on every downstream record â€” already-submitted records keep showing
+        the job-number pickers on every downstream record — already-submitted records keep showing
         the job they were filed against.
       </div>
     </div>
@@ -149,7 +149,7 @@
   }
 
   async function load() {
-    $('statusLine').textContent = 'Loadingâ€¦';
+    $('statusLine').textContent = 'Loading…';
     const [jobs, byJob] = await Promise.all([window.JobStatus.list(), receivingByJob()]);
     rows = jobs.map((j) => Object.assign({}, byJob.get(String(j.job_no)) || {}, j));
     render();
@@ -169,20 +169,20 @@
     const list = visibleRows();
     const openCount = rows.filter((r) => r.status !== 'closed').length;
     $('statusLine').textContent =
-      `${rows.length} job${rows.length === 1 ? '' : 's'} â€” ${openCount} open, ${rows.length - openCount} closed`
-      + (list.length !== rows.length ? ` Â· showing ${list.length}` : '');
+      `${rows.length} job${rows.length === 1 ? '' : 's'} — ${openCount} open, ${rows.length - openCount} closed`
+      + (list.length !== rows.length ? ` · showing ${list.length}` : '');
 
     $('jobsBody').innerHTML = list.map((r) => {
       const closed = r.status === 'closed';
       const closedTxt = closed
-        ? `${(r.closed_at || '').slice(0, 10)}${r.closed_by ? ' Â· ' + esc(r.closed_by) : ''}`
-        : 'â€”';
+        ? `${(r.closed_at || '').slice(0, 10)}${r.closed_by ? ' · ' + esc(r.closed_by) : ''}`
+        : '—';
       return `<tr class="${closed ? 'closed' : ''}">
         <td><strong>${esc(r.job_no)}</strong></td>
-        <td>${esc(r.receivingDate || 'â€”')}</td>
-        <td>${esc(r.receivedFrom || 'â€”')}</td>
-        <td>${esc(r.toBeProcessedFor || 'â€”')}</td>
-        <td>${esc(r.intakeWeight || 'â€”')}</td>
+        <td>${esc(r.receivingDate || '—')}</td>
+        <td>${esc(r.receivedFrom || '—')}</td>
+        <td>${esc(r.toBeProcessedFor || '—')}</td>
+        <td>${esc(r.intakeWeight || '—')}</td>
         <td><span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span></td>
         <td>${closedTxt}</td>
         <td class="no-print" style="white-space:nowrap;">
@@ -210,7 +210,7 @@
     const res = isClosed
       ? await window.JobStatus.reopen(jobNo, { note })
       : await window.JobStatus.close(jobNo, { note });
-    if (!res) { alert('Could not save â€” please retry.'); return; }
+    if (!res) { alert('Could not save — please retry.'); return; }
     await load();
   }
 

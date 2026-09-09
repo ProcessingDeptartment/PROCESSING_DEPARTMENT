@@ -24,40 +24,13 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'product-label-checklist',
-    docCode: 'REC 7.2.14',
-    title: 'Product Label Checklist',
-    docRevisionStart: 1,
-    listColumns: ['date', 'supplier', 'labelDescription'],
-    sections: [
-      { title: 'Label details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'supplier', label: 'Supplier', type: 'text' },
-        { key: 'labelDescription', label: 'Label description', type: 'text' },
-        { key: 'labelVersion', label: 'Label version', type: 'text' },
-        { key: 'quantityOrdered', label: 'Quantity ordered', type: 'number' },
-        { key: 'quantityReceived', label: 'Quantity received', type: 'number' }
-      ]},
-      { title: 'Verification checks', newPage: true, fields: [
-        { key: 'generalConditionAtReceiving', label: 'General condition at receiving OK?', type: 'yesno' },
-        { key: 'labelDimensionsCorrect', label: 'Label dimensions correct?', type: 'yesno' },
-        { key: 'artworkCorrect', label: 'Artwork correct?', type: 'yesno' },
-        { key: 'ingredientStatementCorrect', label: 'Ingredient statement correct?', type: 'yesno' },
-        { key: 'allergenDeclarationComplies', label: 'Allergen declaration complies?', type: 'yesno' },
-        { key: 'labelCompliesApproved', label: 'Label complies/approved?', type: 'yesno' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'receivedBy', label: 'Received by', type: 'text' },
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/product-label-checklist
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'product-label-checklist' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

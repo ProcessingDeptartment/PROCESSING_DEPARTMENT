@@ -50,7 +50,16 @@
     var top = document.querySelector('.fr-top, .ml-top, .cr-top');
     var body = document.querySelector('.fr-body, .ml-body, .cr-body');
     var docLine = document.querySelector('.doc-line');
-    return { top: top, body: body, docLine: docLine };
+    // The element to re-parent is the engine's OUTERMOST wrapper (the mount
+    // div, e.g. #mlRoot / #frRoot -- often also .ml-app / .fr-app), not the
+    // inner .*-body. Bespoke pages scope all their CSS under that id
+    // (`#mlRoot .ds-grid { ... }`), so moving only .ml-body would strand every
+    // one of those rules. Walk up to the highest ancestor still inside <body>.
+    var root = body;
+    while (root && root.parentElement && root.parentElement !== document.body) {
+      root = root.parentElement;
+    }
+    return { top: top, body: body, root: root || body, docLine: docLine };
   }
 
   function currentFile() {
@@ -99,18 +108,7 @@
 
     bar.appendChild(h('span', 'rt-spacer'));
 
-    /* hoist the engine's own top toolbar (Thresholds, + Add entry, ...) into
-       the bar -- moving the real button nodes keeps their listeners. */
-    var actions = h('div', 'rt-actions');
-    if (parts.top) {
-      var toolbar = parts.top.querySelector('.ml-topline, .fr-toolbar, [class$="-topline"]');
-      if (toolbar) {
-        Array.prototype.slice.call(toolbar.children).forEach(function (btn) {
-          actions.appendChild(btn);
-        });
-      }
-    }
-    bar.appendChild(actions);
+    bar.appendChild(h('div', 'rt-actions'));
     return bar;
   }
 
@@ -133,19 +131,33 @@
     var sidebar = buildSidebar();
     var content = h('main', 'rt-content');
 
-    // move the engine's rendered record into the shell content column
-    content.appendChild(parts.body);
+    // move the engine's outermost wrapper (mount div / .ml-app / .fr-app)
+    // into the shell content column, so id-scoped page CSS keeps matching
+    content.appendChild(parts.root || parts.body);
     bodyWrap.appendChild(sidebar);
     bodyWrap.appendChild(content);
     shell.appendChild(topbar);
     shell.appendChild(bodyWrap);
 
-    // the old dark header strip is now replaced by .rt-topbar
-    if (parts.top) parts.top.style.display = 'none';
-
     document.body.insertBefore(shell, document.body.firstChild);
     document.body.classList.add('rt-has-shell');
+    syncToolbar();
     return true;
+  }
+
+  /* The old dark header strip is hidden by CSS (.rt-content .*-top). Its
+     toolbar buttons (Thresholds, + Add entry, ...) are moved into the navy
+     bar's .rt-actions -- idempotent, and re-run after the engine re-renders
+     its mount, which rebuilds a fresh .*-top inside the shell. */
+  function syncToolbar() {
+    var actions = document.querySelector('.rt-topbar .rt-actions');
+    if (!actions) return;
+    var toolbar = document.querySelector(
+      '.rt-content .ml-topline, .rt-content .fr-toolbar, .rt-content .cr-topline');
+    if (!toolbar) return;
+    Array.prototype.slice.call(toolbar.children).forEach(function (btn) {
+      actions.appendChild(btn);
+    });
   }
 
   /* The engines render the roster/entry totals as a single text string
@@ -208,6 +220,7 @@
         var body = document.querySelector('.fr-body, .ml-body, .cr-body');
         var shell = document.querySelector('.rt-shell');
         if (body && (!shell || !shell.contains(body))) mount();
+        else syncToolbar();   // engine re-rendered its mount inside the shell
       });
     });
     obs.observe(document.body, { childList: true, subtree: true });

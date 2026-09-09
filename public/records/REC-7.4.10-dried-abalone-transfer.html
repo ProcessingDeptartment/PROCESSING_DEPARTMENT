@@ -24,51 +24,13 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'dried-abalone-transfer',
-    batchField: 'jobNumber', stage: 'dry-transfer',
-    docCode: 'REC 7.4.10',
-    title: 'Dried Abalone Transfer',
-    docRevisionStart: 2,
-    listColumns: ['intakeDate', 'jobNumber', 'totalDriedWeight', 'dryYield'],
-
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', intakeWeight: 'intakeWeight',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor' } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNumber', 'jiProcessingFor'], fields: [
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch', required: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'intakeWeight', label: 'Intake weight', type: 'number' }
-      ]},
-      { title: 'Batch details', fields: [
-        { key: 'actualDriedDate', label: 'Actual dried date', type: 'date' }
-      ]},
-      { title: 'Totals', fields: [
-        { key: 'totalDriedWeight', label: 'Total dried weight', type: 'number' },
-        { key: 'dryYield', label: 'Dry yield', type: 'number' },
-        { key: 'receivedBy', label: 'Received by', type: 'text', required: true },
-        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
-      ]}
-    ],
-    roster: {
-      title: 'Crates',
-      columns: [
-        { key: 'crateNumber', label: 'Crate number', type: 'number' },
-        { key: 'weight', label: 'Weight (kg)', type: 'number' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/dried-abalone-transfer
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'dried-abalone-transfer' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

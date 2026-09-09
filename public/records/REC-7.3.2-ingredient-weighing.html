@@ -24,65 +24,13 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'ingredient-weighing',
-    batchField: 'jobNo',
-    stage: 'sauce-ingredients',
-
-    extraBatchFields: ['chickenFlavourBatchCode', 'vegetableBaseBatchCode', 'gelatineBatchCode', 'xanthanGumBatchCode', 'maltSugarBatchCode', 'tapiocaStarchBatchCode', 'brownSugarBatchCode', 'sherloneSauceBatchCode'],
-    docCode: 'REC 7.3.2',
-    title: 'Ingredient Weighing',
-    docRevisionStart: 1,
-    listColumns: ['date', 'weighedBy'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Ingredients (1)', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'chickenFlavourWeight', label: 'Chicken flavour weight', type: 'number' },
-        { key: 'chickenFlavourBatchCode', label: 'Chicken flavour batch code', type: 'text' },
-        { key: 'vegetableBaseWeight', label: 'Vegetable base weight', type: 'number' },
-        { key: 'vegetableBaseBatchCode', label: 'Vegetable base batch code', type: 'text' },
-        { key: 'gelatineWeight', label: 'Gelatine weight', type: 'number' },
-        { key: 'gelatineBatchCode', label: 'Gelatine batch code', type: 'text' },
-        { key: 'xanthanGumWeight', label: 'Xanthan gum weight', type: 'number' },
-        { key: 'xanthanGumBatchCode', label: 'Xanthan gum batch code', type: 'text' }
-      ]},
-      { title: 'Ingredients (2)', newPage: true, fields: [
-        { key: 'maltSugarWeight', label: 'Malt sugar weight', type: 'number' },
-        { key: 'maltSugarBatchCode', label: 'Malt sugar batch code', type: 'text' },
-        { key: 'tapiocaStarchWeight', label: 'Tapioca starch weight', type: 'number' },
-        { key: 'tapiocaStarchBatchCode', label: 'Tapioca starch batch code', type: 'text' },
-        { key: 'brownSugarWeight', label: 'Brown sugar weight', type: 'number' },
-        { key: 'brownSugarBatchCode', label: 'Brown sugar batch code', type: 'text' },
-        { key: 'sherloneSauceWeight', label: 'Sherlone sauce weight', type: 'number' },
-        { key: 'sherloneSauceBatchCode', label: 'Sherlone sauce batch code', type: 'text' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'weighedBy', label: 'Weighed by', type: 'text' },
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/ingredient-weighing
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'ingredient-weighing' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

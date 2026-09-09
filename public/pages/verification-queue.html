@@ -46,15 +46,15 @@
 <div id="vq-root">
   <div class="vq-top">
     <h1>Verification Queue</h1>
-    <a class="btn btn-ghost" href="../index.html">â† Home</a>
+    <a class="btn btn-ghost" href="../index.html">← Home</a>
   </div>
 
   <div class="vq-body">
-    <div class="state" id="state">Checkingâ€¦</div>
+    <div class="state" id="state">Checking…</div>
 
     <div class="panel" id="summary" style="display:none;">
       <div class="who">
-        <strong id="who">â€”</strong>
+        <strong id="who">—</strong>
         <span class="muted" id="roleLabel"></span>
       </div>
       <div class="big" id="total">0</div>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="panel" id="listPanel" style="display:none;">
-      <h2>By record â€” oldest waiting first</h2>
+      <h2>By record — oldest waiting first</h2>
       <table>
         <thead><tr><th>Record</th><th>Doc no.</th><th style="text-align:right;">Waiting</th><th>Oldest</th></tr></thead>
         <tbody id="rows"></tbody>
@@ -76,7 +76,7 @@
 
     <div class="note">
       <strong>This is a work queue, not an access control.</strong> Logins are eight
-      in-memory users â€” one per role, all sharing a password â€” and role rules are not
+      in-memory users — one per role, all sharing a password — and role rules are not
       enforced. The queue therefore shows what <em>this role</em> should verify; it cannot
       tell two people holding the same role apart. The signed verification on the record
       remains the evidence, not this list.
@@ -108,9 +108,9 @@
   }
 
   function fmtDate(ts) {
-    if (!ts) return 'â€”';
+    if (!ts) return '—';
     var d = new Date(ts);
-    if (isNaN(d.getTime())) return 'â€”';
+    if (isNaN(d.getTime())) return '—';
     var p = function (n) { return String(n).padStart(2, '0'); };
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
   }
@@ -142,11 +142,11 @@
     el('rows').innerHTML = q.records.map(function (r) {
       var d = daysAgo(r.oldest);
       var ageCls = (d != null && d >= 7) ? 'age old' : 'age';
-      var age = d == null ? 'â€”' : fmtDate(r.oldest) + ' (' + d + 'd)';
+      var age = d == null ? '—' : fmtDate(r.oldest) + ' (' + d + 'd)';
       var label = esc(r.name);
       return '<tr>' +
         '<td>' + (r.href ? '<a class="rec" href="' + esc(r.href) + '">' + label + '</a>' : label) + '</td>' +
-        '<td class="muted">' + esc(r.docNo || 'â€”') + '</td>' +
+        '<td class="muted">' + esc(r.docNo || '—') + '</td>' +
         '<td class="num">' + r.count + '</td>' +
         '<td class="' + ageCls + '">' + age + '</td>' +
         '</tr>';
@@ -169,7 +169,7 @@
     } catch (e) {
       console.error('verification queue failed', e);
       setState('bad', 'Could not load the queue. If this device has no access key, ' +
-        'an empty queue does not mean there is nothing waiting â€” ' +
+        'an empty queue does not mean there is nothing waiting — ' +
         'set one on <a href="api-key.html">the API key page</a>.');
     }
   });

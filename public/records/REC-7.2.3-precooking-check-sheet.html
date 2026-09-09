@@ -26,62 +26,13 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'precooking-check-sheet',
-    docCode: 'REC 7.2.3',
-    title: 'Precooking Check Sheet',
-    docRevisionStart: 1,
-
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        },
-        restrict: { sizeRange: 'sizeRange' } }
-    ],
-    listColumns: ['jiReceivingDate', 'jobNumber', 'sizeRange'],
-    batchField: 'jobNumber',
-    stage: 'precooking',
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNumber', 'jiProcessingFor'], fields: [
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Batch info', fields: [
-        { key: 'precookingDate', label: 'Precooking date', type: 'date' },
-        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
-      ]},
-      { title: 'Precooking process', newPage: true, fields: [
-        { key: 'litresWaterPerCook', label: 'Litres water per cook', type: 'number' },
-        { key: 'sugarKgUsed', label: 'Sugar used (kg)', type: 'number' },
-        { key: 'sugarBatchCode', label: 'Sugar batch code', type: 'text' },
-        { key: 'precookingStartTime', label: 'Precooking start time', type: 'text' },
-        { key: 'temperature', label: 'Temperature', type: 'number' }
-      ]},
-      { title: 'Water & abalone checks', fields: [
-        { key: 'waterInPotChanged', label: 'Water in pot changed?', type: 'yesno' },
-        { key: 'rinseWaterChanged', label: 'Rinse water changed?', type: 'yesno' },
-        { key: 'cleanWeight', label: 'Clean weight', type: 'number' },
-        { key: 'precookWeight', label: 'Precook weight', type: 'number' }
-      ]},
-      { title: 'Totals', fields: [
-        { key: 'totalWholeWeight', label: 'Total whole weight', type: 'number' },
-        { key: 'totalCleanWeight', label: 'Total clean weight', type: 'number' },
-        { key: 'totalPrecookWeight', label: 'Total precook weight', type: 'number' },
-        { key: 'percentCleanWeight', label: '% clean weight', type: 'number' },
-        { key: 'percentPrecookWeight', label: '% precook weight', type: 'number' }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/precooking-check-sheet
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'precooking-check-sheet' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

@@ -22,7 +22,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -32,7 +32,7 @@
     docRevisionStart: 5,
     listColumns: ['weekOf', 'checkedBy'],
     instructions: [
-      { label: 'Inspection', text: 'Inspect all equipment and devices daily. Ã¢Å“â€œ = Good condition/working, X = Faulty/damaged.' }
+      { label: 'Inspection', text: 'Inspect all equipment and devices daily. âÅ““ = Good condition/working, X = Faulty/damaged.' }
     ],
     sections: [
       { title: 'Week', fields: [
@@ -45,17 +45,17 @@
       ]}
     ],
     roster: {
-      title: 'Equipment / device checks Ã¢â‚¬â€ covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
+      title: 'Equipment / device checks — covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
       columns: [
         { key: 'equipmentOrDevice', label: 'Equipment / device', type: 'text' },
         { key: 'date', label: 'Date', type: 'date' },
-        { key: 'condition', label: 'Condition (Ã¢Å“â€œ good / X faulty)', type: 'select', options: ['Ã¢Å“â€œ', 'X'] },
+        { key: 'condition', label: 'Condition (âÅ““ good / X faulty)', type: 'select', options: ['âÅ““', 'X'] },
         { key: 'comments', label: 'Comments', type: 'text' }
       ]
     }
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

@@ -23,35 +23,16 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
+  // Definition lives in the DB — fetched by the engine from
+  // GET /api/record-def/labelling-of-dry-boxes. See Claude outputs/relational-all-records-plan.md.
   MonitoringLog.init({
     mount: '#mlRoot',
-    recordKey: 'labelling-of-dry-boxes',
-    docCode: 'REC 7.4.7',
-    title: 'Labelling of Dry Boxes',
-    docRevisionStart: 2,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'clientName', label: 'Client name', type: 'text' },
-      { key: 'clientAddress', label: 'Client address', type: 'text' },
-      { key: 'quantityOfBoxes', label: 'Quantity of boxes', type: 'number' },
-      { key: 'productDescription', label: 'Product description', type: 'text' },
-      { key: 'agCodeMatchesInspection', label: 'NRCS AG code matches inspection report?', type: 'yesno' },
-      { key: 'sizeRangeCorrectAcrossBoxes', label: 'Product size range correct across all boxes?', type: 'yesno' },
-      { key: 'boxCountMatchesPackingList', label: 'Number of boxes matches packing list?', type: 'yesno' },
-      { key: 'addressMatchesPackingList', label: 'Address on label matches packing list?', type: 'yesno' },
-      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
-      { key: 'inspectedByProcessing', label: 'Inspected by â€” Processing', type: 'text', required: true },
-      { key: 'inspectedByQC', label: 'Inspected by â€” QC', type: 'text' },
-      { key: 'inspectedByFG01', label: 'Inspected by â€” FG01', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
+    recordKey: 'labelling-of-dry-boxes'
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

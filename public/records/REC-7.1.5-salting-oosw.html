@@ -26,52 +26,13 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'salting-oosw',
-    batchField: 'jobNo',
-    docCode: 'REC 7.1.5',
-    title: 'Salting (OOSW)',
-    docRevisionStart: 1,
-    listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', wholeWeight: 'intakeWeight',
-          jiIntakeWeight: 'intakeWeight'
-        },
-        restrict: { sizeRange: 'sizeRange' } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'processingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'], matchJobRoute: 'jobNo' }
-      ]},
-      { title: 'Batch info', fields: [
-        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-        { key: 'wholeWeight', label: 'Whole weight', type: 'number' },
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'supervisor', label: 'Supervisor', type: 'text' },
-        { key: 'supervisorTitle', label: 'Supervisor title', type: 'text' },
-        { key: 'supervisorDate', label: 'Supervisor date', type: 'date' },
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ],
-    roster: {
-      title: 'OOSW weights',
-      totalsRow: ['weight'],
-      columns: [
-        { key: 'weight', label: 'Weight', type: 'number' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/salting-oosw
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'salting-oosw' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

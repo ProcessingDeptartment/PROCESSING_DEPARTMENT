@@ -22,45 +22,17 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
+  // Definition (sections, Boxes roster, batchField, listColumns...) lives in the DB — fetched
+  // by the engine from GET /api/record-def/dry-labelling-list. Was inline until 2026-09-09;
+  // see Claude outputs/relational-all-records-plan.md.
   FormRecord.init({
     mount: '#frRoot',
-    recordKey: 'dry-labelling-list',
-    batchField: 'agCode',
-    stage: 'dry-labelling',
-    docCode: 'REC 7.4.8',
-    title: 'Dry Labelling List',
-    docRevisionStart: 2,
-    listColumns: ['customer', 'flight', 'nettWeight'],
-    sections: [
-      { title: 'Shipment details', fields: [
-        { key: 'customer', label: 'Customer', type: 'text', required: true },
-        { key: 'flight', label: 'Flight', type: 'text' },
-        { key: 'address', label: 'Address', type: 'text', wide: true },
-        { key: 'airwaybillNr', label: 'Airwaybill nr.', type: 'text' },
-        { key: 'etd', label: 'ETD', type: 'date' },
-        { key: 'nettWeight', label: 'Nett weight', type: 'number' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'salesDept', label: 'Sales dept.', type: 'text' },
-        { key: 'driverFromFreightCo', label: 'Driver from freight company', type: 'text' },
-        { key: 'abagoldEmployee', label: 'Abagold employee', type: 'text', required: true }
-      ]}
-    ],
-    roster: {
-      title: 'Boxes',
-      columns: [
-        { key: 'boxNo', label: 'Box no.', type: 'number' },
-        { key: 'gradeRange', label: 'Grade range', type: 'select', options: ['30-40g', '40-50g', '50-60g', '60-70g', '70-90g', '90-110g', '110-150g', '150-200g', '350-500g', 'Wild'] },
-        { key: 'boxCode', label: 'Box code', type: 'text' },
-        { key: 'agCode', label: 'NRCS AG code', type: 'text' },
-        { key: 'weight', label: 'Weight (kg)', type: 'number' }
-      ]
-    }
+    recordKey: 'dry-labelling-list'
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

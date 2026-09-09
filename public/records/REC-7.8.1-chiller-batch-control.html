@@ -24,7 +24,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
   MonitoringLog.init({
     mount: '#mlRoot',
@@ -54,7 +54,7 @@
       Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
       { key: 'traysClearlyMarked', label: 'Trays clearly marked?', type: 'yesno' },
       { key: 'noOfTrays', label: 'No. of trays', type: 'number' },
-      { key: 'chillerTemp', label: 'Chiller temp', type: 'number', unit: 'Â°C' },
+      { key: 'chillerTemp', label: 'Chiller temp', type: 'number', unit: '°C' },
       { key: 'totalDaysInChiller', label: 'Total days in chiller', type: 'number' },
       { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
     ],
@@ -64,6 +64,6 @@
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

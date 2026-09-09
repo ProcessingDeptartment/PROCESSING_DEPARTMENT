@@ -25,63 +25,13 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'drying-process',
-    batchField: 'jobNumber',
-    docCode: 'REC 7.4.1',
-    title: 'Drying Process',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Note', text: 'The paper form has one Date/Time per steam cycle (up to 14). This digital version records the date of each steam turn Ã¢â‚¬â€ steam 1 through 14 Ã¢â‚¬â€ plus the milestone dates either side.' }
-    ],
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNumber', label: 'Job number', type: 'jobsearch', required: true },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
-      { key: 'cookingDate', label: 'Cooking date', type: 'date' },
-      { key: 'cookingWeight', label: 'Cooking weight', type: 'number', unit: 'kg' },
-      { key: 'movementToDryRoom1Date', label: 'Movement to dry room 1', type: 'date' },
-      { key: 'steam1Date', label: 'Steam 1', type: 'date' },
-      { key: 'steam2Date', label: 'Steam 2', type: 'date' },
-      { key: 'steam3Date', label: 'Steam 3', type: 'date' },
-      { key: 'steam4Date', label: 'Steam 4', type: 'date' },
-      { key: 'steam5Date', label: 'Steam 5', type: 'date' },
-      { key: 'steam6Date', label: 'Steam 6', type: 'date' },
-      { key: 'steam7Date', label: 'Steam 7', type: 'date' },
-      { key: 'steam8Date', label: 'Steam 8', type: 'date' },
-      { key: 'steam9Date', label: 'Steam 9', type: 'date' },
-      { key: 'steam10Date', label: 'Steam 10', type: 'date' },
-      { key: 'steam11Date', label: 'Steam 11', type: 'date' },
-      { key: 'steam12Date', label: 'Steam 12', type: 'date' },
-      { key: 'steam13Date', label: 'Steam 13', type: 'date' },
-      { key: 'steam14Date', label: 'Steam 14', type: 'date' },
-      { key: 'movementToContainerDate', label: 'Movement to container', type: 'date' },
-      { key: 'removedFromTrolleysDate', label: 'Removed from trolleys', type: 'date' },
-      { key: 'movementToGradingRoomDate', label: 'Movement to grading room', type: 'date' },
-      { key: 'dateDeString', label: 'Date de-string', type: 'date' },
-      { key: 'dateGraded', label: 'Date graded', type: 'date' },
-      { key: 'totalDryingTimeDays', label: 'Total drying time', type: 'number', unit: 'days' },
-      { key: 'dryWeight', label: 'Dry weight', type: 'number', unit: 'kg' },
-      { key: 'estimateYield', label: 'Estimate yield', type: 'number', unit: '%' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/drying-process
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'drying-process' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

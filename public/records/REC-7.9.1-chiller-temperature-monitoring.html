@@ -24,7 +24,7 @@
 <script src="../lib/thresholds.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
   MonitoringLog.init({
     mount: '#mlRoot',
@@ -35,9 +35,9 @@
     title: 'Chiller Temperature Monitoring',
     docRevisionStart: 9,
     instructions: [
-      { label: 'Temperature parameters', text: '0Â°C to +10Â°C. Defrost temperature not above +20Â°C.' },
+      { label: 'Temperature parameters', text: '0°C to +10°C. Defrost temperature not above +20°C.' },
       { label: 'Frequency of monitoring', text: 'Start of shift, lunch break and end of shift.' },
-      { label: 'If out of spec', text: 'If the temperature varies by more than 0.5Â°C from the accepted parameters, corrective action must be recorded and the temperature checked again within 1 hour.' }
+      { label: 'If out of spec', text: 'If the temperature varies by more than 0.5°C from the accepted parameters, corrective action must be recorded and the temperature checked again within 1 hour.' }
     ],
 
     jobInfoGroup: 'Job info',
@@ -54,23 +54,23 @@
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
       { key: 'timeOfCheck', label: 'Time', type: 'select', options: ['Start of shift', 'Lunch break', 'End of shift'] },
       { key: 'productCovered', label: 'Product covered', type: 'yesno' },
-      { key: 'chiller1DialTemp', label: 'Chiller 1 â€” dial temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
-      { key: 'chiller1ProductTemp', label: 'Chiller 1 â€” product temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
-      { key: 'chiller2DialTemp', label: 'Chiller 2 â€” dial temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
-      { key: 'chiller2ProductTemp', label: 'Chiller 2 â€” product temp', type: 'number', unit: 'Â°C', specKey: 'chillerTemp' },
-      { key: 'freezerDialTemp', label: 'Freezer â€” dial temp', type: 'number', unit: 'Â°C', specKey: 'freezerTemp' },
+      { key: 'chiller1DialTemp', label: 'Chiller 1 — dial temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
+      { key: 'chiller1ProductTemp', label: 'Chiller 1 — product temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
+      { key: 'chiller2DialTemp', label: 'Chiller 2 — dial temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
+      { key: 'chiller2ProductTemp', label: 'Chiller 2 — product temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
+      { key: 'freezerDialTemp', label: 'Freezer — dial temp', type: 'number', unit: '°C', specKey: 'freezerTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
       { key: 'correctiveAction', label: 'Reason for temp being out of spec & corrective action', type: 'textarea' }
     ],
     specFields: [
-      { key: 'chillerTemp', label: 'Chiller / product temperature', unit: 'Â°C', ...Thresholds.get('chiller-temperature-monitoring', 'chillerTemp') },
-      { key: 'freezerTemp', label: 'Freezer dial temperature', unit: 'Â°C', ...Thresholds.get('chiller-temperature-monitoring', 'freezerTemp') }
+      { key: 'chillerTemp', label: 'Chiller / product temperature', unit: '°C', ...Thresholds.get('chiller-temperature-monitoring', 'chillerTemp') },
+      { key: 'freezerTemp', label: 'Freezer dial temperature', unit: '°C', ...Thresholds.get('chiller-temperature-monitoring', 'freezerTemp') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

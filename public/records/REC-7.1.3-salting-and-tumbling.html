@@ -26,72 +26,15 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'salting-and-tumbling',
-    batchField: 'jobNo',
-    docCode: 'REC 7.1.3',
-    title: 'Salting and Tumbling',
-    docRevisionStart: 1,
-    stage: 'salting',
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom', processingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' },
-
-        restrict: { sizeRange: 'sizeRange' } }
-    ],
-    listColumns: ['date', 'jobNo', 'intakeDate', 'processingFor'],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'processingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'intakeDate', label: 'Intake date', type: 'date' },
-        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'], matchJobRoute: 'jobNo' }
-      ]},
-
-      { title: 'Sign-off', newPage: true, fields: [
-        { key: 'qualityController', label: 'Quality controller', type: 'text' },
-        { key: 'processDeviation', label: 'Process deviation', type: 'textarea', wide: true }
-      ]}
-    ],
-
-    roster: {
-      title: 'Salting batches',
-      batchIdColumn: 'batchId',
-      columns: [
-
-        { key: 'batchId', label: 'Batch', type: 'batchseq' },
-        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-
-        { key: 'standardSaltingTime', label: 'Standard salting time', type: 'derived',
-          deriveLookup: { from: 'sizeRange', map: 'saltingStandardTimes' } },
-        { key: 'noOfCrates', label: 'No. of crates', type: 'number' },
-        { key: 'startTime', label: 'Start time', type: 'time' },
-        { key: 'finishTime', label: 'Finish time', type: 'time' },
-
-        { key: 'totalTumblingTime', label: 'Total tumbling time', type: 'derived',
-          deriveDuration: { from: 'startTime', to: 'finishTime' } },
-        { key: 'shuckWeight', label: 'Shuck weight (kg)', type: 'number' },
-        { key: 'saltKg', label: 'Salt (kg)', type: 'number' },
-        { key: 'saltPercentUsed', label: 'Salt % used', type: 'number' },
-        { key: 'saltBatchCode', label: 'Salt batch code', type: 'text' },
-        { key: 'bakingSodaKg', label: 'Baking soda (kg)', type: 'number' },
-        { key: 'bakingSodaBatchCode', label: 'Baking soda batch code', type: 'text' },
-        { key: 'sugarKg', label: 'Sugar (kg)', type: 'number' },
-        { key: 'sugarPercentUsed', label: 'Sugar % used', type: 'number' },
-        { key: 'sugarBatchCode', label: 'Sugar batch code', type: 'text' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/salting-and-tumbling
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'salting-and-tumbling' });
 })();
 </script>
 
 
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

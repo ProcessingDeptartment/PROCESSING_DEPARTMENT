@@ -71,6 +71,11 @@ const server = http.createServer((req, res) => {
   });
 });
 
+// Local dev only: point the front-end at a locally-running API instead of the deployed one.
+//   DEV_API=http://localhost:3001 npm run dev
+// Injected as window.FACILITY_API_BASE, which api-backend.js / the engines already read.
+const DEV_API = process.env.DEV_API || '';
+
 function serveFile(filePath, res) {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = mimeTypes[ext] || 'application/octet-stream';
@@ -79,6 +84,11 @@ function serveFile(filePath, res) {
     if (err) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('Internal server error');
+    } else if (ext === '.html' && DEV_API) {
+      const html = data.toString().replace(/<head(\s[^>]*)?>/i,
+        (m) => `${m}\n<script>window.FACILITY_API_BASE=${JSON.stringify(DEV_API)};</script>`);
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(html);
     } else {
       res.writeHead(200, { 'Content-Type': contentType });
       res.end(data);

@@ -26,58 +26,13 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'retort-inspection-report',
-    batchField: 'jobNo',
-    docCode: 'REC 7.2.9',
-    title: 'Retort Inspection Report',
-    docRevisionStart: 1,
-    listColumns: ['intakeDate', 'jobNo', 'retortCode'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { harvestFarm: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' }
-      ]},
-      { title: 'Batch info', fields: [
-        { key: 'retortCode', label: 'Retort code', type: 'text' },
-        { key: 'timeTrolleyIn', label: 'Time trolley in', type: 'text' },
-        { key: 'product', label: 'Product', type: 'text' },
-        { key: 'canningCode', label: 'Canning code', type: 'text' },
-        { key: 'canSize', label: 'Can size', type: 'text' }
-      ]},
-      { title: 'Pre-retort checks', newPage: true, fields: [
-        { key: 'retortDoorRubberSprayed', label: 'Retort door rubber sprayed?', type: 'yesno' },
-        { key: 'preHeatCycleDone', label: 'Pre-heat cycle done?', type: 'yesno' },
-        { key: 'airFilterOk', label: 'Air filter OK?', type: 'yesno' },
-        { key: 'stackingPatternCorrect', label: 'Stacking pattern correct?', type: 'yesno' }
-      ]},
-      { title: 'Recipe & process', fields: [
-        { key: 'recipeUsed', label: 'Recipe used', type: 'text' },
-        { key: 'autoclaveTapeOnTrolley', label: 'Autoclave tape on trolley?', type: 'yesno' },
-        { key: 'correctTempOnRecipe', label: 'Correct temp on recipe?', type: 'yesno' },
-        { key: 'correctPressureOnRecipe', label: 'Correct pressure on recipe?', type: 'yesno' }
-      ]},
-      { title: 'Notes', fields: [
-        { key: 'processDeviationAlarms', label: 'Process deviations/alarms', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/retort-inspection-report
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'retort-inspection-report' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

@@ -25,46 +25,13 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'scrubbing-checklist-qc',
-    docCode: 'REC 7.2.2',
-    title: 'Scrubbing Checklist',
-    docRevisionStart: 2,
-    instructions: [
-      { label: 'Purpose', text: 'QC check of scrubbing quality â€” crates inspected, damage, and whether abalone is scrubbed clean.' }
-    ],
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' },
-        restrict: { sizeRange: 'sizeRange' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'time', label: 'Time', type: 'text' },
-      Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-      { key: 'noOfCratesInspected', label: 'No. of crates inspected', type: 'number' },
-      { key: 'damagedAbalone', label: 'Damaged abalone?', type: 'yesno' },
-      { key: 'allScrubbedClean', label: 'All abalone scrubbed clean?', type: 'yesno' },
-      { key: 'acceptableDamageTrimmed', label: 'Acceptable damaged abalone trimmed?', type: 'yesno' },
-      { key: 'processDeviation', label: 'Process deviation', type: 'textarea' },
-      { key: 'checkedBy', label: 'QC online â€” checked by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/scrubbing-checklist-qc
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'scrubbing-checklist-qc' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

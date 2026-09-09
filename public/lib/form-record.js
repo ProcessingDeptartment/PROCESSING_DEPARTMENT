@@ -715,6 +715,19 @@
     return fields;
   }
 
+  // The record's definition lives in the DB (RecordDefinition tables, seeded from the old
+  // inline configs -- see Claude outputs/relational-all-records-plan.md). A page that passes
+  // only { recordKey } gets its config assembled by GET /api/record-def/:key.
+  async function fetchRecordDef(recordKey) {
+    if (!window.FacilityApi) return null;
+    try {
+      const res = await window.FacilityApi.fetch('/api/record-def/' + encodeURIComponent(recordKey));
+      if (!res.ok) { console.error('form-record: record-def ' + recordKey + ' -> HTTP ' + res.status); return null; }
+      const body = await res.json();
+      return body && body.config ? body.config : null;
+    } catch (e) { console.error('form-record: record-def ' + recordKey + ' fetch failed', e); return null; }
+  }
+
   async function init(config) {
 
     if (window.LoginUI) {
@@ -723,6 +736,16 @@
 
     injectStyleOnce();
 
+    if (!config.sections && !config.fields && config.recordKey) {
+      const fetched = await fetchRecordDef(config.recordKey);
+      if (fetched) Object.assign(config, fetched);
+    }
+    if (!config.sections && !config.fields) {
+      const m = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
+      if (m) m.innerHTML = '<p style="padding:20px;font:600 14px system-ui;color:#9c241d">'
+        + 'Could not load this record’s definition. The records API may be starting up — reload in a moment.</p>';
+      return;
+    }
 
     const inlineConfig = {
       sections: JSON.parse(JSON.stringify(config.sections || [])),

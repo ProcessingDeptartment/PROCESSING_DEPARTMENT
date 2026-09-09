@@ -24,7 +24,7 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
   MonitoringLog.init({
     mount: '#mlRoot',
@@ -41,8 +41,8 @@
       Lookups.field({ key: 'area', label: 'Area', list: 'areas', required: true }),
       Lookups.field({ key: 'equipmentSwabbed', label: 'Equipment swabbed', list: 'equipment' }),
       Lookups.field({ key: 'allergensInvolved', label: 'Allergens involved', list: 'allergens' }),
-      Lookups.field({ key: 'productBefore', label: 'Product produced â€” prior to allergen wash down', list: 'processingFor' }),
-      Lookups.field({ key: 'productAfter', label: 'Product produced â€” after allergen wash down', list: 'processingFor' }),
+      Lookups.field({ key: 'productBefore', label: 'Product produced — prior to allergen wash down', list: 'processingFor' }),
+      Lookups.field({ key: 'productAfter', label: 'Product produced — after allergen wash down', list: 'processingFor' }),
       { key: 'debrisInspection', label: 'Debris inspection (no debris present)', type: 'yesno' },
       { key: 'equipmentCleaned', label: 'Equipment cleaned', type: 'yesno' },
       { key: 'correctBrushwareUse', label: 'Correct brush-ware use', type: 'yesno' },
@@ -61,6 +61,6 @@
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

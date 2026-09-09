@@ -374,6 +374,12 @@ body.rt-has-shell { overflow-x: hidden; }
    ------------------------------------------------------------------------ */
 body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 
+/* the engine's own dark header strip is replaced by .rt-topbar -- hide it via
+   CSS (survives the engine re-rendering its mount inside the shell) */
+.rt-content .fr-top,
+.rt-content .ml-top,
+.rt-content .cr-top { display: none !important; }
+
 .rt-content .fr-body,
 .rt-content .ml-body,
 .rt-content .cr-body {

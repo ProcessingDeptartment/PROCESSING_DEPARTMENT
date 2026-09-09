@@ -478,7 +478,7 @@
             } else {
                 row.classList.add('is-nc');
                 row.classList.remove('is-conforming');
-                if (printAns) { printAns.innerText = 'âŒ'; printAns.style.color = '#b91c1c'; }
+                if (printAns) { printAns.innerText = '❌'; printAns.style.color = '#b91c1c'; }
             }
             toggleConformBubbles(radio, radio.value === 'NO');
             updateComplianceIcons();
@@ -532,7 +532,7 @@
                 const icon = document.getElementById(sec.statusId);
 
                 if (!hasInput) { icon.innerText = '⚪'; icon.style.color = '#94a3b8'; }
-                else if (isNC) { icon.innerText = 'âŒ'; icon.style.color = '#ef4444'; }
+                else if (isNC) { icon.innerText = '❌'; icon.style.color = '#ef4444'; }
                 else { icon.innerText = '✅'; icon.style.color = '#22c55e'; }
 
                 const commentBox = document.getElementById(`comment-${sec.id}`);
@@ -636,9 +636,9 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
             document.querySelectorAll('.nrcs-row').forEach(row => {
                 const code = row.querySelector('.nrcs-code-input').value.trim();
                 const desc = row.querySelector('.nrcs-desc-input').value;
-                const conform = row.querySelector('.nrcs-conform-input').value === 'YES' ? "✅" : "âŒ";
-                const retortChecked = row.querySelector('.nrcs-retort').checked ? "✅" : "âŒ";
-                const seamChecked = row.querySelector('.nrcs-seam').checked ? "✅" : "âŒ";
+                const conform = row.querySelector('.nrcs-conform-input').value === 'YES' ? "✅" : "❌";
+                const retortChecked = row.querySelector('.nrcs-retort').checked ? "✅" : "❌";
+                const seamChecked = row.querySelector('.nrcs-seam').checked ? "✅" : "❌";
 
                 if(code) {
                     batchCount++;

@@ -22,7 +22,7 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -66,13 +66,13 @@
       columns: [
         { key: 'nameSurname', label: 'Name and surname', type: 'text' },
         { key: 'department', label: 'Department', type: 'select', options: ['Processing', 'QC', 'Live', 'Dry', 'Dispatch', 'Other'] },
-        { key: 'openingSignature', label: 'Opening Ã¢â‚¬â€ signature', type: 'text' },
-        { key: 'closingSignature', label: 'Closing Ã¢â‚¬â€ signature', type: 'text' }
+        { key: 'openingSignature', label: 'Opening — signature', type: 'text' },
+        { key: 'closingSignature', label: 'Closing — signature', type: 'text' }
       ]
     }
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

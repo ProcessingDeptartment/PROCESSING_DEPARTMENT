@@ -26,71 +26,13 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'dry-cooking',
-    batchField: 'jobNumber',
-    docCode: 'REC 7.4.0',
-    title: 'Dry Cooking',
-    docRevisionStart: 1,
-
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', harvestFarm: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    listColumns: ['intakeDate', 'jobNumber', 'potNumber'],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNumber', 'jiProcessingFor'], fields: [
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' },
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true }
-      ]},
-      { title: 'Batch & cooking info', fields: [
-        { key: 'cookingDate', label: 'Cooking date', type: 'date' },
-        { key: 'potNumber', label: 'Pot number', type: 'text' },
-        { key: 'abaloneKg', label: 'Abalone (kg)', type: 'number' }
-      ]},
-      { title: 'Blanching', newPage: true, fields: [
-        { key: 'blanchSeaWater', label: 'Blanch sea water', type: 'number' },
-        { key: 'blanchPh', label: 'Blanch pH', type: 'number' },
-        { key: 'blanchSaltKg', label: 'Blanch salt (kg)', type: 'number' },
-        { key: 'blanchTemp', label: 'Blanch temp', type: 'number' },
-        { key: 'cookingTime', label: 'Cooking time', type: 'text' },
-        { key: 'blanchBatchNumber', label: 'Blanch batch number', type: 'text' }
-      ]},
-      { title: 'Cooking', fields: [
-        { key: 'startTime', label: 'Start time', type: 'text' },
-        { key: 'startingTemp', label: 'Starting temp', type: 'number' },
-        { key: 'temp20MinAfter', label: 'Temp 20 min after', type: 'number' },
-        { key: 'endOfCookingTemp', label: 'End of cooking temp', type: 'number' },
-        { key: 'timeOut', label: 'Time out', type: 'text' },
-        { key: 'totalCookingTime', label: 'Total cooking time', type: 'text' },
-        { key: 'cookSeaWater', label: 'Cook sea water', type: 'number' },
-        { key: 'cookPh', label: 'Cook pH', type: 'number' },
-        { key: 'saltKg', label: 'Salt (kg)', type: 'number' },
-        { key: 'saltBatchNumber', label: 'Salt batch number', type: 'text' }
-      ]},
-      { title: 'Additives (optional)', fields: [
-        { key: 'sugarKg', label: 'Sugar (kg)', type: 'number' },
-        { key: 'sugarBatchNumber', label: 'Sugar batch number', type: 'text' },
-        { key: 'vinegarKg', label: 'Vinegar (kg)', type: 'number' },
-        { key: 'vinegarBatchNumber', label: 'Vinegar batch number', type: 'text' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'cooker', label: 'Cooker', type: 'text' },
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/dry-cooking
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'dry-cooking' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

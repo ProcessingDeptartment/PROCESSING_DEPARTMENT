@@ -26,9 +26,9 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/compute/registry.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
 
   MonitoringLog.init({
     mount: '#mlRoot',
@@ -57,31 +57,24 @@
       { key: 'purgeEndDate', label: 'Purge ended', type: 'date' },
       {
         key: 'purgeDays', label: 'Purging time', type: 'computed', unit: 'days', specKey: 'purgeDays',
-        compute: (v) => {
-          const a = Date.parse(v.purgeStartDate), b = Date.parse(v.purgeEndDate);
-          return (isNaN(a) || isNaN(b)) ? '' : Math.round((b - a) / 86400000);
-        }
+        computeFn: 'dayCount', computeArgs: { from: 'purgeStartDate', to: 'purgeEndDate' }
       },
       { key: 'bagsIntoPurge', label: 'Bags into purge', type: 'number' },
       { key: 'massIntoPurge', label: 'Mass into purge', type: 'number', unit: 'kg' },
       { key: 'massOutOfPurge', label: 'Mass out of purge', type: 'number', unit: 'kg' },
       {
         key: 'purgeLoss', label: 'Purge loss', type: 'computed', unit: '%', specKey: 'purgeLoss',
-        compute: (v) => {
-          const inKg = num(v.massIntoPurge), outKg = num(v.massOutOfPurge);
-          if (inKg === null || outKg === null || inKg <= 0) return '';
-          return Math.round((inKg - outKg) / inKg * 1000) / 10;
-        }
+        computeFn: 'lossPct', computeArgs: { into: 'massIntoPurge', outOf: 'massOutOfPurge' }
       },
 
       { key: 'bagsPacked', label: 'Bags packed', type: 'number' },
       { key: 'boxesPacked', label: 'Boxes packed', type: 'number' },
       { key: 'massPacked', label: 'Mass packed', type: 'number', unit: 'kg' },
 
-      { key: 'oxygenBatchNumber', label: 'Oxygen Ã¢â‚¬â€ batch number', type: 'text' },
-      { key: 'spongesBatchNumber', label: 'Sponges Ã¢â‚¬â€ batch number', type: 'text' },
-      { key: 'bagsBoxFlatBoardBatchNumber', label: 'Plastic bags, box, flat board Ã¢â‚¬â€ batch number', type: 'text' },
-      { key: 'icePacksBatchNumber', label: 'Ice packs Ã¢â‚¬â€ batch number', type: 'text' },
+      { key: 'oxygenBatchNumber', label: 'Oxygen — batch number', type: 'text' },
+      { key: 'spongesBatchNumber', label: 'Sponges — batch number', type: 'text' },
+      { key: 'bagsBoxFlatBoardBatchNumber', label: 'Plastic bags, box, flat board — batch number', type: 'text' },
+      { key: 'icePacksBatchNumber', label: 'Ice packs — batch number', type: 'text' },
       { key: 'signedPackingListsAttached', label: 'Signed packing lists attached?', type: 'yesno' },
       { key: 'completedBySupervisor', label: 'Completed by (Supervisor)', type: 'text', required: true },
       { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' }
@@ -95,6 +88,6 @@
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

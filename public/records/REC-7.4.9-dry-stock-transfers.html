@@ -23,27 +23,16 @@
 <script src="../lib/spec-registry.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=25"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
+  // Definition lives in the DB — fetched by the engine from
+  // GET /api/record-def/dry-stock-transfers. See Claude outputs/relational-all-records-plan.md.
   MonitoringLog.init({
     mount: '#mlRoot',
-    recordKey: 'dry-stock-transfers',
-    docCode: 'REC 7.4.9',
-    title: 'Dry Stock Transfers',
-    docRevisionStart: 2,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'noOfBoxes', label: 'No. of boxes', type: 'number' },
-      { key: 'timeOfTransfer', label: 'Time of transfer', type: 'text' },
-      { key: 'transferredBy', label: 'Transferred by', type: 'text', required: true },
-      { key: 'receivedBy', label: 'Received by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
+    recordKey: 'dry-stock-transfers'
   });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

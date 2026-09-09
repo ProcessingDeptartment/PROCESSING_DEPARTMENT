@@ -26,69 +26,13 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'qc-report',
-    docCode: 'REC 7.2.11',
-    title: 'QC Report',
-    docRevisionStart: 1,
-
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { harvestFarm: 'receivedFrom',
-          jiReceivingDate: 'receivingDate',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    listColumns: ['date', 'jobNumber', 'productDescription'],
-    batchField: 'jobNumber',
-    stage: 'quality',
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNumber', 'jiProcessingFor'], fields: [
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-        { key: 'harvestFarm', label: 'Harvest farm', type: 'text' }
-      ]},
-      { title: 'Batch info', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'productionCode', label: 'Production code', type: 'text' },
-        { key: 'productDescription', label: 'Product description', type: 'text' },
-      ]},
-      { title: 'Measurements', newPage: true, fields: [
-        { key: 'canPieces', label: 'Can pieces', type: 'number' },
-        { key: 'nettMassMin', label: 'Nett mass min', type: 'number' },
-        { key: 'drainMassMin', label: 'Drain mass min', type: 'number' },
-        { key: 'drainMassMax', label: 'Drain mass max', type: 'number' },
-        { key: 'ph', label: 'pH', type: 'number' },
-        { key: 'brix', label: 'Brix', type: 'number' },
-        { key: 'waterReading', label: 'Water reading', type: 'number' },
-        { key: 'saltPercent', label: 'Salt (%)', type: 'number' },
-        { key: 'vacuum', label: 'Vacuum', type: 'number' }
-      ]},
-      { title: 'Visual checks', fields: [
-        { key: 'rustOnCans', label: 'Rust on cans?', type: 'yesno' },
-        { key: 'rustOnLids', label: 'Rust on lids?', type: 'yesno' },
-        { key: 'dentsOnBatch', label: 'Dents on batch?', type: 'yesno' },
-        { key: 'oddOursOnOpening', label: 'Odd odours on opening?', type: 'yesno' },
-        { key: 'damagedPcsInCans', label: 'Damaged pieces in cans?', type: 'yesno' },
-        { key: 'bluingBlackSpots', label: 'Bluing/black spots?', type: 'yesno' },
-        { key: 'sauceColour', label: 'Sauce colour OK?', type: 'yesno' },
-        { key: 'visualAppearance', label: 'Visual appearance OK?', type: 'yesno' },
-        { key: 'textureOfAbalone', label: 'Texture of abalone OK?', type: 'yesno' },
-        { key: 'tasteOfProduct', label: 'Taste of product OK?', type: 'yesno' }
-      ]},
-      { title: 'Notes', fields: [
-        { key: 'comments', label: 'Comments', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/qc-report
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'qc-report' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>

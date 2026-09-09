@@ -14,6 +14,7 @@ const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const dateFieldMap = require('./date-field-map');
 const recordKeyMap = require('./record-key-map');
+const { assembleRecordConfig } = require('./record-def');
 
 const prisma = new PrismaClient();
 const dateFields = dateFieldMap.load();
@@ -335,6 +336,22 @@ app.get('/api/trace/:batch', async (req, res) => {
   } catch (e) {
     console.error('GET trace failed', e);
     res.status(500).json({ batch, records: [], inputs: [], outputs: [] });
+  }
+});
+
+// The record's definition, assembled back into the engine config object it used to declare
+// inline. form-record.js / monitoring-log.js call this on load instead of holding the config.
+// Source of truth is the RecordDefinition tables (seeded by scripts/seed-definitions.mjs);
+// fidelity is gated by scripts/verify-definitions.mjs.
+app.get('/api/record-def/:recordKey', async (req, res) => {
+  try {
+    const out = await assembleRecordConfig(prisma, req.params.recordKey);
+    if (!out) return res.status(404).json({ ok: false, error: 'no definition for ' + req.params.recordKey });
+    res.set('Cache-Control', 'no-cache');
+    res.json(out);
+  } catch (e) {
+    console.error('GET record-def failed', e);
+    res.status(500).json({ ok: false });
   }
 });
 

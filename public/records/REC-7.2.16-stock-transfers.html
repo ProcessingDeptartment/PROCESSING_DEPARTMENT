@@ -26,53 +26,13 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=1"></script>
-<script src="../lib/form-record.js?v=27"></script>
+<script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'stock-transfers',
-    batchField: 'jobNo',
-    docCode: 'REC 7.2.16',
-    title: 'Stock Transfers',
-    docRevisionStart: 1,
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    listColumns: ['date', 'agCode', 'jobNo'],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Stock transfer details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'agCode', label: 'AG code', type: 'text' },
-        { key: 'qualitySignOff', label: 'Quality sign-off', type: 'text' },
-        { key: 'numberOfBoxes', label: 'Number of boxes', type: 'number' },
-        { key: 'pieces', label: 'Pieces', type: 'number' },
-        { key: 'drainedWeight', label: 'Drained weight', type: 'number' },
-        { key: 'sauceType', label: 'Sauce type', type: 'text' },
-        { key: 'orderDesignation', label: 'Order designation', type: 'text' },
-        { key: 'numberOfCans', label: 'Number of cans', type: 'number' }
-      ]},
-      { title: 'Verification', newPage: true, fields: [
-        { key: 'qcVerification', label: 'QC verification', type: 'text' },
-        { key: 'fg02Verification', label: 'FG02 verification', type: 'text' },
-        { key: 'fg01Verification', label: 'FG01 verification', type: 'text' }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/stock-transfers
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'stock-transfers' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=5"></script>
+<script src="../lib/record-shell.js?v=6"></script>
 </body>
 </html>
