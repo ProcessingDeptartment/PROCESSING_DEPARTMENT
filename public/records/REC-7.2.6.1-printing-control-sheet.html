@@ -26,28 +26,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'printing-control-sheet',
-    docCode: 'REC 7.2.6.1',
-    title: 'Printing Control Sheet',
-    docRevisionStart: 1,
-    listColumns: ['date', 'productionDate', 'canPosition'],
-    sections: [
-      { title: 'Printing check', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'productionDate', label: 'Production date', type: 'date' },
-        { key: 'time', label: 'Time', type: 'text' },
-        { key: 'codeCorrect', label: 'Code correct?', type: 'yesno' },
-        { key: 'canPosition', label: 'Can position', type: 'select', options: ['First can', 'Last can'] },
-        { key: 'actualCanPieces', label: 'Actual can pieces', type: 'number' },
-        { key: 'piecesOnCan', label: 'Pieces on can', type: 'number' }
-      ]},
-      { title: 'Corrective actions', fields: [
-        { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/printing-control-sheet
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'printing-control-sheet' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

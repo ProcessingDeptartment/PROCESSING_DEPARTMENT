@@ -30,63 +30,9 @@
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
 
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'abalone-packing-specification',
-    docCode: 'REC 7.2.4',
-    title: 'Abalone Packing Specification',
-    docRevisionStart: 3,
-    batchField: 'jobNo',
-    instructions: [
-      { label: 'Packing specification calculation', text: 'For each pcs / drained-weight line, enter the drained weight (X), the ingo weight (Y) and the customer min/max drained-weight spec. Cookout % and the new min/max ingo weights are worked out for you.' },
-      { label: 'Ingo weights', text: 'Each confirmed calculation line is copied into the Ingo Weights table below, matched on pcs + drained weight. Sign a line off there once QC has checked it.' },
-      { label: 'Frequency', text: 'On each new pack specification or customer spec change.' }
-    ],
-    // Calculation table.
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true, role: 'date' },
-      { key: 'jobNo', label: 'Job number', type: 'jobsearch' },
-      { key: 'pcs', label: 'Pcs', type: 'number' },
-      { key: 'drainedWeight', label: 'Drained weight (X)', type: 'number', unit: 'g' },
-      { key: 'ingoWeight', label: 'Ingo weight (Y)', type: 'number', unit: 'g' },
-      { key: 'minSpec', label: 'Min spec', type: 'number', unit: 'g' },
-      { key: 'maxSpec', label: 'Max spec', type: 'number', unit: 'g' },
-      {
-        key: 'cookoutPct', label: 'Cookout %', type: 'computed', unit: '%',
-        computeFn: 'ratioPct', computeArgs: { x: 'drainedWeight', y: 'ingoWeight' }
-      },
-      {
-        key: 'newMinIngo', label: 'New min ingo', type: 'computed', unit: 'g',
-        computeFn: 'specOverRatio', computeArgs: { spec: 'minSpec', x: 'drainedWeight', y: 'ingoWeight' }
-      },
-      {
-        key: 'newMaxIngo', label: 'New max ingo', type: 'computed', unit: 'g',
-        computeFn: 'specOverRatio', computeArgs: { spec: 'maxSpec', x: 'drainedWeight', y: 'ingoWeight' }
-      },
-      { key: 'comments', label: 'Comments', type: 'textarea', showInTable: false }
-    ],
-    // Confirmed calculation rows feed the Ingo Weights table, matched on pcs + drained weight.
-    deriveInto: {
-      matchKeys: ['pcs', 'drainedWeight'],
-      map: { pcs: 'pcs', drainedWeight: 'drainedWeight', minIngo: 'newMinIngo', maxIngo: 'newMaxIngo' },
-      stampFields: { dateEffective: 'today' }
-    },
-    secondaryLog: {
-      key: 'ingo-weights',
-      title: 'Ingo Weights',
-      deviationLabel: 'Deviation',
-      entryFields: [
-        { key: 'dateEffective', label: 'Date effective', type: 'date', role: 'date' },
-        { key: 'pcs', label: 'Pcs', type: 'number' },
-        { key: 'drainedWeight', label: 'Drained weight', type: 'number', unit: 'g' },
-        { key: 'minIngo', label: 'Ingo weight - min', type: 'number', unit: 'g' },
-        { key: 'maxIngo', label: 'Ingo weight - max', type: 'number', unit: 'g' },
-        { key: 'checkedBy', label: 'Checked by (QC)', type: 'text' },
-        { key: 'checkedByDate', label: 'Sign-off date', type: 'date' },
-        { key: 'comments', label: 'Comments', type: 'text', showInTable: false }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/abalone-packing-specification
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'abalone-packing-specification' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

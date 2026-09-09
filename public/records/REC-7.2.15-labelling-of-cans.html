@@ -26,35 +26,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'labelling-of-cans',
-    docCode: 'REC 7.2.15',
-    title: 'Labelling of Cans',
-    docRevisionStart: 1,
-    listColumns: ['date', 'labelUsed', 'clientDetails'],
-    sections: [
-      { title: 'Pre-labelling', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'labelUsed', label: 'Label used', type: 'text' },
-        { key: 'stickersUsed', label: 'Stickers used', type: 'text' },
-        { key: 'clientDetails', label: 'Client details', type: 'text' },
-        { key: 'quantityLabelsIssued', label: 'Quantity labels issued', type: 'number' },
-        { key: 'quantityIssued', label: 'Quantity issued', type: 'number' },
-        { key: 'boxesFull', label: 'Boxes full?', type: 'yesno' },
-        { key: 'cansCheckedBeforeLabelling', label: 'Cans checked before labelling?', type: 'yesno' }
-      ]},
-      { title: 'Labelling & post-labelling', newPage: true, fields: [
-        { key: 'cansCheckedAfterLabelling', label: 'Cans checked after labelling?', type: 'yesno' },
-        { key: 'correctLabelUsed', label: 'Correct label used?', type: 'yesno' },
-        { key: 'labellingRequirementCorrect', label: 'Labelling requirement correct?', type: 'yesno' },
-        { key: 'cartonLabelsCorrespond', label: 'Carton labels correspond?', type: 'yesno' }
-      ]},
-      { title: 'Notes', fields: [
-        { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/labelling-of-cans
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'labelling-of-cans' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

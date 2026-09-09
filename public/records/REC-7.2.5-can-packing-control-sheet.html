@@ -27,49 +27,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'can-packing-control-sheet',
-    docCode: 'REC 7.2.5',
-    title: 'Can Packing Control Sheet',
-    docRevisionStart: 1,
-    listColumns: ['date', 'jobNo', 'sizeRange'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: {
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        },
-        restrict: { sizeRange: 'sizeRange' } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Packing details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'time', label: 'Time', type: 'text' },
-        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-        { key: 'qualityOfAbalone', label: 'Quality of abalone', type: 'text' },
-        { key: 'piecesSizes', label: 'Pieces/sizes', type: 'text' }
-      ]},
-      { title: 'Weight check', newPage: true, fields: [
-        { key: 'ingoWeightSpec', label: 'Ingo weight spec', type: 'number' },
-        { key: 'actualIngoWeight', label: 'Actual ingo weight', type: 'number' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'qcOnline', label: 'QC online', type: 'text' },
-        { key: 'processDeviation', label: 'Process deviation', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/can-packing-control-sheet
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'can-packing-control-sheet' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

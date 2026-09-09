@@ -26,38 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'sampling-log',
-    docCode: 'REC 7.2',
-    title: 'Sampling Log',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Purpose', text: 'Record any product samples taken (AG code / DW / dry job number / live tag / ranched incoming date) and why.' }
-    ],
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'productInfo', label: 'Product information (AG code, DW / dry job no. / live tag / ranched incoming date)', type: 'text', required: true },
-      { key: 'pieces', label: 'Pieces', type: 'number' },
-      { key: 'quantity', label: 'Quantity (amount or grams)', type: 'number' },
-      { key: 'reason', label: 'Reason for sampling', type: 'select', options: ['QC check', 'Customer request', 'Investigation', 'Other'] },
-      { key: 'sampledBy', label: 'Sampled by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/sampling-log
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'sampling-log' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

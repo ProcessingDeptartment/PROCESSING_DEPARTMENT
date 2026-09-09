@@ -28,50 +28,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'can-filling-and-printing',
-    batchField: 'jobNo',
-    docCode: 'REC 7.2.6',
-    title: 'Can Filling and Printing',
-    docRevisionStart: 1,
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    listColumns: ['date', 'jobNo', 'printedAgCode'],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Filling info', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'startTime', label: 'Start time', type: 'text' },
-        { key: 'waterOrSauceFillingBatch', label: 'Water/sauce filling batch', type: 'text' },
-        { key: 'productTemp', label: 'Product temp', type: 'number' },
-        { key: 'nettWeightSpec', label: 'Nett weight spec', type: 'number' },
-        { key: 'actualNettWeight', label: 'Actual nett weight', type: 'number' }
-      ]},
-      { title: 'Printing info', newPage: true, fields: [
-        { key: 'printedAgCode', label: 'Printed AG code', type: 'text' },
-        { key: 'printedBestBeforeDate', label: 'Printed best before date', type: 'date' },
-        { key: 'verifiedBeforePrinting', label: 'Verified before printing?', type: 'yesno' },
-        { key: 'verifiedAfterPrinting', label: 'Verified after printing?', type: 'yesno' }
-      ]},
-      { title: 'Notes', fields: [
-        { key: 'processDeviations', label: 'Process deviations', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/can-filling-and-printing
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'can-filling-and-printing' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>
