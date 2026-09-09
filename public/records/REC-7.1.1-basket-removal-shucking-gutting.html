@@ -28,51 +28,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'basket-removal-shucking-gutting',
-    batchField: 'jobNo',
-    docCode: 'REC 7.1.1',
-    title: 'Basket Removal, Shucking & Gutting',
-    docRevisionStart: 1,
-
-    submitStamp: true,
-    listColumns: ['intakeDate', 'jobNo', 'sizeRange'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', processingFor: 'toBeProcessedFor',
-          jiReceivedFrom: 'receivedFrom',
-          jiIntakeWeight: 'intakeWeight'
-        },
-        restrict: { sizeRange: 'sizeRange' } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'processingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-        { key: 'intakeDate', label: 'Intake date', type: 'date', required: true },
-        { key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Other'], matchJobRoute: 'jobNo' },
-        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' })
-      ]},
-      { title: 'Incoming check', newPage: true, fields: [
-        { key: 'incomingTemp', label: 'Incoming abalone temp (°C)', type: 'number' },
-        { key: 'noOfMortalities', label: 'No. of mortalities', type: 'number' },
-        { key: 'signsOfParasites', label: 'Signs of parasites?', type: 'yesno', good: 'No' },
-        { key: 'foreignObjects', label: 'Foreign/physical objects?', type: 'yesno', good: 'No' },
-        { key: 'damagesOnFoot', label: 'Damages on foot?', type: 'yesno', good: 'No' }
-      ]},
-      { title: 'Quality checks', fields: [
-        { key: 'damagesAfterShucking', label: 'Damages after shucking?', type: 'yesno', good: 'No' },
-        { key: 'beakCutCorrect', label: 'Beak cut correct?', type: 'yesno', good: 'Yes' },
-        { key: 'damagesAfterGutting', label: 'Damages after gutting & beaking?', type: 'yesno', good: 'No' }
-      ]},
-      { title: 'Process deviations', fields: [
-        { key: 'processDeviations', label: 'Process deviations', type: 'textarea', wide: true }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/basket-removal-shucking-gutting
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'basket-removal-shucking-gutting' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

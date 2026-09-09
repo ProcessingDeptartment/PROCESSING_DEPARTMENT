@@ -28,40 +28,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'scrubbing-check-supervisor',
-    batchField: 'jobNo',
-    docCode: 'REC 7.1.6',
-    title: 'Scrubbing Check - Supervisor',
-    docRevisionStart: 5,
-    instructions: [
-      { label: 'Purpose', text: 'Supervisor check that abalone is cleaned effectively during scrubbing, and any damage is recorded.' }
-    ],
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { key: 'abaloneSize', label: 'Abalone size', type: 'number', unit: 'g' },
-      { key: 'date', label: 'Date', type: 'date' },
-      { key: 'time', label: 'Time', type: 'text' },
-      { key: 'productCleanedEffectively', label: 'Product cleaned effectively?', type: 'yesno' },
-      { key: 'damagedAbalone', label: 'Damaged abalone?', type: 'yesno' },
-      { key: 'weightDamagedAbalone', label: 'Weight damaged abalone', type: 'number', unit: 'kg' },
-      { key: 'weightDamagedTrimmed', label: 'Weight damaged abalone trimmed', type: 'number', unit: 'kg' },
-      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/scrubbing-check-supervisor
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'scrubbing-check-supervisor' });
 })();
 </script>
 </body>
