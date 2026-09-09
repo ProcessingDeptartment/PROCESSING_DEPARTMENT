@@ -73,7 +73,7 @@
 </head>
 <body>
 <header>
-  <a class="back" href="../index.html">â† Back to Processing Department</a>
+  <a class="back" href="../index.html">← Back to Processing Department</a>
   <h1>Batch Traceability</h1>
   <div class="sub">Enter a product batch / lot number to see every record that touched it, front to back.</div>
 </header>
@@ -117,7 +117,7 @@
       $('batchList').innerHTML = list.map(b => `<option value="${esc(b)}">`).join('');
       $('hint').textContent = list.length
         ? `${list.length} batch number${list.length === 1 ? '' : 's'} indexed so far.`
-        : 'No batches indexed yet â€” save a record that declares a batch field to populate this.';
+        : 'No batches indexed yet — save a record that declares a batch field to populate this.';
     } catch (e) {
       $('hint').textContent = '';
     }
@@ -126,18 +126,18 @@
   function render(rows, batchNo) {
     const tl = $('timeline');
     $('count').hidden = false;
-    $('count').textContent = `${rows.length} touchpoint${rows.length === 1 ? '' : 's'} for batch â€œ${batchNo}â€`;
+    $('count').textContent = `${rows.length} touchpoint${rows.length === 1 ? '' : 's'} for batch “${batchNo}”`;
     tl.innerHTML = rows.map(r => `
       <li class="tp">
         <div class="card">
           <div class="top">
             <span class="title">${esc(r.record_title || r.record_key)}</span>
-            <span class="date">${esc(r.occurred_on || 'â€”')}</span>
+            <span class="date">${esc(r.occurred_on || '—')}</span>
           </div>
           ${r.stage ? `<span class="stage">${esc(r.stage)}</span>` : ''}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
           ${r.linked_batch ? `<div class="summary">Linked to: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}
-          ${r.href ? `<a class="open" href="${esc(r.href)}">Open record â†’</a>` : ''}
+          ${r.href ? `<a class="open" href="${esc(r.href)}">Open record →</a>` : ''}
         </div>
       </li>`).join('');
   }
@@ -147,7 +147,7 @@
   function renderGenealogy(graph) {
     const cell = (list) => list.length
       ? list.map(b => `<a href="?batch=${encodeURIComponent(b)}">${esc(b)}</a>`).join('')
-      : '<span class="none">â€”</span>';
+      : '<span class="none">—</span>';
     $('inputs').innerHTML = cell(graph.inputs || []);
     $('outputs').innerHTML = cell(graph.outputs || []);
     $('genealogy').hidden = false;
@@ -159,13 +159,13 @@
     $('count').hidden = true;
     $('genealogy').hidden = true;
     if (!batchNo) { setStatus('Enter a batch number to trace.'); return; }
-    setStatus('Tracingâ€¦');
+    setStatus('Tracing…');
     $('traceBtn').disabled = true;
     try {
       let graph = await window.Traceability.traceGraph(batchNo);
 
       if (!graph.records.length) { await sleep(2000); graph = await window.Traceability.traceGraph(batchNo); }
-      if (!graph.records.length) { setStatus(`No records reference batch â€œ${batchNo}â€ yet.`); return; }
+      if (!graph.records.length) { setStatus(`No records reference batch “${batchNo}” yet.`); return; }
       setStatus('');
       renderGenealogy(graph);
       render(graph.records, batchNo);

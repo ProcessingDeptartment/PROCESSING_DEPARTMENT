@@ -37,7 +37,7 @@
     stage: 'recall-braised',
     listColumns: ['date', 'agCode', 'jobNo'],
     instructions: [
-      { label: 'How to fill this in', text: 'Choose the job number first ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â each roster row then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
+      { label: 'How to fill this in', text: 'Choose the job number first — each roster row then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
       { label: 'Records not traced by job number', text: 'Cleaning (REC 7.6.1, 7.6.2), Staff Hygiene (REC 7.6.7), Glass & Plastic (REC 7.7.2) and Utensil Issue (REC 7.7.4) are daily, weekly or per-shift records covering many jobs at once, so they are deliberately NOT filed against a job number and will not appear in the picker. Retrieve them by DATE RANGE for the production dates of this job and record them as Master Index picks.' }
     ],
 
@@ -52,7 +52,7 @@
       ]}
     ],
     roster: {
-      title: 'Records ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â same production-chain coverage as the Canned Abalone checklist (REC 8.1.6), specific to the braised sauce line',
+      title: 'Records — same production-chain coverage as the Canned Abalone checklist (REC 8.1.6), specific to the braised sauce line',
       columns: [
         { key: 'submissionRef', label: 'Record for this job', type: 'recordpick', source: 'jobtrace', jobField: 'jobNo', fillCode: 'recordCode', fillName: 'recordName' },
         { key: 'recordCode', label: 'REC code', type: 'text' },

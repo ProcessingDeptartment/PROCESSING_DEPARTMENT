@@ -157,7 +157,7 @@
 
     let text = flat
       ? `${label} is holding steady around ${secondAvg.toFixed(2)}.`
-      : `${label} is trending ${direction} (${firstAvg.toFixed(2)} â†’ ${secondAvg.toFixed(2)}).`;
+      : `${label} is trending ${direction} (${firstAvg.toFixed(2)} → ${secondAvg.toFixed(2)}).`;
     if (level === 'alarm') text += recentOut ? ' Recent readings are out of spec.' : ' Approaching the spec limit.';
     else if (level === 'watch') text += ' Worth keeping an eye on.';
 
@@ -165,7 +165,7 @@
   }
 
   function renderAlert(container, alert) {
-    const icon = alert.level === 'stable' ? 'âœ“' : 'ðŸ””';
+    const icon = alert.level === 'stable' ? '✓' : 'ðŸ””';
     container.innerHTML = `<div class="trend-alert ${alert.level}">${icon} ${alert.text}</div>`;
   }
 
@@ -238,7 +238,7 @@
 
     [0, Math.floor((n - 1) / 2), n - 1].forEach((i) => {
       if (i < 0 || i >= n) return;
-      svg += `<text x="${xAt(i)}" y="${H - 6}" text-anchor="middle" fill="#6b7680">${rows[i].date || 'â€”'}</text>`;
+      svg += `<text x="${xAt(i)}" y="${H - 6}" text-anchor="middle" fill="#6b7680">${rows[i].date || '—'}</text>`;
     });
 
     series.forEach((s) => {
@@ -254,7 +254,7 @@
     series.forEach((s) => {
       s.points.forEach((p, i) => {
         if (p.y === null || !p.outOfSpec) return;
-        svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="4" fill="#d0342c"><title>${rows[i].date} â€” ${s.name}: ${p.y.toFixed(2)} (out of spec: ${spec.min}â€“${spec.max})</title></circle>`;
+        svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="4" fill="#d0342c"><title>${rows[i].date} — ${s.name}: ${p.y.toFixed(2)} (out of spec: ${spec.min}–${spec.max})</title></circle>`;
       });
     });
     svg += '</svg>';
@@ -264,14 +264,14 @@
   function isOutOfSpec(v, spec) { return v != null && (v < spec.min || v > spec.max); }
 
   function td(v, decimals, spec) {
-    const out = v == null ? 'â€”' : v.toFixed(decimals);
+    const out = v == null ? '—' : v.toFixed(decimals);
     return `<td${isOutOfSpec(v, spec) ? ' style="color:#d0342c;font-weight:600;"' : ''}>${out}</td>`;
   }
 
   function renderTable(rows, specs) {
     $('dataTableBody').innerHTML = rows.map((r) => `
       <tr>
-        <td>${r.date || 'â€”'}</td>
+        <td>${r.date || '—'}</td>
         <td>${r.batch}</td>
         <td>${r.revision}</td>
         ${td(r.before.bhb, 2, specs.bhbPct)}${td(r.during.bhb, 2, specs.bhbPct)}${td(r.after.bhb, 2, specs.bhbPct)}
@@ -325,12 +325,12 @@
   }
 
   async function refresh() {
-    $('statusLine').textContent = 'Loadingâ€¦';
+    $('statusLine').textContent = 'Loading…';
     currentRows = await loadRows();
     const anyOut = (r, metric, spec) => ['before', 'during', 'after'].some((s) => isOutOfSpec(r[s][metric], spec));
     const outCount = currentRows.filter((r) => anyOut(r, 'bhb', SPECS.bhbPct) || anyOut(r, 'freespace', SPECS.freespace)).length;
     $('statusLine').textContent = `${currentRows.length} submitted inspection${currentRows.length === 1 ? '' : 's'}`
-      + (outCount ? ` â€” ${outCount} with an out-of-spec reading` : '');
+      + (outCount ? ` — ${outCount} with an out-of-spec reading` : '');
     renderCharts();
     renderTable(currentRows, SPECS);
     renderAlert($('alertBhb'), computeTrendAlert(currentRows, (r) => r.after.bhb, SPECS.bhbPct, 'down', '%B.H.B.'));

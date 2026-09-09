@@ -134,9 +134,9 @@
   });
 
   function fmtWhen(ts) {
-    if (!ts) return 'â€”';
+    if (!ts) return '—';
     const d = new Date(ts);
-    if (isNaN(d.getTime())) return 'â€”';
+    if (isNaN(d.getTime())) return '—';
     const p = (n) => String(n).padStart(2, '0');
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
@@ -211,7 +211,7 @@
         ts: entry.updatedAt || entry.createdAt || 0,
         who: who,
         status: 'draft',
-        detail: 'Draft â€” not submitted'
+        detail: 'Draft — not submitted'
       }));
     }
 
@@ -222,7 +222,7 @@
         who: ver.verifiedBy || '',
         status: 'verified',
         detail: [ver.verifiedSig ? 'Title: ' + ver.verifiedSig : '', ver.verifiedSignature ? 'Sig: ' + ver.verifiedSignature : '']
-          .filter(Boolean).join(' Â· ')
+          .filter(Boolean).join(' · ')
       }));
     }
   }
@@ -292,7 +292,7 @@
   };
 
   function docLabel(e) {
-    const label = (e.docNo ? esc(e.docNo) + ' â€” ' : '') + esc(e.name);
+    const label = (e.docNo ? esc(e.docNo) + ' — ' : '') + esc(e.name);
     return e.href ? '<a href="' + esc(e.href) + '">' + label + '</a>' : label;
   }
 
@@ -323,15 +323,15 @@
 
     wrap.innerHTML = '<table class="log-table"><thead><tr>' +
       COLS.map((c) => '<th data-sort="' + c.key + '">' + esc(c.label) +
-        (sortKey === c.key ? (sortDir === 1 ? ' â–²' : ' â–¼') : '') + '</th>').join('') +
+        (sortKey === c.key ? (sortDir === 1 ? ' ▲' : ' ▼') : '') + '</th>').join('') +
       '</tr></thead><tbody>' +
       rows.map((e) =>
         '<tr><td class="when">' + fmtWhen(e.ts) + '</td>' +
         '<td>' + (EVENT_BADGE[e.event] || esc(e.event)) + '</td>' +
         '<td class="doc">' + docLabel(e) + '</td>' +
-        '<td>' + esc(e.who || 'â€”') + '</td>' +
-        '<td class="when">' + esc(e.entryDate || 'â€”') + '</td>' +
-        '<td>' + esc(e.ref || 'â€”') + '</td>' +
+        '<td>' + esc(e.who || '—') + '</td>' +
+        '<td class="when">' + esc(e.entryDate || '—') + '</td>' +
+        '<td>' + esc(e.ref || '—') + '</td>' +
         '<td>' + (STATUS_BADGE[e.status] || '') + '</td>' +
         '<td class="detail">' + esc(e.detail || '') + '</td></tr>').join('') +
       '</tbody></table>';
@@ -352,7 +352,7 @@
     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const body = rows.map((e) => [fmtWhen(e.ts), e.event, e.docNo, e.name, e.who, e.entryDate, e.ref, e.status, e.detail, e.recordKey, e.entryId].map(q).join(','));
     const csv = [head.map(q).join(',')].concat(body).join('\r\n');
-    const blob = new Blob(['ï»¿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -365,7 +365,7 @@
 
   function fillRecordFilter() {
     const seen = {};
-    EVENTS.forEach((e) => { seen[e.recordKey] = (e.docNo ? e.docNo + ' â€” ' : '') + e.name; });
+    EVENTS.forEach((e) => { seen[e.recordKey] = (e.docNo ? e.docNo + ' — ' : '') + e.name; });
     $('fRecord').innerHTML = '<option value="">All records</option>' +
       Object.keys(seen).sort((a, b) => seen[a].localeCompare(seen[b]))
         .map((k) => '<option value="' + esc(k) + '">' + esc(seen[k]) + '</option>').join('');
@@ -409,10 +409,10 @@
 
     const noKey = backend !== 'local' && window.FacilityApi && !window.FacilityApi.getKey();
     $('scopeNote').innerHTML = (backend === 'local')
-      ? 'Showing <strong>this device only</strong> â€” the records API is not connected, so this reads local storage. '
+      ? 'Showing <strong>this device only</strong> — the records API is not connected, so this reads local storage. '
         + 'Set a device key on <a href="api-key.html">the API key page</a> for the facility-wide view.'
       : noKey
-        ? 'This device has <strong>no access key</strong>, so the records API returns nothing â€” an empty log here does '
+        ? 'This device has <strong>no access key</strong>, so the records API returns nothing — an empty log here does '
           + 'not mean there are no records. Set a device key on <a href="api-key.html">the API key page</a>.'
         : 'Showing <strong>facility-wide</strong> data from the records API (<code>' + esc(backend) + '</code>).';
   })();
