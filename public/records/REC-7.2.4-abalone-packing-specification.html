@@ -26,16 +26,9 @@
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/traceability.js?v=6"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=26"></script>
+<script src="../lib/compute/registry.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
-  function ceilOrBlank(n) { return (n === null || n === undefined || !isFinite(n)) ? '' : Math.ceil(n); }
-
-  // Cookout fraction: drained weight (X) over ingo weight (Y).
-  function cookoutFrac(v) {
-    const x = num(v.drainedWeight), y = num(v.ingoWeight);
-    return (x === null || y === null || y === 0) ? null : x / y;
-  }
 
   MonitoringLog.init({
     mount: '#mlRoot',
@@ -60,15 +53,15 @@
       { key: 'maxSpec', label: 'Max spec', type: 'number', unit: 'g' },
       {
         key: 'cookoutPct', label: 'Cookout %', type: 'computed', unit: '%',
-        compute: (v) => { const f = cookoutFrac(v); return f === null ? '' : Math.round(f * 10000) / 100; }
+        computeFn: 'ratioPct', computeArgs: { x: 'drainedWeight', y: 'ingoWeight' }
       },
       {
         key: 'newMinIngo', label: 'New min ingo', type: 'computed', unit: 'g',
-        compute: (v) => { const f = cookoutFrac(v), m = num(v.minSpec); return (f === null || m === null) ? '' : ceilOrBlank(m / f); }
+        computeFn: 'specOverRatio', computeArgs: { spec: 'minSpec', x: 'drainedWeight', y: 'ingoWeight' }
       },
       {
         key: 'newMaxIngo', label: 'New max ingo', type: 'computed', unit: 'g',
-        compute: (v) => { const f = cookoutFrac(v), m = num(v.maxSpec); return (f === null || m === null) ? '' : ceilOrBlank(m / f); }
+        computeFn: 'specOverRatio', computeArgs: { spec: 'maxSpec', x: 'drainedWeight', y: 'ingoWeight' }
       },
       { key: 'comments', label: 'Comments', type: 'textarea', showInTable: false }
     ],

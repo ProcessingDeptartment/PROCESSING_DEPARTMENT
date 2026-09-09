@@ -24,9 +24,9 @@
 <script src="../lib/thresholds.js?v=2"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=2"></script>
-<script src="../lib/monitoring-log.js?v=26"></script>
+<script src="../lib/compute/registry.js?v=1"></script>
+<script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
 
   MonitoringLog.init({
     mount: '#mlRoot',
@@ -52,19 +52,13 @@
       { key: 'coldTestReading', label: 'Cold water — test reading', type: 'number', unit: '°C', specKey: 'coldRange' },
       {
         key: 'coldDeviation', label: 'Cold water — deviation', type: 'computed', unit: '°C', specKey: 'diffTolerance',
-        compute: (v) => {
-          const r = num(v.coldReferenceReading), t = num(v.coldTestReading);
-          return (r === null || t === null) ? '' : Math.round((t - r) * 100) / 100;
-        }
+        computeFn: 'subtract', computeArgs: { a: 'coldTestReading', b: 'coldReferenceReading' }
       },
       { key: 'hotReferenceReading', label: 'Hot water — reference reading', type: 'number', unit: '°C', specKey: 'hotRange' },
       { key: 'hotTestReading', label: 'Hot water — test reading', type: 'number', unit: '°C', specKey: 'hotRange' },
       {
         key: 'hotDeviation', label: 'Hot water — deviation', type: 'computed', unit: '°C', specKey: 'diffTolerance',
-        compute: (v) => {
-          const r = num(v.hotReferenceReading), t = num(v.hotTestReading);
-          return (r === null || t === null) ? '' : Math.round((t - r) * 100) / 100;
-        }
+        computeFn: 'subtract', computeArgs: { a: 'hotTestReading', b: 'hotReferenceReading' }
       },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
       { key: 'verifiedBy', label: 'Verified by', type: 'text' },

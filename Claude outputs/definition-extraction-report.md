@@ -1,10 +1,18 @@
-# Definition-extraction report (report-only)
+# Definition-extraction report
 
 **Date:** 2026-09-09
-**Command:** `node scripts/extract-definitions.mjs` (writes nothing)
+**Command:** `node scripts/extract-definitions.mjs` (report) / `--emit` (writes the JSON)
 **Raw output:** `Claude outputs/definition-extraction-report.txt`, `definition-extraction.json`
-**Purpose:** size the manual-review backlog for moving record definitions into the DB
-(the one open unknown in `relational-all-records-plan.md`).
+
+**Update — compute registry built (later same day):** the 7 flagged records are resolved.
+5 named functions in `public/lib/compute/registry.js` (mirrored server-side by
+`src/compute-registry.js`) now back the 8 monitoring-log computed fields
+(`computeFn` + `computeArgs` on the field rows); the 3 form-record ones
+(`intakeWeight`, `standardSaltingTime`, `totalTumblingTime`) were already declarative
+(`sumRosterColumn` / `deriveLookup` / `deriveDuration`) and needed nothing.
+**Now: 129 clean, 2 flagged** — REC 7.1.2 (barcode + scale hardware) and REC 7.2.12
+(`customBody`), both keeping JS via `clientHook` exactly as Consolidated Plan §6.3 intends.
+The section below is the original report.
 
 ---
 

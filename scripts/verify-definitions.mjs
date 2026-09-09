@@ -39,6 +39,8 @@ function rebuild(def) {
     if (f.options != null) o.options = f.options;
     if (f.group != null) o.group = f.group;
     if (f.recordPickSource != null) o.source = f.recordPickSource;
+    if (f.computeFn != null) o.computeFn = f.computeFn;
+    if (f.computeArgs != null) o.computeArgs = f.computeArgs;
     for (const [k, v] of Object.entries(f.extraJson || {})) o[k] = v;
     return o;
   };
@@ -93,10 +95,13 @@ function diff(a, b, at, out) {
 }
 
 // ---- run --------------------------------------------------------------------------
-let pass = 0; const fails = [];
+let pass = 0, migrated = 0; const fails = [];
 for (const def of defs) {
   const page = pageConfig(def.pageFile);
   if (!page) { fails.push({ key: def.recordKey, diffs: ['could not re-read page config'] }); continue; }
+  // A migrated page passes only { mount, recordKey } -- the DB is its source of truth now, so
+  // there is nothing on the page to compare against. Fidelity for these was checked before strip.
+  if (!page.sections && !page.fields && !page.entryFields && (def.fields.length || def.sections.length)) { migrated++; continue; }
   const rebuilt = rebuild(def);
   const out = [];
   diff(page, rebuilt, '', out);
@@ -113,6 +118,7 @@ for (const def of defs) {
 
 console.log(`\n=== verify-definitions — ${defs.length} records ===\n`);
 console.log(`round-trip identical (ignoring functions):  ${pass}`);
+console.log(`already migrated (page stripped, skipped):  ${migrated}`);
 console.log(`with real differences:                       ${fails.length}\n`);
 for (const f of fails) {
   console.log(`✗ ${f.key}  (${f.file || ''})`);

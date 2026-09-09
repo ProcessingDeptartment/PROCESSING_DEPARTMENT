@@ -38,11 +38,14 @@ function diff(a, b, at, out) {
 }
 
 const defs = await prisma.recordDefinition.findMany({ select: { recordKey: true, pageFile: true } });
-let pass = 0; const fails = [];
+let pass = 0, migrated = 0; const fails = [];
 for (const { recordKey, pageFile } of defs) {
   const page = readPageConfig(pageFile, RECDIR)?.config;
   const assembled = await assembleRecordConfig(prisma, recordKey);
   if (!page || !assembled) { fails.push({ recordKey, diffs: ['missing page or db config'] }); continue; }
+  // migrated page: only { mount, recordKey } on the page, DB is source of truth -> nothing to compare
+  if (!page.sections && !page.fields && !page.entryFields
+      && (assembled.config.sections || assembled.config.fields || assembled.config.entryFields)) { migrated++; continue; }
   const out = [];
   diff(page, assembled.config, '', out);
   const real = out.filter((d) => {
@@ -59,6 +62,7 @@ for (const { recordKey, pageFile } of defs) {
 
 console.log(`\n=== verify-record-def-api — ${defs.length} records (from Neon) ===\n`);
 console.log(`page === assembled-from-DB:  ${pass}`);
+console.log(`already migrated (skipped):  ${migrated}`);
 console.log(`with differences:            ${fails.length}\n`);
 for (const f of fails) {
   console.log(`✗ ${f.recordKey}  (${f.pageFile || ''})`);

@@ -36,10 +36,10 @@ const DEF_KEYS = new Set(['mount', 'recordKey', 'engine', 'docCode', 'title', 'd
 // field keys handled by an explicit column on RecordFieldDef
 const FIELD_KEYS = new Set(['key', 'label', 'type', 'required', 'readOnly', 'unit', 'options',
   'group', 'computeFn', 'computeArgs', 'recordPickSource', 'linkField', 'linkRelation', 'validateJson']);
-// bespoke pages: recordKey -> the named JS hook the page keeps (Consolidated Plan §6.3)
+// bespoke pages: recordKey -> the named JS hook the page keeps (Consolidated Plan §6.3).
+// REC 7.2.4's derive-into is fully declarative engine config, so it is NOT a hook.
 const CLIENT_HOOKS = {
   'abalone-receiving': 'abaloneReceivingScale',
-  'abalone-packing-specification': 'packingSpecDerive',
   'double-seam-inspection-report': 'doubleSeamCustomBody',
 };
 
@@ -80,7 +80,6 @@ function build(file, src) {
   const scriptBlocks = (src.match(/<script(?![^>]*\bsrc=)[^>]*>/g) || []).length;
   if (scriptBlocks > 1) flags.push(`bespoke: ${scriptBlocks} inline <script> blocks`);
   if (/customBody\s*:/.test(src)) flags.push('customBody hook');
-  if (/deriveInto\s*:/.test(src)) flags.push('deriveInto hook');
   if (/window\.Rec[A-Z]\w*/.test(src)) flags.push('hardware/window.Rec* integration');
 
   const parsed = extractInitArg(src);
@@ -118,7 +117,9 @@ function build(file, src) {
     def.fields.push(row);
     if (!KNOWN_TYPES.has(row.type)) flags.push(`unknown field type: '${row.type}' (${row.key})`);
     if (row.type === 'select' && !row.options) flags.push(`select without options[]: ${row.key}`);
-    if ((row.type === 'computed' || row.type === 'derived' || row.needsComputeFn) && !row.computeFn)
+    const derived = row.computeFn
+      || (row.extraJson && (row.extraJson.sumRosterColumn || row.extraJson.deriveLookup || row.extraJson.deriveDuration));
+    if ((row.type === 'computed' || row.type === 'derived' || row.needsComputeFn) && !derived)
       flags.push(`field '${row.key}' (${row.type}) needs a computeFn in the registry (§6.1)`);
     const kids = Array.isArray(f.columns) ? f.columns : (f.type === 'roster' && Array.isArray(f.fields) ? f.fields : null);
     if (kids) kids.forEach((c) => addField(c, sIdx, f.key));
@@ -191,17 +192,35 @@ const results = files.map((f) => build(f, fs.readFileSync(path.join(RECDIR, f), 
 if (mode === 'json') { console.log(JSON.stringify(results, null, 2)); process.exit(0); }
 
 if (mode === 'emit') {
-  const defs = results.filter((r) => r.def).map((r) => r.def);
+  // Once a page has been migrated (its inline .init config stripped to just { recordKey }),
+  // the page yields an empty definition -- the DB / this JSON is now the source of truth for it.
+  // Carry the existing definition forward instead of overwriting it with the empty one.
+  let prior = {};
+  try {
+    prior = Object.fromEntries(JSON.parse(fs.readFileSync(OUT, 'utf8')).definitions.map((d) => [d.recordKey, d]));
+  } catch { /* first run */ }
+  let carried = 0;
+  const defs = results.filter((r) => r.def).map((r) => {
+    const d = r.def;
+    const empty = d.fields.length === 0 && d.sections.length === 0 && !d.clientHook;
+    const had = prior[d.recordKey];
+    if (empty && had && (had.fields?.length || had.sections?.length)) { carried++; return had; }
+    return d;
+  });
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify({ generated: new Date().toISOString().slice(0, 10), count: defs.length, definitions: defs }, null, 2) + '\n');
-  console.log(`wrote ${path.relative(ROOT, OUT)} — ${defs.length} definitions (${results.length - defs.length} pages had no parseable init)`);
+  console.log(`wrote ${path.relative(ROOT, OUT)} — ${defs.length} definitions`
+    + (carried ? `, ${carried} carried forward from already-migrated pages` : ''));
   process.exit(0);
 }
 
-const clean = results.filter((r) => r.flags.length === 0);
-const flagged = results.filter((r) => r.flags.length > 0);
-const unparse = results.filter((r) => r.flags.some((x) => x.startsWith('UNPARSEABLE') || x.startsWith('NO .init')));
+const migratedPages = results.filter((r) => r.def && !r.def.fields.length && !r.def.sections.length && !r.def.clientHook);
+const active = results.filter((r) => !migratedPages.includes(r));
+const clean = active.filter((r) => r.flags.length === 0);
+const flagged = active.filter((r) => r.flags.length > 0);
+const unparse = active.filter((r) => r.flags.some((x) => x.startsWith('UNPARSEABLE') || x.startsWith('NO .init')));
 console.log(`\n=== extract-definitions — ${results.length} record pages ===\n`);
+console.log(`already migrated (config stripped):  ${migratedPages.length}  (definition carried forward on --emit)`);
 console.log(`clean (map with no manual review):   ${clean.length}`);
 console.log(`flagged:                             ${flagged.length}`);
 console.log(`  unparseable / no init:             ${unparse.length}`);

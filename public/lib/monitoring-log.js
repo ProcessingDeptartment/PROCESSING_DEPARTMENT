@@ -786,9 +786,11 @@
     function computeAll(rawValues) {
       const values = Object.assign({}, rawValues);
       entryFields.forEach(f => {
-        if (f.type === 'computed' && typeof f.compute === 'function') {
-          try { values[f.key] = f.compute(values); } catch (e) { values[f.key] = ''; }
-        }
+        if (f.type !== 'computed') return;
+        try {
+          if (typeof f.compute === 'function') values[f.key] = f.compute(values);
+          else if (f.computeFn && window.ComputeRegistry) values[f.key] = window.ComputeRegistry.run(f.computeFn, f.computeArgs, values);
+        } catch (e) { values[f.key] = ''; }
       });
       return values;
     }

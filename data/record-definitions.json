@@ -6173,16 +6173,18 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 5,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "subtract",
+          "computeArgs": {
+            "a": "coldTestReading",
+            "b": "coldReferenceReading"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
             "specKey": "diffTolerance"
-          },
-          "needsComputeFn": true
+          }
         },
         {
           "key": "hotReferenceReading",
@@ -6240,16 +6242,18 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 8,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "subtract",
+          "computeArgs": {
+            "a": "hotTestReading",
+            "b": "hotReferenceReading"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
             "specKey": "diffTolerance"
-          },
-          "needsComputeFn": true
+          }
         },
         {
           "key": "checkedBy",
@@ -6501,16 +6505,18 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 6,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "subtract",
+          "computeArgs": {
+            "a": "testReading",
+            "b": "referenceReading"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
             "specKey": "diffTolerance"
-          },
-          "needsComputeFn": true
+          }
         },
         {
           "key": "correctionUsed",
@@ -9902,7 +9908,7 @@
       "title": "Abalone Packing Specification",
       "docRevisionStart": 3,
       "jobInfoGroup": null,
-      "clientHook": "packingSpecDerive",
+      "clientHook": null,
       "sections": [],
       "fields": [
         {
@@ -10053,13 +10059,15 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 7,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "ratioPct",
+          "computeArgs": {
+            "x": "drainedWeight",
+            "y": "ingoWeight"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "needsComputeFn": true
+          "validateJson": null
         },
         {
           "key": "newMinIngo",
@@ -10073,13 +10081,16 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 8,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "specOverRatio",
+          "computeArgs": {
+            "spec": "minSpec",
+            "x": "drainedWeight",
+            "y": "ingoWeight"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "needsComputeFn": true
+          "validateJson": null
         },
         {
           "key": "newMaxIngo",
@@ -10093,13 +10104,16 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 9,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "specOverRatio",
+          "computeArgs": {
+            "spec": "maxSpec",
+            "x": "drainedWeight",
+            "y": "ingoWeight"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "needsComputeFn": true
+          "validateJson": null
         },
         {
           "key": "comments",
@@ -19931,16 +19945,18 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 10,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "dayCount",
+          "computeArgs": {
+            "from": "purgeStartDate",
+            "to": "purgeEndDate"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
             "specKey": "purgeDays"
-          },
-          "needsComputeFn": true
+          }
         },
         {
           "key": "bagsIntoPurge",
@@ -20011,16 +20027,18 @@
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 14,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "lossPct",
+          "computeArgs": {
+            "into": "massIntoPurge",
+            "outOf": "massOutOfPurge"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
             "specKey": "purgeLoss"
-          },
-          "needsComputeFn": true
+          }
         },
         {
           "key": "bagsPacked",
