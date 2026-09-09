@@ -88,7 +88,7 @@
             <tr>
               <th>Job no.</th><th>Received</th><th>Farm</th><th>For</th>
               <th>Intake weight (kg)</th><th>Status</th><th>Closed</th>
-              <th class="no-print">Report</th><th class="no-print">Action</th>
+              <th class="no-print">Reports</th><th class="no-print">Action</th>
             </tr>
           </thead>
           <tbody id="jobsBody"></tbody>
@@ -185,7 +185,10 @@
         <td>${esc(r.intakeWeight || '—')}</td>
         <td><span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span></td>
         <td>${closedTxt}</td>
-        <td class="no-print"><a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Report</a></td>
+        <td class="no-print" style="white-space:nowrap;">
+          <a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Canning</a>
+          <a class="btn btn-flat btn-sm" href="drying-report.html?job=${encodeURIComponent(r.job_no)}">Drying</a>
+        </td>
         <td class="no-print">
           <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}">
             ${closed ? 'Reopen' : 'Close job'}
