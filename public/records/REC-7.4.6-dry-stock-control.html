@@ -27,41 +27,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'dry-stock-control',
-    batchField: 'jobNo',
-    docCode: 'REC 7.4.6',
-    title: 'Dry Stock Control',
-    docRevisionStart: 3,
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'intakeDate', label: 'Intake date', type: 'date' },
-      { key: 'month', label: 'Month', type: 'month', required: true },
-      { key: 'wholeWeight', label: 'Whole weight', type: 'number', unit: 'kg' },
-      { key: 'cookingDate', label: 'Cooking date', type: 'date' },
-      { key: 'noOfTrolleys', label: 'No. of trolleys', type: 'number' },
-      { key: 'weightIn', label: 'Weight in', type: 'number', unit: 'kg' },
-      { key: 'dateIn', label: 'Date in', type: 'date' },
-      { key: 'countInFactory', label: 'Count in — factory', type: 'number' },
-      { key: 'countInFinance', label: 'Count in — finance', type: 'number' },
-      { key: 'weightOut', label: 'Weight out', type: 'number', unit: 'kg' },
-      { key: 'dateOut', label: 'Date out', type: 'date' },
-      { key: 'countOutFactory', label: 'Count out — factory', type: 'number' },
-      { key: 'countOutFinance', label: 'Count out — finance', type: 'number' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/dry-stock-control
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'dry-stock-control' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

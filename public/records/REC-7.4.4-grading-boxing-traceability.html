@@ -26,43 +26,9 @@
 <script src="../lib/permission-rules.js?v=1"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'grading-boxing-traceability',
-    batchField: 'jobNo',
-    stage: 'grading-boxing',
-    docCode: 'REC 7.4.4',
-    title: 'Grading, Boxing & Traceability',
-    docRevisionStart: 1,
-    listColumns: ['dateCreated', 'binCode', 'sizeGrade'],
-
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
-          jiReceivingDate: 'receivingDate',
-          jiReceivedFrom: 'receivedFrom',
-          jiProcessingFor: 'toBeProcessedFor',
-          jiIntakeWeight: 'intakeWeight'
-        } }
-    ],
-    sections: [
-      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'], fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-        { key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-        { key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-        { key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-        { key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true }
-      ]},
-      { title: 'Grading & boxing', fields: [
-        { key: 'dateCreated', label: 'Date created', type: 'date', required: true },
-        { key: 'binCode', label: 'Bin code', type: 'text' },
-        { key: 'sizeGrade', label: 'Size grade', type: 'text' },
-        { key: 'jobNumbersInBin', label: 'Job numbers in bin', type: 'textarea', wide: true }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'supervisor', label: 'Supervisor', type: 'text' }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/grading-boxing-traceability
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'grading-boxing-traceability' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

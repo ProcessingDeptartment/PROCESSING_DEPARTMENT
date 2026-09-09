@@ -27,45 +27,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'dry-monitoring',
-    batchField: 'jobNumber',
-    docCode: 'REC 7.4.2',
-    title: 'Dry Monitoring',
-    docRevisionStart: 3,
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { intakeDate: 'receivingDate', intakeWeight: 'intakeWeight', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'intakeWeight', label: 'Intake weight', type: 'number', unit: 'kg' },
-      { group: 'Job info', key: 'intakeDate', label: 'Intake date', type: 'date' },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'cookingDate', label: 'Cooking date', type: 'date' },
-      { key: 'dryRoomArea', label: 'Dry room area', type: 'text' },
-      { key: 'noOfTrolleys', label: 'No. of trolleys', type: 'number' },
-      { key: 'trolleysClearlyMarked', label: 'Trolleys clearly marked', type: 'yesno' },
-      { key: 'estimatedDryDate', label: 'Estimated dry date', type: 'date' },
-      { key: 'mouldVisible', label: 'Mould visible', type: 'yesno' },
-      { key: 'whiteSaltOnSurface', label: 'White salt on surface', type: 'yesno' },
-      { key: 'caseHardening', label: 'Case hardening', type: 'yesno' },
-      { key: 'surfaceShine', label: 'Surface shine', type: 'yesno' },
-      { key: 'footDamage', label: 'Foot damage', type: 'yesno' },
-      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
-      { key: 'comments', label: 'Comments', type: 'textarea' },
-      { key: 'qcCheck', label: 'QC check', type: 'text', required: true },
-      { key: 'supervisor', label: 'Supervisor', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/dry-monitoring
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'dry-monitoring' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

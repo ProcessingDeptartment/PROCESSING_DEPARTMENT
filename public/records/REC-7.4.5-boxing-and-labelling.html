@@ -26,32 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'boxing-and-labelling',
-    docCode: 'REC 7.4.5',
-    title: 'Boxing & Labelling',
-    docRevisionStart: 4,
-    instructions: [
-      { label: 'Note', text: 'The bin code is used as the "box code" on the label.' }
-    ],
-    entryFields: [
-      { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
-      { key: 'tareWeight', label: 'Tare weight', type: 'number', unit: 'kg' },
-      { key: 'binCode', label: 'Bin code', type: 'text', required: true },
-      Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-      { key: 'colourUniform', label: 'Colour uniform?', type: 'yesno' },
-      { key: 'correctSizeGrade', label: 'Correct size grade?', type: 'yesno' },
-      { key: 'frillsPresent', label: 'Frills present?', type: 'yesno' },
-      { key: 'bagAndBoxSealed', label: 'Bag and box sealed?', type: 'yesno' },
-      { key: 'nettWeight', label: 'Nett weight', type: 'number', unit: 'kg' },
-      { key: 'qualityController', label: 'Quality controller', type: 'text', required: true },
-      { key: 'supervisor', label: 'Supervisor', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/boxing-and-labelling
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'boxing-and-labelling' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>
