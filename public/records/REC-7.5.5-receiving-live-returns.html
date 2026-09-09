@@ -26,26 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'receiving-live-returns',
-    docCode: 'REC 7.5.5',
-    title: 'Receiving Live Returns',
-    docRevisionStart: 2,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'clientIdn', label: 'Client / IDN', type: 'text', required: true },
-      { key: 'boxNo', label: 'Box no.', type: 'text' },
-      Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-      { key: 'count', label: 'Count', type: 'number' },
-      { key: 'basketNumberTrackingNo', label: 'Basket number / tracking no.', type: 'text' },
-      { key: 'positionNo', label: 'Position no.', type: 'text' },
-      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/receiving-live-returns
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'receiving-live-returns' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

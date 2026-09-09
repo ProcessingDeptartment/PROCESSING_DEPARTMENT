@@ -25,27 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'incoming-ppe-inspection',
-    docCode: 'REC 7.8.5',
-    title: 'Incoming PPE Inspection',
-    docRevisionStart: 4,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'product', label: 'Product', type: 'text', required: true },
-      { key: 'supplier', label: 'Supplier', type: 'text' },
-      { key: 'approvedSupplier', label: 'Approved supplier?', type: 'yesno' },
-      { key: 'deliveryNote', label: 'Delivery note', type: 'text' },
-      { key: 'quantity', label: 'Quantity', type: 'number' },
-      { key: 'carRequired', label: 'CAR required?', type: 'yesno' },
-      { key: 'carNr', label: 'CAR nr.', type: 'text' },
-      { key: 'receivedBy', label: 'Received by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/incoming-ppe-inspection
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'incoming-ppe-inspection' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

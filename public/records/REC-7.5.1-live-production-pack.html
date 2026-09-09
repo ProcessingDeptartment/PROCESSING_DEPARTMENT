@@ -30,62 +30,9 @@
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
 
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'live-production-pack',
-    docCode: 'REC 7.5.1',
-    title: 'Live Production Pack',
-    docRevisionStart: 4,
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    batchField: 'jobNumber',
-    stage: 'live-packing',
-    entryFields: [
-      { group: 'Job info', key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { key: 'packingDate', label: 'Packing date', type: 'date', required: true },
-      { key: 'idnsPacked', label: 'IDNs packed', type: 'text' },
-      { key: 'livePackChecklistAttached', label: 'Live pack checklist (REC 7.5.2) attached?', type: 'yesno' },
-
-      { key: 'purgeStartDate', label: 'Purge started', type: 'date' },
-      { key: 'purgeEndDate', label: 'Purge ended', type: 'date' },
-      {
-        key: 'purgeDays', label: 'Purging time', type: 'computed', unit: 'days', specKey: 'purgeDays',
-        computeFn: 'dayCount', computeArgs: { from: 'purgeStartDate', to: 'purgeEndDate' }
-      },
-      { key: 'bagsIntoPurge', label: 'Bags into purge', type: 'number' },
-      { key: 'massIntoPurge', label: 'Mass into purge', type: 'number', unit: 'kg' },
-      { key: 'massOutOfPurge', label: 'Mass out of purge', type: 'number', unit: 'kg' },
-      {
-        key: 'purgeLoss', label: 'Purge loss', type: 'computed', unit: '%', specKey: 'purgeLoss',
-        computeFn: 'lossPct', computeArgs: { into: 'massIntoPurge', outOf: 'massOutOfPurge' }
-      },
-
-      { key: 'bagsPacked', label: 'Bags packed', type: 'number' },
-      { key: 'boxesPacked', label: 'Boxes packed', type: 'number' },
-      { key: 'massPacked', label: 'Mass packed', type: 'number', unit: 'kg' },
-
-      { key: 'oxygenBatchNumber', label: 'Oxygen — batch number', type: 'text' },
-      { key: 'spongesBatchNumber', label: 'Sponges — batch number', type: 'text' },
-      { key: 'bagsBoxFlatBoardBatchNumber', label: 'Plastic bags, box, flat board — batch number', type: 'text' },
-      { key: 'icePacksBatchNumber', label: 'Ice packs — batch number', type: 'text' },
-      { key: 'signedPackingListsAttached', label: 'Signed packing lists attached?', type: 'yesno' },
-      { key: 'completedBySupervisor', label: 'Completed by (Supervisor)', type: 'text', required: true },
-      { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' }
-    ],
-    specFields: [
-      { key: 'purgeDays', label: 'Purging time', unit: 'days', ...Thresholds.get('live-production-pack', 'purgeDays') },
-      { key: 'purgeLoss', label: 'Purge loss', unit: '%', ...Thresholds.get('live-production-pack', 'purgeLoss') }
-    ],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/live-production-pack
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'live-production-pack' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

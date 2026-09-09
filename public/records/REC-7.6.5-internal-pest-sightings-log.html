@@ -25,30 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'internal-pest-sightings-log',
-    docCode: 'REC 7.6.5',
-    title: 'Internal Pest Sightings Log',
-    docRevisionStart: 2,
-    instructions: [
-      { label: 'Instruction', text: 'If any pest or presence of pest activity is noted or reported, the Internal Pest Controller completes this log and informs management.' }
-    ],
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'areaOfSighting', label: 'Area of pest / activity sighting (incl. brief description)', type: 'textarea', required: true },
-      { key: 'typeOfPest', label: 'Type of pest sighted', type: 'select', options: ['Rat/mouse', 'Fly', 'Cockroach', 'Bird', 'Ant', 'Moth', 'Other'] },
-      { key: 'reportedBy', label: 'Pest sighting reported by', type: 'text' },
-      { key: 'carCompleted', label: 'CAR completed?', type: 'yesno' },
-      { key: 'pestControlCompanyNotified', label: 'Pest control company notified?', type: 'yesno' },
-      { key: 'internalPestController', label: 'Internal pest controller', type: 'text', required: true },
-      { key: 'managementVerification', label: 'Management verification', type: 'text' },
-      { key: 'comment', label: 'Comment', type: 'textarea' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/internal-pest-sightings-log
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'internal-pest-sightings-log' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

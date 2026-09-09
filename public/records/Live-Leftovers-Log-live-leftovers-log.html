@@ -25,24 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'live-leftovers-log',
-    docCode: 'Live Leftovers Log',
-    title: 'Live Leftovers Log',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Note', text: 'Tracks live product leftover weight by size class after packing â€” a standalone running log, separate from the per-pack leftovers fields on REC 7.5.2 Live Pack Checklist.' }
-    ],
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'sizeClass', label: 'Size range', type: 'select', options: ['30-40g', '40-50g', '50-60g', '60-70g', '70-90g', '90-110g', '110-150g', '150-200g', '350-500g', 'Wild'] },
-      { key: 'weight', label: 'Weight', type: 'number', unit: 'kg' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/live-leftovers-log
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'live-leftovers-log' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=5"></script>

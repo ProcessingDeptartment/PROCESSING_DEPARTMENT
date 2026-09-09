@@ -24,32 +24,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'traceability-mock-recall-live-abalone',
-    docCode: 'REC 8.1.8',
-    title: 'Traceability & Mock Recall Checklist for Live Abalone',
-    docRevisionStart: 3,
-    listColumns: ['recallInitiationDate', 'packingDate'],
-    instructions: [
-      { label: 'Note', text: 'Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
-    ],
-    sections: [
-      { title: 'Batch details', fields: [
-        { key: 'recallInitiationDate', label: 'Recall initiation date', type: 'date', required: true },
-        { key: 'packingDate', label: 'Packing date', type: 'date' }
-      ]}
-    ],
-    roster: {
-      title: 'Records — covers Live Production Pack (7.5.1), Live Pack Checklist / Bag Checks (7.5.2/7.5.3), IDN/Customer Order, NRCS Health Certificate, and related cleaning/hygiene records',
-      columns: [
-        { key: 'recordName', label: 'Record', type: 'text' },
-        { key: 'recordCode', label: 'QC record / REC code', type: 'text' },
-        { key: 'summary', label: 'Summary', type: 'textarea' },
-        { key: 'included', label: 'Included', type: 'select', options: ['Yes', 'No', 'N/A'] }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/traceability-mock-recall-live-abalone
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'traceability-mock-recall-live-abalone' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

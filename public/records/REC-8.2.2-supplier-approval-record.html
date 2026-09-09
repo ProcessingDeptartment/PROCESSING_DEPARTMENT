@@ -24,39 +24,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'supplier-approval-record',
-    docCode: 'REC 8.2.2',
-    title: 'Supplier Approval Record',
-    docRevisionStart: 3,
-    listColumns: ['supplierName', 'dateOfEvaluation', 'totalPercent'],
-    instructions: [
-      { label: 'Scoring', text: 'The supplier is rated on the 6 criteria below. A score of 70% or more adds them to the Approved Supplier List. An ad-hoc supplier used before the selection process is complete needs Food Safety Team Leader approval.' }
-    ],
-    sections: [
-      { title: 'Evaluation details', fields: [
-        { key: 'supplierName', label: 'Name of supplier', type: 'text', required: true },
-        { key: 'productService', label: 'Product/service', type: 'text' },
-        { key: 'dateOfEvaluation', label: 'Date of evaluation', type: 'date', required: true },
-        { key: 'evaluator', label: 'Evaluator', type: 'text' }
-      ]},
-      { title: 'Criteria (Yes = 1, No = 0)', fields: [
-        { key: 'evidenceOfCertificates', label: 'Evidence of current Food Safety Certificates/COAs/COCs/MSDs/Letter of Conformance?', type: 'select', options: ['Yes', 'No'] },
-        { key: 'qualityCompliesSpec', label: 'Quality of product/service complies to specifications?', type: 'select', options: ['Yes', 'No'] },
-        { key: 'deliveredOnTime', label: 'Delivered within the required timeframe?', type: 'select', options: ['Yes', 'No'] },
-        { key: 'correspondsToOrder', label: 'Product/service delivered corresponds to the order?', type: 'select', options: ['Yes', 'No'] },
-        { key: 'documentationAdequate', label: 'Documentation supplied with delivery adequate?', type: 'select', options: ['Yes', 'No'] },
-        { key: 'technicalAssistanceAvailable', label: 'Technical assistance available regarding product/service?', type: 'select', options: ['Yes', 'No'] },
-        { key: 'totalPercent', label: 'Total', type: 'number', unit: '%' }
-      ]},
-      { title: 'Outcome', fields: [
-        { key: 'actionIfNotApproved', label: 'If not approved, action required', type: 'textarea', wide: true },
-        { key: 'managementVerification', label: 'Management verification', type: 'text', required: true },
-        { key: 'verificationDate', label: 'Date', type: 'date' }
-      ]}
-    ]
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/supplier-approval-record
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'supplier-approval-record' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

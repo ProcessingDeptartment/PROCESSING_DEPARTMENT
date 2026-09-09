@@ -25,23 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'qa1-damaged-cans-and-lids',
-    docCode: 'QA1',
-    title: 'Damaged Cans and Lids',
-    docRevisionStart: 1,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'noOfCansEnds', label: 'No. of cans/ends', type: 'number' },
-      { key: 'palletNumberProductionDate', label: 'Pallet number and production date', type: 'text' },
-      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true },
-      { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/qa1-damaged-cans-and-lids
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'qa1-damaged-cans-and-lids' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

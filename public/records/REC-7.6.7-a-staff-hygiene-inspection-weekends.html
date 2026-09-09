@@ -24,41 +24,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'staff-hygiene-inspection-weekends',
-    docCode: 'REC 7.6.7a',
-    title: 'Staff Hygiene Inspection - Weekends',
-    docRevisionStart: 1,
-    listColumns: ['date'],
-    instructions: [
-      { label: 'Work instruction', text: 'Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Non-compliance observed should be recorded and reported to supervisors.' }
-    ],
-    sections: [
-      { title: 'Shift details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
-      ]}
-    ],
-    roster: {
-      title: 'Staff members — day shift',
-      columns: [
-        { key: 'staffMember', label: 'Staff member', type: 'text' },
-        { key: 'protectiveClothing', label: 'Protective clothing', type: 'yesno' },
-        { key: 'hairBootsClean', label: 'Hair covered and boot washed', type: 'yesno' },
-        { key: 'fingernails', label: 'Fingernails short and clean', type: 'yesno' },
-        { key: 'noJewelleryMakeup', label: 'No jewellery/make-up', type: 'yesno' },
-        { key: 'handWash', label: 'Hand wash', type: 'yesno' },
-        { key: 'injuryIllness', label: 'Injury / illness', type: 'yesno' },
-        { key: 'noFood', label: 'No food', type: 'yesno' },
-        { key: 'correctiveAction', label: 'Corrective action', type: 'text' },
-        { key: 'comments', label: 'Comments', type: 'text' },
-        { key: 'qcSignature', label: 'QC signature', type: 'text' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/staff-hygiene-inspection-weekends
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'staff-hygiene-inspection-weekends' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

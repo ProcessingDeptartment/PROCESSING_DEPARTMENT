@@ -25,30 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'mortality-counts-by-customer',
-    docCode: 'Mortality Counts by Customer',
-    title: 'Mortality Counts by Customer',
-    docRevisionStart: 1,
-    listColumns: ['date'],
-    instructions: [
-      { label: 'Note', text: 'The paper version used one spreadsheet tab per date with a customer — size-band matrix that varies in width each time — this roster form captures the same data (customer, size band, mortality count) as flexible rows instead.' }
-    ],
-    sections: [
-      { title: 'Date', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true }
-      ]}
-    ],
-    roster: {
-      title: 'Mortality counts',
-      columns: [
-        { key: 'customer', label: 'Customer', type: 'text' },
-        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-        { key: 'noMortalities', label: 'No. mortalities', type: 'number' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/mortality-counts-by-customer
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'mortality-counts-by-customer' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

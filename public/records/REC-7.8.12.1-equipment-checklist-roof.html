@@ -24,36 +24,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'equipment-checklist-roof',
-    docCode: 'REC 7.8.12.1',
-    title: 'Equipment Checklist - Roof (Daily Ozone & Compressor)',
-    docRevisionStart: 1,
-    listColumns: ['date', 'checkedBy'],
-    instructions: [
-      { label: 'To-do — daily', text: 'Drain the compressor tank. Empty the drip tray underneath the 250-pipe connection.' },
-      { label: 'To-do — weekly', text: 'Drain and clean the filters.' }
-    ],
-    sections: [
-      { title: 'Inspection details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
-        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
-      ]}
-    ],
-    roster: {
-      title: 'Daily Ozone and compressor checklist',
-      columns: [
-        { key: 'component', label: 'Component', type: 'select', options: ['Ozone', 'Compressor'] },
-        { key: 'description', label: 'Description', type: 'text' },
-        { key: 'inspected', label: 'Inspected (Y/N)', type: 'select', options: ['Y', 'N'] },
-        { key: 'commentsAction', label: 'Comments / action to be taken', type: 'text' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/equipment-checklist-roof
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'equipment-checklist-roof' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

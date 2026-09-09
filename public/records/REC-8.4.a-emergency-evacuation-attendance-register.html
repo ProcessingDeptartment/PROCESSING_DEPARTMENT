@@ -24,35 +24,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'emergency-evacuation-attendance-register',
-    docCode: 'REC 8.4.a',
-    title: 'Emergency Evacuation Attendance Register',
-    docRevisionStart: 1,
-    listColumns: ['date', 'buildingArea', 'typeOfDrill'],
-    sections: [
-      { title: 'Drill details', fields: [
-        { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'buildingArea', label: 'Building / area', type: 'text' },
-        { key: 'typeOfDrill', label: 'Type of drill or emergency', type: 'text' },
-        { key: 'timeStarted', label: 'Time started', type: 'text' },
-        { key: 'timeEnded', label: 'Time ended', type: 'text' }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'notesComments', label: 'Notes and comments', type: 'textarea', wide: true },
-        { key: 'safetyOfficer', label: 'Signed by safety officer', type: 'text', required: true },
-        { key: 'management', label: 'Signed by management', type: 'text' }
-      ]}
-    ],
-    roster: {
-      title: 'Participants',
-      columns: [
-        { key: 'name', label: 'Name', type: 'text' },
-        { key: 'signature', label: 'Signature', type: 'text' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/emergency-evacuation-attendance-register
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'emergency-evacuation-attendance-register' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

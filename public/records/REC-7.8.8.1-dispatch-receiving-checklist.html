@@ -27,44 +27,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'dispatch-receiving-checklist',
-    batchField: 'jobNumber',
-    docCode: 'REC 7.8.8.1',
-    title: 'Dispatch Receiving Checklist',
-    docRevisionStart: 1,
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'clientDetails', label: 'Client details', type: 'text' },
-      { key: 'noOfPalletsBoxes', label: 'No. of pallets/boxes', type: 'number' },
-      { key: 'deliveryNote', label: 'Delivery note', type: 'text' },
-      { key: 'productDispatched', label: 'Product dispatched', type: 'text' },
-      { key: 'outerCartonSealed', label: 'Outer carton sealed tightly & neat', type: 'yesno' },
-      { key: 'damagedDirtyBoxesPallets', label: 'Evidence of damaged & dirty boxes, pallets on loading', type: 'yesno' },
-      { key: 'damagedStockLoaded', label: 'Evidence of damaged stock being loaded', type: 'yesno' },
-      { key: 'pestInfestationStock', label: 'Evidence of pest infestation in stock loaded', type: 'yesno' },
-      { key: 'loadingSpaceClean', label: 'Loading space clean, free from odours and mould growth', type: 'yesno' },
-      { key: 'stockNotLoadedWithNonFood', label: 'Stock not loaded with any other non-food products', type: 'yesno' },
-      { key: 'rustDentSigns', label: 'Any signs of rust or dent from the cans', type: 'yesno' },
-      { key: 'truckSecuredLocked', label: 'Truck secured and locked after loading', type: 'yesno' },
-      { key: 'correctiveActions', label: 'Corrective actions', type: 'textarea' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/dispatch-receiving-checklist
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'dispatch-receiving-checklist' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

@@ -24,33 +24,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'master-cleaning-checklist',
-    docCode: 'Master Cleaning Checklist',
-    title: 'Master Cleaning Checklist (New Plant)',
-    docRevisionStart: 1,
-    listColumns: ['weekOf', 'responsibleOperator'],
-    instructions: [
-      { label: 'Note', text: 'The paper form has separate Day/Night tick columns for every day of the week. This digital version records one row per equipment item per day — use the day field to log which day/shift a cleaning was done, and add a row per occurrence.' }
-    ],
-    sections: [
-      { title: 'Week details', fields: [
-        { key: 'weekOf', label: 'Week of', type: 'date', required: true },
-        { key: 'responsibleOperator', label: 'Responsible operator', type: 'text', required: true }
-      ]}
-    ],
-    roster: {
-      title: 'Equipment / item cleaning log',
-      columns: [
-        { key: 'equipmentOrItem', label: 'Equipment or item', type: 'text' },
-        { key: 'frequency', label: 'Frequency', type: 'text' },
-        { key: 'day', label: 'Day', type: 'select', options: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
-        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-        { key: 'done', label: 'Done?', type: 'yesno' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/master-cleaning-checklist
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'master-cleaning-checklist' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

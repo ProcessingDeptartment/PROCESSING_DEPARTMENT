@@ -28,39 +28,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'dry-chiller-batch-control',
-    batchField: 'jobNo',
-    docCode: 'REC 7.8.1',
-    title: 'Dry Chiller Batch Control',
-    docRevisionStart: 4,
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { harvestFarm: 'receivedFrom', jiReceivingDate: 'receivingDate', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      Lookups.field({ group: 'Job info', key: 'harvestFarm', label: 'Harvest farm', list: 'farms' }),
-      { key: 'processingStep', label: 'Processing step', type: 'select', options: ['After first wash', 'After cooking'] },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'time', label: 'Time', type: 'text' },
-      { key: 'traysClearlyMarked', label: 'Trays clearly marked?', type: 'yesno' },
-      { key: 'noOfTrays', label: 'No. of trays', type: 'number' },
-      { key: 'productTemp', label: 'Product temp', type: 'number', unit: '°C' },
-      { key: 'chillerTemp', label: 'Chiller temp', type: 'number', unit: '°C' },
-      { key: 'totalDaysInChiller', label: 'Total days in chiller', type: 'number' },
-      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true },
-      { key: 'factoryManager', label: 'Factory manager', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/dry-chiller-batch-control
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'dry-chiller-batch-control' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

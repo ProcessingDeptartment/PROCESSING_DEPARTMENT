@@ -26,33 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'chemical-stock-issue-register',
-
-    batchField: 'batchNumber',
-    batchDateField: 'dateOfIssue',
-    stage: 'chemical issued',
-    docCode: 'REC 7.6.4',
-    title: 'Chemical Stock & Issue Register',
-    docRevisionStart: 4,
-    entryFields: [
-      { key: 'nameOfChemical', label: 'Name of chemical', type: 'text', required: true },
-      { key: 'approvedSupplier', label: 'Approved supplier', type: 'text' },
-      { key: 'batchNumber', label: 'Batch number', type: 'text' },
-      { key: 'msdsAvailable', label: 'MSDS available', type: 'yesno' },
-      { key: 'expiryDate', label: 'Expiry date', type: 'date' },
-      { key: 'dateOfIssue', label: 'Date of issue', type: 'date', required: true },
-      { key: 'quantityIssued', label: 'Quantity issued', type: 'number' },
-      { key: 'dilution', label: 'Dilution', type: 'text' },
-      { key: 'issuedTo', label: 'Issued to', type: 'text' },
-      { key: 'issuedBy', label: 'Issued by', type: 'text', required: true },
-      { key: 'areaToBeCleaned', label: 'Area to be cleaned?', type: 'yesno' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/chemical-stock-issue-register
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'chemical-stock-issue-register' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

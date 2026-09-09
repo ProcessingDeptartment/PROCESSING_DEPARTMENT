@@ -26,32 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'water-monitoring',
-    docCode: 'REC 7.8.9',
-    title: 'Water Monitoring',
-    docRevisionStart: 3,
-    instructions: [
-      { label: 'Note', text: 'Targets for fresh water pH and sea water pH/salt are not specified on the paper form — set them under Thresholds once confirmed. Readings are recorded either way.' }
-    ],
-    entryFields: [
-      { key: 'month', label: 'Month', type: 'month' },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'freshWaterPh', label: 'Fresh water pH', type: 'number', specKey: 'freshPh' },
-      { key: 'seaWaterSalt', label: 'Sea water salt', type: 'number', unit: '%', specKey: 'seaSalt' },
-      { key: 'seaWaterPh', label: 'Sea water pH', type: 'number', specKey: 'seaPh' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
-      { key: 'comments', label: 'Comments for any deviation', type: 'textarea' }
-    ],
-    specFields: [
-      { key: 'freshPh', label: 'Fresh water pH', ...Thresholds.get('water-monitoring', 'freshPh') },
-      { key: 'seaSalt', label: 'Sea water salt', unit: '%', ...Thresholds.get('water-monitoring', 'seaSalt') },
-      { key: 'seaPh', label: 'Sea water pH', ...Thresholds.get('water-monitoring', 'seaPh') }
-    ],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/water-monitoring
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'water-monitoring' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

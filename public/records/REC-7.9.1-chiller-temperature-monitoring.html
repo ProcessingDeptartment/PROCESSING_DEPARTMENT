@@ -26,49 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'chiller-temperature-monitoring',
-    batchField: 'jobNo',
-    stage: 'chilling',
-    docCode: 'REC 7.9.1',
-    title: 'Chiller Temperature Monitoring',
-    docRevisionStart: 9,
-    instructions: [
-      { label: 'Temperature parameters', text: '0°C to +10°C. Defrost temperature not above +20°C.' },
-      { label: 'Frequency of monitoring', text: 'Start of shift, lunch break and end of shift.' },
-      { label: 'If out of spec', text: 'If the temperature varies by more than 0.5°C from the accepted parameters, corrective action must be recorded and the temperature checked again within 1 hour.' }
-    ],
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'timeOfCheck', label: 'Time', type: 'select', options: ['Start of shift', 'Lunch break', 'End of shift'] },
-      { key: 'productCovered', label: 'Product covered', type: 'yesno' },
-      { key: 'chiller1DialTemp', label: 'Chiller 1 — dial temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'chiller1ProductTemp', label: 'Chiller 1 — product temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'chiller2DialTemp', label: 'Chiller 2 — dial temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'chiller2ProductTemp', label: 'Chiller 2 — product temp', type: 'number', unit: '°C', specKey: 'chillerTemp' },
-      { key: 'freezerDialTemp', label: 'Freezer — dial temp', type: 'number', unit: '°C', specKey: 'freezerTemp' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
-      { key: 'correctiveAction', label: 'Reason for temp being out of spec & corrective action', type: 'textarea' }
-    ],
-    specFields: [
-      { key: 'chillerTemp', label: 'Chiller / product temperature', unit: '°C', ...Thresholds.get('chiller-temperature-monitoring', 'chillerTemp') },
-      { key: 'freezerTemp', label: 'Freezer dial temperature', unit: '°C', ...Thresholds.get('chiller-temperature-monitoring', 'freezerTemp') }
-    ],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/chiller-temperature-monitoring
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'chiller-temperature-monitoring' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

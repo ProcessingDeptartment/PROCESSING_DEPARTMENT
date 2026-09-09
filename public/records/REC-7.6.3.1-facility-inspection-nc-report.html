@@ -25,35 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'facility-inspection-nc-report',
-    docCode: 'REC 7.6.3.1',
-    title: 'Facility Inspection NC Report',
-    docRevisionStart: 4,
-    listColumns: ['inspectionDate', 'completedBy'],
-    sections: [
-      { title: 'Inspection details', fields: [
-        { key: 'completedBy', label: 'Completed by', type: 'text', required: true },
-        { key: 'inspectionDate', label: 'Inspection date', type: 'date', required: true }
-      ]},
-      { title: 'Management verification', fields: [
-        { key: 'managementVerification', label: 'Management verification', type: 'text' },
-        { key: 'verificationDate', label: 'Date', type: 'date' }
-      ]}
-    ],
-    roster: {
-      title: 'Non-conformances by area',
-      columns: [
-        Lookups.field({ key: 'area', label: 'Area', list: 'areas' }),
-        { key: 'nonConformance', label: 'Non-conformance', type: 'textarea' },
-        { key: 'correctiveAction', label: 'Corrective action', type: 'textarea' },
-        { key: 'targetDate', label: 'Target date', type: 'date' },
-        { key: 'actualDateCompleted', label: 'Actual date completed', type: 'date' },
-        { key: 'personResponsible', label: 'Person / department responsible', type: 'text' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/facility-inspection-nc-report
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'facility-inspection-nc-report' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

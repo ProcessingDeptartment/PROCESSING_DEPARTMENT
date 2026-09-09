@@ -25,22 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'mortalities-log',
-    docCode: 'Mortalities Log',
-    title: 'Mortalities Log',
-    docRevisionStart: 1,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'mortalitiesKg', label: 'Mortalities', type: 'number', unit: 'kg' },
-      { key: 'totalPack', label: 'Total pack', type: 'number', unit: 'kg' },
-      { key: 'percent', label: 'Mortalities', type: 'number', unit: '%' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/mortalities-log
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'mortalities-log' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

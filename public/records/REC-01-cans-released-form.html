@@ -25,30 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'cans-released-form',
-    batchField: 'agCode',
-    stage: 'release',
-    docCode: 'REC 01',
-    title: 'Cans Released Form (Awaiting NRCS Releases)',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Purpose', text: 'Record cans released from hold, awaiting NRCS clearance.' }
-    ],
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'noOfPieces', label: 'No. of pieces', type: 'number' },
-      { key: 'brineOrBraised', label: 'Brine / Braised', type: 'select', options: ['Brine', 'Braised'] },
-      { key: 'noOfGrams', label: 'No. of grams', type: 'number' },
-      { key: 'noOfCans', label: 'No. of cans', type: 'number' },
-      { key: 'agCode', label: 'AG code', type: 'text' },
-      { key: 'checkedByQC', label: 'Checked by (QC)', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/cans-released-form
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'cans-released-form' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

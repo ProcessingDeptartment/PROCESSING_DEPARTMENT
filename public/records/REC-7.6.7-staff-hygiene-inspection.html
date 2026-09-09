@@ -24,42 +24,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/form-record.js?v=28"></script>
 <script>(function () {
-  FormRecord.init({
-    mount: '#frRoot',
-    recordKey: 'staff-hygiene-inspection',
-    docCode: 'REC 7.6.7',
-    title: 'Staff Hygiene Inspection',
-    docRevisionStart: 4,
-    listColumns: ['weekStarting', 'shift'],
-    instructions: [
-      { label: 'Work instruction', text: 'Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Key: âÅ““ = Compliance, x = Non-compliance, A = Absent.' }
-    ],
-    sections: [
-      { title: 'Week details', fields: [
-        { key: 'weekStarting', label: 'Date (beginning of working week)', type: 'date', required: true },
-        { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] }
-      ]},
-      { title: 'Sign-off', fields: [
-        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
-      ]}
-    ],
-    roster: {
-      title: 'Staff members — one row per staff member per day (Mon-Fri)',
-      columns: [
-        { key: 'staffMember', label: 'Staff member', type: 'text' },
-        { key: 'day', label: 'Day', type: 'select', options: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
-        { key: 'protectiveClothing', label: 'Protective clothing', type: 'yesno' },
-        { key: 'hairBootsClean', label: 'Hair covered & boots washed', type: 'yesno' },
-        { key: 'fingernails', label: 'Fingernails short & clean', type: 'yesno' },
-        { key: 'noJewelleryMakeup', label: 'No jewellery/watches/make-up', type: 'yesno' },
-        { key: 'handWash', label: 'Hand wash protocol followed', type: 'yesno' },
-        { key: 'noFoodDrink', label: 'No food & drink', type: 'yesno' },
-        { key: 'injuryIllness', label: 'Injury / illness', type: 'yesno' },
-        { key: 'comment', label: 'Comment / corrective action', type: 'text' },
-        { key: 'qcSignature', label: 'QC signature', type: 'text' }
-      ]
-    }
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/staff-hygiene-inspection
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  FormRecord.init({ mount: '#frRoot', recordKey: 'staff-hygiene-inspection' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

@@ -25,28 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'plaster-dressing-inspection',
-    docCode: 'REC 7.7.6',
-    title: 'Plaster Issuing / Dressing Inspection',
-    docRevisionStart: 3,
-    entryFields: [
-      { key: 'dateOfIncident', label: 'Date of incident', type: 'date', required: true },
-      { key: 'time', label: 'Time', type: 'text' },
-      { key: 'itemIssued', label: 'Item issued (plaster, glove, bandage)', type: 'text' },
-      { key: 'nameOfInjured', label: 'Name and surname of injured', type: 'text', required: true },
-      { key: 'descriptionOfInjury', label: 'Short description of injury', type: 'textarea' },
-      { key: 'firstAider', label: 'Name and surname of first aider', type: 'text' },
-      { key: 'incidentRecordedNo', label: 'Incident recorded #', type: 'text' },
-      { key: 'breakTime', label: 'Break time', type: 'text' },
-      { key: 'lunchTime', label: 'Lunch time', type: 'text' },
-      { key: 'knockOffTime', label: 'Knock off time', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/plaster-dressing-inspection
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'plaster-dressing-inspection' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

@@ -26,36 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'grading-room-temp-humidity-log',
-    docCode: 'REC 7.9.3.2',
-    title: 'Grading Room Temp & Humidity Log',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Check', text: 'Check temperature & relative humidity on the dial inside the grading room. Temperature should be 25–32°C; any deviation must be reported.' }
-    ],
-    entryFields: [
-      { key: 'week', label: 'Week', type: 'text' },
-      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'room', label: 'Room', type: 'text', default: 'Grading Room' },
-      { key: 'startShiftTemp', label: 'Start shift — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
-      { key: 'startShiftHumidity', label: 'Start shift — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'duringProdTemp', label: 'During production — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
-      { key: 'duringProdHumidity', label: 'During production — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'endShiftTemp', label: 'End shift — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
-      { key: 'endShiftHumidity', label: 'End shift — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
-      { key: 'correctiveAction', label: 'Corrective action', type: 'textarea' }
-    ],
-    specFields: [
-      { key: 'roomTemp', label: 'Room temperature', unit: '°C', ...Thresholds.get('grading-room-temp-humidity-log', 'roomTemp') },
-      { key: 'roomHumidity', label: 'Relative humidity', unit: '% rH', ...Thresholds.get('grading-room-temp-humidity-log', 'roomHumidity') }
-    ],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/grading-room-temp-humidity-log
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'grading-room-temp-humidity-log' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

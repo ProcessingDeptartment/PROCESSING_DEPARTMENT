@@ -25,30 +25,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'daily-waste-removal',
-    docCode: 'REC 7.8.2',
-    title: 'Daily Waste Removal',
-    docRevisionStart: 3,
-    instructions: [
-      { label: 'Note', text: 'Once the waste is offloaded, the person at the dumpsite or area of dumping must sign the form.' }
-    ],
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'timeOfCollection', label: 'Time of waste collection', type: 'text' },
-      { key: 'areaRemovedFrom', label: 'Area where waste is removed from', type: 'text' },
-      { key: 'typeOfWaste', label: 'Type of waste removed (description)', type: 'text' },
-      { key: 'destinationDumpsite', label: 'Destination of waste (name of dumpsite)', type: 'text' },
-      { key: 'dumpsiteRepSignature', label: 'Signature of dumpsite representative', type: 'text' },
-      { key: 'vehicleRegNr', label: 'Vehicle registration nr.', type: 'text' },
-      { key: 'driver', label: 'Driver', type: 'text' },
-      { key: 'supervisor', label: 'Supervisor', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/daily-waste-removal
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'daily-waste-removal' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

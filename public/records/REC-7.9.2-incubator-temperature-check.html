@@ -26,29 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'incubator-temperature-check',
-    docCode: 'REC 7.9.2',
-    title: 'Daily Incubator Temperature Check',
-    docRevisionStart: 6,
-    instructions: [
-      { label: 'Target range', text: '36.1°C – 37.8°C, recorded at start of shift, lunch and end of shift.' }
-    ],
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
-    ],
-    specFields: [
-      { key: 'incubatorTemp', label: 'Incubator temperature', unit: '°C', ...Thresholds.get('incubator-temperature-check', 'incubatorTemp') }
-    ],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/incubator-temperature-check
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'incubator-temperature-check' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

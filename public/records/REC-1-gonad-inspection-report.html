@@ -28,44 +28,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'gonad-inspection-report',
-    batchField: 'jobNo',
-    docCode: 'REC 1',
-    title: 'Gonad Inspection Report',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Stage 0', text: 'Immature, sex indeterminate, digestive gland visible as grey/brown mass.' },
-      { label: 'Stage 1', text: 'Sex determinable, gonad small, colouration, tip pointed.' },
-      { label: 'Stage 2', text: 'Gonad large, tip rounded but not swollen.' },
-      { label: 'Stage 3', text: 'Gonad very large, tip rounded and swollen, bulging at shell edge.' }
-    ],
-
-    jobInfoGroup: 'Job info',
-    autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
-        fill: { processingFor: 'toBeProcessedFor', jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiIntakeWeight: 'intakeWeight' },
-        restrict: { sizeRange: 'sizeRange' } }
-    ],
-    entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
-      { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
-      { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'jiIntakeWeight', label: 'Intake weight (kg)', type: 'text', readOnly: true },
-      { group: 'Job info', key: 'processingFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'], matchJobRoute: 'jobNo' },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'stage', label: 'Stage', type: 'select', options: ['0', '1', '2', '3'] },
-      Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
-      { key: 'sex', label: 'Sex', type: 'select', options: ['Male', 'Female'] },
-      { key: 'damagesAfterGutting', label: 'Damages after gutting', type: 'text' },
-      { key: 'basketReceivingComments', label: 'Basket receiving — comments', type: 'textarea' },
-      { key: 'checkedBy', label: 'QC online — checked by', type: 'text', required: true }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/gonad-inspection-report
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'gonad-inspection-report' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>

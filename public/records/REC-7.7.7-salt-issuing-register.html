@@ -26,26 +26,9 @@
 <script src="../lib/signoff-block.js?v=2"></script>
 <script src="../lib/monitoring-log.js?v=27"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'salt-issuing-register',
-
-    batchField: 'batchNumber',
-    stage: 'salt issued',
-    docCode: 'REC 7.7.7',
-    title: 'Salt Issuing Register',
-    docRevisionStart: 1,
-    entryFields: [
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'quantityIssued', label: 'Quantity issued', type: 'text' },
-      { key: 'batchNumber', label: 'Batch number of salt', type: 'text' },
-      { key: 'issuedTo', label: 'Issued to', type: 'text', required: true },
-      { key: 'issuedBy', label: 'Issued by', type: 'text' }
-    ],
-    specFields: [],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/salt-issuing-register
+  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
+  MonitoringLog.init({ mount: '#mlRoot', recordKey: 'salt-issuing-register' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>
