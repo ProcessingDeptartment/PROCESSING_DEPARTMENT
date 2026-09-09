@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSMS</title>
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .container{ max-width:1100px; margin:0 auto; padding:20px; }
+  .section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#5c6771; font-weight:700; margin:0 0 10px; }
+  table.nav-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; }
+  table.nav-table th,table.nav-table td{ border-bottom:1px solid #e2e4e3; padding:14px 16px; text-align:left; font-size:12px; vertical-align:middle; }
+  table.nav-table th{ background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; padding:10px 16px; }
+  table.nav-table tbody tr:last-child td{ border-bottom:none; }
+  table.nav-table tbody tr{ cursor:pointer; transition:background .15s ease; }
+  table.nav-table tbody tr:hover{ background:#f9fafb; }
+  td.document{ white-space:nowrap; width:260px; border-left:4px solid #a9763a; }
+  td.document a{ font-size:14px; font-weight:600; color:#1d2b38; text-decoration:none; }
+  tbody tr:hover td.document a{ text-decoration:underline; }
+  td.description{ color:#5c6771; }
+  .back-link{ display:inline-block; margin-top:16px; color:#1d4ed8; text-decoration:none; font-size:0.9rem; }
+  .back-link:hover{ text-decoration:underline; }
+  @media (max-width:640px){
+    td.document{ width:auto; white-space:normal; }
+  }
+</style>
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+
+<div class="header">
+  <h1>FSMS</h1>
+  <p>Food Safety Management System &mdash; read-only reference documents</p>
+</div>
+
+<div class="container">
+
+  <h2 class="section-title">FSMS Documents</h2>
+  <table class="nav-table">
+    <thead>
+      <tr>
+        <th>Document</th>
+        <th>Contents</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr onclick="location.href='../sops/sop-list.html'">
+        <td class="document"><a href="../sops/sop-list.html">SOP List</a></td>
+        <td class="description">Standard Operating Procedures &mdash; read-only reference, not fill-in records</td>
+      </tr>
+      <tr onclick="location.href='../policies/policy-list.html'">
+        <td class="document"><a href="../policies/policy-list.html">Policy List</a></td>
+        <td class="description">Policies &mdash; read-only reference, not fill-in records</td>
+      </tr>
+      <tr onclick="location.href='../procedures/procedure-list.html'">
+        <td class="document"><a href="../procedures/procedure-list.html">Procedure List</a></td>
+        <td class="description">Procedures &mdash; read-only reference, not fill-in records</td>
+      </tr>
+      <tr onclick="location.href='../prps/prp-list.html'">
+        <td class="document"><a href="../prps/prp-list.html">PRP List</a></td>
+        <td class="description">Pre-Requisite Programmes &mdash; read-only reference, not fill-in records</td>
+      </tr>
+      <tr onclick="location.href='specifications.html'">
+        <td class="document"><a href="specifications.html">Specifications</a></td>
+        <td class="description">Product and raw material specifications &mdash; read-only reference, not fill-in records</td>
+      </tr>
+      <tr onclick="location.href='../records/master-record-index.html'">
+        <td class="document"><a href="../records/master-record-index.html">REC 01 Master Record Index</a></td>
+        <td class="description">The controlled document-control register: every record, its current revision, reason for change, distribution and issue date</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <a class="back-link" href="../index.html">&larr; Back to home</a>
+
+</div>
+
+</body>
+</html>
