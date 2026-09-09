@@ -142,9 +142,9 @@ function build(file, src) {
   (cfg.fields || []).forEach((f) => addField(f, null, null));
   if (cfg.roster && Array.isArray(cfg.roster.columns)) {
     const ri = def.sections.length;
-    def.sections.push({ title: cfg.roster.title ?? 'Roster', kind: 'roster', position: ri });
-    if (cfg.roster.title || Object.keys(cfg.roster).some((k) => k !== 'title' && k !== 'columns'))
-      def.rosterExtra = Object.fromEntries(Object.entries(cfg.roster).filter(([k]) => k !== 'columns'));
+    const rExtra = {};
+    for (const [k, v] of Object.entries(cfg.roster)) if (k !== 'title' && k !== 'columns' && !isFn(v)) rExtra[k] = v;
+    def.sections.push({ title: cfg.roster.title ?? 'Roster', kind: 'roster', position: ri, ...(Object.keys(rExtra).length ? { extraJson: rExtra } : {}) });
     cfg.roster.columns.forEach((c) => addField({ ...c, type: c.type || 'text' }, ri, '@roster'));
   }
 
@@ -163,12 +163,21 @@ function build(file, src) {
       def.autofills.push(row);
     }
   }
+  // batchField / extraBatchFields become per-field link markers -- the field key doubles as the
+  // link kind ('jobNo', 'agCode', 'exportBatch', ...). Primary is 'self'; extras default 'input'
+  // (same semantics as traceability.js). Kept in RecordDefinition too for the API to read directly.
   if (cfg.batchField) {
     const bf = def.fields.find((f) => f.key === cfg.batchField && f.parentFieldKey === null);
-    if (bf) { bf.linkField = bf.linkField || 'batch'; bf.linkRelation = bf.linkRelation || 'self'; }
+    if (bf) { bf.linkField = bf.linkField || cfg.batchField; bf.linkRelation = bf.linkRelation || 'self'; }
     def.primaryBatchField = cfg.batchField;
   }
-  if (Array.isArray(cfg.extraBatchFields)) def.extraBatchFields = cfg.extraBatchFields;
+  if (Array.isArray(cfg.extraBatchFields)) {
+    def.extraBatchFields = cfg.extraBatchFields;
+    for (const k of cfg.extraBatchFields) {
+      const xf = def.fields.find((f) => f.key === k);
+      if (xf) { xf.linkField = xf.linkField || k; xf.linkRelation = xf.linkRelation || 'input'; }
+    }
+  }
 
   if (CLIENT_HOOKS[def.recordKey]) def.clientHook = CLIENT_HOOKS[def.recordKey];
 

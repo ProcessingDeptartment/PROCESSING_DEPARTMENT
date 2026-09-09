@@ -45,7 +45,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -531,9 +531,6 @@
             "text": "The paper form has separate Day/Night tick columns for every day of the week. This digital version records one row per equipment item per day — use the day field to log which day/shift a cleaning was done, and add a row per occurrence."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Equipment / item cleaning log"
       }
     },
     {
@@ -724,9 +721,6 @@
             "text": "The reference cleaning schedule that REC 7.6.1 (Daily Cleaning Inspection), REC 7.6.1.1 (Deep Cleaning Record Weekly) and REC 7.6.2 (Weekly Cleaning Record) point to. Update this when the cleaning method, frequency or responsible party for any part/area changes."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Cleaning tasks"
       }
     },
     {
@@ -947,9 +941,6 @@
             "text": "The paper version used one spreadsheet tab per date with a customer — size-band matrix that varies in width each time — this roster form captures the same data (customer, size band, mortality count) as flexible rows instead."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Mortality counts"
       }
     },
     {
@@ -1181,9 +1172,6 @@
           "productionCode",
           "nrcsAgCode"
         ]
-      },
-      "rosterExtra": {
-        "title": "Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Precooking Check Sheet (7.2.3), Retort Inspection Reports (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming Inspection for Cans & Lids (7.8.6), Double Seam Inspection Report (7.2.12), Retort reports, Temperature probe reports, Production figure (cans produced)"
       }
     },
     {
@@ -1443,9 +1431,6 @@
           "jobNumberProductionDate",
           "nrcsAgCode"
         ]
-      },
-      "rosterExtra": {
-        "title": "Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Dry Cooking (7.4.0), Dry Monitoring (7.4.2), Grading/Packing/Boxing of Dried Abalone (7.4.3)"
       }
     },
     {
@@ -1700,9 +1685,6 @@
           "productionCode",
           "nrcsAgCode"
         ]
-      },
-      "rosterExtra": {
-        "title": "Records included — Rework Log (7.2.13), Retort Inspection Reports (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming Inspection for Cans & Lids (7.8.6), Double Seam Inspection Report (7.2.12), Retort reports, Production figure (cans produced)"
       }
     },
     {
@@ -1945,7 +1927,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "agCode",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -2012,7 +1994,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -2518,9 +2500,6 @@
           "date",
           "trainer"
         ]
-      },
-      "rosterExtra": {
-        "title": "Attendees"
       }
     },
     {
@@ -2550,7 +2529,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null,
           "extraJson": {
@@ -3146,7 +3125,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -3511,7 +3490,14 @@
         {
           "title": "Baskets received",
           "kind": "roster",
-          "position": 1
+          "position": 1,
+          "extraJson": {
+            "totalsRow": [
+              "wholeWeight",
+              "farmCount",
+              "mortalityCount"
+            ]
+          }
         }
       ],
       "fields": [
@@ -3530,7 +3516,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -3744,14 +3730,6 @@
           "intakeWeight"
         ]
       },
-      "rosterExtra": {
-        "title": "Baskets received",
-        "totalsRow": [
-          "wholeWeight",
-          "farmCount",
-          "mortalityCount"
-        ]
-      },
       "primaryBatchField": "jobNo"
     },
     {
@@ -3788,7 +3766,10 @@
         {
           "title": "Salting batches",
           "kind": "roster",
-          "position": 2
+          "position": 2,
+          "extraJson": {
+            "batchIdColumn": "batchId"
+          }
         }
       ],
       "fields": [
@@ -3807,7 +3788,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -4310,10 +4291,6 @@
           "processingFor"
         ]
       },
-      "rosterExtra": {
-        "title": "Salting batches",
-        "batchIdColumn": "batchId"
-      },
       "primaryBatchField": "jobNo"
     },
     {
@@ -4384,7 +4361,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -4744,8 +4721,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "saltBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -4782,8 +4759,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "bakingSodaBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -4922,7 +4899,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -5274,7 +5251,12 @@
         {
           "title": "OOSW weights",
           "kind": "roster",
-          "position": 3
+          "position": 3,
+          "extraJson": {
+            "totalsRow": [
+              "weight"
+            ]
+          }
         }
       ],
       "fields": [
@@ -5293,7 +5275,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -5555,12 +5537,6 @@
           "sizeRange"
         ]
       },
-      "rosterExtra": {
-        "title": "OOSW weights",
-        "totalsRow": [
-          "weight"
-        ]
-      },
       "primaryBatchField": "jobNo"
     },
     {
@@ -5590,7 +5566,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -6887,7 +6863,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -7204,7 +7180,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -7845,7 +7821,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -8777,7 +8753,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -9492,7 +9468,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -9966,7 +9942,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -10643,7 +10619,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -11208,7 +11184,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -11621,7 +11597,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -12058,7 +12034,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -12885,7 +12861,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -13018,8 +12994,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "chickenFlavourBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13056,8 +13032,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "vegetableBaseBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13094,8 +13070,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "gelatineBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13132,8 +13108,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "xanthanGumBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13170,8 +13146,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "maltSugarBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13208,8 +13184,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "tapiocaStarchBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13246,8 +13222,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "brownSugarBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13284,8 +13260,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "sherloneSauceBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13431,7 +13407,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -13545,8 +13521,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "brothBatchDate",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13678,8 +13654,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "chickenLiquidBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13716,8 +13692,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "smokeyFlavourBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13735,8 +13711,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "cvgMixBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13811,8 +13787,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "mdMixBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13830,8 +13806,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "tsMixBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -13849,8 +13825,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "soMixBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         }
       ],
@@ -14366,7 +14342,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -14864,7 +14840,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -15473,7 +15449,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -16130,7 +16106,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -16367,9 +16343,6 @@
           "dryYield"
         ]
       },
-      "rosterExtra": {
-        "title": "Crates"
-      },
       "primaryBatchField": "jobNumber"
     },
     {
@@ -16399,7 +16372,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -16846,7 +16819,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -17560,9 +17533,6 @@
           "yield"
         ]
       },
-      "rosterExtra": {
-        "title": "Collection bins"
-      },
       "primaryBatchField": "jobNumber"
     },
     {
@@ -17625,7 +17595,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -18187,9 +18157,6 @@
           "yield"
         ]
       },
-      "rosterExtra": {
-        "title": "Collection bins"
-      },
       "primaryBatchField": "jobNumber"
     },
     {
@@ -18242,7 +18209,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -18718,7 +18685,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -19633,9 +19600,6 @@
           "nettWeight"
         ]
       },
-      "rosterExtra": {
-        "title": "Boxes"
-      },
       "primaryBatchField": "agCode"
     },
     {
@@ -19780,7 +19744,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -21179,9 +21143,6 @@
             "text": "On the day of packing (or the shift before), all bags allocated for the live pack must be checked by a team of 2 from live sorting and 2 from processing."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Bags checked"
       }
     },
     {
@@ -21472,9 +21433,6 @@
           "date",
           "shift"
         ]
-      },
-      "rosterExtra": {
-        "title": "Bags graded"
       }
     },
     {
@@ -21886,9 +21844,6 @@
           "date",
           "shift"
         ]
-      },
-      "rosterExtra": {
-        "title": "Checklist items (one row per area/equipment item checked)"
       }
     },
     {
@@ -22117,9 +22072,6 @@
           "date",
           "shift"
         ]
-      },
-      "rosterExtra": {
-        "title": "Checklist items (one row per area/equipment item checked)"
       }
     },
     {
@@ -22348,9 +22300,6 @@
           "date",
           "shift"
         ]
-      },
-      "rosterExtra": {
-        "title": "Checklist items (one row per area/equipment item checked)"
       }
     },
     {
@@ -22542,9 +22491,6 @@
             "text": "Perform cleaning per the master cleaning schedule. Food contact surfaces cleaned at start of shift, between jobs and at end of shift. Sanitise work surfaces at end of shift. Raise a corrective action immediately on visual inspection failure at end of shift. Open a CAR for areas non-conforming more than once a week. Tick C if cleaning is done, NC if not."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Checklist items — covers Entrance to Shucking, Shucking, Sorting, Live Holding, Live Packing/Packaging, Dry Grading/Raw Material store, Canteen/Change rooms/Toilets/Chemical room, etc."
       }
     },
     {
@@ -22752,9 +22698,6 @@
             "text": "Perform cleaning per the master cleaning schedule. Raise a corrective action immediately on visual inspection failure at end of shift. Open a CAR for areas non-conforming more than once a week. Tick C if cleaning is done, NC if not."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Checklist items — covers Entrance, Dry Cooking, Dry Entrance, Dry Storage & Passage, Shucking, Scrubbing, Washing, Canning areas, etc."
       }
     },
     {
@@ -22906,9 +22849,6 @@
           "weekOf",
           "checkedBy"
         ]
-      },
-      "rosterExtra": {
-        "title": "Checklist items — covers floors/doors/walls, humidifiers, drains, ceilings, tanks, chillers, seamer, retort, motors, roof, outside areas, etc."
       }
     },
     {
@@ -23295,9 +23235,6 @@
           "date",
           "completedBy"
         ]
-      },
-      "rosterExtra": {
-        "title": "Areas inspected — Factory surroundings, Staff Canteen/Change rooms/Toilets, Chemical & PPE storage, Shucking/Sorting/Live Holding/Live Packing areas, Raw material & packaging store, etc."
       }
     },
     {
@@ -23536,9 +23473,6 @@
           "inspectionDate",
           "completedBy"
         ]
-      },
-      "rosterExtra": {
-        "title": "Non-conformances by area"
       }
     },
     {
@@ -23606,7 +23540,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "batchNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -24329,9 +24263,6 @@
             "text": "Weekly inspections are done to determine the presence of pests and signs of activity. If any presence/activity is noted, complete the Pest Sightings Log and inform the pest control company. Bird droppings or pests present inside the facility must be recorded on a CAR."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Areas checked — Raw materials, Live box prep/entrance/packing/holding, Sorting, Shucking, Entrance, Outside building, Bait stations, Canteen, Toilets/Change rooms, Dry cooking/hanging/stringing, Canning, Office, NRCS room, etc. Key: blank = inspected no activity, A = activity noted."
       }
     },
     {
@@ -24621,9 +24552,6 @@
             "text": "Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Non-compliance observed should be recorded and reported to supervisors."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Staff members — day shift"
       }
     },
     {
@@ -24942,9 +24870,6 @@
             "text": "Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Key: âÅ““ = Compliance, x = Non-compliance, A = Absent."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Staff members — one row per staff member per day (Mon-Fri)"
       }
     },
     {
@@ -25546,9 +25471,6 @@
             "text": "Inspect all equipment and devices daily. âÅ““ = Good condition/working, X = Faulty/damaged."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Equipment / device checks — covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters"
       }
     },
     {
@@ -25760,9 +25682,6 @@
             "text": "Every morning before starting up, check light fittings, windows, temperature dial displays, extractor fan grids, wall clocks, computer screens and plastic crates. Check equipment/machinery (rollers, conveyers, racking, trolleys, tanks) is in good repair. Detail any non-conformance in Comments."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Areas checked — Sorting, Live Holding, Live Packing, Receiving, Shucking, Salting & Washing/Metal grid, Grading, Pre-cooking, Filling & Seam, Retort, Washing bay, Can Storage, Cold rooms, Dry room, Dry cooking room, Dry grading room"
       }
     },
     {
@@ -26418,9 +26337,6 @@
           "date",
           "areaOfBreakage"
         ]
-      },
-      "rosterExtra": {
-        "title": "Raw materials / product contaminated or potentially contaminated"
       }
     },
     {
@@ -26683,9 +26599,6 @@
             "text": "Knives remove gut & beak; scrapers remove flesh from shell (shucking); scrubbing brushes scrub abalone; needles for stringing dry, scissors for destringing dry. Record quantity issued. Condition: âÅ““ = good condition, X = faulty/damaged. Faulty/damaged utensils returned to supervisor and discarded, with type & number recorded. Utensils go into Dynacide solution when not in use."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Utensils issued — Scrapers, Scrub brushes, Needles, Scissors, Holding cups, String roll"
       }
     },
     {
@@ -26948,9 +26861,6 @@
             "text": "âÅ““ = Compliance, x = Non-compliance."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Staff members — one row per staff member per day (Mon-Sat)"
       }
     },
     {
@@ -27202,9 +27112,6 @@
             "text": "âÅ““ = Compliance, x = Non-compliance, N/A = Not issued."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Staff members — one row per staff member per day (Mon-Sat)"
       }
     },
     {
@@ -27448,9 +27355,6 @@
             "text": "âÅ““ = Compliance, x = Non-compliance."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Staff members — one row per staff member per day (Mon-Sat)"
       }
     },
     {
@@ -28056,7 +27960,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "batchNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -28136,7 +28040,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -28482,7 +28386,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -29514,9 +29418,6 @@
             "text": "Conduct inspections at start of shift, checking that all listed areas are clean and in good, functioning condition, and that equipment/machinery is in a good state of repair and intact. Detail any non-conformance in the Comments column. Key: Y = Inspected and in order, N = Inspected but not conforming."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Equipment checks — covers Conveyors/Seamer, Washing machines/tumblers, Retort 1&2, Steamer, Boiler room, Can Drier, tanks (sea/fresh water), Compressor, Cooling system, Effluent water, Live area seawater tank, Sewage, etc."
       }
     },
     {
@@ -29703,9 +29604,6 @@
             "text": "Drain and clean the filters."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Daily Ozone and compressor checklist"
       }
     },
     {
@@ -30256,7 +30154,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -31205,7 +31103,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -33082,7 +32980,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -33516,7 +33414,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNumber",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -34299,7 +34197,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -35914,7 +35812,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "productionCode",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -36749,9 +36647,6 @@
             "text": "Mock recall to be completed within 72 hours due to time difference to country of export."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Attendees"
       }
     },
     {
@@ -37115,7 +37010,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -37289,9 +37184,6 @@
           }
         ]
       },
-      "rosterExtra": {
-        "title": "Records — same production-chain coverage as the Canned Abalone checklist (REC 8.1.6), specific to the braised sauce line"
-      },
       "primaryBatchField": "jobNo"
     },
     {
@@ -37332,7 +37224,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -37506,9 +37398,6 @@
           }
         ]
       },
-      "rosterExtra": {
-        "title": "Records — covers Stock on hold, Customer letter response, Recall communication, Shipment docs, Customer invoice, Abalone Receiving (7.1.2), Shucking & Gutting (7.1.1), Bleeding & Salting (7.1.3), Washing (7.1.4), OOSW (7.1.5), Chiller Monitoring (7.9.1), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Pre-cook Sheet (7.2.3), Retort Inspection (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming records & COA (7.8.6/7.8.7), Double Seam (7.2.12), Retort control sheet, Scale verification (7.10.5), Cans Printing & Filling (7.2.6), NRCS Clearance, QC Report, Dispatch (7.8.8), Glass & Plastic (7.7.2), Staff Hygiene (7.6.7), Utensil Record (7.7.4), Daily/Weekly Cleaning Inspection (7.6.1/7.6.2)"
-      },
       "primaryBatchField": "jobNo"
     },
     {
@@ -37549,7 +37438,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -37723,9 +37612,6 @@
           }
         ]
       },
-      "rosterExtra": {
-        "title": "Records — same production-chain coverage as the Canned Abalone checklist (REC 8.1.6), specific to the minced line"
-      },
       "primaryBatchField": "jobNo"
     },
     {
@@ -37766,7 +37652,7 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": "batch",
+          "linkField": "jobNo",
           "linkRelation": "self",
           "validateJson": null
         },
@@ -37940,9 +37826,6 @@
           }
         ]
       },
-      "rosterExtra": {
-        "title": "Records — covers Dry Cooking (7.4.0), Drying Process (7.4.1), Dry Monitoring (7.4.2), Grading Production Log (7.4.3.1/7.4.3.2), Grading & Boxing Traceability (7.4.4), Boxing & Labelling (7.4.5), Dry Stock Control (7.4.6), Labelling of Dry Boxes (7.4.7), Dry Labelling List (7.4.8), Dry Stock Transfers (7.4.9), Dried Abalone Transfer (7.4.10), incoming/COA and cleaning/hygiene records"
-      },
       "primaryBatchField": "jobNo"
     },
     {
@@ -38099,9 +37982,6 @@
             "text": "Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement)."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Records — covers Live Production Pack (7.5.1), Live Pack Checklist / Bag Checks (7.5.2/7.5.3), IDN/Customer Order, NRCS Health Certificate, and related cleaning/hygiene records"
       }
     },
     {
@@ -40345,9 +40225,6 @@
           "buildingArea",
           "typeOfDrill"
         ]
-      },
-      "rosterExtra": {
-        "title": "Participants"
       }
     },
     {
@@ -41293,9 +41170,6 @@
             "text": "Attendance is a roster (name + present) rather than a fixed name list, so it stays accurate as staff changes."
           }
         ]
-      },
-      "rosterExtra": {
-        "title": "Attendance"
       }
     },
     {

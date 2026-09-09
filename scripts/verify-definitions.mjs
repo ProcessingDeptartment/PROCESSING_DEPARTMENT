@@ -52,7 +52,11 @@ function rebuild(def) {
   const rosterSec = def.sections.find((s) => s.kind === 'roster');
   if (rosterSec) {
     const ri = def.sections.indexOf(rosterSec);
-    cfg.roster = { ...(def.rosterExtra || {}), columns: def.fields.filter((f) => f.sectionIndex === ri).sort((a, b) => a.position - b.position).map(fieldOut) };
+    cfg.roster = {
+      ...(rosterSec.title != null ? { title: rosterSec.title } : {}),
+      ...(rosterSec.extraJson || {}),
+      columns: def.fields.filter((f) => f.sectionIndex === ri).sort((a, b) => a.position - b.position).map(fieldOut),
+    };
   }
   const fieldSecs = def.sections.filter((s) => s.kind === 'fields');
   if (fieldSecs.length) {
