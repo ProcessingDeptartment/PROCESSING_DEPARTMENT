@@ -81,7 +81,7 @@
     if (!raw) return null;
     var out = { basketNr: '', farmCount: '', sizeRange: '' };
 
-    var sizeM = raw.match(/(\d{1,3})\s*[-ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“]\s*(\d{1,3})\s*g/i) || raw.match(/(\d{3})\s*g\s*\+/);
+    var sizeM = raw.match(/(\d{1,3})\s*[-–—]\s*(\d{1,3})\s*g/i) || raw.match(/(\d{3})\s*g\s*\+/);
     if (sizeM) out.sizeRange = convertSize(parseInt(sizeM[1], 10));
 
     var bM = raw.match(/(?:basket|bkt)\D*(\d+)/i);
@@ -189,7 +189,7 @@
 
   function sizeOptionsHtml() {
     var list = (window.Lookups && window.Lookups.get('sizeRanges')) || [];
-    return '<option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>' + list.map(function (v) {
+    return '<option value="">—</option>' + list.map(function (v) {
       return '<option value="' + v + '">' + v + '</option>';
     }).join('');
   }
@@ -325,5 +325,6 @@
   })();
 })();
 </script>
+<script src="../lib/record-shell.js?v=5"></script>
 </body>
 </html>

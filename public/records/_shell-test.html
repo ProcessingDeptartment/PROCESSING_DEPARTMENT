@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shell test (throwaway)</title>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  /* page-local only: reset the browser default margin so the shell fills the frame */
+  html, body { margin: 0; }
+  /* tiny helper just for this demo's two-column single-submission grid */
+  .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .demo-grid .rt-field { display: flex; flex-direction: column; gap: 4px; }
+  .demo-grid label { font-size: 12px; font-weight: 600; color: var(--rt-slate); }
+  .demo-grid input, .demo-grid select {
+    min-height: var(--rt-tap); padding: 10px 12px; font: inherit; font-size: 14px;
+    border: 1px solid var(--rt-border); border-radius: var(--rt-radius-sm);
+  }
+  .demo-switch { display: flex; gap: 8px; }
+  .demo-switch button { min-height: 36px; padding: 6px 14px; font: inherit; font-size: 12px;
+    border: 1px solid var(--rt-border); background: #fff; border-radius: 4px; cursor: pointer; }
+  .demo-switch button.on { background: var(--rt-navy-primary); color: #fff; border-color: var(--rt-navy-primary); }
+</style>
+</head>
+<body>
+<div class="rt-shell">
+
+  <!-- TOP BAR -->
+  <header class="rt-topbar">
+    <div class="rt-logo">AB</div>
+    <span class="rt-doc-code">REC 7.4.2</span>
+    <span class="rt-title">Shell Test Record</span>
+    <span class="rt-rev">Rev 3 &middot; 2026-01-14</span>
+    <span class="rt-spacer"></span>
+    <div class="rt-actions">
+      <button type="button">Refresh</button>
+      <button type="button">CSV</button>
+      <button type="button">Print</button>
+    </div>
+  </header>
+
+  <div class="rt-body">
+
+    <!-- SIDEBAR (placeholder items; real nav targets settled at step 3 review) -->
+    <nav class="rt-sidebar">
+      <div class="rt-nav-head">Navigation</div>
+      <a href="../records/record-list.html">&larr; Record List</a>
+      <a href="../index.html">Home</a>
+      <a href="../pages/dashboard.html">Dashboard</a>
+      <a href="../pages/job-status.html">Job Status Updates</a>
+      <a href="../records/batch-trace.html">Batch Traceability</a>
+      <a href="../pages/submissions-log.html">Submissions &amp; Verifications Log</a>
+      <a href="../pages/fsms.html">FSMS</a>
+      <a href="../pages/handovers.html">Handovers</a>
+      <a href="../records/quick-abalone-receiving.html">Quick Abalone Receiving</a>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="rt-content">
+
+      <div class="demo-switch no-print">
+        <button type="button" class="on" onclick="pick('rep')">Repeating-row view</button>
+        <button type="button" onclick="pick('single')">Single-submission view</button>
+      </div>
+
+      <!-- JOB / RECORD HEADER INFO BLOCK -->
+      <section class="rt-card rt-card--accent">
+        <div class="rt-jobhead">
+          <div>
+            <div class="rt-field-label">Record ID</div>
+            <div class="rt-field-value">STR-0521</div>
+          </div>
+          <div>
+            <div class="rt-field-label">Date &amp; Time</div>
+            <div class="rt-field-value">9 Sep 2026 &middot; 14:32</div>
+          </div>
+          <div>
+            <div class="rt-field-label">Logged By</div>
+            <div class="rt-field-value">Sipho T</div>
+          </div>
+          <div>
+            <div class="rt-field-label">Status</div>
+            <div class="rt-field-value"><span class="rt-status is-ok">On target</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ REPEATING-ROW PATTERN ============ -->
+      <div id="view-rep">
+        <section class="rt-card" style="margin-bottom:16px;">
+          <div class="rt-card__head">Add entry</div>
+          <div class="rt-addrow">
+            <div class="rt-field"><label>Basket ID</label><input type="text" placeholder="Basket ID"></div>
+            <div class="rt-field" style="flex:2 1 220px;"><label>Notes</label><input type="text" placeholder="Notes (optional)"></div>
+            <div class="rt-field"><label>Weight (kg)</label><input type="number" inputmode="decimal" placeholder="0.00"></div>
+            <button class="rt-btn rt-btn--primary" type="button">Add</button>
+          </div>
+        </section>
+
+        <section class="rt-card rt-tally" style="margin-bottom:16px;">
+          <div><div class="rt-stat-label">Entries</div><div class="rt-stat-value is-count">12</div></div>
+          <div><div class="rt-stat-label">Total weight</div><div class="rt-stat-value">287.4 kg</div></div>
+          <div><div class="rt-stat-label">Average</div><div class="rt-stat-value is-avg">23.95 kg</div></div>
+        </section>
+
+        <section class="rt-card rt-card--flush" style="margin-bottom:16px;">
+          <table class="rt-table">
+            <thead><tr><th>ID</th><th>Notes</th><th class="rt-num">Weight</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>BAS-1204</td><td>Fresh delivery</td><td class="rt-num">24.1 kg</td><td><button class="rt-row-del" type="button" aria-label="Remove">&#10005;</button></td></tr>
+              <tr><td>BAS-1205</td><td>&mdash;</td><td class="rt-num">23.8 kg</td><td><button class="rt-row-del" type="button" aria-label="Remove">&#10005;</button></td></tr>
+              <tr><td>BAS-1206</td><td>Slight discolour</td><td class="rt-num">23.5 kg</td><td><button class="rt-row-del" type="button" aria-label="Remove">&#10005;</button></td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- ============ SINGLE-SUBMISSION PATTERN ============ -->
+      <div id="view-single" hidden>
+        <section class="rt-card">
+          <div class="rt-card__head">New entry</div>
+          <div class="demo-grid">
+            <div class="rt-field"><label>Date</label><input type="date"></div>
+            <div class="rt-field"><label>Batch no.</label><input type="text"></div>
+            <div class="rt-field"><label>Salt %</label><input type="number"></div>
+            <div class="rt-field"><label>Tumble time (min)</label><input type="number"></div>
+            <div class="rt-field"><label>Temperature (&deg;C)</label><input type="number"></div>
+            <div class="rt-field"><label>Result</label>
+              <select><option>Pass</option><option>Fail</option></select></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ENTRIES / VERIFICATION DISCLOSURES -->
+      <details class="rt-card rt-disclosure">
+        <summary>Entries</summary>
+        <p class="rt-empty">Previously submitted entries render here as a read-only table.</p>
+      </details>
+
+      <details class="rt-card rt-disclosure">
+        <summary>Verification</summary>
+        <p class="rt-empty">Verification panel &mdash; unchanged behaviour, restyled as a card.</p>
+      </details>
+
+      <!-- ACTION BAR -->
+      <div class="rt-actionbar">
+        <button class="rt-btn rt-btn--outline" type="button">Clear</button>
+        <button class="rt-btn rt-btn--outline" type="button">Save draft</button>
+        <button class="rt-btn rt-btn--primary" type="button">Submit</button>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  function pick(which) {
+    document.getElementById('view-rep').hidden = which !== 'rep';
+    document.getElementById('view-single').hidden = which !== 'single';
+    document.querySelectorAll('.demo-switch button').forEach(function (b, i) {
+      b.classList.toggle('on', (which === 'rep') === (i === 0));
+    });
+  }
+</script>
+</body>
+</html>

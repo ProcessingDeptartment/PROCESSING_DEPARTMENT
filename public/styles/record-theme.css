@@ -1,3 +1,849 @@
+/* ========================================================================
+   TABLET RECORD-ENTRY SHELL  (added 2026-09-09)
+
+   Scope: the individual record-entry pages reached from Record List only
+   (Mortalities Log and the ~130 sibling records). NOT Home, NOT the Record
+   List index, NOT Job Status / Traceability / Submissions / FSMS / Handovers
+   / login -- several of which also load THIS stylesheet (job-status.html
+   does). Because of that shared load, every rule below is nested under
+   `.rt-shell`. A page opts in by wrapping its content in
+   `<div class="rt-shell"> ... </div>`; a page that never adds that class is
+   visually untouched by this whole block. Do NOT add bare element, `.panel`,
+   `.field`, `.doc-line`, `input` or `button` selectors here.
+
+   Tokens are declared on :root (inert -- a CSS variable changes nothing
+   until something references it) so the shell markup can use them and so a
+   future engine hook can read them; names match Section 3 of the redesign
+   brief exactly.
+   ======================================================================== */
+:root {
+  /* -- brief Section 3 palette (verbatim) -- */
+  --rt-navy-primary:   #1B2330;   /* top bar, active sidebar item */
+  --rt-navy-secondary: #1D2B38;   /* sidebar background */
+  --rt-slate:          #5C6771;   /* secondary text, inactive nav */
+  --rt-border:         #E2E4E3;   /* dividers, table borders */
+  --rt-bg:             #F4F1E8;   /* page background, zebra stripe */
+  --rt-gold:           #A9763A;   /* primary buttons, active accent */
+  --rt-gold-hover:     #C0863F;
+  --rt-green:          #15803D;   /* success / on-target */
+  --rt-purple:         #7C3AED;   /* category / tag accent */
+  --rt-blue:           #1D4ED8;   /* info / links / averages */
+  --rt-white:          #FFFFFF;
+  --rt-amber:          #B45309;   /* in-progress / warn status */
+  --rt-fail:           #A3352D;   /* deviation / fail status */
+  --rt-fail-bg:        #FBE8E6;
+
+  --rt-radius:         10px;
+  --rt-radius-sm:      8px;
+  --rt-radius-btn:     12px;
+  --rt-tap:            44px;      /* min interactive height */
+  --rt-tap-sm:        36px;      /* inline icon buttons only */
+  --rt-sidebar-w:      200px;
+  --rt-shadow:         0 1px 2px rgba(0,0,0,.05);
+  --rt-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --rt-tabbar-h:       60px;      /* height reserved when sidebar collapses */
+  --rt-topbar-h:       57px;      /* sticky-offset for the sidebar */
+}
+
+/* ---- shell frame -------------------------------------------------------- */
+.rt-shell {
+  font-family: var(--rt-font);
+  color: var(--rt-navy-primary);
+  background: var(--rt-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+/* keep horizontal overflow contained WITHOUT making .rt-shell a scroll
+   container -- that would break position:sticky on the top bar / sidebar */
+body.rt-has-shell { overflow-x: hidden; }
+.rt-card--flush { max-width: 100%; overflow-x: auto; }
+.rt-shell *,
+.rt-shell *::before,
+.rt-shell *::after { box-sizing: border-box; }
+
+/* top bar -- doc code + title + rev, plus optional action buttons.
+   Sticky so the record title + toolbar stay visible down a long form. */
+.rt-topbar {
+  background: var(--rt-navy-primary);
+  color: var(--rt-white);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.rt-topbar .rt-logo {
+  width: 32px; height: 32px; flex-shrink: 0;
+  background: var(--rt-gold);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: var(--rt-white);
+}
+.rt-topbar .rt-doc-code {
+  font-family: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  font-size: 12px; font-weight: 600; letter-spacing: .04em;
+  opacity: .75;
+}
+.rt-topbar .rt-title { font-size: 16px; font-weight: 700; }
+.rt-topbar .rt-rev {
+  font-family: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  font-size: 11px; opacity: .7;
+}
+.rt-topbar .rt-spacer { flex: 1; }
+.rt-topbar .rt-actions { display: flex; gap: 8px; }
+.rt-topbar .rt-actions button {
+  min-height: var(--rt-tap-sm);
+  padding: 6px 12px;
+  font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--rt-white);
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: var(--rt-radius-sm);
+  cursor: pointer;
+}
+.rt-topbar .rt-actions button:hover { background: rgba(255,255,255,.22); }
+
+.rt-topbar .rt-title {
+  font-size: 16px; font-weight: 700;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* body = sidebar + content. Document is the scroller; the sidebar sticks so
+   the nav (esp. "← Record List", the way back) is always reachable. */
+.rt-body { display: flex; flex: 1; min-width: 0; align-items: flex-start; }
+
+.rt-sidebar {
+  background: var(--rt-navy-secondary);
+  width: var(--rt-sidebar-w);
+  flex-shrink: 0;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: var(--rt-topbar-h);
+  height: calc(100vh - var(--rt-topbar-h));
+  overflow-y: auto;
+}
+.rt-sidebar .rt-nav-head {
+  padding: 12px 16px;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--rt-white);
+  opacity: .6;
+}
+.rt-sidebar a {
+  padding: 12px 16px;
+  min-height: var(--rt-tap);
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px;
+  color: var(--rt-slate);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+.rt-sidebar a:hover { color: var(--rt-white); }
+.rt-sidebar a.is-active {
+  color: var(--rt-white);
+  background: var(--rt-navy-primary);
+  border-left-color: var(--rt-gold);
+}
+
+.rt-content {
+  flex: 1;
+  min-width: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.rt-content > * { min-width: 0; }
+
+/* ---- cards ------------------------------------------------------------- */
+.rt-card {
+  background: var(--rt-white);
+  border-radius: var(--rt-radius);
+  box-shadow: var(--rt-shadow);
+  padding: 16px;
+}
+.rt-card--accent   { border-left: 4px solid var(--rt-purple); }
+.rt-card--flush    { padding: 0; overflow: hidden; }
+.rt-card__head {
+  font-size: 15px; font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* job / record header info block */
+.rt-jobhead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 24px;
+}
+.rt-jobhead .rt-field-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--rt-slate);
+}
+.rt-jobhead .rt-field-value {
+  font-size: 16px; font-weight: 700;
+  margin-top: 4px;
+  color: var(--rt-navy-primary);
+}
+
+/* ---- running-tally stat row (repeating-row records) ------------------- */
+.rt-tally {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  border-top: 3px solid var(--rt-green);
+}
+.rt-tally .rt-stat-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--rt-slate);
+}
+.rt-tally .rt-stat-value {
+  font-size: 30px; font-weight: 700;
+  margin-top: 6px;
+  color: var(--rt-navy-primary);
+}
+.rt-tally .rt-stat-value.is-count { color: var(--rt-green); }
+.rt-tally .rt-stat-value.is-avg   { color: var(--rt-blue); }
+
+/* ---- inline add-row bar --------------------------------------------------- */
+.rt-addrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.rt-addrow .rt-field { flex: 1 1 140px; display: flex; flex-direction: column; gap: 4px; }
+.rt-addrow .rt-field > label {
+  font-size: 12px; font-weight: 600; color: var(--rt-slate);
+}
+.rt-addrow input,
+.rt-addrow select {
+  min-height: var(--rt-tap);
+  padding: 10px 12px;
+  font: inherit; font-size: 14px;
+  border: 1px solid var(--rt-border);
+  border-radius: var(--rt-radius-sm);
+  background: var(--rt-white);
+}
+.rt-addrow input:focus,
+.rt-addrow select:focus {
+  outline: 2px solid var(--rt-navy-primary);
+  outline-offset: 1px;
+}
+
+/* ---- entries table ---------------------------------------------------- */
+.rt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rt-table thead th {
+  text-align: left;
+  padding: 12px 16px;
+  background: var(--rt-bg);
+  border-bottom: 1px solid var(--rt-border);
+  font-size: 11px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--rt-slate);
+}
+.rt-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rt-border);
+  vertical-align: middle;
+}
+.rt-table tbody tr:nth-child(even) { background: var(--rt-bg); }
+.rt-table .rt-num { text-align: right; font-variant-numeric: tabular-nums; }
+.rt-table .rt-row-del {
+  min-height: var(--rt-tap-sm); min-width: var(--rt-tap-sm);
+  padding: 4px 8px;
+  font: inherit; font-size: 12px;
+  color: var(--rt-navy-primary);
+  background: var(--rt-border);
+  border: none; border-radius: 3px;
+  cursor: pointer;
+}
+.rt-table .rt-row-del:hover { background: #d3d6d4; }
+.rt-empty { padding: 16px; color: var(--rt-slate); font-size: 13px; }
+
+/* ---- status dots ---------------------------------------------------------- */
+.rt-status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.rt-status::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--rt-slate);
+}
+.rt-status.is-ok::before        { background: var(--rt-green); }
+.rt-status.is-ok                { color: var(--rt-green); }
+.rt-status.is-progress::before  { background: var(--rt-amber); }
+.rt-status.is-progress          { color: var(--rt-amber); }
+.rt-status.is-queued::before    { background: var(--rt-purple); }
+.rt-status.is-queued            { color: var(--rt-purple); }
+.rt-status.is-fail::before      { background: var(--rt-fail, #a3352d); }
+.rt-status.is-fail              { color: var(--rt-fail, #a3352d); }
+
+/* ---- buttons -------------------------------------------------------------- */
+.rt-btn {
+  min-height: var(--rt-tap);
+  padding: 12px 22px;
+  font: inherit; font-size: 14px; font-weight: 600;
+  border-radius: var(--rt-radius-btn);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .15s ease, box-shadow .15s ease, transform .05s ease;
+}
+.rt-btn:active { transform: translateY(1px); }
+.rt-btn--primary { background: var(--rt-gold); color: var(--rt-white); }
+.rt-btn--primary:hover { background: var(--rt-gold-hover); }
+.rt-btn--outline {
+  background: var(--rt-white);
+  color: var(--rt-navy-primary);
+  border-color: var(--rt-border);
+}
+.rt-btn--outline:hover { background: var(--rt-bg); }
+.rt-actionbar { display: flex; flex-wrap: wrap; gap: 12px; padding-top: 4px; }
+.rt-actionbar .rt-btn { flex: 1 1 160px; }
+
+/* ---- collapsible panels (Entries / Verification) --------------------- */
+.rt-disclosure > summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+  min-height: var(--rt-tap);
+}
+.rt-disclosure > summary::-webkit-details-marker { display: none; }
+.rt-disclosure > summary::before {
+  content: "\25B8"; color: var(--rt-slate);
+}
+.rt-disclosure[open] > summary::before { content: "\25BE"; }
+.rt-disclosure > summary + * { margin-top: 12px; }
+
+/* ---- responsive: sidebar -> bottom tab bar (provisional 800px) ------- */
+@media (max-width: 800px) {
+  .rt-body { flex-direction: column; overflow: visible; }
+  .rt-content { padding: 16px; padding-bottom: calc(var(--rt-tabbar-h) + 16px); }
+  .rt-sidebar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0; top: auto;
+    width: auto;
+    height: var(--rt-tabbar-h);
+    flex-direction: row;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0;
+    border-top: 1px solid rgba(255,255,255,.12);
+    z-index: 20;
+  }
+  .rt-sidebar .rt-nav-head { display: none; }
+  .rt-sidebar a {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    border-left: none;
+    border-top: 3px solid transparent;
+    font-size: 11px;
+    text-align: center;
+    padding: 6px 4px;
+  }
+  .rt-sidebar a.is-active {
+    border-left: none;
+    border-top-color: var(--rt-gold);
+  }
+  .rt-tally .rt-stat-value { font-size: 24px; }
+}
+
+/* the shell frame is app furniture -- never on a printed controlled copy */
+@media print {
+  .rt-topbar, .rt-sidebar { display: none !important; }
+  .rt-body, .rt-content { display: block !important; overflow: visible !important; padding: 0 !important; }
+  .rt-card { box-shadow: none !important; border: 1px solid #000 !important; }
+}
+
+/* ------------------------------------------------------------------------
+   ENGINE RESKIN  --  when a record engine's output (form-record `.fr-*`,
+   monitoring-log `.ml-*`, cleaning-register `.cr-*`) is re-parented into
+   `.rt-content` by record-shell.js, retint its panels/buttons to the shell
+   tokens. Every rule here is prefixed `.rt-content` (i.e. inside the shell)
+   so a page that never loads record-shell.js -- job-status.html included --
+   sees none of it. No layout logic is changed, only colour/spacing/radius.
+   ------------------------------------------------------------------------ */
+body.rt-has-shell { margin: 0; background: var(--rt-bg); }
+
+.rt-content .fr-body,
+.rt-content .ml-body,
+.rt-content .cr-body {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.rt-content .fr-app,
+.rt-content .ml-app,
+.rt-content .cr-app { background: transparent; }
+
+/* ---- field grid: same fields/order/validation, bulkier target layout ---- */
+.rt-content .fr-grid,
+.rt-content .ml-grid,
+.rt-content .fr-grid-2, .rt-content .fr-grid-3, .rt-content .fr-grid-4,
+.rt-content .ml-grid-2, .rt-content .ml-grid-3, .rt-content .ml-grid-4 {
+  display: grid;
+  gap: 18px 18px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+/* plain label above a large input -- weight goes on the field itself */
+.rt-content .fr-field,
+.rt-content .ml-field,
+.rt-content .cr-field {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--rt-slate);
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.rt-content .fr-field span.hint,
+.rt-content .ml-field span.hint {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--rt-slate);
+  font-family: var(--rt-font);
+}
+.rt-content .fr-field input,
+.rt-content .fr-field select,
+.rt-content .fr-field textarea,
+.rt-content .ml-field input,
+.rt-content .ml-field select,
+.rt-content .ml-field textarea,
+.rt-content #recBasketPanel input,
+.rt-content #recBasketPanel select {
+  font-family: var(--rt-font);
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+  min-height: 54px;
+  padding: 15px 16px;
+  border: 1.5px solid var(--rt-slate);
+  border-radius: var(--rt-radius-sm);
+  background: var(--rt-white);
+  color: var(--rt-navy-primary);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.04);
+}
+.rt-content .fr-field input::placeholder,
+.rt-content .ml-field input::placeholder,
+.rt-content #recBasketPanel input::placeholder { font-weight: 400; color: #9aa3ab; }
+.rt-content .fr-field input:focus,
+.rt-content .fr-field select:focus,
+.rt-content .fr-field textarea:focus,
+.rt-content .ml-field input:focus,
+.rt-content .ml-field select:focus,
+.rt-content .ml-field textarea:focus,
+.rt-content #recBasketPanel input:focus {
+  outline: 2px solid var(--rt-navy-primary);
+  outline-offset: 1px;
+  border-color: var(--rt-navy-primary);
+}
+/* compound field widgets (job-number prefix+digits, prefixed inputs) keep
+   their inline sizing -- don't force width:100% on their parts */
+.rt-content .fr-jobnumber,
+.rt-content .fr-prefixed { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.rt-content .fr-jobnumber select,
+.rt-content .fr-jobnumber input,
+.rt-content .fr-prefixed input,
+.rt-content .fr-prefixed .fr-prefix { width: auto; }
+.rt-content .fr-jobnumber select { min-width: 92px; flex: 0 0 auto; }
+.rt-content .fr-jobnumber input.fr-jn-digits { flex: 1 1 120px; }
+
+/* inputs inside the entries/roster tables stay compact -- those tables scroll */
+.rt-content table input,
+.rt-content table select,
+.rt-content table textarea,
+.rt-content .fr-roster-row input,
+.rt-content .fr-roster-row select {
+  min-height: 0;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border-width: 1px;
+  box-shadow: none;
+}
+/* section sub-headings inside the entry form ("JOB INFO", "BASKETS RECEIVED") */
+.rt-content .fr-grouphead,
+.rt-content .ml-grouphead,
+.rt-content .fr-section-collapsible > .fr-section-title,
+.rt-content .fr-section-collapsible > summary,
+.rt-content .ml-section-collapsible > summary {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--rt-slate);
+  border-bottom: 1px solid var(--rt-border);
+  padding: 4px 0 7px;
+  margin: 4px 0 12px;
+}
+/* collapsible section: a real disclosure row with a rotating caret */
+.rt-content .fr-section-collapsible > .fr-section-title,
+.rt-content .fr-section-collapsible > summary,
+.rt-content .ml-section-collapsible > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: var(--rt-tap);
+  cursor: pointer;
+  list-style: none;
+}
+.rt-content .fr-section-collapsible > .fr-section-title::-webkit-details-marker,
+.rt-content .ml-section-collapsible > summary::-webkit-details-marker { display: none; }
+.rt-content .fr-section-collapsible > .fr-section-title::before,
+.rt-content .fr-section-collapsible > summary::before,
+.rt-content .ml-section-collapsible > summary::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--rt-gold);
+  border-bottom: 2px solid var(--rt-gold);
+  transform: rotate(-45deg);
+  transition: transform .15s ease;
+}
+.rt-content .fr-section-collapsible[open] > .fr-section-title::before,
+.rt-content .fr-section-collapsible[open] > summary::before,
+.rt-content .ml-section-collapsible[open] > summary::before {
+  transform: rotate(45deg);
+}
+.rt-content .fr-section-summary,
+.rt-content .ml-section-summary {
+  margin-left: auto;
+  font-family: var(--rt-font);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--rt-navy-primary);
+}
+
+/* ---- Y / N / None toggle -> segmented control ------------------------ */
+.rt-content .ml-yesno,
+.rt-content .fr-yesno {
+  display: inline-flex;
+  gap: 0;
+  border: 1.5px solid var(--rt-border);
+  border-radius: var(--rt-radius-btn);
+  overflow: hidden;
+  max-width: 100%;
+}
+.rt-content .ml-yesno button,
+.rt-content .fr-yesno button {
+  flex: 1 1 auto;
+  min-width: 64px;
+  min-height: var(--rt-tap);
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rt-slate);
+  background: var(--rt-white);
+  border: 0 !important;
+  border-right: 1px solid var(--rt-border) !important;
+  border-radius: 0;
+  box-shadow: none;
+}
+.rt-content .ml-yesno button:last-child,
+.rt-content .fr-yesno button:last-child { border-right: 0 !important; }
+.rt-content .ml-yesno button:hover:not(:disabled),
+.rt-content .fr-yesno button:hover:not(:disabled) { background: var(--rt-bg); }
+/* selected -- keep the engine's data-good good/bad mapping, retinted */
+.rt-content .ml-yesno button.on,
+.rt-content .fr-yesno button.on { background: var(--rt-bg); color: var(--rt-navy-primary); }
+.rt-content .ml-yesno[data-good="Yes"] button.on[data-v="Yes"],
+.rt-content .ml-yesno[data-good="No"] button.on[data-v="No"],
+.rt-content .ml-yesno:not([data-good]) button.on[data-v="Yes"],
+.rt-content .fr-yesno button.on[data-v="Yes"] {
+  background: #e6f4ec !important;
+  color: var(--rt-green) !important;
+  box-shadow: inset 0 0 0 2px var(--rt-green);
+}
+.rt-content .ml-yesno[data-good="Yes"] button.on[data-v="No"],
+.rt-content .ml-yesno[data-good="No"] button.on[data-v="Yes"],
+.rt-content .ml-yesno:not([data-good]) button.on[data-v="No"],
+.rt-content .fr-yesno button.on[data-v="No"] {
+  background: var(--rt-fail-bg) !important;
+  color: var(--rt-fail) !important;
+  box-shadow: inset 0 0 0 2px var(--rt-fail);
+}
+.rt-content .ml-yesno button:disabled,
+.rt-content .fr-yesno button:disabled { opacity: .5; }
+/* the entry action row -> outline / outline / primary, full-width on tablet */
+.rt-content .fr-actions,
+.rt-content .ml-actions:not(.ml-modal-inner .ml-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--rt-border);
+  margin-top: 14px;
+}
+.rt-content .fr-actions .fr-btn,
+.rt-content .ml-actions .ml-btn { flex: 1 1 150px; }
+
+/* the bespoke "Current basket" panel (REC 7.1.2) uses inline styles on its
+   wrapper but .fr-field / .fr-grid inside -- lift it onto the card look */
+.rt-content #recBasketPanel {
+  background: var(--rt-white) !important;
+  border: 1px solid var(--rt-border) !important;
+  border-left: 4px solid var(--rt-gold) !important;
+  border-radius: var(--rt-radius) !important;
+  padding: 16px !important;
+}
+
+.rt-content .fr-panel,
+.rt-content .ml-panel,
+.rt-content .cr-panel {
+  background: var(--rt-white);
+  border: 1px solid var(--rt-border);
+  border-radius: var(--rt-radius);
+  box-shadow: var(--rt-shadow);
+  margin-bottom: 0;
+}
+.rt-content .fr-panel-head,
+.rt-content .ml-panel-head,
+.rt-content .cr-panel-head {
+  background: var(--rt-white);
+  border-bottom: 1px solid var(--rt-border);
+  border-radius: var(--rt-radius) var(--rt-radius) 0 0;
+}
+
+/* primary action -> gold; flat/ghost -> outline. Same selectors the engines
+   use for Submit / Save / Log verification / +Add. */
+.rt-content .fr-btn,
+.rt-content .ml-btn,
+.rt-content .cr-btn {
+  min-height: 48px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--rt-radius-btn);
+  transition: background .15s ease, box-shadow .15s ease, transform .05s ease;
+}
+.rt-content .fr-btn:active,
+.rt-content .ml-btn:active,
+.rt-content .cr-btn:active { transform: translateY(1px); }
+.rt-content .fr-btn-primary,
+.rt-content .ml-btn-primary { box-shadow: 0 1px 3px rgba(169,118,58,.35); }
+.rt-content .fr-btn-primary,
+.rt-content .ml-btn-primary,
+.rt-content .cr-btn-primary {
+  background: var(--rt-gold);
+  color: var(--rt-white);
+}
+.rt-content .fr-btn-primary:hover,
+.rt-content .ml-btn-primary:hover,
+.rt-content .cr-btn-primary:hover { background: var(--rt-gold-hover); }
+.rt-content .fr-btn-flat,
+.rt-content .ml-btn-flat,
+.rt-content .cr-btn-flat {
+  background: var(--rt-white);
+  color: var(--rt-navy-primary);
+  border: 1px solid var(--rt-border);
+}
+.rt-content .fr-btn-flat:hover,
+.rt-content .ml-btn-flat:hover,
+.rt-content .cr-btn-flat:hover { background: var(--rt-bg); }
+
+/* the engine top-toolbar buttons now live in the navy bar -- give them the
+   translucent-on-navy treatment the shell's own .rt-actions buttons get */
+.rt-topbar .rt-actions .ml-btn,
+.rt-topbar .rt-actions .fr-btn,
+.rt-topbar .rt-actions button {
+  min-height: var(--rt-tap-sm);
+  padding: 6px 12px;
+  font-size: 12px; font-weight: 600;
+  color: var(--rt-white);
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.25) !important;
+  border-radius: var(--rt-radius-sm);
+}
+.rt-topbar .rt-actions .ml-btn:hover,
+.rt-topbar .rt-actions .fr-btn:hover,
+.rt-topbar .rt-actions button:hover { background: rgba(255,255,255,.22); }
+
+/* ---- entries / submissions tables ------------------------------------- */
+.rt-content .fr-table-wrap,
+.rt-content .ml-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--rt-border);
+  border-radius: var(--rt-radius);
+  background: var(--rt-white);
+}
+.rt-content table.fr-table,
+.rt-content table.ml-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.rt-content table.fr-table th,
+.rt-content table.ml-table th {
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--rt-bg);
+  border: 0;
+  border-bottom: 1px solid var(--rt-border);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--rt-slate);
+  white-space: nowrap;
+}
+.rt-content table.fr-table td,
+.rt-content table.ml-table td {
+  padding: 11px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--rt-border);
+  vertical-align: middle;
+}
+.rt-content table.fr-table tbody tr:nth-child(even),
+.rt-content table.ml-table tbody tr:nth-child(even) { background: var(--rt-bg); }
+.rt-content table.fr-table tbody tr:last-child td,
+.rt-content table.ml-table tbody tr:last-child td { border-bottom: 0; }
+.rt-content table.ml-table td.ml-num,
+.rt-content table.fr-table td.fr-num { text-align: right; font-variant-numeric: tabular-nums; }
+.rt-content table.ml-table tr.ml-fail td { background: var(--rt-fail-bg, #fbe8e6); }
+
+/* status badges -> token colours */
+.rt-content .fr-badge,
+.rt-content .ml-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.rt-content .fr-badge-ok,
+.rt-content .ml-badge-ok { background: #e6f4ec; color: var(--rt-green); }
+.rt-content .fr-badge-fail,
+.rt-content .ml-badge-fail { background: var(--rt-fail-bg, #fbe8e6); color: var(--rt-fail, #a3352d); }
+
+/* ---- roster: each row a card. A GRID (not ragged flex-wrap) so every
+   field column is the same width and stays aligned as the row wraps. ---- */
+.rt-content .fr-roster-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px 14px;
+  align-items: end;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--rt-white);
+  border: 1px solid var(--rt-border);
+  border-radius: var(--rt-radius);
+}
+.rt-content .fr-roster-row > .fr-field { min-width: 0; }
+.rt-content .fr-roster-row [data-remove-roster-row] {
+  grid-column: 1 / -1;
+  justify-self: end;
+  min-height: var(--rt-tap-sm);
+  padding: 8px 16px;
+  background: var(--rt-border);
+  color: var(--rt-navy-primary);
+  border: 0;
+  border-radius: var(--rt-radius-sm);
+  box-shadow: none;
+}
+.rt-content .fr-roster-row [data-remove-roster-row]:hover { background: #d3d6d4; }
+/* collapsed roster row -> a clean one-line summary (REC 7.1.2 etc.) */
+.rt-content .fr-roster-row-collapsed {
+  display: flex;
+  padding: 12px 14px;
+  align-items: center;
+}
+.rt-content .fr-roster-summary {
+  flex: 1 1 100%;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.rt-content .fr-roster-summary-text {
+  font-family: var(--rt-font);
+  font-weight: 600;
+  color: var(--rt-navy-primary);
+}
+
+/* phone: every roster field + entry-grid field on its own full-width line,
+   labels and inputs flush-left, remove button full width. No ragged columns. */
+@media (max-width: 560px) {
+  .rt-content .fr-roster-row { grid-template-columns: 1fr; }
+  .rt-content .fr-roster-row [data-remove-roster-row] {
+    justify-self: stretch;
+    text-align: center;
+    min-height: var(--rt-tap);
+  }
+  .rt-content .fr-grid,
+  .rt-content .ml-grid,
+  .rt-content .fr-grid-2, .rt-content .fr-grid-3, .rt-content .fr-grid-4,
+  .rt-content .ml-grid-2, .rt-content .ml-grid-3, .rt-content .ml-grid-4 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .rt-content .fr-jobnumber input.fr-jn-digits { flex: 1 1 100%; }
+}
+
+/* running-tally: totals re-rendered as a stat-tile row by record-shell.js.
+   The wrapper carries no box of its own once it holds a .rt-tally -- the
+   tile row is the visible element. Fallback styling for the plain-text form
+   (before the script runs, or if parsing fails). */
+.rt-content .fr-roster-totals,
+.rt-content .ml-roster-totals {
+  border: 1px solid var(--rt-border);
+  border-top: 3px solid var(--rt-green);
+  background: var(--rt-white);
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--rt-navy-primary);
+  border-radius: var(--rt-radius);
+  margin-top: 4px;
+}
+.rt-content .fr-roster-totals.rt-totals-tiled,
+.rt-content .ml-roster-totals.rt-totals-tiled {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.rt-content .fr-roster-totals .rt-tally,
+.rt-content .ml-roster-totals .rt-tally {
+  background: var(--rt-white);
+  border: 1px solid var(--rt-border);
+  border-top: 3px solid var(--rt-green);
+  border-radius: var(--rt-radius);
+  padding: 16px;
+}
+.rt-content .rt-tally .rt-stat-value {
+  font-family: var(--rt-font);
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 4px;
+  color: var(--rt-navy-primary);
+}
+.rt-content .rt-tally .rt-stat-value.is-count { color: var(--rt-green); }
+.rt-content .rt-tally .rt-stat-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--rt-slate);
+}
+
+/* ======================================================================== */
 
 :root {
   --palette-paper: #f4f5f3;
