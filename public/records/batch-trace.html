@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -10,79 +10,196 @@
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
-  :root { --steel: var(--palette-primary); --steel2: #263a4c; --orange: #e07a2c; --line: var(--palette-border); --ink: var(--palette-ink); --muted: #5b6b78; }
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: var(--ink); background: #f4f6f8; }
-  header { background: var(--steel); color: #fff; padding: 18px 22px; }
-  header h1 { margin: 0; font-size: 20px; }
-  header .sub { color: #b9c6d1; font-size: 13px; margin-top: 3px; }
-  .wrap { max-width: 960px; margin: 0 auto; padding: 22px; }
-  .search { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-  .search label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  .search input { font-size: 15px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px; min-width: 240px; }
-  .search button { background: var(--orange); color: #fff; border: 0; border-radius: 7px; padding: 10px 18px; font-size: 15px; cursor: pointer; }
+  body {
+    font-family: var(--rt-font);
+    margin: 0;
+    color: var(--rt-navy-primary);
+    background: var(--rt-bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    background: var(--rt-navy-primary);
+    color: var(--rt-white);
+    padding: 16px 22px 18px;
+  }
+  header .back { color: #9fb0bd; font-size: 13px; text-decoration: none; }
+  header .back:hover { color: var(--rt-white); }
+  header h1 { margin: 8px 0 3px; font-size: 20px; font-weight: 700; }
+  header .sub { color: #aebac4; font-size: 13px; max-width: 60ch; }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 22px; }
+
+  .search {
+    background: var(--rt-white);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius);
+    box-shadow: var(--rt-shadow);
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .search .field { flex: 1 1 260px; }
+  .search label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rt-slate);
+    margin-bottom: 5px;
+  }
+  .search input {
+    width: 100%;
+    font-size: 15px;
+    font-family: var(--rt-font);
+    padding: 10px 12px;
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius-sm);
+    min-height: var(--rt-tap);
+  }
+  .search input:focus { outline: 2px solid var(--rt-gold); outline-offset: 1px; border-color: var(--rt-gold); }
+  .search button {
+    background: var(--rt-gold);
+    color: var(--rt-white);
+    border: 0;
+    border-radius: var(--rt-radius-btn);
+    padding: 0 22px;
+    min-height: var(--rt-tap);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--rt-font);
+    cursor: pointer;
+  }
+  .search button:hover:not(:disabled) { background: var(--rt-gold-hover); }
   .search button:disabled { opacity: .5; cursor: default; }
-  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  .status { margin: 18px 2px; color: var(--muted); }
-  .status.err { color: #b3261e; }
-  .genealogy { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 2px 4px; }
-  .genealogy .box { flex: 1 1 220px; background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; }
-  .genealogy .box h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-  .genealogy .box a { display: inline-block; margin: 3px 6px 0 0; font-size: 13px; color: var(--orange); text-decoration: none; }
-  .genealogy .box a:hover { text-decoration: underline; }
-  .genealogy .box .none { color: var(--muted); font-size: 13px; }
-  .count { font-size: 13px; color: var(--muted); margin: 20px 2px 8px; }
+
+  .hint { font-size: 12px; color: var(--rt-slate); margin: 10px 2px 0; }
+  .status { margin: 18px 2px; color: var(--rt-slate); font-size: 14px; }
+  .status.err { color: var(--rt-fail); }
+  .status.loading::after {
+    content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 8px;
+    border: 2px solid var(--rt-border); border-top-color: var(--rt-gold); border-radius: 50%;
+    vertical-align: -2px; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result-head {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    margin: 22px 2px 12px;
+  }
+  .result-head h2 { margin: 0; font-size: 16px; }
+  .result-head .batch-tag {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    background: var(--rt-navy-primary); color: var(--rt-white);
+    border-radius: 6px; padding: 2px 8px; font-size: 13px; font-weight: 600;
+  }
+  .result-head .count { color: var(--rt-slate); font-size: 13px; }
+
+  .genealogy { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 2px 22px; }
+  .genealogy .box {
+    flex: 1 1 240px;
+    background: var(--rt-white);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius);
+    box-shadow: var(--rt-shadow);
+    padding: 13px 15px;
+  }
+  .genealogy .box.up   { border-left: 4px solid var(--rt-blue); }
+  .genealogy .box.down { border-left: 4px solid var(--rt-purple); }
+  .genealogy .box h3 {
+    margin: 0 0 8px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--rt-slate);
+  }
+  .genealogy .box a {
+    display: inline-block; margin: 3px 6px 0 0; padding: 4px 9px;
+    font-size: 13px; font-family: ui-monospace, Menlo, Consolas, monospace;
+    color: var(--rt-navy-primary); background: var(--rt-bg);
+    border: 1px solid var(--rt-border); border-radius: 6px; text-decoration: none;
+  }
+  .genealogy .box a:hover { border-color: var(--rt-gold); color: var(--rt-gold); }
+  .genealogy .box .none { color: var(--rt-slate); font-size: 13px; }
+
   ol.timeline { list-style: none; margin: 0; padding: 0; position: relative; }
-  ol.timeline::before { content: ""; position: absolute; left: 14px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
-  li.tp { position: relative; padding: 0 0 14px 42px; }
-  li.tp::before { content: ""; position: absolute; left: 8px; top: 16px; width: 14px; height: 14px; border-radius: 50%; background: var(--orange); border: 3px solid #fff; box-shadow: 0 0 0 1px var(--line); }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; }
+  ol.timeline::before {
+    content: ""; position: absolute; left: 15px; top: 6px; bottom: 6px;
+    width: 2px; background: var(--rt-border);
+  }
+  ol.timeline:has(.empty)::before { display: none; }
+  ol.timeline .empty { margin-left: 0; }
+  li.tp { position: relative; padding: 0 0 14px 44px; }
+  li.tp::before {
+    content: ""; position: absolute; left: 9px; top: 17px; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--rt-gold); border: 3px solid var(--rt-bg);
+    box-shadow: 0 0 0 1px var(--rt-border);
+  }
+  li.tp.rel-input::before  { background: var(--rt-blue); }
+  li.tp.rel-output::before { background: var(--rt-purple); }
+
+  .card {
+    background: var(--rt-white);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius-sm);
+    box-shadow: var(--rt-shadow);
+    padding: 12px 14px;
+  }
   .card .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
-  .card .title { font-weight: 700; }
-  .card .date { color: var(--muted); font-size: 13px; white-space: nowrap; }
-  .card .stage { display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: var(--steel2); border-radius: 20px; padding: 2px 9px; margin-top: 6px; }
-  .card .summary { color: #34434f; font-size: 14px; margin-top: 7px; }
-  .card a.open { display: inline-block; margin-top: 9px; font-size: 13px; color: var(--orange); text-decoration: none; }
+  .card .title { font-weight: 700; font-size: 14px; }
+  .card .date { color: var(--rt-slate); font-size: 13px; white-space: nowrap; }
+  .card .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+  .card .tag {
+    display: inline-block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em;
+    font-weight: 700; border-radius: 20px; padding: 2px 9px;
+  }
+  .card .tag.stage { color: var(--rt-white); background: var(--rt-navy-secondary); }
+  .card .tag.rel-input  { color: var(--rt-blue);   background: #e6edfb; }
+  .card .tag.rel-output { color: var(--rt-purple); background: #efe7fd; }
+  .card .summary { color: #34434f; font-size: 13.5px; margin-top: 8px; }
+  .card .summary a { color: var(--rt-gold); text-decoration: none; }
+  .card a.open {
+    display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600;
+    color: var(--rt-gold); text-decoration: none;
+  }
   .card a.open:hover { text-decoration: underline; }
-  a.back { color: #b9c6d1; font-size: 13px; text-decoration: none; }
+
+  .empty {
+    background: var(--rt-white); border: 1px dashed var(--rt-border);
+    border-radius: var(--rt-radius); padding: 26px; text-align: center;
+    color: var(--rt-slate); font-size: 14px;
+  }
 
   @media (max-width: 768px) {
     header { padding: 14px 16px; }
     header h1 { font-size: 18px; }
     .wrap { padding: 16px; }
-    
-    .search { padding: 14px; gap: 8px; }
-    .search > div { flex: 1 1 100%; }
-    .search input { min-width: 0; width: 100%; font-size: 16px; }
-    .search button { flex: 1 1 100%; padding: 12px 18px; }
-    li.tp { padding-left: 34px; }
+    .search { padding: 14px; }
+    .search .field, .search button { flex: 1 1 100%; }
+    .search input { font-size: 16px; }
+    li.tp { padding-left: 36px; }
     .card .date { white-space: normal; }
   }
   @media (max-width: 480px) {
-    header { padding: 12px 14px; }
-    header h1 { font-size: 17px; }
     .wrap { padding: 12px; }
-    ol.timeline::before { left: 10px; }
-    li.tp { padding-left: 28px; }
-    li.tp::before { left: 4px; }
-    .card { padding: 10px 12px; }
-    .card .summary { font-size: 13px; }
+    ol.timeline::before { left: 11px; }
+    li.tp { padding-left: 30px; }
+    li.tp::before { left: 5px; }
   }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
 <header>
-  <a class="back" href="../index.html">← Back to Processing Department</a>
+  <a class="back" href="../index.html">&larr; Back to Processing Department</a>
   <h1>Batch Traceability</h1>
-  <div class="sub">Enter a product batch / lot number to see every record that touched it, front to back.</div>
+  <div class="sub">Enter a product batch, job or lot number to see every record that touched it &mdash; and the batches it was made from or went into.</div>
 </header>
 
 <div class="wrap">
   <div class="search">
-    <div>
-      <label for="batchInput">Batch / lot number</label>
-      <input id="batchInput" list="batchList" placeholder="e.g. 20240517-A" autocomplete="off">
+    <div class="field">
+      <label for="batchInput">Batch / job / lot number</label>
+      <input id="batchInput" list="batchList" placeholder="e.g. 3CP2451 or 20240517-A" autocomplete="off">
       <datalist id="batchList"></datalist>
     </div>
     <button id="traceBtn">Trace</button>
@@ -90,12 +207,23 @@
   <div class="hint" id="hint"></div>
 
   <div class="status" id="status"></div>
-  <div class="genealogy" id="genealogy" hidden>
-    <div class="box"><h3>Made from (one up)</h3><div id="inputs"></div></div>
-    <div class="box"><h3>Went into (one down)</h3><div id="outputs"></div></div>
+
+  <div id="results" hidden>
+    <div class="result-head">
+      <h2>Genealogy</h2>
+      <span class="batch-tag" id="batchTag"></span>
+    </div>
+    <div class="genealogy" id="genealogy">
+      <div class="box up"><h3>Made from &mdash; one up</h3><div id="inputs"></div></div>
+      <div class="box down"><h3>Went into &mdash; one down</h3><div id="outputs"></div></div>
+    </div>
+
+    <div class="result-head">
+      <h2>Record trail</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <ol class="timeline" id="timeline"></ol>
   </div>
-  <div class="count" id="count" hidden></div>
-  <ol class="timeline" id="timeline"></ol>
 </div>
 
 <script src="../lib/data-store.js?v=5"></script>
@@ -105,9 +233,15 @@
 <script src="../lib/traceability.js?v=6"></script>
 <script>  const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  function setStatus(msg, isErr) {
-    const s = $('status'); s.textContent = msg || ''; s.classList.toggle('err', !!isErr);
+  const REL_LABEL = { input: 'made from', output: 'went into' };
+
+  function setStatus(msg, kind) {
+    const s = $('status');
+    s.textContent = msg || '';
+    s.classList.toggle('err', kind === 'err');
+    s.classList.toggle('loading', kind === 'loading');
   }
 
   async function loadKnownBatches() {
@@ -123,54 +257,63 @@
     }
   }
 
+  function renderGenealogy(graph) {
+    const cell = list => list && list.length
+      ? list.map(b => `<a href="?batch=${encodeURIComponent(b)}">${esc(b)}</a>`).join('')
+      : '<span class="none">— none recorded —</span>';
+    $('inputs').innerHTML = cell(graph.inputs);
+    $('outputs').innerHTML = cell(graph.outputs);
+  }
+
   function render(rows, batchNo) {
-    const tl = $('timeline');
-    $('count').hidden = false;
-    $('count').textContent = `${rows.length} touchpoint${rows.length === 1 ? '' : 's'} for batch “${batchNo}”`;
-    tl.innerHTML = rows.map(r => `
-      <li class="tp">
+    $('count').textContent = `${rows.length} touchpoint${rows.length === 1 ? '' : 's'}`;
+    $('timeline').innerHTML = rows.map(r => {
+      const rel = r.rel === 'input' || r.rel === 'output' ? r.rel : '';
+      const relTag = rel ? `<span class="tag rel-${rel}">${REL_LABEL[rel]}</span>` : '';
+      const stageTag = r.stage ? `<span class="tag stage">${esc(r.stage)}</span>` : '';
+      const tags = (relTag || stageTag) ? `<div class="tags">${stageTag}${relTag}</div>` : '';
+      return `
+      <li class="tp${rel ? ' rel-' + rel : ''}">
         <div class="card">
           <div class="top">
             <span class="title">${esc(r.record_title || r.record_key)}</span>
             <span class="date">${esc(r.occurred_on || '—')}</span>
           </div>
-          ${r.stage ? `<span class="stage">${esc(r.stage)}</span>` : ''}
+          ${tags}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
-          ${r.linked_batch ? `<div class="summary">Linked to: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}
-          ${r.href ? `<a class="open" href="${esc(r.href)}">Open record →</a>` : ''}
+          ${r.linked_batch && r.linked_batch !== batchNo
+            ? `<div class="summary">Linked batch: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}
+          ${r.href ? `<a class="open" href="${esc(r.href)}">Open this record &rarr;</a>` : ''}
         </div>
-      </li>`).join('');
-  }
-
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-  function renderGenealogy(graph) {
-    const cell = (list) => list.length
-      ? list.map(b => `<a href="?batch=${encodeURIComponent(b)}">${esc(b)}</a>`).join('')
-      : '<span class="none">—</span>';
-    $('inputs').innerHTML = cell(graph.inputs || []);
-    $('outputs').innerHTML = cell(graph.outputs || []);
-    $('genealogy').hidden = false;
+      </li>`;
+    }).join('');
   }
 
   async function doTrace() {
     const batchNo = $('batchInput').value.trim();
-    $('timeline').innerHTML = '';
-    $('count').hidden = true;
-    $('genealogy').hidden = true;
-    if (!batchNo) { setStatus('Enter a batch number to trace.'); return; }
-    setStatus('Tracing…');
+    if (!batchNo) { setStatus('Enter a batch number to trace.'); $('results').hidden = true; return; }
+    setStatus('Tracing…', 'loading');
+    $('results').hidden = true;
     $('traceBtn').disabled = true;
     try {
       let graph = await window.Traceability.traceGraph(batchNo);
-
       if (!graph.records.length) { await sleep(2000); graph = await window.Traceability.traceGraph(batchNo); }
-      if (!graph.records.length) { setStatus(`No records reference batch “${batchNo}” yet.`); return; }
+      if (!graph.records.length) {
+        setStatus('');
+        $('results').hidden = false;
+        $('batchTag').textContent = batchNo;
+        renderGenealogy({ inputs: [], outputs: [] });
+        $('count').textContent = '0 touchpoints';
+        $('timeline').innerHTML = `<li class="empty">No records reference batch “${esc(batchNo)}” yet.</li>`;
+        return;
+      }
       setStatus('');
+      $('batchTag').textContent = batchNo;
       renderGenealogy(graph);
       render(graph.records, batchNo);
+      $('results').hidden = false;
     } catch (e) {
-      setStatus(e && e.message ? e.message : 'Trace failed.', true);
+      setStatus(e && e.message ? e.message : 'Trace failed.', 'err');
     } finally {
       $('traceBtn').disabled = false;
     }
@@ -178,12 +321,17 @@
 
   $('traceBtn').addEventListener('click', doTrace);
   $('batchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doTrace(); });
+  $('batchInput').addEventListener('change', () => { if ($('batchInput').value.trim()) doTrace(); });
 
-  const q = new URLSearchParams(location.search).get('batch');
-  if (q) { $('batchInput').value = q; doTrace(); }
+  window.addEventListener('popstate', syncFromUrl);
+  function syncFromUrl() {
+    const q = new URLSearchParams(location.search).get('batch');
+    if (q && q !== $('batchInput').value.trim()) { $('batchInput').value = q; doTrace(); }
+  }
+
+  const q0 = new URLSearchParams(location.search).get('batch');
+  if (q0) { $('batchInput').value = q0; doTrace(); }
   loadKnownBatches();
 </script>
 </body>
 </html>
-
-

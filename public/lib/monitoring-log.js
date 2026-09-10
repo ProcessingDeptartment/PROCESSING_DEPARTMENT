@@ -1499,7 +1499,15 @@
         return true;
       },
 
-      verifiableCount: () => submitFlow ? entries.filter(e => isSubmitted(e) && !e.verification).length : entries.length };
+      verifiableCount: () => submitFlow ? entries.filter(e => isSubmitted(e) && !e.verification).length : entries.length,
+      // Deep-link support: open entry <id> in this log if it lives here.
+      openIfPresent: (id) => {
+        if (!entries.some(e => e.id === id)) return false;
+        openForm(id);
+        const c = el(modalIds.fields);
+        if (c && c.scrollIntoView) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+      } };
   }
 
   // Definition source of truth is the DB -- see form-record.js's fetchRecordDef note.
@@ -2123,6 +2131,19 @@
     primary.renderTable();
     if (secondary) { await secondary.load(); secondary.renderTable(); }
     refreshVerification();
+
+    // #<entryId> deep link (e.g. from Batch Traceability) opens that entry.
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+    function openFromHash() {
+      let id = (location.hash || '').replace(/^#/, '');
+      try { id = decodeURIComponent(id); } catch (e) { /* keep raw */ }
+      id = id.trim();
+      if (!id) return;
+      if (!primary.openIfPresent(id) && !(secondary && secondary.openIfPresent(id))) {
+        toast('That entry has not reached this device yet.');
+      }
+    }
 
     if (config.customBody && typeof config.customBody.init === 'function') {
       try {

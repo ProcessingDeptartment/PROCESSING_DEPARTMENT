@@ -1826,6 +1826,21 @@
     await load();
     renderTable();
     refreshVerification();
+
+    // Deep link from Batch Traceability etc.: #<submissionId> opens that entry
+    // (read-only if already submitted) rather than a blank new-entry form.
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+    function openFromHash() {
+      let id = (location.hash || '').replace(/^#/, '');
+      try { id = decodeURIComponent(id); } catch (e) { /* keep raw */ }
+      id = id.trim();
+      if (!id) return;
+      if (!submissions.some(s => s.id === id)) { toast('That entry has not reached this device yet.'); return; }
+      openForm(id);
+      const panel = el('fr_modalSections');
+      if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
 
