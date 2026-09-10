@@ -3092,10 +3092,12 @@
         },
         {
           "title": "Incoming check",
-          "kind": "fields",
+          "kind": "roster",
           "position": 1,
           "extraJson": {
-            "newPage": true
+            "totalsRow": [
+              "noOfMortalities"
+            ]
           }
         },
         {
@@ -3252,7 +3254,7 @@
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
           "computeArgs": null,
@@ -3271,7 +3273,7 @@
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
           "computeArgs": null,
@@ -3290,7 +3292,7 @@
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
           "computeArgs": null,
@@ -3312,7 +3314,7 @@
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
           "computeArgs": null,
@@ -3334,7 +3336,7 @@
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
           "computeArgs": null,
@@ -4284,6 +4286,7 @@
       "extraJson": {
         "batchField": "jobNo",
         "stage": "salting",
+        "resumeByJob": true,
         "listColumns": [
           "date",
           "jobNo",
@@ -4825,6 +4828,7 @@
       ],
       "extraJson": {
         "batchField": "jobNo",
+        "resumeByJob": true,
         "extraBatchFields": [
           "saltBatchCode",
           "bakingSodaBatchCode"
@@ -4865,22 +4869,17 @@
           }
         },
         {
-          "title": "Batch info",
-          "kind": "fields",
+          "title": "Washes",
+          "kind": "roster",
           "position": 1
         },
         {
-          "title": "Washing details",
+          "title": "Sign-off",
           "kind": "fields",
           "position": 2,
           "extraJson": {
             "newPage": true
           }
-        },
-        {
-          "title": "Sign-off",
-          "kind": "fields",
-          "position": 3
         }
       ],
       "fields": [
@@ -4989,7 +4988,7 @@
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
           "computeArgs": null,
@@ -5008,7 +5007,7 @@
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
           "computeArgs": null,
@@ -5030,7 +5029,7 @@
           ],
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
           "computeArgs": null,
@@ -5060,7 +5059,7 @@
           ],
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
           "computeArgs": null,
@@ -5078,8 +5077,8 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
           "computeArgs": null,
@@ -5097,8 +5096,8 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
           "computeArgs": null,
@@ -5116,8 +5115,8 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
           "computeArgs": null,
@@ -5135,8 +5134,8 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 12,
           "computeFn": null,
           "computeArgs": null,
@@ -5154,7 +5153,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 3,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 13,
           "computeFn": null,
@@ -5173,7 +5172,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 3,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 14,
           "computeFn": null,
@@ -5239,23 +5238,23 @@
           }
         },
         {
-          "title": "Batch info",
+          "title": "Sign-off",
           "kind": "fields",
           "position": 1
         },
         {
-          "title": "Sign-off",
-          "kind": "fields",
-          "position": 2
-        },
-        {
           "title": "OOSW weights",
           "kind": "roster",
-          "position": 3,
+          "position": 2,
           "extraJson": {
             "totalsRow": [
               "weight"
-            ]
+            ],
+            "pctTotal": {
+              "of": "jiIntakeWeight",
+              "num": "weight",
+              "label": "OOSW %"
+            }
           }
         }
       ],
@@ -5382,8 +5381,8 @@
             "450g+"
           ],
           "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": null,
+          "sectionIndex": 2,
+          "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
           "computeArgs": null,
@@ -5394,22 +5393,29 @@
         },
         {
           "key": "wholeWeight",
-          "label": "Whole weight",
-          "type": "number",
+          "label": "Size-range whole weight (kg)",
+          "type": "derived",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": null,
+          "sectionIndex": 2,
+          "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "deriveGroupSum": {
+              "source": "abalone-receiving",
+              "groupBy": "sizeRange",
+              "sum": "wholeWeight"
+            }
+          }
         },
         {
           "key": "supervisor",
@@ -5420,7 +5426,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 7,
           "computeFn": null,
@@ -5439,7 +5445,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 8,
           "computeFn": null,
@@ -5458,7 +5464,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 9,
           "computeFn": null,
@@ -5477,7 +5483,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 10,
           "computeFn": null,
@@ -5492,14 +5498,14 @@
         },
         {
           "key": "weight",
-          "label": "Weight",
+          "label": "OOSW weight (kg)",
           "type": "number",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 3,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
@@ -5519,7 +5525,6 @@
             "intakeDate": "receivingDate",
             "harvestFarm": "receivedFrom",
             "processingFor": "toBeProcessedFor",
-            "wholeWeight": "intakeWeight",
             "jiIntakeWeight": "intakeWeight"
           },
           "extraJson": {
@@ -5534,7 +5539,7 @@
         "listColumns": [
           "intakeDate",
           "jobNo",
-          "sizeRange"
+          "processingFor"
         ]
       },
       "primaryBatchField": "jobNo"
@@ -9093,15 +9098,41 @@
     },
     {
       "recordKey": "scrubbing-checklist-qc",
-      "engine": "monitoring-log",
-      "mount": "#mlRoot",
+      "engine": "form-record",
+      "mount": "#frRoot",
       "pageFile": "REC-7.2.2-scrubbing-checklist-qc.html",
       "docCode": "REC 7.2.2",
       "title": "Scrubbing Checklist",
       "docRevisionStart": 2,
-      "jobInfoGroup": "Job info",
+      "jobInfoGroup": null,
       "clientHook": null,
-      "sections": [],
+      "sections": [
+        {
+          "title": "Job info",
+          "kind": "fields",
+          "position": 0,
+          "extraJson": {
+            "collapsible": true,
+            "summaryField": [
+              "jobNo",
+              "jiProcessingFor"
+            ]
+          }
+        },
+        {
+          "title": "Scrubbing checks",
+          "kind": "roster",
+          "position": 1
+        },
+        {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 2,
+          "extraJson": {
+            "newPage": true
+          }
+        }
+      ],
       "fields": [
         {
           "key": "jobNo",
@@ -9111,15 +9142,15 @@
           "readOnly": false,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 0,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "jobNo",
+          "linkRelation": "self",
           "validateJson": null
         },
         {
@@ -9130,8 +9161,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 1,
           "computeFn": null,
@@ -9149,8 +9180,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 2,
           "computeFn": null,
@@ -9168,8 +9199,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 3,
           "computeFn": null,
@@ -9187,8 +9218,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 4,
           "computeFn": null,
@@ -9207,7 +9238,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 5,
           "computeFn": null,
@@ -9226,8 +9257,8 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
           "computeArgs": null,
@@ -9256,8 +9287,8 @@
             "450g+"
           ],
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
           "computeArgs": null,
@@ -9275,8 +9306,8 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
           "computeArgs": null,
@@ -9294,15 +9325,18 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "No"
+          }
         },
         {
           "key": "allScrubbedClean",
@@ -9313,15 +9347,18 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "Yes"
+          }
         },
         {
           "key": "acceptableDamageTrimmed",
@@ -9332,15 +9369,18 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "Yes"
+          }
         },
         {
           "key": "processDeviation",
@@ -9351,7 +9391,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 12,
           "computeFn": null,
@@ -9359,7 +9399,10 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "wide": true
+          }
         },
         {
           "key": "checkedBy",
@@ -9370,7 +9413,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 13,
           "computeFn": null,
@@ -9406,10 +9449,16 @@
             "text": "QC check of scrubbing quality — crates inspected, damage, and whether abalone is scrubbed clean."
           }
         ],
-        "specFields": [],
-        "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
-      }
+        "batchField": "jobNo",
+        "submitStamp": true,
+        "resumeByJob": true,
+        "listColumns": [
+          "date",
+          "jobNo",
+          "sizeRange"
+        ]
+      },
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "precooking-check-sheet",

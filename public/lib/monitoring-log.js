@@ -1084,6 +1084,33 @@
       wireJobInfoCollapsible(container, ns, entryFields, jobInfoGroup);
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
 
+      // resumeByJob: this record is completed over more than one sitting. On a fresh entry,
+      // picking a job that already has an unsubmitted draft reopens that draft so the earlier
+      // data comes back instead of starting a blank second entry for the same job.
+      if (!id && !locked && traceConfig && traceConfig.resumeByJob) {
+        const jobKey = traceConfig.batchField
+          || (entryFields.find((f) => f.type === 'jobsearch') || {}).key
+          || 'jobNo';
+        const jobEl = el(ns + '_f_' + jobKey);
+        if (jobEl) {
+          const tryResume = () => {
+            if (editingId) return;
+            const jobNo = String(jobEl.value || '').trim();
+            if (!jobNo) return;
+            const draft = entries
+              .filter((e) => !isSubmitted(e) && String((e.values || {})[jobKey] || '').trim() === jobNo)
+              .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))[0];
+            if (draft) {
+              jobEl.removeEventListener('change', tryResume);
+              jobEl.removeEventListener('input', tryResume);
+              toast('Continuing the saved draft for job ' + jobNo + '.');
+              openForm(draft.id);
+            }
+          };
+          ['change', 'input'].forEach((ev) => jobEl.addEventListener(ev, tryResume));
+        }
+      }
+
       if (existing && Array.isArray(existing.provisionalFields)) {
         existing.provisionalFields.forEach((k) => markProvisional(container.querySelector('#' + ns + '_f_' + k), true));
         renderProvisionalNotice(container, ns);

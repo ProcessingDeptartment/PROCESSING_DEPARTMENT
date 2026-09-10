@@ -291,6 +291,25 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
             if (set.size <= 50) options[k] = [...set];
           }
           values.__rosterOptions = options;
+          // Per-group subtotals: for each text column with <=50 distinct values, sum every clean
+          // numeric column within each group. Lets a downstream form ask "whole weight received
+          // for size range 100-150g on this job" without re-fetching the whole roster.
+          const groupSums = {};
+          for (const [gk, gset] of Object.entries(distinct)) {
+            if (gset.size > 50) continue;
+            for (const r of entry.roster) {
+              const gval = String((r || {})[gk] == null ? '' : r[gk]).trim();
+              if (!gval) continue;
+              for (const [nk, nv] of Object.entries(r || {})) {
+                const ntext = String(nv == null ? '' : nv).trim();
+                if (!ntext || !/^-?\d+(\.\d+)?$/.test(ntext)) continue;
+                const bucket = (groupSums[gk] = groupSums[gk] || {});
+                const cell = (bucket[gval] = bucket[gval] || {});
+                cell[nk] = (cell[nk] || 0) + parseFloat(ntext);
+              }
+            }
+          }
+          if (Object.keys(groupSums).length) values.__rosterGroupSums = groupSums;
         }
         if (String(values[field] || '').trim().toUpperCase() !== needle) continue;
         // Drafts are matched on purpose: a job number is created on Abalone Receiving at the start
