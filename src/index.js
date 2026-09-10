@@ -215,20 +215,36 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
       for (const entry of entries) {
         const values = { ...(entry.values || entry) };
         // Roster-based records (e.g. Abalone Receiving's baskets) keep their real weight/count
-        // data as per-row roster entries, not a top-level value -- sum each numeric roster
-        // column so autofill can pull "total whole weight received for this job" etc. Never
-        // overwrites a real top-level field of the same name.
+        // data as per-row roster entries, not a top-level value. Expose per-column totals under
+        // a namespaced `__rosterSums` key so a caller that wants "total whole weight received
+        // for this job" can read it explicitly -- never as bare top-level fields, which a
+        // fillMap could silently pick up. Two columns can't be told apart by value alone
+        // (basketNr 1,2,3 sums to 6 just as validly as wholeWeight does), so leaving these
+        // namespaced keeps the guess out of the autofill namespace.
         if (Array.isArray(entry.roster) && entry.roster.length) {
+          // Strict numeric test (not parseFloat): parseFloat('100-150g') is 100, so a size-range
+          // column would otherwise produce a bogus total. A column is dropped the moment any
+          // non-empty cell fails to be a clean number.
           const sums = {};
+          const numericCol = {};
           for (const row of entry.roster) {
             for (const [k, v] of Object.entries(row || {})) {
-              const num = parseFloat(v);
-              if (!isNaN(num)) sums[k] = (sums[k] || 0) + num;
+              const text = String(v == null ? '' : v).trim();
+              if (!text || numericCol[k] === false) continue;
+              if (/^-?\d+(\.\d+)?$/.test(text)) {
+                numericCol[k] = true;
+                sums[k] = (sums[k] || 0) + parseFloat(text);
+              } else {
+                numericCol[k] = false;
+                delete sums[k];
+              }
             }
           }
+          const rosterSums = {};
           for (const [k, sum] of Object.entries(sums)) {
-            if (!(k in values)) values[k] = String(sum);
+            if (numericCol[k]) rosterSums[k] = String(sum);
           }
+          if (Object.keys(rosterSums).length) values.__rosterSums = rosterSums;
           // Distinct text values per roster column, e.g. the size ranges actually received on
           // this job. Downstream forms use it to narrow their own size-range picker to what the
           // job contains, so a grader can't pick a size that was never received. Capped so a
