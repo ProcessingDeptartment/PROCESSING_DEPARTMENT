@@ -55,9 +55,13 @@ async function assembleRecordConfig(prisma, recordKey) {
 
   const fieldSecs = def.sections.filter((s) => s.kind === 'fields');
   if (fieldSecs.length) {
+    // A field section whose position falls after the roster's renders below the roster
+    // table in the engine (afterRoster) -- keeps sign-off at the foot of the record.
+    const rosterPos = rosterSec ? rosterSec.position : Infinity;
     cfg.sections = fieldSecs.map((s) => ({
       title: s.title,
       ...(s.extraJson || {}),
+      ...(s.position > rosterPos ? { afterRoster: true } : {}),
       fields: bySection(def.sections.indexOf(s), null),
     }));
   }

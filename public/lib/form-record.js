@@ -715,6 +715,13 @@
     return fields;
   }
 
+  // Sections declared after the roster (afterRoster: true) render below the roster table
+  // rather than above it -- keeps sign-off at the foot of the record, not under job entry.
+  function sectionsAroundRoster(config) {
+    const secs = config.sections || [];
+    return { pre: secs.filter(s => !s.afterRoster), post: secs.filter(s => s.afterRoster) };
+  }
+
   // The record's definition lives in the DB (RecordDefinition tables, seeded from the old
   // inline configs -- see Claude outputs/relational-all-records-plan.md). A page that passes
   // only { recordKey } gets its config assembled by GET /api/record-def/:key.
@@ -1305,7 +1312,7 @@
         ? `<div class="fr-locked">Submitted${existing.submittedAt
             ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.</div>`
         : '';
-      html += (config.sections || []).map(sec => {
+      const renderSection = sec => {
         const fieldsHtml = `<div class="fr-grid fr-grid-2">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
             ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}
@@ -1321,7 +1328,9 @@
           </details>`;
         }
         return `<div class="fr-section-title">${esc(sec.title)}</div>${fieldsHtml}`;
-      }).join('');
+      };
+      const { pre: preSecs, post: postSecs } = sectionsAroundRoster(config);
+      html += preSecs.map(renderSection).join('');
       if (hasRoster) {
         html += `
         <div class="fr-section-title">${esc(config.roster.title)}</div>
@@ -1331,6 +1340,7 @@
         <input type="file" id="fr_csvFile" accept=".csv,text/csv" style="display:none;">
         ${config.roster.totalsRow ? `<div id="fr_rosterTotals" class="fr-roster-totals"></div>` : ''}`;
       }
+      html += postSecs.map(renderSection).join('');
 
       if (existing && existing.values) {
         const currentKeys = new Set(allFields(config).map(f => f.key));
@@ -1549,8 +1559,10 @@
       return String(raw);
     }
 
-    function sheetSectionsHtml(sub) {
-      return (config.sections || []).map(sec => {
+    function sheetSectionsHtml(sub, which) {
+      const { pre, post } = sectionsAroundRoster(config);
+      const secs = which === 'post' ? post : which === 'pre' ? pre : (config.sections || []);
+      return secs.map(sec => {
         const rows = (sec.fields || []).map(f =>
           `<tr><td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td>
              <td>${esc(displayValue(f, sub.values[f.key]))}</td></tr>`).join('');
@@ -1626,7 +1638,7 @@
 
     function buildSheet(sub) {
       return `<div class="fr-sheet-page">
-        ${sheetSectionsHtml(sub)}${sheetRosterHtml(sub)}${sheetSignHtml(sub)}
+        ${sheetSectionsHtml(sub, 'pre')}${sheetRosterHtml(sub)}${sheetSectionsHtml(sub, 'post')}${sheetSignHtml(sub)}
       </div>`;
     }
 
