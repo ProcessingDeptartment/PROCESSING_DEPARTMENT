@@ -17,6 +17,7 @@ const recordKeyMap = require('./record-key-map');
 const { assembleRecordConfig } = require('./record-def');
 const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
 const { syncRecordLinks } = require('./record-links');
+const { syncSubmissionRows } = require('./submission-store');
 
 const prisma = new PrismaClient();
 const dateFields = dateFieldMap.load();
@@ -160,6 +161,8 @@ app.put('/api/storage/key/:key', async (req, res) => {
     await syncSubmissionDates(req.params.key, value);
     try { await syncRecordLinks(prisma, req.params.key, value); }
     catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
+    try { await syncSubmissionRows(prisma, req.params.key, value); }
+    catch (e) { console.error('syncSubmissionRows failed (write succeeded)', e); }
     res.json({ ok: true, warnings: violations });
   } catch (e) {
     console.error('PUT key failed', e);
@@ -171,6 +174,9 @@ app.delete('/api/storage/key/:key', async (req, res) => {
   try {
     await prisma.keyValue.deleteMany({ where: { key: req.params.key } });
     await prisma.submissionDateField.deleteMany({ where: { submissionKey: req.params.key } });
+    // Clear submission + link rows (pass empty array → deletes everything for this record)
+    try { await syncSubmissionRows(prisma, req.params.key, '[]'); } catch (_) {}
+    try { await syncRecordLinks(prisma, req.params.key, '[]'); } catch (_) {}
     res.json({ ok: true });
   } catch (e) {
     console.error('DELETE key failed', e);
