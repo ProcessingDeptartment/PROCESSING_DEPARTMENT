@@ -1033,6 +1033,29 @@
       let rows = (existingRows || []).slice();
       if (!rows.length) rows.push({});
 
+      // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
+      // from the Abalone Receiving baskets for this job). One fetch per job, cached; a column
+      // opts in via extraJson.deriveGroupSum = { source, groupBy, sum }.
+      const groupSumCol = (config.roster.columns || []).find(c => c.deriveGroupSum);
+      const groupSumsCache = { job: null, data: {} };
+      async function loadGroupSums() {
+        if (!groupSumCol) return;
+        const jobEl = el('fr_f_' + (config.batchField || 'jobNo'));
+        const job = jobEl ? String(jobEl.value || '').trim() : '';
+        if (job === groupSumsCache.job) return;
+        groupSumsCache.job = job;
+        groupSumsCache.data = {};
+        if (job) {
+          try {
+            const found = await autofillLookup(
+              { source: groupSumCol.deriveGroupSum.source, matchField: 'jobNo' }, job);
+            groupSumsCache.data = (found && found.__rosterGroupSums) || {};
+          } catch (e) { groupSumsCache.data = {}; }
+        }
+        renderRosterDerived();
+        renderRosterTotals();
+      }
+
 
       function renderRosterTotals() {
         if (!config.roster.totalsRow) return;
@@ -1051,6 +1074,15 @@
             const col = config.roster.columns.find(c => c.key === k);
             return `${esc(col ? col.label : k)}: ${totals[k].toFixed(2)}`;
           }).join(' &nbsp;·&nbsp; ');
+          // Optional percentage-of-a-top-field readout, e.g. OOSW %  =  Σ OOSW weight ÷ job whole weight.
+          const p = config.roster.pctTotal;
+          if (p) {
+            const ofEl = el('fr_f_' + p.of);
+            const denom = ofEl ? parseFloat(ofEl.value) : NaN;
+            const numer = totals[p.num] || 0;
+            const txt = (!isNaN(denom) && denom > 0) ? (numer / denom * 100).toFixed(2) + '%' : '—';
+            totalsEl.innerHTML += ` &nbsp;·&nbsp; <strong>${esc(p.label || 'OOSW %')}: ${txt}</strong>`;
+          }
         }
         allFields(config).forEach((f) => {
           if (f.type !== 'computed' || !f.sumRosterColumn) return;
@@ -1074,9 +1106,17 @@
           specials.forEach(c => {
             const inp = el(`fr_roster_${i}_${c.key}`);
             if (!inp) return;
-            inp.value = c.type === 'batchseq'
-              ? (jobNo ? jobNo + '/' + (i + 1) : '#' + (i + 1))
-              : computeRowDerived(c, cur);
+            if (c.type === 'batchseq') {
+              inp.value = jobNo ? jobNo + '/' + (i + 1) : '#' + (i + 1);
+            } else if (c.deriveGroupSum) {
+              const g = c.deriveGroupSum;
+              const grp = groupSumsCache.data[g.groupBy] || {};
+              const cell = grp[String(cur[g.groupBy] || '').trim()] || {};
+              const val = cell[g.sum];
+              inp.value = (val == null || val === '') ? '' : String(val);
+            } else {
+              inp.value = computeRowDerived(c, cur);
+            }
           });
         });
       }
@@ -1190,8 +1230,16 @@
       });
 
       const jobWatch = el('fr_f_' + (config.batchField || 'jobNo'));
-      if (jobWatch) ['input', 'change'].forEach(ev => jobWatch.addEventListener(ev, renderRosterDerived));
+      if (jobWatch) ['input', 'change'].forEach(ev => {
+        jobWatch.addEventListener(ev, renderRosterDerived);
+        jobWatch.addEventListener(ev, loadGroupSums);
+      });
+      if (config.roster.pctTotal) {
+        const ofEl = el('fr_f_' + config.roster.pctTotal.of);
+        if (ofEl) ['input', 'change'].forEach(ev => ofEl.addEventListener(ev, renderRosterTotals));
+      }
       draw();
+      loadGroupSums();
 
       if (canCollapse) {
         rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
@@ -1329,6 +1377,32 @@
         renderProvisionalNotice(container);
       }
 
+      // resumeByJob: this record is completed over more than one sitting (e.g. REC 7.1.3 —
+      // start times captured now, finish times added later). On a fresh entry, picking a job
+      // that already has an unsubmitted draft reopens that draft so the earlier data comes
+      // back instead of starting a blank second record for the same job.
+      if (!id && !locked && config.resumeByJob) {
+        const jobKey = config.batchField || 'jobNo';
+        const jobEl = el('fr_f_' + jobKey);
+        if (jobEl) {
+          const tryResume = () => {
+            if (editingId) return;
+            const jobNo = String(jobEl.value || '').trim();
+            if (!jobNo) return;
+            const draft = submissions
+              .filter((s) => !isSubmitted(s) && String((s.values || {})[jobKey] || '').trim() === jobNo)
+              .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))[0];
+            if (draft) {
+              jobEl.removeEventListener('change', tryResume);
+              jobEl.removeEventListener('input', tryResume);
+              toast('Continuing the saved draft for job ' + jobNo + '.');
+              openForm(draft.id);
+            }
+          };
+          ['change', 'input'].forEach((ev) => jobEl.addEventListener(ev, tryResume));
+        }
+      }
+
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked || computedIds.has(i.id); });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
@@ -1395,7 +1469,7 @@
         rosterRows.forEach((r, i) => {
           rosterCols.forEach((c) => {
             if (c.type === 'batchseq') r[c.key] = jobNo ? jobNo + '/' + (i + 1) : '#' + (i + 1);
-            else if (c.type === 'derived') r[c.key] = computeRowDerived(c, r);
+            else if (c.type === 'derived' && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
           });
         });
       }
@@ -1508,9 +1582,17 @@
           return `<td><strong>${ci === 0 ? 'Total' : ''}</strong></td>`;
         }).join('')}</tr>`;
       }
+      let pctHtml = '';
+      const p = config.roster.pctTotal;
+      if (p && rows.length) {
+        const numer = rows.reduce((s, r) => { const n = parseFloat(r[p.num]); return s + (isNaN(n) ? 0 : n); }, 0);
+        const denom = parseFloat(sub.values[p.of]);
+        const txt = (!isNaN(denom) && denom > 0) ? (numer / denom * 100).toFixed(2) + '%' : '—';
+        pctHtml = `<p class="fr-roster-totals"><strong>${esc(p.label || 'OOSW %')}: ${txt}</strong></p>`;
+      }
       return `<h3>${esc(config.roster.title)}</h3>
         <table><thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
-        <tbody>${body}${totalsRowHtml}</tbody></table>`;
+        <tbody>${body}${totalsRowHtml}</tbody></table>${pctHtml}`;
     }
 
 
