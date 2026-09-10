@@ -1,54 +1,15 @@
 (function () {
-  const PREFIX = 'facility_records:';
+  // data-store.js — the `window.storage` seam every record page saves through.
+  //
+  // As of 2026-09-10 this is API-ONLY. The old localStorage "LocalBackend" is removed:
+  //   - Records save straight to Neon via api-backend.js.
+  //   - If the API is unreachable, the save fails and retries (api-backend.js handles the queue).
+  //   - No data is written to or read from localStorage by this module.
+  //
+  // The `shared` flag that some callers still pass (true = backend, false = local-only) is
+  // accepted but ignored: both paths use the backend. This avoids touching 130+ call sites.
 
-
-  const LocalBackend = {
-    name: 'local',
-    async get(key) {
-      try {
-        const raw = window.localStorage.getItem(PREFIX + key);
-        return raw === null ? null : { value: raw };
-      } catch (e) {
-        console.error('storage get failed (local)', e);
-        return null;
-      }
-    },
-    async set(key, value) {
-      try {
-        window.localStorage.setItem(PREFIX + key, value);
-        return true;
-      } catch (e) {
-        console.error('storage set failed (local)', e);
-        return false;
-      }
-    },
-    async remove(key) {
-      try {
-        window.localStorage.removeItem(PREFIX + key);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    },
-    async getByPrefix(prefix) {
-      const out = {};
-      try {
-        for (let i = 0; i < window.localStorage.length; i++) {
-          const k = window.localStorage.key(i);
-          if (k && k.startsWith(PREFIX + prefix)) {
-            out[k.slice(PREFIX.length)] = window.localStorage.getItem(k);
-          }
-        }
-      } catch (e) {
-        console.error('storage getByPrefix failed (local)', e);
-      }
-      return out;
-    }
-  };
-
-
-  let backend = LocalBackend;
-
+  let backend = null;
 
   let markReady;
   let expecting = false;
@@ -62,12 +23,10 @@
     setTimeout(settle, 8000);
   }
 
-
   function whenReady() {
     if (!expecting) settle();
     return readyPromise;
   }
-
 
   function useBackend(impl) {
     const missing = ['get', 'set', 'remove', 'getByPrefix']
@@ -83,30 +42,33 @@
     return true;
   }
 
-
   function backendUnavailable() { settle(); }
+  function backendName() { return backend ? (backend.name || 'custom') : 'none'; }
 
-
-  function backendName() {
-    return backend.name || 'custom';
+  function requireBackend() {
+    if (backend) return backend;
+    console.error('[data-store] no backend registered — api-backend.js must load before any storage call');
+    return null;
   }
 
-
-  async function get(key, shared) {
-    return (shared === false ? LocalBackend : backend).get(key);
+  async function get(key) {
+    const b = requireBackend();
+    return b ? b.get(key) : null;
   }
 
-  async function set(key, value, shared) {
-    return (shared === false ? LocalBackend : backend).set(key, value);
+  async function set(key, value) {
+    const b = requireBackend();
+    return b ? b.set(key, value) : false;
   }
 
-  async function remove(key, shared) {
-    return (shared === false ? LocalBackend : backend).remove(key);
+  async function remove(key) {
+    const b = requireBackend();
+    return b ? b.remove(key) : false;
   }
 
-
-  async function getByPrefix(prefix, shared) {
-    return (shared === false ? LocalBackend : backend).getByPrefix(prefix);
+  async function getByPrefix(prefix) {
+    const b = requireBackend();
+    return b ? b.getByPrefix(prefix) : {};
   }
 
   window.storage = { get, set, remove, getByPrefix, useBackend, backendName, whenReady, expectBackend, backendUnavailable };

@@ -15,6 +15,8 @@ const { PrismaClient } = require('@prisma/client');
 const dateFieldMap = require('./date-field-map');
 const recordKeyMap = require('./record-key-map');
 const { assembleRecordConfig } = require('./record-def');
+const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
+const { syncRecordLinks } = require('./record-links');
 
 const prisma = new PrismaClient();
 const dateFields = dateFieldMap.load();
@@ -132,13 +134,33 @@ app.put('/api/storage/key/:key', async (req, res) => {
   try {
     const { value } = req.body;
     if (typeof value !== 'string') return res.status(400).json({ ok: false });
+
+    // Layer 2: validate the submission against its record definition. Report-only unless
+    // VALIDATE_WRITES=enforce, in which case a submitted-and-invalid entry is rejected 422.
+    let violations = [];
+    try {
+      const verdict = await validateWrite(prisma, req.params.key, value);
+      violations = verdict.violations;
+      if (!verdict.ok) {
+        console.warn('PUT', req.params.key, 'REJECTED —', violations.length, 'violation(s):', violations);
+        return res.status(422).json({ ok: false, error: 'validation failed', violations });
+      }
+      if (violations.length) {
+        console.warn('PUT', req.params.key, '— stored with', violations.length, 'validation warning(s):', violations);
+      }
+    } catch (e) {
+      console.error('validateWrite threw (write allowed)', e);
+    }
+
     await prisma.keyValue.upsert({
       where: { key: req.params.key },
       create: { key: req.params.key, value },
       update: { value }
     });
     await syncSubmissionDates(req.params.key, value);
-    res.json({ ok: true });
+    try { await syncRecordLinks(prisma, req.params.key, value); }
+    catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
+    res.json({ ok: true, warnings: violations });
   } catch (e) {
     console.error('PUT key failed', e);
     res.status(500).json({ ok: false });
@@ -371,8 +393,26 @@ app.get('/api/record-def/:recordKey', async (req, res) => {
   }
 });
 
+// Cross-record link query: every record that mentions this value (job number, batch code, AG
+// code, lot number, person name, ...). Optionally filter by linkField to scope to one join-key
+// type. This is the relational replacement for traceability.js's prefix scan.
+app.get('/api/links/:value', async (req, res) => {
+  try {
+    const linkValue = String(req.params.value || '').trim().toUpperCase();
+    if (!linkValue) return res.json([]);
+    const where = { linkValue };
+    if (req.query.field) where.linkField = req.query.field;
+    const rows = await prisma.recordLink.findMany({ where, orderBy: { createdAt: 'desc' } });
+    res.json(rows);
+  } catch (e) {
+    console.error('GET links failed', e);
+    res.status(500).json([]);
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {
-  console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`);
+  console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
+    + ` — write validation ${VALIDATE_ENFORCE ? 'ENFORCED (422 on invalid)' : 'report-only'}`);
 });

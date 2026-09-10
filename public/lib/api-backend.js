@@ -1,10 +1,11 @@
 (function () {
   const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
 
-
   if (window.storage && window.storage.expectBackend) window.storage.expectBackend();
-  const KEY_STORE = 'facility_api_key';
 
+  // API key is still persisted in localStorage/sessionStorage — it's a device credential, not
+  // record data, and losing it on every page load would force re-entry on every form.
+  const KEY_STORE = 'facility_api_key';
 
   const memStore = {};
   function pickStore() {
@@ -27,7 +28,6 @@
     };
   }
   const STORE = pickStore();
-  if (!STORE.durable) console.warn('[api-backend] no persistent storage on this device — offline saves cannot be queued');
 
 
   function getKey() {
@@ -76,45 +76,19 @@
     authFailed: () => authFailed };
 
 
-  const QUEUE_STORE = 'facility_api_queue';
+  // ---------- In-memory retry queue (no localStorage) ----------
+  // If a write fails (network down, 5xx), it stays in this in-memory queue and retries every
+  // 30 s and on `online`. If the user navigates away before it drains, the data is LOST — that
+  // is the intended behaviour (no localStorage for record data). The banner warns them.
+  const queue = {};       // key -> { op, value, ts }
   let draining = false;
 
-  function loadQueue() {
-    try { return JSON.parse(STORE.s.getItem(QUEUE_STORE) || '{}') || {}; }
-    catch (e) { return {}; }
-  }
-  function saveQueue(q) {
-    try { STORE.s.setItem(QUEUE_STORE, JSON.stringify(q)); return true; }
-    catch (e) { console.error('write queue could not be persisted', e); return false; }
-  }
-  function queueCount() { return Object.keys(loadQueue()).length; }
-
+  function queueCount() { return Object.keys(queue).length; }
 
   function enqueue(op, key, value) {
-    if (!STORE.durable) {
-      showNoStorageBanner();
-      return false;
-    }
-    const q = loadQueue();
-    q[key] = { op: op, value: value, ts: Date.now() };
-    const ok = saveQueue(q);
-    if (!ok) showNoStorageBanner();
+    queue[key] = { op: op, value: value, ts: Date.now() };
     updateQueueBadge();
-    return ok;
-  }
-
-  let noStorageShown = false;
-  function showNoStorageBanner() {
-    if (noStorageShown || typeof document === 'undefined' || !document.body) return;
-    noStorageShown = true;
-    const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#9c241d;color:#fff;'
-      + 'font:600 14px/1.4 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;padding:11px 16px;'
-      + 'display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center;';
-    el.textContent = 'The records database is unreachable and this device cannot store work offline '
-      + '(private window, or browser storage is blocked). Nothing was saved — reconnect, or use a '
-      + 'different device, before re-entering this record.';
-    document.body.appendChild(el);
+    return true;
   }
 
   let queueBadge = null;
@@ -130,7 +104,7 @@
       document.body.appendChild(queueBadge);
     }
     queueBadge.textContent = n + (n === 1 ? ' record is' : ' records are')
-      + ' saved on this device and waiting to sync. Leave this page open until it clears.';
+      + ' waiting to sync — do NOT close or navigate away from this page until it clears.';
   }
 
 
@@ -138,10 +112,9 @@
     if (draining) return;
     draining = true;
     try {
-      const q = loadQueue();
-      const keys = Object.keys(q).sort((a, b) => q[a].ts - q[b].ts);
+      const keys = Object.keys(queue).sort((a, b) => queue[a].ts - queue[b].ts);
       for (const key of keys) {
-        const item = q[key];
+        const item = queue[key];
         let ok = false;
         try {
           const res = item.op === 'remove'
@@ -155,9 +128,8 @@
         } catch (e) { ok = false; }
         if (!ok) break;
         invalidate(key);
-
-        const latest = loadQueue();
-        if (latest[key] && latest[key].ts === item.ts) { delete latest[key]; saveQueue(latest); }
+        // Only delete if this is still the same queued item (not re-queued during drain).
+        if (queue[key] && queue[key].ts === item.ts) delete queue[key];
       }
     } finally {
       draining = false;
@@ -172,6 +144,7 @@
   }
 
 
+  // ---------- Read cache (in memory) ----------
   const TTL_MS = 2000;
   const inFlight = new Map();
   const recent = new Map();
@@ -182,9 +155,8 @@
   }
 
   async function apiGet(key) {
-
-    const q = loadQueue();
-    if (q[key]) return q[key].op === 'remove' ? null : { value: q[key].value };
+    // Check the in-memory queue first (same as before, minus localStorage).
+    if (queue[key]) return queue[key].op === 'remove' ? null : { value: queue[key].value };
 
     const hit = recent.get(key);
     if (hit && Date.now() - hit.at < TTL_MS) return hit.value;
@@ -215,7 +187,6 @@
 
 
   async function apiSet(key, value) {
-
     invalidate(key);
     let res = null;
     try {
@@ -228,7 +199,6 @@
       console.warn('storage set failed, queueing (api)', e);
     }
     if (res && res.ok) {
-
       if (queueCount()) drain();
       return true;
     }
@@ -245,8 +215,7 @@
       console.warn('storage remove failed, queueing (api)', e);
     }
     if (res && res.ok) {
-      const q = loadQueue();
-      if (q[key]) { delete q[key]; saveQueue(q); updateQueueBadge(); }
+      if (queue[key]) { delete queue[key]; updateQueueBadge(); }
       return true;
     }
     return enqueue('remove', key, null);
@@ -261,11 +230,11 @@
       console.error('storage getByPrefix failed (api)', e);
     }
 
-    const q = loadQueue();
-    Object.keys(q).forEach(function (k) {
+    // Overlay in-memory queued writes.
+    Object.keys(queue).forEach(function (k) {
       if (k.indexOf(prefix) !== 0) return;
-      if (q[k].op === 'remove') delete out[k];
-      else out[k] = q[k].value;
+      if (queue[k].op === 'remove') delete out[k];
+      else out[k] = queue[k].value;
     });
     return out;
   }
