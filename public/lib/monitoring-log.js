@@ -1665,6 +1665,7 @@
           <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verificationBody" data-label="verification">View verification</button>
         </div>
         <div class="ml-panel-body ml-collapsible" id="ml_verificationBody">
+          <div class="ml-notice ml-notice-due" id="ml_verifyGate" style="display:none;"></div>
           <div class="ml-notice ml-notice-due" id="ml_verifyNotice"></div>
           ${submitFlow ? `
           <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verifySelect" data-label="entries to verify">View entries to verify</button>
@@ -1932,6 +1933,38 @@
       const notifyCfg = config.verificationNotify || null;
       const operatorField = (config.entryFields || []).find(f => f.role === 'operator') || null;
 
+      let verifyGate = { allowed: true, signedIn: true, roles: [], rolesLabel: '' };
+
+      function applyVerifyGate() {
+        const btn = el('ml_saveVerificationBtn');
+        const line = el('ml_verifyGate');
+        if (btn) {
+          btn.disabled = !verifyGate.allowed;
+          btn.title = verifyGate.allowed ? '' : window.SignOffBlock.gateMessage(verifyGate);
+        }
+        if (line) {
+          if (verifyGate.allowed) { line.style.display = 'none'; line.innerHTML = ''; }
+          else {
+            line.style.display = '';
+            line.textContent = window.SignOffBlock.gateMessage(verifyGate) + ' ';
+            if (!verifyGate.signedIn && window.LoginUI && window.LoginUI.showLoginModal) {
+              const b = document.createElement('button');
+              b.type = 'button';
+              b.className = 'ml-btn ml-btn-flat ml-btn-sm';
+              b.textContent = 'Sign in';
+              b.addEventListener('click', () => window.LoginUI.showLoginModal());
+              line.appendChild(b);
+            }
+          }
+        }
+      }
+
+      async function loadVerifyGate() {
+        try { verifyGate = await window.SignOffBlock.verifyGate(config.recordKey); }
+        catch (e) { verifyGate = { allowed: true, signedIn: true, roles: [], rolesLabel: '' }; }
+        applyVerifyGate();
+      }
+
 
       function checkVerificationDue(hist) {
         if (!notifyCfg) return;
@@ -2008,11 +2041,16 @@
         const target = el('ml_verificationHistory');
         renderVerifySelect();
         checkVerificationDue(hist);
+        applyVerifyGate();
         if (!hist.length) { target.innerHTML = `<div class="ml-history-item ml-muted">No verification logged yet.</div>`; return; }
         target.innerHTML = hist.slice().reverse().map(v => `
           <div class="ml-history-item"><span>${window.SignOffBlock.historyLine(v)}</span></div>`).join('');
       }
       el('ml_saveVerificationBtn').addEventListener('click', async () => {
+        verifyGate = await window.SignOffBlock.verifyGate(config.recordKey);
+        applyVerifyGate();
+        if (!verifyGate.allowed) { toast(window.SignOffBlock.gateMessage(verifyGate)); return; }
+
         const values = window.SignOffBlock.readVerifyInputs('ml_verified');
         if (!window.SignOffBlock.validateVerifyInputs(values)) { toast('Verified by, title, date and signature are all required.'); return; }
 
@@ -2042,6 +2080,10 @@
       });
 
       refreshVerification = renderVerificationHistory;
+      loadVerifyGate();
+      if (typeof document !== 'undefined') {
+        document.addEventListener('authSuccess', () => { loadVerifyGate(); });
+      }
     }
 
 

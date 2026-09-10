@@ -842,6 +842,7 @@
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verificationBody" data-label="verification">View verification</button>
           </div>
           <div class="fr-panel-body fr-collapsible" id="fr_verificationBody">
+            <div class="fr-notice fr-notice-due" id="fr_verifyGate" style="display:none;"></div>
             <div class="fr-notice fr-notice-due" id="fr_verifyNotice"></div>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verifySelect" data-label="entries to verify">View entries to verify</button>
             <div class="fr-history-list fr-collapsible" id="fr_verifySelect" style="margin-bottom:10px;"></div>
@@ -1577,6 +1578,35 @@
 
     let refreshVerification = () => {};
     if (showVerification) {
+      let verifyGate = { allowed: true, signedIn: true, roles: [], rolesLabel: '' };
+
+      async function loadVerifyGate() {
+        try { verifyGate = await window.SignOffBlock.verifyGate(config.recordKey); }
+        catch (e) { verifyGate = { allowed: true, signedIn: true, roles: [], rolesLabel: '' }; }
+        applyVerifyGate();
+      }
+
+      function applyVerifyGate() {
+        const btn = el('fr_saveVerificationBtn');
+        if (btn) {
+          btn.disabled = !verifyGate.allowed;
+          btn.title = verifyGate.allowed ? '' : window.SignOffBlock.gateMessage(verifyGate);
+        }
+        const line = el('fr_verifyGate');
+        if (!line) return;
+        if (verifyGate.allowed) { line.style.display = 'none'; line.innerHTML = ''; return; }
+        line.style.display = '';
+        line.textContent = window.SignOffBlock.gateMessage(verifyGate) + ' ';
+        if (!verifyGate.signedIn && window.LoginUI && window.LoginUI.showLoginModal) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'fr-btn fr-btn-flat fr-btn-sm';
+          b.textContent = 'Sign in';
+          b.addEventListener('click', () => window.LoginUI.showLoginModal());
+          line.appendChild(b);
+        }
+      }
+
       function pendingForVerification() {
         return submissions.filter(s => isSubmitted(s) && !s.verification);
       }
@@ -1611,6 +1641,7 @@
           notice.innerHTML = '';
           notice.classList.remove('show');
         }
+        applyVerifyGate();
         const target = el('fr_verificationHistory');
         if (!hist.length) { target.innerHTML = `<div class="fr-history-item fr-muted">No verification logged yet.</div>`; return; }
         target.innerHTML = hist.slice().reverse().map(v => `
@@ -1618,6 +1649,10 @@
       }
 
       el('fr_saveVerificationBtn').addEventListener('click', async () => {
+        verifyGate = await window.SignOffBlock.verifyGate(config.recordKey);
+        applyVerifyGate();
+        if (!verifyGate.allowed) { toast(window.SignOffBlock.gateMessage(verifyGate)); return; }
+
         const values = window.SignOffBlock.readVerifyInputs('fr_verified');
         if (!window.SignOffBlock.validateVerifyInputs(values)) { toast('Verified by, title, date and signature are all required.'); return; }
 
@@ -1638,6 +1673,10 @@
         renderVerificationHistory();
       });
       refreshVerification = renderVerificationHistory;
+      loadVerifyGate();
+      if (typeof document !== 'undefined') {
+        document.addEventListener('authSuccess', () => { loadVerifyGate(); });
+      }
     }
 
     el('fr_cancelBtn').addEventListener('click', onClearClick);

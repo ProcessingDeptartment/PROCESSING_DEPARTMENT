@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verifier Assignments</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--palette-ink,#1b2330); background:var(--palette-paper,#f4f5f3); font-size:13px; line-height:1.4; margin:0; }
+  *{ box-sizing:border-box; }
+  .dc-top{ background:var(--palette-dark,#1d2b38); color:var(--palette-dark-text,#f4f1e8); padding:14px 18px; }
+  .dc-top h1{ margin:0; font-size:18px; font-weight:600; }
+  .dc-top p{ margin:4px 0 0; color:var(--palette-dark-muted,#b9c3cc); font-size:12px; }
+  .dc-top a.back{ color:var(--palette-dark-muted,#b9c3cc); text-decoration:none; font-size:12px; display:inline-block; margin-top:6px; }
+  .dc-top a.back:hover{ color:#fff; }
+
+  .container{ max-width:1200px; margin:0 auto; padding:16px 20px 60px; }
+  .notice{ background:var(--palette-head-bg,#eef1f4); border-left:3px solid var(--palette-primary,#2f4356); padding:10px 14px; border-radius:3px; margin-bottom:14px; font-size:11.5px; color:var(--palette-label,#5c6771); }
+  .notice b{ color:var(--palette-heading,#2f4356); }
+
+  .toolbar{ background:#fff; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; padding:12px 14px; margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .toolbar input[type=text]{ padding:7px 10px; border:1px solid #d0d5db; border-radius:4px; font-size:13px; min-width:280px; }
+  .toolbar .default-roles{ font-size:11.5px; color:var(--palette-label,#5c6771); }
+  .toolbar .default-roles b{ color:var(--palette-heading,#2f4356); }
+  .save-state{ font-size:11.5px; color:var(--palette-ok,#2f7a52); font-weight:600; margin-left:auto; }
+  .save-state.err{ color:var(--palette-fail,#a3352d); }
+
+  .table-scroll{ overflow-x:auto; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; background:#fff; }
+  table{ width:100%; border-collapse:collapse; min-width:820px; }
+  th,td{ border-bottom:1px solid var(--palette-border,#e2e4e3); padding:8px 10px; text-align:left; font-size:12px; vertical-align:middle; }
+  thead th{ background:var(--palette-head-bg,#f6f7f8); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--palette-label,#5c6771); font-weight:700; position:sticky; top:0; z-index:2; }
+  tbody tr:hover{ background:var(--palette-head-bg,#f9fafb); }
+  tr.hidden{ display:none; }
+  td.c-code{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--palette-heading,#2f4356); white-space:nowrap; }
+  td.c-name a{ color:var(--palette-heading,#2f4356); font-weight:600; text-decoration:none; }
+  td.c-name a:hover{ text-decoration:underline; }
+  td.c-roles label{ display:inline-flex; align-items:center; gap:4px; margin:2px 10px 2px 0; font-size:11.5px; white-space:nowrap; }
+  td.c-roles input{ margin:0; }
+  td.c-state{ white-space:nowrap; font-size:11px; }
+  .pill{ display:inline-block; padding:1px 8px; border-radius:9px; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+  .pill-default{ background:#eef1f4; color:#6b7280; }
+  .pill-custom{ background:#fdf3e3; color:#9a6516; }
+  .btn-reset{ background:transparent; border:none; color:var(--palette-primary,#1d4ed8); cursor:pointer; font-size:11px; text-decoration:underline; padding:0; margin-left:6px; }
+  .btn-reset[disabled]{ color:#b6bcc2; cursor:default; text-decoration:none; }
+  .row-dirty td.c-roles{ box-shadow:inset 3px 0 0 var(--palette-primary,#c9832b); }
+  .no-results{ text-align:center; color:var(--palette-label,#5c6771); padding:40px 20px; }
+  .readonly-note{ font-size:11.5px; color:var(--palette-label,#5c6771); margin-top:10px; }
+  .back-link{ display:inline-block; margin-top:16px; color:var(--palette-heading,#2f4356); text-decoration:none; font-size:12.5px; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="dc-top">
+  <h1>Verifier Assignments</h1>
+  <p>Which role signs off each record. Used by the Awaiting Verification queue and the record verification panels.</p>
+  <a class="back" href="../index.html">&larr; Back to Processing Department</a>
+</div>
+
+<div class="container">
+  <div class="notice">
+    Set the role(s) allowed to <b>verify</b> each record. A record with nothing ticked uses the
+    <b>default</b> verifier roles. Only the assigned role can sign a record off on
+    <a href="awaiting-verification.html">Awaiting Verification</a> and on the record itself.
+    Changes save immediately and apply facility-wide.
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Filter by document number or name…" autocomplete="off">
+    <span class="default-roles">Default: <b id="defaultRoles">—</b></span>
+    <span class="save-state" id="saveState"></span>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:110px;">Doc No.</th>
+          <th style="width:260px;">Record</th>
+          <th>Verifier role(s)</th>
+          <th style="width:150px;">Assignment</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="no-results" id="noResults" style="display:none;">No records match that filter.</div>
+  <div class="readonly-note" id="readonlyNote" style="display:none;"></div>
+
+  <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
+</div>
+
+<script>
+  try {
+    fetch('https://processing-department-api.onrender.com/api/health',
+          { mode: 'cors', cache: 'no-store', keepalive: true }).catch(function () {});
+  } catch (e) {  }
+</script>
+
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/verification-queue.js?v=3"></script>
+<script>(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  };
+
+  var ROLE_LABELS = (window.PermissionRules && window.PermissionRules.ROLE_LABELS) || {};
+  // roles offered as verifier options — the supervisory / management set
+  var ROLE_CHOICES = ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR']
+    .filter(function (r) { return (window.PermissionRules && window.PermissionRules.ROLES || []).indexOf(r) !== -1; });
+
+  var DEFAULT_ROLES = window.VerificationQueue.baseVerifierRoles();
+  var ASSIGN_KEY = window.VerificationQueue.ASSIGN_KEY;
+
+  function roleLabel(r) { return ROLE_LABELS[r] || r.replace(/_/g, ' '); }
+  function labelList(roles) { return (roles || []).map(roleLabel).join(', ') || '—'; }
+
+  var RECORDS = ((window.MasterIndexData && window.MasterIndexData.rows) || [])
+    .filter(function (r) { return r.recordKey && r.href; })
+    .map(function (r) { return { recordKey: r.recordKey, docNo: r.docNo || '', name: r.name || r.recordKey, href: '../records/' + r.href }; })
+    .sort(function (a, b) { return String(a.docNo).localeCompare(String(b.docNo), undefined, { numeric: true, sensitivity: 'base' }); });
+
+  var assignments = {};     // recordKey -> [roles]
+  var canEdit = true;
+
+  function setSaveState(msg, isErr) {
+    var s = $('saveState');
+    s.textContent = msg || '';
+    s.classList.toggle('err', !!isErr);
+    if (msg && !isErr) setTimeout(function () { if (s.textContent === msg) s.textContent = ''; }, 1800);
+  }
+
+  function currentRoles(rk) {
+    var a = assignments[rk];
+    return (Array.isArray(a) && a.length) ? a : null; // null => default
+  }
+
+  function rowHtml(rec) {
+    var custom = currentRoles(rec.recordKey);
+    var active = custom || DEFAULT_ROLES;
+    var checks = ROLE_CHOICES.map(function (role) {
+      var on = active.indexOf(role) !== -1;
+      return '<label><input type="checkbox" class="rolebox" data-rk="' + esc(rec.recordKey) + '" value="' + esc(role) + '"' +
+        (on ? ' checked' : '') + (canEdit ? '' : ' disabled') + '>' + esc(roleLabel(role)) + '</label>';
+    }).join('');
+    var pill = custom
+      ? '<span class="pill pill-custom">Custom</span>'
+      : '<span class="pill pill-default">Default</span>';
+    var reset = '<button type="button" class="btn-reset" data-rk="' + esc(rec.recordKey) + '"' +
+      (custom && canEdit ? '' : ' disabled') + '>reset</button>';
+    return '<tr data-rk="' + esc(rec.recordKey) + '" data-hay="' + esc((rec.docNo + ' ' + rec.name).toLowerCase()) + '">' +
+      '<td class="c-code">' + esc(rec.docNo) + '</td>' +
+      '<td class="c-name"><a href="' + esc(rec.href) + '">' + esc(rec.name) + '</a></td>' +
+      '<td class="c-roles">' + checks + '</td>' +
+      '<td class="c-state">' + pill + reset + '</td>' +
+    '</tr>';
+  }
+
+  function render() {
+    $('tbody').innerHTML = RECORDS.map(rowHtml).join('');
+    filter();
+  }
+
+  function filter() {
+    var q = $('search').value.trim().toLowerCase();
+    var shown = 0;
+    $('tbody').querySelectorAll('tr').forEach(function (tr) {
+      var ok = !q || tr.getAttribute('data-hay').indexOf(q) !== -1;
+      tr.classList.toggle('hidden', !ok);
+      if (ok) shown++;
+    });
+    $('noResults').style.display = shown ? 'none' : 'block';
+  }
+
+  async function save() {
+    // prune empty arrays so a cleared record falls back to default
+    var out = {};
+    Object.keys(assignments).forEach(function (k) {
+      if (Array.isArray(assignments[k]) && assignments[k].length) out[k] = assignments[k];
+    });
+    assignments = out;
+    var ok = await window.storage.set(ASSIGN_KEY, JSON.stringify(out), true);
+    if (ok === false) { setSaveState('Not saved — retry', true); return false; }
+    setSaveState('Saved');
+    return true;
+  }
+
+  function onToggle(rk, role, on) {
+    var base = currentRoles(rk) || DEFAULT_ROLES.slice();
+    var set = new Set(base);
+    if (on) set.add(role); else set.delete(role);
+    assignments[rk] = ROLE_CHOICES.filter(function (r) { return set.has(r); });
+    save();
+    refreshRow(rk);
+  }
+
+  function resetRow(rk) {
+    delete assignments[rk];
+    save();
+    refreshRow(rk);
+  }
+
+  function refreshRow(rk) {
+    var tr = $('tbody').querySelector('tr[data-rk="' + (window.CSS && CSS.escape ? CSS.escape(rk) : rk) + '"]');
+    if (!tr) { render(); return; }
+    var rec = RECORDS.find(function (r) { return r.recordKey === rk; });
+    tr.outerHTML = rowHtml(rec);
+    var fresh = $('tbody').querySelector('tr[data-rk="' + (window.CSS && CSS.escape ? CSS.escape(rk) : rk) + '"]');
+    if (fresh) { fresh.classList.add('row-dirty'); setTimeout(function () { fresh.classList.remove('row-dirty'); }, 900); }
+    filter();
+  }
+
+  function wire() {
+    $('search').addEventListener('input', filter);
+    $('tbody').addEventListener('change', function (e) {
+      var cb = e.target.closest('.rolebox');
+      if (!cb || !canEdit) return;
+      onToggle(cb.getAttribute('data-rk'), cb.value, cb.checked);
+    });
+    $('tbody').addEventListener('click', function (e) {
+      var b = e.target.closest('.btn-reset');
+      if (!b || b.disabled || !canEdit) return;
+      resetRow(b.getAttribute('data-rk'));
+    });
+  }
+
+  async function init() {
+    $('defaultRoles').textContent = labelList(DEFAULT_ROLES);
+    canEdit = !window.PermissionRules || window.PermissionRules.can('manageMasterIndex');
+    wire();
+    render();
+
+    try { await window.storage.whenReady(); } catch (e) {  }
+    try {
+      var raw = await window.storage.get(ASSIGN_KEY, true);
+      assignments = raw && raw.value ? JSON.parse(raw.value) : {};
+      if (!assignments || typeof assignments !== 'object') assignments = {};
+    } catch (e) { assignments = {}; setSaveState('Could not load saved assignments', true); }
+    render();
+
+    if (!canEdit) {
+      $('readonlyNote').style.display = '';
+      $('readonlyNote').textContent = 'Read-only — QA management / document-control roles may change verifier assignments.';
+    }
+    var backend = window.storage.backendName();
+    if (backend === 'local') {
+      $('readonlyNote').style.display = '';
+      $('readonlyNote').textContent = 'The records API is not connected on this device — changes save to this device only. '
+        + 'Set a device key on the API key page for a facility-wide save.';
+    }
+  }
+
+  window.addEventListener('load', async function () {
+    if (window.LoginUI && window.LoginUI.ensureAuthenticated) {
+      try { await window.LoginUI.ensureAuthenticated(); } catch (e) {  }
+    }
+    if (!window.Auth || !window.Auth.isAuthenticated()) {
+      if (window.LoginUI) window.LoginUI.showLoginModal();
+      document.addEventListener('authSuccess', function once() {
+        document.removeEventListener('authSuccess', once);
+        init();
+      });
+      return;
+    }
+    init();
+  });
+})();
+</script>
+</body>
+</html>

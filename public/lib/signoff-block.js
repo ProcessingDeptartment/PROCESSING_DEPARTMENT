@@ -88,6 +88,58 @@
     return record;
   }
 
+  var VERIFIER_ASSIGN_KEY = 'verifier_assignments';
+
+  function baseVerifierRoles() {
+    var rules = window.PermissionRules && window.PermissionRules.RULES;
+    return (rules && rules.verifyRecord) ||
+      ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'];
+  }
+
+  var ROLE_LABELS_FALLBACK = {
+    PRODUCTION_SUPERVISOR: 'Production Supervisor', SHIFT_MANAGER: 'Shift Manager',
+    QUALITY_SUPERVISOR: 'Quality Supervisor', QUALITY_CONTROLLER: 'Quality Controller',
+    QA_MANAGER: 'QA Manager', PRODUCTION_MANAGER: 'Production Manager',
+    OPERATOR: 'Operator', ADMINISTRATOR: 'Administrator'
+  };
+
+  function roleLabel(r) {
+    var labels = (window.PermissionRules && window.PermissionRules.ROLE_LABELS) || ROLE_LABELS_FALLBACK;
+    return labels[r] || ROLE_LABELS_FALLBACK[r] || String(r).replace(/_/g, ' ');
+  }
+
+  // Roles allowed to verify this record: the saved per-record assignment if any,
+  // otherwise the default verifier roles.
+  async function assignedVerifierRoles(recordKey) {
+    try {
+      var raw = await storeGet(VERIFIER_ASSIGN_KEY, true);
+      var map = raw ? JSON.parse(raw) : {};
+      var a = map && map[recordKey];
+      if (Array.isArray(a) && a.length) return a.slice();
+    } catch (e) { /* fall through to default */ }
+    return baseVerifierRoles();
+  }
+
+  // Whether the signed-in user's role may verify this record.
+  async function verifyGate(recordKey) {
+    var roles = await assignedVerifierRoles(recordKey);
+    var role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;
+    return {
+      roles: roles,
+      rolesLabel: roles.map(roleLabel).join(', '),
+      role: role,
+      signedIn: !!role,
+      allowed: !!role && roles.indexOf(role) !== -1
+    };
+  }
+
+  function gateMessage(gate) {
+    if (gate.allowed) return '';
+    if (!gate.signedIn) return 'Sign in as ' + gate.rolesLabel + ' to verify this record.';
+    return 'Only ' + gate.rolesLabel + ' may verify this record. You are signed in as '
+      + roleLabel(gate.role) + '.';
+  }
+
   async function getVerificationHistory(recordKey) {
     const raw = await storeGet('verification_log:' + recordKey, true);
     try { return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
@@ -177,6 +229,7 @@
   window.SignOffBlock = {
     completedByHtml, printRow, mountVerification,
     verifyIds, verifyFieldsHtml, printOnlyVerifyFieldsHtml, readVerifyInputs, clearVerifyInputs, validateVerifyInputs,
-    historyLine, logVerification, getVerificationHistory
+    historyLine, logVerification, getVerificationHistory,
+    baseVerifierRoles, assignedVerifierRoles, verifyGate, gateMessage, roleLabel
   };
 })();

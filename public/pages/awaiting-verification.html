@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Awaiting Verification</title>
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .container{ max-width:1200px; margin:0 auto; padding:20px 20px 140px; }
+
+  .who{ display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; margin-bottom:14px; }
+  .who strong{ font-size:16px; }
+  .who .muted{ color:#5c6771; }
+
+  .state{ padding:10px 12px; border-radius:6px; font-size:12.5px; font-weight:600; margin-bottom:14px; }
+  .state.ok{ background:#e8f3ec; color:#2f7a52; }
+  .state.bad{ background:#fbe8e6; color:#a3352d; }
+  .state.info{ background:#e6eefb; color:#1d4ed8; }
+
+  .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .seg{ display:inline-flex; border:1px solid #d0d5db; border-radius:6px; overflow:hidden; }
+  .seg button{ padding:7px 14px; border:none; background:#fff; font-size:12px; cursor:pointer; }
+  .seg button.active{ background:#2f4356; color:#fff; }
+  .btn{ padding:7px 12px; border:1px solid #d0d5db; background:#fff; border-radius:6px; font-size:12px; cursor:pointer; }
+  .btn:hover{ background:#f2f4f6; }
+
+  .grp{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:14px; overflow:hidden; }
+  .grp-head{ padding:10px 14px; background:#fbfbfa; border-bottom:1px solid #e2e4e3; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .grp-head h2{ margin:0; font-size:13px; }
+  .grp-head a{ color:#1d4ed8; text-decoration:none; }
+  .grp-head a:hover{ text-decoration:underline; }
+  .grp-head .count{ background:#fbe8e6; color:#a3352d; border-radius:20px; padding:2px 9px; font-size:11px; font-weight:700; }
+  .grp-head .roles{ color:#5c6771; font-size:11px; margin-left:auto; }
+
+  table{ width:100%; border-collapse:collapse; }
+  th,td{ border-bottom:1px solid #eceeef; padding:8px 12px; text-align:left; font-size:12px; vertical-align:top; }
+  th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; white-space:nowrap; }
+  tbody tr:hover{ background:#f9fafb; }
+  td.chk,th.chk{ width:28px; text-align:center; }
+  td.when{ white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-size:11.5px; }
+  .age.old{ color:#a3352d; font-weight:700; }
+  .rev{ background:transparent; border:none; color:#1d4ed8; cursor:pointer; font-size:11.5px; padding:0; text-decoration:underline; }
+  tr.detail td{ background:#f8fafc; }
+  dl.vals{ margin:0; display:grid; grid-template-columns:max-content 1fr; gap:2px 14px; }
+  dl.vals dt{ color:#5c6771; font-weight:600; }
+  dl.vals dd{ margin:0; }
+  tr.foreign td{ color:#8a939b; }
+
+  .empty{ padding:24px; text-align:center; color:#8a939b; background:#fff; border:1px solid #e2e4e3; border-radius:8px; }
+
+  .verifybar{ position:fixed; left:0; right:0; bottom:0; background:#1d2b38; color:#f4f1e8; padding:12px 20px; z-index:50;
+    display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; box-shadow:0 -6px 20px rgba(0,0,0,.18); }
+  .verifybar.hidden{ display:none; }
+  .verifybar .sel{ font-weight:700; font-size:13px; padding-bottom:6px; }
+  .verifybar label{ display:flex; flex-direction:column; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#b9c3cc; gap:3px; }
+  .verifybar input{ padding:7px 9px; border:1px solid #55636e; border-radius:5px; font-size:12px; background:#fff; color:#1b2330; min-width:150px; }
+  .verifybar input[readonly]{ background:#e9edf1; }
+  .verifybar .go{ background:#2f7a52; color:#fff; border:none; border-radius:6px; padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; }
+  .verifybar .go:disabled{ background:#5c6771; cursor:default; }
+
+  .note{ margin-top:18px; background:#fbf0dc; color:#8a5a10; border-radius:6px; padding:11px 13px; font-size:11.5px; }
+  #toast{ position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:#1b2330; color:#fff; padding:10px 16px; border-radius:6px; font-size:12.5px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:60; }
+  #toast.show{ opacity:1; }
+  @media (max-width:640px){ .container{ padding:12px 12px 200px; } .verifybar input{ min-width:120px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Awaiting Verification</h1>
+  <p>Every submitted entry waiting for <em>your</em> verification, in one place &mdash; review and sign them off without opening each record.</p>
+  <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
+</div>
+
+<div class="container">
+  <div class="who" id="who"></div>
+  <div class="state info" id="state">Loading&hellip;</div>
+
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <div class="seg">
+      <button data-scope="mine" class="active">My queue</button>
+      <button data-scope="all">All pending</button>
+    </div>
+    <button class="btn" id="btnRefresh">Refresh</button>
+    <button class="btn" id="btnExpandAll">Expand all</button>
+  </div>
+
+  <div id="groups"></div>
+
+  <div class="note" id="note"></div>
+</div>
+
+<div class="verifybar hidden" id="verifybar">
+  <span class="sel" id="selCount">0 selected</span>
+  <label>Verified by<input id="vBy" readonly></label>
+  <label>Title<input id="vTitle" placeholder="e.g. QA Manager"></label>
+  <label>Date<input id="vDate" type="date"></label>
+  <label>Signature<input id="vSig" placeholder="Type your name"></label>
+  <button class="go" id="btnVerify">Verify selected</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  try {
+    fetch('https://processing-department-api.onrender.com/api/health',
+          { mode: 'cors', cache: 'no-store', keepalive: true }).catch(function () {});
+  } catch (e) {  }
+</script>
+
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=6"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/signoff-block.js?v=3"></script>
+<script src="../lib/verification-queue.js?v=3"></script>
+<script>(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  };
+
+  var ROLE_LABELS = (window.PermissionRules && window.PermissionRules.ROLE_LABELS) || {};
+  var indexByKey = {};
+  ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (row) {
+    if (row.recordKey) indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
+  });
+
+  function labelRoles(roles) {
+    return (roles || []).map(function (r) { return ROLE_LABELS[r] || r.replace(/_/g, ' '); }).join(', ');
+  }
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+  function setState(cls, html) { var s = $('state'); s.className = 'state ' + cls; s.innerHTML = html; }
+  function today() {
+    var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    var d = new Date(ts); if (isNaN(d.getTime())) return '—';
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function daysAgo(ts) { return ts ? Math.floor((Date.now() - ts) / 86400000) : null; }
+
+  var DATEISH = /date/i;
+  function entryDate(values) {
+    if (!values) return '';
+    var k = Object.keys(values).find(function (key) { return DATEISH.test(key) && values[key]; });
+    return k ? String(values[k]) : '';
+  }
+  function entryRef(values) {
+    if (!values) return '';
+    var jk = Object.keys(values).find(function (k) { return /job.*(no|number)/i.test(k) && values[k]; });
+    if (jk) return String(values[jk]);
+    var k = Object.keys(values).find(function (key) {
+      var v = values[key];
+      return v != null && typeof v !== 'object' && !DATEISH.test(key) && String(v).trim() !== '' && String(v).length <= 30;
+    });
+    return k ? String(values[k]) : '';
+  }
+  function personOf(values) {
+    if (!values) return '';
+    var k = Object.keys(values).find(function (key) {
+      return /(completed|recorded|checked|done|performed).*by|^operator$|^name$/i.test(key) && values[key];
+    });
+    return k ? String(values[k]) : '';
+  }
+  function isAwaiting(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    var submitted = entry.status == null || entry.status === 'submitted';
+    return submitted && !entry.verification;
+  }
+  function whenOf(entry) { return entry.submittedAt || entry.updatedAt || entry.createdAt || 0; }
+
+  var STATE = { scope: 'mine', role: null, user: null, rows: [], picked: {}, open: {} };
+
+  async function scan() {
+    var pair = await Promise.all([
+      window.storage.getByPrefix('formrecord:', true),
+      window.storage.getByPrefix('monitoring_log:', true)
+    ]);
+    var rows = [];
+    pair.forEach(function (map, i) {
+      var prefix = i === 0 ? 'formrecord:' : 'monitoring_log:';
+      var engine = i === 0 ? 'form' : 'log';
+      Object.keys(map || {}).forEach(function (storageKey) {
+        var suffix = storageKey.slice(prefix.length);
+        var recordKey = suffix.replace(/__.*$/, '').split(':')[0];
+        if (!recordKey) return;
+        var list;
+        try { list = JSON.parse(map[storageKey]); } catch (e) { return; }
+        list = Array.isArray(list) ? list : [list];
+        var allowed = window.VerificationQueue.rolesFor(recordKey);
+        var meta = indexByKey[recordKey] || {};
+        list.forEach(function (entry) {
+          if (!isAwaiting(entry)) return;
+          rows.push({
+            storageKey: storageKey, engine: engine, recordKey: recordKey,
+            id: entry.id || '', name: meta.name || recordKey, docNo: meta.docNo || '',
+            href: meta.href ? '../records/' + meta.href : null,
+            values: entry.values || {},
+            entryDate: entryDate(entry.values), ref: entryRef(entry.values), who: personOf(entry.values),
+            submittedAt: whenOf(entry), allowedRoles: allowed,
+            mine: allowed.indexOf(STATE.role) !== -1
+          });
+        });
+      });
+    });
+    rows.sort(function (a, b) { return (a.submittedAt || Infinity) - (b.submittedAt || Infinity); });
+    STATE.rows = rows;
+  }
+
+  function visibleRows() {
+    return STATE.rows.filter(function (r) { return STATE.scope === 'all' || r.mine; });
+  }
+
+  function groupRows(rows) {
+    var groups = [];
+    var byKey = {};
+    rows.forEach(function (r) {
+      var g = byKey[r.recordKey];
+      if (!g) { g = byKey[r.recordKey] = { recordKey: r.recordKey, name: r.name, docNo: r.docNo, href: r.href, allowedRoles: r.allowedRoles, mine: r.mine, rows: [] }; groups.push(g); }
+      g.rows.push(r);
+    });
+    return groups;
+  }
+
+  function rowId(r) { return r.storageKey + '|' + r.id; }
+
+  function render() {
+    var user = STATE.user, roleLabel = ROLE_LABELS[STATE.role] || (STATE.role || '').replace(/_/g, ' ');
+    $('who').innerHTML = '<strong>' + esc(user || 'Not signed in') + '</strong>' +
+      '<span class="muted">' + (STATE.role ? '(' + esc(roleLabel) + ')' : '') + '</span>';
+
+    var mineCount = STATE.rows.filter(function (r) { return r.mine; }).length;
+    var anyVerifierRecords = STATE.rows.some(function (r) { return r.mine; }) ||
+      window.VerificationQueue.baseVerifierRoles().indexOf(STATE.role) !== -1;
+
+    if (!anyVerifierRecords) {
+      setState('info', 'Your role (' + esc(roleLabel) + ') carries no verification duties, so nothing is assigned to you here.');
+    } else if (!mineCount) {
+      setState('ok', 'Nothing is waiting for your verification right now.');
+    } else {
+      setState('bad', '<strong>' + mineCount + '</strong> ' + (mineCount === 1 ? 'entry is' : 'entries are') + ' awaiting your verification.');
+    }
+    $('toolbar').style.display = '';
+
+    var rows = visibleRows();
+    var groups = groupRows(rows);
+    var box = $('groups');
+    if (!groups.length) {
+      box.innerHTML = '<div class="empty">' +
+        (STATE.scope === 'all' ? 'No submitted entries are awaiting verification anywhere.' : 'Nothing in your queue.') + '</div>';
+    } else {
+      box.innerHTML = groups.map(renderGroup).join('');
+    }
+    wireGroups();
+    renderBar();
+    $('note').innerHTML =
+      'Verification is restricted: only the role assigned to a record can sign it off, and the ' +
+      '<em>Verified by</em> name is taken from your login. Rows for other roles are shown greyed under ' +
+      '<strong>All pending</strong> and cannot be selected. The signed verification stored on each record ' +
+      'remains the evidence — this page is a work queue.';
+  }
+
+  function renderGroup(g) {
+    var selectable = g.mine;
+    return '<div class="grp" data-record="' + esc(g.recordKey) + '">' +
+      '<div class="grp-head">' +
+        (selectable ? '<input type="checkbox" class="grp-all" title="Select all in this record">' : '') +
+        '<h2>' + (g.href ? '<a href="' + esc(g.href) + '">' + esc(g.docNo ? g.docNo + ' — ' + g.name : g.name) + '</a>'
+                         : esc(g.docNo ? g.docNo + ' — ' + g.name : g.name)) + '</h2>' +
+        '<span class="count">' + g.rows.length + '</span>' +
+        '<span class="roles">Verifier: ' + esc(labelRoles(g.allowedRoles)) + (selectable ? '' : ' — not you') + '</span>' +
+      '</div>' +
+      '<table><thead><tr>' +
+        '<th class="chk"></th><th>Entry date</th><th>Ref</th><th>Submitted by</th><th>Waiting</th><th></th>' +
+      '</tr></thead><tbody>' +
+      g.rows.map(function (r) {
+        var d = daysAgo(r.submittedAt);
+        var ageCls = (d != null && d >= 7) ? 'age old' : 'age';
+        var age = d == null ? '—' : fmtDate(r.submittedAt) + ' (' + d + 'd)';
+        var rid = rowId(r);
+        var open = !!STATE.open[rid];
+        var main = '<tr class="' + (r.mine ? '' : 'foreign') + '">' +
+          '<td class="chk">' + (r.mine
+            ? '<input type="checkbox" class="row-pick" data-rid="' + esc(rid) + '"' + (STATE.picked[rid] ? ' checked' : '') + '>'
+            : '') + '</td>' +
+          '<td class="when">' + esc(r.entryDate || '—') + '</td>' +
+          '<td>' + esc(r.ref || '—') + '</td>' +
+          '<td>' + esc(r.who || '—') + '</td>' +
+          '<td class="' + ageCls + '">' + age + '</td>' +
+          '<td><button type="button" class="rev" data-rid="' + esc(rid) + '">' + (open ? 'Hide' : 'Preview') + '</button></td>' +
+        '</tr>';
+        var detail = open ? '<tr class="detail"><td></td><td colspan="5">' + valuesDl(r.values) + '</td></tr>' : '';
+        return main + detail;
+      }).join('') +
+      '</tbody></table></div>';
+  }
+
+  function valuesDl(values) {
+    var keys = Object.keys(values || {}).filter(function (k) {
+      var v = values[k];
+      return v != null && v !== '' && typeof v !== 'object';
+    });
+    if (!keys.length) return '<span class="muted">No field values captured on this entry.</span>';
+    return '<dl class="vals">' + keys.map(function (k) {
+      return '<dt>' + esc(k) + '</dt><dd>' + esc(values[k]) + '</dd>';
+    }).join('') + '</dl>';
+  }
+
+  function wireGroups() {
+    document.querySelectorAll('.row-pick').forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        var rid = cb.getAttribute('data-rid');
+        if (cb.checked) STATE.picked[rid] = true; else delete STATE.picked[rid];
+        syncGroupAll();
+        renderBar();
+      });
+    });
+    document.querySelectorAll('.rev').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var rid = b.getAttribute('data-rid');
+        STATE.open[rid] = !STATE.open[rid];
+        render();
+      });
+    });
+    document.querySelectorAll('.grp').forEach(function (grp) {
+      var all = grp.querySelector('.grp-all');
+      if (!all) return;
+      all.addEventListener('change', function () {
+        grp.querySelectorAll('.row-pick').forEach(function (cb) {
+          cb.checked = all.checked;
+          var rid = cb.getAttribute('data-rid');
+          if (all.checked) STATE.picked[rid] = true; else delete STATE.picked[rid];
+        });
+        renderBar();
+      });
+    });
+    syncGroupAll();
+  }
+
+  function syncGroupAll() {
+    document.querySelectorAll('.grp').forEach(function (grp) {
+      var all = grp.querySelector('.grp-all');
+      if (!all) return;
+      var picks = grp.querySelectorAll('.row-pick');
+      var checked = 0;
+      picks.forEach(function (cb) { if (cb.checked) checked++; });
+      all.checked = checked > 0 && checked === picks.length;
+      all.indeterminate = checked > 0 && checked < picks.length;
+    });
+  }
+
+  function pickedRows() {
+    return STATE.rows.filter(function (r) { return STATE.picked[rowId(r)]; });
+  }
+
+  function renderBar() {
+    var picked = pickedRows();
+    var bar = $('verifybar');
+    if (!picked.length) { bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+    $('selCount').textContent = picked.length + ' selected';
+  }
+
+  async function doVerify() {
+    var picked = pickedRows();
+    if (!picked.length) return;
+
+    var foreign = picked.filter(function (r) { return !r.mine; });
+    if (foreign.length) { toast('Some selected entries are not assigned to your role. Refresh and retry.'); return; }
+
+    var v = {
+      verifiedBy: ($('vBy').value || '').trim(),
+      verifiedSig: ($('vTitle').value || '').trim(),
+      verifiedDate: $('vDate').value,
+      verifiedSignature: ($('vSig').value || '').trim()
+    };
+    if (!window.SignOffBlock.validateVerifyInputs(v)) { toast('Verified by, title, date and signature are all required.'); return; }
+
+    $('btnVerify').disabled = true;
+    try {
+      // group picked entry ids by storage key, and record keys for the history log
+      var byStore = {}, byRecord = {};
+      picked.forEach(function (r) {
+        (byStore[r.storageKey] || (byStore[r.storageKey] = [])).push(r.id);
+        (byRecord[r.recordKey] || (byRecord[r.recordKey] = [])).push(r.id);
+      });
+
+      var record = { verifiedBy: v.verifiedBy, verifiedSig: v.verifiedSig, verifiedDate: v.verifiedDate, verifiedSignature: v.verifiedSignature, loggedAt: Date.now() };
+
+      // 1. write verification onto each affected entry, per storage key
+      for (var storeKey in byStore) {
+        var ids = new Set(byStore[storeKey]);
+        var raw = await window.storage.get(storeKey, true);
+        var list;
+        try { list = JSON.parse(raw ? raw.value : '[]'); } catch (e) { list = []; }
+        if (!Array.isArray(list)) continue;
+        list.forEach(function (entry) {
+          if (entry && ids.has(entry.id) && !entry.verification) entry.verification = record;
+        });
+        var ok = await window.storage.set(storeKey, JSON.stringify(list), true);
+        if (ok === false) throw new Error('save failed for ' + storeKey);
+      }
+
+      // 2. append to each record's verification history log
+      for (var rk in byRecord) {
+        try { await window.SignOffBlock.logVerification({ recordKey: rk, values: v, picked: byRecord[rk] }); }
+        catch (e) { console.error('history log failed for ' + rk, e); }
+      }
+
+      var n = picked.length;
+      STATE.picked = {};
+      $('vTitle').value = ''; $('vSig').value = '';
+      await scan();
+      render();
+      toast('Verified ' + n + ' ' + (n === 1 ? 'entry' : 'entries') + '.');
+    } catch (e) {
+      console.error('verification failed', e);
+      toast('Verification could not be saved — please retry.');
+    } finally {
+      $('btnVerify').disabled = false;
+    }
+  }
+
+  function wireStatic() {
+    document.querySelectorAll('.seg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        STATE.scope = b.getAttribute('data-scope');
+        document.querySelectorAll('.seg button').forEach(function (x) { x.classList.toggle('active', x === b); });
+        render();
+      });
+    });
+    $('btnRefresh').addEventListener('click', async function () {
+      setState('info', 'Refreshing…');
+      try { await window.VerificationQueue.loadAssignments(true); } catch (e) {  }
+      await scan(); render();
+    });
+    $('btnExpandAll').addEventListener('click', function () {
+      var rows = visibleRows(), anyClosed = rows.some(function (r) { return !STATE.open[rowId(r)]; });
+      rows.forEach(function (r) { STATE.open[rowId(r)] = anyClosed; });
+      $('btnExpandAll').textContent = anyClosed ? 'Collapse all' : 'Expand all';
+      render();
+    });
+    $('btnVerify').addEventListener('click', doVerify);
+  }
+
+  async function start() {
+    STATE.user = window.Auth.getCurrentUsername();
+    STATE.role = window.Auth.getCurrentRole();
+    $('vBy').value = STATE.user || '';
+    $('vDate').value = today();
+    try { await window.storage.whenReady(); } catch (e) {  }
+    try { await window.VerificationQueue.loadAssignments(); } catch (e) {  }
+    try {
+      await scan();
+      render();
+    } catch (e) {
+      console.error(e);
+      setState('bad', 'Could not load the queue. If this device has no access key, an empty queue does not mean ' +
+        'there is nothing waiting — set one on <a href="api-key.html">the API key page</a>.');
+    }
+  }
+
+  window.addEventListener('load', async function () {
+    wireStatic();
+    if (window.LoginUI && window.LoginUI.ensureAuthenticated) {
+      try { await window.LoginUI.ensureAuthenticated(); } catch (e) {  }
+    }
+    if (!window.Auth || !window.Auth.isAuthenticated()) {
+      setState('bad', 'Sign in to see what is waiting for your verification.');
+      $('toolbar').style.display = 'none';
+      if (window.LoginUI) window.LoginUI.showLoginModal();
+      document.addEventListener('authSuccess', function once() {
+        document.removeEventListener('authSuccess', once);
+        start();
+      });
+      return;
+    }
+    start();
+  });
+})();
+</script>
+</body>
+</html>

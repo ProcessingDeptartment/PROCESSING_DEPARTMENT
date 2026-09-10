@@ -1,9 +1,35 @@
 (function () {
   'use strict';
 
+  /* Per-record override of which role(s) may verify that record. When a record
+     is not listed here it falls back to PermissionRules.RULES.verifyRecord.
+     Populated at runtime from the shared 'verifier_assignments' store, which is
+     edited on pages/verifier-assignments.html — call loadAssignments() first.
+     Keys are recordKeys (the master-index recordKey / the slug in the storage key). */
   var BY_RECORD = {
 
   };
+
+  var ASSIGN_KEY = 'verifier_assignments';
+  var assignmentsLoaded = false;
+
+  /* Merge saved per-record verifier overrides into BY_RECORD. Safe to call more
+     than once; a later save is picked up on the next call. */
+  async function loadAssignments(force) {
+    if (assignmentsLoaded && !force) return BY_RECORD;
+    try {
+      var raw = await window.storage.get(ASSIGN_KEY, true);
+      var map = raw && raw.value ? JSON.parse(raw.value) : {};
+      Object.keys(map).forEach(function (k) {
+        if (Array.isArray(map[k]) && map[k].length) BY_RECORD[k] = map[k].slice();
+        else delete BY_RECORD[k];
+      });
+      assignmentsLoaded = true;
+    } catch (e) {
+      console.error('verifier assignments load failed', e);
+    }
+    return BY_RECORD;
+  }
 
   function baseVerifierRoles() {
     var rules = window.PermissionRules && window.PermissionRules.RULES;
@@ -126,5 +152,9 @@
     return q;
   }
 
-  window.VerificationQueue = { forRole: forRole, forCurrentUser: forCurrentUser, flagOnLogin: flagOnLogin, BY_RECORD: BY_RECORD };
+  window.VerificationQueue = {
+    forRole: forRole, forCurrentUser: forCurrentUser, flagOnLogin: flagOnLogin,
+    BY_RECORD: BY_RECORD, rolesFor: rolesFor, baseVerifierRoles: baseVerifierRoles,
+    loadAssignments: loadAssignments, ASSIGN_KEY: ASSIGN_KEY
+  };
 })();
