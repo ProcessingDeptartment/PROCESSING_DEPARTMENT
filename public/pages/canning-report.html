@@ -73,8 +73,8 @@
   <div class="cr-body">
     <div class="panel no-print">
       <div class="toolbar">
-        <label class="muted">Job no.</label>
-        <select id="jobSelect" style="min-width:180px;padding:6px 9px;"></select>
+        <span class="muted">Job no.</span>
+        <span class="jobno" id="jobLabel" style="font-size:16px;">—</span>
         <button class="btn btn-flat" id="refreshBtn">Refresh</button>
         <span class="grow"></span>
         <button class="btn btn-flat" id="csvBtn">Export CSV</button>
@@ -334,8 +334,10 @@
     `;
   }
 
+  let CURRENT_JOB = null;
+
   function currentJob() {
-    return $('jobSelect').value;
+    return CURRENT_JOB;
   }
 
   function statusRowFor(jobNo) {
@@ -343,6 +345,7 @@
   }
 
   function downloadCsv() {
+    if (!currentJob()) { alert('No job specified.'); return; }
     const rep = buildReport(currentJob(), statusRowFor(currentJob()));
     const q = (s) => `"${String(s == null ? '' : s).replace(/"/g, '""')}"`;
     const lines = [];
@@ -408,33 +411,28 @@
   }
 
   async function show(jobNo) {
-    if (!jobNo) { $('reportPanel').innerHTML = '<div class="muted">Pick a job number.</div>'; return; }
+    $('jobLabel').textContent = jobNo || '—';
+    if (!jobNo) {
+      $('reportPanel').innerHTML = '<div class="muted">No job specified. Open this report from <a href="job-status.html">Job Status Updates</a>.</div>';
+      return;
+    }
     const statusRow = statusRowFor(jobNo);
     const rep = buildReport(jobNo, statusRow);
     render(rep, statusRow);
     $('statusLine').textContent =
       `${rep.counts.receiving} receiving · ${rep.counts.cans} cans produced · ${rep.counts.precook} precooking · ${rep.counts.oosw} OOSW record(s) for this job`;
-    const url = new URL(location.href);
-    url.searchParams.set('job', jobNo);
-    history.replaceState(null, '', url);
   }
 
   async function refresh() {
     $('statusLine').textContent = 'Loading…';
-    const keep = currentJob();
     [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
     JOB_STATUSES = STATUSES.filter((s) => isCanningJob(s.job_no));
-
-    $('jobSelect').innerHTML = JOB_STATUSES.map((s) =>
-      `<option value="${esc(s.job_no)}">${esc(s.job_no)}${s.status === 'closed' ? ' (closed)' : ''}</option>`).join('');
-    const wanted = keep || new URLSearchParams(location.search).get('job');
-    if (wanted && JOB_STATUSES.some((s) => String(s.job_no) === String(wanted))) $('jobSelect').value = wanted;
+    CURRENT_JOB = new URLSearchParams(location.search).get('job');
     await show(currentJob());
   }
 
   async function init() {
     if (window.LoginUI) { await window.LoginUI.ensureAuthenticated(); }
-    $('jobSelect').addEventListener('change', () => show(currentJob()));
     $('refreshBtn').addEventListener('click', refresh);
     $('csvBtn').addEventListener('click', downloadCsv);
     $('printBtn').addEventListener('click', () => window.print());

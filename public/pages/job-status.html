@@ -139,6 +139,15 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  function isCanningJob(jobNo) {
+    const j = String(jobNo || '').toUpperCase();
+    return j.startsWith('3CP') || j.startsWith('CPR');
+  }
+  function isDryingJob(jobNo) {
+    const j = String(jobNo || '').toUpperCase();
+    return j.startsWith('3DP') || j.startsWith('DPR');
+  }
+
   let rows = [];
 
 
@@ -217,8 +226,9 @@
         <td><span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span></td>
         <td>${closedTxt}</td>
         <td class="no-print" style="white-space:nowrap;">
-          <a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Canning</a>
-          <a class="btn btn-flat btn-sm" href="drying-report.html?job=${encodeURIComponent(r.job_no)}">Drying</a>
+          ${isCanningJob(r.job_no) ? `<a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Canning</a>` : ''}
+          ${isDryingJob(r.job_no) ? `<a class="btn btn-flat btn-sm" href="drying-report.html?job=${encodeURIComponent(r.job_no)}">Drying</a>` : ''}
+          ${!isCanningJob(r.job_no) && !isDryingJob(r.job_no) ? '<span class="muted">—</span>' : ''}
         </td>
         <td class="no-print" style="white-space:nowrap;">
           <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">Details</button>
