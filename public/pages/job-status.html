@@ -43,6 +43,17 @@
   .pill.open{ background:var(--palette-ok-bg); color:var(--palette-ok); }
   .pill.closed{ background:#e7eaec; color:#5b6b78; }
   .table-wrap{ overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(20,26,30,.55); display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto; z-index:50; }
+  .modal-backdrop[hidden]{ display:none; }
+  .modal{ background:#fff; border-radius:8px; padding:18px 20px; width:100%; max-width:520px; }
+  .modal h2{ font-size:16px; margin:0 0 12px; }
+  .field-row{ display:flex; flex-direction:column; gap:3px; margin-bottom:10px; }
+  .field-row label{ font-size:12px; color:#5c6771; font-weight:600; }
+  .field-row input, .field-row textarea{ font-family:var(--sans); font-size:14px; padding:6px 9px; border:1px solid var(--line); border-radius:4px; }
+  .field-row textarea{ resize:vertical; min-height:50px; }
+  .nrcs-row{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+  .nrcs-row input{ flex:1; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
   @media print{
     .no-print{ display:none !important; }
     .js-top{ background:#fff; color:#000; border-bottom:2px solid #000; }
@@ -96,10 +107,30 @@
       </div>
     </div>
   </div>
+  <div class="modal-backdrop no-print" id="detailsModal" hidden>
+    <div class="modal">
+      <h2>Job details — <span id="detailsJobNo"></span></h2>
+      <div class="field-row"><label>GRN No.</label><input type="text" id="fldGrnNo"></div>
+      <div class="field-row"><label>PO No.</label><input type="text" id="fldPoNo"></div>
+      <div class="field-row"><label>Cost per Kg</label><input type="text" id="fldCostPerKg"></div>
+      <div class="field-row"><label>Delivery note no.</label><input type="text" id="fldDeliveryNoteNo"></div>
+      <div class="field-row"><label>Canning efficiency</label><input type="text" id="fldCanningEfficiency"></div>
+      <div class="field-row"><label>Comments</label><textarea id="fldComments"></textarea></div>
+      <div class="field-row">
+        <label>NRCS AG codes (a job may have more than one)</label>
+        <div id="nrcsRows"></div>
+        <button class="btn btn-flat btn-sm" id="addNrcsRow" type="button">+ Add NRCS AG code</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-flat" id="cancelDetails" type="button">Cancel</button>
+        <button class="btn btn-primary" id="saveDetails" type="button">Save</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/job-status.js?v=3"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -189,7 +220,8 @@
           <a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Canning</a>
           <a class="btn btn-flat btn-sm" href="drying-report.html?job=${encodeURIComponent(r.job_no)}">Drying</a>
         </td>
-        <td class="no-print">
+        <td class="no-print" style="white-space:nowrap;">
+          <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">Details</button>
           <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}">
             ${closed ? 'Reopen' : 'Close job'}
           </button>
@@ -200,6 +232,68 @@
     document.querySelectorAll('[data-toggle]').forEach((btn) => {
       btn.addEventListener('click', () => toggleJob(btn.dataset.toggle, btn.dataset.closed === '1'));
     });
+    document.querySelectorAll('[data-details]').forEach((btn) => {
+      btn.addEventListener('click', () => openDetails(btn.dataset.details));
+    });
+  }
+
+  let editingJobNo = null;
+
+  function nrcsRowHtml(agCode, additionalCans) {
+    return `<div class="nrcs-row">
+      <input type="text" placeholder="NRCS AG code" class="nrcs-ag" value="${esc(agCode || '')}">
+      <input type="text" placeholder="Additional cans" class="nrcs-cans" value="${esc(additionalCans || '')}" style="max-width:130px;">
+      <button class="btn btn-flat btn-sm" type="button" data-remove-nrcs>✕</button>
+    </div>`;
+  }
+
+  function wireNrcsRemove() {
+    $('nrcsRows').querySelectorAll('[data-remove-nrcs]').forEach((btn) => {
+      btn.addEventListener('click', () => btn.closest('.nrcs-row').remove());
+    });
+  }
+
+  function openDetails(jobNo) {
+    editingJobNo = jobNo;
+    const row = rows.find((r) => String(r.job_no) === String(jobNo)) || {};
+    $('detailsJobNo').textContent = jobNo;
+    $('fldGrnNo').value = row.grnNo || '';
+    $('fldPoNo').value = row.poNo || '';
+    $('fldCostPerKg').value = row.costPerKg || '';
+    $('fldDeliveryNoteNo').value = row.deliveryNoteNo || '';
+    $('fldCanningEfficiency').value = row.canningEfficiency || '';
+    $('fldComments').value = row.comments || '';
+    const entries = Array.isArray(row.nrcsEntries) && row.nrcsEntries.length ? row.nrcsEntries : [{}];
+    $('nrcsRows').innerHTML = entries.map((e) => nrcsRowHtml(e.agCode, e.additionalCans)).join('');
+    wireNrcsRemove();
+    $('detailsModal').hidden = false;
+  }
+
+  function closeDetails() {
+    $('detailsModal').hidden = true;
+    editingJobNo = null;
+  }
+
+  async function saveDetailsClick() {
+    if (!editingJobNo) return;
+    const nrcsEntries = Array.from($('nrcsRows').querySelectorAll('.nrcs-row')).map((row) => ({
+      agCode: row.querySelector('.nrcs-ag').value.trim(),
+      additionalCans: row.querySelector('.nrcs-cans').value.trim()
+    })).filter((e) => e.agCode || e.additionalCans);
+
+    const patch = {
+      grnNo: $('fldGrnNo').value.trim(),
+      poNo: $('fldPoNo').value.trim(),
+      costPerKg: $('fldCostPerKg').value.trim(),
+      deliveryNoteNo: $('fldDeliveryNoteNo').value.trim(),
+      canningEfficiency: $('fldCanningEfficiency').value.trim(),
+      comments: $('fldComments').value.trim(),
+      nrcsEntries
+    };
+    const res = await window.JobStatus.saveDetails(editingJobNo, patch);
+    if (!res) { alert('Could not save — please retry.'); return; }
+    closeDetails();
+    await load();
   }
 
   async function toggleJob(jobNo, isClosed) {
@@ -242,6 +336,12 @@
     $('showClosed').addEventListener('change', render);
     $('csvBtn').addEventListener('click', downloadCsv);
     $('printBtn').addEventListener('click', () => window.print());
+    $('addNrcsRow').addEventListener('click', () => {
+      $('nrcsRows').insertAdjacentHTML('beforeend', nrcsRowHtml('', ''));
+      wireNrcsRemove();
+    });
+    $('cancelDetails').addEventListener('click', closeDetails);
+    $('saveDetails').addEventListener('click', saveDetailsClick);
     await load();
   }
 

@@ -88,7 +88,7 @@
 </div>
 
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/job-status.js?v=3"></script>
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
@@ -136,7 +136,9 @@
     CACHE = { receiving, cansProduced, precooking, oosw };
   }
 
-  function buildReport(jobNo) {
+  function buildReport(jobNo, statusRow) {
+    const jobFields = statusRow || {};
+    const nrcsEntries = Array.isArray(jobFields.nrcsEntries) ? jobFields.nrcsEntries : [];
     const receiving = forJob(CACHE.receiving, jobNo);
     const cans = forJob(CACHE.cansProduced, jobNo);
     const precook = forJob(CACHE.precooking, jobNo);
@@ -203,6 +205,7 @@
       jobNo, receiving, harvest, totalMass, totalAnimals,
       canRows, totalCans, equivCans, actualYield, targetCans, massPerCan,
       ooswWeight, cleanWeight, precookWeight, pct,
+      jobFields, nrcsEntries,
       header: (receiving[0] && receiving[0].values) || {},
       counts: { receiving: receiving.length, cans: cans.length, precook: precook.length, oosw: oosw.length }
     };
@@ -226,12 +229,21 @@
         <span class="muted">Generated ${new Date().toLocaleString()}</span>
       </div>
 
+      <h2 class="sec">Job details</h2>
+      <dl class="kv">
+        <dt>Processed for</dt><dd>${esc(h.toBeProcessedFor || '—')}</dd>
+        <dt>GRN No.</dt><dd>${esc(rep.jobFields.grnNo || '—')}</dd>
+        <dt>PO No.</dt><dd>${esc(rep.jobFields.poNo || '—')}</dd>
+        <dt>Cost per Kg</dt><dd>${esc(rep.jobFields.costPerKg || '—')}</dd>
+        <dt>Delivery note no.</dt><dd>${esc(rep.jobFields.deliveryNoteNo || '—')}</dd>
+      </dl>
+
       <div class="grid2">
         <dl class="kv">
-          <dt>Canning process for</dt><dd>${esc(h.toBeProcessedFor || '—')}</dd>
           <dt>Received from</dt><dd>${esc(h.receivedFrom || '—')}</dd>
           <dt>Receiving date</dt><dd>${esc(h.receivingDate || '—')}</dd>
           <dt>Actual cans</dt><dd>${rep.totalCans || '—'}</dd>
+          <dt>Comments</dt><dd>${esc(rep.jobFields.comments || '—')}</dd>
         </dl>
         <dl class="kv">
           <dt>Actual yield</dt><dd>${fmt(rep.actualYield)} cans/100 kg</dd>
@@ -282,14 +294,39 @@
         </tbody>
       </table>
 
-      <h2 class="sec">Processing measures</h2>
+      <div class="grid2">
+        <div>
+          <h2 class="sec">Processing measures</h2>
+          <table>
+            <thead><tr><th>Measure</th><th class="num">Weight (kg)</th><th class="num">% of whole mass</th></tr></thead>
+            <tbody>
+              <tr><td>Out of salt weight</td><td class="num">${fmt(rep.ooswWeight)}</td><td class="num">${rep.pct(rep.ooswWeight) == null ? '—' : fmt(rep.pct(rep.ooswWeight)) + '%'}</td></tr>
+              <tr><td>Clean weight</td><td class="num">${fmt(rep.cleanWeight)}</td><td class="num">${rep.pct(rep.cleanWeight) == null ? '—' : fmt(rep.pct(rep.cleanWeight)) + '%'}</td></tr>
+              <tr><td>Precook weight</td><td class="num">${fmt(rep.precookWeight)}</td><td class="num">${rep.pct(rep.precookWeight) == null ? '—' : fmt(rep.pct(rep.precookWeight)) + '%'}</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h2 class="sec">Efficiency indicators</h2>
+          <table>
+            <thead><tr><th>Indicator</th><th class="num">Value</th></tr></thead>
+            <tbody>
+              <tr><td>Whole mass per can</td><td class="num">${fmt(rep.massPerCan)} kg</td></tr>
+              <tr><td>Canning efficiency</td><td class="num">${esc(rep.jobFields.canningEfficiency || '—')}</td></tr>
+              <tr><td>Actual yield</td><td class="num">${fmt(rep.actualYield)} cans/100 kg</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="sec">NRCS AG codes</h2>
       <table>
-        <thead><tr><th>Measure</th><th class="num">Weight (kg)</th><th class="num">% of whole mass</th></tr></thead>
+        <thead><tr><th>NRCS AG code</th><th class="num">Additional NRCS cans</th></tr></thead>
         <tbody>
-          <tr><td>Out of salt weight</td><td class="num">${fmt(rep.ooswWeight)}</td><td class="num">${rep.pct(rep.ooswWeight) == null ? '—' : fmt(rep.pct(rep.ooswWeight)) + '%'}</td></tr>
-          <tr><td>Clean weight</td><td class="num">${fmt(rep.cleanWeight)}</td><td class="num">${rep.pct(rep.cleanWeight) == null ? '—' : fmt(rep.pct(rep.cleanWeight)) + '%'}</td></tr>
-          <tr><td>Precook weight</td><td class="num">${fmt(rep.precookWeight)}</td><td class="num">${rep.pct(rep.precookWeight) == null ? '—' : fmt(rep.pct(rep.precookWeight)) + '%'}</td></tr>
-          <tr class="total"><td>Whole mass per can</td><td class="num">${fmt(rep.massPerCan)} kg</td><td class="num"></td></tr>
+          ${rep.nrcsEntries.length ? rep.nrcsEntries.map((e) => `<tr>
+            <td>${esc(e.agCode || '—')}</td>
+            <td class="num">${esc(e.additionalCans || '—')}</td>
+          </tr>`).join('') : '<tr><td colspan="2" class="muted">No NRCS AG codes captured yet for this job — add them from Job Status Updates before closing.</td></tr>'}
         </tbody>
       </table>
 
@@ -301,13 +338,22 @@
     return $('jobSelect').value;
   }
 
+  function statusRowFor(jobNo) {
+    return JOB_STATUSES.find((s) => String(s.job_no) === String(jobNo));
+  }
+
   function downloadCsv() {
-    const rep = buildReport(currentJob());
+    const rep = buildReport(currentJob(), statusRowFor(currentJob()));
     const q = (s) => `"${String(s == null ? '' : s).replace(/"/g, '""')}"`;
     const lines = [];
     lines.push(q('Canning Report'), '');
     lines.push([q('Job no.'), q(rep.jobNo)].join(','));
     lines.push([q('Processing for'), q(rep.header.toBeProcessedFor)].join(','));
+    lines.push([q('GRN No.'), q(rep.jobFields.grnNo)].join(','));
+    lines.push([q('PO No.'), q(rep.jobFields.poNo)].join(','));
+    lines.push([q('Cost per Kg'), q(rep.jobFields.costPerKg)].join(','));
+    lines.push([q('Delivery note no.'), q(rep.jobFields.deliveryNoteNo)].join(','));
+    lines.push([q('Comments'), q(rep.jobFields.comments)].join(','));
     lines.push([q('Received from'), q(rep.header.receivedFrom)].join(','));
     lines.push([q('Actual cans'), q(rep.totalCans)].join(','));
     lines.push([q(EQUIV_DRAINED_G + 'g equivalent cans'), q(rep.equivCans == null ? '' : Math.round(rep.equivCans))].join(','));
@@ -332,7 +378,15 @@
     lines.push(['Measure', 'Weight (kg)', '% of whole mass'].map(q).join(','));
     [['Out of salt weight', rep.ooswWeight], ['Clean weight', rep.cleanWeight], ['Precook weight', rep.precookWeight]]
       .forEach(([label, w]) => lines.push([q(label), q(fmt(w)), q(rep.pct(w) == null ? '' : fmt(rep.pct(w)))].join(',')));
-    lines.push([q('Whole mass per can'), q(fmt(rep.massPerCan)), ''].join(','));
+    lines.push('');
+    lines.push(q('EFFICIENCY INDICATORS'));
+    lines.push([q('Whole mass per can (kg)'), q(fmt(rep.massPerCan))].join(','));
+    lines.push([q('Canning efficiency'), q(rep.jobFields.canningEfficiency)].join(','));
+    lines.push([q('Actual yield (cans/100kg)'), q(fmt(rep.actualYield))].join(','));
+    lines.push('');
+    lines.push(q('NRCS AG CODES'));
+    lines.push(['NRCS AG code', 'Additional NRCS cans'].map(q).join(','));
+    rep.nrcsEntries.forEach((e) => lines.push([q(e.agCode), q(e.additionalCans)].join(',')));
 
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -355,8 +409,9 @@
 
   async function show(jobNo) {
     if (!jobNo) { $('reportPanel').innerHTML = '<div class="muted">Pick a job number.</div>'; return; }
-    const rep = buildReport(jobNo);
-    render(rep, JOB_STATUSES.find((s) => String(s.job_no) === String(jobNo)));
+    const statusRow = statusRowFor(jobNo);
+    const rep = buildReport(jobNo, statusRow);
+    render(rep, statusRow);
     $('statusLine').textContent =
       `${rep.counts.receiving} receiving · ${rep.counts.cans} cans produced · ${rep.counts.precook} precooking · ${rep.counts.oosw} OOSW record(s) for this job`;
     const url = new URL(location.href);

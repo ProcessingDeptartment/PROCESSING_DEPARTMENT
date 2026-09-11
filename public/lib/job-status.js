@@ -84,5 +84,12 @@
     return ok ? row : null;
   }
 
-  window.JobStatus = { list, get, close, reopen, openJobNumbers, allJobNumbers };
+  async function saveDetails(jobNo, patch) {
+    const prev = await get(jobNo);
+    const row = Object.assign({}, prev, patch, { job_no: String(jobNo) });
+    const ok = await window.storage.set(NS + jobNo, JSON.stringify(row), true);
+    return ok ? row : null;
+  }
+
+  window.JobStatus = { list, get, close, reopen, openJobNumbers, allJobNumbers, saveDetails };
 })();
