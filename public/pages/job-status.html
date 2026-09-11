@@ -14,6 +14,8 @@
     --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
     --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
     --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+    --navy:#1b2330; --gold:#a9763a; --status-green:#15803d; --slate:#5c6771;
+    --border-light:#e2e4e3; --offwhite:#f4f1e8;
   }
   #js-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.4; }
   #js-root *{ box-sizing:border-box; }
@@ -44,17 +46,41 @@
   .pill.open{ background:var(--palette-ok-bg); color:var(--palette-ok); }
   .pill.closed{ background:#e7eaec; color:#5b6b78; }
   .table-wrap{ overflow:auto; border:1px solid var(--line-soft); border-radius:4px; }
+  td.status-cell{ white-space:nowrap; }
+  .details-status{ display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; margin-top:5px; }
+  .details-dot{ width:7px; height:7px; border-radius:50%; display:inline-block; flex:none; }
+  .details-status.complete{ color:var(--status-green); }
+  .details-status.complete .details-dot{ background:var(--status-green); }
+  .details-status.pending{ color:var(--gold); }
+  .details-status.pending .details-dot{ background:var(--gold); }
+  tr td:first-child{ border-left:3px solid transparent; }
+  tr.details-pending td:first-child{ border-left-color:var(--gold); }
+  .row-actions{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; }
+
   .modal-backdrop{ position:fixed; inset:0; background:rgba(20,26,30,.55); display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto; z-index:50; }
   .modal-backdrop[hidden]{ display:none; }
-  .modal{ background:#fff; border-radius:8px; padding:18px 20px; width:100%; max-width:520px; }
-  .modal h2{ font-size:16px; margin:0 0 12px; }
-  .field-row{ display:flex; flex-direction:column; gap:3px; margin-bottom:10px; }
-  .field-row label{ font-size:12px; color:#5c6771; font-weight:600; }
-  .field-row input, .field-row textarea{ font-family:var(--sans); font-size:14px; padding:6px 9px; border:1px solid var(--line); border-radius:4px; }
-  .field-row textarea{ resize:vertical; min-height:50px; }
-  .nrcs-row{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
-  .nrcs-row input{ flex:1; }
-  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+  .modal{ background:#fff; border-radius:6px; padding:0; width:100%; max-width:700px; box-shadow:0 4px 20px rgba(0,0,0,.15); }
+  .modal-head{ padding:18px 22px 4px; }
+  .modal-head h2{ font-size:17px; margin:0 0 4px; color:var(--navy); }
+  .modal-sub{ font-size:12.5px; color:var(--slate); margin:0 0 4px; }
+  .modal-section{ padding:14px 22px; border-bottom:1px solid var(--border-light); }
+  .modal-section:last-of-type{ border-bottom:none; }
+  .modal-section h3{ font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--slate); margin:0 0 10px; font-weight:700; }
+  .req-mark{ color:var(--gold); margin-left:2px; }
+  .field-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px 16px; }
+  .field-row{ display:flex; flex-direction:column; gap:3px; }
+  .field-row + .field-row{ margin-top:10px; }
+  .field-grid-2 .field-row{ margin-top:0; }
+  .field-row label{ font-size:12px; color:var(--slate); font-weight:600; }
+  .field-row input, .field-row textarea{ font-family:var(--sans); font-size:14px; padding:6px 9px; border:1px solid var(--line); border-radius:4px; min-height:44px; }
+  .field-row textarea{ resize:vertical; min-height:60px; }
+  .nrcs-row{ display:flex; gap:8px; align-items:center; padding:6px 8px; border-radius:4px; }
+  .nrcs-row:nth-child(odd){ background:var(--offwhite); }
+  .nrcs-row:nth-child(even){ background:#fff; }
+  .nrcs-row input{ flex:1; min-height:38px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; background:var(--offwhite); border-top:1px solid var(--border-light); border-radius:0 0 6px 6px; }
+  .btn-gold{ background:var(--gold); color:#fff; }
+  .btn-white{ background:#fff; color:var(--ink); border:1px solid var(--line) !important; }
   @media print{
     .no-print{ display:none !important; }
     .js-top{ background:#fff; color:#000; border-bottom:2px solid #000; }
@@ -91,6 +117,9 @@
         the job-number pickers on every downstream record — already-submitted records keep showing
         the job they were filed against.
       </div>
+      <div class="muted" style="margin-top:4px;">
+        Click a job row, then "Add Job Details" to enter required information before closing.
+      </div>
     </div>
 
     <div class="panel">
@@ -110,22 +139,41 @@
   </div>
   <div class="modal-backdrop no-print" id="detailsModal" hidden>
     <div class="modal">
-      <h2>Job details — <span id="detailsJobNo"></span></h2>
-      <div class="field-row"><label>GRN No.</label><input type="text" id="fldGrnNo"></div>
-      <div class="field-row"><label>PO No.</label><input type="text" id="fldPoNo"></div>
-      <div class="field-row"><label>Cost per Kg</label><input type="text" id="fldCostPerKg"></div>
-      <div class="field-row"><label>Delivery note no.</label><input type="text" id="fldDeliveryNoteNo"></div>
-      <div class="field-row"><label>Canning efficiency</label><input type="text" id="fldCanningEfficiency"></div>
-      <div class="field-row"><label>Comments</label><textarea id="fldComments"></textarea></div>
-      <div class="field-row">
-        <label>NRCS AG codes (a job may have more than one)</label>
-        <div id="nrcsRows"></div>
-        <button class="btn btn-flat btn-sm" id="addNrcsRow" type="button">+ Add NRCS AG code</button>
+      <div class="modal-head">
+        <h2>Add Job Details — <span id="detailsJobNo"></span></h2>
+        <p class="modal-sub">Complete the required fields before you can close this job.</p>
       </div>
-      <div class="field-row"><label>Additional NRCS cans</label><input type="text" id="fldAdditionalNrcsCans"></div>
+
+      <div class="modal-section">
+        <h3>Reference details<span class="req-mark">*</span></h3>
+        <div class="field-grid-2">
+          <div class="field-row"><label>GRN No.<span class="req-mark">*</span></label><input type="text" id="fldGrnNo"></div>
+          <div class="field-row"><label>PO No.<span class="req-mark">*</span></label><input type="text" id="fldPoNo"></div>
+          <div class="field-row"><label>Cost per Kg<span class="req-mark">*</span></label><input type="text" id="fldCostPerKg"></div>
+          <div class="field-row"><label>Delivery note no.<span class="req-mark">*</span></label><input type="text" id="fldDeliveryNoteNo"></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>Report notes</h3>
+        <div class="field-row"><label>Canning efficiency <span class="muted">(optional — no formula defined yet)</span></label><input type="text" id="fldCanningEfficiency"></div>
+        <div class="field-row"><label>Comments<span class="req-mark">*</span></label><textarea id="fldComments"></textarea></div>
+      </div>
+
+      <div class="modal-section">
+        <h3>NRCS AG codes<span class="req-mark">*</span> <span class="muted" style="text-transform:none; letter-spacing:0; font-weight:400;">— a job may have more than one; at least one required</span></h3>
+        <div id="nrcsRows"></div>
+        <button class="btn btn-flat btn-sm" id="addNrcsRow" type="button" style="margin-top:6px;">+ Add</button>
+      </div>
+
+      <div class="modal-section">
+        <h3>Additional NRCS cans <span class="muted" style="text-transform:none; letter-spacing:0; font-weight:400;">(optional)</span></h3>
+        <div class="field-row"><label>Quantity</label><input type="number" id="fldAdditionalNrcsCans"></div>
+      </div>
+
       <div class="modal-actions">
-        <button class="btn btn-flat" id="cancelDetails" type="button">Cancel</button>
-        <button class="btn btn-primary" id="saveDetails" type="button">Save</button>
+        <button class="btn btn-white" id="cancelDetails" type="button">Cancel</button>
+        <button class="btn btn-gold" id="saveDetails" type="button">Save</button>
       </div>
     </div>
   </div>
@@ -221,26 +269,32 @@
         : '—';
       const detailsDone = hasRequiredJobDetails(r);
       const canClose = closed || detailsDone;
-      return `<tr class="${closed ? 'closed' : ''}">
+      return `<tr class="${closed ? 'closed' : ''} ${!closed && !detailsDone ? 'details-pending' : ''}">
         <td><strong>${esc(r.job_no)}</strong></td>
         <td>${esc(r.receivingDate || '—')}</td>
         <td>${esc(r.receivedFrom || '—')}</td>
         <td>${esc(r.toBeProcessedFor || '—')}</td>
         <td>${esc(r.intakeWeight || '—')}</td>
-        <td><span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span></td>
+        <td class="status-cell">
+          <span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span>
+          <div class="details-status ${detailsDone ? 'complete' : 'pending'}">
+            <span class="details-dot"></span>${detailsDone ? 'Details: ✓ Complete' : 'Details needed'}
+          </div>
+        </td>
         <td>${closedTxt}</td>
         <td class="no-print" style="white-space:nowrap;">
           ${isCanningJob(r.job_no) ? `<a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Canning</a>` : ''}
           ${isDryingJob(r.job_no) ? `<a class="btn btn-flat btn-sm" href="drying-report.html?job=${encodeURIComponent(r.job_no)}">Drying</a>` : ''}
           ${!isCanningJob(r.job_no) && !isDryingJob(r.job_no) ? '<span class="muted">—</span>' : ''}
         </td>
-        <td class="no-print" style="white-space:nowrap;">
-          <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">Add Job Details</button>
-          <span class="muted" style="font-size:11px;">${detailsDone ? '✓ complete' : 'incomplete'}</span><br>
-          <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}"
-            ${canClose ? '' : 'disabled title="Add Job Details before closing this job."'}>
-            ${closed ? 'Reopen' : 'Close job'}
-          </button>
+        <td class="no-print">
+          <div class="row-actions">
+            <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">Add Job Details</button>
+            <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}"
+              ${canClose ? '' : 'disabled title="Add Job Details before closing this job."'}>
+              ${closed ? 'Reopen' : 'Close job'}
+            </button>
+          </div>
         </td>
       </tr>`;
     }).join('') || '<tr><td colspan="9" class="muted">No jobs to show.</td></tr>';
