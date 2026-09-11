@@ -121,6 +121,7 @@
         <div id="nrcsRows"></div>
         <button class="btn btn-flat btn-sm" id="addNrcsRow" type="button">+ Add NRCS AG code</button>
       </div>
+      <div class="field-row"><label>Additional NRCS cans</label><input type="text" id="fldAdditionalNrcsCans"></div>
       <div class="modal-actions">
         <button class="btn btn-flat" id="cancelDetails" type="button">Cancel</button>
         <button class="btn btn-primary" id="saveDetails" type="button">Save</button>
@@ -249,10 +250,9 @@
 
   let editingJobNo = null;
 
-  function nrcsRowHtml(agCode, additionalCans) {
+  function nrcsRowHtml(agCode) {
     return `<div class="nrcs-row">
       <input type="text" placeholder="NRCS AG code" class="nrcs-ag" value="${esc(agCode || '')}">
-      <input type="text" placeholder="Additional cans" class="nrcs-cans" value="${esc(additionalCans || '')}" style="max-width:130px;">
       <button class="btn btn-flat btn-sm" type="button" data-remove-nrcs>✕</button>
     </div>`;
   }
@@ -261,6 +261,23 @@
     $('nrcsRows').querySelectorAll('[data-remove-nrcs]').forEach((btn) => {
       btn.addEventListener('click', () => btn.closest('.nrcs-row').remove());
     });
+  }
+
+  // Legacy shape (pre-migration): nrcsEntries: [{ agCode, additionalCans }, ...] treated AG code
+  // and Additional NRCS cans as one paired record. They are independent data points — a job can
+  // have multiple AG codes, and Additional NRCS cans is one job-level quantity, not per-code.
+  // This derives the new shape from old data without dropping anything already saved.
+  function migrateNrcsShape(row) {
+    if (Array.isArray(row.nrcsAgCodes) || row.additionalNrcsCans != null) {
+      return { agCodes: Array.isArray(row.nrcsAgCodes) ? row.nrcsAgCodes : [], additionalNrcsCans: row.additionalNrcsCans || '' };
+    }
+    const entries = Array.isArray(row.nrcsEntries) ? row.nrcsEntries : [];
+    const agCodes = entries.map((e) => e.agCode).filter(Boolean);
+    const total = entries.reduce((a, e) => {
+      const n = parseFloat(e.additionalCans);
+      return isNaN(n) ? a : (a || 0) + n;
+    }, null);
+    return { agCodes, additionalNrcsCans: total == null ? '' : String(total) };
   }
 
   function openDetails(jobNo) {
@@ -273,8 +290,10 @@
     $('fldDeliveryNoteNo').value = row.deliveryNoteNo || '';
     $('fldCanningEfficiency').value = row.canningEfficiency || '';
     $('fldComments').value = row.comments || '';
-    const entries = Array.isArray(row.nrcsEntries) && row.nrcsEntries.length ? row.nrcsEntries : [{}];
-    $('nrcsRows').innerHTML = entries.map((e) => nrcsRowHtml(e.agCode, e.additionalCans)).join('');
+    const migrated = migrateNrcsShape(row);
+    $('fldAdditionalNrcsCans').value = migrated.additionalNrcsCans;
+    const agCodes = migrated.agCodes.length ? migrated.agCodes : [''];
+    $('nrcsRows').innerHTML = agCodes.map((code) => nrcsRowHtml(code)).join('');
     wireNrcsRemove();
     $('detailsModal').hidden = false;
   }
@@ -286,10 +305,9 @@
 
   async function saveDetailsClick() {
     if (!editingJobNo) return;
-    const nrcsEntries = Array.from($('nrcsRows').querySelectorAll('.nrcs-row')).map((row) => ({
-      agCode: row.querySelector('.nrcs-ag').value.trim(),
-      additionalCans: row.querySelector('.nrcs-cans').value.trim()
-    })).filter((e) => e.agCode || e.additionalCans);
+    const nrcsAgCodes = Array.from($('nrcsRows').querySelectorAll('.nrcs-ag'))
+      .map((input) => input.value.trim())
+      .filter(Boolean);
 
     const patch = {
       grnNo: $('fldGrnNo').value.trim(),
@@ -298,7 +316,8 @@
       deliveryNoteNo: $('fldDeliveryNoteNo').value.trim(),
       canningEfficiency: $('fldCanningEfficiency').value.trim(),
       comments: $('fldComments').value.trim(),
-      nrcsEntries
+      nrcsAgCodes,
+      additionalNrcsCans: $('fldAdditionalNrcsCans').value.trim()
     };
     const res = await window.JobStatus.saveDetails(editingJobNo, patch);
     if (!res) { alert('Could not save — please retry.'); return; }
@@ -347,7 +366,7 @@
     $('csvBtn').addEventListener('click', downloadCsv);
     $('printBtn').addEventListener('click', () => window.print());
     $('addNrcsRow').addEventListener('click', () => {
-      $('nrcsRows').insertAdjacentHTML('beforeend', nrcsRowHtml('', ''));
+      $('nrcsRows').insertAdjacentHTML('beforeend', nrcsRowHtml(''));
       wireNrcsRemove();
     });
     $('cancelDetails').addEventListener('click', closeDetails);

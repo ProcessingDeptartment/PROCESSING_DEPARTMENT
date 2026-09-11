@@ -49,13 +49,24 @@
   @media (max-width:760px){ .grid2{ grid-template-columns:1fr; } }
   .warn{ background:#fbf0dc; color:#8a5a10; border-radius:4px; padding:8px 11px; font-size:12px; margin-top:8px; }
   @media print{
+    @page{ size:A4; margin:10mm; }
     .no-print{ display:none !important; }
-    .cr-top{ background:#fff; color:#000; border-bottom:2px solid #000; }
-    .panel{ border:none; padding:0; margin-bottom:10px; }
+    .cr-top{ background:#fff; color:#000; border-bottom:2px solid #000; padding:4px 0 6px; }
+    .cr-body{ padding:0; max-width:none; }
+    .panel{ border:none; padding:0; margin-bottom:0; }
     body{ background:#fff; }
-    h2.sec{ break-after:avoid; }
+    #cr-root{ font-size:10.5px; line-height:1.25; }
+    h1{ font-size:16px; }
+    .jobline{ margin-bottom:6px; padding-bottom:4px; }
+    .jobno{ font-size:16px; }
+    h2.sec{ font-size:10px; margin:8px 0 4px; break-after:avoid; }
+    table{ font-size:10px; }
+    th,td{ padding:2px 5px; }
+    .kv{ font-size:10.5px; gap:2px 10px; }
+    .grid2{ gap:12px; }
     table{ break-inside:auto; }
     tr{ break-inside:avoid; }
+    .page2-start{ break-before:page; }
   }
 </style>
 </head>
@@ -136,9 +147,25 @@
     CACHE = { receiving, cansProduced, precooking, oosw };
   }
 
+  // Legacy shape: nrcsEntries: [{ agCode, additionalCans }] paired the two together.
+  // They're independent — a job can have several AG codes, and Additional NRCS cans is
+  // one job-level quantity, not per-code. Derive the new shape when old data is still present.
+  function migrateNrcsShape(jobFields) {
+    if (Array.isArray(jobFields.nrcsAgCodes) || jobFields.additionalNrcsCans != null) {
+      return { agCodes: Array.isArray(jobFields.nrcsAgCodes) ? jobFields.nrcsAgCodes : [], additionalNrcsCans: jobFields.additionalNrcsCans || '' };
+    }
+    const entries = Array.isArray(jobFields.nrcsEntries) ? jobFields.nrcsEntries : [];
+    const agCodes = entries.map((e) => e.agCode).filter(Boolean);
+    const total = entries.reduce((a, e) => {
+      const n = num(e.additionalCans);
+      return n == null ? a : (a || 0) + n;
+    }, null);
+    return { agCodes, additionalNrcsCans: total == null ? '' : String(total) };
+  }
+
   function buildReport(jobNo, statusRow) {
     const jobFields = statusRow || {};
-    const nrcsEntries = Array.isArray(jobFields.nrcsEntries) ? jobFields.nrcsEntries : [];
+    const nrcs = migrateNrcsShape(jobFields);
     const receiving = forJob(CACHE.receiving, jobNo);
     const cans = forJob(CACHE.cansProduced, jobNo);
     const precook = forJob(CACHE.precooking, jobNo);
@@ -205,7 +232,7 @@
       jobNo, receiving, harvest, totalMass, totalAnimals,
       canRows, totalCans, equivCans, actualYield, targetCans, massPerCan,
       ooswWeight, cleanWeight, precookWeight, pct,
-      jobFields, nrcsEntries,
+      jobFields, nrcsAgCodes: nrcs.agCodes, additionalNrcsCans: nrcs.additionalNrcsCans,
       header: (receiving[0] && receiving[0].values) || {},
       counts: { receiving: receiving.length, cans: cans.length, precook: precook.length, oosw: oosw.length }
     };
@@ -321,16 +348,19 @@
 
       <h2 class="sec">NRCS AG codes</h2>
       <table>
-        <thead><tr><th>NRCS AG code</th><th class="num">Additional NRCS cans</th></tr></thead>
+        <thead><tr><th>NRCS AG code</th></tr></thead>
         <tbody>
-          ${rep.nrcsEntries.length ? rep.nrcsEntries.map((e) => `<tr>
-            <td>${esc(e.agCode || '—')}</td>
-            <td class="num">${esc(e.additionalCans || '—')}</td>
-          </tr>`).join('') : '<tr><td colspan="2" class="muted">No NRCS AG codes captured yet for this job — add them from Job Status Updates before closing.</td></tr>'}
+          ${rep.nrcsAgCodes.length ? rep.nrcsAgCodes.map((code) => `<tr><td>${esc(code)}</td></tr>`).join('')
+            : '<tr><td class="muted">No NRCS AG codes captured yet for this job — add them from Job Status Updates.</td></tr>'}
+          <tr class="total"><td>Additional NRCS cans: ${esc(rep.additionalNrcsCans || '—')}</td></tr>
         </tbody>
       </table>
 
       ${missing.length ? `<div class="warn no-print"><strong>No data yet from:</strong> ${esc(missing.join(', '))}. Those sections stay blank until those records are submitted against this job.</div>` : ''}
+
+      <!-- Stock-code level Can Breakdown table (spec section 5) lands here once the stock code
+           lookup exists. Give its wrapping element class="page2-start" so it prints on page 2
+           instead of pushing onto/off page 1. -->
     `;
   }
 
@@ -388,8 +418,9 @@
     lines.push([q('Actual yield (cans/100kg)'), q(fmt(rep.actualYield))].join(','));
     lines.push('');
     lines.push(q('NRCS AG CODES'));
-    lines.push(['NRCS AG code', 'Additional NRCS cans'].map(q).join(','));
-    rep.nrcsEntries.forEach((e) => lines.push([q(e.agCode), q(e.additionalCans)].join(',')));
+    lines.push([q('NRCS AG code')].join(','));
+    rep.nrcsAgCodes.forEach((code) => lines.push([q(code)].join(',')));
+    lines.push([q('Additional NRCS cans'), q(rep.additionalNrcsCans)].join(','));
 
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);

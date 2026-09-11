@@ -58,20 +58,21 @@
   }
 
   async function close(jobNo, meta) {
-    const row = {
+    const prev = await get(jobNo);
+    const row = Object.assign({}, prev, {
       job_no: String(jobNo),
       status: 'closed',
       closed_at: new Date().toISOString(),
       closed_by: (meta && meta.by) || (window.Auth && window.Auth.getCurrentUsername && window.Auth.getCurrentUsername()) || null,
       note: (meta && meta.note) || null
-    };
+    });
     const ok = await window.storage.set(NS + jobNo, JSON.stringify(row), true);
     return ok ? row : null;
   }
 
   async function reopen(jobNo, meta) {
     const prev = await get(jobNo);
-    const row = {
+    const row = Object.assign({}, prev, {
       job_no: String(jobNo),
       status: 'open',
       previously_closed_at: prev.closed_at || null,
@@ -79,7 +80,7 @@
       reopened_at: new Date().toISOString(),
       reopened_by: (meta && meta.by) || (window.Auth && window.Auth.getCurrentUsername && window.Auth.getCurrentUsername()) || null,
       note: (meta && meta.note) || null
-    };
+    });
     const ok = await window.storage.set(NS + jobNo, JSON.stringify(row), true);
     return ok ? row : null;
   }
