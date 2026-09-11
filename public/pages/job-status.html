@@ -29,6 +29,7 @@
   .btn-flat:hover{ background:#d5d8d6; }
   .btn-sm{ padding:4px 9px; font-size:13px; }
   .btn-danger{ background:var(--palette-fail); color:#fff; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
   .js-body{ padding:16px 18px 60px; max-width:1200px; margin:0 auto; }
   .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; padding:14px 16px; }
   .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -218,6 +219,8 @@
       const closedTxt = closed
         ? `${(r.closed_at || '').slice(0, 10)}${r.closed_by ? ' · ' + esc(r.closed_by) : ''}`
         : '—';
+      const detailsDone = hasRequiredJobDetails(r);
+      const canClose = closed || detailsDone;
       return `<tr class="${closed ? 'closed' : ''}">
         <td><strong>${esc(r.job_no)}</strong></td>
         <td>${esc(r.receivingDate || '—')}</td>
@@ -232,8 +235,10 @@
           ${!isCanningJob(r.job_no) && !isDryingJob(r.job_no) ? '<span class="muted">—</span>' : ''}
         </td>
         <td class="no-print" style="white-space:nowrap;">
-          <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">Details</button>
-          <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}">
+          <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">Add Job Details</button>
+          <span class="muted" style="font-size:11px;">${detailsDone ? '✓ complete' : 'incomplete'}</span><br>
+          <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}"
+            ${canClose ? '' : 'disabled title="Add Job Details before closing this job."'}>
             ${closed ? 'Reopen' : 'Close job'}
           </button>
         </td>
@@ -278,6 +283,19 @@
       return isNaN(n) ? a : (a || 0) + n;
     }, null);
     return { agCodes, additionalNrcsCans: total == null ? '' : String(total) };
+  }
+
+  // Required before a job can be closed. Canning efficiency is deliberately excluded — it has
+  // no defined formula yet, so requiring it would block every job from ever closing.
+  function hasRequiredJobDetails(row) {
+    const r = row || {};
+    const agCodes = migrateNrcsShape(r).agCodes;
+    return !!(String(r.grnNo || '').trim()
+      && String(r.poNo || '').trim()
+      && String(r.costPerKg || '').trim()
+      && String(r.deliveryNoteNo || '').trim()
+      && String(r.comments || '').trim()
+      && agCodes.some((c) => String(c || '').trim()));
   }
 
   function openDetails(jobNo) {
@@ -327,6 +345,14 @@
 
   async function toggleJob(jobNo, isClosed) {
     const verb = isClosed ? 'Reopen' : 'Close';
+
+    if (!isClosed) {
+      const row = rows.find((r) => String(r.job_no) === String(jobNo));
+      if (!hasRequiredJobDetails(row)) {
+        alert('Add Job Details before closing this job.');
+        return;
+      }
+    }
 
     if (!window.confirm(`${verb} job ${jobNo}?` + (isClosed ? '' : '\n\nIt will no longer be selectable on any record.'))) return;
     const note = window.prompt(`Reason / note for ${verb.toLowerCase()}ing ${jobNo} (optional):`, '') || null;
