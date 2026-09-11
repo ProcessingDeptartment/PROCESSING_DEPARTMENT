@@ -251,6 +251,17 @@
   }
 
 
+  // Roster batch-sequence numbering: <date>-<01> per row (2-digit, resets each date), not
+  // <jobNo>/<n> -- a job can span several processing dates and the date-based code is what's
+  // written on the salt/tumble batch tags on the floor. Which field supplies the date is
+  // configurable via roster.batchSeqDateField (default 'date'); falls back to '#01' if that
+  // field is still blank.
+  function formatBatchSeq(dateVal, i) {
+    const seq = String(i + 1).padStart(2, '0');
+    dateVal = String(dateVal == null ? '' : dateVal).trim();
+    return dateVal ? dateVal + '-' + seq : '#' + seq;
+  }
+
   function computeRowDerived(col, row) {
     if (col.deriveDuration) return diffHHMM(row[col.deriveDuration.from], row[col.deriveDuration.to]);
     if (col.deriveLookup) return lookupMapValue(col.deriveLookup.map, row[col.deriveLookup.from]);
@@ -1102,8 +1113,8 @@
       function renderRosterDerived() {
         const specials = (config.roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived');
         if (!specials.length) return;
-        const jobEl = el('fr_f_' + (config.batchField || 'jobNo'));
-        const jobNo = jobEl ? String(jobEl.value || '').trim() : '';
+        const dateEl = el('fr_f_' + (config.roster.batchSeqDateField || 'date'));
+        const batchSeqDate = dateEl ? dateEl.value : '';
         rows.forEach((_, i) => {
           const cur = {};
           config.roster.columns.forEach(c => {
@@ -1114,7 +1125,7 @@
             const inp = el(`fr_roster_${i}_${c.key}`);
             if (!inp) return;
             if (c.type === 'batchseq') {
-              inp.value = jobNo ? jobNo + '/' + (i + 1) : '#' + (i + 1);
+              inp.value = formatBatchSeq(batchSeqDate, i);
             } else if (c.deriveGroupSum) {
               const g = c.deriveGroupSum;
               const grp = groupSumsCache.data[g.groupBy] || {};
@@ -1241,6 +1252,13 @@
         jobWatch.addEventListener(ev, renderRosterDerived);
         jobWatch.addEventListener(ev, loadGroupSums);
       });
+      // batchseq columns key off roster.batchSeqDateField (default 'date'), a separate field
+      // from the job -- re-derive when it changes too, so codes update as soon as it's filled in.
+      const batchSeqDateKey = config.roster.batchSeqDateField || 'date';
+      if (batchSeqDateKey !== (config.batchField || 'jobNo')) {
+        const dateWatch = el('fr_f_' + batchSeqDateKey);
+        if (dateWatch) ['input', 'change'].forEach(ev => dateWatch.addEventListener(ev, renderRosterDerived));
+      }
       if (config.roster.pctTotal) {
         const ofEl = el('fr_f_' + config.roster.pctTotal.of);
         if (ofEl) ['input', 'change'].forEach(ev => ofEl.addEventListener(ev, renderRosterTotals));
@@ -1475,10 +1493,10 @@
         });
 
         const rosterCols = (config.roster && config.roster.columns) || [];
-        const jobNo = String(values[config.batchField] || '').trim();
+        const batchSeqDate = values[(config.roster && config.roster.batchSeqDateField) || 'date'];
         rosterRows.forEach((r, i) => {
           rosterCols.forEach((c) => {
-            if (c.type === 'batchseq') r[c.key] = jobNo ? jobNo + '/' + (i + 1) : '#' + (i + 1);
+            if (c.type === 'batchseq') r[c.key] = formatBatchSeq(batchSeqDate, i);
             else if (c.type === 'derived' && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
           });
         });

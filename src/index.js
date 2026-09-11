@@ -354,6 +354,44 @@ app.get('/api/dates', async (req, res) => {
 // client-side prefix scan in public/lib/traceability.js but runs it in Postgres so a recall query
 // does not depend on the querying device having synced. Keys are
 // 'batch_link:<encodeURIComponent(batch)>:<record>:<submission>' -- match that encoding exactly.
+const subTable = (recordKey) => 'sub_' + String(recordKey).replace(/-/g, '_');
+
+// Mutates `records` (trace rows: {record_key, submission_id, ...}) in place, adding
+// `status`: 'draft' | 'submitted' | 'verified'. Reads the per-record sub_<key> projection
+// (dual-written by syncSubmissionRows) rather than the KeyValue blob so this is one indexed
+// query per distinct record, not a full-array parse per record.
+async function attachSubmissionStatus(records) {
+  const byKey = new Map();
+  for (const r of records) {
+    if (!r.record_key || !r.submission_id) continue;
+    if (!byKey.has(r.record_key)) byKey.set(r.record_key, new Set());
+    byKey.get(r.record_key).add(r.submission_id);
+  }
+  await Promise.all([...byKey.entries()].map(async ([recordKey, idSet]) => {
+    const ids = [...idSet];
+    let rows;
+    try {
+      rows = await prisma.$queryRawUnsafe(
+        `SELECT id, status, "rawJson" FROM "${subTable(recordKey)}" WHERE id = ANY($1::text[])`,
+        ids,
+      );
+    } catch (e) {
+      return; // table may not exist for this record yet -- leave status unset
+    }
+    const byId = new Map();
+    for (const row of rows) {
+      let verified = false;
+      if (row.rawJson) {
+        try { verified = !!JSON.parse(row.rawJson).verification; } catch (e) { /* ignore */ }
+      }
+      byId.set(row.id, verified ? 'verified' : (row.status === 'draft' ? 'draft' : 'submitted'));
+    }
+    for (const r of records) {
+      if (r.record_key === recordKey && byId.has(r.submission_id)) r.status = byId.get(r.submission_id);
+    }
+  }));
+}
+
 app.get('/api/trace/:batch', async (req, res) => {
   const batch = String(req.params.batch || '').trim();
   try {
@@ -395,6 +433,7 @@ app.get('/api/trace/:batch', async (req, res) => {
       if (da && db && da !== db) return da < db ? -1 : 1;
       return (a.updated_at || '') < (b.updated_at || '') ? -1 : 1;
     });
+    await attachSubmissionStatus(records);
     res.json({ batch, records, inputs: [...inputs], outputs: [...outputs] });
   } catch (e) {
     console.error('GET trace failed', e);

@@ -155,6 +155,13 @@
   .card .tag.stage { color: var(--rt-white); background: var(--rt-navy-secondary); }
   .card .tag.rel-input  { color: var(--rt-blue);   background: #e6edfb; }
   .card .tag.rel-output { color: var(--rt-purple); background: #efe7fd; }
+  .card .tag.status-verified  { color: var(--rt-green); background: #e3f3e8; }
+  .card .tag.status-submitted { color: var(--rt-amber); background: #fdf0dc; }
+  .card .tag.status-draft     { color: var(--rt-slate); background: var(--rt-border); }
+  .card .doc-code {
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 12px;
+    color: var(--rt-slate); margin-right: 7px;
+  }
   .card .summary { color: #34434f; font-size: 13.5px; margin-top: 8px; }
   .card .summary a { color: var(--rt-gold); text-decoration: none; }
   .card a.open {
@@ -168,6 +175,14 @@
     border-radius: var(--rt-radius); padding: 26px; text-align: center;
     color: var(--rt-slate); font-size: 14px;
   }
+
+  .btn-flat {
+    background: var(--rt-white); color: var(--rt-navy-primary); border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius-sm); padding: 0 16px; min-height: 36px; font-size: 13px;
+    font-weight: 600; font-family: var(--rt-font); cursor: pointer;
+  }
+  .btn-flat:hover { border-color: var(--rt-gold); color: var(--rt-gold); }
+  .result-head .spacer { flex: 1; }
 
   @media (max-width: 768px) {
     header { padding: 14px 16px; }
@@ -184,6 +199,19 @@
     ol.timeline::before { left: 11px; }
     li.tp { padding-left: 30px; }
     li.tp::before { left: 5px; }
+  }
+
+  /* Print / PDF: swap the interactive page for a plain paper-style trace sheet. */
+  @media print {
+    @page { size: A4; margin: 14mm; }
+    body { background: #fff; }
+    header .back, .search, .hint, .no-print { display: none !important; }
+    header { background: #fff; color: #000; padding: 0 0 10px; border-bottom: 2px solid #000; }
+    header .sub, .result-head .count { color: #333; }
+    .wrap { max-width: none; padding: 0; margin-top: 14px; }
+    .genealogy .box, .card, .empty { box-shadow: none; border-color: #999; }
+    .card { break-inside: avoid; }
+    ol.timeline::before { background: #999; }
   }
 </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
@@ -212,6 +240,8 @@
     <div class="result-head">
       <h2>Genealogy</h2>
       <span class="batch-tag" id="batchTag"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn-flat no-print" id="printBtn">View / print PDF</button>
     </div>
     <div class="genealogy" id="genealogy">
       <div class="box up"><h3>Made from &mdash; one up</h3><div id="inputs"></div></div>
@@ -231,11 +261,19 @@
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/traceability.js?v=6"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
 <script>  const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   const REL_LABEL = { input: 'made from', output: 'went into' };
+  const STATUS_LABEL = { verified: 'Verified · complete', submitted: 'Awaiting verification', draft: 'Draft' };
+
+  // record_key -> doc code (e.g. "REC 7.1.4"), same lookup form-record.js uses for job-trace picks.
+  const docCodeByKey = {};
+  ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(r => {
+    if (r.recordKey) docCodeByKey[r.recordKey] = String(r.docNo || '').trim();
+  });
 
   function setStatus(msg, kind) {
     const s = $('status');
@@ -271,19 +309,22 @@
       const rel = r.rel === 'input' || r.rel === 'output' ? r.rel : '';
       const relTag = rel ? `<span class="tag rel-${rel}">${REL_LABEL[rel]}</span>` : '';
       const stageTag = r.stage ? `<span class="tag stage">${esc(r.stage)}</span>` : '';
-      const tags = (relTag || stageTag) ? `<div class="tags">${stageTag}${relTag}</div>` : '';
+      const statusLabel = STATUS_LABEL[r.status];
+      const statusTag = statusLabel ? `<span class="tag status-${r.status}">${esc(statusLabel)}</span>` : '';
+      const tags = (relTag || stageTag || statusTag) ? `<div class="tags">${stageTag}${statusTag}${relTag}</div>` : '';
+      const docCode = docCodeByKey[r.record_key];
       return `
       <li class="tp${rel ? ' rel-' + rel : ''}">
         <div class="card">
           <div class="top">
-            <span class="title">${esc(r.record_title || r.record_key)}</span>
+            <span class="title">${docCode ? `<span class="doc-code">${esc(docCode)}</span>` : ''}${esc(r.record_title || r.record_key)}</span>
             <span class="date">${esc(r.occurred_on || '—')}</span>
           </div>
           ${tags}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
           ${r.linked_batch && r.linked_batch !== batchNo
             ? `<div class="summary">Linked batch: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}
-          ${r.href ? `<a class="open" href="${esc(r.href)}">Open this record &rarr;</a>` : ''}
+          ${r.href ? `<a class="open no-print" href="${esc(r.href)}">Open this record &rarr;</a>` : ''}
         </div>
       </li>`;
     }).join('');
@@ -318,6 +359,14 @@
       $('traceBtn').disabled = false;
     }
   }
+
+  $('printBtn').addEventListener('click', () => {
+    const batchNo = $('batchInput').value.trim();
+    const prevTitle = document.title;
+    document.title = 'Batch Trace_' + (batchNo || 'record') + '_' + new Date().toISOString().slice(0, 10);
+    window.print();
+    document.title = prevTitle;
+  });
 
   $('traceBtn').addEventListener('click', doTrace);
   $('batchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doTrace(); });
