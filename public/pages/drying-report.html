@@ -257,7 +257,7 @@
           <tr class="total"><td>Actual yield</td><td class="num statbig">${fmt(rep.actualYield)} %</td></tr>
         </tbody>
       </table>
-      <div class="muted" style="margin-top:4px;">Yield = dried weight Ã· whole weight Ã— 100 (or the value recorded on REC 7.4.1 / 7.4.3.1 where present).</div>
+      <div class="muted" style="margin-top:4px;">Yield = dried weight ÷ whole weight × 100 (or the value recorded on REC 7.4.1 / 7.4.3.1 where present).</div>
 
       <h2 class="sec">Harvest breakdown (receiving)</h2>
       <table>
@@ -360,11 +360,17 @@
   }
 
   let STATUSES = [];
+  let JOB_STATUSES = [];
+
+  function isDryingJob(jobNo) {
+    const j = String(jobNo || '').toUpperCase();
+    return j.startsWith('3DP') || j.startsWith('DPR');
+  }
 
   async function show(jobNo) {
     if (!jobNo) { $('reportPanel').innerHTML = '<div class="muted">Pick a job number.</div>'; return; }
     const rep = buildReport(jobNo);
-    render(rep, STATUSES.find((s) => String(s.job_no) === String(jobNo)));
+    render(rep, JOB_STATUSES.find((s) => String(s.job_no) === String(jobNo)));
     $('statusLine').textContent =
       `${rep.counts.receiving} receiving · ${rep.counts.drying} drying process · ${rep.counts.grading} grading log record(s) for this job`;
     const url = new URL(location.href);
@@ -376,11 +382,12 @@
     $('statusLine').textContent = 'Loading…';
     const keep = currentJob();
     [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
+    JOB_STATUSES = STATUSES.filter((s) => isDryingJob(s.job_no));
 
-    $('jobSelect').innerHTML = STATUSES.map((s) =>
+    $('jobSelect').innerHTML = JOB_STATUSES.map((s) =>
       `<option value="${esc(s.job_no)}">${esc(s.job_no)}${s.status === 'closed' ? ' (closed)' : ''}</option>`).join('');
     const wanted = keep || new URLSearchParams(location.search).get('job');
-    if (wanted && STATUSES.some((s) => String(s.job_no) === String(wanted))) $('jobSelect').value = wanted;
+    if (wanted && JOB_STATUSES.some((s) => String(s.job_no) === String(wanted))) $('jobSelect').value = wanted;
     await show(currentJob());
   }
 

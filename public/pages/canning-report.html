@@ -346,11 +346,17 @@
   }
 
   let STATUSES = [];
+  let JOB_STATUSES = [];
+
+  function isCanningJob(jobNo) {
+    const j = String(jobNo || '').toUpperCase();
+    return j.startsWith('3CP') || j.startsWith('CPR');
+  }
 
   async function show(jobNo) {
     if (!jobNo) { $('reportPanel').innerHTML = '<div class="muted">Pick a job number.</div>'; return; }
     const rep = buildReport(jobNo);
-    render(rep, STATUSES.find((s) => String(s.job_no) === String(jobNo)));
+    render(rep, JOB_STATUSES.find((s) => String(s.job_no) === String(jobNo)));
     $('statusLine').textContent =
       `${rep.counts.receiving} receiving · ${rep.counts.cans} cans produced · ${rep.counts.precook} precooking · ${rep.counts.oosw} OOSW record(s) for this job`;
     const url = new URL(location.href);
@@ -362,11 +368,12 @@
     $('statusLine').textContent = 'Loading…';
     const keep = currentJob();
     [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
+    JOB_STATUSES = STATUSES.filter((s) => isCanningJob(s.job_no));
 
-    $('jobSelect').innerHTML = STATUSES.map((s) =>
+    $('jobSelect').innerHTML = JOB_STATUSES.map((s) =>
       `<option value="${esc(s.job_no)}">${esc(s.job_no)}${s.status === 'closed' ? ' (closed)' : ''}</option>`).join('');
     const wanted = keep || new URLSearchParams(location.search).get('job');
-    if (wanted && STATUSES.some((s) => String(s.job_no) === String(wanted))) $('jobSelect').value = wanted;
+    if (wanted && JOB_STATUSES.some((s) => String(s.job_no) === String(wanted))) $('jobSelect').value = wanted;
     await show(currentJob());
   }
 
