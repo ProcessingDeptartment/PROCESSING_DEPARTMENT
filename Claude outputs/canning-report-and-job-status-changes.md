@@ -71,6 +71,15 @@ Fixed:
 - `job-status.html` modal UI split accordingly — a repeatable AG-code-only list, and one separate "Additional NRCS cans" input.
 - **Migration**: existing paired data (e.g. CPR002045's `AG1`/`100`) is not dropped. A `migrateNrcsShape()` helper (duplicated identically in `job-status.html` and `canning-report.html`, since both read job-status rows independently) detects the old `nrcsEntries` shape when no new-shape data is present yet, and derives: all `agCode`s collected into the AG codes list, and all `additionalCans` values summed into the single Additional NRCS cans total. Nothing is saved back in the old shape going forward — the next Save from either page writes the new shape.
 
+## Job Details UI restyle (2026-09-11, per Claude Design brief)
+
+Rebuilt `job-status.html`'s table and modal against the supplied design brief (Artboard 2 + Artboard 6), with one deliberate deviation confirmed with Michaela: the brief marked Canning efficiency and Additional NRCS cans as required-to-close; both stay **optional**, matching the required set already confirmed above (GRN No., PO No., Cost per Kg, Delivery note no., Comments, ≥1 NRCS AG code). Canning efficiency specifically still has no defined formula, so it can't gate closing.
+
+- **Status column**: now shows the Open/Closed pill plus a second line — green "Details: ✓ Complete" or gold "Details needed" — with a gold left-border accent on rows still missing details.
+- **Action column**: "Add Job Details" and "Close job"/"Reopen" now sit side by side in one row, fixing the stacked layout that didn't look right.
+- **Helper text** added under the table description: "Click a job row, then 'Add Job Details' to enter required information before closing."
+- **Modal redesigned** to spec: header + subheader, four sectioned blocks with divider lines (Reference details — 2-column grid; Report notes; NRCS AG codes — alternating row backgrounds; Additional NRCS cans), gold asterisks only on the six actually-required fields, footer with off-white background and gold Save / white Cancel buttons, 700px width, palette colors and shadow per brief.
+
 ## Still blocked / open
 
 - **Stock-code level Can Breakdown table** (Stock code | Cans | Pcs/can | N/W | D/W | Description | 213g equiv.): blocked on "Werner's stock code list" — confirmed not yet digitized anywhere. Cannot build the lookup until that list exists as a file or system Claude can read. The print layout has a `.page2-start` hook ready for it.
