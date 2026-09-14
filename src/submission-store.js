@@ -17,6 +17,72 @@ function toTable(recordKey) {
   return 'sub_' + recordKey.replace(/-/g, '_');
 }
 
+// Mirrors scripts/generate-submission-schema.mjs's FIELD_TYPE_TO_PRISMA — the column kind each
+// RecordFieldDef.type coerces to when written into a submission table.
+function columnKind(fieldType) {
+  switch (fieldType) {
+    case 'number':
+    case 'computed':
+    case 'derived':
+      return 'float';
+    case 'digits':
+      return 'int';
+    case 'yesno':
+      return 'boolean';
+    case 'date':
+    case 'timestamp':
+      return 'date';
+    default:
+      return 'string';
+  }
+}
+
+const YES_VALUES = new Set(['yes', 'y', 'true']);
+const NO_VALUES = new Set(['no', 'n', 'false']);
+
+// Converts a raw form value to the type its submission column expects. Never throws: an
+// unconvertible value degrades to null (recoverable from rawJson) so one bad field can't fail
+// the whole write — see BACKEND_INTEGRATION.md's "never let a storage failure break a form
+// mid-shift" principle.
+function coerce(value, kind, recordKey, fieldKey) {
+  if (value == null || value === '') return null;
+  switch (kind) {
+    case 'float': {
+      const n = parseFloat(value);
+      if (Number.isNaN(n)) {
+        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as number, storing null`);
+        return null;
+      }
+      return n;
+    }
+    case 'int': {
+      const n = parseInt(value, 10);
+      if (Number.isNaN(n)) {
+        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as integer, storing null`);
+        return null;
+      }
+      return n;
+    }
+    case 'boolean': {
+      const s = String(value).trim().toLowerCase();
+      if (YES_VALUES.has(s)) return true;
+      if (NO_VALUES.has(s)) return false;
+      console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as yes/no, storing null`);
+      return null;
+    }
+    case 'date': {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) {
+        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as date, storing null`);
+        return null;
+      }
+      return d;
+    }
+    default:
+      return String(value);
+  }
+}
+
 function toCol(fieldKey) {
   let col = fieldKey;
   if (/^\d/.test(col)) col = 'f_' + col;
@@ -47,10 +113,11 @@ async function getSchema(prisma, recordKey) {
       return idx === f.sectionIndex;
     });
     const col = toCol(f.key);
+    const kind = columnKind(f.type);
     if (sec && sec.kind === 'roster') {
-      rosterCols.push({ key: f.key, col });
+      rosterCols.push({ key: f.key, col, kind });
     } else {
-      topCols.push({ key: f.key, col });
+      topCols.push({ key: f.key, col, kind });
     }
   }
 
@@ -106,10 +173,10 @@ async function syncSubmissionRows(prisma, key, value) {
       entry.inSpec != null ? entry.inSpec : null,
     ];
 
-    for (const { key: fk, col } of schema.topCols) {
+    for (const { key: fk, col, kind } of schema.topCols) {
       const v = values[fk];
       cols.push(`"${col}"`);
-      params.push(v != null ? String(v) : null);
+      params.push(coerce(v, kind, recordKey, fk));
     }
 
     const placeholders = params.map((_, i) => `$${i + 1}`).join(', ');
@@ -125,10 +192,10 @@ async function syncSubmissionRows(prisma, key, value) {
         const childCols = ['"parentId"', '"position"'];
         const childParams = [entry.id, position];
 
-        for (const { key: fk, col } of schema.rosterCols) {
+        for (const { key: fk, col, kind } of schema.rosterCols) {
           const v = row[fk];
           childCols.push(`"${col}"`);
-          childParams.push(v != null ? String(v) : null);
+          childParams.push(coerce(v, kind, recordKey, fk));
         }
 
         const cp = childParams.map((_, i) => `$${i + 1}`).join(', ');

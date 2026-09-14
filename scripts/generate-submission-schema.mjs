@@ -6,11 +6,11 @@
 //         (@@map("sub_dry_export_pack_front_page")).
 // Roster → child table: Sub_dry_export_pack_front_page_Row, with a FK back to the parent.
 //
-// Every field becomes a nullable String column (the canonical storage type for all form data —
-// the engine always reads/writes strings). Typed columns (Int, Float, DateTime) are NOT used:
-// the overhead of type coercion + null-vs-empty handling across 1800 fields isn't worth it when
-// every query that needs typed access already knows the field and can cast. The definition layer
-// owns the type metadata; the submission table is a flat store.
+// Each field's Prisma column type is derived from its declared `type` in record-definitions.json
+// (RecordFieldDef.type) via FIELD_TYPE_TO_PRISMA below — not a flat String for every field.
+// Identifier/format-like types (jobsearch, jobnumber, recordpick, batchseq, month, time) stay
+// String? because they aren't really typed values (job numbers, month-pickers, HH:MM). See
+// claude/erp-reconciliation-prep.md for the field-by-field reasoning this supersedes.
 //
 // Every submission row also carries:
 //   id         String @id          — the client-generated uid('sub') / uid('entry')
@@ -30,6 +30,32 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
 const { definitions } = JSON.parse(readFileSync(resolve(root, 'data/record-definitions.json'), 'utf8'));
+
+const FIELD_TYPE_TO_PRISMA = {
+  text: 'String?',
+  number: 'Float?',
+  yesno: 'Boolean?',
+  date: 'DateTime? @db.Date',
+  select: 'String?',
+  textarea: 'String?',
+  jobsearch: 'String?',
+  month: 'String?',
+  recordpick: 'String?',
+  timestamp: 'DateTime?',
+  digits: 'Int?',
+  time: 'String?',
+  jobnumber: 'String?',
+  batchseq: 'String?',
+};
+
+function prismaTypeFor(field, def) {
+  if (field.type === 'computed' || field.type === 'derived') {
+    // Both kinds are numeric in every current definition (see build-spec audit); fall back to
+    // Float? for any future non-numeric computeFn rather than guessing further.
+    return 'Float?';
+  }
+  return FIELD_TYPE_TO_PRISMA[field.type] || 'String?';
+}
 
 function toModelName(recordKey) {
   return 'Sub_' + recordKey.replace(/-/g, '_');
@@ -90,7 +116,7 @@ for (const def of definitions) {
     const col = toColName(f.key);
     if (seenCols.has(col)) continue; // dedup
     seenCols.add(col);
-    lines.push(`  ${col.padEnd(24)} String?`);
+    lines.push(`  ${col.padEnd(24)} ${prismaTypeFor(f, def)}`);
   }
 
   if (hasRoster) {
@@ -120,7 +146,7 @@ for (const def of definitions) {
       const col = toColName(f.key);
       if (childSeen.has(col)) continue;
       childSeen.add(col);
-      lines.push(`  ${col.padEnd(24)} String?`);
+      lines.push(`  ${col.padEnd(24)} ${prismaTypeFor(f, def)}`);
     }
 
     lines.push('');
