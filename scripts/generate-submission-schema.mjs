@@ -8,9 +8,11 @@
 //
 // Each field's Prisma column type is derived from its declared `type` in record-definitions.json
 // (RecordFieldDef.type) via FIELD_TYPE_TO_PRISMA below — not a flat String for every field.
-// Identifier/format-like types (jobsearch, jobnumber, recordpick, batchseq, month, time) stay
-// String? because they aren't really typed values (job numbers, month-pickers, HH:MM). See
-// claude/erp-reconciliation-prep.md for the field-by-field reasoning this supersedes.
+// Identifier-like types (jobsearch, jobnumber, recordpick, batchseq) stay String? because they
+// aren't really typed values (job/batch codes, record references). `month` and `time` are typed
+// too: month -> DateTime? @db.Date (stored as the 1st of that month), time -> DateTime? @db.Time
+// (a real time-of-day column, no date attached). See claude/erp-reconciliation-prep.md for the
+// field-by-field reasoning this supersedes.
 //
 // Every submission row also carries:
 //   id         String @id          — the client-generated uid('sub') / uid('entry')
@@ -39,11 +41,11 @@ const FIELD_TYPE_TO_PRISMA = {
   select: 'String?',
   textarea: 'String?',
   jobsearch: 'String?',
-  month: 'String?',
+  month: 'DateTime? @db.Date', // <input type="month"> value ("2026-09") stored as its first day
   recordpick: 'String?',
   timestamp: 'DateTime?',
   digits: 'Int?',
-  time: 'String?',
+  time: 'DateTime? @db.Time', // "HH:MM" stored as a time-of-day column (no date component)
   jobnumber: 'String?',
   batchseq: 'String?',
 };

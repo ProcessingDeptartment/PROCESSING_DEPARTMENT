@@ -688,8 +688,8 @@ model Sub_salting_and_tumbling_Row {
   sizeRange           String?
   standardSaltingTime Float?
   noOfCrates          Float?
-  startTime           String?
-  finishTime          String?
+  startTime           DateTime? @db.Time
+  finishTime          DateTime? @db.Time
   totalTumblingTime   Float?
   shuckWeight         Float?
   saltKg              Float?
@@ -907,7 +907,7 @@ model Sub_thermometer_correction_factors {
   rawJson     String?
   inSpec      Boolean?
 
-  month                 String?
+  month                 DateTime? @db.Date
   date                  DateTime? @db.Date
   referenceThermoSerial String?
   referenceReading      Float?
@@ -1952,7 +1952,7 @@ model Sub_dry_stock_control {
   jiProcessingFor String?
   jiIntakeWeight  String?
   intakeDate      DateTime? @db.Date
-  month           String?
+  month           DateTime? @db.Date
   wholeWeight     Float?
   cookingDate     DateTime? @db.Date
   noOfTrolleys    Float?
@@ -3232,7 +3232,7 @@ model Sub_factory_maintenance_inspection {
   rawJson     String?
   inSpec      Boolean?
 
-  month      String?
+  month      DateTime? @db.Date
   date       DateTime? @db.Date
   checkedBy  String?
   verifiedBy String?
@@ -3660,7 +3660,7 @@ model Sub_water_monitoring {
   rawJson     String?
   inSpec      Boolean?
 
-  month        String?
+  month        DateTime? @db.Date
   date         DateTime? @db.Date
   freshWaterPh Float?
   seaWaterSalt Float?
@@ -3681,7 +3681,7 @@ model Sub_lha_water_monitoring {
   rawJson     String?
   inSpec      Boolean?
 
-  month                String?
+  month                DateTime? @db.Date
   date                 DateTime? @db.Date
   shift                String?
   timeOfCheck          String?

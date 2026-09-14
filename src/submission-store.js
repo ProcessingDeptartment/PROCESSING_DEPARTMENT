@@ -32,6 +32,10 @@ function columnKind(fieldType) {
     case 'date':
     case 'timestamp':
       return 'date';
+    case 'month':
+      return 'month';
+    case 'time':
+      return 'time';
     default:
       return 'string';
   }
@@ -74,6 +78,34 @@ function coerce(value, kind, recordKey, fieldKey) {
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) {
         console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as date, storing null`);
+        return null;
+      }
+      return d;
+    }
+    case 'month': {
+      // <input type="month"> value, e.g. "2026-09" — store as the 1st of that month, UTC so the
+      // stored date doesn't shift with the server's local timezone.
+      if (!/^\d{4}-\d{2}$/.test(value)) {
+        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as month, storing null`);
+        return null;
+      }
+      const d = new Date(`${value}-01T00:00:00Z`);
+      if (Number.isNaN(d.getTime())) {
+        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as month, storing null`);
+        return null;
+      }
+      return d;
+    }
+    case 'time': {
+      // "HH:MM" — parsed as UTC so the stored time-of-day doesn't shift with the server's local
+      // timezone; the @db.Time column drops the date part anyway.
+      if (!/^\d{2}:\d{2}$/.test(value)) {
+        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as time, storing null`);
+        return null;
+      }
+      const d = new Date(`1970-01-01T${value}:00Z`);
+      if (Number.isNaN(d.getTime())) {
+        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as time, storing null`);
         return null;
       }
       return d;
