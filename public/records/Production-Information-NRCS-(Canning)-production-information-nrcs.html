@@ -23,9 +23,9 @@
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=3"></script>
-<script src="../lib/traceability.js?v=6"></script>
+<script src="../lib/traceability.js?v=7"></script>
 <script src="../lib/batch-validation.js?v=1"></script>
-<script src="../lib/form-record.js?v=34"></script>
+<script src="../lib/form-record.js?v=35"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -37,7 +37,9 @@
     stage: 'nrcs-canning',
     listColumns: ['productionCode', 'nrcsAgCode'],
     instructions: [
-      { label: 'How to fill this in', text: 'Choose the job number first — each row in the records table below then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' }
+      { label: 'How to fill this in', text: 'Choose the job number first — each row in the records table below then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
+      { label: 'Production codes table', text: 'Each row here picks a specific Cans Produced (REC 7.2.7) submission for this job number and pulls in its production code, NRCS AG code, and product description automatically. Add one row per can run.' },
+      { label: 'Submitting this record', text: 'Every row in the records tables below must be attached (a specific record picked, not just a record type) and show "Verified" before this NRCS record can be submitted. You can still save a draft at any point while records are still being filed or verified elsewhere.' }
     ],
     autofill: [
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
@@ -58,15 +60,28 @@
         { key: 'verificationBy', label: 'Verification by', type: 'text' }
       ]}
     ],
-    roster: {
-      title: 'Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Precooking Check Sheet (7.2.3), Retort Inspection Reports (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming Inspection for Cans & Lids (7.8.6), Double Seam Inspection Report (7.2.12), Retort reports, Temperature probe reports, Production figure (cans produced)',
-      columns: [
-        { key: 'submissionRef', label: 'Record for this job', type: 'recordpick', source: 'jobtrace', jobField: 'jobNo', fillCode: 'recordCode', fillName: 'recordName' },
-        { key: 'recordCode', label: 'REC code', type: 'text' },
-        { key: 'recordName', label: 'Record name', type: 'text' },
-        { key: 'included', label: 'Included', type: 'select', options: ['Yes', 'No', 'N/A'] }
-      ]
-    }
+    rosters: [
+      {
+        key: 'roster',
+        title: 'Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Precooking Check Sheet (7.2.3), Retort Inspection Reports (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming Inspection for Cans & Lids (7.8.6), Double Seam Inspection Report (7.2.12), Retort reports, Temperature probe reports, Production figure (cans produced)',
+        columns: [
+          { key: 'submissionRef', label: 'Record for this job', type: 'recordpick', source: 'jobtrace', jobField: 'jobNo', fillCode: 'recordCode', fillName: 'recordName', required: true },
+          { key: 'recordCode', label: 'REC code', type: 'text' },
+          { key: 'recordName', label: 'Record name', type: 'text' },
+          { key: 'included', label: 'Included', type: 'select', options: ['Yes', 'No', 'N/A'] }
+        ]
+      },
+      {
+        key: 'productionCodes',
+        title: 'Production codes for this job — pulled from Cans Produced (REC 7.2.7) records filed against the job number above',
+        columns: [
+          { key: 'submissionRef', label: 'Cans Produced record', type: 'recordpick', source: 'jobtrace', jobField: 'jobNo', sourceRecordKey: 'cans-produced', fillMap: { productionCode: 'productionCode', nrcsAgCode: 'nrcsAgCode', productDescription: 'brineOrBraised' }, required: true },
+          { key: 'productionCode', label: 'Production code', type: 'text' },
+          { key: 'nrcsAgCode', label: 'NRCS AG code', type: 'text' },
+          { key: 'productDescription', label: 'Product description', type: 'text' }
+        ]
+      }
+    ]
   });
 })();
 </script>

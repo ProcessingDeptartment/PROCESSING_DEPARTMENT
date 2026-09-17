@@ -63,7 +63,7 @@
 <script src="../lib/api-backend.js?v=6"></script>
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
-<script src="../lib/traceability.js?v=6"></script>
+<script src="../lib/traceability.js?v=7"></script>
 <script src="../lib/traced-records.js?v=2"></script>
 <script>(function () {
   const $ = id => document.getElementById(id);
@@ -148,24 +148,33 @@
     plan = [];
     for (const rec of (window.TracedRecords || [])) {
       const subs = await loadSubmissions(rec);
-      let indexed = 0, missing = [], noBatch = 0;
+      let indexed = 0, missing = [], stale = [], noBatch = 0;
       for (const sub of subs) {
         const batchNo = String((sub.values || {})[rec.batchField] || '').trim();
         if (!batchNo) { noBatch++; continue; }
         const key = 'batch_link:' + seg(batchNo) + ':' + seg(rec.recordKey) + ':' + seg(sub.id);
-        if (have.has(key)) indexed++;
-        else missing.push(sub);
+        if (have.has(key)) {
+          indexed++;
+          // Rows written before status/verified/verifiedDate existed on the index have no
+          // `status` key at all -- re-run indexSubmission on those too so old rows pick up
+          // the new fields, not just genuinely-missing rows.
+          let row = null;
+          try { row = JSON.parse(existing[key]); } catch (e) {  }
+          if (row && row.status === undefined) stale.push(sub);
+        } else missing.push(sub);
       }
-      plan.push({ rec, total: subs.length, indexed, missing, noBatch });
-      log(rec.docCode + ' — ' + subs.length + ' submissions, ' + missing.length + ' missing');
+      plan.push({ rec, total: subs.length, indexed, missing, stale, noBatch });
+      log(rec.docCode + ' — ' + subs.length + ' submissions, ' + missing.length + ' missing, ' +
+        stale.length + ' need a status refresh');
     }
     render();
     $('scanBtn').disabled = false;
     const totalMissing = plan.reduce((n, p) => n + p.missing.length, 0);
-    $('runBtn').disabled = totalMissing === 0;
-    $('status').textContent = totalMissing
-      ? totalMissing + ' entries to write.'
-      : 'Nothing to backfill — every submission with a batch number is already indexed.';
+    const totalStale = plan.reduce((n, p) => n + p.stale.length, 0);
+    $('runBtn').disabled = (totalMissing + totalStale) === 0;
+    $('status').textContent = (totalMissing + totalStale)
+      ? (totalMissing + ' entries to write, ' + totalStale + ' to refresh with status fields.')
+      : 'Nothing to backfill — every submission with a batch number is already indexed and up to date.';
   }
 
   function render() {
@@ -175,6 +184,7 @@
       if (p.noBatch) notes.push('<span class="warn">' + p.noBatch + ' with no ' + p.rec.batchField + '</span>');
       if (p.rec.store === 'custom') notes.push('<span class="muted">custom store</span>');
       if (!p.total) notes.push('<span class="muted">no submissions</span>');
+      if (p.stale.length) notes.push('<span class="warn">' + p.stale.length + ' need a status refresh</span>');
       return '<tr><td>' + (p.rec.docCode || '') + '</td><td>' + p.rec.title + '</td>' +
         '<td class="n">' + p.total + '</td><td class="n">' + p.indexed + '</td>' +
         '<td class="n">' + (p.missing.length ? '<strong>' + p.missing.length + '</strong>' : '0') + '</td>' +
@@ -182,10 +192,11 @@
     }).join('');
     const t = plan.reduce((a, p) => ({
       subs: a.subs + p.total, idx: a.idx + p.indexed,
-      miss: a.miss + p.missing.length, nb: a.nb + p.noBatch
-    }), { subs: 0, idx: 0, miss: 0, nb: 0 });
+      miss: a.miss + p.missing.length, stale: a.stale + p.stale.length, nb: a.nb + p.noBatch
+    }), { subs: 0, idx: 0, miss: 0, stale: 0, nb: 0 });
     $('totals').innerHTML = t.subs + ' submissions across ' + plan.length + ' records · ' +
       t.idx + ' already indexed · <strong>' + t.miss + ' missing</strong> · ' +
+      '<strong>' + t.stale + ' need a status refresh</strong> · ' +
       t.nb + ' carry no batch number (skipped).';
   }
 
@@ -197,9 +208,10 @@
     const auth = await assertAuthorised();
     if (!auth.ok) { blockUnauthorised(auth.why); return; }
 
-    let written = 0, failed = 0;
+    let written = 0, refreshed = 0, failed = 0;
     for (const p of plan) {
-      if (!p.missing.length) continue;
+      const todo = p.missing.concat(p.stale);
+      if (!todo.length) continue;
 
       const config = {
         recordKey: p.rec.recordKey,
@@ -214,7 +226,12 @@
         try { await window.Traceability.indexSubmission(config, sub); written++; }
         catch (e) { failed++; log('FAILED ' + p.rec.docCode + ' ' + sub.id + ': ' + e); }
       }
-      log('Wrote ' + p.missing.length + ' for ' + p.rec.docCode);
+      for (const sub of p.stale) {
+        try { await window.Traceability.indexSubmission(config, sub); refreshed++; }
+        catch (e) { failed++; log('FAILED (refresh) ' + p.rec.docCode + ' ' + sub.id + ': ' + e); }
+      }
+      log('Wrote ' + p.missing.length + ' for ' + p.rec.docCode +
+        (p.stale.length ? ', refreshed ' + p.stale.length : ''));
     }
 
     const after = await assertAuthorised();
@@ -226,8 +243,9 @@
       return;
     }
 
-    log('Done. ' + written + ' written, ' + failed + ' failed.');
-    $('status').innerHTML = '<span class="ok">Backfill complete — ' + written + ' entries written.</span>' +
+    log('Done. ' + written + ' written, ' + refreshed + ' refreshed, ' + failed + ' failed.');
+    $('status').innerHTML = '<span class="ok">Backfill complete — ' + written + ' entries written, ' +
+      refreshed + ' refreshed.</span>' +
       (failed ? ' <span class="warn">' + failed + ' failed.</span>' : '') + ' Re-scan to confirm.';
     $('scanBtn').disabled = false;
   }

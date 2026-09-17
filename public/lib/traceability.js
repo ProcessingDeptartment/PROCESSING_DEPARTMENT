@@ -17,6 +17,11 @@
   const REL_OUTPUT = 'output';
   const REL_SELF = 'self';
 
+  // Mirrors form-record.js's isSubmitted(sub) exactly (~line 928): a submission with no status
+  // set, or status 'submitted', counts as submitted. Kept in sync by hand rather than imported,
+  // since traceability.js loads standalone on pages that never load form-record.js.
+  function isSubmitted(sub) { return !!sub && (sub.status == null || sub.status === 'submitted'); }
+
   function normExtraFields(config) {
     // Accepts ['saltBatchCode', ...] or [{ field:'saltBatchCode', rel:'input' }, ...] or a mix.
     return (config.extraBatchFields || []).map(function (e) {
@@ -86,6 +91,10 @@
         occurred_on: occurredOn || null,
         href: hrefForThisPage(config, sub),
         summary: summary || null,
+        values: values || {},
+        status: isSubmitted(sub) ? 'submitted' : 'draft',
+        verified: !!(sub.verification),
+        verifiedDate: (sub.verification && sub.verification.verifiedDate) || null,
         updated_at: new Date().toISOString()
       };
       await window.storage.set(

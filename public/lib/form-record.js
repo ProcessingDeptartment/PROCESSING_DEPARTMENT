@@ -65,6 +65,16 @@
   .fr-badge{ display:inline-block; padding:1px 7px; border-radius:9px; font-size:10px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; background:#eceeef; color:#54606b; white-space:nowrap; }
   .fr-badge-ok{ background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); }
   .fr-badge-fail{ background:var(--palette-fail-bg,#fbe8e6); color:var(--palette-fail,#a3352d); }
+  /* Roster recordpick status badges -- same classes/colors as submissions-log.html so a picked
+     record's state reads consistently across pages. */
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .badge-warn{ background:#fbe8e6; color:#a3352d; }
+  .badge-ok{ background:#e8f3ec; color:#2f7a52; }
+  .badge-muted{ background:#eee; color:#777; }
+  .badge-info{ background:#e6eefb; color:#1d4ed8; }
+  .fr-recordpick{ display:flex; flex-direction:column; gap:4px; }
+  .fr-recordpick a.rec{ color:var(--palette-primary,#c9832b); text-decoration:none; font-weight:600; font-size:11px; }
+  .fr-recordpick a.rec:hover{ text-decoration:underline; }
   .fr-locked{ padding:8px 11px; margin-bottom:10px; border-left:3px solid var(--palette-ok,#2f6b3a); background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); font-size:11.5px; font-weight:600; }
   .fr-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
   .fr-notice.show{ display:block; }
@@ -268,8 +278,26 @@
     return row[col.key] || '';
   }
 
-  function fieldInputHtml(id, field, value) {
+  function fmtDDMMYYYY(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    const pad = n => String(n).padStart(2, '0');
+    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+  }
+
+  // The 4-state model a picked roster record can be in -- reused wherever a recordpick status
+  // badge is rendered (initial HTML and after wireRecordPick updates it on pick/refresh).
+  function recordpickBadgeHtml(value, status, verified, verifiedDate) {
+    if (!value) return '<span class="badge badge-muted">Not attached</span>';
+    if (status !== 'submitted') return '<span class="badge badge-info">Draft — not yet submitted</span>';
+    if (!verified) return '<span class="badge badge-warn">Awaiting verification</span>';
+    return '<span class="badge badge-ok">Verified (' + esc(fmtDDMMYYYY(verifiedDate)) + ')</span>';
+  }
+
+  function fieldInputHtml(id, field, value, row) {
     const v = value == null ? '' : value;
+    row = row || {};
 
       const ro = field.readOnly ? ' readonly' : '';
 
@@ -304,12 +332,26 @@
 
       if (field.type === 'recordpick') {
         const trace = field.source === 'jobtrace';
-        return `<select id="${id}" data-recordpick="1"` +
+        const status = row['__' + field.key + '_status'] || '';
+        const verified = row['__' + field.key + '_verified'] === '1' || row['__' + field.key + '_verified'] === true;
+        const verifiedDate = row['__' + field.key + '_verifiedDate'] || '';
+        const href = row['__' + field.key + '_href'] || '';
+        const select = `<select id="${id}" data-recordpick="1"` +
           ` data-fill-name="${esc(field.fillName || '')}" data-fill-code="${esc(field.fillCode || '')}"` +
+          ` data-fill-map="${esc(JSON.stringify(field.fillMap || {}))}"` +
           ` data-jobtrace="${trace ? '1' : ''}" data-job-field="${esc(field.jobField || '')}"` +
+          ` data-source-record-key="${esc(field.sourceRecordKey || '')}"` +
           ` data-value="${esc(v)}">` +
           (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
           `</select>`;
+        return `<span class="fr-recordpick">${select}` +
+          `<input type="hidden" id="${id}__status" value="${esc(status)}">` +
+          `<input type="hidden" id="${id}__verified" value="${verified ? '1' : ''}">` +
+          `<input type="hidden" id="${id}__verifiedDate" value="${esc(verifiedDate)}">` +
+          `<input type="hidden" id="${id}__href" value="${esc(href)}">` +
+          (v && href ? `<a class="rec" href="${esc(href)}" target="_blank" rel="noopener">View record</a>` : '') +
+          `<span id="${id}__badge">${recordpickBadgeHtml(v, status, verified, verifiedDate)}</span>` +
+          `</span>`;
       }
       if (field.type === 'select') {
         const opts = ['', ...(field.options || [])];
@@ -389,10 +431,11 @@
     }
 
 
-    async function jobTraceOptions(jobNo) {
+    async function jobTraceOptions(jobNo, sourceRecordKey) {
       if (!jobNo || !window.Traceability) return [];
       let rows = [];
       try { rows = await window.Traceability.trace(jobNo); } catch (e) { return []; }
+      if (sourceRecordKey) rows = rows.filter(r => r.record_key === sourceRecordKey);
       const byKey = {};
       ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(r => {
         if (r.recordKey) byKey[r.recordKey] = String(r.docNo || '').trim();
@@ -406,6 +449,10 @@
           code: code,
           name: name,
           href: r.href || '',
+          values: r.values || {},
+          status: r.status || 'submitted',
+          verified: !!r.verified,
+          verifiedDate: r.verifiedDate || '',
           label: (code ? code + ' — ' : '') + name + (when ? ' · ' + when : '') + (r.stage ? ' [' + r.stage + ']' : '')
         };
       });
@@ -424,9 +471,11 @@
           const jobField = sel.dataset.jobField || ((config && config.batchField) || '');
           const jobInput = jobField ? el('fr_f_' + jobField) : null;
           const jobNo = jobInput ? String(jobInput.value || '').trim() : '';
+          const sourceRecordKey = sel.dataset.sourceRecordKey || '';
+          const cacheKey = jobNo + '::' + sourceRecordKey;
           if (jobNo) {
-            if (!(jobNo in traceCache)) traceCache[jobNo] = await jobTraceOptions(jobNo);
-            opts = traceCache[jobNo];
+            if (!(cacheKey in traceCache)) traceCache[cacheKey] = await jobTraceOptions(jobNo, sourceRecordKey);
+            opts = traceCache[cacheKey];
           }
         }
 
@@ -437,8 +486,16 @@
         }
         sel.innerHTML = '<option value="">—</option>' + opts.map(o =>
           `<option value="${esc(o.value)}" data-code="${esc(o.code || '')}" data-name="${esc(o.name || '')}" data-href="${esc(o.href || '')}"` +
+          ` data-values="${esc(JSON.stringify(o.values || {}))}"` +
+          ` data-status="${esc(o.status || '')}" data-verified="${o.verified ? '1' : ''}" data-verified-date="${esc(o.verifiedDate || '')}"` +
           `${o.value === current ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
         sel.value = current;
+
+        // Refresh the persisted status/badge from the current option even when nothing was
+        // just picked -- e.g. the picked submission got verified elsewhere since this draft
+        // was last saved, and the badge should reflect that without requiring a re-pick.
+        const currentOpt = current ? sel.options[sel.selectedIndex] : null;
+        if (currentOpt && currentOpt.value === current) updateRecordPickStatus(sel, currentOpt);
 
         if (!sel._recordPickWired) {
           sel._recordPickWired = true;
@@ -454,9 +511,54 @@
               target.value = (opt && opt.dataset[dataKey]) || '';
               target.dispatchEvent(new Event('input', { bubbles: true }));
             });
+            let fillMap = {};
+            try { fillMap = JSON.parse(sel.dataset.fillMap || '{}'); } catch (e) { fillMap = {}; }
+            let optValues = {};
+            try { optValues = JSON.parse((opt && opt.dataset.values) || '{}'); } catch (e) { optValues = {}; }
+            Object.keys(fillMap).forEach((targetColumnKey) => {
+              const sourceValueKey = fillMap[targetColumnKey];
+              let value = optValues[sourceValueKey];
+              if (sourceValueKey === 'nrcsAgCode' && !value) value = optValues.agCode;
+              const target = row.querySelector(`[id$="_${targetColumnKey}"]`);
+              if (!target) return;
+              target.value = value || '';
+              target.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            updateRecordPickStatus(sel, sel.value ? opt : null);
           });
         }
       }
+    }
+
+    // Writes the picked option's status/verified/verifiedDate/href onto this recordpick's
+    // persisted hidden fields (so it survives save/reload of a draft, same as fillCode/fillName)
+    // and repaints the badge/view-link next to the select.
+    function updateRecordPickStatus(sel, opt) {
+      const status = (opt && opt.dataset.status) || '';
+      const verified = !!(opt && opt.dataset.verified);
+      const verifiedDate = (opt && opt.dataset.verifiedDate) || '';
+      const href = (opt && opt.dataset.href) || '';
+      const value = sel.value || '';
+      const statusEl = el(sel.id + '__status');
+      const verifiedEl = el(sel.id + '__verified');
+      const verifiedDateEl = el(sel.id + '__verifiedDate');
+      const hrefEl = el(sel.id + '__href');
+      if (statusEl) statusEl.value = status;
+      if (verifiedEl) verifiedEl.value = verified ? '1' : '';
+      if (verifiedDateEl) verifiedDateEl.value = verifiedDate;
+      if (hrefEl) hrefEl.value = href;
+      const wrap = sel.closest('.fr-recordpick');
+      if (!wrap) return;
+      const linkEl = wrap.querySelector('a.rec');
+      if (value && href) {
+        if (linkEl) linkEl.href = href;
+        else wrap.insertAdjacentHTML('beforeend',
+          `<a class="rec" href="${esc(href)}" target="_blank" rel="noopener">View record</a>`);
+      } else if (linkEl) {
+        linkEl.remove();
+      }
+      const badgeEl = el(sel.id + '__badge');
+      if (badgeEl) badgeEl.innerHTML = recordpickBadgeHtml(value, status, verified, verifiedDate);
     }
 
 
@@ -733,6 +835,32 @@
     return { pre: secs.filter(s => !s.afterRoster), post: secs.filter(s => s.afterRoster) };
   }
 
+  // A record can declare either a single `roster` (legacy shape, stored under sub.roster) or an
+  // array of `rosters: [{ key, title, columns, ... }, ...]` rendered as separate repeating tables,
+  // each wired through the same recordpick/add-row/save-load paths. `getRosterList` normalizes
+  // both shapes into one array; `roster.key` (default 'roster' for a lone/legacy roster) is the
+  // storage key -- the first roster in the list still persists to sub.roster for backward
+  // compatibility with data saved before multi-roster support existed.
+  function getRosterList(config) {
+    if (Array.isArray(config.rosters)) {
+      return config.rosters.filter(Boolean).map(r => Object.assign({}, r, { key: r.key || 'roster' }));
+    }
+    if (config.roster) return [Object.assign({}, config.roster, { key: config.roster.key || 'roster' })];
+    return [];
+  }
+
+  function getRosterRows(sub, index, key) {
+    if (!sub) return [];
+    if (index === 0) return sub.roster || [];
+    return (sub.rosters && sub.rosters[key]) || [];
+  }
+
+  function setRosterRows(sub, index, key, rows) {
+    if (index === 0) { sub.roster = rows; return; }
+    sub.rosters = sub.rosters || {};
+    sub.rosters[key] = rows;
+  }
+
   // The record's definition lives in the DB (RecordDefinition tables, seeded from the old
   // inline configs -- see Claude outputs/relational-all-records-plan.md). A page that passes
   // only { recordKey } gets its config assembled by GET /api/record-def/:key.
@@ -777,10 +905,13 @@
         if (override && override.schemaVersion === 1 && override.engine === 'form-record') {
           config.sections = override.sections;
           if (override.roster !== undefined) config.roster = override.roster || undefined;
+          if (override.rosters !== undefined) config.rosters = override.rosters || undefined;
           if (override.listColumns) config.listColumns = override.listColumns;
         }
       }
     } catch (e) { console.warn('fr: template override parse failed', e); }
+
+    const rosterList = getRosterList(config);
 
     const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
 
@@ -819,7 +950,9 @@
       btn.textContent = 'Tap again to clear';
       clearTimer = setTimeout(() => { clearArmed = false; clearTimer = null; btn.textContent = 'Clear'; }, 4000);
     }
-    const hasRoster = !!config.roster;
+    const hasRoster = rosterList.length > 0;
+    function rosterNs(i) { return i === 0 ? 'fr' : 'fr' + i; }
+    function rosterDomId(base, i) { return i === 0 ? base : base + '_' + i; }
 
     async function load() {
       const raw = await storeGet(storageKey, true);
@@ -982,11 +1115,11 @@
       wrap.querySelectorAll('[data-pdf]').forEach(btn => btn.addEventListener('click', () => printSubmission(btn.dataset.pdf)));
     }
 
-    function rosterRowHtml(ns, idx, row) {
+    function rosterRowHtml(ns, idx, row, roster) {
       row = row || {};
       return `<div class="fr-roster-row" data-roster-row="${idx}">
-        ${config.roster.columns.map(c => `<label class="fr-field">${esc(c.label)}
-          ${fieldInputHtml(`${ns}_roster_${idx}_${c.key}`, c, row[c.key])}
+        ${roster.columns.map(c => `<label class="fr-field">${esc(c.label)}${c.required ? ' *' : ''}
+          ${fieldInputHtml(`${ns}_roster_${idx}_${c.key}`, c, row[c.key], row)}
         </label>`).join('')}
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" data-remove-roster-row="${idx}">✕</button>
       </div>`;
@@ -1014,11 +1147,11 @@
     }
 
 
-    function importRosterCsv(text, rosterContainer) {
+    function importRosterCsv(text, rosterContainer, roster) {
       const cells = parseCsvText(text);
       if (!cells.length) { alert('That CSV is empty.'); return; }
       const norm = s => String(s == null ? '' : s).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-      const cols = config.roster.columns;
+      const cols = roster.columns;
       const header = cells[0].map(norm);
       const mapping = header.map(h => {
         const col = cols.find(c => norm(c.key) === h || norm(c.label) === h);
@@ -1046,15 +1179,18 @@
       alert('Imported ' + imported.length + ' row' + (imported.length === 1 ? '' : 's') + '.');
     }
 
-    function renderRosterEditor(existingRows) {
-      const container = el('fr_rosterRows');
+    function renderRosterEditor(existingRows, roster, rosterIndex) {
+      const ns = rosterNs(rosterIndex);
+      const containerId = rosterDomId('fr_rosterRows', rosterIndex);
+      const fid = (i, key) => `${ns}_roster_${i}_${key}`;
+      const container = el(containerId);
       let rows = (existingRows || []).slice();
       if (!rows.length) rows.push({});
 
       // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
       // from the Abalone Receiving baskets for this job). One fetch per job, cached; a column
       // opts in via extraJson.deriveGroupSum = { source, groupBy, sum }.
-      const groupSumCol = (config.roster.columns || []).find(c => c.deriveGroupSum);
+      const groupSumCol = (roster.columns || []).find(c => c.deriveGroupSum);
       const groupSumsCache = { job: null, data: {} };
       async function loadGroupSums() {
         if (!groupSumCol) return;
@@ -1076,24 +1212,24 @@
 
 
       function renderRosterTotals() {
-        if (!config.roster.totalsRow) return;
+        if (!roster.totalsRow) return;
         const totals = {};
-        config.roster.totalsRow.forEach(k => { totals[k] = 0; });
+        roster.totalsRow.forEach(k => { totals[k] = 0; });
         rows.forEach((_, i) => {
-          config.roster.totalsRow.forEach(k => {
-            const inp = el(`fr_roster_${i}_${k}`);
+          roster.totalsRow.forEach(k => {
+            const inp = el(fid(i, k));
             const val = inp ? parseFloat(inp.value) : NaN;
             if (!isNaN(val)) totals[k] += val;
           });
         });
-        const totalsEl = el('fr_rosterTotals');
+        const totalsEl = el(rosterDomId('fr_rosterTotals', rosterIndex));
         if (totalsEl) {
-          totalsEl.innerHTML = 'Totals — ' + config.roster.totalsRow.map(k => {
-            const col = config.roster.columns.find(c => c.key === k);
+          totalsEl.innerHTML = 'Totals — ' + roster.totalsRow.map(k => {
+            const col = roster.columns.find(c => c.key === k);
             return `${esc(col ? col.label : k)}: ${totals[k].toFixed(2)}`;
           }).join(' &nbsp;·&nbsp; ');
           // Optional percentage-of-a-top-field readout, e.g. OOSW %  =  Σ OOSW weight ÷ job whole weight.
-          const p = config.roster.pctTotal;
+          const p = roster.pctTotal;
           if (p) {
             const ofEl = el('fr_f_' + p.of);
             const denom = ofEl ? parseFloat(ofEl.value) : NaN;
@@ -1104,6 +1240,7 @@
         }
         allFields(config).forEach((f) => {
           if (f.type !== 'computed' || !f.sumRosterColumn) return;
+          if (!roster.columns.some(c => c.key === f.sumRosterColumn)) return;
           const inp = el(`fr_f_${f.key}`);
           if (inp) inp.value = (totals[f.sumRosterColumn] || 0).toFixed(2);
         });
@@ -1111,18 +1248,18 @@
 
 
       function renderRosterDerived() {
-        const specials = (config.roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived');
+        const specials = (roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived');
         if (!specials.length) return;
-        const dateEl = el('fr_f_' + (config.roster.batchSeqDateField || 'date'));
+        const dateEl = el('fr_f_' + (roster.batchSeqDateField || 'date'));
         const batchSeqDate = dateEl ? dateEl.value : '';
         rows.forEach((_, i) => {
           const cur = {};
-          config.roster.columns.forEach(c => {
-            const inp = el(`fr_roster_${i}_${c.key}`);
+          roster.columns.forEach(c => {
+            const inp = el(fid(i, c.key));
             cur[c.key] = inp ? inp.value : '';
           });
           specials.forEach(c => {
-            const inp = el(`fr_roster_${i}_${c.key}`);
+            const inp = el(fid(i, c.key));
             if (!inp) return;
             if (c.type === 'batchseq') {
               inp.value = formatBatchSeq(batchSeqDate, i);
@@ -1140,20 +1277,20 @@
       }
 
 
-      const canCollapse = config.roster.collapseRows !== false && config.roster.columns.length > 2;
+      const canCollapse = roster.collapseRows !== false && roster.columns.length > 2;
       const collapsedRows = new Set();
-      const dataCols = config.roster.columns.filter(c => c.type !== 'batchseq');
+      const dataCols = roster.columns.filter(c => c.type !== 'batchseq');
 
       function rowHasData(i) {
         return dataCols.some(c => {
-          const inp = el(`fr_roster_${i}_${c.key}`);
+          const inp = el(fid(i, c.key));
           return inp && String(inp.value || '').trim() !== '';
         });
       }
       function rowSummaryHtml(i) {
         const bits = [];
-        config.roster.columns.forEach(c => {
-          const inp = el(`fr_roster_${i}_${c.key}`);
+        roster.columns.forEach(c => {
+          const inp = el(fid(i, c.key));
           const v = inp ? String(inp.value || '').trim() : '';
           if (!v) return;
           bits.push(c.type === 'batchseq' ? esc(v) : `${esc(c.label)}: ${esc(v)}`);
@@ -1185,7 +1322,7 @@
       }
 
       function draw() {
-        container.innerHTML = rows.map((r, i) => rosterRowHtml('fr', i, r)).join('');
+        container.innerHTML = rows.map((r, i) => rosterRowHtml(ns, i, r, roster)).join('');
 
               if (typeof wireYesNo === 'function') wireYesNo(container);
               if (typeof wireJobNumber === 'function') wireJobNumber(container);
@@ -1243,7 +1380,7 @@
         const i = Number(btn.dataset.rosterEdit);
         collapsedRows.delete(i);
         applyCollapse();
-        const first = el(`fr_roster_${i}_${(dataCols[0] || config.roster.columns[0]).key}`);
+        const first = el(fid(i, (dataCols[0] || roster.columns[0]).key));
         if (first) { try { first.focus(); } catch (err) {} }
       });
 
@@ -1254,13 +1391,13 @@
       });
       // batchseq columns key off roster.batchSeqDateField (default 'date'), a separate field
       // from the job -- re-derive when it changes too, so codes update as soon as it's filled in.
-      const batchSeqDateKey = config.roster.batchSeqDateField || 'date';
+      const batchSeqDateKey = roster.batchSeqDateField || 'date';
       if (batchSeqDateKey !== (config.batchField || 'jobNo')) {
         const dateWatch = el('fr_f_' + batchSeqDateKey);
         if (dateWatch) ['input', 'change'].forEach(ev => dateWatch.addEventListener(ev, renderRosterDerived));
       }
-      if (config.roster.pctTotal) {
-        const ofEl = el('fr_f_' + config.roster.pctTotal.of);
+      if (roster.pctTotal) {
+        const ofEl = el('fr_f_' + roster.pctTotal.of);
         if (ofEl) ['input', 'change'].forEach(ev => ofEl.addEventListener(ev, renderRosterTotals));
       }
       draw();
@@ -1270,28 +1407,32 @@
         rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
         applyCollapse();
       }
-      container._getRows = () => {
-
-        rows = rows.map((_, i) => {
-          const row = {};
-          config.roster.columns.forEach(c => {
-            const inp = el(`fr_roster_${i}_${c.key}`);
-            row[c.key] = inp ? inp.value : '';
-          });
-          return row;
+      // recordpick columns persist their status/verified/verifiedDate/href alongside the picked
+      // value, off the same hidden fields wireRecordPick keeps live -- read here so it survives
+      // save/reload of a draft, same as fillCode/fillName already do.
+      function readRow(i) {
+        const row = {};
+        roster.columns.forEach(c => {
+          const inp = el(fid(i, c.key));
+          row[c.key] = inp ? inp.value : '';
+          if (c.type === 'recordpick') {
+            ['status', 'verified', 'verifiedDate', 'href'].forEach(suffix => {
+              const sInp = el(fid(i, c.key) + '__' + suffix);
+              if (sInp) row['__' + c.key + '_' + suffix] = sInp.value;
+            });
+          }
         });
+        return row;
+      }
+
+      container._getRows = () => {
+        rows = rows.map((_, i) => readRow(i));
         return rows;
       };
 
       container._importRows = (newRows) => {
-        rows = rows.map((_, i) => {
-          const row = {};
-          config.roster.columns.forEach(c => {
-            const inp = el(`fr_roster_${i}_${c.key}`);
-            row[c.key] = inp ? inp.value : '';
-          });
-          return row;
-        }).filter(r => config.roster.columns.some(c => String(r[c.key] || '').trim() !== ''));
+        rows = rows.map((_, i) => readRow(i))
+          .filter(r => roster.columns.some(c => String(r[c.key] || '').trim() !== ''));
         rows = rows.concat(newRows);
         draw();
 
@@ -1302,19 +1443,12 @@
       };
       container._addRow = () => {
 
-        rows = rows.map((_, i) => {
-          const row = {};
-          config.roster.columns.forEach(c => {
-            const inp = el(`fr_roster_${i}_${c.key}`);
-            row[c.key] = inp ? inp.value : '';
-          });
-          return row;
-        });
+        rows = rows.map((_, i) => readRow(i));
         rows.push({});
 
         if (canCollapse) rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
         draw();
-        const first = el(`fr_roster_${rows.length - 1}_${(dataCols[0] || config.roster.columns[0]).key}`);
+        const first = el(fid(rows.length - 1, (dataCols[0] || roster.columns[0]).key));
         if (first) { try { first.focus(); } catch (err) {} }
       };
     }
@@ -1350,13 +1484,13 @@
       const { pre: preSecs, post: postSecs } = sectionsAroundRoster(config);
       html += preSecs.map(renderSection).join('');
       if (hasRoster) {
-        html += `
-        <div class="fr-section-title">${esc(config.roster.title)}</div>
-        <div id="fr_rosterRows"></div>
-        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="fr_addRosterRowBtn">+ Add row</button>
-        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="fr_importCsvBtn">Import CSV</button>
-        <input type="file" id="fr_csvFile" accept=".csv,text/csv" style="display:none;">
-        ${config.roster.totalsRow ? `<div id="fr_rosterTotals" class="fr-roster-totals"></div>` : ''}`;
+        html += rosterList.map((roster, i) => `
+        <div class="fr-section-title">${esc(roster.title)}</div>
+        <div id="${rosterDomId('fr_rosterRows', i)}"></div>
+        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">+ Add row</button>
+        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}">Import CSV</button>
+        <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">
+        ${roster.totalsRow ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals"></div>` : ''}`).join('');
       }
       html += postSecs.map(renderSection).join('');
 
@@ -1371,17 +1505,22 @@
       }
       container.innerHTML = html;
       if (hasRoster) {
-        renderRosterEditor(existing ? existing.roster : null);
-        el('fr_addRosterRowBtn').addEventListener('click', () => container.querySelector('#fr_rosterRows')._addRow());
-        el('fr_importCsvBtn').addEventListener('click', () => el('fr_csvFile').click());
-        el('fr_csvFile').addEventListener('change', function () {
-          const file = this.files && this.files[0];
-          this.value = '';
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = () => importRosterCsv(String(reader.result), container.querySelector('#fr_rosterRows'));
-          reader.onerror = () => alert('Could not read that file.');
-          reader.readAsText(file);
+        rosterList.forEach((roster, i) => {
+          renderRosterEditor(existing ? getRosterRows(existing, i, roster.key) : null, roster, i);
+          const rowsId = rosterDomId('fr_rosterRows', i);
+          el(rosterDomId('fr_addRosterRowBtn', i)).addEventListener('click',
+            () => container.querySelector('#' + rowsId)._addRow());
+          el(rosterDomId('fr_importCsvBtn', i)).addEventListener('click',
+            () => el(rosterDomId('fr_csvFile', i)).click());
+          el(rosterDomId('fr_csvFile', i)).addEventListener('change', function () {
+            const file = this.files && this.files[0];
+            this.value = '';
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => importRosterCsv(String(reader.result), container.querySelector('#' + rowsId), roster);
+            reader.onerror = () => alert('Could not read that file.');
+            reader.readAsText(file);
+          });
         });
       }
 
@@ -1391,7 +1530,7 @@
       wireSectionSummaries(container);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); wireJobRouteCheck(container, config); }
 
-      const pickFields = allFields(config).concat((config.roster && config.roster.columns) || []);
+      const pickFields = allFields(config).concat(rosterList.reduce((acc, r) => acc.concat(r.columns || []), []));
       const traceJobField = (pickFields.find(f => f.type === 'recordpick' && f.jobField) || {}).jobField
         || config.batchField;
       const traceJobInput = traceJobField ? el('fr_f_' + traceJobField) : null;
@@ -1479,25 +1618,54 @@
           return;
         }
       }
-      const rosterRows = hasRoster ? el('fr_rosterRows')._getRows() : undefined;
+      const rosterRowsByIndex = hasRoster
+        ? rosterList.map((roster, i) => el(rosterDomId('fr_rosterRows', i))._getRows())
+        : undefined;
 
+      // Finalize-only gate: every row in a roster column marked `required: true` (type
+      // 'recordpick') must be attached to a specific submission AND that submission verified,
+      // before this record can be submitted. Saving a draft is always allowed regardless.
+      let incompleteRoster = null;
+      if (rosterRowsByIndex && finalize) {
+        rosterList.forEach((roster, i) => {
+          if (incompleteRoster) return;
+          const requiredCols = (roster.columns || []).filter(c => c.type === 'recordpick' && c.required);
+          if (!requiredCols.length) return;
+          const rows = rosterRowsByIndex[i];
+          const incomplete = rows.some(r => requiredCols.some(c => {
+            const value = r[c.key];
+            if (!value) return true;
+            const status = r['__' + c.key + '_status'];
+            const verified = r['__' + c.key + '_verified'] === '1' || r['__' + c.key + '_verified'] === true;
+            return status !== 'submitted' || !verified;
+          }));
+          if (incomplete) incompleteRoster = roster;
+        });
+      }
+      if (incompleteRoster && finalize) {
+        toast(`All records in "${incompleteRoster.title}" must be attached and verified before this can be submitted.`);
+        return;
+      }
 
-      if (rosterRows) {
+      if (rosterRowsByIndex) {
+        const allRosterRows = rosterRowsByIndex.reduce((acc, rows) => acc.concat(rows), []);
         allFields(config).forEach((f) => {
           if (f.type !== 'computed' || !f.sumRosterColumn) return;
-          const total = rosterRows.reduce((sum, r) => {
+          const total = allRosterRows.reduce((sum, r) => {
             const n = parseFloat(r[f.sumRosterColumn]);
             return sum + (isNaN(n) ? 0 : n);
           }, 0);
           values[f.key] = total.toFixed(2);
         });
 
-        const rosterCols = (config.roster && config.roster.columns) || [];
-        const batchSeqDate = values[(config.roster && config.roster.batchSeqDateField) || 'date'];
-        rosterRows.forEach((r, i) => {
-          rosterCols.forEach((c) => {
-            if (c.type === 'batchseq') r[c.key] = formatBatchSeq(batchSeqDate, i);
-            else if (c.type === 'derived' && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
+        rosterList.forEach((roster, i) => {
+          const rosterCols = roster.columns || [];
+          const batchSeqDate = values[roster.batchSeqDateField || 'date'];
+          rosterRowsByIndex[i].forEach((r, idx) => {
+            rosterCols.forEach((c) => {
+              if (c.type === 'batchseq') r[c.key] = formatBatchSeq(batchSeqDate, idx);
+              else if (c.type === 'derived' && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
+            });
           });
         });
       }
@@ -1508,9 +1676,12 @@
         const existing = submissions.find(s => s.id === editingId);
         if (isSubmitted(existing)) { toast('This submission is submitted and can no longer be changed.'); return; }
         existing.history = existing.history || [];
-        existing.history.push({ ts: Date.now(), previousValues: existing.values, previousRoster: existing.roster });
+        existing.history.push({
+          ts: Date.now(), previousValues: existing.values,
+          previousRoster: existing.roster, previousRosters: existing.rosters
+        });
         existing.values = values;
-        if (hasRoster) existing.roster = rosterRows;
+        if (hasRoster) rosterList.forEach((roster, i) => setRosterRows(existing, i, roster.key, rosterRowsByIndex[i]));
         existing.updatedAt = Date.now();
         existing.status = status;
         if (finalize) existing.submittedAt = Date.now();
@@ -1527,7 +1698,7 @@
           signOffs: []
         };
         if (finalize) sub.submittedAt = Date.now();
-        if (hasRoster) sub.roster = rosterRows;
+        if (hasRoster) rosterList.forEach((roster, i) => setRosterRows(sub, i, roster.key, rosterRowsByIndex[i]));
         submissions.push(sub);
         savedSub = sub;
       }
@@ -1593,34 +1764,38 @@
 
     function sheetRosterHtml(sub) {
       if (!hasRoster) return '';
-      const cols = config.roster.columns || [];
-      const rows = (sub.roster || []).filter(r =>
+      return rosterList.map((roster, i) => sheetOneRosterHtml(sub, roster, i)).join('');
+    }
+
+    function sheetOneRosterHtml(sub, roster, i) {
+      const cols = roster.columns || [];
+      const rows = getRosterRows(sub, i, roster.key).filter(r =>
         cols.some(c => String(r[c.key] || '').trim() !== ''));
 
       const body = (rows.length ? rows : [{}, {}, {}]).map(r =>
         `<tr>${cols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
       let totalsRowHtml = '';
-      if (config.roster.totalsRow && rows.length) {
+      if (roster.totalsRow && rows.length) {
         const totals = {};
-        config.roster.totalsRow.forEach(k => { totals[k] = 0; });
-        rows.forEach(r => config.roster.totalsRow.forEach(k => {
+        roster.totalsRow.forEach(k => { totals[k] = 0; });
+        rows.forEach(r => roster.totalsRow.forEach(k => {
           const val = parseFloat(r[k]);
           if (!isNaN(val)) totals[k] += val;
         }));
         totalsRowHtml = `<tr>${cols.map((c, ci) => {
-          if (config.roster.totalsRow.includes(c.key)) return `<td><strong>${totals[c.key].toFixed(2)}</strong></td>`;
+          if (roster.totalsRow.includes(c.key)) return `<td><strong>${totals[c.key].toFixed(2)}</strong></td>`;
           return `<td><strong>${ci === 0 ? 'Total' : ''}</strong></td>`;
         }).join('')}</tr>`;
       }
       let pctHtml = '';
-      const p = config.roster.pctTotal;
+      const p = roster.pctTotal;
       if (p && rows.length) {
         const numer = rows.reduce((s, r) => { const n = parseFloat(r[p.num]); return s + (isNaN(n) ? 0 : n); }, 0);
         const denom = parseFloat(sub.values[p.of]);
         const txt = (!isNaN(denom) && denom > 0) ? (numer / denom * 100).toFixed(2) + '%' : '—';
         pctHtml = `<p class="fr-roster-totals"><strong>${esc(p.label || 'OOSW %')}: ${txt}</strong></p>`;
       }
-      return `<h3>${esc(config.roster.title)}</h3>
+      return `<h3>${esc(roster.title)}</h3>
         <table><thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
         <tbody>${body}${totalsRowHtml}</tbody></table>${pctHtml}`;
     }
