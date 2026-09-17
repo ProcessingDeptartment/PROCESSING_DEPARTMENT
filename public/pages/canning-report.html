@@ -109,6 +109,12 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
   const fmt = (n, d) => (n == null ? '—' : n.toFixed(d == null ? 2 : d));
+  const formatDate = (s) => {
+    if (!s) return '';
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return String(s);
+    return `${m[3]}/${m[2]}/${m[1]}`;
+  };
 
 
   const TARGET_YIELD = 105.00;
@@ -268,7 +274,7 @@
       <div class="grid2">
         <dl class="kv">
           <dt>Received from</dt><dd>${esc(h.receivedFrom || '—')}</dd>
-          <dt>Receiving date</dt><dd>${esc(h.receivingDate || '—')}</dd>
+          <dt>Receiving date</dt><dd>${esc(formatDate(h.receivingDate) || '—')}</dd>
           <dt>Actual cans</dt><dd>${rep.totalCans || '—'}</dd>
           <dt>Comments</dt><dd>${esc(rep.jobFields.comments || '—')}</dd>
         </dl>
@@ -280,24 +286,6 @@
         </dl>
       </div>
 
-      <h2 class="sec">Can breakdown</h2>
-      <table>
-        <thead><tr>
-          <th>Production code</th><th class="num">Quantity</th><th class="num">Drained weight</th>
-          <th>Medium</th><th>NRCS AG code</th>
-        </tr></thead>
-        <tbody>
-          ${rep.canRows.length ? rep.canRows.map((r) => `<tr>
-            <td>${esc(r.productionCode || '—')}</td>
-            <td class="num">${r.qty == null ? '—' : r.qty}</td>
-            <td class="num">${r.drained == null ? '—' : r.drained + 'g'}</td>
-            <td>${esc(r.medium || '—')}</td>
-            <td>${esc(r.agCode || '—')}</td>
-          </tr>`).join('') : '<tr><td colspan="5" class="muted">No Cans Produced records for this job.</td></tr>'}
-          ${rep.canRows.length ? `<tr class="total"><td>TOTAL</td><td class="num">${rep.totalCans}</td><td colspan="3"></td></tr>` : ''}
-        </tbody>
-      </table>
-
       <h2 class="sec">Harvest breakdown</h2>
       <table>
         <thead><tr>
@@ -306,7 +294,7 @@
         </tr></thead>
         <tbody>
           ${rep.harvest.length ? rep.harvest.map((r) => `<tr>
-            <td>${esc(r.date || '—')}</td>
+            <td>${esc(formatDate(r.date) || '—')}</td>
             <td>${esc(r.sizeRange || '—')}</td>
             <td class="num">${fmt(r.mass, 3)}</td>
             <td class="num">${r.animals == null ? '—' : r.animals}</td>
@@ -356,6 +344,24 @@
         </tbody>
       </table>
 
+      <h2 class="sec">Can breakdown</h2>
+      <table>
+        <thead><tr>
+          <th>Production code</th><th class="num">Quantity</th><th class="num">Drained weight</th>
+          <th>Medium</th><th>NRCS AG code</th>
+        </tr></thead>
+        <tbody>
+          ${rep.canRows.length ? rep.canRows.map((r) => `<tr>
+            <td>${esc(r.productionCode || '—')}</td>
+            <td class="num">${r.qty == null ? '—' : r.qty}</td>
+            <td class="num">${r.drained == null ? '—' : r.drained + 'g'}</td>
+            <td>${esc(r.medium || '—')}</td>
+            <td>${esc(r.agCode || '—')}</td>
+          </tr>`).join('') : '<tr><td colspan="5" class="muted">No Cans Produced records for this job.</td></tr>'}
+          ${rep.canRows.length ? `<tr class="total"><td>TOTAL</td><td class="num">${rep.totalCans}</td><td colspan="3"></td></tr>` : ''}
+        </tbody>
+      </table>
+
       ${missing.length ? `<div class="warn no-print"><strong>No data yet from:</strong> ${esc(missing.join(', '))}. Those sections stay blank until those records are submitted against this job.</div>` : ''}
 
       <!-- Stock-code level Can Breakdown table (spec section 5) lands here once the stock code
@@ -394,15 +400,10 @@
     lines.push([q('Target yield (cans/100kg)'), q(TARGET_YIELD.toFixed(2))].join(','));
     lines.push([q('Target cans'), q(rep.targetCans == null ? '' : Math.round(rep.targetCans))].join(','));
     lines.push('');
-    lines.push(q('CAN BREAKDOWN'));
-    lines.push(['Production code', 'Quantity', 'Drained weight (g)', 'Medium', 'NRCS AG code'].map(q).join(','));
-    rep.canRows.forEach((r) => lines.push([q(r.productionCode), q(r.qty), q(r.drained), q(r.medium), q(r.agCode)].join(',')));
-    lines.push([q('TOTAL'), q(rep.totalCans), '', '', ''].join(','));
-    lines.push('');
     lines.push(q('HARVEST BREAKDOWN'));
     lines.push(['Receiving date', 'Size range', 'Whole mass (kg)', 'Animals', 'Weight per animal (g)'].map(q).join(','));
     rep.harvest.forEach((r) => lines.push([
-      q(r.date), q(r.sizeRange), q(fmt(r.mass, 3)), q(r.animals),
+      q(formatDate(r.date)), q(r.sizeRange), q(fmt(r.mass, 3)), q(r.animals),
       q((r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : '')
     ].join(',')));
     lines.push([q('TOTAL'), '', q(fmt(rep.totalMass, 2)), q(rep.totalAnimals), ''].join(','));
@@ -421,6 +422,11 @@
     lines.push([q('NRCS AG code')].join(','));
     rep.nrcsAgCodes.forEach((code) => lines.push([q(code)].join(',')));
     lines.push([q('Additional NRCS cans'), q(rep.additionalNrcsCans)].join(','));
+    lines.push('');
+    lines.push(q('CAN BREAKDOWN'));
+    lines.push(['Production code', 'Quantity', 'Drained weight (g)', 'Medium', 'NRCS AG code'].map(q).join(','));
+    rep.canRows.forEach((r) => lines.push([q(r.productionCode), q(r.qty), q(r.drained), q(r.medium), q(r.agCode)].join(',')));
+    lines.push([q('TOTAL'), q(rep.totalCans), '', '', ''].join(','));
 
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
