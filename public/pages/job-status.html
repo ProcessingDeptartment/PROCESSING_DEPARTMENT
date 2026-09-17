@@ -87,6 +87,8 @@
     .panel{ border:none; padding:0; }
     .table-wrap{ border:none; overflow:visible; }
     body{ background:#fff; }
+    .modal-backdrop{ position:static; background:#fff; padding:0; display:block; }
+    .modal{ box-shadow:none; max-width:none; }
   }
 </style>
 </head>
@@ -137,11 +139,11 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop no-print" id="detailsModal" hidden>
+  <div class="modal-backdrop" id="detailsModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <h2>Add Job Details — <span id="detailsJobNo"></span></h2>
-        <p class="modal-sub">Complete the required fields before you can close this job.</p>
+        <h2><span id="detailsTitlePrefix">Add Job Details</span> — <span id="detailsJobNo"></span></h2>
+        <p class="modal-sub" id="detailsSub">Complete the required fields before you can close this job.</p>
       </div>
 
       <div class="modal-section">
@@ -171,8 +173,9 @@
         <div class="field-row"><label>Quantity</label><input type="number" id="fldAdditionalNrcsCans"></div>
       </div>
 
-      <div class="modal-actions">
-        <button class="btn btn-white" id="cancelDetails" type="button">Cancel</button>
+      <div class="modal-actions no-print">
+        <button class="btn btn-white" id="cancelDetails" type="button">Close</button>
+        <button class="btn btn-flat" id="printDetails" type="button">Print / PDF</button>
         <button class="btn btn-gold" id="saveDetails" type="button">Save</button>
       </div>
     </div>
@@ -289,7 +292,7 @@
         </td>
         <td class="no-print">
           <div class="row-actions">
-            <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">Add Job Details</button>
+            <button class="btn btn-flat btn-sm" data-details="${esc(r.job_no)}">${closed ? 'View Details' : 'Add Job Details'}</button>
             <button class="btn btn-sm ${closed ? 'btn-flat' : 'btn-danger'}" data-toggle="${esc(r.job_no)}" data-closed="${closed ? '1' : ''}"
               ${canClose ? '' : 'disabled title="Add Job Details before closing this job."'}>
               ${closed ? 'Reopen' : 'Close job'}
@@ -355,7 +358,7 @@
   function openDetails(jobNo) {
     editingJobNo = jobNo;
     const row = rows.find((r) => String(r.job_no) === String(jobNo)) || {};
-    $('detailsJobNo').textContent = jobNo;
+    const readOnly = row.status === 'closed';
     $('fldGrnNo').value = row.grnNo || '';
     $('fldPoNo').value = row.poNo || '';
     $('fldCostPerKg').value = row.costPerKg || '';
@@ -367,6 +370,19 @@
     const agCodes = migrated.agCodes.length ? migrated.agCodes : [''];
     $('nrcsRows').innerHTML = agCodes.map((code) => nrcsRowHtml(code)).join('');
     wireNrcsRemove();
+
+    $('detailsJobNo').textContent = jobNo;
+    $('detailsTitlePrefix').textContent = readOnly ? 'Job Details' : 'Add Job Details';
+    $('detailsSub').textContent = readOnly
+      ? 'This job is closed — details are read-only.'
+      : 'Complete the required fields before you can close this job.';
+
+    const fields = ['fldGrnNo', 'fldPoNo', 'fldCostPerKg', 'fldDeliveryNoteNo', 'fldCanningEfficiency', 'fldComments', 'fldAdditionalNrcsCans'];
+    fields.forEach((id) => { $(id).disabled = readOnly; });
+    $('nrcsRows').querySelectorAll('input, button').forEach((el) => { el.disabled = readOnly; });
+    $('addNrcsRow').disabled = readOnly;
+    $('saveDetails').style.display = readOnly ? 'none' : '';
+
     $('detailsModal').hidden = false;
   }
 
@@ -451,6 +467,7 @@
     });
     $('cancelDetails').addEventListener('click', closeDetails);
     $('saveDetails').addEventListener('click', saveDetailsClick);
+    $('printDetails').addEventListener('click', () => window.print());
     await load();
   }
 
