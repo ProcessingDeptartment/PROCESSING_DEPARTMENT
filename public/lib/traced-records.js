@@ -227,6 +227,17 @@ window.TracedRecords = [
     "store": "formrecord:cans-produced"
   },
   {
+    "recordKey": "production-information-nrcs",
+    "pageFile": "Production-Information-NRCS-(Canning)-production-information-nrcs.html",
+    "docCode": "Production Information NRCS (Canning)",
+    "title": "Production Information NRCS (Canning)",
+    "batchField": "jobNo",
+    "batchDateField": null,
+    "stage": "nrcs-canning",
+    "extraBatchFields": [],
+    "store": "formrecord:production-information-nrcs"
+  },
+  {
     "recordKey": "retorting-control-sheet",
     "pageFile": "REC-7.2.8-retorting-control-sheet.html",
     "docCode": "REC 7.2.8",
