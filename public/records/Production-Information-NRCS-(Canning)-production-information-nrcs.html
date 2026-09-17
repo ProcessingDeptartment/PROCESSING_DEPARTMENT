@@ -40,7 +40,9 @@
       { label: 'How to fill this in', text: 'Choose the job number first — each row in the records table below then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' }
     ],
     autofill: [
-      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { } }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: {
+          receivingDate: 'receivingDate'
+        } }
     ],
     sections: [
       { title: 'Batch details', fields: [
