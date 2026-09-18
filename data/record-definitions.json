@@ -11195,7 +11195,7 @@
       "mount": "#frRoot",
       "pageFile": "REC-7.2.7-cans-produced.html",
       "docCode": "REC 7.2.7",
-      "title": "Cans Produced",
+      "title": "Canning Production",
       "docRevisionStart": 1,
       "jobInfoGroup": null,
       "clientHook": null,
@@ -11213,22 +11213,30 @@
           }
         },
         {
-          "title": "Batch info",
+          "title": "Trolley & retort info",
           "kind": "fields",
           "position": 1
         },
         {
-          "title": "Cooking & processing",
-          "kind": "fields",
+          "title": "Can batches",
+          "kind": "roster",
           "position": 2,
           "extraJson": {
-            "newPage": true
+            "newPage": true,
+            "totalsRow": [
+              "numberOfCans"
+            ]
           }
         },
         {
           "title": "Damage report",
           "kind": "fields",
           "position": 3
+        },
+        {
+          "title": "Comments",
+          "kind": "fields",
+          "position": 4
         }
       ],
       "fields": [
@@ -11329,9 +11337,9 @@
         },
         {
           "key": "productionCode",
-          "label": "Production code",
+          "label": "Production code (AG code)",
           "type": "text",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -11349,8 +11357,8 @@
         {
           "key": "timeTrolleyIn",
           "label": "Time trolley in",
-          "type": "text",
-          "required": false,
+          "type": "time",
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -11368,11 +11376,16 @@
         {
           "key": "retortCode",
           "label": "Retort code",
-          "type": "text",
-          "required": false,
+          "type": "select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ],
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": null,
@@ -11386,14 +11399,19 @@
         },
         {
           "key": "retortNo",
-          "label": "Retort no.",
-          "type": "text",
-          "required": false,
+          "label": "Retort number",
+          "type": "select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "L1",
+            "L2",
+            "R1",
+            "R2"
+          ],
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 8,
           "computeFn": null,
@@ -11404,15 +11422,18 @@
           "validateJson": null
         },
         {
-          "key": "cookingMethodRecipe",
-          "label": "Cooking method/recipe",
-          "type": "text",
-          "required": false,
+          "key": "canSize",
+          "label": "Can size",
+          "type": "select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "Unit",
+            "Mince"
+          ],
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 9,
           "computeFn": null,
@@ -11423,36 +11444,21 @@
           "validateJson": null
         },
         {
-          "key": "canPieces",
-          "label": "Can pieces",
-          "type": "number",
-          "required": false,
+          "key": "cookingMethodRecipe",
+          "label": "Cooking method",
+          "type": "select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "11 minutes",
+            "15 minutes",
+            "24 minutes"
+          ],
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 10,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "drainWeight",
-          "label": "Drain weight (g)",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 2,
-          "parentFieldKey": null,
-          "position": 11,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -11464,7 +11470,7 @@
           "key": "brineOrBraised",
           "label": "Brine / Braised",
           "type": "select",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": [
@@ -11472,8 +11478,27 @@
             "Braised"
           ],
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 11,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "canPieces",
+          "label": "Can pieces (mince only, 1-50)",
+          "type": "number",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 2,
+          "parentFieldKey": "@roster",
           "position": 12,
           "computeFn": null,
           "computeArgs": null,
@@ -11483,16 +11508,23 @@
           "validateJson": null
         },
         {
-          "key": "sauceBatch",
-          "label": "Sauce batch",
-          "type": "text",
-          "required": false,
+          "key": "drainWeight",
+          "label": "Drain weight",
+          "type": "select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "80g",
+            "150g",
+            "180g",
+            "200g",
+            "213g",
+            "238g"
+          ],
           "group": null,
           "sectionIndex": 2,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 13,
           "computeFn": null,
           "computeArgs": null,
@@ -11505,13 +11537,13 @@
           "key": "numberOfCans",
           "label": "Number of cans",
           "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 2,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 14,
           "computeFn": null,
           "computeArgs": null,
@@ -11521,16 +11553,16 @@
           "validateJson": null
         },
         {
-          "key": "damagedCans",
-          "label": "Damaged cans",
-          "type": "number",
+          "key": "sauceBatch",
+          "label": "Sauce batch (if braised)",
+          "type": "text",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 2,
-          "parentFieldKey": null,
+          "parentFieldKey": "@roster",
           "position": 15,
           "computeFn": null,
           "computeArgs": null,
@@ -11540,10 +11572,10 @@
           "validateJson": null
         },
         {
-          "key": "reasonForDamage",
-          "label": "Reason for damage",
-          "type": "text",
-          "required": false,
+          "key": "xSmallDamagedCans",
+          "label": "X-Small damaged cans",
+          "type": "number",
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -11559,10 +11591,10 @@
           "validateJson": null
         },
         {
-          "key": "totalDamagedCans",
-          "label": "Total damaged cans",
+          "key": "otherSizeDamagedCans",
+          "label": "Damaged cans (other sizes)",
           "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -11570,6 +11602,25 @@
           "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 17,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "comments",
+          "label": "Comments",
+          "type": "textarea",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 18,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -11595,7 +11646,8 @@
         "listColumns": [
           "intakeDate",
           "jobNumber",
-          "numberOfCans"
+          "productionCode",
+          "canSize"
         ],
         "batchField": "jobNumber",
         "stage": "canning"

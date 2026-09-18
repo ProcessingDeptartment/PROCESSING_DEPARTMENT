@@ -191,16 +191,23 @@
     const totalAnimals = harvest.reduce((a, h) => a + (h.animals || 0), 0);
 
 
-    const canRows = cans.map((s) => {
+    const canRowsRaw = [];
+    cans.forEach((s) => {
       const v = s.values || {};
-      return {
+      const trolley = {
         productionCode: v.productionCode || '',
-        qty: num(v.numberOfCans),
-        drained: num(v.drainWeight),
         medium: v.brineOrBraised || '',
-        agCode: v.nrcsAgCode || v.agCode || ''
+        agCode: v.nrcsAgCode || v.agCode || v.productionCode || ''
       };
-    }).filter((r) => r.qty != null || r.drained != null);
+      const batches = Array.isArray(s.roster) ? s.roster : [];
+      if (batches.length) {
+        batches.forEach((r) => canRowsRaw.push({ ...trolley, qty: num(r.numberOfCans), drained: num(r.drainWeight) }));
+      } else if (v.numberOfCans != null || v.drainWeight != null) {
+        // Pre-redesign submissions stored can count/drain weight at trolley level.
+        canRowsRaw.push({ ...trolley, qty: num(v.numberOfCans), drained: num(v.drainWeight) });
+      }
+    });
+    const canRows = canRowsRaw.filter((r) => r.qty != null || r.drained != null);
     const totalCans = canRows.reduce((a, r) => a + (r.qty || 0), 0);
 
     const drainedMassG = canRows.reduce((a, r) => a + (r.qty || 0) * (r.drained || 0), 0);

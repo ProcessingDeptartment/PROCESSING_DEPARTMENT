@@ -1194,20 +1194,34 @@ model Sub_cans_produced {
   jiIntakeWeight           String?
   intakeDate               DateTime? @db.Date
   productionCode           String?
-  timeTrolleyIn            String?
+  timeTrolleyIn            DateTime? @db.Time
   retortCode               String?
   retortNo                 String?
+  canSize                  String?
   cookingMethodRecipe      String?
-  canPieces                Float?
-  drainWeight              Float?
   brineOrBraised           String?
-  sauceBatch               String?
-  numberOfCans             Float?
-  damagedCans              Float?
-  reasonForDamage          String?
-  totalDamagedCans         Float?
+  xSmallDamagedCans        Float?
+  otherSizeDamagedCans     Float?
+  comments                 String?
+
+  rows Sub_cans_produced_Row[]
 
   @@map("sub_cans_produced")
+}
+
+model Sub_cans_produced_Row {
+  id       Int     @id @default(autoincrement())
+  parentId String
+  parent   Sub_cans_produced @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  position Int     @default(0)
+
+  canPieces                Float?
+  drainWeight              String?
+  numberOfCans             Float?
+  sauceBatch               String?
+
+  @@index([parentId])
+  @@map("sub_cans_produced_row")
 }
 
 model Sub_retorting_control_sheet {
