@@ -1195,8 +1195,8 @@ model Sub_cans_produced {
   intakeDate               DateTime? @db.Date
   productionCode           String?
   timeTrolleyIn            DateTime? @db.Time
-  retortCode               String?
-  retortNo                 String?
+  retortCodePrefix         String?
+  retortCodeDigit          Float?
   canSize                  String?
   cookingMethodRecipe      String?
   brineOrBraised           String?
@@ -1215,7 +1215,7 @@ model Sub_cans_produced_Row {
   parent   Sub_cans_produced @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int     @default(0)
 
-  canPieces                Float?
+  canPieces                String?
   drainWeight              String?
   numberOfCans             Float?
   sauceBatch               String?

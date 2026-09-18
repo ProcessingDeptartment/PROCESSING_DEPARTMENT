@@ -4,7 +4,7 @@ Covers the changes from `nrcs-canning-roster-verification-instructions.md`:
 - `public/lib/traceability.js` (v7) — trace index rows now carry `status`/`verified`/`verifiedDate`
 - `public/lib/form-record.js` (v35) — recordpick roster columns render Add/change → View → status badge; `saveForm(finalize)` blocks Submit when a required recordpick row isn't attached+verified
 - `public/pages/backfill-traceability.html` — re-indexes rows missing the new fields
-- `Production-Information-NRCS-(Canning)-production-information-nrcs.html` — both `submissionRef` columns marked `required: true`, new instruction added
+- `Production-Information-NRCS-(Canning)-production-information-nrcs.html` — single "Records included" roster's `submissionRef` column marked `required: true`; the separate "Production codes" roster was merged into this same roster as extra columns (`productionCode`, `nrcsAgCode`, `productDescription`), filled via `fillMap` whenever the picked record is a Cans Produced (REC 7.2.7) submission
 
 **Blocker found during automated testing:** the Job No. field (`type: 'jobsearch'`) only
 accepts values from `window.JobStatus.openJobNumbers()` — any value not in that list is
@@ -34,19 +34,20 @@ Pick (or create) a real open job number, call it `JOBNO`, that has:
    then reopen the NRCS Canning draft.
    - [ ] The row's badge now reads **"Verified (DD/MM/YYYY)"** with the correct date,
      without needing to re-pick the row.
-6. With every required roster row now verified (both "Records included" and "Production
-   codes" rosters), click **Submit**.
+6. With every required row in the roster now verified, click **Submit**.
    - [ ] Submission succeeds.
-7. Test the "not attached" case: start a fresh entry with `JOBNO`, leave a required
-   roster with zero rows or a row with no value picked, click Submit.
+7. Test the "not attached" case: start a fresh entry with `JOBNO`, leave the roster with
+   zero rows or a row with no value picked, click Submit.
    - [ ] Blocked with an appropriate message — distinct in effect (not necessarily wording)
      from the "attached but unverified" case; the row shows badge "Not attached".
 8. Confirm "View record" links open the correct record for a couple of different rows
    (not just the first one tested).
-9. **Regression — production codes roster (prior change):** pick a "Cans Produced"
-   record on the Production codes roster row.
-   - [ ] `productionCode`, `nrcsAgCode`, `productDescription` (from `brineOrBraised`)
-     auto-populate on the row exactly as before this change.
+9. **Regression — Cans Produced auto-fill (prior change, now merged into this roster):**
+   add another row in the same "Records included" roster and pick a "Cans Produced"
+   (REC 7.2.7) submission for it.
+   - [ ] `Production code`, `NRCS AG code`, `Product description` (from `brineOrBraised`)
+     auto-populate on that row, while `REC code`/`Record name` still populate as before —
+     confirms both `fillCode`/`fillName` and `fillMap` apply together on one column.
 10. **Cache check:** hard-refresh (Ctrl+Shift+R) the NRCS Canning page and confirm no
     console errors and the roster still renders with badges/links — confirms the
     `?v=` bumps on `traceability.js`/`form-record.js` took effect everywhere this page

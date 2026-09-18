@@ -90,7 +90,7 @@
         {
           "key": "rec747Attached",
           "label": "REC 7.4.7 Labelling of Dry Boxes attached?",
-          "type": "yesno",
+          "type": "recordpick",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -101,15 +101,19 @@
           "position": 3,
           "computeFn": null,
           "computeArgs": null,
-          "recordPickSource": null,
+          "recordPickSource": "jobtrace",
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNumber",
+            "sourceRecordKey": "labelling-of-dry-boxes"
+          }
         },
         {
           "key": "rec748Attached",
           "label": "REC 7.4.8 Dry Labelling List attached?",
-          "type": "yesno",
+          "type": "recordpick",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -120,15 +124,19 @@
           "position": 4,
           "computeFn": null,
           "computeArgs": null,
-          "recordPickSource": null,
+          "recordPickSource": "jobtrace",
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNumber",
+            "sourceRecordKey": "dry-labelling-list"
+          }
         },
         {
           "key": "rec749Attached",
           "label": "REC 7.4.9 Dry Stock Transfers attached?",
-          "type": "yesno",
+          "type": "recordpick",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -139,10 +147,14 @@
           "position": 5,
           "computeFn": null,
           "computeArgs": null,
-          "recordPickSource": null,
+          "recordPickSource": "jobtrace",
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNumber",
+            "sourceRecordKey": "dry-stock-transfers"
+          }
         },
         {
           "key": "signedPackingListsAttached",
@@ -11374,17 +11386,15 @@
           "validateJson": null
         },
         {
-          "key": "retortCode",
+          "key": "retortCodePrefix",
           "label": "Retort code",
           "type": "select",
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": [
-            "R1",
-            "R2",
-            "R3",
-            "R4"
+            "L",
+            "N"
           ],
           "group": null,
           "sectionIndex": 1,
@@ -11398,18 +11408,13 @@
           "validateJson": null
         },
         {
-          "key": "retortNo",
-          "label": "Retort number",
-          "type": "select",
+          "key": "retortCodeDigit",
+          "label": "Retort no.",
+          "type": "number",
           "required": true,
           "readOnly": false,
           "unit": null,
-          "options": [
-            "L1",
-            "L2",
-            "R1",
-            "R2"
-          ],
+          "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": null,
@@ -11424,14 +11429,11 @@
         {
           "key": "canSize",
           "label": "Can size",
-          "type": "select",
+          "type": "text",
           "required": true,
           "readOnly": false,
           "unit": null,
-          "options": [
-            "Unit",
-            "Mince"
-          ],
+          "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": null,
@@ -11490,12 +11492,19 @@
         },
         {
           "key": "canPieces",
-          "label": "Can pieces (mince only, 1-50)",
-          "type": "number",
+          "label": "Can pieces",
+          "type": "select",
           "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "1","2","3","4","5","6","7","8","9","10",
+            "11","12","13","14","15","16","17","18","19","20",
+            "21","22","23","24","25","26","27","28","29","30",
+            "31","32","33","34","35","36","37","38","39","40",
+            "41","42","43","44","45","46","47","48","49","50",
+            "Mince"
+          ],
           "group": null,
           "sectionIndex": 2,
           "parentFieldKey": "@roster",

@@ -1529,7 +1529,7 @@
 
     injectStyleOnce();
 
-    if (!config.entryFields && config.recordKey) {
+    if (!config.entryFields && !config.customBody && config.recordKey) {
       const fetched = await fetchRecordDef(config.recordKey);
       if (fetched) Object.assign(config, fetched);
     }
