@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>REC 7.2.12 Double Seam Inspection — redesign</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f2f1ec;}
+  .ds-input{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .ds-btn{cursor:pointer;border:none;}
+  .ds-btn:active{opacity:0.85;}
+</style>
+</helmet>
+
+<div style="width: 900px; min-height: 1400px; box-sizing: border-box; background: #f2f1ec; display: flex; flex-direction: column;">
+
+  <!-- ===== Sticky top: doc bar + spec banner ===== -->
+  <div style="position: sticky; top: 0; z-index: 20; display: flex; flex-direction: column;">
+    <div style="background: #1c2733; color: #ffffff; padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+      <div style="width: 36px; height: 36px; border-radius: 8px; background: {{accent}}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #241a0a; flex-shrink: 0;">AB</div>
+      <div style="display: flex; flex-direction: column; line-height: 1.25;">
+        <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.02em;">REC 7.2.12 · Double Seam Inspection</div>
+        <div style="font-size: 11.5px; color: #a9b4c0;">Job {{jobNo}} · {{stageLabel}} · Can {{state.can}}</div>
+      </div>
+    </div>
+
+    <div style="padding: 12px 20px; display: flex; align-items: center; gap: 10px; background: {{banner.bg}}; border-bottom: 1px solid {{banner.border}};">
+      <div style="width: 22px; height: 22px; border-radius: 50%; background: {{banner.dotBg}}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0;">{{banner.icon}}</div>
+      <div style="font-size: 13px; font-weight: 700; color: {{banner.text}};">{{banner.headline}}</div>
+      <div style="flex-grow: 1;"></div>
+      <div style="font-size: 11px; font-weight: 700; color: {{banner.text}}; background: rgba(255,255,255,0.5); padding: 3px 9px; border-radius: 20px;">Can {{state.can}} · {{stageLabel}}</div>
+    </div>
+  </div>
+
+  <div style="padding: 18px 20px 40px; display: flex; flex-direction: column; gap: 16px;">
+
+    <!-- ===== Job & equipment info — same collapsible pattern as every other record (job no. stays visible while collapsed) ===== -->
+    <details style="background: #ffffff; border: 1px solid #e2e4e3; border-radius: 10px; overflow: hidden;">
+      <summary style="list-style: none; cursor: pointer; padding: 12px 16px; background: #fbfbfa; border-bottom: 1px solid #e2e4e3; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #2f4356; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 10px;">▸</span>
+        <span>Job &amp; equipment info</span>
+        <span class="ds-input" style="text-transform: none; letter-spacing: 0; font-weight: 700; color: #1b2330;">{{jobNo}}</span>
+      </summary>
+      <div style="padding: 14px 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+        <sc-for list="{{headerFields}}" as="f" hint-placeholder-count="10">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 11px; font-weight: 700; color: #6b7580;">{{f.label}}</label>
+            <input value="{{f.value}}" readonly style="height: 40px; padding: 0 10px; border: 1px solid #d7dad9; border-radius: 6px; font-size: 14px; color: #1b2330; background: #fcfcfb;">
+          </div>
+        </sc-for>
+      </div>
+    </details>
+
+    <!-- ===== Stage tabs (big, thumb-height) ===== -->
+    <div style="display: flex; gap: 8px;">
+      <sc-for list="{{stageTabs}}" as="tab" hint-placeholder-count="3">
+        <button onClick="{{tab.onClick}}" class="ds-btn" style="flex-grow: 1; height: 52px; border-radius: 10px; font-size: 13.5px; font-weight: 700; background: {{tab.bg}}; color: {{tab.color}}; border: 1px solid {{tab.border}};">{{tab.label}}</button>
+      </sc-for>
+    </div>
+
+    <!-- ===== Can toggle (one can shown at a time) + vacuum ===== -->
+    <div style="display: flex; gap: 10px; align-items: stretch;">
+      <div style="display: flex; gap: 6px; background: #e7e5df; border-radius: 10px; padding: 4px; flex-shrink: 0;">
+        <sc-for list="{{canTabs}}" as="c" hint-placeholder-count="2">
+          <button onClick="{{c.onClick}}" class="ds-btn" style="width: 110px; height: 48px; border-radius: 8px; font-size: 14px; font-weight: 700; background: {{c.bg}}; color: {{c.color}};">{{c.label}}</button>
+        </sc-for>
+      </div>
+      <div style="flex-grow: 1; border-radius: 10px; background: {{vacuum.bg}}; border: 1px solid {{vacuum.border}}; display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+        <div style="font-size: 11.5px; font-weight: 700; color: {{vacuum.text}};">Vacuum · spec {{vacuum.spec}}</div>
+        <div class="ds-input" style="font-size: 16px; font-weight: 800; color: {{vacuum.text}};">{{vacuum.value}}</div>
+      </div>
+    </div>
+
+    <!-- ===== Measurement groups — all 3 points side by side, active can only ===== -->
+    <sc-for list="{{groups}}" as="grp" hint-placeholder-count="4">
+      <div style="background: #ffffff; border: 1px solid #e2e4e3; border-radius: 10px; overflow: hidden;">
+        <div style="padding: 10px 16px; background: #fbfbfa; border-bottom: 1px solid #e2e4e3; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #2f4356;">{{grp.title}}</div>
+
+        <div style="display: grid; grid-template-columns: minmax(0,1fr) 96px 96px 96px; align-items: center; padding: 8px 16px; background: #f7f7f4; border-bottom: 1px solid #eceeec;">
+          <div></div>
+          <div style="text-align: center; font-size: 10px; font-weight: 800; color: #8a939b; letter-spacing: 0.04em;">PT 1</div>
+          <div style="text-align: center; font-size: 10px; font-weight: 800; color: #8a939b; letter-spacing: 0.04em;">PT 2</div>
+          <div style="text-align: center; font-size: 10px; font-weight: 800; color: #8a939b; letter-spacing: 0.04em;">PT 3</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column;">
+          <sc-for list="{{grp.rows}}" as="row" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: minmax(0,1fr) 96px 96px 96px; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #f0f1ef;">
+              <div style="display: flex; flex-direction: column; gap: 2px; padding-right: 8px;">
+                <div style="font-size: 13.5px; font-weight: 700; color: #33404a;">{{row.label}}</div>
+                <div style="font-size: 10.5px; color: #8a939b;">{{row.spec}}</div>
+              </div>
+              <div class="ds-input" style="height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14.5px; font-weight: 800; background: {{row.p1Bg}}; color: {{row.p1Color}}; border: 1px solid {{row.p1Border}};">{{row.p1}}</div>
+              <div class="ds-input" style="height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14.5px; font-weight: 800; background: {{row.p2Bg}}; color: {{row.p2Color}}; border: 1px solid {{row.p2Border}};">{{row.p2}}</div>
+              <div class="ds-input" style="height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14.5px; font-weight: 800; background: {{row.p3Bg}}; color: {{row.p3Color}}; border: 1px solid {{row.p3Border}};">{{row.p3}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+
+    <!-- ===== Overlap summary for active can ===== -->
+    <div style="background: #ffffff; border: 1px solid #e2e4e3; border-radius: 10px; overflow: hidden;">
+      <div style="padding: 10px 16px; background: #fbfbfa; border-bottom: 1px solid #e2e4e3; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #2f4356;">Calculated overlap · Can {{state.can}}</div>
+      <div style="padding: 14px 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+        <div style="border-radius: 8px; padding: 12px 14px; background: {{overlap.pctBg}}; border: 1px solid {{overlap.pctBorder}};">
+          <div style="font-size: 10.5px; font-weight: 700; color: {{overlap.pctText}};">% overlap · min 45%</div>
+          <div style="font-size: 22px; font-weight: 800; color: {{overlap.pctText}}; margin-top: 4px;" class="ds-input">{{overlap.pctVal}}</div>
+        </div>
+        <div style="border-radius: 8px; padding: 12px 14px; background: {{overlap.actBg}}; border: 1px solid {{overlap.actBorder}};">
+          <div style="font-size: 10.5px; font-weight: 700; color: {{overlap.actText}};">Actual overlap · min 1mm</div>
+          <div style="font-size: 22px; font-weight: 800; color: {{overlap.actText}}; margin-top: 4px;" class="ds-input">{{overlap.actVal}}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Comments ===== -->
+    <div style="background: #ffffff; border: 1px solid #e2e4e3; border-radius: 10px; overflow: hidden;">
+      <div style="padding: 10px 16px; background: #fbfbfa; border-bottom: 1px solid #e2e4e3; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #2f4356;">Comments</div>
+      <div style="padding: 14px 16px;">
+        <textarea rows="3" placeholder="Notes on this inspection…" style="width: 100%; box-sizing: border-box; border: 1px solid #d7dad9; border-radius: 6px; padding: 10px; font-size: 13.5px; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+    </div>
+
+    <!-- ===== Sign-off ===== -->
+    <div style="background: #ffffff; border: 1px solid #e2e4e3; border-radius: 10px; overflow: hidden;">
+      <div style="padding: 10px 16px; background: #fbfbfa; border-bottom: 1px solid #e2e4e3; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #2f4356;">Completed by</div>
+      <div style="padding: 14px 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 11px; font-weight: 700; color: #6b7580;">Completed by</label>
+          <input placeholder="Name" style="height: 42px; padding: 0 10px; border: 1px solid #d7dad9; border-radius: 6px; font-size: 14px;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 11px; font-weight: 700; color: #6b7580;">Date</label>
+          <input type="date" style="height: 42px; padding: 0 10px; border: 1px solid #d7dad9; border-radius: 6px; font-size: 14px;">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== Sticky bottom action bar ===== -->
+  <div style="position: sticky; bottom: 0; z-index: 20; background: #ffffff; border-top: 1px solid #e2e4e3; padding: 12px 20px; display: flex; gap: 10px; box-shadow: 0 -4px 14px rgba(0,0,0,0.06);">
+    <button class="ds-btn" style="flex: 0 0 auto; padding: 0 18px; height: 48px; border-radius: 8px; background: #e2e4e3; color: #1b2330; font-size: 13.5px; font-weight: 700;">Clear</button>
+    <button class="ds-btn" style="flex: 0 0 auto; padding: 0 18px; height: 48px; border-radius: 8px; background: #e2e4e3; color: #1b2330; font-size: 13.5px; font-weight: 700;">Save draft</button>
+    <div style="flex-grow: 1;"></div>
+    <button class="ds-btn" style="flex: 0 0 auto; padding: 0 26px; height: 48px; border-radius: 8px; background: {{submitBg}}; color: #241a0a; font-size: 13.5px; font-weight: 800;">Submit</button>
+  </div>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#c9832b","options":["#c9832b","#2f7a52","#a3352d","#2f4356"]},"$preview":{"width":900,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { stage: 'during', can: 1 };
+  }
+
+  setStage(stage) { return () => this.setState({ stage }); }
+  setCan(can) { return () => this.setState({ can }); }
+
+  rowData() {
+    return [
+      { title: 'Seam dimensions', rows: [
+        { label: 'Seam length', spec: 'record only', values: [3.214, 3.198, 3.221], oor: [false, false, false] },
+        { label: 'Seam thickness', spec: 'record only', values: [0.512, 0.498, 0.505], oor: [false, false, false] }
+      ]},
+      { title: 'Hooks & B.H.B.', rows: [
+        { label: 'Body hook', spec: '1.83 – 2.23mm', values: [2.05, 1.62, 2.08], oor: [false, true, false] },
+        { label: 'Cover hook', spec: 'record only', values: [1.98, 2.01, 1.95], oor: [false, false, false] },
+        { label: '% B.H.B.', spec: '70 – 100% · calc', values: [78.4, 64.2, 80.1], oor: [false, true, false] },
+        { label: 'Freespace', spec: '0.03 – 0.19mm · calc', values: [0.11, 0.09, 0.12], oor: [false, false, false] }
+      ]},
+      { title: 'Fit & tightness', rows: [
+        { label: 'Internal', spec: 'record only', values: [1.02, 1.05, 1.00], oor: [false, false, false] },
+        { label: 'Tightness / wrinkle', spec: 'min 85%', values: [92, 79, 90], oor: [false, true, false] }
+      ]},
+      { title: 'Plate & countersink', rows: [
+        { label: 'Plate thickness (end)', spec: 'record only', values: [0.211, 0.209, 0.213], oor: [false, false, false] },
+        { label: 'Plate thickness (body)', spec: 'record only', values: [0.208, 0.206, 0.210], oor: [false, false, false] },
+        { label: 'Countersink depth', spec: '4.73 – 4.97mm', values: [4.85, 4.62, 4.88], oor: [false, true, false] }
+      ]}
+    ];
+  }
+
+  cell(val, fail) {
+    return {
+      val,
+      bg: fail ? '#fbe8e6' : '#f7f9f8',
+      color: fail ? '#a3352d' : '#33404a',
+      border: fail ? '#e3a9a3' : '#e2e4e3'
+    };
+  }
+
+  renderVals() {
+    const accent = this.props.accent ?? '#c9832b';
+    const { stage, can } = this.state;
+
+    const stages = [
+      { key: 'before', label: 'Before production' },
+      { key: 'during', label: 'During production' },
+      { key: 'after', label: 'After production' }
+    ];
+    const stageTabs = stages.map(s => ({
+      label: s.label,
+      onClick: this.setStage(s.key),
+      bg: s.key === stage ? '#1c2733' : '#ffffff',
+      color: s.key === stage ? '#ffffff' : '#5c6771',
+      border: s.key === stage ? '#1c2733' : '#d7dad9'
+    }));
+    const stageLabelMap = { before: 'Before production', during: 'During production', after: 'After production' };
+
+    const canTabs = [1, 2].map(n => ({
+      label: 'Can ' + n,
+      onClick: this.setCan(n),
+      bg: n === can ? accent : 'transparent',
+      color: n === can ? '#241a0a' : '#5c6771'
+    }));
+
+    const groupsRaw = this.rowData();
+    let failCount = 0;
+    const groups = groupsRaw.map(g => ({
+      title: g.title,
+      rows: g.rows.map(r => {
+        const c1 = this.cell(r.values[0], r.oor[0]);
+        const c2 = this.cell(r.values[1], r.oor[1]);
+        const c3 = this.cell(r.values[2], r.oor[2]);
+        failCount += r.oor.filter(Boolean).length;
+        return {
+          label: r.label, spec: r.spec,
+          p1: c1.val, p1Bg: c1.bg, p1Color: c1.color, p1Border: c1.border,
+          p2: c2.val, p2Bg: c2.bg, p2Color: c2.color, p2Border: c2.border,
+          p3: c3.val, p3Bg: c3.bg, p3Color: c3.color, p3Border: c3.border
+        };
+      })
+    }));
+
+    const banner = failCount === 0
+      ? { bg: '#e8f3ec', border: '#bfe0cd', dotBg: '#2f7a52', icon: '✓', text: '#215a3c', headline: 'No spec breaches on this can' }
+      : { bg: '#fbe8e6', border: '#e3a9a3', dotBg: '#a3352d', icon: '!', text: '#7a241d', headline: failCount + ' item(s) out of spec on this can' };
+
+    const vacuumPass = can === 1;
+    const vacuum = vacuumPass
+      ? { bg: '#e8f3ec', border: '#bfe0cd', text: '#215a3c', value: '-14.2 kPa', spec: '> -10 kPa' }
+      : { bg: '#fbe8e6', border: '#e3a9a3', text: '#7a241d', value: '-6.8 kPa', spec: '> -10 kPa' };
+
+    const overlapPass = can === 1;
+    const overlap = overlapPass
+      ? { pctBg: '#e8f3ec', pctBorder: '#bfe0cd', pctText: '#215a3c', pctVal: '46.8%', actBg: '#e8f3ec', actBorder: '#bfe0cd', actText: '#215a3c', actVal: '1.24mm' }
+      : { pctBg: '#fbe8e6', pctBorder: '#e3a9a3', pctText: '#7a241d', pctVal: '43.1%', actBg: '#fbe8e6', actBorder: '#e3a9a3', actText: '#7a241d', actVal: '0.92mm' };
+
+    const headerFields = [
+      { label: 'Job no.', value: 'CPR-2609-014' },
+      { label: 'AG Code', value: 'AG 0417' },
+      { label: 'Date', value: '18 Sep 2026' },
+      { label: 'Can size', value: '73 × 119mm' },
+      { label: 'Date produced', value: '18 Sep 2026' },
+      { label: 'Fujian batch (cans)', value: 'FJ-C-22841' },
+      { label: 'Fujian batch (ends)', value: 'FJ-E-11029' },
+      { label: 'Micrometer serial', value: 'MM-0032' },
+      { label: 'Gauge 1.21mm', value: '1.22mm' },
+      { label: 'Gauge 3.00mm', value: '3.01mm' }
+    ];
+
+    return {
+      accent,
+      state: { stage, can },
+      jobNo: 'CPR-2609-014',
+      stageLabel: stageLabelMap[stage],
+      stageTabs, canTabs, groups, banner, vacuum, overlap, headerFields,
+      submitBg: failCount > 0 ? '#e2e4e3' : accent
+    };
+  }
+}
+</script>
+</body>
+</html>

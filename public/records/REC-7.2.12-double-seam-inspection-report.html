@@ -200,6 +200,7 @@
   let state = blankState();
   let formContainer = null;
   let activeStage = 'before';
+  let activeCan = 'can1';
   let specProfiles = {};   // id -> published spec content
   let specIndex = [];      // [{id, name}]
   let mlCtx = null;
@@ -354,8 +355,7 @@
     const active = document.activeElement;
     const activePath = active && active.dataset ? active.dataset.path : null;
     container.querySelector('#ds_issues').innerHTML = issuesHtml();
-    container.querySelector('#ds_stageContent').innerHTML =
-      canTableHtml(activeStage, 'can1') + canTableHtml(activeStage, 'can2');
+    container.querySelector('#ds_stageContent').innerHTML = canTableHtml(activeStage, activeCan);
     wireStageInputs(container);
     wireIssueButtons(container);
     if (activePath) {
@@ -407,6 +407,7 @@
     state = stateFromValues(entry ? entry.values : null);
     if (!state.specProfileId && specIndex[0]) state.specProfileId = specIndex[0].id;
     activeStage = 'before';
+    activeCan = 'can1';
 
     container.innerHTML =
       '<div class="ds-toolbar">' +
@@ -416,7 +417,8 @@
         '<a class="ds-btn-flat" href="double-seam-trend.html" style="text-decoration:none;">Trend</a>' +
       '</div>' +
       '<div id="ds_issues">' + issuesHtml() + '</div>' +
-      '<div class="ds-panel"><div class="ds-panel-head"><h3>Header</h3></div><div class="ds-panel-body">' +
+      '<details class="ml-section-collapsible" style="border:1px solid var(--palette-border,#e2e4e3);border-radius:6px;padding:10px 14px;background:#fff;">' +
+        '<summary class="ml-grouphead">Job &amp; equipment info<span class="ml-section-summary" id="ds_jobNoSummary">' + esc(state.header.jobNo || '(no job no.)') + '</span></summary>' +
         '<div class="ds-grid" style="margin-bottom:10px;">' +
           headerFieldHtml('jobNo', 'Job no.') + headerFieldHtml('agCode', 'AG Code') +
           headerFieldHtml('reportDate', 'Date', 'date') + headerFieldHtml('canSize', 'Can size') +
@@ -430,8 +432,11 @@
           headerFieldHtml('gauge121', 'Size 1.21mm - actual reading', 'number', 'tol +/-0.02mm') +
           headerFieldHtml('gauge300', 'Size 3.00mm - actual reading', 'number', 'tol +/-0.02mm') +
         '</div>' +
-      '</div></div>' +
+      '</details>' +
       '<div class="ds-stage-tabs" id="ds_stageTabs">' + STAGES.map(s => '<div class="ds-stage-tab' + (s.key === activeStage ? ' active' : '') + '" data-stage="' + s.key + '">' + esc(s.label) + '</div>').join('') + '</div>' +
+      '<div class="ds-can-tabs" id="ds_canTabs" style="display:flex;gap:6px;margin-bottom:10px;">' +
+        CANS.map(c => '<div class="ds-stage-tab' + (c === activeCan ? ' active' : '') + '" data-can="' + c + '" style="flex:0 0 auto;min-width:96px;text-align:center;">' + (c === 'can1' ? 'Can 1' : 'Can 2') + '</div>').join('') +
+      '</div>' +
       '<div class="ds-panel"><div class="ds-panel-head"><h3 id="ds_stageTitle"></h3></div><div class="ds-panel-body" id="ds_stageContent"></div></div>' +
       '<div class="ds-panel"><div class="ds-panel-head"><h3>Comments</h3></div><div class="ds-panel-body">' +
         '<textarea id="ds_comments" rows="3" style="width:100%;">' + esc(state.comments) + '</textarea></div></div>' +
@@ -444,21 +449,34 @@
 
     // stage content
     const paintStage = () => {
-      container.querySelector('#ds_stageTitle').textContent = STAGES.find(s => s.key === activeStage).label + ' - 2 cans x 3 points each';
+      const canLabel = activeCan === 'can1' ? 'Can 1' : 'Can 2';
+      container.querySelector('#ds_stageTitle').textContent = STAGES.find(s => s.key === activeStage).label + ' - ' + canLabel + ' - 3 points';
       container.querySelectorAll('#ds_stageTabs .ds-stage-tab').forEach(t => t.classList.toggle('active', t.dataset.stage === activeStage));
-      container.querySelector('#ds_stageContent').innerHTML = canTableHtml(activeStage, 'can1') + canTableHtml(activeStage, 'can2');
+      container.querySelectorAll('#ds_canTabs .ds-stage-tab').forEach(t => t.classList.toggle('active', t.dataset.can === activeCan));
+      container.querySelector('#ds_stageContent').innerHTML = canTableHtml(activeStage, activeCan);
       wireStageInputs(container);
     };
     container.querySelectorAll('#ds_stageTabs .ds-stage-tab').forEach(t => {
       t.addEventListener('click', () => { activeStage = t.dataset.stage; paintStage(); });
+    });
+    container.querySelectorAll('#ds_canTabs .ds-stage-tab').forEach(t => {
+      t.addEventListener('click', () => { activeCan = t.dataset.can; paintStage(); });
     });
     paintStage();
     wireIssueButtons(container);
 
     // header inputs
     container.querySelectorAll('[data-hkey]').forEach(inp => {
-      inp.addEventListener('input', () => { state.header[inp.dataset.hkey] = inp.value; repaintDynamic(container); });
-      inp.addEventListener('change', () => { state.header[inp.dataset.hkey] = inp.value; repaintDynamic(container); });
+      const onEdit = () => {
+        state.header[inp.dataset.hkey] = inp.value;
+        if (inp.dataset.hkey === 'jobNo') {
+          const sum = container.querySelector('#ds_jobNoSummary');
+          if (sum) sum.textContent = state.header.jobNo || '(no job no.)';
+        }
+        repaintDynamic(container);
+      };
+      inp.addEventListener('input', onEdit);
+      inp.addEventListener('change', onEdit);
     });
     container.querySelector('#ds_comments').addEventListener('input', e => { state.comments = e.target.value; });
     SIGNOFF_KEYS.forEach(k => {
