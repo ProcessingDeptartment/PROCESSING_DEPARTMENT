@@ -44,6 +44,19 @@ function columnKind(fieldType) {
 const YES_VALUES = new Set(['yes', 'y', 'true']);
 const NO_VALUES = new Set(['no', 'n', 'false']);
 
+// The store rewrites a record's whole table on every save, so one stale value (say a free-text
+// entry from before a field became a time) would log the same warning on every save of that record.
+// Warn once per distinct (record, field, value, kind) per process; the value is still stored as null
+// and stays recoverable from rawJson. Bounded so a stream of different bad values cannot grow it.
+const warned = new Set();
+function warnOnce(kind, recordKey, fieldKey, value, what) {
+  const id = `${recordKey}|${fieldKey}|${kind}|${String(value)}`;
+  if (warned.has(id)) return;
+  if (warned.size >= 1000) warned.clear();
+  warned.add(id);
+  console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as ${what}, storing null`);
+}
+
 // Converts a raw form value to the type its submission column expects. Never throws: an
 // unconvertible value degrades to null (recoverable from rawJson) so one bad field can't fail
 // the whole write — see BACKEND_INTEGRATION.md's "never let a storage failure break a form
@@ -54,7 +67,7 @@ function coerce(value, kind, recordKey, fieldKey) {
     case 'float': {
       const n = parseFloat(value);
       if (Number.isNaN(n)) {
-        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as number, storing null`);
+        warnOnce('number', recordKey, fieldKey, value, 'number');
         return null;
       }
       return n;
@@ -62,7 +75,7 @@ function coerce(value, kind, recordKey, fieldKey) {
     case 'int': {
       const n = parseInt(value, 10);
       if (Number.isNaN(n)) {
-        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as integer, storing null`);
+        warnOnce('integer', recordKey, fieldKey, value, 'integer');
         return null;
       }
       return n;
@@ -71,13 +84,13 @@ function coerce(value, kind, recordKey, fieldKey) {
       const s = String(value).trim().toLowerCase();
       if (YES_VALUES.has(s)) return true;
       if (NO_VALUES.has(s)) return false;
-      console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as yes/no, storing null`);
+      warnOnce('yes-no', recordKey, fieldKey, value, 'yes/no');
       return null;
     }
     case 'date': {
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) {
-        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as date, storing null`);
+        warnOnce('date', recordKey, fieldKey, value, 'date');
         return null;
       }
       return d;
@@ -86,12 +99,12 @@ function coerce(value, kind, recordKey, fieldKey) {
       // <input type="month"> value, e.g. "2026-09" — store as the 1st of that month, UTC so the
       // stored date doesn't shift with the server's local timezone.
       if (!/^\d{4}-\d{2}$/.test(value)) {
-        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as month, storing null`);
+        warnOnce('month', recordKey, fieldKey, value, 'month');
         return null;
       }
       const d = new Date(`${value}-01T00:00:00Z`);
       if (Number.isNaN(d.getTime())) {
-        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as month, storing null`);
+        warnOnce('month', recordKey, fieldKey, value, 'month');
         return null;
       }
       return d;
@@ -100,12 +113,12 @@ function coerce(value, kind, recordKey, fieldKey) {
       // "HH:MM" — parsed as UTC so the stored time-of-day doesn't shift with the server's local
       // timezone; the @db.Time column drops the date part anyway.
       if (!/^\d{2}:\d{2}$/.test(value)) {
-        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as time, storing null`);
+        warnOnce('time', recordKey, fieldKey, value, 'time');
         return null;
       }
       const d = new Date(`1970-01-01T${value}:00Z`);
       if (Number.isNaN(d.getTime())) {
-        console.warn(`[submission-store] ${recordKey}.${fieldKey}: cannot parse "${value}" as time, storing null`);
+        warnOnce('time', recordKey, fieldKey, value, 'time');
         return null;
       }
       return d;
