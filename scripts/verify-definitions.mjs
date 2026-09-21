@@ -51,7 +51,16 @@ function rebuild(def) {
     .filter((f) => f.sectionIndex == null && (f.parentFieldKey ?? null) === parent)
     .sort((a, b) => a.position - b.position).map(fieldOut);
 
-  const rosterSec = def.sections.find((s) => s.kind === 'roster');
+  const isMulti = (s) => s.kind === 'roster' && s.extraJson && s.extraJson.rosterKey != null;
+  const multi = def.sections.filter(isMulti);
+  if (multi.length) {
+    cfg.rosters = multi.map((s) => {
+      const { rosterKey, ...rest } = s.extraJson;
+      return { key: rosterKey, ...(s.title != null ? { title: s.title } : {}), ...rest,
+        columns: def.fields.filter((f) => f.sectionIndex === def.sections.indexOf(s)).sort((a, b) => a.position - b.position).map(fieldOut) };
+    });
+  }
+  const rosterSec = def.sections.find((s) => s.kind === 'roster' && !isMulti(s));
   if (rosterSec) {
     const ri = def.sections.indexOf(rosterSec);
     cfg.roster = {

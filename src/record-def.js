@@ -43,7 +43,17 @@ async function assembleRecordConfig(prisma, recordKey) {
     .filter((f) => f.sectionIndex === i && (f.parentFieldKey ?? null) === parent)
     .map(fieldOut);
 
-  const rosterSec = def.sections.find((s) => s.kind === 'roster');
+  // form-record multi-roster (`rosters: [...]`): roster sections tagged extraJson.rosterKey.
+  const isMulti = (s) => s.kind === 'roster' && s.extraJson && s.extraJson.rosterKey != null;
+  const multi = def.sections.filter(isMulti);
+  if (multi.length) {
+    cfg.rosters = multi.map((s) => {
+      const { rosterKey, ...rest } = s.extraJson;
+      return { key: rosterKey, ...(s.title != null ? { title: s.title } : {}), ...rest,
+        columns: def.fields.filter((f) => f.sectionIndex === def.sections.indexOf(s)).map(fieldOut) };
+    });
+  }
+  const rosterSec = def.sections.find((s) => s.kind === 'roster' && !isMulti(s));
   if (rosterSec) {
     const ri = def.sections.indexOf(rosterSec);
     cfg.roster = {

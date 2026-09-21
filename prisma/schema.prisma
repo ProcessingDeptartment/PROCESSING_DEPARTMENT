@@ -162,9 +162,9 @@ model Sub_dry_export_pack_front_page {
   jobNumber                  String?
   packingDate                DateTime? @db.Date
   noOfBoxesExported          Float?
-  rec747Attached             Boolean?
-  rec748Attached             Boolean?
-  rec749Attached             Boolean?
+  rec747Attached             String?
+  rec748Attached             String?
+  rec749Attached             String?
   signedPackingListsAttached Boolean?
   healthCertificatesAttached Boolean?
   completedBySupervisor      String?
@@ -319,6 +319,7 @@ model Sub_production_information_nrcs {
   rawJson     String?
   inSpec      Boolean?
 
+  jobNo                    String?
   receivingDate      DateTime? @db.Date
   dateOfInspection   DateTime? @db.Date
   productionCode     String?
@@ -333,14 +334,18 @@ model Sub_production_information_nrcs {
 }
 
 model Sub_production_information_nrcs_Row {
-  id       Int                             @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   parentId String
   parent   Sub_production_information_nrcs @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  position Int                             @default(0)
+  position Int     @default(0)
 
-  recordName String?
-  recordCode String?
-  included   String?
+  submissionRef            String?
+  recordCode               String?
+  recordName               String?
+  productionCode           String?
+  nrcsAgCode               String?
+  productDescription       String?
+  included                 String?
 
   @@index([parentId])
   @@map("sub_production_information_nrcs_row")
@@ -1024,7 +1029,52 @@ model Sub_double_seam_inspection_report {
   rawJson     String?
   inSpec      Boolean?
 
+  jobNo                    String?
+  agCode                   String?
+  reportDate               DateTime? @db.Date
+  canSize                  String?
+  dateProduced             DateTime? @db.Date
+  batchCans                String?
+  batchEnds                String?
+  microSerial              String?
+  microVerified            Boolean?
+  gauge121                 Float?
+  gauge300                 Float?
+  specProfileId            String?
+  specProfileName          String?
+  specVersionAtSave        Float?
+  completedBy              String?
+  completedDate            DateTime? @db.Date
+
+  rows Sub_double_seam_inspection_report_Row[]
+
   @@map("sub_double_seam_inspection_report")
+}
+
+model Sub_double_seam_inspection_report_Row {
+  id       Int     @id @default(autoincrement())
+  parentId String
+  parent   Sub_double_seam_inspection_report @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  position Int     @default(0)
+
+  stage                    String?
+  can                      String?
+  point                    Int?
+  vacuum                   Float?
+  seamLength               Float?
+  seamThickness            Float?
+  bodyHook                 Float?
+  coverHook                Float?
+  bhbPct                   Float?
+  freespace                Float?
+  internal                 Float?
+  tightnessPct             Float?
+  plateThicknessEnd        Float?
+  plateThicknessBody       Float?
+  countersinkDepth         Float?
+
+  @@index([parentId])
+  @@map("sub_double_seam_inspection_report_row")
 }
 
 model Sub_rework_log {

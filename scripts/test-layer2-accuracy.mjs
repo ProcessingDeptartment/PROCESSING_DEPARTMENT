@@ -212,7 +212,7 @@ async function main() {
     await syncRecordLinks(prisma, cookKey, cookJson);
 
     const links = await prisma.recordLink.findMany({ where: { linkValue: TEST_JOB } });
-    // abalone-receiving has linkField jobNo, precooking has linkField jobNumber.
+    // abalone-receiving and precooking both use the canonical linkField jobNo (its field key is jobNumber).
     // mortalities-log has NO linkField — so only 2 records produce links.
     check('RecordLink: rows for TEST999999 exist', links.length >= 2, 'got ' + links.length);
 
@@ -227,7 +227,7 @@ async function main() {
       check('  recv relation = self', byRecord['abalone-receiving'].relation === 'self');
     }
     if (byRecord['precooking-check-sheet']) {
-      check('  cook linkField = jobNumber', byRecord['precooking-check-sheet'].linkField === 'jobNumber');
+      check('  cook linkField = jobNo', byRecord['precooking-check-sheet'].linkField === 'jobNo');
     }
 
     // ---- Idempotency ----

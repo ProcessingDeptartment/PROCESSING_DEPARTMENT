@@ -502,9 +502,22 @@
     const spec = currentSpec();
     if (state.specVersionAtSave == null && spec && spec.versionNumber != null) state.specVersionAtSave = spec.versionNumber;
     syncDerived();
+    // Flat projection for the submission tables (definition: double-seam-inspection-report in
+    // data/record-definitions.json): header fields mirrored top-level, and one roster row per
+    // stage x can x point. The nested header / stages below stay the source for the form + sheet.
+    const roster = [];
+    STAGES.forEach(st => CANS.forEach(ck => {
+      const can = state.stages[st.key][ck];
+      can.points.forEach((p, i) => {
+        const row = { stage: st.key, can: ck, point: i + 1, vacuum: can.vacuum };
+        ROWS.forEach(r => { row[r.key] = p[r.key]; });
+        roster.push(row);
+      });
+    }));
+    const headerTop = {};
+    HEADER_KEYS.forEach(k => { headerTop[k] = state.header[k]; });
     return {
-      jobNo: state.header.jobNo, reportDate: state.header.reportDate, date: state.header.reportDate,
-      batchCans: state.header.batchCans,
+      ...headerTop, date: state.header.reportDate, roster,
       specProfileId: state.specProfileId, specProfileName: currentProfileName(),
       specVersionAtSave: state.specVersionAtSave,
       header: JSON.parse(JSON.stringify(state.header)),

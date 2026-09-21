@@ -47,6 +47,11 @@ const isFn = (v) => typeof v === 'function';
 const plain = (v) => v && typeof v === 'object' && !Array.isArray(v);
 
 // ---- one field row in canonical shape ----------------------------------------------
+// The job number is one join key however each form names its field ('jobNo' on 32 records,
+// 'jobNumber' on 14). Store it under one linkField so /api/links?field=jobNo finds all of them.
+// Other link kinds keep their field key as the kind.
+const canonicalLink = (k) => (k == null ? null : (k === 'jobNumber' ? 'jobNo' : k));
+
 function fieldRow(f, sectionIndex, parentKey, position) {
   const row = {
     key: f.key ?? null,
@@ -63,7 +68,7 @@ function fieldRow(f, sectionIndex, parentKey, position) {
     computeFn: typeof f.computeFn === 'string' ? f.computeFn : null,
     computeArgs: plain(f.computeArgs) ? f.computeArgs : null,
     recordPickSource: f.source ?? f.recordPickSource ?? null,
-    linkField: f.linkField ?? null,
+    linkField: canonicalLink(f.linkField),
     linkRelation: f.linkRelation ?? null,
     validateJson: plain(f.validate) ? f.validate : null,
   };
@@ -106,7 +111,10 @@ function build(file, src) {
   if (!def.recordKey) flags.push('recordKey not a string literal');
 
   const extra = {};
-  for (const [k, v] of Object.entries(cfg)) if (!DEF_KEYS.has(k) && !isFn(v)) extra[k] = v;
+  // `rosters: [{ key, title, columns }, ...]` (form-record multi-roster) becomes roster sections
+  // below, so it must not also ride along in extraJson.
+  const multiRosters = Array.isArray(cfg.rosters) && cfg.rosters.every((r) => plain(r) && Array.isArray(r.columns));
+  for (const [k, v] of Object.entries(cfg)) if (!DEF_KEYS.has(k) && !isFn(v) && !(k === 'rosters' && multiRosters)) extra[k] = v;
   for (const [k, v] of Object.entries(cfg)) if (isFn(v)) { flags.push(`function-valued config: ${k}()`); extra[`__fn_${k}`] = true; }
   if (Object.keys(extra).length) def.extraJson = extra;
 
@@ -139,6 +147,19 @@ function build(file, src) {
       }
     });
   }
+  // Each roster becomes a roster section tagged extraJson.rosterKey. The first one is what the
+  // engine persists to sub.roster (and so what the submission table's child rows come from);
+  // later ones live in sub.rosters[key] and are not projected -- flagged below.
+  if (multiRosters) {
+    cfg.rosters.forEach((r, idx) => {
+      const ri = def.sections.length;
+      const rExtra = { rosterKey: r.key || 'roster' };
+      for (const [k, v] of Object.entries(r)) if (k !== 'title' && k !== 'key' && k !== 'columns' && !isFn(v)) rExtra[k] = v;
+      def.sections.push({ title: r.title ?? 'Roster', kind: 'roster', position: ri, extraJson: rExtra });
+      r.columns.forEach((c) => addField({ ...c, type: c.type || 'text' }, ri, idx === 0 ? '@roster' : '@roster:' + rExtra.rosterKey));
+      if (idx > 0) flags.push(`additional roster '${rExtra.rosterKey}' is not projected to the submission tables`);
+    });
+  }
   (cfg.entryFields || []).forEach((f) => addField(f, null, null));
   (cfg.fields || []).forEach((f) => addField(f, null, null));
   if (cfg.roster && Array.isArray(cfg.roster.columns)) {
@@ -169,14 +190,14 @@ function build(file, src) {
   // (same semantics as traceability.js). Kept in RecordDefinition too for the API to read directly.
   if (cfg.batchField) {
     const bf = def.fields.find((f) => f.key === cfg.batchField && f.parentFieldKey === null);
-    if (bf) { bf.linkField = bf.linkField || cfg.batchField; bf.linkRelation = bf.linkRelation || 'self'; }
+    if (bf) { bf.linkField = bf.linkField || canonicalLink(cfg.batchField); bf.linkRelation = bf.linkRelation || 'self'; }
     def.primaryBatchField = cfg.batchField;
   }
   if (Array.isArray(cfg.extraBatchFields)) {
     def.extraBatchFields = cfg.extraBatchFields;
     for (const k of cfg.extraBatchFields) {
       const xf = def.fields.find((f) => f.key === k);
-      if (xf) { xf.linkField = xf.linkField || k; xf.linkRelation = xf.linkRelation || 'input'; }
+      if (xf) { xf.linkField = xf.linkField || canonicalLink(k); xf.linkRelation = xf.linkRelation || 'input'; }
     }
   }
 
@@ -205,8 +226,15 @@ if (mode === 'emit') {
     const empty = d.fields.length === 0 && d.sections.length === 0 && !d.clientHook;
     const had = prior[d.recordKey];
     if (empty && had && (had.fields?.length || had.sections?.length)) { carried++; return had; }
+    // A customBody page (REC 7.2.12) draws its own body, so its page config lists no fields --
+    // the typed columns for its submission table live only in the definition. Keep them.
+    if (!d.fields.length && !d.sections.length && d.clientHook && had && (had.fields?.length || had.sections?.length)) {
+      carried++;
+      return { ...d, sections: had.sections, fields: had.fields, autofills: d.autofills.length ? d.autofills : (had.autofills || []) };
+    }
     return d;
   });
+  for (const d of defs) for (const f of d.fields) f.linkField = canonicalLink(f.linkField);
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify({ generated: new Date().toISOString().slice(0, 10), count: defs.length, definitions: defs }, null, 2) + '\n');
   console.log(`wrote ${path.relative(ROOT, OUT)} — ${defs.length} definitions`

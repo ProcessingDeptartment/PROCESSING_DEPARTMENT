@@ -217,9 +217,11 @@ async function syncSubmissionRows(prisma, key, value) {
       ...params
     ));
 
-    // Insert roster rows.
-    if (schema.childTable && Array.isArray(entry.roster)) {
-      entry.roster.forEach((row, position) => {
+    // Insert roster rows. form-record keeps them on the entry; a monitoring-log customBody
+    // record (REC 7.2.12) emits them from read(), so they arrive inside `values`.
+    const rosterRows = Array.isArray(entry.roster) ? entry.roster : values.roster;
+    if (schema.childTable && Array.isArray(rosterRows)) {
+      rosterRows.forEach((row, position) => {
         if (!row) return;
         const childCols = ['"parentId"', '"position"'];
         const childParams = [entry.id, position];
