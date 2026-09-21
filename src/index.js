@@ -18,6 +18,7 @@ const { assembleRecordConfig } = require('./record-def');
 const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
 const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
+const { syncSubmissionDates } = require('./submission-dates');
 
 const prisma = new PrismaClient();
 const dateFields = dateFieldMap.load();
@@ -62,64 +63,6 @@ app.use('/api', (req, res, next) => {
   return res.status(401).json({ ok: false, error: 'unauthorised' });
 });
 
-function isPlainObject(v) {
-  return v !== null && typeof v === 'object' && !Array.isArray(v);
-}
-
-// Walks a submission's JSON payload (which may contain repeating rows/rosters) and pulls out
-// every value whose key is a known date field. Doesn't assume a fixed shape -- just recurses.
-function extractDateFields(obj, found) {
-  if (Array.isArray(obj)) {
-    for (const item of obj) extractDateFields(item, found);
-    return;
-  }
-  if (!isPlainObject(obj)) return;
-  for (const [key, value] of Object.entries(obj)) {
-    if (dateFields.has(key) && (typeof value === 'string' || value === null)) {
-      found.push({ fieldKey: key, rawValue: value });
-    }
-    if (isPlainObject(value) || Array.isArray(value)) {
-      extractDateFields(value, found);
-    }
-  }
-}
-
-async function syncSubmissionDates(key, value) {
-  if (!recordKeyMap.hasKnownPrefix(key)) return;
-  let parsed;
-  try {
-    parsed = JSON.parse(value);
-  } catch {
-    return; // not JSON -- nothing to extract
-  }
-
-  const found = [];
-  extractDateFields(parsed, found);
-
-  const recordKey = recordKeyMap.recordKeyFromStorageKey(key);
-  const record = recordKeys[recordKey];
-  const recordName = record ? record.recordName : recordKey;
-
-  await prisma.$transaction([
-    prisma.submissionDateField.deleteMany({ where: { submissionKey: key } }),
-    ...found.map(({ fieldKey, rawValue }) => {
-      const meta = dateFields.get(fieldKey);
-      const dateValue = rawValue && !isNaN(Date.parse(rawValue)) ? new Date(rawValue) : null;
-      return prisma.submissionDateField.create({
-        data: {
-          submissionKey: key,
-          recordName,
-          fieldKey,
-          fieldLabel: meta.fieldLabel,
-          recordClass: meta.recordClass,
-          dateValue,
-          rawValue
-        }
-      });
-    })
-  ]);
-}
-
 app.get('/api/storage/key/:key', async (req, res) => {
   try {
     const row = await prisma.keyValue.findUnique({ where: { key: req.params.key } });
@@ -160,7 +103,7 @@ app.put('/api/storage/key/:key', async (req, res) => {
       create: { key: req.params.key, value },
       update: { value }
     });
-    await syncSubmissionDates(req.params.key, value);
+    await syncSubmissionDates(prisma, req.params.key, value, { dateFields, recordKeys });
     try { await syncRecordLinks(prisma, req.params.key, value); }
     catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
     try { await syncSubmissionRows(prisma, req.params.key, value); }
@@ -335,9 +278,10 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
 // Read-only view over the extracted date fields, for reporting/audits.
 app.get('/api/dates', async (req, res) => {
   try {
-    const { recordClass, from, to } = req.query;
+    const { recordClass, from, to, recordKey } = req.query;
     const where = {};
     if (recordClass) where.recordClass = recordClass;
+    if (recordKey) where.recordKey = recordKey;
     if (from || to) {
       where.dateValue = {};
       if (from) where.dateValue.gte = new Date(from);

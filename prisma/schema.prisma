@@ -25,7 +25,9 @@ model KeyValue {
 model SubmissionDateField {
   id            Int       @id @default(autoincrement())
   submissionKey String
-  recordName    String
+  recordKey     String? // canonical record id ('cans-produced'), from the storage key. Nullable only until the API that fills it is deployed; then tightened to NOT NULL.
+  recordName    String // display name: definition title -> legacy map name -> key
+  submissionId  String? // the entry inside the record's array this date belongs to
   fieldKey      String
   fieldLabel    String
   recordClass   String
@@ -34,6 +36,8 @@ model SubmissionDateField {
   createdAt     DateTime  @default(now())
 
   @@index([submissionKey])
+  @@index([recordKey])
+  @@index([submissionId])
   @@index([fieldKey])
   @@index([dateValue])
 }

@@ -75,25 +75,11 @@
   window.FacilityApi = { base: () => API_BASE, getKey, setKey, clearKey, headers, fetch: apiFetch,
     authFailed: () => authFailed };
 
-  // ---------- Instant-load cache for record LAYOUT (not record data) ----------
-  // A record page must draw immediately even while the API is asleep. The form definition and the
-  // template override are layout only, so they are cached on the device and served at once; a
-  // background fetch refreshes the cache for the next open. Entries/submissions are never cached.
-  const SWR_PREFIX = 'abg_swr1:';
-  function swr(cacheKey, fetcher) {
-    let cached = null;
-    try { const raw = STORE.s.getItem(SWR_PREFIX + cacheKey); if (raw) cached = JSON.parse(raw); } catch (e) { cached = null; }
-    const refresh = (async function () {
-      const v = await fetcher();
-      try { STORE.s.setItem(SWR_PREFIX + cacheKey, JSON.stringify({ v: v })); } catch (e) { /* quota: fine */ }
-      return v;
-    })();
-    if (cached) { refresh.catch(function () {}); return Promise.resolve(cached.v); }
-    return refresh;
-  }
-  function swrPut(cacheKey, v) {
-    try { STORE.s.setItem(SWR_PREFIX + cacheKey, JSON.stringify({ v: v })); } catch (e) { /* ignore */ }
-  }
+  // ---------- Instant-load record layout (nothing stored on the device) ----------
+  // A record page must draw immediately even while the API is asleep. The form definition is
+  // layout, not record data, and is published with the site as /data/record-defs/<key>.json
+  // (scripts/export-record-defs.mjs) -- static files that never sleep. The live API is only the
+  // fallback when a snapshot is missing. Entries/submissions always come from the API.
   async function fetchWithRetry(path, tries) {
     let last = null;
     for (let i = 0; i < tries; i++) {
@@ -110,25 +96,29 @@
     }
     throw last;
   }
-  // -> config object, or null if unavailable (nothing cached and API down)
+  // -> config object, or null if unavailable
   window.FacilityApi.recordDef = async function (recordKey) {
     try {
-      return await swr('def:' + recordKey, async function () {
-        const res = await fetchWithRetry('/api/record-def/' + encodeURIComponent(recordKey), 6);
-        const body = await res.json();
-        if (!body || !body.config) throw new Error('no config');
-        return body.config;
-      });
+      const r = await fetch('/data/record-defs/' + encodeURIComponent(recordKey) + '.json', { cache: 'no-cache' });
+      if (r.ok) return await r.json();
+    } catch (e) { /* fall through to the API */ }
+    try {
+      const res = await fetchWithRetry('/api/record-def/' + encodeURIComponent(recordKey), 6);
+      const body = await res.json();
+      return body && body.config ? body.config : null;
     } catch (e) { console.error('record-def ' + recordKey + ' failed', e); return null; }
   };
-  // -> raw override JSON string, or null when there is none
+  // -> raw override JSON string, or null. Never holds the page up: if the API doesn't answer within
+  // 0.6 s (asleep) the form simply draws with its standard layout.
   window.FacilityApi.templateOverride = async function (recordKey) {
     try {
-      return await swr('tpl:' + recordKey, async function () {
-        const res = await fetchWithRetry('/api/storage/key/' + encodeURIComponent('record_template:' + recordKey), 6);
-        const body = await res.json();
-        return body && body.value != null ? body.value : null;
-      });
+      const res = await Promise.race([
+        apiFetch('/api/storage/key/' + encodeURIComponent('record_template:' + recordKey)),
+        new Promise(function (_, rej) { setTimeout(function () { rej(new Error('slow')); }, 600); })
+      ]);
+      if (!res.ok) return null;
+      const body = await res.json();
+      return body && body.value != null ? body.value : null;
     } catch (e) { return null; }
   };
 
@@ -248,7 +238,6 @@
 
   async function apiSet(key, value) {
     invalidate(key);
-    if (key.indexOf('record_template:') === 0) swrPut('tpl:' + key.slice('record_template:'.length), value);
     let res = null;
     try {
       res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), {
@@ -269,7 +258,6 @@
 
   async function apiRemove(key) {
     invalidate(key);
-    if (key.indexOf('record_template:') === 0) swrPut('tpl:' + key.slice('record_template:'.length), null);
     let res = null;
     try {
       res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), { method: 'DELETE' });
