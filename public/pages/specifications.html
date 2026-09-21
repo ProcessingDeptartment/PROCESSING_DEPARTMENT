@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Specifications</title>
@@ -10,10 +10,56 @@
   .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
   .header h1{ margin:0; font-size:18px; font-weight:600; }
   .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
   .container{ max-width:1100px; margin:0 auto; padding:20px; }
-  .placeholder{ background:#fff; border:1px solid #e2e4e3; border-radius:6px; padding:24px; color:#5c6771; }
-  .back-link{ display:inline-block; margin-top:16px; color:#1d4ed8; text-decoration:none; font-size:0.9rem; }
-  .back-link:hover{ text-decoration:underline; }
+
+  .state{ padding:10px 12px; border-radius:6px; font-size:12.5px; font-weight:600; margin-bottom:14px; }
+  .state.bad{ background:#fbe8e6; color:#a3352d; }
+  .state.info{ background:#e6eefb; color:#1d4ed8; }
+
+  .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .toolbar input[type=search]{ padding:7px 10px; border:1px solid #d0d5db; border-radius:6px; font-size:12.5px; min-width:220px; }
+  .btn{ padding:7px 12px; border:1px solid #d0d5db; background:#fff; border-radius:6px; font-size:12px; cursor:pointer; }
+  .btn:hover{ background:#f2f4f6; }
+  .btn.primary{ background:#2f7a52; border-color:#2f7a52; color:#fff; font-weight:700; }
+  .btn.primary:hover{ background:#286947; }
+  .btn:disabled{ opacity:.5; cursor:default; }
+
+  .card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:10px; overflow:hidden; }
+  .card-head{ padding:11px 14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; cursor:pointer; }
+  .card-head:hover{ background:#f9fafb; }
+  .card-head h2{ margin:0; font-size:13.5px; }
+  .card-head .code{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5c6771; }
+  .card-head .meta{ margin-left:auto; color:#5c6771; font-size:11.5px; text-align:right; }
+  .pill{ background:#e8f3ec; color:#2f7a52; border-radius:20px; padding:2px 9px; font-size:11px; font-weight:700; }
+  .pill.old{ background:#eceeef; color:#5c6771; }
+  .card-body{ display:none; border-top:1px solid #e2e4e3; padding:14px; background:#fcfcfb; }
+  .card.open .card-body{ display:block; }
+
+  .sec{ margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; }
+  table.leaves{ border-collapse:collapse; width:100%; margin-bottom:14px; background:#fff; border:1px solid #e2e4e3; }
+  table.leaves td{ padding:5px 10px; border-bottom:1px solid #eceeef; vertical-align:middle; }
+  table.leaves td.k{ color:#3b4650; width:55%; word-break:break-word; }
+  table.leaves td.k .grp{ color:#8a939b; }
+  table.leaves input[type=number], table.leaves input[type=text]{ padding:5px 8px; border:1px solid #d0d5db; border-radius:5px; font-size:12.5px; width:140px; box-sizing:border-box; }
+  table.leaves input.changed{ border-color:#c98a1d; background:#fff7e6; }
+  table.leaves input[readonly]{ background:#f2f4f6; color:#5c6771; }
+  .attr{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:10px; }
+  .attr label{ display:flex; flex-direction:column; gap:3px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; }
+  .attr input{ padding:7px 9px; border:1px solid #d0d5db; border-radius:5px; font-size:12.5px; text-transform:none; letter-spacing:0; color:#1b2330; }
+  .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .actions .hint{ color:#8a5a10; font-size:12px; }
+
+  .hist{ margin-top:16px; }
+  .hist-item{ padding:7px 0; border-top:1px solid #eceeef; font-size:12px; display:flex; gap:10px; }
+  .hist-item .v{ font-weight:700; min-width:34px; }
+  .hist-item .why{ color:#5c6771; }
+  .empty{ padding:24px; text-align:center; color:#8a939b; background:#fff; border:1px solid #e2e4e3; border-radius:8px; }
+  .note{ margin-top:18px; background:#fbf0dc; color:#8a5a10; border-radius:6px; padding:11px 13px; font-size:11.5px; }
+  #toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#1b2330; color:#fff; padding:10px 16px; border-radius:6px; font-size:12.5px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:60; }
+  #toast.show{ opacity:1; }
+  @media (max-width:640px){ .container{ padding:12px; } .card-head .meta{ margin-left:0; text-align:left; } table.leaves td.k{ width:auto; } }
 </style>
 <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -21,15 +67,287 @@
 
 <div class="header">
   <h1>Specifications</h1>
-  <p>Product and raw material specifications &mdash; read-only reference, not fill-in records</p>
-</div>
-
-<div class="container">
-  <div class="placeholder">
-    Specifications are not yet digitised on this system. This page will list product and raw material specifications once they are added.
-  </div>
+  <p>Limits and tolerances used by the records. Update a value here when a spec changes &mdash; each change is published as a new version with who, why and when.</p>
   <a class="back-link" href="fsms.html">&larr; Back to FSMS</a>
 </div>
 
+<div class="container">
+  <div class="state info" id="state">Loading&hellip;</div>
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <input type="search" id="q" placeholder="Search specifications&hellip;">
+    <button class="btn" id="btnRefresh">Refresh</button>
+  </div>
+  <div id="list"></div>
+  <div class="note" id="note" style="display:none;">
+    Editing a spec changes the limits the records check against from the moment the new version is published. Earlier
+    versions stay on file and entries already saved keep the version they were made under.
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+  try {
+    fetch('https://processing-department-api.onrender.com/api/health',
+          { mode: 'cors', cache: 'no-store', keepalive: true }).catch(function () {});
+  } catch (e) {  }
+</script>
+
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=13"></script>
+<script src="../lib/permission-rules.js?v=1"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=1"></script>
+<script src="../lib/spec-registry.js"></script>
+<script>(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  };
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 2600); }
+  function setState(cls, html) { var s = $('state'); s.className = 'state ' + cls; s.innerHTML = html; s.style.display = html ? '' : 'none'; }
+  function fmtWhen(ts) {
+    if (!ts) return '—';
+    var d = new Date(ts); if (isNaN(d.getTime())) return '—';
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function humanise(k) {
+    return String(k).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); });
+  }
+
+  var META = ['versionNumber', 'changeReason', 'publishedBy', 'changedByTitle', 'publishedAt'];
+  var indexByKey = {};
+  ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (row) {
+    if (row.recordKey) indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
+  });
+
+  var SPECS = [];      // { key, name, code, href, versions:[index entries, newest first], published, draft }
+  var OPEN = {};       // spec key -> true
+
+  // ---- flatten / rebuild a spec object into editable leaves -----------------------------------
+  function leavesOf(obj) {
+    var out = [];
+    (function walk(node, path) {
+      if (node !== null && typeof node === 'object') {
+        Object.keys(node).forEach(function (k) {
+          if (!path.length && META.indexOf(k) >= 0) return;
+          walk(node[k], path.concat(k));
+        });
+      } else if (path.length) {
+        out.push({ path: path, value: node });
+      }
+    })(obj, []);
+    return out;
+  }
+  function getAt(obj, path) { return path.reduce(function (n, k) { return n == null ? n : n[k]; }, obj); }
+  function setAt(obj, path, val) {
+    var n = obj;
+    for (var i = 0; i < path.length - 1; i++) n = n[path[i]];
+    n[path[path.length - 1]] = val;
+  }
+  function labelOf(path) {
+    var parts = path.map(humanise);
+    var last = parts.pop();
+    return (parts.length ? '<span class="grp">' + esc(parts.join(' › ')) + ' › </span>' : '') + esc(last);
+  }
+
+  // ---- load ----------------------------------------------------------------------------------
+  async function load() {
+    var map = await window.storage.getByPrefix('spec_versions_index:', true);
+    var profileNames = {};
+    try {
+      var p = await window.storage.get('spec_profiles_index', true);
+      JSON.parse((p && p.value) || '[]').forEach(function (e) { if (e && e.id) profileNames[e.id] = e.name; });
+    } catch (e) {  }
+
+    var specs = [];
+    Object.keys(map || {}).forEach(function (storageKey) {
+      var key = storageKey.slice('spec_versions_index:'.length);
+      var idx;
+      try { idx = JSON.parse(map[storageKey]); } catch (e) { return; }
+      if (!Array.isArray(idx) || !idx.length) return;
+      idx = idx.slice().sort(function (a, b) { return b.versionNumber - a.versionNumber; });
+      var rk = key.replace(/-spec$/, '');
+      var meta = key.slice(-5) === '-spec' ? indexByKey[rk] : null;
+      specs.push({
+        key: key,
+        name: (meta && meta.name) || profileNames[key] || humanise(rk),
+        code: (meta && meta.docNo) || '',
+        href: meta && meta.href ? meta.href : '',
+        versions: idx,
+        published: null,
+        draft: null
+      });
+    });
+    specs.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    await Promise.all(specs.map(async function (s) {
+      s.published = await window.SpecRegistry.getPublished(s.key);
+    }));
+    SPECS = specs.filter(function (s) { return s.published; });
+  }
+
+  // ---- render --------------------------------------------------------------------------------
+  function render() {
+    var q = ($('q').value || '').trim().toLowerCase();
+    var shown = SPECS.filter(function (s) { return !q || (s.name + ' ' + s.code + ' ' + s.key).toLowerCase().indexOf(q) >= 0; });
+    if (!shown.length) {
+      $('list').innerHTML = '<div class="empty">' + (SPECS.length ? 'No specifications match your search.'
+        : 'No specifications have been created yet. A record\'s spec appears here once it has been opened for the first time.') + '</div>';
+      return;
+    }
+    $('list').innerHTML = shown.map(function (s) {
+      var cur = s.versions[0];
+      return '<div class="card' + (OPEN[s.key] ? ' open' : '') + '" data-key="' + esc(s.key) + '">' +
+        '<div class="card-head" data-act="toggle">' +
+          '<h2>' + esc(s.name) + '</h2>' +
+          (s.code ? '<span class="code">' + esc(s.code) + '</span>' : '') +
+          '<span class="pill">v' + cur.versionNumber + '</span>' +
+          '<span class="meta">Updated ' + fmtWhen(cur.publishedAt) + ' by ' + esc(cur.publishedBy || '—') + '</span>' +
+        '</div>' +
+        '<div class="card-body">' + (OPEN[s.key] ? body(s) : '') + '</div></div>';
+    }).join('');
+  }
+
+  // Only these roles may publish a new spec version.
+  var EDIT_ROLES = ['QA_MANAGER', 'ADMINISTRATOR'];
+  function canEdit() {
+    return !!(window.Auth && EDIT_ROLES.indexOf(window.Auth.getCurrentRole()) >= 0);
+  }
+
+  function body(s) {
+    var edit = canEdit();
+    var leaves = leavesOf(s.published);
+    var rows = leaves.map(function (l, i) {
+      var v = l.value, cell;
+      var ro = edit ? '' : ' readonly';
+      if (typeof v === 'number') cell = '<input type="number" step="any" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
+      else if (typeof v === 'boolean') cell = '<input type="text" readonly value="' + esc(v) + '">';
+      else if (v == null) cell = '<input type="number" step="any" data-i="' + i + '" data-null="1" value="" placeholder="not set"' + ro + '>';
+      else cell = '<input type="text" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
+      return '<tr><td class="k">' + labelOf(l.path) + '</td><td>' + cell + '</td></tr>';
+    }).join('');
+    var user = (window.Auth && window.Auth.getCurrentUsername()) || '';
+    var hist = s.versions.map(function (h) {
+      return '<div class="hist-item"><span class="v">v' + h.versionNumber + '</span>' +
+        '<span>' + fmtWhen(h.publishedAt) + ' · ' + esc(h.publishedBy || '—') + (h.changedByTitle ? ' (' + esc(h.changedByTitle) + ')' : '') +
+        '<br><span class="why">' + esc(h.changeReason || '') + '</span></span>' +
+        (h.status === 'PUBLISHED' ? '<span class="pill" style="margin-left:auto;align-self:flex-start;">Current</span>' : '') + '</div>';
+    }).join('');
+    return (s.href ? '<p style="margin:0 0 10px;"><a href="' + esc(s.href) + '">Open the record &rarr;</a></p>' : '') +
+      '<div class="sec">Current limits (v' + s.versions[0].versionNumber + ')</div>' +
+      (rows ? '<table class="leaves"><tbody>' + rows + '</tbody></table>' : '<div class="empty" style="margin-bottom:14px;">This specification has no editable values.</div>') +
+      (rows && !edit ? '<p class="hint" style="color:#5c6771;margin:0 0 14px;">Read-only. Only the QA Manager or an Administrator can change a specification.</p>' : '') +
+      (rows && edit ? '<div class="sec">Publish as a new version</div>' +
+      '<div class="attr">' +
+        '<label>Reason for the change<input data-f="reason" placeholder="e.g. Customer revised max seam thickness"></label>' +
+        '<label>Your name<input data-f="by" value="' + esc(user) + '"></label>' +
+        '<label>Your title<input data-f="title" placeholder="e.g. QA Manager"></label>' +
+      '</div>' +
+      '<div class="actions"><button class="btn primary" data-act="publish" disabled>Publish new version</button>' +
+        '<button class="btn" data-act="reset">Discard edits</button><span class="hint" data-f="hint">No changes yet.</span></div>' : '') +
+      '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>';
+  }
+
+  // ---- editing -------------------------------------------------------------------------------
+  function coerce(input, orig) {
+    var raw = input.value.trim();
+    if (input.type === 'number') return raw === '' ? null : Number(raw);
+    return raw;
+  }
+  function changesFor(card, s) {
+    var leaves = leavesOf(s.published), changes = [];
+    card.querySelectorAll('table.leaves input[data-i]').forEach(function (inp) {
+      var l = leaves[Number(inp.getAttribute('data-i'))];
+      var nv = coerce(inp, l.value);
+      var same = (nv === l.value) || (nv == null && l.value == null) || (nv === '' && l.value == null);
+      inp.classList.toggle('changed', !same);
+      if (!same && !(typeof nv === 'number' && isNaN(nv))) changes.push({ path: l.path, value: nv });
+    });
+    return changes;
+  }
+  function refreshButton(card, s) {
+    var n = changesFor(card, s).length;
+    var f = function (k) { return card.querySelector('[data-f="' + k + '"]'); };
+    var ready = n > 0 && f('reason').value.trim() && f('by').value.trim() && f('title').value.trim();
+    card.querySelector('[data-act="publish"]').disabled = !ready;
+    f('hint').textContent = n === 0 ? 'No changes yet.'
+      : n + ' value' + (n === 1 ? '' : 's') + ' changed' + (ready ? '.' : ' — add a reason, your name and title to publish.');
+  }
+  async function publish(card, s) {
+    if (!canEdit()) { toast('Only the QA Manager or an Administrator can change a specification.'); return; }
+    var f = function (k) { return card.querySelector('[data-f="' + k + '"]').value.trim(); };
+    var changes = changesFor(card, s);
+    if (!changes.length) return;
+    var data = JSON.parse(JSON.stringify(s.published));
+    META.forEach(function (k) { delete data[k]; });
+    changes.forEach(function (c) { setAt(data, c.path, c.value); });
+    var btn = card.querySelector('[data-act="publish"]');
+    btn.disabled = true;
+    try {
+      var full = await window.SpecRegistry.proposeVersion(s.key, data, { changeReason: f('reason'), publishedBy: f('by'), changedByTitle: f('title') });
+      s.published = full;
+      s.versions = await window.SpecRegistry.history(s.key);
+      toast(s.name + ' is now v' + full.versionNumber + '.');
+      render();
+    } catch (e) { toast(e.message || 'Could not publish.'); btn.disabled = false; }
+  }
+
+  function wire() {
+    $('list').addEventListener('click', function (ev) {
+      var t = ev.target.closest('[data-act]');
+      if (!t) return;
+      var card = t.closest('.card'); if (!card) return;
+      var s = SPECS.filter(function (x) { return x.key === card.getAttribute('data-key'); })[0];
+      var act = t.getAttribute('data-act');
+      if (act === 'toggle') { OPEN[s.key] = !OPEN[s.key]; render(); }
+      else if (act === 'reset') { render(); }
+      else if (act === 'publish') publish(card, s);
+    });
+    $('list').addEventListener('input', function (ev) {
+      var card = ev.target.closest('.card'); if (!card) return;
+      var s = SPECS.filter(function (x) { return x.key === card.getAttribute('data-key'); })[0];
+      if (card.querySelector('[data-act="publish"]')) refreshButton(card, s);
+    });
+    $('q').addEventListener('input', render);
+    $('btnRefresh').addEventListener('click', function () { start(); });
+  }
+
+  async function start() {
+    setState('info', 'Loading specifications&hellip;');
+    try { await window.storage.whenReady(); } catch (e) {  }
+    try {
+      await load();
+      setState('', '');
+      $('toolbar').style.display = '';
+      $('note').style.display = canEdit() ? '' : 'none';
+      render();
+    } catch (e) {
+      console.error(e);
+      setState('bad', 'Could not load specifications. If this device has no access key, set one on <a href="api-key.html">the API key page</a>.');
+    }
+  }
+
+  window.addEventListener('load', async function () {
+    wire();
+    if (window.LoginUI && window.LoginUI.ensureAuthenticated) {
+      try { await window.LoginUI.ensureAuthenticated(); } catch (e) {  }
+    }
+    if (!window.Auth || !window.Auth.isAuthenticated()) {
+      setState('bad', 'Sign in to view and update specifications.');
+      if (window.LoginUI) window.LoginUI.showLoginModal();
+      document.addEventListener('authSuccess', function once() {
+        document.removeEventListener('authSuccess', once);
+        start();
+      });
+      return;
+    }
+    start();
+  });
+})();
+</script>
 </body>
 </html>
