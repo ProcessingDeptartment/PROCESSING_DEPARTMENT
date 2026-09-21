@@ -25,7 +25,7 @@ model KeyValue {
 model SubmissionDateField {
   id            Int       @id @default(autoincrement())
   submissionKey String
-  recordKey     String? // canonical record id ('cans-produced'), from the storage key. Nullable only until the API that fills it is deployed; then tightened to NOT NULL.
+  recordKey     String // canonical record id ('cans-produced'), from the storage key
   recordName    String // display name: definition title -> legacy map name -> key
   submissionId  String? // the entry inside the record's array this date belongs to
   fieldKey      String
