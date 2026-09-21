@@ -128,6 +128,113 @@ model RecordAutofillDef {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Governance data -- specs, verification and job status. Same pattern as the sub_* tables: the
+// KeyValue blob (spec_version:*, spec_versions_index:*, spec_profiles_index, verification_log:*,
+// verifier_assignments, job_status:*) stays the source of truth the pages read and write; the API
+// projects every write into these typed tables (src/governance-store.js) so they can be queried and
+// joined -- e.g. which submissions a verification covered, or which spec version was in force.
+// Replace-on-write, so edits and deletions stay in sync. Rebuild: scripts/rebuild-derived.js governance.
+// ---------------------------------------------------------------------------------------------
+
+// Spec profiles: the named can-type specs a record can be measured against (spec_profiles_index).
+model SpecProfile {
+  id        String   @id // 'fujian-73x119-eoa' -- also the specKey of its versions
+  name      String
+  position  Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+// One row per published version of a spec (spec_version:<specKey>:<n> + its entry in
+// spec_versions_index:<specKey>). The limits differ per spec (min/max ranges, targets, tolerances),
+// so they stay in `params` as JSON -- the typed part is the version's identity and audit trail.
+model SpecVersion {
+  specKey        String
+  versionNumber  Int
+  status         String    @default("PUBLISHED") // 'PUBLISHED' | 'OBSOLETE' (from the index)
+  recordKey      String? // the record this spec governs ('dry-monitoring' for 'dry-monitoring-spec'); null for profiles
+  changeReason   String?
+  publishedBy    String?
+  changedByTitle String?
+  publishedAt    DateTime?
+  params         Json? // the spec's limits; null only if the index was seen before the version body
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@id([specKey, versionNumber])
+  @@index([recordKey])
+  @@index([specKey, status])
+}
+
+// verification_log:<recordKey> -- one row per sign-off event; the submissions it covered are in
+// VerificationEventEntry (submissionId = the sub_* row id).
+model VerificationEvent {
+  id                Int                      @id @default(autoincrement())
+  recordKey         String
+  position          Int                      @default(0) // order in the log
+  verifiedBy        String?
+  verifiedTitle     String? // the signer's title/role (the blob calls it verifiedSig)
+  verifiedDate      DateTime?                @db.Date
+  verifiedSignature String? // typed signature / initials
+  loggedAt          DateTime?
+  entries           VerificationEventEntry[]
+
+  @@index([recordKey])
+}
+
+model VerificationEventEntry {
+  id           Int               @id @default(autoincrement())
+  eventId      Int
+  event        VerificationEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  submissionId String
+
+  @@index([eventId])
+  @@index([submissionId])
+}
+
+// verifier_assignments -- per-record override of which roles may verify it.
+model VerifierAssignment {
+  recordKey String
+  role      String
+  position  Int    @default(0)
+
+  @@id([recordKey, role])
+}
+
+// job_status:<jobNo> -- open/closed state and the canning-report details for one job.
+model JobStatus {
+  jobNo              String          @id
+  status             String          @default("open") // 'open' | 'closed'
+  grnNo              String?
+  poNo               String?
+  deliveryNoteNo     String?
+  costPerKg          Float?
+  canningEfficiency  Float?
+  additionalNrcsCans Float?
+  comments           String?
+  closedAt           DateTime?
+  closedBy           String?
+  reopenedAt         DateTime?
+  reopenedBy         String?
+  previouslyClosedAt DateTime?
+  previouslyClosedBy String?
+  note               String?
+  extraJson          Json? // any blob key without a column, so nothing is dropped
+  updatedAt          DateTime        @updatedAt
+  agCodes            JobNrcsAgCode[]
+}
+
+model JobNrcsAgCode {
+  id       Int       @id @default(autoincrement())
+  jobNo    String
+  job      JobStatus @relation(fields: [jobNo], references: [jobNo], onDelete: Cascade)
+  agCode   String
+  position Int       @default(0)
+
+  @@index([jobNo])
+  @@index([agCode])
+}
+
+// ---------------------------------------------------------------------------------------------
 // Generic cross-record link -- the relational successor to traceability.js's batch_link:* keys.
 // linkField is open-ended (job number is only the ERP reconciliation key). Written by the API on
 // every submission from each field whose RecordFieldDef.linkField is set. Dates stay in

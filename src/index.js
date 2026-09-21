@@ -19,6 +19,7 @@ const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submiss
 const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
 const { syncSubmissionDates } = require('./submission-dates');
+const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
 
 const prisma = new PrismaClient();
 const dateFields = dateFieldMap.load();
@@ -108,6 +109,10 @@ app.put('/api/storage/key/:key', async (req, res) => {
     catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
     try { await syncSubmissionRows(prisma, req.params.key, value); }
     catch (e) { console.error('syncSubmissionRows failed (write succeeded)', e); }
+    if (isGovernanceKey(req.params.key)) {
+      try { await syncGovernanceKey(prisma, req.params.key, value); }
+      catch (e) { console.error('syncGovernanceKey failed (write succeeded)', e); }
+    }
     res.json({ ok: true, warnings: violations });
   } catch (e) {
     console.error('PUT key failed', e);
@@ -122,6 +127,9 @@ app.delete('/api/storage/key/:key', async (req, res) => {
     // Clear submission + link rows (pass empty array → deletes everything for this record)
     try { await syncSubmissionRows(prisma, req.params.key, '[]'); } catch (_) {}
     try { await syncRecordLinks(prisma, req.params.key, '[]'); } catch (_) {}
+    if (isGovernanceKey(req.params.key)) {
+      try { await syncGovernanceKey(prisma, req.params.key, null); } catch (_) {}
+    }
     res.json({ ok: true });
   } catch (e) {
     console.error('DELETE key failed', e);
