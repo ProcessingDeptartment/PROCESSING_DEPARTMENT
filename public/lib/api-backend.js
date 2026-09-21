@@ -168,7 +168,10 @@
       try {
         const res = await apiFetch('/api/storage/key/' + encodeURIComponent(key));
         if (!res.ok) return null;
-        return await res.json();
+        // A missing key comes back 200 { value: null } (a 404 would show as a red console error
+        // for every optional key a page probes). Callers treat "missing" as null, so normalise.
+        const body = await res.json();
+        return body && body.value != null ? body : null;
       } catch (e) {
         console.error('storage get failed (api)', e);
         return null;

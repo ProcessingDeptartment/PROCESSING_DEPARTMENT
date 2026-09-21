@@ -123,7 +123,9 @@ async function syncSubmissionDates(key, value) {
 app.get('/api/storage/key/:key', async (req, res) => {
   try {
     const row = await prisma.keyValue.findUnique({ where: { key: req.params.key } });
-    if (!row) return res.status(404).json(null);
+    // Missing key is normal (pages probe optional keys like doc_header:*), so answer 200 with a
+    // null value rather than 404 -- browsers log every 404 as a console error, which buries real ones.
+    if (!row) return res.json({ value: null });
     res.json({ value: row.value });
   } catch (e) {
     console.error('GET key failed', e);
