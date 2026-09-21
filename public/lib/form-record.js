@@ -234,8 +234,18 @@
   }
 
 
+  // Split a saved job number into the prefix dropdown + digits the field is drawn from. Prefixes come
+  // from the same list the dropdown offers (Lookups.jobPrefixes: 3CP, 3DP, CPR, DPR -- two of them
+  // START WITH A DIGIT, which the old letters-only pattern could not split, so a saved 3CP/3DP job
+  // number loaded back blank). Longest prefix first; the pattern below covers a list that has not
+  // loaded yet, with an optional leading digit for the same reason.
   function splitJobNo(value) {
-    const m = String(value || '').trim().toUpperCase().match(/^([A-Z]{2,3})(\d*)$/);
+    const s = String(value || '').trim().toUpperCase();
+    const list = (window.Lookups ? window.Lookups.get('jobPrefixes') : []) || [];
+    const known = list.slice().sort((a, b) => b.length - a.length)
+      .find((p) => s.startsWith(p) && /^\d*$/.test(s.slice(p.length)));
+    if (known) return { prefix: known, digits: s.slice(known.length) };
+    const m = s.match(/^(\d?[A-Z]{2,3})(\d*)$/);
     return m ? { prefix: m[1], digits: m[2] } : { prefix: '', digits: '' };
   }
 
@@ -590,7 +600,15 @@
         }
         prefixSel.addEventListener('change', sync);
         digitsInp.addEventListener('input', sync);
-        sync();
+        // A saved value the dropdown cannot represent (an unknown prefix) must not be blanked just
+        // by opening the record: sync() rebuilds the hidden value from the dropdown + digits, which
+        // cannot represent it here. Keep what was saved, say so, and let the user re-pick a prefix.
+        if (hidden.value && (prefixSel.value + digitsInp.value).toUpperCase() !== String(hidden.value).trim().toUpperCase()) {
+          hint.textContent = hidden.value + ' - prefix not recognised, choose one to replace it';
+          hint.classList.add('bad');
+        } else {
+          sync();
+        }
       });
     }
 
