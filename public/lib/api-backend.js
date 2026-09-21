@@ -75,6 +75,63 @@
   window.FacilityApi = { base: () => API_BASE, getKey, setKey, clearKey, headers, fetch: apiFetch,
     authFailed: () => authFailed };
 
+  // ---------- Instant-load cache for record LAYOUT (not record data) ----------
+  // A record page must draw immediately even while the API is asleep. The form definition and the
+  // template override are layout only, so they are cached on the device and served at once; a
+  // background fetch refreshes the cache for the next open. Entries/submissions are never cached.
+  const SWR_PREFIX = 'abg_swr1:';
+  function swr(cacheKey, fetcher) {
+    let cached = null;
+    try { const raw = STORE.s.getItem(SWR_PREFIX + cacheKey); if (raw) cached = JSON.parse(raw); } catch (e) { cached = null; }
+    const refresh = (async function () {
+      const v = await fetcher();
+      try { STORE.s.setItem(SWR_PREFIX + cacheKey, JSON.stringify({ v: v })); } catch (e) { /* quota: fine */ }
+      return v;
+    })();
+    if (cached) { refresh.catch(function () {}); return Promise.resolve(cached.v); }
+    return refresh;
+  }
+  function swrPut(cacheKey, v) {
+    try { STORE.s.setItem(SWR_PREFIX + cacheKey, JSON.stringify({ v: v })); } catch (e) { /* ignore */ }
+  }
+  async function fetchWithRetry(path, tries) {
+    let last = null;
+    for (let i = 0; i < tries; i++) {
+      try {
+        const res = await apiFetch(path);
+        if (res.ok) return res;
+        if (res.status < 500) throw new Error('HTTP ' + res.status);
+        last = new Error('HTTP ' + res.status);
+      } catch (e) {
+        if (/^HTTP 4/.test(e.message)) throw e;
+        last = e;
+      }
+      await new Promise(function (r) { setTimeout(r, 3000); });
+    }
+    throw last;
+  }
+  // -> config object, or null if unavailable (nothing cached and API down)
+  window.FacilityApi.recordDef = async function (recordKey) {
+    try {
+      return await swr('def:' + recordKey, async function () {
+        const res = await fetchWithRetry('/api/record-def/' + encodeURIComponent(recordKey), 6);
+        const body = await res.json();
+        if (!body || !body.config) throw new Error('no config');
+        return body.config;
+      });
+    } catch (e) { console.error('record-def ' + recordKey + ' failed', e); return null; }
+  };
+  // -> raw override JSON string, or null when there is none
+  window.FacilityApi.templateOverride = async function (recordKey) {
+    try {
+      return await swr('tpl:' + recordKey, async function () {
+        const res = await fetchWithRetry('/api/storage/key/' + encodeURIComponent('record_template:' + recordKey), 6);
+        const body = await res.json();
+        return body && body.value != null ? body.value : null;
+      });
+    } catch (e) { return null; }
+  };
+
 
   // ---------- In-memory retry queue (no localStorage) ----------
   // If a write fails (network down, 5xx), it stays in this in-memory queue and retries every
@@ -191,6 +248,7 @@
 
   async function apiSet(key, value) {
     invalidate(key);
+    if (key.indexOf('record_template:') === 0) swrPut('tpl:' + key.slice('record_template:'.length), value);
     let res = null;
     try {
       res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), {
@@ -211,6 +269,7 @@
 
   async function apiRemove(key) {
     invalidate(key);
+    if (key.indexOf('record_template:') === 0) swrPut('tpl:' + key.slice('record_template:'.length), null);
     let res = null;
     try {
       res = await apiFetch('/api/storage/key/' + encodeURIComponent(key), { method: 'DELETE' });
@@ -251,11 +310,38 @@
     getByPrefix: apiGetByPrefix
   });
 
-  fetch(API_BASE + '/api/health').then((res) => {
-    if (!res.ok) throw new Error('unhealthy');
-    if (queueCount()) drain();
-  }).catch((e) => {
-    console.warn('facility-api unreachable — writes will queue until it returns', e);
-    updateQueueBadge();
-  });
+  // ---------- Cold-start notice (non-blocking) ----------
+  // The page itself renders from cached layout, so this is only a slim strip telling staff that
+  // entries are still loading / saving will wait. It never covers the form.
+  let wakeEl = null;
+  let wakeTimer = null;
+  function showWake() {
+    if (wakeEl || typeof document === 'undefined') return;
+    wakeEl = document.createElement('div');
+    wakeEl.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99997;background:#8a5a10;color:#fff;'
+      + 'font:600 13px/1.4 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;padding:6px 16px;text-align:center;';
+    wakeEl.textContent = 'Connecting to the records server… saved entries will appear shortly.';
+    (document.body || document.documentElement).appendChild(wakeEl);
+  }
+  function hideWake() {
+    clearTimeout(wakeTimer);
+    if (wakeEl) { wakeEl.remove(); wakeEl = null; }
+  }
+
+  let healthy = false;
+  function checkHealth(attempt) {
+    fetch(API_BASE + '/api/health', { cache: 'no-store' }).then((res) => {
+      if (!res.ok) throw new Error('unhealthy');
+      healthy = true;
+      hideWake();
+      if (queueCount()) drain();
+    }).catch((e) => {
+      if (healthy) return;
+      console.warn('facility-api unreachable (attempt ' + attempt + ') — retrying', e);
+      updateQueueBadge();
+      setTimeout(function () { checkHealth(attempt + 1); }, 3000);
+    });
+  }
+  wakeTimer = setTimeout(function () { if (!healthy) showWake(); }, 1200);
+  checkHealth(1);
 })();

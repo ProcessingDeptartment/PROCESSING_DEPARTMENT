@@ -25,6 +25,7 @@
 //   inSpec     Boolean?            — monitoring-log's per-entry spec evaluation
 
 import { readFileSync, writeFileSync } from 'fs';
+import { createHash } from 'crypto';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -58,6 +59,20 @@ function prismaTypeFor(field, def) {
   }
   return FIELD_TYPE_TO_PRISMA[field.type] || 'String?';
 }
+
+// Indexes: only the columns a lookup actually filters on -- each top-level link field (job number,
+// ingredient/batch codes; RecordFieldDef.linkField). The store rewrites a record's whole table on
+// every save, so every extra index costs a write; dates and status are deliberately not indexed
+// (cross-record date queries go through the already-indexed SubmissionDateField).
+// Names are explicit so the Prisma schema and the migration SQL cannot disagree; Postgres cuts
+// identifiers at 63 bytes, so a long table+column name is shortened with a stable hash.
+function indexName(table, col) {
+  const full = `${table}_${col}_idx`;
+  if (full.length <= 63) return full;
+  const h = createHash('sha1').update(full).digest('hex').slice(0, 6);
+  return `${table.slice(0, 40)}_${col.slice(0, 8)}_${h}_idx`;
+}
+const indexSql = [];
 
 function toModelName(recordKey) {
   return 'Sub_' + recordKey.replace(/-/g, '_');
@@ -114,11 +129,13 @@ for (const def of definitions) {
   lines.push('');
 
   const seenCols = new Set(['id', 'status', 'source', 'submittedAt', 'createdAt', 'updatedAt', 'rawJson', 'inSpec']);
+  const indexCols = [];
   for (const f of topFields) {
     const col = toColName(f.key);
     if (seenCols.has(col)) continue; // dedup
     seenCols.add(col);
     lines.push(`  ${col.padEnd(24)} ${prismaTypeFor(f, def)}`);
+    if (f.linkField) indexCols.push(col);
   }
 
   if (hasRoster) {
@@ -127,6 +144,11 @@ for (const def of definitions) {
   }
 
   lines.push('');
+  for (const col of indexCols) {
+    const name = indexName(tableName, col);
+    lines.push(`  @@index([${col}], map: "${name}")`);
+    indexSql.push(`CREATE INDEX "${name}" ON "${tableName}"("${col}");`);
+  }
   lines.push(`  @@map("${tableName}")`);
   lines.push('}');
   lines.push('');
@@ -164,3 +186,6 @@ writeFileSync(outPath, lines.join('\n'), 'utf8');
 
 console.log(`Generated ${definitions.length} submission models → ${outPath}`);
 console.log(`Append to prisma/schema.prisma, then run: npx prisma migrate dev --name submission_tables`);
+
+// `--index-sql` prints the CREATE INDEX statements for the link-field indexes above (for a migration).
+if (process.argv.includes('--index-sql')) console.log(indexSql.join(String.fromCharCode(10)));

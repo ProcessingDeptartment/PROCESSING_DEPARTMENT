@@ -1513,12 +1513,7 @@
   // Definition source of truth is the DB -- see form-record.js's fetchRecordDef note.
   async function fetchRecordDef(recordKey) {
     if (!window.FacilityApi) return null;
-    try {
-      const res = await window.FacilityApi.fetch('/api/record-def/' + encodeURIComponent(recordKey));
-      if (!res.ok) { console.error('monitoring-log: record-def ' + recordKey + ' -> HTTP ' + res.status); return null; }
-      const body = await res.json();
-      return body && body.config ? body.config : null;
-    } catch (e) { console.error('monitoring-log: record-def ' + recordKey + ' fetch failed', e); return null; }
+    return window.FacilityApi.recordDef(recordKey);   // cached copy first, refreshed in background
   }
 
   async function init(config) {
@@ -1541,7 +1536,7 @@
     }
 
     try {
-      const _teRaw = await (async () => { try { const r = await window.storage.get('record_template:' + config.recordKey, true); return r ? r.value : null; } catch (e) { return null; } })();
+      const _teRaw = await window.FacilityApi.templateOverride(config.recordKey);
       if (_teRaw) {
         const override = JSON.parse(_teRaw);
         if (override && override.schemaVersion === 1 && override.engine === 'monitoring-log') {

@@ -9,9 +9,12 @@
  * want after an accidental delete. --overwrite additionally replaces rows whose content differs,
  * for rolling the whole database back to the state in the file.
  *
- * Restores the KeyValue table only. SubmissionDateField is derived data -- the API rebuilds it from
- * the record contents on write -- so replaying the records regenerates it, and forcing old rows
- * back in could contradict what the records now say.
+ * Restores the KeyValue table only. SubmissionDateField and the `relational` section of the backup
+ * (Record* definitions, RecordLink, sub_* tables) are derived data -- the API rebuilds them from the
+ * record contents on write (scripts/backfill-submission-tables.mjs replays every blob, and
+ * scripts/seed-definitions.mjs reloads the definitions) -- so replaying the records regenerates
+ * them, and forcing old rows back in could contradict what the records now say. The relational
+ * copy in the backup is for inspection and disaster recovery, not for this script.
  *
  * Usage:
  *   node scripts/restore.js                          dry run against latest.json

@@ -866,12 +866,7 @@
   // only { recordKey } gets its config assembled by GET /api/record-def/:key.
   async function fetchRecordDef(recordKey) {
     if (!window.FacilityApi) return null;
-    try {
-      const res = await window.FacilityApi.fetch('/api/record-def/' + encodeURIComponent(recordKey));
-      if (!res.ok) { console.error('form-record: record-def ' + recordKey + ' -> HTTP ' + res.status); return null; }
-      const body = await res.json();
-      return body && body.config ? body.config : null;
-    } catch (e) { console.error('form-record: record-def ' + recordKey + ' fetch failed', e); return null; }
+    return window.FacilityApi.recordDef(recordKey);   // cached copy first, refreshed in background
   }
 
   async function init(config) {
@@ -899,7 +894,7 @@
       listColumns: config.listColumns ? config.listColumns.slice() : undefined
     };
     try {
-      const overrideRaw = await storeGet('record_template:' + config.recordKey, true);
+      const overrideRaw = await window.FacilityApi.templateOverride(config.recordKey);
       if (overrideRaw) {
         const override = JSON.parse(overrideRaw);
         if (override && override.schemaVersion === 1 && override.engine === 'form-record') {

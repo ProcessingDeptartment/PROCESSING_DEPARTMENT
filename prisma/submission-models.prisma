@@ -26,6 +26,7 @@ model Sub_dry_export_pack_front_page {
   checkedByQC              String?
   verificationBy           String?
 
+  @@index([jobNumber], map: "sub_dry_export_pack_front_page_jobNumber_idx")
   @@map("sub_dry_export_pack_front_page")
 }
 
@@ -185,6 +186,7 @@ model Sub_production_information_nrcs {
 
   rows Sub_production_information_nrcs_Row[]
 
+  @@index([jobNo], map: "sub_production_information_nrcs_jobNo_idx")
   @@map("sub_production_information_nrcs")
 }
 
@@ -319,6 +321,7 @@ model Sub_cans_released_form {
   agCode                   String?
   checkedByQC              String?
 
+  @@index([agCode], map: "sub_cans_released_form_agCode_idx")
   @@map("sub_cans_released_form")
 }
 
@@ -345,6 +348,7 @@ model Sub_gonad_inspection_report {
   basketReceivingComments  String?
   checkedBy                String?
 
+  @@index([jobNo], map: "sub_gonad_inspection_report_jobNo_idx")
   @@map("sub_gonad_inspection_report")
 }
 
@@ -410,6 +414,7 @@ model Sub_incubator_cans_log {
   dateCleared              DateTime?
   clearedByName            String?
 
+  @@index([jobNo], map: "sub_incubator_cans_log_jobNo_idx")
   @@map("sub_incubator_cans_log")
 }
 
@@ -458,6 +463,7 @@ model Sub_basket_removal_shucking_gutting {
 
   rows Sub_basket_removal_shucking_gutting_Row[]
 
+  @@index([jobNo], map: "sub_basket_removal_shucking_gutting_jobNo_idx")
   @@map("sub_basket_removal_shucking_gutting")
 }
 
@@ -495,6 +501,7 @@ model Sub_abalone_receiving {
 
   rows Sub_abalone_receiving_Row[]
 
+  @@index([jobNo], map: "sub_abalone_receiving_jobNo_idx")
   @@map("sub_abalone_receiving")
 }
 
@@ -535,6 +542,7 @@ model Sub_salting_and_tumbling {
 
   rows Sub_salting_and_tumbling_Row[]
 
+  @@index([jobNo], map: "sub_salting_and_tumbling_jobNo_idx")
   @@map("sub_salting_and_tumbling")
 }
 
@@ -599,6 +607,9 @@ model Sub_bleeding_and_salting {
   qualityController        String?
   processDeviation         String?
 
+  @@index([jobNo], map: "sub_bleeding_and_salting_jobNo_idx")
+  @@index([saltBatchCode], map: "sub_bleeding_and_salting_saltBatchCode_idx")
+  @@index([bakingSodaBatchCode], map: "sub_bleeding_and_salting_bakingSodaBatchCode_idx")
   @@map("sub_bleeding_and_salting")
 }
 
@@ -622,6 +633,7 @@ model Sub_washing_control_sheet {
 
   rows Sub_washing_control_sheet_Row[]
 
+  @@index([jobNo], map: "sub_washing_control_sheet_jobNo_idx")
   @@map("sub_washing_control_sheet")
 }
 
@@ -666,6 +678,7 @@ model Sub_salting_oosw {
 
   rows Sub_salting_oosw_Row[]
 
+  @@index([jobNo], map: "sub_salting_oosw_jobNo_idx")
   @@map("sub_salting_oosw")
 }
 
@@ -707,6 +720,7 @@ model Sub_scrubbing_check_supervisor {
   weightDamagedTrimmed     Float?
   supervisor               String?
 
+  @@index([jobNo], map: "sub_scrubbing_check_supervisor_jobNo_idx")
   @@map("sub_scrubbing_check_supervisor")
 }
 
@@ -829,6 +843,7 @@ model Sub_stock_loading {
   commentsDents            String?
   checkedBy                String?
 
+  @@index([jobNo], map: "sub_stock_loading_jobNo_idx")
   @@map("sub_stock_loading")
 }
 
@@ -871,6 +886,7 @@ model Sub_qc_report {
   tasteOfProduct           Boolean?
   comments                 String?
 
+  @@index([jobNumber], map: "sub_qc_report_jobNumber_idx")
   @@map("sub_qc_report")
 }
 
@@ -903,6 +919,7 @@ model Sub_double_seam_inspection_report {
 
   rows Sub_double_seam_inspection_report_Row[]
 
+  @@index([jobNo], map: "sub_double_seam_inspection_report_jobNo_idx")
   @@map("sub_double_seam_inspection_report")
 }
 
@@ -957,6 +974,7 @@ model Sub_rework_log {
   quantityProduced         Float?
   checkedByQC              String?
 
+  @@index([jobNo], map: "sub_rework_log_jobNo_idx")
   @@map("sub_rework_log")
 }
 
@@ -1043,6 +1061,7 @@ model Sub_stock_transfers {
   fg02Verification         String?
   fg01Verification         String?
 
+  @@index([jobNo], map: "sub_stock_transfers_jobNo_idx")
   @@map("sub_stock_transfers")
 }
 
@@ -1067,6 +1086,7 @@ model Sub_scrubbing_checklist_qc {
 
   rows Sub_scrubbing_checklist_qc_Row[]
 
+  @@index([jobNo], map: "sub_scrubbing_checklist_qc_jobNo_idx")
   @@map("sub_scrubbing_checklist_qc")
 }
 
@@ -1119,6 +1139,7 @@ model Sub_precooking_check_sheet {
   percentCleanWeight       Float?
   percentPrecookWeight     Float?
 
+  @@index([jobNumber], map: "sub_precooking_check_sheet_jobNumber_idx")
   @@map("sub_precooking_check_sheet")
 }
 
@@ -1144,6 +1165,7 @@ model Sub_abalone_packing_specification {
   newMaxIngo               Float?
   comments                 String?
 
+  @@index([jobNo], map: "sub_abalone_packing_specification_jobNo_idx")
   @@map("sub_abalone_packing_specification")
 }
 
@@ -1202,6 +1224,7 @@ model Sub_can_filling_and_printing {
   verifiedAfterPrinting    Boolean?
   processDeviations        String?
 
+  @@index([jobNo], map: "sub_can_filling_and_printing_jobNo_idx")
   @@map("sub_can_filling_and_printing")
 }
 
@@ -1255,6 +1278,7 @@ model Sub_cans_produced {
 
   rows Sub_cans_produced_Row[]
 
+  @@index([jobNumber], map: "sub_cans_produced_jobNumber_idx")
   @@map("sub_cans_produced")
 }
 
@@ -1303,6 +1327,7 @@ model Sub_retorting_control_sheet {
   timeTrolleyOut           String?
   processDeviation         String?
 
+  @@index([jobNumber], map: "sub_retorting_control_sheet_jobNumber_idx")
   @@map("sub_retorting_control_sheet")
 }
 
@@ -1336,6 +1361,7 @@ model Sub_retort_inspection_report {
   correctPressureOnRecipe  Boolean?
   processDeviationAlarms   String?
 
+  @@index([jobNo], map: "sub_retort_inspection_report_jobNo_idx")
   @@map("sub_retort_inspection_report")
 }
 
@@ -1405,6 +1431,15 @@ model Sub_ingredient_weighing {
   weighedBy                String?
   comments                 String?
 
+  @@index([jobNo], map: "sub_ingredient_weighing_jobNo_idx")
+  @@index([chickenFlavourBatchCode], map: "sub_ingredient_weighing_chickenFlavourBatchCode_idx")
+  @@index([vegetableBaseBatchCode], map: "sub_ingredient_weighing_vegetableBaseBatchCode_idx")
+  @@index([gelatineBatchCode], map: "sub_ingredient_weighing_gelatineBatchCode_idx")
+  @@index([xanthanGumBatchCode], map: "sub_ingredient_weighing_xanthanGumBatchCode_idx")
+  @@index([maltSugarBatchCode], map: "sub_ingredient_weighing_maltSugarBatchCode_idx")
+  @@index([tapiocaStarchBatchCode], map: "sub_ingredient_weighing_tapiocaStarchBatchCode_idx")
+  @@index([brownSugarBatchCode], map: "sub_ingredient_weighing_brownSugarBatchCode_idx")
+  @@index([sherloneSauceBatchCode], map: "sub_ingredient_weighing_sherloneSauceBatchCode_idx")
   @@map("sub_ingredient_weighing")
 }
 
@@ -1442,6 +1477,14 @@ model Sub_sauce_mixing {
   tsMixBatchCode           String?
   soMixBatchCode           String?
 
+  @@index([jobNo], map: "sub_sauce_mixing_jobNo_idx")
+  @@index([brothBatchDate], map: "sub_sauce_mixing_brothBatchDate_idx")
+  @@index([chickenLiquidBatchCode], map: "sub_sauce_mixing_chickenLiquidBatchCode_idx")
+  @@index([smokeyFlavourBatchCode], map: "sub_sauce_mixing_smokeyFlavourBatchCode_idx")
+  @@index([cvgMixBatchCode], map: "sub_sauce_mixing_cvgMixBatchCode_idx")
+  @@index([mdMixBatchCode], map: "sub_sauce_mixing_mdMixBatchCode_idx")
+  @@index([tsMixBatchCode], map: "sub_sauce_mixing_tsMixBatchCode_idx")
+  @@index([soMixBatchCode], map: "sub_sauce_mixing_soMixBatchCode_idx")
   @@map("sub_sauce_mixing")
 }
 
@@ -1522,6 +1565,7 @@ model Sub_brine_mixing_report {
   maltBatchNo              String?
   commentsDeviations       String?
 
+  @@index([jobNumber], map: "sub_brine_mixing_report_jobNumber_idx")
   @@map("sub_brine_mixing_report")
 }
 
@@ -1566,6 +1610,7 @@ model Sub_dry_cooking {
   cooker                   String?
   comments                 String?
 
+  @@index([jobNumber], map: "sub_dry_cooking_jobNumber_idx")
   @@map("sub_dry_cooking")
 }
 
@@ -1611,6 +1656,7 @@ model Sub_drying_process {
   dryWeight                Float?
   estimateYield            Float?
 
+  @@index([jobNumber], map: "sub_drying_process_jobNumber_idx")
   @@map("sub_drying_process")
 }
 
@@ -1637,6 +1683,7 @@ model Sub_dried_abalone_transfer {
 
   rows Sub_dried_abalone_transfer_Row[]
 
+  @@index([jobNumber], map: "sub_dried_abalone_transfer_jobNumber_idx")
   @@map("sub_dried_abalone_transfer")
 }
 
@@ -1684,6 +1731,7 @@ model Sub_dry_monitoring {
   qcCheck                  String?
   supervisor               String?
 
+  @@index([jobNumber], map: "sub_dry_monitoring_jobNumber_idx")
   @@map("sub_dry_monitoring")
 }
 
@@ -1732,6 +1780,7 @@ model Sub_grading_production_log_cultivated {
 
   rows Sub_grading_production_log_cultivated_Row[]
 
+  @@index([jobNumber], map: "sub_grading_production_log_cultivated_jobNumber_idx")
   @@map("sub_grading_production_log_cultivated")
 }
 
@@ -1788,6 +1837,7 @@ model Sub_grading_production_log_ranched {
 
   rows Sub_grading_production_log_ranched_Row[]
 
+  @@index([jobNumber], map: "sub_grading_production_log_ranched_jobNumber_idx")
   @@map("sub_grading_production_log_ranched")
 }
 
@@ -1828,6 +1878,7 @@ model Sub_grading_boxing_traceability {
   jobNumbersInBin          String?
   supervisor               String?
 
+  @@index([jobNo], map: "sub_grading_boxing_traceability_jobNo_idx")
   @@map("sub_grading_boxing_traceability")
 }
 
@@ -1884,6 +1935,7 @@ model Sub_dry_stock_control {
   countOutFactory          Float?
   countOutFinance          Float?
 
+  @@index([jobNo], map: "sub_dry_stock_control_jobNo_idx")
   @@map("sub_dry_stock_control")
 }
 
@@ -2010,6 +2062,7 @@ model Sub_live_production_pack {
   completedBySupervisor    String?
   checkedByQC              String?
 
+  @@index([jobNumber], map: "sub_live_production_pack_jobNumber_idx")
   @@map("sub_live_production_pack")
 }
 
@@ -2485,6 +2538,7 @@ model Sub_chemical_stock_issue_register {
   issuedBy                 String?
   areaToBeCleaned          Boolean?
 
+  @@index([batchNumber], map: "sub_chemical_stock_issue_register_batchNumber_idx")
   @@map("sub_chemical_stock_issue_register")
 }
 
@@ -3028,6 +3082,7 @@ model Sub_salt_issuing_register {
   issuedTo                 String?
   issuedBy                 String?
 
+  @@index([batchNumber], map: "sub_salt_issuing_register_batchNumber_idx")
   @@map("sub_salt_issuing_register")
 }
 
@@ -3057,6 +3112,7 @@ model Sub_chiller_batch_control {
   totalDaysInChiller       Float?
   supervisor               String?
 
+  @@index([jobNo], map: "sub_chiller_batch_control_jobNo_idx")
   @@map("sub_chiller_batch_control")
 }
 
@@ -3086,6 +3142,7 @@ model Sub_dry_chiller_batch_control {
   supervisor               String?
   factoryManager           String?
 
+  @@index([jobNo], map: "sub_dry_chiller_batch_control_jobNo_idx")
   @@map("sub_dry_chiller_batch_control")
 }
 
@@ -3302,6 +3359,7 @@ model Sub_seamer_inspection_report {
   verifiedByEnd            String?
   managementEnd            String?
 
+  @@index([jobNo], map: "sub_seamer_inspection_report_jobNo_idx")
   @@map("sub_seamer_inspection_report")
 }
 
@@ -3391,6 +3449,7 @@ model Sub_cans_incoming_inspection {
   cansAcceptedRejected     String?
   receivedInspectedBy      String?
 
+  @@index([jobNo], map: "sub_cans_incoming_inspection_jobNo_idx")
   @@map("sub_cans_incoming_inspection")
 }
 
@@ -3532,6 +3591,7 @@ model Sub_dispatch_loading_inspection_checklist {
   correctiveActions        String?
   checkedBy                String?
 
+  @@index([jobNo], map: "sub_dispatch_loading_inspection_checklist_jobNo_idx")
   @@map("sub_dispatch_loading_inspection_checklist")
 }
 
@@ -3566,6 +3626,7 @@ model Sub_dispatch_receiving_checklist {
   correctiveActions        String?
   checkedBy                String?
 
+  @@index([jobNumber], map: "sub_dispatch_receiving_checklist_jobNumber_idx")
   @@map("sub_dispatch_receiving_checklist")
 }
 
@@ -3638,6 +3699,7 @@ model Sub_chiller_temperature_monitoring {
   checkedBy                String?
   correctiveAction         String?
 
+  @@index([jobNo], map: "sub_chiller_temperature_monitoring_jobNo_idx")
   @@map("sub_chiller_temperature_monitoring")
 }
 
@@ -3778,6 +3840,7 @@ model Sub_disposition_investigation_record {
   approvedBy               String?
   dateReviewed             DateTime? @db.Date
 
+  @@index([productionCode], map: "sub_disposition_investigation_record_productionCode_idx")
   @@map("sub_disposition_investigation_record")
 }
 
@@ -3874,6 +3937,7 @@ model Sub_traceability_mock_recall_canned_braised_abalone {
 
   rows Sub_traceability_mock_recall_canned_braised_abalone_Row[]
 
+  @@index([jobNo], map: "sub_traceability_mock_recall_canned_braised_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_canned_braised_abalone")
 }
 
@@ -3909,6 +3973,7 @@ model Sub_traceability_mock_recall_canned_abalone {
 
   rows Sub_traceability_mock_recall_canned_abalone_Row[]
 
+  @@index([jobNo], map: "sub_traceability_mock_recall_canned_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_canned_abalone")
 }
 
@@ -3944,6 +4009,7 @@ model Sub_traceability_mock_recall_canned_minced_abalone {
 
   rows Sub_traceability_mock_recall_canned_minced_abalone_Row[]
 
+  @@index([jobNo], map: "sub_traceability_mock_recall_canned_minced_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_canned_minced_abalone")
 }
 
@@ -3979,6 +4045,7 @@ model Sub_traceability_mock_recall_dried_abalone {
 
   rows Sub_traceability_mock_recall_dried_abalone_Row[]
 
+  @@index([jobNo], map: "sub_traceability_mock_recall_dried_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_dried_abalone")
 }
 
