@@ -3153,7 +3153,7 @@
         {
           "key": "startTime",
           "label": "Start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -3172,7 +3172,7 @@
         {
           "key": "endTime",
           "label": "End time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -4733,7 +4733,7 @@
         {
           "key": "bleedingStartTime",
           "label": "Bleeding start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -4752,7 +4752,7 @@
         {
           "key": "bleedingFinishTime",
           "label": "Bleeding finish time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -4809,7 +4809,7 @@
         {
           "key": "saltingStartTime",
           "label": "Salting start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -4828,7 +4828,7 @@
         {
           "key": "saltingFinishTime",
           "label": "Salting finish time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -5211,7 +5211,7 @@
         {
           "key": "timeStarted",
           "label": "Time started",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -5903,7 +5903,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -10065,7 +10065,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -10526,7 +10526,7 @@
         {
           "key": "precookingStartTime",
           "label": "Precooking start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -11248,7 +11248,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -11598,7 +11598,7 @@
         {
           "key": "startTime",
           "label": "Start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -11876,7 +11876,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -12670,7 +12670,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -12727,7 +12727,7 @@
         {
           "key": "timeTrolleyIn",
           "label": "Time trolley in",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -12879,7 +12879,7 @@
         {
           "key": "timeTrolleyOut",
           "label": "Time trolley out",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -13107,7 +13107,7 @@
         {
           "key": "timeTrolleyIn",
           "label": "Time trolley in",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -16065,7 +16065,7 @@
         {
           "key": "startTime",
           "label": "Start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -16141,7 +16141,7 @@
         {
           "key": "timeOut",
           "label": "Time out",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -20693,7 +20693,7 @@
         {
           "key": "timeOfTransfer",
           "label": "Time of transfer",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -21384,7 +21384,7 @@
         {
           "key": "startTime",
           "label": "Start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -21631,7 +21631,7 @@
         {
           "key": "timeFinishedPacking",
           "label": "Time finished packing",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -26787,7 +26787,7 @@
         {
           "key": "timeOfBreakage",
           "label": "Time of breakage",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -27205,7 +27205,7 @@
         {
           "key": "timeOfRestart",
           "label": "Time of production restart",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -28568,7 +28568,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -28682,7 +28682,7 @@
         {
           "key": "breakTime",
           "label": "Break time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -28701,7 +28701,7 @@
         {
           "key": "lunchTime",
           "label": "Lunch time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -28720,7 +28720,7 @@
         {
           "key": "knockOffTime",
           "label": "Knock off time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -28800,7 +28800,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -28914,7 +28914,7 @@
         {
           "key": "breakTime",
           "label": "Break time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -29233,7 +29233,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -29559,7 +29559,7 @@
         {
           "key": "time",
           "label": "Time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -29881,7 +29881,7 @@
         {
           "key": "timeStarted",
           "label": "Time started",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -29900,7 +29900,7 @@
         {
           "key": "timeFinished",
           "label": "Time finished",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -30683,7 +30683,7 @@
         {
           "key": "timeOfCollection",
           "label": "Time of waste collection",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -30880,7 +30880,7 @@
         {
           "key": "timeBoilerStarted",
           "label": "Time boiler started",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -31032,7 +31032,7 @@
         {
           "key": "timeBoilerTurnedOff",
           "label": "Time boiler turned off",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -35107,7 +35107,7 @@
         {
           "key": "timeOfCheck",
           "label": "Time of check",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -37422,7 +37422,7 @@
         {
           "key": "dateTimeStarted",
           "label": "Date & time started",
-          "type": "text",
+          "type": "datetime",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -37441,7 +37441,7 @@
         {
           "key": "dateTimeFinished",
           "label": "Date & time finished",
-          "type": "text",
+          "type": "datetime",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -37737,7 +37737,7 @@
         {
           "key": "startTime",
           "label": "Start time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -37756,7 +37756,7 @@
         {
           "key": "finishTime",
           "label": "Finish time",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -41127,7 +41127,7 @@
         {
           "key": "timeStarted",
           "label": "Time started",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -41146,7 +41146,7 @@
         {
           "key": "timeEnded",
           "label": "Time ended",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -41320,7 +41320,7 @@
         {
           "key": "timeEvacuating",
           "label": "Time of evacuating factory",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
@@ -41339,7 +41339,7 @@
         {
           "key": "timeReturning",
           "label": "Time of returning to factory",
-          "type": "text",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,

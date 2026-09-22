@@ -388,6 +388,7 @@
       if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
 
       if (field.type === 'time') return `<input type="time" id="${id}" value="${esc(v)}">`;
+      if (field.type === 'datetime') return `<input type="datetime-local" id="${id}" value="${esc(v)}"${ro}>`;
 
       if (field.type === 'batchseq' || field.type === 'derived') {
         return `<input type="text" id="${id}" value="${esc(v)}" readonly tabindex="-1">`;
@@ -902,9 +903,10 @@
   }
 
 
-  async function autofillLookup(rule, value) {
+  async function autofillLookup(rule, value, excludeId) {
 
-    const path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
+    let path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
+    if (excludeId) path += `?excludeId=${encodeURIComponent(excludeId)}`;
     const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
       : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
     if (!res.ok) return null;
@@ -1715,6 +1717,10 @@
         ? `<div class="fr-locked">Submitted${existing.submittedAt
             ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.</div>`
         : '';
+      if (existing && existing.values && existing.values.oosWarningAck) {
+        html += `<div class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
+          ${esc(existing.values.oosWarningNote || 'Batch weight exceeding OOSW - possible batch mix')}</div>`;
+      }
       const renderSection = sec => {
         const fieldsHtml = `<div class="fr-grid fr-grid-2">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
@@ -1873,6 +1879,45 @@
       if (unverifiedRequired && finalize) { toast(`"${unverifiedRequired}" must be attached and verified before this can be submitted.`); return; }
       if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
       if (routeConflict && finalize) { toast(routeConflict); return; }
+
+      // oosCheck: cross-record cap. This form's own running total for a job (its own numeric
+      // field, summed across every previously-submitted batch for that job, plus the value being
+      // saved now) must not exceed a total already recorded on another record for the same job
+      // (e.g. REC 7.1.5's OOSW weight). This is a soft gate: an operator can knowingly override
+      // it, but only by explicitly confirming, and the override is stamped onto the record so it
+      // surfaces as a standing warning on the printed sheet from then on.
+      if (finalize && config.oosCheck) {
+        const oc = config.oosCheck;
+        const jobVal = String(values[oc.ownJobField] || '').trim();
+        delete values.oosWarningAck;
+        delete values.oosWarningNote;
+        if (jobVal) {
+          let oswTotal = null;
+          let ownTotal = null;
+          try {
+            const [capData, ownData] = await Promise.all([
+              autofillLookup({ source: oc.source, matchField: oc.matchField }, jobVal),
+              autofillLookup({ source: config.recordKey, matchField: oc.ownJobField }, jobVal, editingId)
+            ]);
+            if (capData && capData.__rosterSums && capData.__rosterSums[oc.sumColumn] != null) {
+              oswTotal = parseFloat(capData.__rosterSums[oc.sumColumn]);
+            }
+            const priorOwn = (ownData && ownData.__matchValueSums && ownData.__matchValueSums[oc.ownWeightField] != null)
+              ? parseFloat(ownData.__matchValueSums[oc.ownWeightField]) : 0;
+            const thisOwn = parseFloat(values[oc.ownWeightField]) || 0;
+            ownTotal = priorOwn + thisOwn;
+          } catch (e) { console.error('oosCheck lookup failed', e); }
+          if (oswTotal != null && !isNaN(oswTotal) && ownTotal != null && ownTotal > oswTotal) {
+            const proceed = confirm(
+              `${oc.message}\n\nTotal for this job so far (including this batch): ${ownTotal.toFixed(2)} kg\n` +
+              `OOSW weight recorded for this job: ${oswTotal.toFixed(2)} kg\n\n` +
+              `Click OK to confirm this is correct and submit anyway, or Cancel to go back and check.`);
+            if (!proceed) return;
+            values.oosWarningAck = true;
+            values.oosWarningNote = oc.message;
+          }
+        }
+      }
 
       let completedBy = null;
       if (finalize) {
@@ -2110,9 +2155,15 @@
       </tbody></table>`;
     }
 
+    function oosWarningHtml(sub) {
+      if (!sub.values || !sub.values.oosWarningAck) return '';
+      return `<p class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
+        ${esc(sub.values.oosWarningNote || 'Batch weight exceeding OOSW - possible batch mix')}</p>`;
+    }
+
     function buildSheet(sub) {
       return `<div class="fr-sheet-page">
-        ${sheetSectionsHtml(sub, 'pre')}${sheetRosterHtml(sub)}${sheetSectionsHtml(sub, 'post')}${sheetSignHtml(sub)}
+        ${sheetSectionsHtml(sub, 'pre')}${sheetRosterHtml(sub)}${sheetSectionsHtml(sub, 'post')}${oosWarningHtml(sub)}${sheetSignHtml(sub)}
       </div>`;
     }
 

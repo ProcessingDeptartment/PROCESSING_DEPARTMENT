@@ -186,7 +186,14 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
   try {
     const { recordKey, field, value } = req.params;
     const needle = value.trim().toUpperCase();
+    const excludeId = req.query.excludeId ? String(req.query.excludeId) : null;
     let best = null;
+    // Sum of each numeric top-level field across every OTHER submitted entry that matches this
+    // job (e.g. total kg already cooked in earlier dry-cooking batches for the same job number).
+    // Excludes drafts (not yet committed) and excludeId (the record currently being edited),
+    // so a form re-checking its own in-progress total doesn't double-count itself.
+    const matchValueSums = {};
+    const matchNumericOk = {};
     for (const prefix of ['formrecord:', 'monitoring_log:']) {
       const row = await prisma.keyValue.findUnique({ where: { key: prefix + recordKey } });
       if (!row) continue;
@@ -274,6 +281,28 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
         values.__updatedAt = entry.updatedAt || entry.submittedAt || entry.createdAt || null;
         const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
         if (!best || stamp > best.stamp) best = { stamp, values };
+
+        if (entry.status === 'submitted' && entry.id !== excludeId) {
+          const rawValues = entry.values || entry;
+          for (const [k, v] of Object.entries(rawValues)) {
+            if (k.startsWith('__')) continue;
+            const text = String(v == null ? '' : v).trim();
+            if (!text || matchNumericOk[k] === false) continue;
+            if (/^-?\d+(\.\d+)?$/.test(text)) {
+              matchNumericOk[k] = true;
+              matchValueSums[k] = (matchValueSums[k] || 0) + parseFloat(text);
+            } else {
+              matchNumericOk[k] = false;
+              delete matchValueSums[k];
+            }
+          }
+        }
+      }
+    }
+    if (best && Object.keys(matchValueSums).length) {
+      best.values.__matchValueSums = {};
+      for (const [k, sum] of Object.entries(matchValueSums)) {
+        if (matchNumericOk[k]) best.values.__matchValueSums[k] = String(sum);
       }
     }
     res.json(best ? best.values : null);

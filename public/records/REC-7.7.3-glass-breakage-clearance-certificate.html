@@ -34,7 +34,7 @@
     sections: [
       { title: 'Incident details', fields: [
         { key: 'date', label: 'Date', type: 'date', required: true },
-        { key: 'timeOfBreakage', label: 'Time of breakage', type: 'text' },
+        { key: 'timeOfBreakage', label: 'Time of breakage', type: 'time' },
         { key: 'areaOfBreakage', label: 'Area where breakage occurred', type: 'text', required: true },
         { key: 'reportedBy', label: 'Person who reported the incident', type: 'text' },
         { key: 'factoryManager', label: 'Factory manager', type: 'text' },
@@ -60,7 +60,7 @@
         { key: 'areaInspectedAfterCleaning', label: 'Area inspected after cleaning?', type: 'yesno' },
         { key: 'contaminatedProductDiscarded', label: 'Contaminated product safely discarded?', type: 'yesno' },
         { key: 'safeToRestart', label: 'Safe to continue production?', type: 'yesno' },
-        { key: 'timeOfRestart', label: 'Time of production restart', type: 'text' }
+        { key: 'timeOfRestart', label: 'Time of production restart', type: 'time' }
       ]},
       { title: 'Close-out', fields: [
         { key: 'carCompleted', label: 'Corrective Action Request record completed?', type: 'yesno' },
