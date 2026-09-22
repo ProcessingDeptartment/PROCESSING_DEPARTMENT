@@ -1268,6 +1268,8 @@
           </div>
           <div class="fr-panel-body">
             <div id="fr_modalSections"></div>
+            <div class="fr-muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;">Completed by</div>
+            ${window.SignOffBlock.completedByHtml({ byId: 'fr_cb_by', titleId: 'fr_cb_title', dateId: 'fr_cb_date', signatureId: 'fr_cb_signature', gridClass: 'fr-grid fr-grid-4', fieldClass: 'fr-field' })}
             <div class="fr-actions">
               <button class="fr-btn fr-btn-flat" id="fr_cancelBtn">Clear</button>
               <button class="fr-btn fr-btn-flat" id="fr_saveBtn">Save draft</button>
@@ -1296,6 +1298,15 @@
       <div id="fr_printSheet" class="fr-sheet"></div>
       <div class="fr-toast no-print" id="fr_toast"></div>
     `;
+
+    function suggestCompletedBy() {
+      const by = el('fr_cb_by');
+      if (!by || by.value.trim()) return;
+      const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
+      if (name) by.value = name;
+    }
+    suggestCompletedBy();
+    if (typeof document !== 'undefined') document.addEventListener('authSuccess', suggestCompletedBy);
 
 
     function isSubmitted(sub) { return !!sub && (sub.status == null || sub.status === 'submitted'); }
@@ -1863,6 +1874,20 @@
       if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
       if (routeConflict && finalize) { toast(routeConflict); return; }
 
+      let completedBy = null;
+      if (finalize) {
+        completedBy = {
+          by: (el('fr_cb_by').value || '').trim(),
+          title: (el('fr_cb_title').value || '').trim(),
+          date: (el('fr_cb_date').value || '').trim(),
+          signature: (el('fr_cb_signature').value || '').trim()
+        };
+        if (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature) {
+          toast('Completed by, title, date and signature are required to submit.');
+          return;
+        }
+      }
+
       if (config.batchField && window.BatchValidation) {
         const batchValue = values[config.batchField];
         if (batchValue && !window.BatchValidation.isValid(batchValue)) {
@@ -1936,7 +1961,7 @@
         if (hasRoster) rosterList.forEach((roster, i) => setRosterRows(existing, i, roster.key, rosterRowsByIndex[i]));
         existing.updatedAt = Date.now();
         existing.status = status;
-        if (finalize) existing.submittedAt = Date.now();
+        if (finalize) { existing.submittedAt = Date.now(); existing.completedBy = completedBy; }
         savedSub = existing;
       } else {
         const sub = {
@@ -1949,7 +1974,7 @@
           history: [],
           signOffs: []
         };
-        if (finalize) sub.submittedAt = Date.now();
+        if (finalize) { sub.submittedAt = Date.now(); sub.completedBy = completedBy; }
         if (hasRoster) rosterList.forEach((roster, i) => setRosterRows(sub, i, roster.key, rosterRowsByIndex[i]));
         submissions.push(sub);
         savedSub = sub;
@@ -1970,6 +1995,10 @@
       if (!ok) { toast('Save failed — please retry.'); return; }
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
+      if (finalize) {
+        ['fr_cb_by', 'fr_cb_title', 'fr_cb_date', 'fr_cb_signature'].forEach(id => { const i = el(id); if (i) i.value = ''; });
+        suggestCompletedBy();
+      }
       closeForm();
       renderTable();
 

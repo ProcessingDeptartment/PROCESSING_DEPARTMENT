@@ -5,11 +5,13 @@
   function completedByHtml(opts) {
     const byId = opts.byId, titleId = opts.titleId, dateId = opts.dateId, signatureId = opts.signatureId;
     const byLabel = opts.byLabel || 'Completed by';
-    return `<div class="grid grid-4">
-      <label class="field">${esc(byLabel)}<input id="${byId}"></label>
-      <label class="field">Title<input id="${titleId}"></label>
-      <label class="field">Date<input id="${dateId}" type="date"></label>
-      <label class="field">Signature<input id="${signatureId}"></label>
+    const gridClass = opts.gridClass || 'grid grid-4';
+    const fieldClass = opts.fieldClass || 'field';
+    return `<div class="${gridClass}">
+      <label class="${fieldClass}">${esc(byLabel)}<input id="${byId}"></label>
+      <label class="${fieldClass}">Title<input id="${titleId}"></label>
+      <label class="${fieldClass}">Date<input id="${dateId}" type="date"></label>
+      <label class="${fieldClass}">Signature<input id="${signatureId}"></label>
     </div>`;
   }
 

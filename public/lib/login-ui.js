@@ -117,9 +117,13 @@
   }
 
   function ensureAuthenticated() {
-
+    if (window.Auth && window.Auth.isAuthenticated()) return Promise.resolve();
     return new Promise((resolve) => {
-      resolve();
+      showLoginModal();
+      document.addEventListener('authSuccess', function handler() {
+        document.removeEventListener('authSuccess', handler);
+        resolve();
+      });
     });
   }
 
