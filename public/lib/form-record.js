@@ -903,6 +903,74 @@
   }
 
 
+  // ---------------------------------------------------------------------------------------
+  // Business rules registry. Every cross-record check ("this can't exceed that", "this must
+  // match that") lives as DATA in public/data/business-rules.json, not in this file or in any
+  // record's own JSON. Adding, changing or retiring a rule is a one-line edit to that registry
+  // -- it never touches form-record.js or a record's html page. This file only needs a new
+  // `case` below when a genuinely new *kind* of check is needed (rare); everyday rules just
+  // reuse an existing type with new parameters.
+  let businessRulesCache = null;
+  async function fetchBusinessRules() {
+    if (businessRulesCache) return businessRulesCache;
+    try {
+      const r = await fetch('/data/business-rules.json', { cache: 'no-cache' });
+      businessRulesCache = r.ok ? await r.json() : [];
+    } catch (e) { businessRulesCache = []; }
+    return businessRulesCache;
+  }
+
+  // capAgainstOtherRecord: this record's own numeric field, totalled across every previously
+  // submitted entry for the same job (plus the value being saved now), must not exceed a total
+  // already recorded on another record for the same job. Soft gate -- an operator can override
+  // by explicitly confirming, and the override is stamped onto the record (oosWarningAck /
+  // oosWarningNote) so it keeps showing as a warning on the submitted view and the printed sheet.
+  async function checkCapAgainstOtherRecord(rule, config, values, editingId) {
+    const jobVal = String(values[rule.ownJobField] || '').trim();
+    delete values.oosWarningAck;
+    delete values.oosWarningNote;
+    if (!jobVal) return true;
+    let capTotal = null;
+    let ownTotal = null;
+    try {
+      const [capData, ownData] = await Promise.all([
+        autofillLookup({ source: rule.source, matchField: rule.matchField }, jobVal),
+        autofillLookup({ source: config.recordKey, matchField: rule.ownJobField }, jobVal, editingId)
+      ]);
+      if (capData && capData.__rosterSums && capData.__rosterSums[rule.sumColumn] != null) {
+        capTotal = parseFloat(capData.__rosterSums[rule.sumColumn]);
+      }
+      const priorOwn = (ownData && ownData.__matchValueSums && ownData.__matchValueSums[rule.ownWeightField] != null)
+        ? parseFloat(ownData.__matchValueSums[rule.ownWeightField]) : 0;
+      const thisOwn = parseFloat(values[rule.ownWeightField]) || 0;
+      ownTotal = priorOwn + thisOwn;
+    } catch (e) { console.error('business rule lookup failed', rule, e); return true; }
+    if (capTotal == null || isNaN(capTotal) || ownTotal == null || ownTotal <= capTotal) return true;
+    const proceed = confirm(
+      `${rule.message}\n\nTotal for this job so far (including this batch): ${ownTotal.toFixed(2)} kg\n` +
+      `Recorded cap for this job: ${capTotal.toFixed(2)} kg\n\n` +
+      `Click OK to confirm this is correct and submit anyway, or Cancel to go back and check.`);
+    if (!proceed) return false;
+    values.oosWarningAck = true;
+    values.oosWarningNote = rule.message;
+    return true;
+  }
+
+  // Runs every registry rule that applies to this record at finalize time. Returns false the
+  // moment a rule vetoes the save (operator declined to override); saveForm aborts on that.
+  async function runBusinessRules(config, values, editingId) {
+    const rules = (await fetchBusinessRules()).filter(r => r.recordKey === config.recordKey);
+    for (const rule of rules) {
+      let ok = true;
+      switch (rule.type) {
+        case 'capAgainstOtherRecord': ok = await checkCapAgainstOtherRecord(rule, config, values, editingId); break;
+        default: console.warn('business-rules.json: unknown rule type', rule.type);
+      }
+      if (!ok) return false;
+    }
+    return true;
+  }
+
   async function autofillLookup(rule, value, excludeId) {
 
     let path = `/api/lookup/${encodeURIComponent(rule.source)}/${encodeURIComponent(rule.matchField)}/${encodeURIComponent(value)}`;
@@ -1880,43 +1948,12 @@
       if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
       if (routeConflict && finalize) { toast(routeConflict); return; }
 
-      // oosCheck: cross-record cap. This form's own running total for a job (its own numeric
-      // field, summed across every previously-submitted batch for that job, plus the value being
-      // saved now) must not exceed a total already recorded on another record for the same job
-      // (e.g. REC 7.1.5's OOSW weight). This is a soft gate: an operator can knowingly override
-      // it, but only by explicitly confirming, and the override is stamped onto the record so it
-      // surfaces as a standing warning on the printed sheet from then on.
-      if (finalize && config.oosCheck) {
-        const oc = config.oosCheck;
-        const jobVal = String(values[oc.ownJobField] || '').trim();
-        delete values.oosWarningAck;
-        delete values.oosWarningNote;
-        if (jobVal) {
-          let oswTotal = null;
-          let ownTotal = null;
-          try {
-            const [capData, ownData] = await Promise.all([
-              autofillLookup({ source: oc.source, matchField: oc.matchField }, jobVal),
-              autofillLookup({ source: config.recordKey, matchField: oc.ownJobField }, jobVal, editingId)
-            ]);
-            if (capData && capData.__rosterSums && capData.__rosterSums[oc.sumColumn] != null) {
-              oswTotal = parseFloat(capData.__rosterSums[oc.sumColumn]);
-            }
-            const priorOwn = (ownData && ownData.__matchValueSums && ownData.__matchValueSums[oc.ownWeightField] != null)
-              ? parseFloat(ownData.__matchValueSums[oc.ownWeightField]) : 0;
-            const thisOwn = parseFloat(values[oc.ownWeightField]) || 0;
-            ownTotal = priorOwn + thisOwn;
-          } catch (e) { console.error('oosCheck lookup failed', e); }
-          if (oswTotal != null && !isNaN(oswTotal) && ownTotal != null && ownTotal > oswTotal) {
-            const proceed = confirm(
-              `${oc.message}\n\nTotal for this job so far (including this batch): ${ownTotal.toFixed(2)} kg\n` +
-              `OOSW weight recorded for this job: ${oswTotal.toFixed(2)} kg\n\n` +
-              `Click OK to confirm this is correct and submit anyway, or Cancel to go back and check.`);
-            if (!proceed) return;
-            values.oosWarningAck = true;
-            values.oosWarningNote = oc.message;
-          }
-        }
+      // Business rules (see BusinessRules.run / public/data/business-rules.json): every
+      // cross-record check for every form lives in that one registry, not in form code or record
+      // JSON. A rule can veto the finalize (returns false -> abort, same as the gates above).
+      if (finalize) {
+        const ok = await runBusinessRules(config, values, editingId);
+        if (!ok) return;
       }
 
       let completedBy = null;

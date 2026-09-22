@@ -1,0 +1,14 @@
+[
+  {
+    "recordKey": "dry-cooking",
+    "type": "capAgainstOtherRecord",
+    "label": "Dry cooking batch weight vs OOSW",
+    "why": "Abalone processed for dry cooking cannot exceed the OOSW weight recorded for the job on REC 7.1.5 - a higher total means batches from different jobs got mixed.",
+    "ownJobField": "jobNumber",
+    "ownWeightField": "abaloneKg",
+    "source": "salting-oosw",
+    "matchField": "jobNo",
+    "sumColumn": "weight",
+    "message": "Batch weight exceeding OOSW - possible batch mix"
+  }
+]
