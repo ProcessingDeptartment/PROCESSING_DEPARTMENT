@@ -131,7 +131,7 @@
       rolesLabel: roles.map(roleLabel).join(', '),
       role: role,
       signedIn: !!role,
-      allowed: !!role && roles.indexOf(role) !== -1
+      allowed: role === 'ADMINISTRATOR' || (!!role && roles.indexOf(role) !== -1)
     };
   }
 
