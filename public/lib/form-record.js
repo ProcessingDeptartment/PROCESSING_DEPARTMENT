@@ -665,9 +665,20 @@
     }
 
 
+    // wireRecordPick runs async trace lookups per field and is invoked more than once in quick
+    // succession (once on initial render, again on every job-number change/input event -- see the
+    // listener wired near the end of openForm). Without a guard, a slower earlier call can still be
+    // awaiting its fetches when a newer call starts, finishes, and paints the correct options --
+    // then the stale call resolves and overwrites the DOM with its now-outdated (often empty)
+    // results. _rpGen is a per-container generation counter: each call captures the generation it
+    // started at and, after every await, bails before writing to the DOM if a newer call has since
+    // started.
     async function wireRecordPick(container, config) {
       const sels = Array.from(container.querySelectorAll('select[data-recordpick]'));
       if (!sels.length) return;
+
+      const myGen = (container._rpGen = (container._rpGen || 0) + 1);
+      const stale = () => container._rpGen !== myGen;
 
       const traceCache = {};
       for (const sel of sels) {
@@ -696,6 +707,8 @@
           const scopeKey = sel.dataset.sourceRecordKey || '';
           opts = scopeKey ? await recordSubmissionOptions(scopeKey) : masterIndexOptions();
         }
+
+        if (stale()) return; // a newer wireRecordPick call has started -- don't paint over it
 
         // Auto-add: an empty required/traced field with exactly one record actually found for
         // this job (or, for bintrace, this job's bin) gets pre-selected rather than left for the
