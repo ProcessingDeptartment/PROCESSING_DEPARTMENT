@@ -5,6 +5,16 @@
     NS + seg(batchNo) + ':' + seg(recordKey) + ':' + seg(subId);
   const batchPrefix = batchNo => NS + seg(batchNo) + ':';
 
+  // Second, parallel index: resolves a physical bin code to the job number(s) whose graded stock
+  // was collected into it (see grading-production-log-cultivated/ranched "Collection bins" roster).
+  // A bin can in principle receive stock from more than one job's grading run, so lookups return
+  // an array. Kept as its own namespace rather than folded into batch_link, since a bin code and a
+  // job/batch number are different identifier spaces (bin codes aren't validated as job numbers).
+  const NS_BIN = 'bin_link:';
+  const binKeyFor = (binCode, recordKey, subId) =>
+    NS_BIN + seg(binCode) + ':' + seg(recordKey) + ':' + seg(subId);
+  const binPrefix = binCode => NS_BIN + seg(binCode) + ':';
+
   // Link direction. Every stored row carries `rel`, the relationship of THIS row's batch_no to the
   // record's primary batch (`linked_batch`):
   //   'self'   -- this row IS the record's own product/job batch (no linked_batch)
@@ -135,6 +145,45 @@
           );
         }
       }
+
+      const binCol = rosterCfg.binIdColumn;
+      if (binCol && Array.isArray(sub.roster)) {
+        for (let i = 0; i < sub.roster.length; i++) {
+          const binCode = String((sub.roster[i] || {})[binCol] || '').trim();
+          if (!binCode) continue;
+          await window.storage.set(
+            binKeyFor(binCode, config.recordKey, sub.id + ':bin' + i),
+            JSON.stringify(Object.assign(
+              { bin_code: binCode, job_no: batchNo, link_field: binCol },
+              baseRow
+            )),
+            true
+          );
+        }
+      }
+
+      // Top-level (non-roster) bin index: e.g. grading-boxing-traceability (REC 7.4.4) captures
+      // one bin code plus a free-text list of the job number(s) collected into it per submission
+      // -- the record staff already fill in to say "these jobs fed this bin". config.binField
+      // names the bin-code field; config.binJobsField names the free-text job-list field, split
+      // on commas/semicolons/newlines into individual job numbers.
+      if (config.binField && config.binJobsField) {
+        const binCode = String(values[config.binField] || '').trim();
+        const jobsRaw = String(values[config.binJobsField] || '');
+        const jobs = jobsRaw.split(/[,;\n\r]+/).map(s => s.trim()).filter(Boolean);
+        if (binCode && jobs.length) {
+          for (let i = 0; i < jobs.length; i++) {
+            await window.storage.set(
+              binKeyFor(binCode, config.recordKey, sub.id + ':job' + i),
+              JSON.stringify(Object.assign(
+                { bin_code: binCode, job_no: jobs[i], link_field: config.binJobsField },
+                baseRow
+              )),
+              true
+            );
+          }
+        }
+      }
     } catch (e) {
       console.warn('[traceability] index failed (record still saved)', e);
     }
@@ -143,15 +192,36 @@
 
   async function removeSubmission(recordKey, submissionId) {
     try {
-      const map = await window.storage.getByPrefix(NS, true);
       const suffix = ':' + seg(recordKey) + ':' + seg(submissionId);
-      const doomed = Object.keys(map || {}).filter(function (k) {
-        return k.endsWith(suffix) || k.includes(suffix + '%3A');
-      });
-      for (const k of doomed) await window.storage.remove(k, true);
+      for (const ns of [NS, NS_BIN]) {
+        const map = await window.storage.getByPrefix(ns, true);
+        const doomed = Object.keys(map || {}).filter(function (k) {
+          return k.endsWith(suffix) || k.includes(suffix + '%3A');
+        });
+        for (const k of doomed) await window.storage.remove(k, true);
+      }
     } catch (e) {
       console.warn('[traceability] remove failed', e);
     }
+  }
+
+  // Job number(s) whose graded stock was collected into this physical bin code. Returns an array
+  // of bin_link rows (one per contributing job/record), since a bin can be topped up by more than
+  // one job's grading run.
+  async function jobsForBin(binCode) {
+    const map = await window.storage.getByPrefix(binPrefix(String(binCode).trim()), true);
+    return sortRows(parseRows(map));
+  }
+
+  // Reverse lookup: which physical bin(s) a job's graded stock was collected into. Scans the full
+  // bin_link namespace (no bin code known up front, same pattern as genealogyLocal's full-NS scan
+  // over batch_link) and filters to rows whose job_no matches. Used to resolve downstream records
+  // that only carry a bin code (e.g. boxing-and-labelling) back to the job(s) that fed them.
+  async function binsForJob(jobNo) {
+    const job = String(jobNo || '').trim();
+    if (!job) return [];
+    const all = parseRows(await window.storage.getByPrefix(NS_BIN, true));
+    return sortRows(all.filter(r => r.job_no === job));
   }
 
 
@@ -232,5 +302,5 @@
     }
   }
 
-  window.Traceability = { indexSubmission, removeSubmission, trace, traceGraph, knownBatches };
+  window.Traceability = { indexSubmission, removeSubmission, trace, traceGraph, knownBatches, jobsForBin, binsForJob };
 })();

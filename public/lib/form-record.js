@@ -341,7 +341,7 @@
       }
 
       if (field.type === 'recordpick') {
-        const trace = field.source === 'jobtrace';
+        const trace = field.source === 'jobtrace' || field.source === 'bintrace';
         const status = row['__' + field.key + '_status'] || '';
         const verified = row['__' + field.key + '_verified'] === '1' || row['__' + field.key + '_verified'] === true;
         const verifiedDate = row['__' + field.key + '_verifiedDate'] || '';
@@ -349,7 +349,7 @@
         const select = `<select id="${id}" data-recordpick="1"` +
           ` data-fill-name="${esc(field.fillName || '')}" data-fill-code="${esc(field.fillCode || '')}"` +
           ` data-fill-map="${esc(JSON.stringify(field.fillMap || {}))}"` +
-          ` data-jobtrace="${trace ? '1' : ''}" data-job-field="${esc(field.jobField || '')}"` +
+          ` data-jobtrace="${trace ? esc(field.source) : ''}" data-job-field="${esc(field.jobField || '')}"` +
           ` data-source-record-key="${esc(field.sourceRecordKey || '')}"` +
           ` data-value="${esc(v)}">` +
           (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
@@ -429,8 +429,9 @@
     }
 
 
-    function masterIndexOptions() {
+    function masterIndexOptions(sourceRecordKey) {
       return ((window.MasterIndexData && window.MasterIndexData.rows) || [])
+        .filter(r => !sourceRecordKey || r.recordKey === sourceRecordKey)
         .map(r => ({
           value: String(r.docNo || '').trim(),
           code: String(r.docNo || '').trim(),
@@ -469,27 +470,81 @@
     }
 
 
+    // For records that only carry a bin code (e.g. boxing-and-labelling), not a job number:
+    // resolve the job's bin(s) via Traceability.binsForJob, then trace() each bin code (records
+    // opted into the bin index index a self row under batch_link:<binCode>:...) and merge,
+    // de-duping by submission. Mirrors jobTraceOptions but hops through the bin_link index first.
+    async function binTraceOptions(jobNo, sourceRecordKey) {
+      if (!jobNo || !window.Traceability || !window.Traceability.binsForJob) return [];
+      let binRows = [];
+      try { binRows = await window.Traceability.binsForJob(jobNo); } catch (e) { return []; }
+      const bins = [...new Set(binRows.map(r => r.bin_code).filter(Boolean))];
+      if (!bins.length) return [];
+      const byId = new Map();
+      for (const bin of bins) {
+        let rows = [];
+        try { rows = await window.Traceability.trace(bin); } catch (e) { rows = []; }
+        if (sourceRecordKey) rows = rows.filter(r => r.record_key === sourceRecordKey);
+        rows.forEach(r => byId.set(r.record_key + '|' + r.submission_id, r));
+      }
+      const byKey = {};
+      ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(r => {
+        if (r.recordKey) byKey[r.recordKey] = String(r.docNo || '').trim();
+      });
+      return [...byId.values()].map(r => {
+        const code = byKey[r.record_key] || '';
+        const name = r.record_title || r.record_key || '';
+        const when = r.occurred_on || '';
+        return {
+          value: r.record_key + '::' + r.submission_id,
+          code: code,
+          name: name,
+          href: r.href || '',
+          values: r.values || {},
+          status: r.status || 'submitted',
+          verified: !!r.verified,
+          verifiedDate: r.verifiedDate || '',
+          label: (code ? code + ' — ' : '') + name + (when ? ' · ' + when : '') + (r.stage ? ' [' + r.stage + ']' : '')
+        };
+      });
+    }
+
+
     async function wireRecordPick(container, config) {
       const sels = Array.from(container.querySelectorAll('select[data-recordpick]'));
       if (!sels.length) return;
 
       const traceCache = {};
       for (const sel of sels) {
-        const current = sel.dataset.value || sel.value || '';
+        let current = sel.dataset.value || sel.value || '';
         let opts = [];
+        let tracedMatch = false;
         if (sel.dataset.jobtrace) {
+          const mode = sel.dataset.jobtrace; // 'jobtrace' or 'bintrace'
           const jobField = sel.dataset.jobField || ((config && config.batchField) || '');
           const jobInput = jobField ? el('fr_f_' + jobField) : null;
           const jobNo = jobInput ? String(jobInput.value || '').trim() : '';
           const sourceRecordKey = sel.dataset.sourceRecordKey || '';
-          const cacheKey = jobNo + '::' + sourceRecordKey;
+          const cacheKey = mode + '::' + jobNo + '::' + sourceRecordKey;
           if (jobNo) {
-            if (!(cacheKey in traceCache)) traceCache[cacheKey] = await jobTraceOptions(jobNo, sourceRecordKey);
+            if (!(cacheKey in traceCache)) {
+              traceCache[cacheKey] = mode === 'bintrace'
+                ? await binTraceOptions(jobNo, sourceRecordKey)
+                : await jobTraceOptions(jobNo, sourceRecordKey);
+            }
             opts = traceCache[cacheKey];
+            tracedMatch = opts.length > 0;
           }
         }
 
-        if (!opts.length) opts = masterIndexOptions();
+        if (!opts.length) opts = masterIndexOptions(sel.dataset.sourceRecordKey || '');
+
+        // Auto-add: an empty required/traced field with exactly one record actually found for
+        // this job (or, for bintrace, this job's bin) gets pre-selected rather than left for the
+        // preparer to notice and pick by hand -- the "auto-adds the records" behaviour. This only
+        // fires off a genuine traced match, never off the broad/filtered master-index fallback,
+        // so it never silently guesses at a record that isn't actually linked to this job.
+        if (!current && tracedMatch && opts.length === 1) current = opts[0].value;
 
         if (current && !opts.some(o => o.value === current)) {
           opts = [{ value: current, code: current, name: '', label: current }].concat(opts);
@@ -500,6 +555,7 @@
           ` data-status="${esc(o.status || '')}" data-verified="${o.verified ? '1' : ''}" data-verified-date="${esc(o.verifiedDate || '')}"` +
           `${o.value === current ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
         sel.value = current;
+        sel.dataset.value = current;
 
         // Refresh the persisted status/badge from the current option even when nothing was
         // just picked -- e.g. the picked submission got verified elsewhere since this draft
@@ -1547,7 +1603,7 @@
       const traceJobField = (pickFields.find(f => f.type === 'recordpick' && f.jobField) || {}).jobField
         || config.batchField;
       const traceJobInput = traceJobField ? el('fr_f_' + traceJobField) : null;
-      if (traceJobInput && container.querySelector('select[data-recordpick][data-jobtrace="1"]')) {
+      if (traceJobInput && container.querySelector('select[data-recordpick][data-jobtrace]:not([data-jobtrace=""])')) {
         ['change', 'input'].forEach(ev =>
           traceJobInput.addEventListener(ev, () => wireRecordPick(container, config)));
       }
@@ -1601,12 +1657,21 @@
 
       const values = {};
       let missingRequired = null;
+      let unverifiedRequired = null;
       let invalidJobNumber = null;
       let routeConflict = null;
       allFields(config).forEach(f => {
         const inp = el(`fr_f_${f.key}`);
         values[f.key] = inp ? inp.value : '';
         if (f.required && !String(values[f.key] || '').trim()) missingRequired = f.label;
+        // A required top-level recordpick field (e.g. an attachment checklist row) must not just
+        // be picked -- the real linked record it points to must have reached Verified status,
+        // same gate as required recordpick columns inside a roster (see incompleteRoster below).
+        if (f.type === 'recordpick' && f.required && String(values[f.key] || '').trim()) {
+          const status = (el(`fr_f_${f.key}__status`) || {}).value;
+          const verified = (el(`fr_f_${f.key}__verified`) || {}).value === '1';
+          if (status !== 'submitted' || !verified) unverifiedRequired = f.label;
+        }
         if (f.type === 'jobnumber' && f.validate !== false && values[f.key] &&
             window.Lookups && window.Lookups.batch && !window.Lookups.batch.isValid(values[f.key])) {
           invalidJobNumber = f.label;
@@ -1621,6 +1686,7 @@
         }
       });
       if (missingRequired && finalize) { toast(`"${missingRequired}" is required.`); return; }
+      if (unverifiedRequired && finalize) { toast(`"${unverifiedRequired}" must be attached and verified before this can be submitted.`); return; }
       if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
       if (routeConflict && finalize) { toast(routeConflict); return; }
 
