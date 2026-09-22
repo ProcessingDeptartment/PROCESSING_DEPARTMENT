@@ -283,17 +283,17 @@
           }
         },
         {
-          "key": "signedPackingListsAttached",
-          "label": "Signed packing lists attached?",
-          "type": "yesno",
-          "required": false,
+          "key": "salesPackingListAttached",
+          "label": "Sales packing list attached?",
+          "type": "upload",
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": null,
-          "position": 200,
+          "position": 210,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -304,15 +304,15 @@
         {
           "key": "healthCertificatesAttached",
           "label": "Health certificates attached?",
-          "type": "yesno",
-          "required": false,
+          "type": "upload",
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": null,
-          "position": 201,
+          "position": 211,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -17766,7 +17766,10 @@
         {
           "title": "Collection bins",
           "kind": "roster",
-          "position": 3
+          "position": 3,
+          "extraJson": {
+            "binIdColumn": "binCode"
+          }
         },
         {
           "title": "Totals & sign-off",
@@ -18542,7 +18545,10 @@
         {
           "title": "Collection bins",
           "kind": "roster",
-          "position": 3
+          "position": 3,
+          "extraJson": {
+            "binIdColumn": "binCode"
+          }
         },
         {
           "title": "Totals & sign-off",

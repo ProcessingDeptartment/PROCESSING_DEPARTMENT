@@ -75,6 +75,10 @@
   .fr-recordpick{ display:flex; flex-direction:column; gap:4px; }
   .fr-recordpick a.rec{ color:var(--palette-primary,#c9832b); text-decoration:none; font-weight:600; font-size:11px; }
   .fr-recordpick a.rec:hover{ text-decoration:underline; }
+  .fr-upload{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .fr-upload-info{ font-size:11.5px; color:#8a939b; }
+  .fr-upload a.fr-upload-dl{ color:var(--palette-primary,#c9832b); text-decoration:none; font-weight:600; font-size:11px; }
+  .fr-upload a.fr-upload-dl:hover{ text-decoration:underline; }
   .fr-locked{ padding:8px 11px; margin-bottom:10px; border-left:3px solid var(--palette-ok,#2f6b3a); background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); font-size:11.5px; font-weight:600; }
   .fr-notice{ display:none; padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600; margin-bottom:10px; }
   .fr-notice.show{ display:block; }
@@ -378,6 +382,22 @@
       if (field.type === 'batchseq' || field.type === 'derived') {
         return `<input type="text" id="${id}" value="${esc(v)}" readonly tabindex="-1">`;
       }
+      if (field.type === 'upload') {
+        // Value is a JSON blob {name,type,size,data} where `data` is a data: URL, stored inline
+        // in the submission's own values (same place every other field lands) -- no new table or
+        // upload endpoint. Kept small deliberately (see MAX_UPLOAD_BYTES in wireUpload) since it
+        // rides the existing JSON column rather than dedicated blob storage.
+        let meta = null;
+        try { meta = v ? JSON.parse(v) : null; } catch (e) { meta = null; }
+        const info = meta ? `${esc(meta.name)} (${Math.round((meta.size || 0) / 1024)} KB)` : 'No file attached';
+        return `<span class="fr-upload" data-upload-for="${id}">` +
+          `<input type="hidden" id="${id}" value="${esc(v)}">` +
+          `<input type="file" id="${id}__file" accept="application/pdf,image/*">` +
+          `<span class="fr-upload-info">${info}</span>` +
+          (meta ? `<a class="fr-upload-dl" href="${esc(meta.data)}" download="${esc(meta.name)}">Download</a>` +
+            `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" data-upload-remove="1">Remove</button>` : '') +
+          `</span>`;
+      }
       return `<input type="text" id="${id}" value="${esc(v)}"${ro}>`;
     }
 
@@ -426,6 +446,95 @@
           });
         });
       });
+    }
+
+
+    const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // stored inline in the submission JSON -- keep small
+
+    function wireUpload(container) {
+      container.querySelectorAll('.fr-upload').forEach(wrap => {
+        if (wrap._uploadWired) return;
+        wrap._uploadWired = true;
+        const id = wrap.dataset.uploadFor;
+        const hidden = el(id);
+        const fileInp = el(id + '__file');
+        if (!hidden || !fileInp) return;
+
+        function paint() {
+          let meta = null;
+          try { meta = hidden.value ? JSON.parse(hidden.value) : null; } catch (e) { meta = null; }
+          const info = wrap.querySelector('.fr-upload-info');
+          if (info) info.textContent = meta ? `${meta.name} (${Math.round((meta.size || 0) / 1024)} KB)` : 'No file attached';
+          let dl = wrap.querySelector('.fr-upload-dl');
+          let rm = wrap.querySelector('[data-upload-remove]');
+          if (meta) {
+            if (!dl) { dl = document.createElement('a'); dl.className = 'fr-upload-dl'; wrap.appendChild(dl); }
+            dl.href = meta.data; dl.download = meta.name; dl.textContent = 'Download';
+            if (!rm) {
+              rm = document.createElement('button');
+              rm.type = 'button';
+              rm.className = 'fr-btn fr-btn-flat fr-btn-sm';
+              rm.textContent = 'Remove';
+              rm.setAttribute('data-upload-remove', '1');
+              wrap.appendChild(rm);
+              rm.addEventListener('click', () => {
+                hidden.value = '';
+                hidden.dispatchEvent(new Event('input', { bubbles: true }));
+                paint();
+              });
+            }
+          } else {
+            if (dl) dl.remove();
+            if (rm) rm.remove();
+          }
+        }
+
+        fileInp.addEventListener('change', function () {
+          const file = this.files && this.files[0];
+          this.value = '';
+          if (!file) return;
+          if (file.size > MAX_UPLOAD_BYTES) {
+            alert('That file is larger than 4 MB — pick a smaller one (or a compressed scan).');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => {
+            hidden.value = JSON.stringify({ name: file.name, type: file.type, size: file.size, data: String(reader.result) });
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+            paint();
+          };
+          reader.onerror = () => alert('Could not read that file.');
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+
+
+    // Suggests job number(s) for config.binJobsField (a free-text field, e.g. REC 7.4.4's
+    // "Job numbers in bin") from config.binField's value, by looking up which grading-log
+    // Collection Bins rows (indexed via roster.binIdColumn, see traceability.js) used that same
+    // bin code. Fills only when the jobs field is currently empty -- this is a suggestion the
+    // preparer can override, not an overwrite of something they already typed. The two records
+    // otherwise capture overlapping info independently (grading log roster row's bin code vs.
+    // this record's own free-text list) with nothing tying them together.
+    function wireBinJobsAutofill(container, config) {
+      if (!config.binField || !config.binJobsField) return;
+      const binInput = el('fr_f_' + config.binField);
+      const jobsInput = el('fr_f_' + config.binJobsField);
+      if (!binInput || !jobsInput || binInput._binJobsWired) return;
+      binInput._binJobsWired = true;
+      const suggest = async () => {
+        const binCode = String(binInput.value || '').trim();
+        if (!binCode || String(jobsInput.value || '').trim() || !window.Traceability || !window.Traceability.jobsForBin) return;
+        let rows = [];
+        try { rows = await window.Traceability.jobsForBin(binCode); } catch (e) { return; }
+        const jobs = [...new Set(rows.map(r => r.job_no || r.batch_no).filter(Boolean))];
+        if (jobs.length) {
+          jobsInput.value = jobs.join(', ');
+          jobsInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      };
+      ['change', 'blur'].forEach(ev => binInput.addEventListener(ev, suggest));
     }
 
 
@@ -1595,6 +1704,8 @@
 
       if (typeof wireYesNo === 'function') wireYesNo(container);
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
+      if (typeof wireUpload === 'function') wireUpload(container);
+      if (typeof wireBinJobsAutofill === 'function') wireBinJobsAutofill(container, config);
       if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
       wireSectionSummaries(container);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); wireJobRouteCheck(container, config); }
