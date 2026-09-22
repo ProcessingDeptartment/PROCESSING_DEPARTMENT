@@ -20,36 +20,51 @@
 
   .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
   .toolbar input[type=search]{ padding:7px 10px; border:1px solid #d0d5db; border-radius:6px; font-size:12.5px; min-width:220px; }
+  .toolbar label{ display:inline-flex; gap:5px; align-items:center; font-size:12px; color:#3b4650; }
+  .toolbar .count{ color:#5c6771; font-size:12px; margin-left:auto; }
   .btn{ padding:7px 12px; border:1px solid #d0d5db; background:#fff; border-radius:6px; font-size:12px; cursor:pointer; }
   .btn:hover{ background:#f2f4f6; }
   .btn.primary{ background:#2f7a52; border-color:#2f7a52; color:#fff; font-weight:700; }
   .btn.primary:hover{ background:#286947; }
+  .btn.danger{ color:#a3352d; border-color:#e3b9b5; }
+  .btn.danger:hover{ background:#fbe8e6; }
+  .btn.sm{ padding:4px 9px; font-size:11.5px; }
   .btn:disabled{ opacity:.5; cursor:default; }
 
-  .card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:10px; overflow:hidden; }
-  .card-head{ padding:11px 14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; cursor:pointer; }
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; padding:14px; margin-bottom:14px; }
+  .panel h3{ margin:0 0 10px; font-size:13px; }
+
+  .card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:8px; overflow:hidden; }
+  .card.removed{ opacity:.65; }
+  .card-head{ padding:10px 14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; cursor:pointer; }
   .card-head:hover{ background:#f9fafb; }
   .card-head h2{ margin:0; font-size:13.5px; }
   .card-head .code{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5c6771; }
   .card-head .meta{ margin-left:auto; color:#5c6771; font-size:11.5px; text-align:right; }
   .pill{ background:#e8f3ec; color:#2f7a52; border-radius:20px; padding:2px 9px; font-size:11px; font-weight:700; }
-  .pill.old{ background:#eceeef; color:#5c6771; }
+  .pill.none{ background:#eceeef; color:#5c6771; font-weight:600; }
+  .pill.custom{ background:#e6eefb; color:#1d4ed8; }
   .card-body{ display:none; border-top:1px solid #e2e4e3; padding:14px; background:#fcfcfb; }
   .card.open .card-body{ display:block; }
 
   .sec{ margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; }
-  table.leaves{ border-collapse:collapse; width:100%; margin-bottom:14px; background:#fff; border:1px solid #e2e4e3; }
+  table.leaves{ border-collapse:collapse; width:100%; margin-bottom:10px; background:#fff; border:1px solid #e2e4e3; }
   table.leaves td{ padding:5px 10px; border-bottom:1px solid #eceeef; vertical-align:middle; }
   table.leaves td.k{ color:#3b4650; width:55%; word-break:break-word; }
   table.leaves td.k .grp{ color:#8a939b; }
+  table.leaves tr.new td.k{ color:#1d4ed8; }
+  table.leaves td.x{ width:1%; white-space:nowrap; }
   table.leaves input[type=number], table.leaves input[type=text]{ padding:5px 8px; border:1px solid #d0d5db; border-radius:5px; font-size:12.5px; width:140px; box-sizing:border-box; }
   table.leaves input.changed{ border-color:#c98a1d; background:#fff7e6; }
   table.leaves input[readonly]{ background:#f2f4f6; color:#5c6771; }
+  .addrow{ display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px; padding:10px; background:#f4f5f3; border-radius:6px; }
   .attr{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:10px; }
-  .attr label{ display:flex; flex-direction:column; gap:3px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; }
-  .attr input{ padding:7px 9px; border:1px solid #d0d5db; border-radius:5px; font-size:12.5px; text-transform:none; letter-spacing:0; color:#1b2330; }
+  .attr label, .addrow label{ display:flex; flex-direction:column; gap:3px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; }
+  .attr input, .addrow input, .addrow select, .panel input{ padding:7px 9px; border:1px solid #d0d5db; border-radius:5px; font-size:12.5px; text-transform:none; letter-spacing:0; color:#1b2330; background:#fff; }
+  .panel .attr{ margin-bottom:12px; }
   .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .actions .hint{ color:#8a5a10; font-size:12px; }
+  .actions .spacer{ margin-left:auto; }
 
   .hist{ margin-top:16px; }
   .hist-item{ padding:7px 0; border-top:1px solid #eceeef; font-size:12px; display:flex; gap:10px; }
@@ -59,7 +74,7 @@
   .note{ margin-top:18px; background:#fbf0dc; color:#8a5a10; border-radius:6px; padding:11px 13px; font-size:11.5px; }
   #toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#1b2330; color:#fff; padding:10px 16px; border-radius:6px; font-size:12.5px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:60; }
   #toast.show{ opacity:1; }
-  @media (max-width:640px){ .container{ padding:12px; } .card-head .meta{ margin-left:0; text-align:left; } table.leaves td.k{ width:auto; } }
+  @media (max-width:640px){ .container{ padding:12px; } .card-head .meta{ margin-left:0; text-align:left; } table.leaves td.k{ width:auto; } .toolbar .count{ margin-left:0; } }
 </style>
 <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -67,20 +82,37 @@
 
 <div class="header">
   <h1>Specifications</h1>
-  <p>Limits and tolerances used by the records. Update a value here when a spec changes &mdash; each change is published as a new version with who, why and when.</p>
+  <p>Limits and tolerances for every record. Update a value or add a spec item here &mdash; each change is published as a new version with who, why and when.</p>
   <a class="back-link" href="fsms.html">&larr; Back to FSMS</a>
 </div>
 
 <div class="container">
   <div class="state info" id="state">Loading&hellip;</div>
   <div class="toolbar" id="toolbar" style="display:none;">
-    <input type="search" id="q" placeholder="Search specifications&hellip;">
+    <input type="search" id="q" placeholder="Search records&hellip;">
+    <label><input type="checkbox" id="onlySpec"> Only with a spec</label>
+    <label id="showRemovedWrap"><input type="checkbox" id="showRemoved"> Show removed (<span id="removedN">0</span>)</label>
+    <button class="btn" id="btnAdd" style="display:none;">+ Add record</button>
     <button class="btn" id="btnRefresh">Refresh</button>
+    <span class="count" id="count"></span>
+  </div>
+  <div id="addPanel" class="panel" style="display:none;">
+    <h3>Add a record to the list</h3>
+    <div class="attr">
+      <label>Record name<input id="newName" placeholder="e.g. Customer X can specification"></label>
+      <label>Document no. (optional)<input id="newCode" placeholder="e.g. SPEC 12"></label>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btnAddGo">Add record</button>
+      <button class="btn" id="btnAddCancel">Cancel</button>
+    </div>
   </div>
   <div id="list"></div>
   <div class="note" id="note" style="display:none;">
-    Editing a spec changes the limits the records check against from the moment the new version is published. Earlier
-    versions stay on file and entries already saved keep the version they were made under.
+    Publishing changes the limits from that moment on. Earlier versions stay on file, and removing a record here only
+    hides it from this list &mdash; its versions are kept and it can be restored. A record's form only checks readings
+    that are linked to a spec item. Tick &ldquo;Also add a field&hellip;&rdquo; when adding a number item to create that linked
+    field automatically, or use &ldquo;Edit the form template&rdquo; to link an existing field yourself.
   </div>
 </div>
 <div id="toast"></div>
@@ -99,6 +131,8 @@
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=1"></script>
 <script src="../lib/spec-registry.js"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/template-editor.js"></script>
 <script>(function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
@@ -107,7 +141,7 @@
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
     });
   };
-  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 2600); }
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 2800); }
   function setState(cls, html) { var s = $('state'); s.className = 'state ' + cls; s.innerHTML = html; s.style.display = html ? '' : 'none'; }
   function fmtWhen(ts) {
     if (!ts) return '—';
@@ -118,17 +152,32 @@
   function humanise(k) {
     return String(k).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); });
   }
+  function camel(name) {
+    var w = String(name).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+    return w.map(function (x, i) { return i ? x.charAt(0).toUpperCase() + x.slice(1) : x; }).join('');
+  }
+  function slug(name) { return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+
+  // Only these roles may change anything on this page.
+  var EDIT_ROLES = ['QA_MANAGER', 'ADMINISTRATOR'];
+  function canEdit() { return !!(window.Auth && EDIT_ROLES.indexOf(window.Auth.getCurrentRole()) >= 0); }
 
   var META = ['versionNumber', 'changeReason', 'publishedBy', 'changedByTitle', 'publishedAt'];
-  var indexByKey = {};
-  ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (row) {
-    if (row.recordKey) indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
-  });
+  var HIDDEN_KEY = 'spec_list_hidden', CUSTOM_KEY = 'spec_custom_entries';
 
-  var SPECS = [];      // { key, name, code, href, versions:[index entries, newest first], published, draft }
-  var OPEN = {};       // spec key -> true
+  var ENTRIES = [];     // { key, name, code, href, custom, versions[], published }
+  var HIDDEN = [];
+  var OPEN = {};
 
-  // ---- flatten / rebuild a spec object into editable leaves -----------------------------------
+  async function readJson(key, dflt) {
+    try { var r = await window.storage.get(key, true); return r ? JSON.parse(r.value) : dflt; } catch (e) { return dflt; }
+  }
+  async function writeJson(key, val) {
+    var ok = await window.storage.set(key, JSON.stringify(val), true);
+    if (ok === false) throw new Error('Could not save — check the connection and try again.');
+  }
+
+  // ---- flatten a spec object into editable leaves ------------------------------------------
   function leavesOf(obj) {
     var out = [];
     (function walk(node, path) {
@@ -140,160 +189,300 @@
       } else if (path.length) {
         out.push({ path: path, value: node });
       }
-    })(obj, []);
+    })(obj || {}, []);
     return out;
   }
-  function getAt(obj, path) { return path.reduce(function (n, k) { return n == null ? n : n[k]; }, obj); }
   function setAt(obj, path, val) {
     var n = obj;
     for (var i = 0; i < path.length - 1; i++) n = n[path[i]];
     n[path[path.length - 1]] = val;
   }
-  function labelOf(path) {
-    var parts = path.map(humanise);
+  var PART = { min: 'Low', max: 'High' };
+  function labelOf(path, labels) {
+    var parts = path.map(function (p, i) {
+      if (i === 0 && labels && labels[p]) return labels[p].label + (labels[p].unit ? ' (' + labels[p].unit + ')' : '');
+      return PART[p] && i > 0 ? PART[p] : humanise(p);
+    });
     var last = parts.pop();
     return (parts.length ? '<span class="grp">' + esc(parts.join(' › ')) + ' › </span>' : '') + esc(last);
   }
 
+  // Friendly names for a record's spec items, from its template (custom override first, else the
+  // standard definition). Loaded the first time a card is opened.
+  async function ensureLabels(e) {
+    if (e.labels || !e.rk) { e.labels = e.labels || {}; return; }
+    var labels = {};
+    try {
+      var over = await readJson('record_template:' + e.rk, null);
+      var def = window.FacilityApi && window.FacilityApi.recordDef ? await window.FacilityApi.recordDef(e.rk) : null;
+      var fields = (over && over.engine === 'monitoring-log' && over.specFields) || (def && def.specFields) || [];
+      fields.forEach(function (f) { if (f && f.key) labels[f.key] = { label: f.label || humanise(f.key), unit: f.unit || '' }; });
+      e.canLink = !!(def && def.entryFields && !def.customBody);
+    } catch (x) {  }
+    e.labels = labels;
+  }
+
   // ---- load ----------------------------------------------------------------------------------
   async function load() {
-    var map = await window.storage.getByPrefix('spec_versions_index:', true);
+    var indexMap = await window.storage.getByPrefix('spec_versions_index:', true);
+    var res = await Promise.all([readJson(HIDDEN_KEY, []), readJson(CUSTOM_KEY, []), readJson('spec_profiles_index', [])]);
+    HIDDEN = Array.isArray(res[0]) ? res[0] : [];
+    var custom = Array.isArray(res[1]) ? res[1] : [];
     var profileNames = {};
-    try {
-      var p = await window.storage.get('spec_profiles_index', true);
-      JSON.parse((p && p.value) || '[]').forEach(function (e) { if (e && e.id) profileNames[e.id] = e.name; });
-    } catch (e) {  }
+    (Array.isArray(res[2]) ? res[2] : []).forEach(function (e) { if (e && e.id) profileNames[e.id] = e.name; });
 
-    var specs = [];
-    Object.keys(map || {}).forEach(function (storageKey) {
-      var key = storageKey.slice('spec_versions_index:'.length);
-      var idx;
-      try { idx = JSON.parse(map[storageKey]); } catch (e) { return; }
-      if (!Array.isArray(idx) || !idx.length) return;
-      idx = idx.slice().sort(function (a, b) { return b.versionNumber - a.versionNumber; });
-      var rk = key.replace(/-spec$/, '');
-      var meta = key.slice(-5) === '-spec' ? indexByKey[rk] : null;
-      specs.push({
-        key: key,
-        name: (meta && meta.name) || profileNames[key] || humanise(rk),
-        code: (meta && meta.docNo) || '',
-        href: meta && meta.href ? meta.href : '',
-        versions: idx,
-        published: null,
-        draft: null
-      });
+    var byKey = {}, list = [];
+    function add(e) { if (!byKey[e.key]) { byKey[e.key] = e; list.push(e); } }
+    ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (r) {
+      if (r.recordKey) add({ key: r.recordKey + '-spec', rk: r.recordKey, name: r.name, code: r.docNo || '', href: r.href ? '../records/' + r.href : '' });
     });
-    specs.sort(function (a, b) { return a.name.localeCompare(b.name); });
-    await Promise.all(specs.map(async function (s) {
-      s.published = await window.SpecRegistry.getPublished(s.key);
+    custom.forEach(function (c) { if (c && c.key) add({ key: c.key, name: c.name || humanise(c.key), code: c.code || '', href: '', custom: true }); });
+    Object.keys(indexMap || {}).forEach(function (sk) {
+      var key = sk.slice('spec_versions_index:'.length);
+      add({ key: key, name: profileNames[key] || humanise(key.replace(/-spec$/, '')), code: '', href: '' });
+    });
+
+    list.forEach(function (e) {
+      var raw = indexMap && indexMap['spec_versions_index:' + e.key], idx = [];
+      try { idx = raw ? JSON.parse(raw) : []; } catch (x) { idx = []; }
+      e.versions = (Array.isArray(idx) ? idx : []).slice().sort(function (a, b) { return b.versionNumber - a.versionNumber; });
+      e.published = null;
+    });
+    await Promise.all(list.filter(function (e) { return e.versions.length; }).map(async function (e) {
+      e.published = await window.SpecRegistry.getPublished(e.key);
     }));
-    SPECS = specs.filter(function (s) { return s.published; });
+    list.sort(function (a, b) { return (a.code + ' ' + a.name).localeCompare(b.code + ' ' + b.name, undefined, { numeric: true }); });
+    ENTRIES = list;
   }
 
   // ---- render --------------------------------------------------------------------------------
+  function isHidden(e) { return HIDDEN.indexOf(e.key) >= 0; }
+  function visible() {
+    var q = ($('q').value || '').trim().toLowerCase(), showRem = $('showRemoved').checked, only = $('onlySpec').checked;
+    return ENTRIES.filter(function (e) {
+      if (isHidden(e) !== showRem) return false;
+      if (only && !e.published) return false;
+      return !q || (e.name + ' ' + e.code + ' ' + e.key).toLowerCase().indexOf(q) >= 0;
+    });
+  }
   function render() {
-    var q = ($('q').value || '').trim().toLowerCase();
-    var shown = SPECS.filter(function (s) { return !q || (s.name + ' ' + s.code + ' ' + s.key).toLowerCase().indexOf(q) >= 0; });
+    var edit = canEdit();
+    $('removedN').textContent = ENTRIES.filter(isHidden).length;
+    $('btnAdd').style.display = edit ? '' : 'none';
+    var shown = visible();
+    $('count').textContent = shown.length + ' of ' + ENTRIES.length + ' records';
     if (!shown.length) {
-      $('list').innerHTML = '<div class="empty">' + (SPECS.length ? 'No specifications match your search.'
-        : 'No specifications have been created yet. A record\'s spec appears here once it has been opened for the first time.') + '</div>';
+      $('list').innerHTML = '<div class="empty">' + ($('showRemoved').checked ? 'No removed records.' : 'No records match.') + '</div>';
       return;
     }
-    $('list').innerHTML = shown.map(function (s) {
-      var cur = s.versions[0];
-      return '<div class="card' + (OPEN[s.key] ? ' open' : '') + '" data-key="' + esc(s.key) + '">' +
+    $('list').innerHTML = shown.map(function (e) {
+      var cur = e.versions[0];
+      return '<div class="card' + (OPEN[e.key] ? ' open' : '') + (isHidden(e) ? ' removed' : '') + '" data-key="' + esc(e.key) + '">' +
         '<div class="card-head" data-act="toggle">' +
-          '<h2>' + esc(s.name) + '</h2>' +
-          (s.code ? '<span class="code">' + esc(s.code) + '</span>' : '') +
-          '<span class="pill">v' + cur.versionNumber + '</span>' +
-          '<span class="meta">Updated ' + fmtWhen(cur.publishedAt) + ' by ' + esc(cur.publishedBy || '—') + '</span>' +
+          '<h2>' + esc(e.name) + '</h2>' +
+          (e.code ? '<span class="code">' + esc(e.code) + '</span>' : '') +
+          (e.custom ? '<span class="pill custom">Added</span>' : '') +
+          (cur ? '<span class="pill">v' + cur.versionNumber + '</span>' : '<span class="pill none">No spec yet</span>') +
+          '<span class="meta">' + (cur ? 'Updated ' + fmtWhen(cur.publishedAt) + ' by ' + esc(cur.publishedBy || '—') : '') + '</span>' +
         '</div>' +
-        '<div class="card-body">' + (OPEN[s.key] ? body(s) : '') + '</div></div>';
+        '<div class="card-body">' + (OPEN[e.key] ? body(e) : '') + '</div></div>';
     }).join('');
   }
 
-  // Only these roles may publish a new spec version.
-  var EDIT_ROLES = ['QA_MANAGER', 'ADMINISTRATOR'];
-  function canEdit() {
-    return !!(window.Auth && EDIT_ROLES.indexOf(window.Auth.getCurrentRole()) >= 0);
+  function rowHtml(l, i, ro, labels) {
+    var v = l.value, cell;
+    if (typeof v === 'number') cell = '<input type="number" step="any" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
+    else if (typeof v === 'boolean') cell = '<input type="text" readonly value="' + esc(v) + '">';
+    else if (v == null) cell = '<input type="number" step="any" data-i="' + i + '" value="" placeholder="not set"' + ro + '>';
+    else cell = '<input type="text" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
+    return '<tr><td class="k">' + labelOf(l.path, labels) + '</td><td>' + cell + '</td><td class="x"></td></tr>';
   }
 
-  function body(s) {
-    var edit = canEdit();
-    var leaves = leavesOf(s.published);
-    var rows = leaves.map(function (l, i) {
-      var v = l.value, cell;
-      var ro = edit ? '' : ' readonly';
-      if (typeof v === 'number') cell = '<input type="number" step="any" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
-      else if (typeof v === 'boolean') cell = '<input type="text" readonly value="' + esc(v) + '">';
-      else if (v == null) cell = '<input type="number" step="any" data-i="' + i + '" data-null="1" value="" placeholder="not set"' + ro + '>';
-      else cell = '<input type="text" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
-      return '<tr><td class="k">' + labelOf(l.path) + '</td><td>' + cell + '</td></tr>';
-    }).join('');
+  function body(e) {
+    var edit = canEdit(), ro = edit ? '' : ' readonly';
+    var leaves = leavesOf(e.published);
+    var rows = leaves.map(function (l, i) { return rowHtml(l, i, ro, e.labels); }).join('');
     var user = (window.Auth && window.Auth.getCurrentUsername()) || '';
-    var hist = s.versions.map(function (h) {
+    var hist = e.versions.map(function (h) {
       return '<div class="hist-item"><span class="v">v' + h.versionNumber + '</span>' +
         '<span>' + fmtWhen(h.publishedAt) + ' · ' + esc(h.publishedBy || '—') + (h.changedByTitle ? ' (' + esc(h.changedByTitle) + ')' : '') +
         '<br><span class="why">' + esc(h.changeReason || '') + '</span></span>' +
         (h.status === 'PUBLISHED' ? '<span class="pill" style="margin-left:auto;align-self:flex-start;">Current</span>' : '') + '</div>';
     }).join('');
-    return (s.href ? '<p style="margin:0 0 10px;"><a href="' + esc(s.href) + '">Open the record &rarr;</a></p>' : '') +
-      '<div class="sec">Current limits (v' + s.versions[0].versionNumber + ')</div>' +
-      (rows ? '<table class="leaves"><tbody>' + rows + '</tbody></table>' : '<div class="empty" style="margin-bottom:14px;">This specification has no editable values.</div>') +
-      (rows && !edit ? '<p class="hint" style="color:#5c6771;margin:0 0 14px;">Read-only. Only the QA Manager or an Administrator can change a specification.</p>' : '') +
-      (rows && edit ? '<div class="sec">Publish as a new version</div>' +
+    var head = (e.href ? '<p style="margin:0 0 10px;"><a href="' + esc(e.href) + '">Open the record &rarr;</a>' +
+      (edit && e.rk ? ' &nbsp;·&nbsp; <a href="' + esc(e.href) + '?editTemplate=1">Edit the form template &rarr;</a>' : '') + '</p>' : '');
+    var cur = e.versions[0];
+    if (!edit) {
+      return head + '<div class="sec">' + (cur ? 'Current limits (v' + cur.versionNumber + ')' : 'Limits') + '</div>' +
+        (rows ? '<table class="leaves"><tbody>' + rows + '</tbody></table>' : '<div class="empty" style="margin-bottom:14px;">No specification has been set for this record.</div>') +
+        '<p style="color:#5c6771;margin:0 0 14px;">Read-only. Only the QA Manager or an Administrator can change a specification.</p>' +
+        (hist ? '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>' : '');
+    }
+    return head +
+      '<div class="sec">' + (cur ? 'Current limits (v' + cur.versionNumber + ')' : 'Limits — none yet, add the first item below') + '</div>' +
+      '<table class="leaves"><tbody data-rows>' + rows + '</tbody></table>' +
+      '<div class="addrow">' +
+        '<label>New spec item<input data-n="name" placeholder="e.g. Seam thickness"></label>' +
+        '<label>Type<select data-n="kind"><option value="range">Range (low / high)</option><option value="number">Single number</option><option value="text">Text</option></select></label>' +
+        '<label>Unit (optional)<input data-n="unit" placeholder="e.g. mm" style="width:90px;"></label>' +
+        '<button class="btn" data-act="additem" type="button">+ Add item</button>' +
+      '</div>' +
+      (e.rk ? '<label style="display:flex;gap:6px;align-items:flex-start;margin:-6px 0 14px;font-size:12px;color:#3b4650;"><input type="checkbox" data-n="linkform" checked style="margin-top:2px;"> ' +
+        '<span>Also add a field for this item to the record’s form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
+      '<div class="sec">Publish as ' + (cur ? 'a new version' : 'the first version') + '</div>' +
       '<div class="attr">' +
         '<label>Reason for the change<input data-f="reason" placeholder="e.g. Customer revised max seam thickness"></label>' +
         '<label>Your name<input data-f="by" value="' + esc(user) + '"></label>' +
         '<label>Your title<input data-f="title" placeholder="e.g. QA Manager"></label>' +
       '</div>' +
-      '<div class="actions"><button class="btn primary" data-act="publish" disabled>Publish new version</button>' +
-        '<button class="btn" data-act="reset">Discard edits</button><span class="hint" data-f="hint">No changes yet.</span></div>' : '') +
-      '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>';
+      '<div class="actions"><button class="btn primary" data-act="publish" disabled>Publish ' + (cur ? 'new version' : 'first version') + '</button>' +
+        '<button class="btn" data-act="reset">Discard edits</button><span class="hint" data-f="hint">No changes yet.</span>' +
+        '<span class="spacer"></span>' +
+        (isHidden(e) ? '<button class="btn" data-act="restore">Restore to list</button>' : '<button class="btn danger" data-act="remove">Remove from list</button>') +
+      '</div>' +
+      (hist ? '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>' : '');
   }
 
   // ---- editing -------------------------------------------------------------------------------
-  function coerce(input, orig) {
-    var raw = input.value.trim();
-    if (input.type === 'number') return raw === '' ? null : Number(raw);
-    return raw;
-  }
-  function changesFor(card, s) {
-    var leaves = leavesOf(s.published), changes = [];
-    card.querySelectorAll('table.leaves input[data-i]').forEach(function (inp) {
+  function find(card) { return ENTRIES.filter(function (x) { return x.key === card.getAttribute('data-key'); })[0]; }
+
+  function existingChanges(card, e) {
+    var leaves = leavesOf(e.published), changes = [];
+    card.querySelectorAll('tbody[data-rows] input[data-i]').forEach(function (inp) {
       var l = leaves[Number(inp.getAttribute('data-i'))];
-      var nv = coerce(inp, l.value);
+      var raw = inp.value.trim();
+      var nv = inp.type === 'number' ? (raw === '' ? null : Number(raw)) : raw;
       var same = (nv === l.value) || (nv == null && l.value == null) || (nv === '' && l.value == null);
       inp.classList.toggle('changed', !same);
       if (!same && !(typeof nv === 'number' && isNaN(nv))) changes.push({ path: l.path, value: nv });
     });
     return changes;
   }
-  function refreshButton(card, s) {
-    var n = changesFor(card, s).length;
+  // New items: [{ key, values: { min?, max? } | value }]
+  function newItems(card) {
+    var out = [];
+    card.querySelectorAll('tr[data-new-key]').forEach(function (tr) {
+      if (!tr.hasAttribute('data-first')) return;
+      var key = tr.getAttribute('data-new-key'), kind = tr.getAttribute('data-kind');
+      var group = card.querySelectorAll('tr[data-new-key="' + key + '"] input');
+      if (kind === 'range') {
+        var v = {};
+        group.forEach(function (i) {
+          var raw = i.value.trim();
+          if (raw !== '' && !isNaN(Number(raw))) v[i.getAttribute('data-part')] = Number(raw);
+        });
+        if (Object.keys(v).length) out.push({ key: key, value: v, kind: kind, label: tr.getAttribute('data-label'), unit: tr.getAttribute('data-unit') });
+      } else {
+        var i0 = group[0], raw0 = i0.value.trim();
+        if (raw0 === '') return;
+        out.push({ key: key, value: kind === 'number' ? Number(raw0) : raw0, kind: kind, label: tr.getAttribute('data-label'), unit: tr.getAttribute('data-unit') });
+      }
+    });
+    return out;
+  }
+  function refresh(card, e) {
+    var n = existingChanges(card, e).length + newItems(card).length;
     var f = function (k) { return card.querySelector('[data-f="' + k + '"]'); };
     var ready = n > 0 && f('reason').value.trim() && f('by').value.trim() && f('title').value.trim();
     card.querySelector('[data-act="publish"]').disabled = !ready;
     f('hint').textContent = n === 0 ? 'No changes yet.'
-      : n + ' value' + (n === 1 ? '' : 's') + ' changed' + (ready ? '.' : ' — add a reason, your name and title to publish.');
+      : n + ' change' + (n === 1 ? '' : 's') + (ready ? '.' : ' — add a reason, your name and title to publish.');
   }
-  async function publish(card, s) {
+
+  function addItem(card, e) {
+    var name = card.querySelector('[data-n="name"]').value.trim();
+    var kind = card.querySelector('[data-n="kind"]').value;
+    var unit = card.querySelector('[data-n="unit"]').value.trim();
+    var key = camel(name);
+    if (!key) { toast('Give the new item a name first.'); return; }
+    if (META.indexOf(key) >= 0 || (e.published && Object.prototype.hasOwnProperty.call(e.published, key)) ||
+        card.querySelector('tr[data-new-key="' + key + '"]')) { toast('“' + name + '” already exists on this spec.'); return; }
+    var tb = card.querySelector('tbody[data-rows]');
+    var parts = kind === 'range' ? [['min', 'Low'], ['max', 'High']] : [[null, '']];
+    parts.forEach(function (p, i) {
+      var tr = document.createElement('tr');
+      tr.className = 'new';
+      tr.setAttribute('data-new-key', key);
+      tr.setAttribute('data-kind', kind);
+      tr.setAttribute('data-label', name);
+      tr.setAttribute('data-unit', unit);
+      if (i === 0) tr.setAttribute('data-first', '1');
+      tr.innerHTML = '<td class="k">' + esc(name) + (p[1] ? ' › ' + p[1] : '') + ' <em>(new)</em></td>' +
+        '<td><input type="' + (kind === 'text' ? 'text' : 'number') + '" step="any"' + (p[0] ? ' data-part="' + p[0] + '"' : '') + '></td>' +
+        '<td class="x">' + (i === 0 ? '<button class="btn sm" type="button" data-act="dropitem" data-key="' + esc(key) + '">Remove</button>' : '') + '</td>';
+      tb.appendChild(tr);
+    });
+    card.querySelector('[data-n="name"]').value = '';
+    card.querySelector('[data-n="unit"]').value = '';
+    var first = tb.querySelector('tr[data-new-key="' + key + '"] input'); if (first) first.focus();
+    refresh(card, e);
+  }
+
+  async function publish(card, e) {
     if (!canEdit()) { toast('Only the QA Manager or an Administrator can change a specification.'); return; }
     var f = function (k) { return card.querySelector('[data-f="' + k + '"]').value.trim(); };
-    var changes = changesFor(card, s);
-    if (!changes.length) return;
-    var data = JSON.parse(JSON.stringify(s.published));
+    var changes = existingChanges(card, e), adds = newItems(card);
+    if (!changes.length && !adds.length) return;
+    var data = e.published ? JSON.parse(JSON.stringify(e.published)) : {};
     META.forEach(function (k) { delete data[k]; });
     changes.forEach(function (c) { setAt(data, c.path, c.value); });
+    adds.forEach(function (a) { data[a.key] = a.value; });
     var btn = card.querySelector('[data-act="publish"]');
     btn.disabled = true;
     try {
-      var full = await window.SpecRegistry.proposeVersion(s.key, data, { changeReason: f('reason'), publishedBy: f('by'), changedByTitle: f('title') });
-      s.published = full;
-      s.versions = await window.SpecRegistry.history(s.key);
-      toast(s.name + ' is now v' + full.versionNumber + '.');
+      var full = await window.SpecRegistry.proposeVersion(e.key, data, { changeReason: f('reason'), publishedBy: f('by'), changedByTitle: f('title') });
+      e.published = full;
+      e.versions = await window.SpecRegistry.history(e.key);
+      var msg = e.name + ' is now v' + full.versionNumber + '.';
+      var linkBox = card.querySelector('[data-n="linkform"]');
+      var toLink = linkBox && linkBox.checked ? adds.filter(function (a) { return a.kind !== 'text'; }) : [];
+      if (toLink.length && e.rk && window.TemplateEditor && window.TemplateEditor.addSpecItem) {
+        var done = 0, why = '';
+        for (var i = 0; i < toLink.length; i++) {
+          try {
+            var r = await window.TemplateEditor.addSpecItem({ recordKey: e.rk, key: toLink[i].key, label: toLink[i].label, unit: toLink[i].unit,
+              reason: 'Spec item “' + toLink[i].label + '” added: ' + f('reason'), changedBy: f('by'), changedByTitle: f('title') });
+            if (r.ok) done++; else why = r.reason;
+          } catch (x) { why = x.message || 'error'; }
+        }
+        e.labels = null;
+        if (done) msg += ' Added ' + done + ' field' + (done === 1 ? '' : 's') + ' to the record’s form template.';
+        if (why === 'unsupported') msg += ' This record’s form can’t check readings against limits, so only the spec was updated.';
+        else if (why) msg += ' The form template could not be updated (' + why + ').';
+      }
+      toast(msg);
+      if (e.rk && !e.labels) await ensureLabels(e);
       render();
-    } catch (e) { toast(e.message || 'Could not publish.'); btn.disabled = false; }
+    } catch (err) { toast(err.message || 'Could not publish.'); btn.disabled = false; }
+  }
+
+  async function setHidden(e, hide) {
+    var fresh = await readJson(HIDDEN_KEY, []);
+    fresh = Array.isArray(fresh) ? fresh.filter(function (k) { return k !== e.key; }) : [];
+    if (hide) fresh.push(e.key);
+    await writeJson(HIDDEN_KEY, fresh);
+    HIDDEN = fresh;
+    toast(hide ? '“' + e.name + '” removed from the list.' : '“' + e.name + '” restored.');
+    render();
+  }
+
+  async function addRecord() {
+    var name = $('newName').value.trim(), code = $('newCode').value.trim();
+    if (!name) { toast('Give the record a name.'); return; }
+    var base = 'custom-' + (slug(name) || 'record'), key = base + '-spec', n = 2;
+    while (ENTRIES.some(function (x) { return x.key === key; })) key = base + '-' + (n++) + '-spec';
+    var fresh = await readJson(CUSTOM_KEY, []);
+    fresh = Array.isArray(fresh) ? fresh : [];
+    fresh.push({ key: key, name: name, code: code });
+    await writeJson(CUSTOM_KEY, fresh);
+    var entry = { key: key, name: name, code: code, href: '', custom: true, versions: [], published: null };
+    ENTRIES.push(entry);
+    ENTRIES.sort(function (a, b) { return (a.code + ' ' + a.name).localeCompare(b.code + ' ' + b.name, undefined, { numeric: true }); });
+    OPEN[key] = true;
+    $('newName').value = ''; $('newCode').value = ''; $('addPanel').style.display = 'none';
+    $('showRemoved').checked = false; $('onlySpec').checked = false; $('q').value = '';
+    render();
+    toast('Added. Add its first spec item and publish.');
   }
 
   function wire() {
@@ -301,19 +490,36 @@
       var t = ev.target.closest('[data-act]');
       if (!t) return;
       var card = t.closest('.card'); if (!card) return;
-      var s = SPECS.filter(function (x) { return x.key === card.getAttribute('data-key'); })[0];
-      var act = t.getAttribute('data-act');
-      if (act === 'toggle') { OPEN[s.key] = !OPEN[s.key]; render(); }
-      else if (act === 'reset') { render(); }
-      else if (act === 'publish') publish(card, s);
+      var e = find(card), act = t.getAttribute('data-act');
+      if (act === 'toggle') {
+        OPEN[e.key] = !OPEN[e.key];
+        if (OPEN[e.key] && !e.labels) ensureLabels(e).then(render); else render();
+      }
+      else if (act === 'reset') render();
+      else if (act === 'additem') addItem(card, e);
+      else if (act === 'dropitem') {
+        card.querySelectorAll('tr[data-new-key="' + t.getAttribute('data-key') + '"]').forEach(function (tr) { tr.remove(); });
+        refresh(card, e);
+      }
+      else if (act === 'publish') {
+        if (!e.versions.length && e.key.slice(-5) === '-spec' && !e.custom &&
+            !confirm('This record has no spec yet. If it checks readings against limits, open the record once first so its default limits are seeded — otherwise those checks will be switched off.\n\nCreate the spec anyway?')) return;
+        publish(card, e);
+      }
+      else if (act === 'remove') { setHidden(e, true).catch(function (x) { toast(x.message); }); }
+      else if (act === 'restore') { setHidden(e, false).catch(function (x) { toast(x.message); }); }
     });
     $('list').addEventListener('input', function (ev) {
-      var card = ev.target.closest('.card'); if (!card) return;
-      var s = SPECS.filter(function (x) { return x.key === card.getAttribute('data-key'); })[0];
-      if (card.querySelector('[data-act="publish"]')) refreshButton(card, s);
+      var card = ev.target.closest('.card'); if (!card || !card.querySelector('[data-act="publish"]')) return;
+      refresh(card, find(card));
     });
     $('q').addEventListener('input', render);
+    $('onlySpec').addEventListener('change', render);
+    $('showRemoved').addEventListener('change', render);
     $('btnRefresh').addEventListener('click', function () { start(); });
+    $('btnAdd').addEventListener('click', function () { $('addPanel').style.display = ''; $('newName').focus(); });
+    $('btnAddCancel').addEventListener('click', function () { $('addPanel').style.display = 'none'; });
+    $('btnAddGo').addEventListener('click', function () { addRecord().catch(function (x) { toast(x.message); }); });
   }
 
   async function start() {

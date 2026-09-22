@@ -86,6 +86,35 @@
     return null;
   }
 
+  function camel(name) {
+    const w = String(name).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+    return w.map((x, i) => i ? x.charAt(0).toUpperCase() + x.slice(1) : x).join('');
+  }
+
+  // Monitoring-log templates link a number field to a spec field by `specKey`. Before saving:
+  //  - give new spec fields a readable key made from their label (the same key the Specifications
+  //    page uses for that limit), and follow that rename in any field that points at it;
+  //  - drop links that no longer make sense (not a number field, or the spec field is gone).
+  function normaliseSpecLinks(w) {
+    const specFields = w.specFields || [];
+    const taken = new Set(specFields.filter(sf => String(sf.key).indexOf('custom_') !== 0).map(sf => sf.key));
+    const remap = {};
+    specFields.forEach(sf => {
+      if (String(sf.key).indexOf('custom_') !== 0 || !String(sf.label || '').trim()) return;
+      const base = camel(sf.label) || 'item';
+      let k = base, n = 2;
+      while (taken.has(k)) k = base + (n++);
+      taken.add(k);
+      remap[sf.key] = k;
+      sf.key = k;
+    });
+    const live = new Set(specFields.map(sf => sf.key));
+    (w.entryFields || []).forEach(f => {
+      if (f.specKey && remap[f.specKey]) f.specKey = remap[f.specKey];
+      if (!f.specKey || f.type !== 'number' || !live.has(f.specKey)) delete f.specKey;
+    });
+  }
+
   function fieldRowHtml(f, idx, prefix, opts) {
     const isComputed = f.type === 'computed';
     const locked = isComputed ? ' te-locked' : '';
@@ -104,6 +133,12 @@
       <label><input type="checkbox" ${f.required ? 'checked' : ''} data-prop="${prefix},${idx},required"> Req</label>`;
 
     if (opts.showUnit) html += `<input type="text" value="${esc(f.unit || '')}" data-prop="${prefix},${idx},unit" placeholder="Unit" style="max-width:70px;" title="Unit">`;
+    if (opts.specFields && f.type === 'number') {
+      const sel = f.specKey || '';
+      const specOpts = ['<option value="">Not checked</option>'].concat(opts.specFields.map(sf =>
+        `<option value="${esc(sf.key)}" ${sf.key === sel ? 'selected' : ''}>Checked against: ${esc(sf.label || sf.key)}</option>`)).join('');
+      html += `<select data-prop="${prefix},${idx},specKey" title="Flags a deviation when this reading is outside the spec limits" style="max-width:210px;">${specOpts}</select>`;
+    }
     if (opts.showGroup) html += `<input type="text" value="${esc(f.group || '')}" data-prop="${prefix},${idx},group" placeholder="Group" style="max-width:100px;" title="Group">`;
     if (opts.showInTable) html += `<label><input type="checkbox" ${f.showInTable !== false ? 'checked' : ''} data-prop="${prefix},${idx},showInTable"> Table</label>`;
     if (opts.showWide) html += `<label><input type="checkbox" ${f.wide ? 'checked' : ''} data-prop="${prefix},${idx},wide"> Wide</label>`;
@@ -213,11 +248,13 @@
     function renderMonitoringLog(w) {
       let html = '<h3>Entry fields</h3>';
       html += `<div class="te-section"><div class="te-section-body">
-        ${(w.entryFields || []).map((f, i) => fieldRowHtml(f, i, 'entry', { showUnit: true, showGroup: true, showInTable: true })).join('')}
+        ${(w.entryFields || []).map((f, i) => fieldRowHtml(f, i, 'entry', { showUnit: true, showGroup: true, showInTable: true, specFields: (w.specFields || []).length ? w.specFields : null })).join('')}
         <button type="button" class="te-btn-flat" data-addfield="entry" style="margin-top:6px;">+ Add field</button>
       </div></div>`;
 
       html += '<h3>Spec fields (thresholds)</h3>';
+      html += `<p style="margin:0 0 8px;color:#54606b;font-size:12px;">A spec field is a limit the record can check readings against. Here you name it; the actual low / high values are set on the
+        <a href="../pages/specifications.html" target="_blank" rel="noopener">Specifications page</a>. To make a reading get checked, set “Checked against” on its number field above.</p>`;
       html += `<div class="te-section"><div class="te-section-body">
         ${(w.specFields || []).map((f, i) => specFieldRowHtml(f, i)).join('')}
         <button type="button" class="te-btn-flat" data-addfield="spec" style="margin-top:6px;">+ Add spec field</button>
@@ -234,6 +271,7 @@
         </div>
         <input type="text" value="${esc(f.label)}" data-prop="spec,${idx},label" placeholder="Label" title="Label">
         <input type="text" value="${esc(f.unit || '')}" data-prop="spec,${idx},unit" placeholder="Unit" style="max-width:70px;" title="Unit">
+        <span style="color:#8a939b;font-size:11px;" title="Identifier used to link readings and limits">${String(f.key || '').indexOf('custom_') === 0 ? 'new' : esc(f.key)}</span>
         <button type="button" class="te-btn-danger" data-remove="spec,${idx}" title="Remove">✕</button>
       </div>`;
     }
@@ -356,6 +394,13 @@
           const [prefix, idxStr] = btn.dataset.remove.split(',');
           const arr = getArray(prefix);
           if (!arr) return;
+          if (prefix === 'spec') {
+            // Unlink readings that were checked against this spec field, so none is left pointing at nothing.
+            const gone = arr[Number(idxStr)];
+            const users = (working.entryFields || []).filter(f => gone && f.specKey === gone.key);
+            if (users.length && !confirm(`${users.length} field(s) are checked against “${gone.label || gone.key}” (${users.map(u => u.label).join(', ')}). They will stop being checked. Remove it anyway?`)) return;
+            users.forEach(f => { delete f.specKey; });
+          }
           arr.splice(Number(idxStr), 1);
           rerender();
         });
@@ -408,6 +453,8 @@
       const reason = overlay.querySelector('#te_reason').value.trim();
       const changedBy = overlay.querySelector('#te_changedBy').value.trim();
       const changedByTitle = overlay.querySelector('#te_changedByTitle').value.trim();
+
+      if (engine !== 'form-record') normaliseSpecLinks(working);
 
       const allFields = [];
       if (engine === 'form-record') {
@@ -481,5 +528,27 @@
     render();
   }
 
-  window.TemplateEditor = { load, open };
+  // Add one spec item to a monitoring-log record's template without opening the editor: a spec field
+  // (the limit) plus a number field on the form that is checked against it. Used by the
+  // Specifications page when a QA Manager adds a new spec item. Returns { ok, reason?, entryKey? }.
+  async function addSpecItem(o) {
+    const def = window.FacilityApi && window.FacilityApi.recordDef ? await window.FacilityApi.recordDef(o.recordKey) : null;
+    if (!def || !def.entryFields || def.customBody) return { ok: false, reason: 'unsupported' };
+    const existing = await load(o.recordKey);
+    const base = existing && existing.engine === 'monitoring-log' ? existing : def;
+    const entryFields = JSON.parse(JSON.stringify(base.entryFields || def.entryFields || []));
+    const specFields = JSON.parse(JSON.stringify(base.specFields || def.specFields || []));
+    if (specFields.some(sf => sf.key === o.key)) return { ok: false, reason: 'exists' };
+    let entryKey = o.key + 'Reading', n = 2;
+    while (entryFields.some(f => f.key === entryKey)) entryKey = o.key + 'Reading' + (n++);
+    specFields.push({ key: o.key, label: o.label, unit: o.unit || '' });
+    entryFields.push({ key: entryKey, label: o.label, type: 'number', unit: o.unit || '', specKey: o.key, required: false });
+    await window.DocumentRevision.bump(o.recordKey, { reason: o.reason, changedBy: o.changedBy, changedByTitle: o.changedByTitle }, def.docRevisionStart || 1);
+    const ok = await storeSet(storageKey(o.recordKey), JSON.stringify({
+      schemaVersion: 1, engine: 'monitoring-log', savedAt: Date.now(), savedBy: o.changedBy, entryFields, specFields
+    }));
+    return ok ? { ok: true, entryKey } : { ok: false, reason: 'save-failed' };
+  }
+
+  window.TemplateEditor = { load, open, addSpecItem };
 })();
