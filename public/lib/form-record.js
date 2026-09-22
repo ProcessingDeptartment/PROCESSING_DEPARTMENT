@@ -300,13 +300,23 @@
     return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
   }
 
+  // A picked record's status comes from two possible sources that disagree on vocabulary:
+  // the older per-row index snapshot (status: 'draft'|'submitted', plus a separate verified/
+  // verifiedDate pair written at index time) and the server's /api/trace endpoint, which joins
+  // live verification state server-side and returns status: 'draft'|'submitted'|'verified'
+  // (see attachSubmissionStatus in src/index.js) without touching verified/verifiedDate. Treat
+  // status === 'verified' as verified even when the separate `verified` flag wasn't set.
+  function recordpickVerified(status, verified) { return status === 'verified' || !!verified; }
+  function recordpickAttached(status) { return status === 'submitted' || status === 'verified'; }
+
   // The 4-state model a picked roster record can be in -- reused wherever a recordpick status
   // badge is rendered (initial HTML and after wireRecordPick updates it on pick/refresh).
   function recordpickBadgeHtml(value, status, verified, verifiedDate) {
     if (!value) return '<span class="badge badge-muted">Not attached</span>';
-    if (status !== 'submitted') return '<span class="badge badge-info">Draft — not yet submitted</span>';
-    if (!verified) return '<span class="badge badge-warn">Awaiting verification</span>';
-    return '<span class="badge badge-ok">Verified (' + esc(fmtDDMMYYYY(verifiedDate)) + ')</span>';
+    if (!recordpickAttached(status)) return '<span class="badge badge-info">Draft — not yet submitted</span>';
+    if (!recordpickVerified(status, verified)) return '<span class="badge badge-warn">Awaiting verification</span>';
+    const dateStr = verifiedDate ? fmtDDMMYYYY(verifiedDate) : '';
+    return '<span class="badge badge-ok">Verified' + (dateStr ? ' (' + esc(dateStr) + ')' : '') + '</span>';
   }
 
   function fieldInputHtml(id, field, value, row) {
@@ -550,6 +560,42 @@
         .map(o => Object.assign(o, { label: o.code + (o.name ? ' — ' + o.name : '') }));
     }
 
+    // Master Index rows are one per RECORD TYPE (its doc code/title), not per submission -- fine
+    // for jobtrace/bintrace's true fallback (offering every record type to pick from generically),
+    // but wrong for a recordpick scoped to one sourceRecordKey that isn't job/bin-traceable at all
+    // (e.g. REC 7.4.8, indexed by agCode): the preparer needs to search actual filed submissions
+    // of that one record, not see it listed once as a record type. Reads the same
+    // `formrecord:<recordKey>` blob the record's own "View entries" list reads (see storageKey in
+    // openForm), so status/verified reflect the real submission, not a server-side trace join.
+    async function recordSubmissionOptions(sourceRecordKey) {
+      if (!sourceRecordKey) return [];
+      let raw = null;
+      try { raw = await storeGet('formrecord:' + sourceRecordKey, true); } catch (e) { return []; }
+      let subs = [];
+      try { subs = raw ? JSON.parse(raw) : []; } catch (e) { subs = []; }
+      if (!Array.isArray(subs) || !subs.length) return [];
+      const indexRow = ((window.MasterIndexData && window.MasterIndexData.rows) || [])
+        .find(r => r.recordKey === sourceRecordKey);
+      const code = indexRow ? String(indexRow.docNo || '').trim() : '';
+      const pageFile = indexRow ? String(indexRow.href || '') : '';
+      return subs.map(sub => {
+        const status = sub.verification ? 'verified' : (sub.status === 'draft' ? 'draft' : 'submitted');
+        const values = sub.values || {};
+        const bits = Object.keys(values).map(k => values[k]).filter(v => v && typeof v !== 'object').slice(0, 3);
+        return {
+          value: sourceRecordKey + '::' + sub.id,
+          code: code,
+          name: indexRow ? String(indexRow.name || '') : sourceRecordKey,
+          href: pageFile ? pageFile + '#' + sub.id : '',
+          values: values,
+          status: status,
+          verified: !!sub.verification,
+          verifiedDate: (sub.verification && sub.verification.verifiedDate) || '',
+          label: (code ? code + ' — ' : '') + bits.join(' · ') + ' [' + status + ']'
+        };
+      });
+    }
+
 
     async function jobTraceOptions(jobNo, sourceRecordKey) {
       if (!jobNo || !window.Traceability) return [];
@@ -646,7 +692,10 @@
           }
         }
 
-        if (!opts.length) opts = masterIndexOptions(sel.dataset.sourceRecordKey || '');
+        if (!opts.length) {
+          const scopeKey = sel.dataset.sourceRecordKey || '';
+          opts = scopeKey ? await recordSubmissionOptions(scopeKey) : masterIndexOptions();
+        }
 
         // Auto-add: an empty required/traced field with exactly one record actually found for
         // this job (or, for bintrace, this job's bin) gets pre-selected rather than left for the
@@ -1781,7 +1830,7 @@
         if (f.type === 'recordpick' && f.required && String(values[f.key] || '').trim()) {
           const status = (el(`fr_f_${f.key}__status`) || {}).value;
           const verified = (el(`fr_f_${f.key}__verified`) || {}).value === '1';
-          if (status !== 'submitted' || !verified) unverifiedRequired = f.label;
+          if (!recordpickVerified(status, verified)) unverifiedRequired = f.label;
         }
         if (f.type === 'jobnumber' && f.validate !== false && values[f.key] &&
             window.Lookups && window.Lookups.batch && !window.Lookups.batch.isValid(values[f.key])) {
@@ -1827,7 +1876,7 @@
             if (!value) return true;
             const status = r['__' + c.key + '_status'];
             const verified = r['__' + c.key + '_verified'] === '1' || r['__' + c.key + '_verified'] === true;
-            return status !== 'submitted' || !verified;
+            return !recordpickVerified(status, verified);
           }));
           if (incomplete) incompleteRoster = roster;
         });
