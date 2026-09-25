@@ -42,7 +42,7 @@
         Lookups.field({ key: 'receivedFrom', label: 'Received from', list: 'farms' }),
 
         { key: 'toBeProcessedFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'], matchJobRoute: 'jobNo' },
-        { key: 'intakeWeight', label: 'Intake weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
+        { key: 'intakeWeight', label: 'Whole weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
       ]}
     ],
     roster: {

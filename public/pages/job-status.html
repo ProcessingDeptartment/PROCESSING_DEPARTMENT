@@ -130,7 +130,7 @@
           <thead>
             <tr>
               <th>Job no.</th><th>Received</th><th>Farm</th><th>For</th>
-              <th>Intake weight (kg)</th><th>Status</th><th>Closed</th>
+              <th>Whole weight (kg)</th><th>Status</th><th>Closed</th>
               <th class="no-print">Reports</th><th class="no-print">Action</th>
             </tr>
           </thead>
@@ -434,7 +434,7 @@
   }
 
   function downloadCsv() {
-    const header = ['Job no.', 'Received', 'Farm', 'Processing for', 'Intake weight (kg)', 'Status', 'Closed at', 'Closed by', 'Note'];
+    const header = ['Job no.', 'Received', 'Farm', 'Processing for', 'Whole weight (kg)', 'Status', 'Closed at', 'Closed by', 'Note'];
     const q = (s) => `"${String(s == null ? '' : s).replace(/"/g, '""')}"`;
     const lines = [header.join(',')];
     visibleRows().forEach((r) => {

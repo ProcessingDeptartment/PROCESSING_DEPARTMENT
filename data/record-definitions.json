@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-21",
+  "generated": "2026-09-25",
   "count": 131,
   "definitions": [
     {
@@ -1409,7 +1409,44 @@
         {
           "title": "Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Dry Cooking (7.4.0), Dry Monitoring (7.4.2), Grading/Packing/Boxing of Dried Abalone (7.4.3)",
           "kind": "roster",
-          "position": 2
+          "position": 2,
+          "extraJson": {
+            "collapseRows": false,
+            "defaultRows": [
+              {
+                "recordName": "Abalone Receiving",
+                "recordCode": "REC 7.1.2"
+              },
+              {
+                "recordName": "Basket Removal / Shucking / Gutting",
+                "recordCode": "REC 7.1.1"
+              },
+              {
+                "recordName": "Bleeding & Salting Checklist",
+                "recordCode": "REC 7.1.3"
+              },
+              {
+                "recordName": "Washing Control Sheet",
+                "recordCode": "REC 7.1.4"
+              },
+              {
+                "recordName": "Chiller Batch Control",
+                "recordCode": "REC 7.8.1"
+              },
+              {
+                "recordName": "Dry Cooking",
+                "recordCode": "REC 7.4.0"
+              },
+              {
+                "recordName": "Dry Monitoring",
+                "recordCode": "REC 7.4.2"
+              },
+              {
+                "recordName": "Grading / Packing / Boxing of Dried Abalone",
+                "recordCode": "REC 7.4.3"
+              }
+            ]
+          }
         }
       ],
       "fields": [
@@ -2249,7 +2286,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -3363,7 +3400,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -3806,7 +3843,7 @@
         },
         {
           "key": "intakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "computed",
           "required": false,
           "readOnly": false,
@@ -4045,7 +4082,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -4619,7 +4656,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -5172,7 +5209,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -5491,7 +5528,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -5845,7 +5882,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -6896,7 +6933,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -7148,7 +7185,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -7446,7 +7483,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -8709,7 +8746,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -9641,7 +9678,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -10026,7 +10063,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -10400,7 +10437,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -11209,7 +11246,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -11559,7 +11596,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -12113,7 +12150,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -12631,7 +12668,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -13030,7 +13067,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -13503,7 +13540,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -13895,7 +13932,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -14441,7 +14478,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -15376,7 +15413,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -15836,7 +15873,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -16483,7 +16520,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -17140,7 +17177,7 @@
         },
         {
           "key": "intakeWeight",
-          "label": "Intake weight",
+          "label": "Whole weight",
           "type": "number",
           "required": false,
           "readOnly": false,
@@ -17387,7 +17424,7 @@
         },
         {
           "key": "intakeWeight",
-          "label": "Intake weight",
+          "label": "Whole weight",
           "type": "number",
           "required": false,
           "readOnly": false,
@@ -17761,14 +17798,20 @@
         {
           "title": "Size grade weights (kg)",
           "kind": "fields",
-          "position": 2
+          "position": 2,
+          "extraJson": {
+            "afterRoster": true
+          }
         },
         {
           "title": "Collection bins",
           "kind": "roster",
           "position": 3,
           "extraJson": {
-            "binIdColumn": "binCode"
+            "binIdColumn": "binCode",
+            "totalsRow": [
+              "gradedWeight"
+            ]
           }
         },
         {
@@ -17837,7 +17880,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -17952,9 +17995,9 @@
         {
           "key": "under8g",
           "label": "Under 8g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17966,14 +18009,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "Under 8g"
+            }
+          }
         },
         {
           "key": "g8to10",
           "label": "8g-10g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17985,14 +18034,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "8g-10g"
+            }
+          }
         },
         {
           "key": "g11to13",
           "label": "11g-13g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18004,14 +18059,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "11g-13g"
+            }
+          }
         },
         {
           "key": "g14to16",
           "label": "14g-16g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18023,14 +18084,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "14g-16g"
+            }
+          }
         },
         {
           "key": "g17to20",
           "label": "17g-20g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18042,14 +18109,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "17g-20g"
+            }
+          }
         },
         {
           "key": "g21to23",
           "label": "21g-23g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18061,14 +18134,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "21g-23g"
+            }
+          }
         },
         {
           "key": "g24to25",
           "label": "24g-25g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18080,14 +18159,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "24g-25g"
+            }
+          }
         },
         {
           "key": "g26to28",
           "label": "26g-28g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18099,14 +18184,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "26g-28g"
+            }
+          }
         },
         {
           "key": "g29to31",
           "label": "29g-31g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18118,14 +18209,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "29g-31g"
+            }
+          }
         },
         {
           "key": "g32to35",
           "label": "32g-35g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18137,14 +18234,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "32g-35g"
+            }
+          }
         },
         {
           "key": "g36to39",
           "label": "36g-39g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18156,14 +18259,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "36g-39g"
+            }
+          }
         },
         {
           "key": "g40to44",
           "label": "40g-44g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18175,14 +18284,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "40g-44g"
+            }
+          }
         },
         {
           "key": "g45to50",
           "label": "45g-50g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18194,14 +18309,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "45g-50g"
+            }
+          }
         },
         {
           "key": "g51to55",
           "label": "51g-55g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18213,14 +18334,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "51g-55g"
+            }
+          }
         },
         {
           "key": "g56to60",
           "label": "56g-60g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18232,14 +18359,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "56g-60g"
+            }
+          }
         },
         {
           "key": "g60plus",
           "label": "60g+",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18251,14 +18384,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "60g+"
+            }
+          }
         },
         {
           "key": "bGrade",
           "label": "B-grade",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18270,7 +18409,13 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "B-grade"
+            }
+          }
         },
         {
           "key": "comments",
@@ -18295,38 +18440,265 @@
           }
         },
         {
-          "key": "actualGradedWeight",
-          "label": "Actual graded weight (kg)",
-          "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "Under 8g",
+            "8g-10g",
+            "11g-13g",
+            "14g-16g",
+            "17g-20g",
+            "21g-23g",
+            "24g-25g",
+            "26g-28g",
+            "29g-31g",
+            "32g-35g",
+            "36g-39g",
+            "40g-44g",
+            "45g-50g",
+            "51g-55g",
+            "56g-60g",
+            "60g+",
+            "B-grade"
+          ],
           "group": null,
-          "sectionIndex": 4,
-          "parentFieldKey": null,
-          "position": 27,
+          "parentFieldKey": "@roster",
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "key": "sizeGrade",
+          "label": "Size grade",
+          "type": "select",
+          "sectionIndex": 3,
+          "position": 32
         },
         {
-          "key": "yield",
-          "label": "Yield (%)",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "binNo",
+          "label": "Bin no.",
           "type": "number",
+          "extraJson": {
+            "seqWithin": "sizeGrade"
+          },
+          "sectionIndex": 3,
+          "position": 33
+        },
+        {
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "binCode",
+          "label": "Bin code",
+          "type": "text",
+          "extraJson": {
+            "deriveJoin": {
+              "parts": [
+                "sizeGrade",
+                "binNo"
+              ],
+              "sep": "-"
+            }
+          },
+          "sectionIndex": 3,
+          "position": 34
+        },
+        {
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 4,
-          "parentFieldKey": null,
-          "position": 28,
+          "parentFieldKey": "@roster",
           "computeFn": null,
           "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "binWeightStart",
+          "label": "Bin weight start (kg)",
+          "type": "number",
+          "extraJson": {
+            "carryPrev": {
+              "match": "binCode",
+              "column": "finalBinWeight",
+              "sources": [
+                "grading-production-log-cultivated",
+                "grading-production-log-ranched"
+              ],
+              "dateField": "gradingDate"
+            }
+          },
+          "sectionIndex": 3,
+          "position": 35
+        },
+        {
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "startConfirmed",
+          "label": "Start weight checked",
+          "type": "confirm",
+          "extraJson": {
+            "confirms": "binWeightStart",
+            "confirmText": "Checked on scale"
+          },
+          "sectionIndex": 3,
+          "position": 36
+        },
+        {
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "fullBoxWeight",
+          "label": "Full box weights (kg)",
+          "type": "numlist",
+          "extraJson": {
+            "lockUntil": "startConfirmed",
+            "placeholder": "e.g. 12.4 + 11.9"
+          },
+          "sectionIndex": 3,
+          "position": 37
+        },
+        {
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "finalBinWeight",
+          "label": "Final bin weight (kg)",
+          "type": "number",
+          "extraJson": {
+            "lockUntil": "startConfirmed"
+          },
+          "sectionIndex": 3,
+          "position": 38
+        },
+        {
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "gradedWeight",
+          "label": "Graded weight (kg)",
+          "type": "derived",
+          "extraJson": {
+            "deriveSum": {
+              "add": [
+                "fullBoxWeight",
+                "finalBinWeight"
+              ],
+              "subtract": [
+                "binWeightStart"
+              ],
+              "require": [
+                "binWeightStart",
+                "finalBinWeight"
+              ],
+              "dp": 2
+            }
+          },
+          "sectionIndex": 3,
+          "position": 39
+        },
+        {
+          "key": "actualGradedWeight",
+          "label": "Actual graded weight (kg)",
+          "type": "computed",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 40,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight"
+          }
+        },
+        {
+          "key": "yield",
+          "label": "Yield (%)",
+          "type": "computed",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 41,
+          "computeFn": "ratioPct",
+          "computeArgs": {
+            "x": "actualGradedWeight",
+            "y": "actualDriedWeight",
+            "dp": 2
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
@@ -18343,7 +18715,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 29,
+          "position": 42,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18362,7 +18734,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 30,
+          "position": 43,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18381,102 +18753,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 31,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "binCode",
-          "label": "Bin code",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 32,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "binWeightStart",
-          "label": "Bin weight (start)",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 33,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "fullBoxWeight",
-          "label": "Full box weight",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 34,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "finalBinWeight",
-          "label": "Final bin weight",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 35,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "gradedWeight",
-          "label": "Graded weight",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 36,
+          "position": 44,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18540,14 +18817,20 @@
         {
           "title": "Size grade weights (kg)",
           "kind": "fields",
-          "position": 2
+          "position": 2,
+          "extraJson": {
+            "afterRoster": true
+          }
         },
         {
           "title": "Collection bins",
           "kind": "roster",
           "position": 3,
           "extraJson": {
-            "binIdColumn": "binCode"
+            "binIdColumn": "binCode",
+            "totalsRow": [
+              "gradedWeight"
+            ]
           }
         },
         {
@@ -18616,7 +18899,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -18731,9 +19014,9 @@
         {
           "key": "under50g",
           "label": "Under 50g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18745,14 +19028,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "Under 50g"
+            }
+          }
         },
         {
           "key": "g51to80",
           "label": "51-80g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18764,14 +19053,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "51-80g"
+            }
+          }
         },
         {
           "key": "g81to100",
           "label": "81-100g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18783,14 +19078,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "81-100g"
+            }
+          }
         },
         {
           "key": "g101to150",
           "label": "101-150g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18802,14 +19103,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "101-150g"
+            }
+          }
         },
         {
           "key": "g151to200",
           "label": "151-200g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18821,14 +19128,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "151-200g"
+            }
+          }
         },
         {
           "key": "g200plus",
           "label": "200g+",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18840,14 +19153,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "200g+"
+            }
+          }
         },
         {
           "key": "darkUnder100g",
           "label": "Dark — under 100g",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18859,14 +19178,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "Dark — under 100g"
+            }
+          }
         },
         {
           "key": "dark100gPlus",
           "label": "Dark — 100g+",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18878,14 +19203,20 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "Dark — 100g+"
+            }
+          }
         },
         {
           "key": "bGrade",
           "label": "B-grade",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -18897,7 +19228,13 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight",
+            "sumRosterWhere": {
+              "sizeGrade": "B-grade"
+            }
+          }
         },
         {
           "key": "comments",
@@ -18922,38 +19259,257 @@
           }
         },
         {
-          "key": "actualGradedWeight",
-          "label": "Actual graded weight (kg)",
-          "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "Under 50g",
+            "51-80g",
+            "81-100g",
+            "101-150g",
+            "151-200g",
+            "200g+",
+            "Dark — under 100g",
+            "Dark — 100g+",
+            "B-grade"
+          ],
           "group": null,
-          "sectionIndex": 4,
-          "parentFieldKey": null,
-          "position": 19,
+          "parentFieldKey": "@roster",
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "key": "sizeGrade",
+          "label": "Size grade",
+          "type": "select",
+          "sectionIndex": 3,
+          "position": 24
         },
         {
-          "key": "yield",
-          "label": "Yield (%)",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "binNo",
+          "label": "Bin no.",
           "type": "number",
+          "extraJson": {
+            "seqWithin": "sizeGrade"
+          },
+          "sectionIndex": 3,
+          "position": 25
+        },
+        {
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "binCode",
+          "label": "Bin code",
+          "type": "text",
+          "extraJson": {
+            "deriveJoin": {
+              "parts": [
+                "sizeGrade",
+                "binNo"
+              ],
+              "sep": "-"
+            }
+          },
+          "sectionIndex": 3,
+          "position": 26
+        },
+        {
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 4,
-          "parentFieldKey": null,
-          "position": 20,
+          "parentFieldKey": "@roster",
           "computeFn": null,
           "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "binWeightStart",
+          "label": "Bin weight start (kg)",
+          "type": "number",
+          "extraJson": {
+            "carryPrev": {
+              "match": "binCode",
+              "column": "finalBinWeight",
+              "sources": [
+                "grading-production-log-cultivated",
+                "grading-production-log-ranched"
+              ],
+              "dateField": "gradingDate"
+            }
+          },
+          "sectionIndex": 3,
+          "position": 27
+        },
+        {
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "startConfirmed",
+          "label": "Start weight checked",
+          "type": "confirm",
+          "extraJson": {
+            "confirms": "binWeightStart",
+            "confirmText": "Checked on scale"
+          },
+          "sectionIndex": 3,
+          "position": 28
+        },
+        {
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "fullBoxWeight",
+          "label": "Full box weights (kg)",
+          "type": "numlist",
+          "extraJson": {
+            "lockUntil": "startConfirmed",
+            "placeholder": "e.g. 12.4 + 11.9"
+          },
+          "sectionIndex": 3,
+          "position": 29
+        },
+        {
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "finalBinWeight",
+          "label": "Final bin weight (kg)",
+          "type": "number",
+          "extraJson": {
+            "lockUntil": "startConfirmed"
+          },
+          "sectionIndex": 3,
+          "position": 30
+        },
+        {
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "key": "gradedWeight",
+          "label": "Graded weight (kg)",
+          "type": "derived",
+          "extraJson": {
+            "deriveSum": {
+              "add": [
+                "fullBoxWeight",
+                "finalBinWeight"
+              ],
+              "subtract": [
+                "binWeightStart"
+              ],
+              "require": [
+                "binWeightStart",
+                "finalBinWeight"
+              ],
+              "dp": 2
+            }
+          },
+          "sectionIndex": 3,
+          "position": 31
+        },
+        {
+          "key": "actualGradedWeight",
+          "label": "Actual graded weight (kg)",
+          "type": "computed",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 32,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight"
+          }
+        },
+        {
+          "key": "yield",
+          "label": "Yield (%)",
+          "type": "computed",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 33,
+          "computeFn": "ratioPct",
+          "computeArgs": {
+            "x": "actualGradedWeight",
+            "y": "actualDriedWeight",
+            "dp": 2
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
@@ -18970,7 +19526,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 21,
+          "position": 34,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18989,7 +19545,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 22,
+          "position": 35,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19008,102 +19564,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 23,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "binCode",
-          "label": "Bin code",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 24,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "binWeightStart",
-          "label": "Bin weight (start)",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 25,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "fullBoxWeight",
-          "label": "Full box weight",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 26,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "finalBinWeight",
-          "label": "Final bin weight",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 27,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "gradedWeight",
-          "label": "Graded weight",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 28,
+          "position": 36,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19249,7 +19710,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -19709,7 +20170,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -20846,7 +21307,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -29127,7 +29588,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -29473,7 +29934,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -31260,7 +31721,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -32209,7 +32670,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -34086,7 +34547,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -34520,7 +34981,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,
@@ -35303,7 +35764,7 @@
         },
         {
           "key": "jiIntakeWeight",
-          "label": "Intake weight (kg)",
+          "label": "Whole weight (kg)",
           "type": "text",
           "required": false,
           "readOnly": true,

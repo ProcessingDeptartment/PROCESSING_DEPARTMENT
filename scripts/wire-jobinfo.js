@@ -68,7 +68,7 @@ const SNAP = [
   ['jiReceivingDate', 'Receiving date',        'date', 'receivingDate'],
   ['jiReceivedFrom',  'Received from (farm)',  'text', 'receivedFrom'],
   ['jiProcessingFor', 'Processing for',        'text', 'toBeProcessedFor'],
-  ['jiIntakeWeight',  'Intake weight (kg)',    'text', 'intakeWeight'],
+  ['jiIntakeWeight',  'Whole weight (kg)',    'text', 'intakeWeight'],
 ];
 
 function bumpVersions() {

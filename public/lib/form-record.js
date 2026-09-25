@@ -307,10 +307,49 @@
     return dateVal ? dateVal + '-' + seq : '#' + seq;
   }
 
+  // A `numlist` cell holds several weights in one box ("12.4 + 11.9 + 12.1"). Its value is their sum;
+  // null when the cell is blank or any part isn't a number.
+  function sumNumList(v) {
+    const parts = String(v == null ? '' : v).split(/[+,;\s]+/).filter(Boolean);
+    if (!parts.length) return null;
+    let total = 0;
+    for (const p of parts) {
+      if (!/^-?\d+(\.\d+)?$/.test(p)) return null;
+      total += parseFloat(p);
+    }
+    return total;
+  }
+
   function computeRowDerived(col, row) {
     if (col.deriveDuration) return diffHHMM(row[col.deriveDuration.from], row[col.deriveDuration.to]);
     if (col.deriveLookup) return lookupMapValue(col.deriveLookup.map, row[col.deriveLookup.from]);
+    // deriveJoin: { parts: ['sizeGrade','binNo'], sep: '-' } -> "8g-10g-1"; blank until every part is filled.
+    if (col.deriveJoin) {
+      const parts = col.deriveJoin.parts.map(k => String(row[k] == null ? '' : row[k]).trim());
+      return parts.every(Boolean) ? parts.join(col.deriveJoin.sep == null ? '-' : col.deriveJoin.sep) : '';
+    }
+    // deriveSum: { add: [...], subtract: [...], require: [...], dp } -- numlist-aware; a missing
+    // non-required input counts as 0, a missing required one leaves the result blank.
+    if (col.deriveSum) {
+      const s = col.deriveSum;
+      if ((s.require || []).some(k => sumNumList(row[k]) === null)) return '';
+      let total = 0;
+      (s.add || []).forEach(k => { total += sumNumList(row[k]) || 0; });
+      (s.subtract || []).forEach(k => { total -= sumNumList(row[k]) || 0; });
+      return total.toFixed(s.dp == null ? 2 : s.dp);
+    }
     return row[col.key] || '';
+  }
+
+  // Sum of a roster column over the rows, optionally only those matching sumRosterWhere
+  // ({ sizeGrade: '8g-10g' }) -- used by computed top-level fields.
+  function sumRosterRows(f, rows) {
+    const where = f.sumRosterWhere || null;
+    return rows.reduce((sum, r) => {
+      if (where && Object.keys(where).some(k => String(r[k] || '').trim() !== String(where[k]))) return sum;
+      const n = sumNumList(r[f.sumRosterColumn]);
+      return sum + (n === null ? 0 : n);
+    }, 0);
   }
 
   function fmtDDMMYYYY(iso) {
@@ -403,6 +442,15 @@
 
         if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
         return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
+      }
+      if (field.type === 'numlist') {
+        return `<input type="text" id="${id}" value="${esc(v)}" inputmode="decimal" placeholder="${esc(field.placeholder || 'e.g. 12.4 + 11.9')}"${ro}>`;
+      }
+      // Tick-to-confirm (e.g. "start weight checked"). Stored as 'Yes' / '' in a hidden input.
+      if (field.type === 'confirm') {
+        return `<span class="fr-confirm"><input type="checkbox" id="${id}__cb" data-confirm-for="${id}"${v === 'Yes' ? ' checked' : ''}>` +
+          `<input type="hidden" id="${id}" value="${v === 'Yes' ? 'Yes' : ''}">` +
+          `<span class="fr-confirm-text">${esc(field.confirmText || 'Confirmed')}</span></span>`;
       }
       if (field.type === 'textarea') return `<textarea id="${id}" rows="3"${ro}>${esc(v)}</textarea>`;
       if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
@@ -1529,6 +1577,24 @@
       alert('Imported ' + imported.length + ' row' + (imported.length === 1 ? '' : 's') + '.');
     }
 
+    // Computed fields that name a registry formula (computeFn/computeArgs) -- same code the API
+    // validates with. Needs ../lib/compute/registry.js on the page; a no-op without it.
+    function refreshComputeFns() {
+      if (!window.ComputeRegistry) return;
+      const fields = allFields(config);
+      const fns = fields.filter(f => f.type === 'computed' && f.computeFn);
+      if (!fns.length) return;
+      const values = {};
+      fields.forEach(f => { const inp = el('fr_f_' + f.key); if (inp) values[f.key] = inp.value; });
+      fns.forEach(f => {
+        const inp = el('fr_f_' + f.key);
+        if (!inp) return;
+        const r = window.ComputeRegistry.run(f.computeFn, f.computeArgs || {}, values);
+        inp.value = r === '' || r == null ? '' : String(r);
+        values[f.key] = inp.value;
+      });
+    }
+
     function renderRosterEditor(existingRows, roster, rosterIndex) {
       const ns = rosterNs(rosterIndex);
       const containerId = rosterDomId('fr_rosterRows', rosterIndex);
@@ -1562,15 +1628,29 @@
       }
 
 
+      // Computed top-level fields fed by this roster (sumRosterColumn, optionally narrowed by
+      // sumRosterWhere), then any computed field naming a registry formula (e.g. yield %).
+      function renderComputedFields() {
+        const cur = rows.map((_, i) => readRow(i));
+        allFields(config).forEach((f) => {
+          if (f.type !== 'computed' || !f.sumRosterColumn) return;
+          if (!roster.columns.some(c => c.key === f.sumRosterColumn)) return;
+          const inp = el(`fr_f_${f.key}`);
+          if (inp) inp.value = sumRosterRows(f, cur).toFixed(2);
+        });
+        refreshComputeFns();
+      }
+
       function renderRosterTotals() {
+        renderComputedFields();
         if (!roster.totalsRow) return;
         const totals = {};
         roster.totalsRow.forEach(k => { totals[k] = 0; });
         rows.forEach((_, i) => {
           roster.totalsRow.forEach(k => {
             const inp = el(fid(i, k));
-            const val = inp ? parseFloat(inp.value) : NaN;
-            if (!isNaN(val)) totals[k] += val;
+            const val = inp ? sumNumList(inp.value) : null;
+            if (val !== null) totals[k] += val;
           });
         });
         const totalsEl = el(rosterDomId('fr_rosterTotals', rosterIndex));
@@ -1589,17 +1669,11 @@
             totalsEl.innerHTML += ` &nbsp;·&nbsp; <strong>${esc(p.label || 'OOSW %')}: ${txt}</strong>`;
           }
         }
-        allFields(config).forEach((f) => {
-          if (f.type !== 'computed' || !f.sumRosterColumn) return;
-          if (!roster.columns.some(c => c.key === f.sumRosterColumn)) return;
-          const inp = el(`fr_f_${f.key}`);
-          if (inp) inp.value = (totals[f.sumRosterColumn] || 0).toFixed(2);
-        });
       }
 
 
       function renderRosterDerived() {
-        const specials = (roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived');
+        const specials = (roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived' || c.deriveJoin);
         if (!specials.length) return;
         const dateEl = el('fr_f_' + (roster.batchSeqDateField || 'date'));
         const batchSeqDate = dateEl ? dateEl.value : '';
@@ -1627,6 +1701,137 @@
         });
       }
 
+
+      // carryPrev: a column pre-filled from the last recorded value for the same physical item,
+      // e.g. a collection bin's start weight = its final weight on the most recent earlier grading
+      // log. { match, column, sources, dateField }. An earlier row in this record wins over the
+      // server lookup. Only fills when the cell is empty or the item it was pulled for changed,
+      // and never once the row's confirm tick (type 'confirm', confirms: <this column>) is set.
+      const carryCols = roster.columns.filter(c => c.carryPrev);
+      const confirmCols = roster.columns.filter(c => c.type === 'confirm');
+      const lockCols = roster.columns.filter(c => c.lockUntil);
+      function isConfirmedFor(cur, colKey) {
+        return confirmCols.some(k => k.confirms === colKey && cur[k.key] === 'Yes');
+      }
+      function setCarryHint(inp, text) {
+        let hint = el(inp.id + '__hint');
+        if (!hint) {
+          hint = document.createElement('small');
+          hint.id = inp.id + '__hint';
+          hint.className = 'fr-carry-hint';
+          inp.insertAdjacentElement('afterend', hint);
+        }
+        hint.textContent = text || '';
+      }
+      function setCarry(inp, value, hintText) {
+        inp.value = String(value);
+        setCarryHint(inp, hintText);
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      function renderRosterCarry() {
+        if (!carryCols.length) return;
+        rows.forEach((_, i) => {
+          const cur = readRow(i);
+          carryCols.forEach(c => {
+            const cp = c.carryPrev;
+            const inp = el(fid(i, c.key));
+            if (!inp || isConfirmedFor(cur, c.key)) return;
+            const key = String(cur[cp.match] || '').trim();
+            if (inp.dataset.carryFor === key) return;
+            const firstSeen = inp.dataset.carryFor === undefined;
+            inp.dataset.carryFor = key;
+            if (!key || (firstSeen && String(inp.value).trim())) return;
+            for (let j = i - 1; j >= 0; j--) {
+              const r = readRow(j);
+              if (String(r[cp.match] || '').trim().toUpperCase() === key.toUpperCase()
+                && sumNumList(r[cp.column]) !== null) {
+                setCarry(inp, r[cp.column], `From row ${j + 1} of this job`);
+                return;
+              }
+            }
+            inp.value = '';
+            setCarryHint(inp, 'Looking up last weight…');
+            const dateEl = cp.dateField ? el('fr_f_' + cp.dateField) : null;
+            const before = (dateEl && dateEl.value) || new Date().toISOString().slice(0, 10);
+            const path = `/api/roster-last/${encodeURIComponent(cp.column)}?sources=${encodeURIComponent((cp.sources || [config.recordKey]).join(','))}`
+              + `&match=${encodeURIComponent(cp.match)}&value=${encodeURIComponent(key)}&before=${encodeURIComponent(before)}`
+              + (cp.dateField ? `&dateField=${encodeURIComponent(cp.dateField)}` : '')
+              + (editingId ? `&excludeId=${encodeURIComponent(editingId)}` : '');
+            (window.FacilityApi ? window.FacilityApi.fetch(path)
+              : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path))
+              .then(res => (res.ok ? res.json() : null))
+              .catch(() => null)
+              .then(found => {
+                if (!document.body.contains(inp) || inp.dataset.carryFor !== key) return;
+                if (isConfirmedFor(readRow(i), c.key)) return;
+                if (found && found.value != null && found.value !== '') {
+                  setCarry(inp, found.value, `Last final weight — job ${found.jobNumber || '?'}`
+                    + (found.date ? ` (${fmtDDMMYYYY(found.date)})` : '')
+                    + (found.status === 'draft' ? ', still a draft' : ''));
+                } else {
+                  setCarryHint(inp, 'No earlier weight for this bin — weigh it and enter the start weight');
+                }
+              });
+          });
+        });
+      }
+      // lockUntil: a column stays disabled until the row's confirm tick is set; a confirmed
+      // column goes read-only (untick to correct it).
+      function applyRowLocks() {
+        if (!lockCols.length && !confirmCols.length) return;
+        rows.forEach((_, i) => {
+          const cur = readRow(i);
+          lockCols.forEach(c => {
+            const inp = el(fid(i, c.key));
+            if (!inp) return;
+            const open = cur[c.lockUntil] === 'Yes';
+            inp.disabled = !open;
+            inp.title = open ? '' : 'Tick the start-weight check first';
+          });
+          confirmCols.forEach(c => {
+            const target = c.confirms ? el(fid(i, c.confirms)) : null;
+            if (target) target.readOnly = cur[c.key] === 'Yes';
+          });
+        });
+      }
+      // seqWithin: picking the group (e.g. size grade) on a row with no number yet numbers it
+      // next in sequence for that group in this record. Stays editable.
+      function autoSeq(e) {
+        const t = e && e.target;
+        if (!t || !t.id) return;
+        roster.columns.filter(c => c.seqWithin).forEach(c => {
+          rows.forEach((_, i) => {
+            if (t.id !== fid(i, c.seqWithin)) return;
+            const inp = el(fid(i, c.key));
+            const grp = String(t.value || '').trim();
+            if (!inp || String(inp.value).trim() || !grp) return;
+            let max = 0;
+            rows.forEach((__, j) => {
+              if (j === i) return;
+              const r = readRow(j);
+              if (String(r[c.seqWithin] || '').trim() !== grp) return;
+              const n = parseInt(r[c.key], 10);
+              if (!isNaN(n) && n > max) max = n;
+            });
+            inp.value = String(max + 1);
+          });
+        });
+      }
+      container.addEventListener('change', (e) => {
+        const cb = e.target && e.target.closest && e.target.closest('input[data-confirm-for]');
+        if (!cb) return;
+        const hidden = el(cb.dataset.confirmFor);
+        if (!hidden) return;
+        const col = confirmCols.find(c => cb.dataset.confirmFor.endsWith('_' + c.key));
+        const target = col && col.confirms ? el(cb.dataset.confirmFor.slice(0, -col.key.length) + col.confirms) : null;
+        if (cb.checked && target && !String(target.value).trim()) {
+          cb.checked = false;
+          toast('Enter the start weight before confirming it.');
+          return;
+        }
+        hidden.value = cb.checked ? 'Yes' : '';
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+      });
 
       const canCollapse = roster.collapseRows !== false && roster.columns.length > 2;
       const collapsedRows = new Set();
@@ -1681,8 +1886,10 @@
 
               (config.autofill || []).forEach((rule) =>
                 applyRestrict(el('fr_modalSections'), rule, rule.__lastFound || null));
-              renderRosterTotals();
               renderRosterDerived();
+              renderRosterCarry();
+              applyRowLocks();
+              renderRosterTotals();
               container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
                 btn.addEventListener('click', () => {
                   const i = Number(btn.dataset.removeRosterRow);
@@ -1698,8 +1905,14 @@
               applyCollapse();
             }
 
-      container.addEventListener('input', renderRosterTotals);
-      container.addEventListener('input', renderRosterDerived);
+      // Derived cells first so totals read the fresh values (e.g. graded weight -> grade totals).
+      container.addEventListener('input', (e) => {
+        autoSeq(e);
+        renderRosterDerived();
+        renderRosterCarry();
+        applyRowLocks();
+        renderRosterTotals();
+      });
 
       function collapseAllExcept(openIdx) {
         if (!canCollapse) return;
@@ -1884,6 +2097,7 @@
       if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
       wireSectionSummaries(container);
       if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); wireJobRouteCheck(container, config); }
+      if (!locked) { container.addEventListener('input', refreshComputeFns); refreshComputeFns(); }
 
       const pickFields = allFields(config).concat(rosterList.reduce((acc, r) => acc.concat(r.columns || []), []));
       const traceJobField = (pickFields.find(f => f.type === 'recordpick' && f.jobField) || {}).jobField
@@ -2033,16 +2247,29 @@
         toast(`All records in "${incompleteRoster.title}" must be attached and verified before this can be submitted.`);
         return;
       }
+      // Required confirm ticks (e.g. bin start weight checked) on every row that holds data.
+      if (rosterRowsByIndex && finalize) {
+        let unconfirmed = null;
+        rosterList.forEach((roster, i) => {
+          if (unconfirmed) return;
+          const reqConfirm = (roster.columns || []).filter(c => c.type === 'confirm' && c.required);
+          if (!reqConfirm.length) return;
+          const idx = rosterRowsByIndex[i].findIndex(r =>
+            (roster.columns || []).some(c => c.type !== 'confirm' && String(r[c.key] || '').trim() !== '')
+            && reqConfirm.some(c => r[c.key] !== 'Yes'));
+          if (idx !== -1) unconfirmed = { roster, row: idx + 1, col: reqConfirm[0] };
+        });
+        if (unconfirmed) {
+          toast(`"${unconfirmed.roster.title}" row ${unconfirmed.row}: ${unconfirmed.col.label} must be ticked before submitting.`);
+          return;
+        }
+      }
 
       if (rosterRowsByIndex) {
         const allRosterRows = rosterRowsByIndex.reduce((acc, rows) => acc.concat(rows), []);
         allFields(config).forEach((f) => {
           if (f.type !== 'computed' || !f.sumRosterColumn) return;
-          const total = allRosterRows.reduce((sum, r) => {
-            const n = parseFloat(r[f.sumRosterColumn]);
-            return sum + (isNaN(n) ? 0 : n);
-          }, 0);
-          values[f.key] = total.toFixed(2);
+          values[f.key] = sumRosterRows(f, allRosterRows).toFixed(2);
         });
 
         rosterList.forEach((roster, i) => {
@@ -2051,9 +2278,16 @@
           rosterRowsByIndex[i].forEach((r, idx) => {
             rosterCols.forEach((c) => {
               if (c.type === 'batchseq') r[c.key] = formatBatchSeq(batchSeqDate, idx);
-              else if (c.type === 'derived' && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
+              else if ((c.type === 'derived' || c.deriveJoin) && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
             });
           });
+        });
+      }
+      if (window.ComputeRegistry) {
+        allFields(config).forEach((f) => {
+          if (f.type !== 'computed' || !f.computeFn) return;
+          const r = window.ComputeRegistry.run(f.computeFn, f.computeArgs || {}, values);
+          values[f.key] = r === '' || r == null ? '' : String(r);
         });
       }
 

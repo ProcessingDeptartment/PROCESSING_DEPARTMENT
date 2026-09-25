@@ -146,7 +146,7 @@
           ['Receiving date', r.receivingDate],
           ['Received from', r.receivedFrom],
           ['To be processed for', r.toBeProcessedFor],
-          ['Intake weight (kg)', intakeOf(r)],
+          ['Whole weight (kg)', intakeOf(r)],
           ['Size ranges', Array.isArray(sizes) && sizes.length ? sizes.join(', ') : ''],
           ['Job status', status && status.status === 'closed' ? 'Closed' : 'Open']
         ];

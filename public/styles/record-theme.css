@@ -1284,3 +1284,9 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
   }
   body.rt-pc .rt-content .fr-roster-row [data-remove-roster-row]:hover { background: var(--rt-fail-bg, #fbe8e6); color: var(--rt-fail, #a3352d); }
 }
+
+/* Tick-to-confirm roster cell (form-record type 'confirm') and carried-value hint (carryPrev). */
+.fr-confirm { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.fr-confirm input[type=checkbox] { width: 24px; height: 24px; min-height: 0; margin: 0; accent-color: var(--rt-slate, #2f4550); }
+.fr-carry-hint { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; color: var(--rt-slate, #5b6770); }
+.fr-roster-row input:disabled { opacity: .55; cursor: not-allowed; }

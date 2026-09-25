@@ -17,14 +17,17 @@ model Sub_dry_export_pack_front_page {
   jobNumber                String?
   packingDate              DateTime? @db.Date
   noOfBoxesExported        Float?
-  rec747Attached           String?
-  rec748Attached           String?
-  rec749Attached           String?
-  signedPackingListsAttached Boolean?
-  healthCertificatesAttached Boolean?
   completedBySupervisor    String?
   checkedByQC              String?
   verificationBy           String?
+  rec745Attached           String?
+  rec746Attached           String?
+  rec747Attached           String?
+  rec748Attached           String?
+  rec749Attached           String?
+  rec7410Attached          String?
+  salesPackingListAttached String?
+  healthCertificatesAttached String?
 
   @@index([jobNumber], map: "sub_dry_export_pack_front_page_jobNumber_idx")
   @@map("sub_dry_export_pack_front_page")
@@ -430,8 +433,8 @@ model Sub_fixed_reader_checks {
 
   date                     DateTime? @db.Date
   location                 String?
-  startTime                String?
-  endTime                  String?
+  startTime                DateTime? @db.Time
+  endTime                  DateTime? @db.Time
   itemNo                   Float?
   rfidTagNumber            String?
   qdeMatch                 Boolean?
@@ -591,12 +594,12 @@ model Sub_bleeding_and_salting {
   date                     DateTime? @db.Date
   sizeRange                String?
   noOfCrates               Float?
-  bleedingStartTime        String?
-  bleedingFinishTime       String?
+  bleedingStartTime        DateTime? @db.Time
+  bleedingFinishTime       DateTime? @db.Time
   bleedingTotalTime        String?
   standardSaltingTime      String?
-  saltingStartTime         String?
-  saltingFinishTime        String?
+  saltingStartTime         DateTime? @db.Time
+  saltingFinishTime        DateTime? @db.Time
   saltingTotalTime         String?
   shuckWeight              Float?
   saltKg                   Float?
@@ -644,7 +647,7 @@ model Sub_washing_control_sheet_Row {
   position Int     @default(0)
 
   date                     DateTime? @db.Date
-  timeStarted              String?
+  timeStarted              DateTime? @db.Time
   washNumber               String?
   sizeRange                String?
   machineNo                String?
@@ -713,7 +716,7 @@ model Sub_scrubbing_check_supervisor {
   jiIntakeWeight           String?
   abaloneSize              Float?
   date                     DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   productCleanedEffectively Boolean?
   damagedAbalone           Boolean?
   weightDamagedAbalone     Float?
@@ -1096,7 +1099,7 @@ model Sub_scrubbing_checklist_qc_Row {
   parent   Sub_scrubbing_checklist_qc @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int     @default(0)
 
-  time                     String?
+  time                     DateTime? @db.Time
   sizeRange                String?
   noOfCratesInspected      Float?
   damagedAbalone           Boolean?
@@ -1127,7 +1130,7 @@ model Sub_precooking_check_sheet {
   litresWaterPerCook       Float?
   sugarKgUsed              Float?
   sugarBatchCode           String?
-  precookingStartTime      String?
+  precookingStartTime      DateTime? @db.Time
   temperature              Float?
   waterInPotChanged        Boolean?
   rinseWaterChanged        Boolean?
@@ -1185,7 +1188,7 @@ model Sub_can_packing_control_sheet {
   jiProcessingFor          String?
   jiIntakeWeight           String?
   date                     DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   sizeRange                String?
   qualityOfAbalone         String?
   piecesSizes              String?
@@ -1213,7 +1216,7 @@ model Sub_can_filling_and_printing {
   jiProcessingFor          String?
   jiIntakeWeight           String?
   date                     DateTime? @db.Date
-  startTime                String?
+  startTime                DateTime? @db.Time
   waterOrSauceFillingBatch String?
   productTemp              Float?
   nettWeightSpec           Float?
@@ -1240,7 +1243,7 @@ model Sub_printing_control_sheet {
 
   date                     DateTime? @db.Date
   productionDate           DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   codeCorrect              Boolean?
   canPosition              String?
   actualCanPieces          Float?
@@ -1313,10 +1316,10 @@ model Sub_retorting_control_sheet {
   jiProcessingFor          String?
   jiIntakeWeight           String?
   date                     DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   productionCode           String?
   productRecipe            String?
-  timeTrolleyIn            String?
+  timeTrolleyIn            DateTime? @db.Time
   retortNo                 String?
   pressureOnGauge          Float?
   tempOnGauge              Float?
@@ -1324,7 +1327,7 @@ model Sub_retorting_control_sheet {
   tempOnScreen             Float?
   startSterilization       String?
   startCooling             String?
-  timeTrolleyOut           String?
+  timeTrolleyOut           DateTime? @db.Time
   processDeviation         String?
 
   @@index([jobNumber], map: "sub_retorting_control_sheet_jobNumber_idx")
@@ -1347,7 +1350,7 @@ model Sub_retort_inspection_report {
   intakeDate               DateTime? @db.Date
   harvestFarm              String?
   retortCode               String?
-  timeTrolleyIn            String?
+  timeTrolleyIn            DateTime? @db.Time
   product                  String?
   canningCode              String?
   canSize                  String?
@@ -1593,11 +1596,11 @@ model Sub_dry_cooking {
   blanchTemp               Float?
   cookingTime              String?
   blanchBatchNumber        String?
-  startTime                String?
+  startTime                DateTime? @db.Time
   startingTemp             Float?
   temp20MinAfter           Float?
   endOfCookingTemp         Float?
-  timeOut                  String?
+  timeOut                  DateTime? @db.Time
   totalCookingTime         String?
   cookSeaWater             Float?
   cookPh                   Float?
@@ -1790,9 +1793,12 @@ model Sub_grading_production_log_cultivated_Row {
   parent   Sub_grading_production_log_cultivated @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int     @default(0)
 
+  sizeGrade                String?
+  binNo                    Float?
   binCode                  String?
   binWeightStart           Float?
-  fullBoxWeight            Float?
+  startConfirmed           String?
+  fullBoxWeight            String?
   finalBinWeight           Float?
   gradedWeight             Float?
 
@@ -1847,9 +1853,12 @@ model Sub_grading_production_log_ranched_Row {
   parent   Sub_grading_production_log_ranched @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int     @default(0)
 
+  sizeGrade                String?
+  binNo                    Float?
   binCode                  String?
   binWeightStart           Float?
-  fullBoxWeight            Float?
+  startConfirmed           String?
+  fullBoxWeight            String?
   finalBinWeight           Float?
   gradedWeight             Float?
 
@@ -1949,6 +1958,7 @@ model Sub_labelling_of_dry_boxes {
   rawJson     String?
   inSpec      Boolean?
 
+  jobNo                    String?
   date                     DateTime? @db.Date
   clientName               String?
   clientAddress            String?
@@ -1963,6 +1973,7 @@ model Sub_labelling_of_dry_boxes {
   inspectedByQC            String?
   inspectedByFG01          String?
 
+  @@index([jobNo], map: "sub_labelling_of_dry_boxes_jobNo_idx")
   @@map("sub_labelling_of_dry_boxes")
 }
 
@@ -2002,6 +2013,7 @@ model Sub_dry_labelling_list_Row {
   boxCode                  String?
   agCode                   String?
   weight                   Float?
+  binCode                  String?
 
   @@index([parentId])
   @@map("sub_dry_labelling_list_row")
@@ -2017,12 +2029,14 @@ model Sub_dry_stock_transfers {
   rawJson     String?
   inSpec      Boolean?
 
+  jobNo                    String?
   date                     DateTime? @db.Date
   noOfBoxes                Float?
-  timeOfTransfer           String?
+  timeOfTransfer           DateTime? @db.Time
   transferredBy            String?
   receivedBy               String?
 
+  @@index([jobNo], map: "sub_dry_stock_transfers_jobNo_idx")
   @@map("sub_dry_stock_transfers")
 }
 
@@ -2080,7 +2094,7 @@ model Sub_live_pack_checklist {
   productionDate           DateTime? @db.Date
   numberOfCartons          Float?
   dripTimeOfBags           String?
-  startTime                String?
+  startTime                DateTime? @db.Time
   scaleTareWeight          Float?
   waterTemp                Float?
   cleaningInspectionBefore Boolean?
@@ -2093,7 +2107,7 @@ model Sub_live_pack_checklist {
   noOfIcepacksPerBox       Float?
   gasInjectedInEachBox     Boolean?
   boxesSealedAndLabelled   Boolean?
-  timeFinishedPacking      String?
+  timeFinishedPacking      DateTime? @db.Time
   allBoxesLoadedInTruck    Boolean?
   truckLockedSealed        Boolean?
   cleaningInspectionAfter  Boolean?
@@ -2801,7 +2815,7 @@ model Sub_glass_breakage_clearance_certificate {
   inSpec      Boolean?
 
   date                     DateTime? @db.Date
-  timeOfBreakage           String?
+  timeOfBreakage           DateTime? @db.Time
   areaOfBreakage           String?
   reportedBy               String?
   factoryManager           String?
@@ -2823,7 +2837,7 @@ model Sub_glass_breakage_clearance_certificate {
   areaInspectedAfterCleaning Boolean?
   contaminatedProductDiscarded Boolean?
   safeToRestart            Boolean?
-  timeOfRestart            String?
+  timeOfRestart            DateTime? @db.Time
   carCompleted             Boolean?
   carNo                    String?
   rootCauseIdentified      Boolean?
@@ -3030,15 +3044,15 @@ model Sub_plaster_dressing_inspection {
   inSpec      Boolean?
 
   dateOfIncident           DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   itemIssued               String?
   nameOfInjured            String?
   descriptionOfInjury      String?
   firstAider               String?
   incidentRecordedNo       String?
-  breakTime                String?
-  lunchTime                String?
-  knockOffTime             String?
+  breakTime                DateTime? @db.Time
+  lunchTime                DateTime? @db.Time
+  knockOffTime             DateTime? @db.Time
 
   @@map("sub_plaster_dressing_inspection")
 }
@@ -3055,13 +3069,13 @@ model Sub_first_aid_checklist_record {
 
   shift                    String?
   dateOfIncident           DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   itemIssued               String?
   intact                   Boolean?
   cleanlinessOfDressing    String?
   firstAider               String?
   nameOfInjured            String?
-  breakTime                String?
+  breakTime                DateTime? @db.Time
 
   @@map("sub_first_aid_checklist_record")
 }
@@ -3104,7 +3118,7 @@ model Sub_chiller_batch_control {
   processingStep           String?
   trackingNo               String?
   date                     DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   sizeRange                String?
   traysClearlyMarked       Boolean?
   noOfTrays                Float?
@@ -3133,7 +3147,7 @@ model Sub_dry_chiller_batch_control {
   harvestFarm              String?
   processingStep           String?
   date                     DateTime? @db.Date
-  time                     String?
+  time                     DateTime? @db.Time
   traysClearlyMarked       Boolean?
   noOfTrays                Float?
   productTemp              Float?
@@ -3162,8 +3176,8 @@ model Sub_maintenance_job_card {
   issueDate                DateTime? @db.Date
   descriptionRequired      String?
   actualMaintenancePerformed String?
-  timeStarted              String?
-  timeFinished             String?
+  timeStarted              DateTime? @db.Time
+  timeFinished             DateTime? @db.Time
   technicianSignature      String?
   comments                 String?
   suitablyCarriedOut       Boolean?
@@ -3278,7 +3292,7 @@ model Sub_daily_waste_removal {
   inSpec      Boolean?
 
   date                     DateTime? @db.Date
-  timeOfCollection         String?
+  timeOfCollection         DateTime? @db.Time
   areaRemovedFrom          String?
   typeOfWaste              String?
   destinationDumpsite      String?
@@ -3301,7 +3315,7 @@ model Sub_boiler_inspection_report {
   inSpec      Boolean?
 
   date                     DateTime? @db.Date
-  timeBoilerStarted        String?
+  timeBoilerStarted        DateTime? @db.Time
   waterLevelChecked        Boolean?
   airReleaseValveOpened    Boolean?
   burnerSwitchedOn         Boolean?
@@ -3309,7 +3323,7 @@ model Sub_boiler_inspection_report {
   pressureChecked          Boolean?
   mowbreyOpened            Boolean?
   mainSteamValveOpened     Boolean?
-  timeBoilerTurnedOff      String?
+  timeBoilerTurnedOff      DateTime? @db.Time
   burnerAdjustedHighToLow  Boolean?
   powerFailure             Boolean?
   boilerRestarted          Boolean?
@@ -3664,7 +3678,7 @@ model Sub_lha_water_monitoring {
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
   shift                    String?
-  timeOfCheck              String?
+  timeOfCheck              DateTime? @db.Time
   chillerUnitOperating     Boolean?
   temperature              Float?
   checkedBy                String?
@@ -3903,8 +3917,8 @@ model Sub_traceability {
   inSpec      Boolean?
 
   dateInitiated            DateTime? @db.Date
-  startTime                String?
-  finishTime               String?
+  startTime                DateTime? @db.Time
+  finishTime               DateTime? @db.Time
   selectedItemDescription  String?
   itemType                 String?
   lotBatchNumber           String?
@@ -4257,8 +4271,8 @@ model Sub_emergency_evacuation_attendance_register {
   date                     DateTime? @db.Date
   buildingArea             String?
   typeOfDrill              String?
-  timeStarted              String?
-  timeEnded                String?
+  timeStarted              DateTime? @db.Time
+  timeEnded                DateTime? @db.Time
   notesComments            String?
   safetyOfficer            String?
   management               String?
@@ -4292,8 +4306,8 @@ model Sub_handling_of_emergencies_and_incidences {
   inSpec      Boolean?
 
   typeOfDrill              String?
-  timeEvacuating           String?
-  timeReturning            String?
+  timeEvacuating           DateTime? @db.Time
+  timeReturning            DateTime? @db.Time
   durationOfDrill          String?
   durationComments         String?
   durationDeviation        String?

@@ -2063,9 +2063,12 @@ model Sub_grading_production_log_cultivated_Row {
   parent   Sub_grading_production_log_cultivated @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int                                   @default(0)
 
+  sizeGrade      String?
+  binNo          Float?
   binCode        String?
   binWeightStart Float?
-  fullBoxWeight  Float?
+  startConfirmed String?
+  fullBoxWeight  String?
   finalBinWeight Float?
   gradedWeight   Float?
 
@@ -2120,9 +2123,12 @@ model Sub_grading_production_log_ranched_Row {
   parent   Sub_grading_production_log_ranched @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int                                @default(0)
 
+  sizeGrade      String?
+  binNo          Float?
   binCode        String?
   binWeightStart Float?
-  fullBoxWeight  Float?
+  startConfirmed String?
+  fullBoxWeight  String?
   finalBinWeight Float?
   gradedWeight   Float?
 

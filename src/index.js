@@ -217,6 +217,62 @@ app.get('/api/values/:recordKey/:field', async (req, res) => {
   }
 });
 
+// Last recorded value of a roster column for a physical item, across one or more records -- e.g. a
+// grading collection bin's final weight on the latest earlier grading log, which becomes that bin's
+// start weight on the next job. Rows match on `match`=`value`; entries are ordered by their own
+// `dateField` (falling back to save time) and only those dated on/before `before` are considered.
+//   GET /api/roster-last/:column?sources=a,b&match=binCode&value=8g-10g-1&dateField=gradingDate&before=2026-09-25&excludeId=...
+app.get('/api/roster-last/:column', async (req, res) => {
+  try {
+    const column = req.params.column;
+    const sources = String(req.query.sources || '').split(',').map(s => s.trim()).filter(Boolean);
+    const match = String(req.query.match || '');
+    const needle = String(req.query.value || '').trim().toUpperCase();
+    const dateField = req.query.dateField ? String(req.query.dateField) : null;
+    const before = req.query.before ? String(req.query.before) : null;
+    const excludeId = req.query.excludeId ? String(req.query.excludeId) : null;
+    if (!sources.length || !match || !needle) return res.json(null);
+    let best = null;
+    for (const recordKey of sources) {
+      for (const prefix of ['formrecord:', 'monitoring_log:']) {
+        const row = await prisma.keyValue.findUnique({ where: { key: prefix + recordKey } });
+        if (!row) continue;
+        let entries;
+        try { entries = JSON.parse(row.value); } catch { continue; }
+        if (!Array.isArray(entries)) continue;
+        for (const entry of entries) {
+          if (excludeId && entry.id === excludeId) continue;
+          const values = entry.values || entry;
+          const date = dateField ? String(values[dateField] || '') : '';
+          if (before && date && date > before) continue;
+          const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
+          const rows = Array.isArray(entry.roster) ? entry.roster : [];
+          // Last matching row within the entry wins (the bin's most recent use in that job).
+          let hit = null;
+          for (const r of rows) {
+            if (String((r || {})[match] || '').trim().toUpperCase() !== needle) continue;
+            const v = String(r[column] == null ? '' : r[column]).trim();
+            if (v) hit = v;
+          }
+          if (hit == null) continue;
+          if (!best || date > best.date || (date === best.date && stamp > best.stamp)) {
+            best = {
+              date, stamp, value: hit, recordKey,
+              jobNumber: values.jobNumber || values.jobNo || '',
+              status: entry.status || 'submitted'
+            };
+          }
+        }
+      }
+    }
+    if (!best) return res.json(null);
+    res.json({ value: best.value, recordKey: best.recordKey, jobNumber: best.jobNumber, date: best.date, status: best.status });
+  } catch (e) {
+    console.error('GET roster-last failed', e);
+    res.status(500).json(null);
+  }
+});
+
 // Finds the most recent entry in a record whose field matches value, for cross-record autofill
 // (e.g. selecting a job number on one record pulls in details already captured on another).
 // Checks both storage prefixes since callers don't know which one a given record uses.
