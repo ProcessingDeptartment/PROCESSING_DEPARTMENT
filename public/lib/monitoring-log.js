@@ -1,6 +1,27 @@
 (function () {
   const NS_ROOT = 'ml';
 
+  // Shared libs loaded on demand from next to this engine: the job picker (search -> confirm
+  // popup -> collapse) and JobStatus, which a few record pages never include themselves.
+  const LIB_BASE = (function () {
+    const s = document.currentScript && document.currentScript.src;
+    return s ? s.replace(/[^/]*$/, '') : '../lib/';
+  })();
+  const libLoads = {};
+  function loadLib(file, globalName) {
+    if (window[globalName]) return Promise.resolve(window[globalName]);
+    if (!libLoads[file]) {
+      libLoads[file] = new Promise((resolve) => {
+        const s = document.createElement('script');
+        s.src = LIB_BASE + file;
+        s.onload = () => resolve(window[globalName] || null);
+        s.onerror = () => { delete libLoads[file]; resolve(null); };
+        document.head.appendChild(s);
+      });
+    }
+    return libLoads[file];
+  }
+
   function el(id) { return document.getElementById(id); }
   function num(v) { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -575,17 +596,21 @@
 
   function wireJobSearch(container, ns, entryFields, autofillRules) {
     const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
-    if (!fields.length || !window.JobStatus) return;
-    window.JobStatus.openJobNumbers().then((open) => {
-      fields.forEach((f) => {
-        const sel = container.querySelector('#' + ns + '_f_' + f.key);
-        if (!sel) return;
+    const sels = fields.map((f) => container.querySelector('#' + ns + '_f_' + f.key)).filter(Boolean);
+    if (!sels.length) return;
+    loadLib('job-picker.js?v=1', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
+    loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
+      if (!js) throw new Error('job-status.js unavailable');
+      return js.openJobNumbers();
+    }).then((open) => {
+      sels.forEach((sel) => {
         const current = sel.value;
         const options = open.slice();
         if (current && options.indexOf(current) === -1) options.unshift(current);
         sel.innerHTML = '<option value="">—</option>' +
           options.map((val) => `<option value="${esc(val)}">${esc(val)}</option>`).join('');
         sel.value = current;
+        if (sel._jobPicker) sel._jobPicker.drawList();
       });
     }).catch((e) => console.error('job list load failed', e));
   }

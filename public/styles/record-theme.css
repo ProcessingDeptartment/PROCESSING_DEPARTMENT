@@ -1176,3 +1176,81 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 
   *:has(> .doc-line) { display: none !important; }
 }
+
+/* ========================================================================
+   PC / desktop density (opt-in: <body class="rt-pc">)
+   For office-desk documents filled in on a PC with mouse + keyboard (e.g.
+   the NRCS pack compilations), not on the floor tablet. Same shell + fields,
+   just compact inputs, a wider multi-column detail grid, and the roster drawn
+   as a real table: one header row, one line per record, no card per row.
+   ======================================================================== */
+@media screen {
+  body.rt-pc .rt-content { padding: 20px 28px; }
+  body.rt-pc .rt-content .fr-grid,
+  body.rt-pc .rt-content .fr-grid-2, body.rt-pc .rt-content .fr-grid-3, body.rt-pc .rt-content .fr-grid-4 {
+    gap: 12px 16px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  body.rt-pc .rt-content .fr-field { font-size: 11px; gap: 4px; }
+  body.rt-pc .rt-content .fr-field input,
+  body.rt-pc .rt-content .fr-field select,
+  body.rt-pc .rt-content .fr-field textarea {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 14px;
+    font-weight: 500;
+    border-width: 1px;
+    border-color: #b9c0c6;
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  body.rt-pc .rt-content .fr-yesno button { min-height: 34px; }
+  body.rt-pc .rt-content .rt-btn,
+  body.rt-pc .rt-content .fr-btn { min-height: 36px; }
+
+  /* roster as a table: fixed columns (N fields + remove), labels only on row 1 */
+  body.rt-pc .rt-content [id^="fr_rosterRows"] {
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius-sm);
+    background: var(--rt-white);
+    overflow: hidden;
+  }
+  body.rt-pc .rt-content .fr-roster-row {
+    grid-template-columns: repeat(var(--rt-roster-cols, 3), minmax(0, 1fr)) 40px;
+    grid-auto-flow: column;
+    gap: 0 10px;
+    align-items: center;
+    padding: 5px 10px;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--rt-border);
+    border-radius: 0;
+  }
+  body.rt-pc .rt-content .fr-roster-row:nth-child(even) { background: #f7f8f7; }
+  body.rt-pc .rt-content .fr-roster-row:first-child { border-top: 0; padding-top: 0; }
+  body.rt-pc .rt-content .fr-roster-row > .fr-field { font-size: 0; gap: 0; }
+  body.rt-pc .rt-content .fr-roster-row > .fr-field input,
+  body.rt-pc .rt-content .fr-roster-row > .fr-field select { min-height: 32px; font-size: 14px; }
+  /* first row carries the column headings, like a table <thead> */
+  body.rt-pc .rt-content .fr-roster-row:first-child > .fr-field {
+    font-size: 11px;
+    gap: 6px;
+  }
+  body.rt-pc .rt-content .fr-roster-row:first-child > .fr-field::first-line {
+    line-height: 30px;
+  }
+  body.rt-pc .rt-content .fr-roster-row:first-child {
+    background: linear-gradient(to bottom, #eef1f0 0, #eef1f0 36px, transparent 36px);
+  }
+  body.rt-pc .rt-content .fr-roster-row [data-remove-roster-row] {
+    grid-column: auto;
+    align-self: end;
+    justify-self: center;
+    min-height: 32px;
+    width: 32px;
+    padding: 0;
+    background: transparent;
+    color: var(--rt-slate);
+  }
+  body.rt-pc .rt-content .fr-roster-row [data-remove-roster-row]:hover { background: var(--rt-fail-bg, #fbe8e6); color: var(--rt-fail, #a3352d); }
+}
