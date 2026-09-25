@@ -25,7 +25,7 @@
 <script src="../lib/traceability.js?v=8"></script>
 <script src="../lib/batch-validation.js?v=1"></script>
 <script src="../lib/signoff-block.js?v=6"></script>
-<script src="../lib/form-record.js?v=51"></script>
+<script src="../lib/form-record.js?v=52"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -46,7 +46,7 @@
     ],
     sections: [
       { title: 'Batch details', fields: [
-        { key: 'jobNo', label: 'Job no.', type: 'jobsearch' },
+        { key: 'jobNo', label: 'Job no.', type: 'jobsearch', route: 'Dried' },
         { key: 'date', label: 'Date', type: 'date', required: true },
         { key: 'agCode', label: 'AG code', type: 'text' },
       ]}

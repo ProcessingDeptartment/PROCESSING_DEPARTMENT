@@ -23,11 +23,18 @@
 //   updatedAt  DateTime
 //   rawJson    String?             — the full JSON blob during transition, so nothing is lost
 //   inSpec     Boolean?            — monitoring-log's per-entry spec evaluation
+//
+// Job-level copies (receiving date, farm, processing-for, intake weight autofilled read-only from
+// REC 7.1.2) get NO column — they live once in sub_abalone_receiving / the job_info view. See
+// src/job-snapshot.js.
 
 import { readFileSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const { jobSnapshotKeys } = createRequire(import.meta.url)('../src/job-snapshot.js');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -102,10 +109,12 @@ for (const def of definitions) {
   const model = toModelName(def.recordKey);
   const tableName = model.toLowerCase();
 
-  // Separate roster fields from top-level fields
+  // Separate roster fields from top-level fields; job-level copies are not stored at all.
+  const skip = jobSnapshotKeys(def);
   const topFields = [];
   const rosterFields = [];
   for (const f of def.fields || []) {
+    if (skip.has(f.key)) continue;
     const sec = def.sections && def.sections[f.sectionIndex];
     if (sec && sec.kind === 'roster') {
       rosterFields.push(f);

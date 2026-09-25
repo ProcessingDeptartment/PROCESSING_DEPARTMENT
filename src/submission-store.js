@@ -6,6 +6,8 @@
 // generated and there's no Prisma model name we can reference at runtime — the table name
 // comes from the record key.
 
+const { jobSnapshotKeys } = require('./job-snapshot');
+
 const PREFIXES = { 'formrecord:': 'form-record', 'monitoring_log:': 'monitoring-log' };
 
 function prefixOf(key) {
@@ -146,13 +148,16 @@ async function getSchema(prisma, recordKey) {
 
   const def = await prisma.recordDefinition.findUnique({
     where: { recordKey },
-    include: { sections: true, fields: true },
+    include: { sections: true, fields: true, autofills: true },
   });
   if (!def) { schemaCache.set(recordKey, null); return null; }
 
+  // Job-level copies (receiving date, farm, ...) are not stored per record — see job-snapshot.js.
+  const skip = jobSnapshotKeys(def);
   const topCols = [];
   const rosterCols = [];
   for (const f of def.fields) {
+    if (skip.has(f.key)) continue;
     const sec = def.sections.find(s => {
       const idx = def.sections.indexOf(s);
       return idx === f.sectionIndex;

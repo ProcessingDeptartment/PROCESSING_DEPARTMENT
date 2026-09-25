@@ -328,7 +328,7 @@
     }
 
     if (field.type === 'jobsearch') {
-      return `<select id="${id}" data-jobsearch="1">` +
+      return `<select id="${id}" data-jobsearch="1"${field.route ? ` data-route="${esc(field.route)}"` : ''}>` +
         (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
         `</select>`;
     }
@@ -600,7 +600,7 @@
     const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
     const sels = fields.map((f) => container.querySelector('#' + ns + '_f_' + f.key)).filter(Boolean);
     if (!sels.length) return;
-    loadLib('job-picker.js?v=2', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
+    loadLib('job-picker.js?v=3', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
     loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
       if (!js) throw new Error('job-status.js unavailable');
       return js.list();

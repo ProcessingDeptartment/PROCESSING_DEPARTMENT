@@ -8,6 +8,8 @@
 // The search is split by route: the operator first picks Can or Dry, and the list only
 // offers jobs whose prefix belongs to that route (3CP/CPR = Can, 3DP/DPR = Dry). Closed
 // jobs stay in the list, tagged "Closed", so a job can still be found after close-out.
+// A jobsearch field with `route: 'Dried'` (or 'Can') -> <select data-route> locks the picker to that
+// route: no Can/Dry toggle, and only jobs whose prefix is that route can be picked (dry records).
 //
 // The <select> stays in the DOM as the value holder, so saving, autofill, summaries and
 // route checks keep working unchanged. Loaded on demand by form-record.js / monitoring-log.js.
@@ -182,7 +184,8 @@
     const input = wrap.querySelector('.jp-search');
     const list = wrap.querySelector('.jp-list');
     const routeBar = wrap.querySelector('.jp-route');
-    let route = loadRoutePref();
+    const fixedRoute = sel.getAttribute('data-route') || '';
+    let route = fixedRoute || loadRoutePref();
     const details = sel.closest('details');
     const summary = details && details.querySelector(':scope > summary');
     let compactLabel = null;
@@ -197,7 +200,7 @@
     const jobs = () => [...sel.options].filter((o) => o.value)
       .map((o) => ({ no: o.value, closed: o.getAttribute('data-status') === 'closed' }));
     // Jobs with no recognised prefix are offered under both routes rather than hidden.
-    const routeJobs = () => jobs().filter((j) => { const r = routeOf(j.no); return !r || r === route; });
+    const routeJobs = () => jobs().filter((j) => { const r = routeOf(j.no); return fixedRoute ? r === fixedRoute : (!r || r === route); });
 
     function paintRoute() {
       routeBar.querySelectorAll('button').forEach((b) =>
@@ -210,7 +213,7 @@
       const v = sel.value;
       picked.hidden = !v;
       input.hidden = !!v;
-      routeBar.hidden = !!v;
+      routeBar.hidden = !!v || !!fixedRoute;
       paintRoute();
       pickedNo.textContent = v;
       wrap.querySelector('.jp-change').hidden = sel.disabled;
@@ -243,6 +246,7 @@
 
     async function choose(jobNo) {
       list.hidden = true;
+      if (fixedRoute && routeOf(jobNo) !== fixedRoute) return;
       input.blur();
       const ok = await confirmJob(jobNo);
       if (!ok) { try { input.focus(); } catch (e) { } return; }
@@ -294,9 +298,9 @@
     wrap.querySelector('.jp-change').addEventListener('click', () => {
       if (sel.disabled) return;
       // Changing a job starts on the current job's route.
-      route = routeOf(sel.value) || route;
+      route = fixedRoute || routeOf(sel.value) || route;
       picked.hidden = true;
-      routeBar.hidden = false;
+      routeBar.hidden = !!fixedRoute;
       input.hidden = false;
       input.value = '';
       paintRoute();

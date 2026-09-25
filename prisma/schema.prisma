@@ -609,9 +609,6 @@ model Sub_gonad_inspection_report {
   inSpec      Boolean?
 
   jobNo                   String?
-  jiReceivingDate         DateTime? @db.Date
-  jiReceivedFrom          String?
-  jiIntakeWeight          String?
   processingFor           String?
   date                    DateTime? @db.Date
   stage                   String?
@@ -724,8 +721,6 @@ model Sub_basket_removal_shucking_gutting {
   inSpec      Boolean?
 
   jobNo                String?
-  jiReceivedFrom       String?
-  jiIntakeWeight       String?
   intakeDate           DateTime? @db.Date
   processingFor        String?
   sizeRange            String?
@@ -807,7 +802,6 @@ model Sub_salting_and_tumbling {
   jobNo             String?
   intakeDate        DateTime? @db.Date
   harvestFarm       String?
-  jiIntakeWeight    String?
   date              DateTime? @db.Date
   processingFor     String?
   qualityController String?
@@ -857,9 +851,6 @@ model Sub_bleeding_and_salting {
   inSpec      Boolean?
 
   jobNo               String?
-  jiReceivingDate     DateTime? @db.Date
-  jiReceivedFrom      String?
-  jiIntakeWeight      String?
   processingFor       String?
   date                DateTime? @db.Date
   sizeRange           String?
@@ -897,10 +888,6 @@ model Sub_washing_control_sheet {
   inSpec      Boolean?
 
   jobNo            String?
-  jiReceivingDate  DateTime? @db.Date
-  jiReceivedFrom   String?
-  jiProcessingFor  String?
-  jiIntakeWeight   String?
   qcOnline         String?
   processDeviation String?
 
@@ -940,7 +927,6 @@ model Sub_salting_oosw {
   inSpec      Boolean?
 
   jobNo           String?
-  jiIntakeWeight  String?
   intakeDate      DateTime? @db.Date
   harvestFarm     String?
   processingFor   String?
@@ -980,10 +966,6 @@ model Sub_scrubbing_check_supervisor {
   inSpec      Boolean?
 
   jobNo                     String?
-  jiReceivingDate           DateTime? @db.Date
-  jiReceivedFrom            String?
-  jiProcessingFor           String?
-  jiIntakeWeight            String?
   abaloneSize               Float?
   date                      DateTime? @db.Date
   time                      String?
@@ -1078,10 +1060,6 @@ model Sub_sampling_log {
   inSpec      Boolean?
 
   jobNo           String?
-  jiReceivingDate DateTime? @db.Date
-  jiReceivedFrom  String?
-  jiProcessingFor String?
-  jiIntakeWeight  String?
   date            DateTime? @db.Date
   productInfo     String?
   pieces          Float?
@@ -1103,10 +1081,6 @@ model Sub_stock_loading {
   inSpec      Boolean?
 
   jobNo           String?
-  jiReceivingDate DateTime? @db.Date
-  jiReceivedFrom  String?
-  jiProcessingFor String?
-  jiIntakeWeight  String?
   date            DateTime? @db.Date
   agCode          String?
   canPieces       Float?
@@ -1131,9 +1105,6 @@ model Sub_qc_report {
   inSpec      Boolean?
 
   jobNumber          String?
-  jiReceivingDate    DateTime? @db.Date
-  jiProcessingFor    String?
-  jiIntakeWeight     String?
   harvestFarm        String?
   date               DateTime? @db.Date
   productionCode     String?
@@ -1233,10 +1204,6 @@ model Sub_rework_log {
   inSpec      Boolean?
 
   jobNo                            String?
-  jiReceivingDate                  DateTime? @db.Date
-  jiReceivedFrom                   String?
-  jiProcessingFor                  String?
-  jiIntakeWeight                   String?
   date                             DateTime? @db.Date
   reasonForRework                  String?
   reworkApprovalBy                 String?
@@ -1317,10 +1284,6 @@ model Sub_stock_transfers {
   inSpec      Boolean?
 
   jobNo            String?
-  jiReceivingDate  DateTime? @db.Date
-  jiReceivedFrom   String?
-  jiProcessingFor  String?
-  jiIntakeWeight   String?
   date             DateTime? @db.Date
   agCode           String?
   qualitySignOff   String?
@@ -1349,10 +1312,6 @@ model Sub_scrubbing_checklist_qc {
   inSpec      Boolean?
 
   jobNo            String?
-  jiReceivingDate  DateTime? @db.Date
-  jiReceivedFrom   String?
-  jiProcessingFor  String?
-  jiIntakeWeight   String?
   date             DateTime? @db.Date
   processDeviation String?
   checkedBy        String?
@@ -1391,10 +1350,6 @@ model Sub_precooking_check_sheet {
   inSpec      Boolean?
 
   jobNumber            String?
-  jiReceivingDate      DateTime? @db.Date
-  jiReceivedFrom       String?
-  jiProcessingFor      String?
-  jiIntakeWeight       String?
   precookingDate       DateTime? @db.Date
   sizeRange            String?
   litresWaterPerCook   Float?
@@ -1453,10 +1408,6 @@ model Sub_can_packing_control_sheet {
   inSpec      Boolean?
 
   jobNo            String?
-  jiReceivingDate  DateTime? @db.Date
-  jiReceivedFrom   String?
-  jiProcessingFor  String?
-  jiIntakeWeight   String?
   date             DateTime? @db.Date
   time             String?
   sizeRange        String?
@@ -1481,10 +1432,6 @@ model Sub_can_filling_and_printing {
   inSpec      Boolean?
 
   jobNo                    String?
-  jiReceivingDate          DateTime? @db.Date
-  jiReceivedFrom           String?
-  jiProcessingFor          String?
-  jiIntakeWeight           String?
   date                     DateTime? @db.Date
   startTime                String?
   waterOrSauceFillingBatch String?
@@ -1534,9 +1481,6 @@ model Sub_cans_produced {
   inSpec      Boolean?
 
   jobNumber                String?
-  jiReceivedFrom           String?
-  jiProcessingFor          String?
-  jiIntakeWeight           String?
   intakeDate               DateTime? @db.Date
   productionCode           String?
   timeTrolleyIn            DateTime? @db.Time
@@ -1581,10 +1525,6 @@ model Sub_retorting_control_sheet {
   inSpec      Boolean?
 
   jobNumber          String?
-  jiReceivingDate    DateTime? @db.Date
-  jiReceivedFrom     String?
-  jiProcessingFor    String?
-  jiIntakeWeight     String?
   date               DateTime? @db.Date
   time               String?
   productionCode     String?
@@ -1615,8 +1555,6 @@ model Sub_retort_inspection_report {
   inSpec      Boolean?
 
   jobNo                   String?
-  jiProcessingFor         String?
-  jiIntakeWeight          String?
   intakeDate              DateTime? @db.Date
   harvestFarm             String?
   retortCode              String?
@@ -1649,10 +1587,6 @@ model Sub_broth_cooking {
   inSpec      Boolean?
 
   jobNo                   String?
-  jiReceivingDate         DateTime? @db.Date
-  jiReceivedFrom          String?
-  jiProcessingFor         String?
-  jiIntakeWeight          String?
   date                    DateTime? @db.Date
   potNo                   String?
   waterLitres             Float?
@@ -1680,10 +1614,6 @@ model Sub_ingredient_weighing {
   inSpec      Boolean?
 
   jobNo                   String?
-  jiReceivingDate         DateTime? @db.Date
-  jiReceivedFrom          String?
-  jiProcessingFor         String?
-  jiIntakeWeight          String?
   date                    DateTime? @db.Date
   chickenFlavourWeight    Float?
   chickenFlavourBatchCode String?
@@ -1727,10 +1657,6 @@ model Sub_sauce_mixing {
   inSpec      Boolean?
 
   jobNo                  String?
-  jiReceivingDate        DateTime? @db.Date
-  jiReceivedFrom         String?
-  jiProcessingFor        String?
-  jiIntakeWeight         String?
   date                   DateTime? @db.Date
   brothBatchDate         DateTime? @db.Date
   potNo                  String?
@@ -1816,10 +1742,6 @@ model Sub_brine_mixing_report {
   inSpec      Boolean?
 
   jobNumber          String?
-  jiReceivingDate    DateTime? @db.Date
-  jiReceivedFrom     String?
-  jiProcessingFor    String?
-  jiIntakeWeight     String?
   date               DateTime? @db.Date
   sample             String?
   productDescription String?
@@ -1853,8 +1775,6 @@ model Sub_dry_cooking {
   inSpec      Boolean?
 
   jobNumber          String?
-  jiProcessingFor    String?
-  jiIntakeWeight     String?
   harvestFarm        String?
   intakeDate         DateTime? @db.Date
   cookingDate        DateTime? @db.Date
@@ -1898,10 +1818,6 @@ model Sub_drying_process {
   inSpec      Boolean?
 
   jobNumber                 String?
-  jiReceivingDate           DateTime? @db.Date
-  jiReceivedFrom            String?
-  jiProcessingFor           String?
-  jiIntakeWeight            String?
   wholeWeight               Float?
   cookingDate               DateTime? @db.Date
   cookingWeight             Float?
@@ -1944,8 +1860,6 @@ model Sub_dried_abalone_transfer {
   inSpec      Boolean?
 
   jobNumber        String?
-  jiReceivedFrom   String?
-  jiProcessingFor  String?
   intakeDate       DateTime? @db.Date
   intakeWeight     Float?
   actualDriedDate  DateTime? @db.Date
@@ -1984,8 +1898,6 @@ model Sub_dry_monitoring {
   inSpec      Boolean?
 
   jobNumber             String?
-  jiReceivedFrom        String?
-  jiProcessingFor       String?
   intakeWeight          Float?
   intakeDate            DateTime? @db.Date
   date                  DateTime? @db.Date
@@ -2019,9 +1931,6 @@ model Sub_grading_production_log_cultivated {
   inSpec      Boolean?
 
   jobNumber           String?
-  jiReceivedFrom      String?
-  jiProcessingFor     String?
-  jiIntakeWeight      String?
   intakeDate          DateTime? @db.Date
   driedWeightReceived Float?
   actualDriedWeight   Float?
@@ -2087,9 +1996,6 @@ model Sub_grading_production_log_ranched {
   inSpec      Boolean?
 
   jobNumber           String?
-  jiReceivedFrom      String?
-  jiProcessingFor     String?
-  jiIntakeWeight      String?
   intakeDate          DateTime? @db.Date
   driedWeightReceived Float?
   actualDriedWeight   Float?
@@ -2147,10 +2053,6 @@ model Sub_grading_boxing_traceability {
   inSpec      Boolean?
 
   jobNo           String?
-  jiReceivingDate DateTime? @db.Date
-  jiReceivedFrom  String?
-  jiProcessingFor String?
-  jiIntakeWeight  String?
   dateCreated     DateTime? @db.Date
   binCode         String?
   sizeGrade       String?
@@ -2197,9 +2099,6 @@ model Sub_dry_stock_control {
   inSpec      Boolean?
 
   jobNo           String?
-  jiReceivedFrom  String?
-  jiProcessingFor String?
-  jiIntakeWeight  String?
   intakeDate      DateTime? @db.Date
   month           DateTime? @db.Date
   wholeWeight     Float?
@@ -2316,10 +2215,6 @@ model Sub_live_production_pack {
   inSpec      Boolean?
 
   jobNumber                   String?
-  jiReceivingDate             DateTime? @db.Date
-  jiReceivedFrom              String?
-  jiProcessingFor             String?
-  jiIntakeWeight              String?
   packingDate                 DateTime? @db.Date
   idnsPacked                  String?
   livePackChecklistAttached   Boolean?
@@ -3376,9 +3271,6 @@ model Sub_chiller_batch_control {
   inSpec      Boolean?
 
   jobNo              String?
-  jiReceivingDate    DateTime? @db.Date
-  jiProcessingFor    String?
-  jiIntakeWeight     String?
   harvestFarm        String?
   processingStep     String?
   trackingNo         String?
@@ -3406,9 +3298,6 @@ model Sub_dry_chiller_batch_control {
   inSpec      Boolean?
 
   jobNo              String?
-  jiReceivingDate    DateTime? @db.Date
-  jiProcessingFor    String?
-  jiIntakeWeight     String?
   harvestFarm        String?
   processingStep     String?
   date               DateTime? @db.Date
@@ -3610,10 +3499,6 @@ model Sub_seamer_inspection_report {
   inSpec      Boolean?
 
   jobNo                       String?
-  jiReceivingDate             DateTime? @db.Date
-  jiReceivedFrom              String?
-  jiProcessingFor             String?
-  jiIntakeWeight              String?
   equipmentName               String?
   date                        DateTime? @db.Date
   preCleaningDone             Boolean?
@@ -3699,10 +3584,6 @@ model Sub_cans_incoming_inspection {
   inSpec      Boolean?
 
   jobNo                    String?
-  jiReceivingDate          DateTime? @db.Date
-  jiReceivedFrom           String?
-  jiProcessingFor          String?
-  jiIntakeWeight           String?
   date                     DateTime? @db.Date
   supplier                 String?
   descriptionOfProducts    String?
@@ -3849,10 +3730,6 @@ model Sub_dispatch_loading_inspection_checklist {
   inSpec      Boolean?
 
   jobNo                      String?
-  jiReceivingDate            DateTime? @db.Date
-  jiReceivedFrom             String?
-  jiProcessingFor            String?
-  jiIntakeWeight             String?
   date                       DateTime? @db.Date
   clientDetails              String?
   noOfPalletsBoxes           Float?
@@ -3885,10 +3762,6 @@ model Sub_dispatch_receiving_checklist {
   inSpec      Boolean?
 
   jobNumber                 String?
-  jiReceivingDate           DateTime? @db.Date
-  jiReceivedFrom            String?
-  jiProcessingFor           String?
-  jiIntakeWeight            String?
   date                      DateTime? @db.Date
   clientDetails             String?
   noOfPalletsBoxes          Float?
@@ -3962,10 +3835,6 @@ model Sub_chiller_temperature_monitoring {
   inSpec      Boolean?
 
   jobNo               String?
-  jiReceivingDate     DateTime? @db.Date
-  jiReceivedFrom      String?
-  jiProcessingFor     String?
-  jiIntakeWeight      String?
   date                DateTime? @db.Date
   shift               String?
   timeOfCheck         String?

@@ -26,7 +26,7 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=8"></script>
 <script src="../lib/signoff-block.js?v=6"></script>
-<script src="../lib/monitoring-log.js?v=34"></script>
+<script src="../lib/monitoring-log.js?v=35"></script>
 <script>(function () {
   MonitoringLog.init({
     mount: '#mlRoot',
@@ -41,7 +41,7 @@
       { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { harvestFarm: 'receivedFrom', jiReceivingDate: 'receivingDate', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
     entryFields: [
-      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch', required: true },
+      { group: 'Job info', key: 'jobNo', label: 'Job no.', type: 'jobsearch', route: 'Dried', required: true },
       { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
       { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },
       { group: 'Job info', key: 'jiIntakeWeight', label: 'Whole weight (kg)', type: 'text', readOnly: true },
