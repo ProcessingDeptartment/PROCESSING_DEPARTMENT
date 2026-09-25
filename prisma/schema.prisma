@@ -4665,3 +4665,26 @@ model Sub_rtw_medical_questionnaire {
 
   @@map("sub_rtw_medical_questionnaire")
 }
+
+// Status dashboard (src/status-page.js). One row per UTC hour of API traffic, flushed from memory
+// every minute, so the 24 h performance chart survives the free tier sleeping/restarting.
+model ApiMetricHour {
+  hour      DateTime @id
+  requests  Int      @default(0)
+  errors    Int      @default(0) // responses with status >= 500
+  totalMs   Int      @default(0) // sum of response times; avg = totalMs / requests
+  maxMs     Int      @default(0)
+  dbQueries Int      @default(0)
+}
+
+// One row per scripts/backup.js run, written by the backup itself, so the API (which cannot see
+// the backup folder) can show the latest archive.
+model BackupRun {
+  id       Int      @id @default(autoincrement())
+  takenAt  DateTime @default(now())
+  file     String
+  sizeKb   Float
+  ok       Boolean
+  rows     Int
+  host     String?
+}

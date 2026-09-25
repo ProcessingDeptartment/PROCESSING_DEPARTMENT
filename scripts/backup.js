@@ -176,6 +176,15 @@ async function main() {
   if (!ok) console.log(`      MISMATCH after re-read: ${bad.join(', ')}`);
   console.log(`      -> ${dir}`);
 
+  // Log the run in the database so the API status page can show the latest archive (the API
+  // can't see this folder). A failure here must never fail the backup itself.
+  try {
+    await prisma.backupRun.create({ data: {
+      file: path.basename(file), sizeKb: Number(kb), ok,
+      rows: Object.values(counts).reduce((a, b) => a + b, 0), host: require('os').hostname(),
+    } });
+  } catch (e) { console.warn('      (could not log run to BackupRun:', e.message.split('\n')[0] + ')'); }
+
   await prisma.$disconnect();
   if (!ok) process.exit(1);
 }

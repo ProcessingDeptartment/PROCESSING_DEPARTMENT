@@ -21,7 +21,8 @@ const { syncSubmissionRows } = require('./submission-store');
 const { syncSubmissionDates } = require('./submission-dates');
 const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
 
-const prisma = new PrismaClient();
+// Query events feed the status page's query counter (src/status-page.js); emit:'event' logs nothing.
+const prisma = new PrismaClient({ log: [{ emit: 'event', level: 'query' }] });
 const dateFields = dateFieldMap.load();
 const recordKeys = recordKeyMap.load();
 const PORT = process.env.PORT || 3001;
@@ -62,6 +63,15 @@ app.use('/api', (req, res, next) => {
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (tokenMatches(token)) return next();
   return res.status(401).json({ ok: false, error: 'unauthorised' });
+});
+
+// Status dashboard at GET / plus request/query timing for it. Mounted before the routes so the
+// timing middleware sees every request.
+require('./status-page').mount(app, prisma, {
+  version: require('../package.json').version,
+  authOn: !!API_KEY,
+  validateEnforce: VALIDATE_ENFORCE,
+  siteUrl: process.env.SITE_URL || '',
 });
 
 app.get('/api/storage/key/:key', async (req, res) => {
@@ -486,13 +496,6 @@ app.get('/api/links/:value', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
-
-require('./status-page').mount(app, prisma, {
-  version: require('../package.json').version,
-  authOn: !!API_KEY,
-  validateEnforce: VALIDATE_ENFORCE,
-  siteUrl: process.env.SITE_URL || '',
-});
 
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
