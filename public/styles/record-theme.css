@@ -395,19 +395,57 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 .rt-content .ml-app,
 .rt-content .cr-app { background: transparent; }
 
-/* ---- field grid: same fields/order/validation, bulkier target layout ---- */
+/* ---- ONE column system for every record form (2026-09-25 alignment fix) --
+   Fixed tracks, never auto-fit: every field grid on the page shares the same
+   column edges whatever its field count. Form grids 4 / 2 / 1, roster rows
+   8 / 4 / 1 (a roster column = half a form column, so edges still line up).
+   The roster count uses its own variable -- --rt-roster-cols is already the
+   PC-mode "roster as a table" column count (body.rt-pc block below). */
+.rt-content {
+  --rt-form-cols: 4;
+  --rt-roster-grid-cols: 8;
+}
+@media (max-width: 1099px) {
+  .rt-content { --rt-form-cols: 2; --rt-roster-grid-cols: 4; }
+}
+@media (max-width: 699px) {
+  .rt-content { --rt-form-cols: 1; --rt-roster-grid-cols: 1; }
+}
 .rt-content .fr-grid,
 .rt-content .ml-grid,
 .rt-content .fr-grid-2, .rt-content .fr-grid-3, .rt-content .fr-grid-4,
 .rt-content .ml-grid-2, .rt-content .ml-grid-3, .rt-content .ml-grid-4 {
   display: grid;
-  gap: 18px 18px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 18px;
+  grid-template-columns: repeat(var(--rt-form-cols), minmax(0, 1fr));
+  align-items: end;
 }
-/* plain label above a large input -- weight goes on the field itself */
+/* a record that draws its own body (monitoring-log customBody, e.g. REC
+   7.2.12) fills the fields container with full-width blocks -- not a grid */
+.rt-content .ml-grid.ml-custom-body,
+.rt-content .fr-grid.fr-custom-body { display: block; }
+/* belt and braces: any non-field child of a field grid (toolbar, tab strip,
+   panel, table wrapper, <details>, heading) spans the whole row */
+.rt-content .ml-grid > :not(.ml-field):not(.fr-field),
+.rt-content .fr-grid > :not(.fr-field):not(.ml-field),
+.rt-content .fr-grid-2 > :not(.fr-field):not(.ml-field),
+.rt-content .fr-grid-3 > :not(.fr-field):not(.ml-field),
+.rt-content .fr-grid-4 > :not(.fr-field):not(.ml-field) { grid-column: 1 / -1; }
+/* wide fields + free-text boxes take the full row */
+.rt-content .fr-field.wide,
+.rt-content .ml-field.wide,
+.rt-content .fr-field:has(> textarea),
+.rt-content .ml-field:has(> textarea) { grid-column: 1 / -1; }
+/* plain label above a large input -- weight goes on the field itself.
+   Flex column, content pushed to the bottom: a two-line label grows upward
+   and the input stays on the row's shared baseline. */
 .rt-content .fr-field,
 .rt-content .ml-field,
 .rt-content .cr-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .03em;
@@ -746,7 +784,7 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
    field column is the same width and stays aligned as the row wraps. ---- */
 .rt-content .fr-roster-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(var(--rt-roster-grid-cols, 8), minmax(0, 1fr));
   gap: 12px 14px;
   align-items: end;
   padding: 14px;
@@ -790,18 +828,10 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 /* phone: every roster field + entry-grid field on its own full-width line,
    labels and inputs flush-left, remove button full width. No ragged columns. */
 @media (max-width: 560px) {
-  .rt-content .fr-roster-row { grid-template-columns: 1fr; }
   .rt-content .fr-roster-row [data-remove-roster-row] {
     justify-self: stretch;
     text-align: center;
     min-height: var(--rt-tap);
-  }
-  .rt-content .fr-grid,
-  .rt-content .ml-grid,
-  .rt-content .fr-grid-2, .rt-content .fr-grid-3, .rt-content .fr-grid-4,
-  .rt-content .ml-grid-2, .rt-content .ml-grid-3, .rt-content .ml-grid-4 {
-    grid-template-columns: 1fr;
-    gap: 14px;
   }
   .rt-content .fr-jobnumber input.fr-jn-digits { flex: 1 1 100%; }
 }
@@ -1189,7 +1219,7 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
   body.rt-pc .rt-content .fr-grid,
   body.rt-pc .rt-content .fr-grid-2, body.rt-pc .rt-content .fr-grid-3, body.rt-pc .rt-content .fr-grid-4 {
     gap: 12px 16px;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(var(--rt-form-cols), minmax(0, 1fr));
   }
   body.rt-pc .rt-content .fr-field { font-size: 11px; gap: 4px; }
   body.rt-pc .rt-content .fr-field input,
