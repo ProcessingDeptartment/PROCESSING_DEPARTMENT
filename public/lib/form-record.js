@@ -239,7 +239,26 @@
   .fr-jobnumber input.fr-jn-digits{ width:auto; flex:1; min-width:80px; }
   .fr-jn-hint{ font-size:10.5px; font-weight:500; color:#8a939b; font-family:'IBM Plex Mono',monospace; }
   .fr-jn-hint.bad{ color:var(--palette-fail,#a3352d); }
-  .fr-roster-totals{ font-size:11px; color:#54606b; margin-top:6px; font-weight:600; }`;
+  .fr-roster-totals{ font-size:11px; color:#54606b; margin-top:6px; font-weight:600; }
+  /* fr-compact: one fixed field size (a quarter of the form) for everything that isn't free
+     data entry -- a roster's quick-capture line, all-computed sections (totals), Completed by. */
+  .fr-grid.fr-compact, .rt-content .fr-grid.fr-compact, body.rt-pc .rt-content .fr-grid.fr-compact{
+    grid-template-columns:repeat(4,minmax(0,1fr)); align-items:end; }
+  @media (max-width:699px){ .fr-grid.fr-compact, .rt-content .fr-grid.fr-compact, body.rt-pc .rt-content .fr-grid.fr-compact{
+    grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  .fr-quick-entry{ margin:4px 0 12px; }
+  .fr-quick-entry .fr-qe-btn .fr-btn{ width:100%; white-space:nowrap; }
+  /* captured rows under a quick-capture line: one slim line each, same columns as the line above
+     (its labels are the headings), no per-row card */
+  .fr-qe-list .fr-roster-row, .rt-content .fr-qe-list .fr-roster-row, body.rt-pc .rt-content .fr-qe-list .fr-roster-row{
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-auto-flow:row; gap:0 18px; align-items:center;
+    padding:6px 0; margin:0; border:0; border-top:1px solid var(--rt-border,#e3e6e4); border-radius:0; background:transparent; }
+  @media (max-width:699px){ .fr-qe-list .fr-roster-row, .rt-content .fr-qe-list .fr-roster-row{ grid-template-columns:repeat(2,minmax(0,1fr)) 44px; gap:0 10px; } }
+  .fr-qe-list .fr-roster-row > .fr-field, .rt-content .fr-qe-list .fr-roster-row > .fr-field{ font-size:0; gap:0; }
+  .fr-qe-list .fr-roster-row > .fr-field input, .rt-content .fr-qe-list .fr-roster-row > .fr-field input{ font-size:15px; min-height:38px; }
+  .fr-qe-list .fr-roster-row [data-remove-roster-row], .rt-content .fr-qe-list .fr-roster-row [data-remove-roster-row],
+  body.rt-pc .rt-content .fr-qe-list .fr-roster-row [data-remove-roster-row]{
+    grid-column:auto; justify-self:start; width:44px; min-height:38px; padding:0; }`;
 
   function injectStyleOnce() {
     if (document.getElementById('fr-style')) return;
@@ -1416,7 +1435,7 @@
           <div class="fr-panel-body">
             <div id="fr_modalSections"></div>
             <div class="fr-muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;">Completed by</div>
-            ${window.SignOffBlock.completedByHtml({ byId: 'fr_cb_by', titleId: 'fr_cb_title', dateId: 'fr_cb_date', signatureId: 'fr_cb_signature', gridClass: 'fr-grid fr-grid-4', fieldClass: 'fr-field' })}
+            ${window.SignOffBlock.completedByHtml({ byId: 'fr_cb_by', titleId: 'fr_cb_title', dateId: 'fr_cb_date', signatureId: 'fr_cb_signature', gridClass: 'fr-grid fr-grid-4 fr-compact', fieldClass: 'fr-field' })}
             <div class="fr-actions">
               <button class="fr-btn fr-btn-flat" id="fr_cancelBtn">Clear</button>
               <button class="fr-btn fr-btn-flat" id="fr_saveBtn">Save draft</button>
@@ -1524,6 +1543,50 @@
     }
 
 
+    // roster.quickEntry: one capture line (the roster's own columns + an add button) above the
+    // list, instead of a blank row + "+ Add row". quickEntry may be true or
+    // { addLabel, autoIncrement: '<numeric column key to prefill with last + 1>' }.
+    function quickEntryHtml(roster, rosterIndex) {
+      const qe = roster.quickEntry === true ? {} : roster.quickEntry;
+      const ns = rosterNs(rosterIndex);
+      return `<div class="fr-grid fr-compact fr-quick-entry no-print">
+        ${roster.columns.filter(c => c.type !== 'batchseq' && c.type !== 'derived').map(c =>
+          `<label class="fr-field">${esc(c.label)}${fieldInputHtml(`${ns}_qe_${c.key}`, c, '')}</label>`).join('')}
+        <div class="fr-field fr-qe-btn"><button type="button" class="fr-btn" id="${ns}_qeAdd">${esc(qe.addLabel || '+ Add')}</button></div>
+      </div>`;
+    }
+    function wireQuickEntry(roster, rosterIndex, rowsEl) {
+      const qe = roster.quickEntry === true ? {} : roster.quickEntry;
+      const ns = rosterNs(rosterIndex);
+      const cols = roster.columns.filter(c => c.type !== 'batchseq' && c.type !== 'derived');
+      const inp = key => el(`${ns}_qe_${key}`);
+      const addBtn = el(`${ns}_qeAdd`);
+      if (!addBtn) return;
+      function prefill() {
+        const k = qe.autoIncrement;
+        if (!k || !inp(k)) return;
+        const nums = rowsEl._getRows().map(r => parseFloat(r[k])).filter(n => !isNaN(n));
+        inp(k).value = nums.length ? Math.max.apply(null, nums) + 1 : '';
+      }
+      function add() {
+        const row = {};
+        cols.forEach(c => { row[c.key] = String(inp(c.key).value || '').trim(); });
+        const missing = cols.find(c => row[c.key] === '');
+        if (missing) { inp(missing.key).focus(); return; }
+        rowsEl._importRows([row]);
+        rowsEl.dispatchEvent(new Event('input', { bubbles: true }));
+        cols.forEach(c => { inp(c.key).value = ''; });
+        prefill();
+        const next = cols.find(c => inp(c.key).value === '') || cols[0];
+        try { inp(next.key).focus(); } catch (e) {}
+      }
+      addBtn.addEventListener('click', add);
+      cols.forEach(c => inp(c.key).addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); add(); }
+      }));
+      prefill();
+    }
+
     function parseCsvText(text) {
       const rows = [];
       let row = [], cell = '', inQuotes = false;
@@ -1602,7 +1665,7 @@
       const container = el(containerId);
       let rows = (existingRows || []).slice();
       // A checklist-style roster can pre-list its rows (roster.defaultRows) on a new record.
-      if (!rows.length) (roster.defaultRows || [{}]).forEach(r => rows.push(Object.assign({}, r)));
+      if (!rows.length) (roster.defaultRows || (roster.quickEntry ? [] : [{}])).forEach(r => rows.push(Object.assign({}, r)));
 
       // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
       // from the Abalone Receiving baskets for this job). One fetch per job, cached; a column
@@ -1894,7 +1957,7 @@
                 btn.addEventListener('click', () => {
                   const i = Number(btn.dataset.removeRosterRow);
                   rows.splice(i, 1);
-                  if (!rows.length) rows.push({});
+                  if (!rows.length && !roster.quickEntry) rows.push({});
 
                   const next = new Set();
                   collapsedRows.forEach(x => { if (x < i) next.add(x); else if (x > i) next.add(x - 1); });
@@ -2031,7 +2094,8 @@
           ${esc(existing.values.oosWarningNote || 'Batch weight exceeding OOSW - possible batch mix')}</div>`;
       }
       const renderSection = sec => {
-        const fieldsHtml = `<div class="fr-grid fr-grid-2">
+        const compact = sec.fields.length && sec.fields.every(f => f.type === 'computed' || f.readOnly);
+        const fieldsHtml = `<div class="fr-grid fr-grid-2${compact ? ' fr-compact' : ''}">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
             ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}
           </label>`).join('')}
@@ -2052,10 +2116,11 @@
       if (hasRoster) {
         html += rosterList.map((roster, i) => `
         <div class="fr-section-title">${esc(roster.title)}</div>
-        <div id="${rosterDomId('fr_rosterRows', i)}"></div>
-        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">+ Add row</button>
+        ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
+        <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : ''}></div>
+        ${roster.quickEntry ? '' : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">+ Add row</button>
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}">Import CSV</button>
-        <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">
+        <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">`}
         ${roster.totalsRow ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals"></div>` : ''}`).join('');
       }
       html += postSecs.map(renderSection).join('');
@@ -2074,6 +2139,7 @@
         rosterList.forEach((roster, i) => {
           renderRosterEditor(existing ? getRosterRows(existing, i, roster.key) : null, roster, i);
           const rowsId = rosterDomId('fr_rosterRows', i);
+          if (roster.quickEntry) { wireQuickEntry(roster, i, container.querySelector('#' + rowsId)); return; }
           el(rosterDomId('fr_addRosterRowBtn', i)).addEventListener('click',
             () => container.querySelector('#' + rowsId)._addRow());
           el(rosterDomId('fr_importCsvBtn', i)).addEventListener('click',

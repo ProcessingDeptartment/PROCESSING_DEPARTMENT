@@ -17098,7 +17098,13 @@
         {
           "title": "Crates",
           "kind": "roster",
-          "position": 3
+          "position": 3,
+          "extraJson": {
+            "quickEntry": {
+              "addLabel": "+ Add crate",
+              "autoIncrement": "crateNumber"
+            }
+          }
         }
       ],
       "fields": [
