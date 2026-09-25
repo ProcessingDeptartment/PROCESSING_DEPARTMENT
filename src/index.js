@@ -487,6 +487,13 @@ app.get('/api/links/:value', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+require('./status-page').mount(app, prisma, {
+  version: require('../package.json').version,
+  authOn: !!API_KEY,
+  validateEnforce: VALIDATE_ENFORCE,
+  siteUrl: process.env.SITE_URL || '',
+});
+
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
     + ` — write validation ${VALIDATE_ENFORCE ? 'ENFORCED (422 on invalid)' : 'report-only'}`);
