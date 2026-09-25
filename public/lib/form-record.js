@@ -977,7 +977,7 @@
     const fields = allFields(config).filter((f) => f.type === 'jobsearch');
     const sels = fields.map((f) => container.querySelector('#fr_f_' + f.key)).filter(Boolean);
     if (!sels.length) return;
-    loadLib('job-picker.js?v=3', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
+    loadLib('job-picker.js?v=4', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
     loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
       if (!js) throw new Error('job-status.js unavailable');
       return js.list();
