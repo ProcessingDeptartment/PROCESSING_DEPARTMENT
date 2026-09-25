@@ -118,6 +118,8 @@
   .ml-history-item:last-child{ border-bottom:none; }
   .ml-modal-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.5); z-index:500; align-items:center; justify-content:center; }
   .ml-modal-inner{ background:#fff; border-radius:8px; width:min(760px,94vw); max-height:90vh; overflow:auto; padding:16px; }
+  .ml-locked{ padding:8px 11px; margin-bottom:10px; border-left:3px solid var(--palette-ok,#2f6b3a); background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); font-size:11.5px; font-weight:600; }
+  .ml-locked[hidden]{ display:none; }
   .ml-modal-inner h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356); margin-bottom:10px; }
   .ml-modal-inner h3{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-label,#54606b); margin:14px 0 6px; }
   .ml-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap; align-items:center; }
@@ -1043,7 +1045,18 @@
       }
       const existing = id ? entries.find(e => e.id === id) : null;
       const locked = existing ? isSubmitted(existing) : false;
-      el(modalIds.title).textContent = !id ? 'New entry' : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
+      const titleEl = el(modalIds.title);
+      titleEl.hidden = true;
+      let lockedNote = titleEl.nextElementSibling;
+      if (!lockedNote || !lockedNote.classList.contains('ml-locked')) {
+        lockedNote = document.createElement('div');
+        lockedNote.className = 'ml-locked';
+        titleEl.after(lockedNote);
+      }
+      lockedNote.hidden = !locked;
+      lockedNote.textContent = locked
+        ? `Submitted${existing.submittedAt ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.`
+        : '';
       const container = el(modalIds.fields);
 
       if (customBody) {

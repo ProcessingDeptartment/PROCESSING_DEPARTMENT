@@ -1334,7 +1334,7 @@
              the same openForm/saveForm code path now fills this always-visible panel. -->
         <div class="fr-panel no-print">
           <div class="fr-panel-head">
-            <h2 id="fr_modalTitle">New entry</h2>
+            <h2 id="fr_modalTitle" hidden></h2>
           </div>
           <div class="fr-panel-body">
             <div id="fr_modalSections"></div>
@@ -1778,8 +1778,6 @@
       editingId = id || null;
       const existing = id ? submissions.find(s => s.id === id) : null;
       const locked = isSubmitted(existing);
-      el('fr_modalTitle').textContent = !id ? 'New entry'
-        : (locked ? 'Submitted entry (read-only)' : 'Edit entry');
       const container = el('fr_modalSections');
       let html = locked
         ? `<div class="fr-locked">Submitted${existing.submittedAt
