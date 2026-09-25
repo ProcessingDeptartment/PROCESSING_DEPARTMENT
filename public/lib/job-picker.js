@@ -5,12 +5,34 @@
 // which is what triggers the engines' autofill. After confirming, the enclosing Job info
 // section collapses to a single small "Job no. XXX" line.
 //
+// The search is split by route: the operator first picks Can or Dry, and the list only
+// offers jobs whose prefix belongs to that route (3CP/CPR = Can, 3DP/DPR = Dry). Closed
+// jobs stay in the list, tagged "Closed", so a job can still be found after close-out.
+//
 // The <select> stays in the DOM as the value holder, so saving, autofill, summaries and
 // route checks keep working unchanged. Loaded on demand by form-record.js / monitoring-log.js.
 (function () {
   if (window.JobPicker) return;
 
   const RECEIVING_KEY = 'abalone-receiving';
+  const ROUTE_PREF_KEY = 'jp_route';
+  const ROUTES = [['Can', 'Can'], ['Dried', 'Dry']];
+  const PREFIX_ROUTE = { '3CP': 'Can', 'CPR': 'Can', '3DP': 'Dried', 'DPR': 'Dried' };
+
+  // 'Can' | 'Dried' | null, from the job-number prefix.
+  function routeOf(jobNo) {
+    if (window.Lookups && window.Lookups.batch && window.Lookups.batch.route) return window.Lookups.batch.route(jobNo);
+    const v = String(jobNo == null ? '' : jobNo).trim().toUpperCase();
+    for (const p in PREFIX_ROUTE) if (v.indexOf(p) === 0) return PREFIX_ROUTE[p];
+    return null;
+  }
+
+  function loadRoutePref() {
+    try { const v = localStorage.getItem(ROUTE_PREF_KEY); return v === 'Can' || v === 'Dried' ? v : ''; } catch (e) { return ''; }
+  }
+  function saveRoutePref(v) {
+    try { localStorage.setItem(ROUTE_PREF_KEY, v); } catch (e) { }
+  }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
@@ -30,6 +52,14 @@
   .jp-wrap{ position:relative; display:block; width:100%; }
   .jp-wrap select[data-jobsearch]{ display:none !important; }
   .jp-search{ width:100%; box-sizing:border-box; }
+  .jp-search:disabled{ background:#f3f4f6; cursor:not-allowed; }
+  .jp-route{ display:inline-flex; margin-bottom:6px; border:1px solid var(--palette-rule,#c9ced6); border-radius:6px; overflow:hidden; }
+  .jp-route[hidden]{ display:none; }
+  .jp-route button{ min-width:72px; padding:8px 16px; border:0; background:#fff; color:var(--palette-ink,#1b2330); font-size:14px; font-weight:600; cursor:pointer; }
+  .jp-route button + button{ border-left:1px solid var(--palette-rule,#c9ced6); }
+  .jp-route button[aria-pressed="true"]{ background:var(--palette-ink,#1b2330); color:#fff; }
+  .jp-opt{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .jp-tag{ font-family:"Segoe UI",system-ui,sans-serif; font-size:11px; font-weight:600; padding:1px 7px; border-radius:10px; background:#e7e9ed; color:#4a5261; }
   .jp-list{ position:absolute; z-index:50; left:0; right:0; top:100%; margin-top:2px; max-height:260px; overflow:auto;
     background:#fff; border:1px solid var(--palette-rule,#c9ced6); border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,.15); }
   .jp-list[hidden]{ display:none; }
@@ -121,8 +151,9 @@
           ['Job status', status && status.status === 'closed' ? 'Closed' : 'Open']
         ];
         let warn = '';
-        if (!rec) warn = 'No Abalone Receiving record (REC 7.1.2) was found for this job. Check the job number before confirming.';
-        else if (r.__status && r.__status !== 'submitted') warn = 'The Abalone Receiving record (REC 7.1.2) for this job is still a draft — its details are provisional.';
+        if (status && status.status === 'closed') warn = 'This job has been closed out. Only confirm if this record genuinely belongs to it. ';
+        if (!rec) warn += 'No Abalone Receiving record (REC 7.1.2) was found for this job. Check the job number before confirming.';
+        else if (r.__status && r.__status !== 'submitted') warn += 'The Abalone Receiving record (REC 7.1.2) for this job is still a draft — its details are provisional.';
         modal.querySelector('.jp-body').innerHTML = `<dl class="jp-dl">${rows.map(([k, v]) =>
           `<dt>${esc(k)}</dt><dd>${esc(v == null || v === '' ? '—' : v)}</dd>`).join('')}</dl>` +
           (warn ? `<div class="jp-warn">${esc(warn)}</div>` : '');
@@ -142,12 +173,16 @@
     wrap.insertAdjacentHTML('beforeend', `
       <span class="jp-picked" hidden><span class="jp-picked-no"></span>
         <button type="button" class="jp-change">Change</button></span>
+      <span class="jp-route" role="group" aria-label="Job type" hidden>${ROUTES.map(([v, label]) =>
+        `<button type="button" data-route="${v}" aria-pressed="false">${label}</button>`).join('')}</span>
       <input type="search" class="jp-search" placeholder="Search job no…" autocomplete="off" hidden>
       <div class="jp-list" role="listbox" hidden></div>`);
     const picked = wrap.querySelector('.jp-picked');
     const pickedNo = wrap.querySelector('.jp-picked-no');
     const input = wrap.querySelector('.jp-search');
     const list = wrap.querySelector('.jp-list');
+    const routeBar = wrap.querySelector('.jp-route');
+    let route = loadRoutePref();
     const details = sel.closest('details');
     const summary = details && details.querySelector(':scope > summary');
     let compactLabel = null;
@@ -159,12 +194,24 @@
     let active = -1;
     let matches = [];
 
-    const jobs = () => [...sel.options].map((o) => o.value).filter(Boolean);
+    const jobs = () => [...sel.options].filter((o) => o.value)
+      .map((o) => ({ no: o.value, closed: o.getAttribute('data-status') === 'closed' }));
+    // Jobs with no recognised prefix are offered under both routes rather than hidden.
+    const routeJobs = () => jobs().filter((j) => { const r = routeOf(j.no); return !r || r === route; });
+
+    function paintRoute() {
+      routeBar.querySelectorAll('button').forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-route') === route)));
+      input.disabled = !route;
+      input.placeholder = route ? 'Search ' + (route === 'Can' ? 'Can' : 'Dry') + ' job no…' : 'Select Can or Dry first';
+    }
 
     function paint() {
       const v = sel.value;
       picked.hidden = !v;
       input.hidden = !!v;
+      routeBar.hidden = !!v;
+      paintRoute();
       pickedNo.textContent = v;
       wrap.querySelector('.jp-change').hidden = sel.disabled;
       if (compactLabel) compactLabel.textContent = v ? 'Job no. ' + v : '';
@@ -173,11 +220,16 @@
 
     function drawList() {
       const q = input.value.trim().toUpperCase();
-      matches = jobs().filter((j) => !q || j.toUpperCase().includes(q)).slice(0, 60);
+      if (!route) { list.hidden = true; matches = []; return; }
+      const pool = routeJobs();
+      const hits = pool.filter((j) => !q || j.no.toUpperCase().includes(q)).slice(0, 60);
+      matches = hits.map((j) => j.no);
       active = matches.length ? 0 : -1;
-      list.innerHTML = matches.length
-        ? matches.map((j, i) => `<div class="jp-opt${i === active ? ' active' : ''}" role="option" data-v="${esc(j)}">${esc(j)}</div>`).join('')
-        : `<div class="jp-empty">${jobs().length ? 'No open job matches' : 'Loading jobs…'}</div>`;
+      const kind = route === 'Can' ? 'Can' : 'Dry';
+      list.innerHTML = hits.length
+        ? hits.map((j, i) => `<div class="jp-opt${i === active ? ' active' : ''}" role="option" data-v="${esc(j.no)}">` +
+            `<span>${esc(j.no)}</span>${j.closed ? '<span class="jp-tag">Closed</span>' : ''}</div>`).join('')
+        : `<div class="jp-empty">${!jobs().length ? 'Loading jobs…' : pool.length ? 'No ' + kind + ' job matches' : 'No ' + kind + ' jobs found'}</div>`;
       list.hidden = false;
     }
 
@@ -207,6 +259,16 @@
       if (details) details.open = false;
     }
 
+    routeBar.addEventListener('click', (ev) => {
+      const b = ev.target.closest('button[data-route]');
+      if (!b) return;
+      route = b.getAttribute('data-route');
+      saveRoutePref(route);
+      input.value = '';
+      paintRoute();
+      try { input.focus(); } catch (e) { }
+      drawList();
+    });
     input.addEventListener('focus', drawList);
     input.addEventListener('input', drawList);
     input.addEventListener('keydown', (ev) => {
@@ -215,7 +277,10 @@
       else if (ev.key === 'Enter') { ev.preventDefault(); if (matches[active]) choose(matches[active]); }
       else if (ev.key === 'Escape') { list.hidden = true; if (sel.value) paint(); }
     });
+    // Keep focus in the search box when switching Can/Dry.
+    routeBar.addEventListener('mousedown', (ev) => { if (!input.disabled) ev.preventDefault(); });
     input.addEventListener('blur', () => setTimeout(() => {
+      if (document.activeElement === input) return;
       list.hidden = true;
       // Leaving the search without picking keeps the previously confirmed job.
       if (sel.value && !input.value.trim()) paint();
@@ -228,9 +293,13 @@
     });
     wrap.querySelector('.jp-change').addEventListener('click', () => {
       if (sel.disabled) return;
+      // Changing a job starts on the current job's route.
+      route = routeOf(sel.value) || route;
       picked.hidden = true;
+      routeBar.hidden = false;
       input.hidden = false;
       input.value = '';
+      paintRoute();
       try { input.focus(); } catch (e) { }
     });
     sel.addEventListener('change', paint);

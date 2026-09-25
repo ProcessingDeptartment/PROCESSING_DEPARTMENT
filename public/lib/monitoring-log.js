@@ -69,6 +69,8 @@
   .ml-grid-3{ grid-template-columns:repeat(3,1fr); }
   .ml-grid-4{ grid-template-columns:repeat(4,1fr); }
   .ml-field{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--palette-label,#54606b); font-weight:600; }
+  .ml-field.wide{ grid-column:1/-1; }
+  .ml-grid.ml-custom-body{ display:block; }
   .ml-field span.hint{ font-weight:400; color:#8a939b; font-family:'IBM Plex Mono',monospace; font-size:10.5px; }
   .ml-filters{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
   .ml-filters input[type=date]{ width:auto; }
@@ -598,17 +600,21 @@
     const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
     const sels = fields.map((f) => container.querySelector('#' + ns + '_f_' + f.key)).filter(Boolean);
     if (!sels.length) return;
-    loadLib('job-picker.js?v=1', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
+    loadLib('job-picker.js?v=2', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
     loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
       if (!js) throw new Error('job-status.js unavailable');
-      return js.openJobNumbers();
-    }).then((open) => {
+      return js.list();
+    }).then((rows) => {
+      // Closed jobs stay findable (the picker tags them); open jobs list first.
+      const status = new Map(rows.map((r) => [String(r.job_no), r.status === 'closed' ? 'closed' : 'open']));
+      const all = rows.map((r) => String(r.job_no))
+        .sort((a, b) => (status.get(a) === 'closed') - (status.get(b) === 'closed'));
       sels.forEach((sel) => {
         const current = sel.value;
-        const options = open.slice();
+        const options = all.slice();
         if (current && options.indexOf(current) === -1) options.unshift(current);
         sel.innerHTML = '<option value="">—</option>' +
-          options.map((val) => `<option value="${esc(val)}">${esc(val)}</option>`).join('');
+          options.map((val) => `<option value="${esc(val)}" data-status="${status.get(val) || 'open'}">${esc(val)}</option>`).join('');
         sel.value = current;
         if (sel._jobPicker) sel._jobPicker.drawList();
       });
@@ -1084,6 +1090,8 @@
         : '';
       const container = el(modalIds.fields);
 
+      // the fields container is reused; a custom body draws full-width blocks, so it must not be a field grid
+      container.classList.toggle('ml-custom-body', !!customBody);
       if (customBody) {
         container.innerHTML = '';
         const ctx = {
