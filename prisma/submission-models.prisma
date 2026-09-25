@@ -598,8 +598,6 @@ model Sub_bleeding_and_salting {
   saltBatchCode            String?
   bakingSodaG              Float?
   bakingSodaBatchCode      String?
-  qualityController        String?
-  processDeviation         String?
 
   @@index([jobNo], map: "sub_bleeding_and_salting_jobNo_idx")
   @@index([saltBatchCode], map: "sub_bleeding_and_salting_saltBatchCode_idx")
