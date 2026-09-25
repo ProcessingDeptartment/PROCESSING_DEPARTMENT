@@ -4595,11 +4595,6 @@
           "title": "Salting mix",
           "kind": "fields",
           "position": 4
-        },
-        {
-          "title": "Sign-off",
-          "kind": "fields",
-          "position": 5
         }
       ],
       "fields": [
@@ -5019,47 +5014,6 @@
           "linkField": "bakingSodaBatchCode",
           "linkRelation": "input",
           "validateJson": null
-        },
-        {
-          "key": "qualityController",
-          "label": "Quality controller",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 5,
-          "parentFieldKey": null,
-          "position": 21,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "processDeviation",
-          "label": "Process deviation",
-          "type": "textarea",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 5,
-          "parentFieldKey": null,
-          "position": 22,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "wide": true
-          }
         }
       ],
       "autofills": [
