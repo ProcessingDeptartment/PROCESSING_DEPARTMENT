@@ -99,10 +99,16 @@ app.put('/api/storage/key/:key', async (req, res) => {
       console.error('validateWrite threw (write allowed)', e);
     }
 
-    await prisma.keyValue.upsert({
-      where: { key: req.params.key },
-      create: { key: req.params.key, value },
-      update: { value }
+    await prisma.$transaction(async (tx) => {
+      const prev = await tx.keyValue.findUnique({ where: { key: req.params.key } });
+      await tx.keyValue.upsert({
+        where: { key: req.params.key },
+        create: { key: req.params.key, value },
+        update: { value }
+      });
+      if (!prev || prev.value !== value) {
+        await tx.keyValueHistory.create({ data: { ...who(req), key: req.params.key, action: 'set', before: prev ? prev.value : null, after: value } });
+      }
     });
     await syncSubmissionDates(prisma, req.params.key, value, { dateFields, recordKeys });
     try { await syncRecordLinks(prisma, req.params.key, value); }
@@ -120,9 +126,31 @@ app.put('/api/storage/key/:key', async (req, res) => {
   }
 });
 
+// Who the client says made the change -- recorded in KeyValueHistory, not verified (see auth note).
+function who(req) {
+  const clip = (v) => (v ? String(v).slice(0, 120) : null);
+  return { actor: clip(req.get('x-user')), role: clip(req.get('x-role')) };
+}
+
+// Audit trail for one key, newest first.
+app.get('/api/history/:key', async (req, res) => {
+  try {
+    const rows = await prisma.keyValueHistory.findMany({ where: { key: req.params.key }, orderBy: { at: 'desc' }, take: 200 });
+    res.json({ ok: true, rows });
+  } catch (e) {
+    console.error('GET history failed', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
 app.delete('/api/storage/key/:key', async (req, res) => {
   try {
-    await prisma.keyValue.deleteMany({ where: { key: req.params.key } });
+    await prisma.$transaction(async (tx) => {
+      const prev = await tx.keyValue.findUnique({ where: { key: req.params.key } });
+      if (!prev) return;
+      await tx.keyValueHistory.create({ data: { ...who(req), key: req.params.key, action: 'delete', before: prev.value, after: null } });
+      await tx.keyValue.delete({ where: { key: req.params.key } });
+    });
     await prisma.submissionDateField.deleteMany({ where: { submissionKey: req.params.key } });
     // Clear submission + link rows (pass empty array → deletes everything for this record)
     try { await syncSubmissionRows(prisma, req.params.key, '[]'); } catch (_) {}

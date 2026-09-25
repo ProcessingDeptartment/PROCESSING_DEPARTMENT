@@ -17,6 +17,23 @@ model KeyValue {
   updatedAt DateTime @updatedAt
 }
 
+// Append-only audit trail: one row per write or delete of a KeyValue, holding the value before
+// and after. Written in the same transaction as the change, so a change can't land without its
+// history row. `actor`/`role` are what the client claims (X-User / X-Role headers) -- until
+// Entra ID exists that is not proof of identity, but it records who the device said was signed in.
+model KeyValueHistory {
+  id        Int      @id @default(autoincrement())
+  key       String
+  action    String   // 'set' | 'delete'
+  before    String?
+  after     String?
+  actor     String?
+  role      String?
+  at        DateTime @default(now())
+
+  @@index([key, at])
+}
+
 // One row per date field found inside a 'formrecord:*' record, so dates are queryable without
 // parsing every JSON blob. Populated/replaced by the API whenever a formrecord:* key is written.
 // recordClass matches DATE_FIELDS_ALL_RECORDS.csv: "A - Record header date" (one date per

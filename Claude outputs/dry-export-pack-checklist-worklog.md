@@ -8,7 +8,8 @@ Replaced the manual "Attachments checklist" (5 hardcoded yes/no fields) on `Dry-
 
 ### Engine changes (`public/lib/traceability.js`, `public/lib/form-record.js`)
 
-- **`bin_link:` index** — new namespace parallel to `batch_link:`, resolves a physical bin code to the job number(s) whose graded stock fed it. Fed from **REC 7.4.4 (Grading, Boxing & Traceability)**, which already captures `binCode` + a free-text `jobNumbersInBin` per submission — the record staff already fill in for this purpose. `Traceability.jobsForBin(binCode)` / `Traceability.binsForJob(jobNo)`.
+- **`bin_link:` index** — new namespace parallel to `batch_link:`, resolves a physical bin code to the job number(s) whose graded stock fed it. Fed from **REC 7.4.4 (Grading, Boxing & Traceability)**, which already captures `binCode` + a free-text `jobNumbersInBin` per submission — the record staff already fill in for this purpose. `Traceability.jobsForBin(binCode)` / `Traceability.binsForJob(jobNo)`.  can i change the free text to something else ? i would almost want the job numbers in bin to auto populate based off of the info already provided during the previous production run as the jobs in the bin do not change until the bin is emptied and at that point the user will complete the fields and submit the bin or box code 
+
 - **`bintrace` recordpick source** — for records keyed by bin code, not job number (e.g. `boxing-and-labelling`, whose `binCode` field is literally reused as the box code on the label). Resolves job → bin(s) → submissions.
 - **Bin-code auto-suggest** — on REC 7.4.4, entering a bin code auto-fills `jobNumbersInBin` from the grading logs' Collection Bins roster (now indexed via `roster.binIdColumn`), only when the field is still empty.
 - **`upload` field type** — file attach/download/remove, value stored inline as a JSON blob in the submission's own `values` (no new table or endpoint), capped at 4MB. Used for Health Certificates and Sales Packing List.
@@ -29,7 +30,7 @@ Replaced the manual "Attachments checklist" (5 hardcoded yes/no fields) on `Dry-
 
 5 of the 6 records this checklist depends on (`REC-7.4.4`, `7.4.5`, `7.4.7`, `7.4.8`, `7.4.9`) were **missing the `traceability.js` and/or `job-status.js` script tags entirely** — so `Traceability.indexSubmission` silently never ran, and the job-number picker never populated. Added the missing tags to those 5 pages.
 
-**This is a much wider gap than just these 5 pages**: across the whole app, 39 of 52 `monitoring-log.js` pages and 53 of 80 `form-record.js` pages are missing `traceability.js`. Only the pages in this checklist's direct dependency chain were fixed this session — **the rest is an open follow-up**, worth a dedicated audit before relying on traceability/batch-trace features elsewhere in the app.
+**This is a much wider gap than just these 5 pages**: across the whole app, 39 of 52 `monitoring-log.js` pages and 53 of 80 `form-record.js` pages are missing `traceability.js`. Only the pages in this checklist's direct dependency chain were fixed this session — **the rest is an open follow-up**, worth a dedicated audit before relying on traceability/batch-trace features elsewhere in the app.   NB do this fix
 
 ## Verified end-to-end (real job `3DP55555`, live production)
 

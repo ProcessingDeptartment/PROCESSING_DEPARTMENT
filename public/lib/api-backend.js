@@ -45,6 +45,14 @@
     const h = Object.assign({}, extra || {});
     const k = getKey();
     if (k) h.Authorization = 'Bearer ' + k;
+    // Who is signed in, for the server's audit trail (KeyValueHistory). ASCII-only for headers.
+    try {
+      const A = window.Auth;
+      const u = A && A.getCurrentUsername && A.getCurrentUsername();
+      const r = A && A.getCurrentRole && A.getCurrentRole();
+      if (u) h['X-User'] = String(u).replace(/[^ -~]/g, '?');
+      if (r) h['X-Role'] = String(r).replace(/[^ -~]/g, '?');
+    } catch (e) {}
     return h;
   }
 
