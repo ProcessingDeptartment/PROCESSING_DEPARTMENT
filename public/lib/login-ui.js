@@ -116,7 +116,11 @@
     return modal;
   }
 
+  // TEMPORARY: sign-in and verification gates switched off. Set to true to re-enable.
+  window.AUTH_GATES_ENABLED = false;
+
   function ensureAuthenticated() {
+    if (!window.AUTH_GATES_ENABLED) return Promise.resolve();
     if (window.Auth && window.Auth.isAuthenticated()) return Promise.resolve();
     return new Promise((resolve) => {
       showLoginModal();

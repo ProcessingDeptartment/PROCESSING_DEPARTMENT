@@ -66,6 +66,7 @@
   }
 
   function validateVerifyInputs(v) {
+    if (window.AUTH_GATES_ENABLED !== true) return true; // gates temporarily off (see login-ui.js)
     return !!(v.verifiedBy && v.verifiedSig && v.verifiedDate && v.verifiedSignature);
   }
 
@@ -131,7 +132,7 @@
       rolesLabel: roles.map(roleLabel).join(', '),
       role: role,
       signedIn: !!role,
-      allowed: role === 'ADMINISTRATOR' || (!!role && roles.indexOf(role) !== -1)
+      allowed: window.AUTH_GATES_ENABLED !== true || role === 'ADMINISTRATOR' || (!!role && roles.indexOf(role) !== -1)
     };
   }
 

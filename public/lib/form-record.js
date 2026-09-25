@@ -1964,7 +1964,7 @@
           date: (el('fr_cb_date').value || '').trim(),
           signature: (el('fr_cb_signature').value || '').trim()
         };
-        if (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature) {
+        if (window.AUTH_GATES_ENABLED === true && (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature)) {
           toast('Completed by, title, date and signature are required to submit.');
           return;
         }
