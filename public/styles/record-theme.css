@@ -794,6 +794,12 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
   border-radius: var(--rt-radius);
 }
 .rt-content .fr-roster-row > .fr-field { min-width: 0; }
+/* None / Y / N in a narrow roster cell: fill the cell and let the buttons shrink, rather than
+   the 3 x 64px minimum overflowing and clipping "N" off the end */
+.rt-content .fr-roster-row .ml-yesno,
+.rt-content .fr-roster-row .fr-yesno { display: flex; width: 100%; }
+.rt-content .fr-roster-row .ml-yesno button,
+.rt-content .fr-roster-row .fr-yesno button { min-width: 0; padding: 10px 4px; white-space: nowrap; }
 .rt-content .fr-roster-row [data-remove-roster-row] {
   grid-column: 1 / -1;
   justify-self: end;

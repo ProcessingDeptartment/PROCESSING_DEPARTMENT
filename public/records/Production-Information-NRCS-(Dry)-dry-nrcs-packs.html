@@ -23,7 +23,7 @@
 <script src="../lib/login-ui.js?v=3"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=6"></script>
-<script src="../lib/form-record.js?v=52"></script>
+<script src="../lib/form-record.js?v=53"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -34,12 +34,12 @@
     listColumns: ['jobNumberProductionDate', 'nrcsAgCode'],
 
     autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo',
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo',
         fill: { receivingDate: 'receivingDate' } }
     ],
     sections: [
       { title: 'Batch details', fields: [
-        { key: 'jobNumber', label: 'Job number', type: 'jobsearch', route: 'Dried' },
+        { key: 'jobNo', label: 'Job number', type: 'jobsearch', route: 'Dried' },
         { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
         { key: 'dateOfInspection', label: 'Date of inspection', type: 'date' },
         { key: 'jobNumberProductionDate', label: 'Job number / production date', type: 'text' },

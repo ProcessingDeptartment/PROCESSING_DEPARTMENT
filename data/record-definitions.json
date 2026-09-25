@@ -31,7 +31,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -166,7 +166,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "jobField": "jobNumber",
+            "jobField": "jobNo",
             "sourceRecordKey": "boxing-and-labelling"
           }
         },
@@ -189,7 +189,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "jobField": "jobNumber",
+            "jobField": "jobNo",
             "sourceRecordKey": "dry-stock-control"
           }
         },
@@ -212,7 +212,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "jobField": "jobNumber",
+            "jobField": "jobNo",
             "sourceRecordKey": "labelling-of-dry-boxes"
           }
         },
@@ -235,7 +235,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "jobField": "jobNumber",
+            "jobField": "jobNo",
             "sourceRecordKey": "dry-labelling-list"
           }
         },
@@ -258,7 +258,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "jobField": "jobNumber",
+            "jobField": "jobNo",
             "sourceRecordKey": "dry-stock-transfers"
           }
         },
@@ -281,7 +281,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "jobField": "jobNumber",
+            "jobField": "jobNo",
             "sourceRecordKey": "dried-abalone-transfer"
           }
         },
@@ -326,20 +326,20 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {}
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "listColumns": [
           "packingDate",
-          "jobNumber"
+          "jobNo"
         ]
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "live-leftovers-log",
@@ -1454,7 +1454,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -1672,7 +1672,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -7400,7 +7400,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -7431,7 +7431,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -7968,7 +7968,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -7982,13 +7982,13 @@
       "extraJson": {
         "listColumns": [
           "date",
-          "jobNumber",
+          "jobNo",
           "productDescription"
         ],
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "stage": "quality"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "double-seam-inspection-report",
@@ -10335,7 +10335,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -10366,7 +10366,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -10778,7 +10778,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -10797,13 +10797,13 @@
       "extraJson": {
         "listColumns": [
           "jiReceivingDate",
-          "jobNumber",
+          "jobNo",
           "sizeRange"
         ],
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "stage": "precooking"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "abalone-packing-specification",
@@ -12064,7 +12064,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -12098,7 +12098,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -12530,7 +12530,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -12544,14 +12544,14 @@
       "extraJson": {
         "listColumns": [
           "intakeDate",
-          "jobNumber",
+          "jobNo",
           "productionCode",
           "canSize"
         ],
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "stage": "canning"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "retorting-control-sheet",
@@ -12571,7 +12571,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -12597,7 +12597,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -12963,7 +12963,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -12977,13 +12977,13 @@
       "extraJson": {
         "listColumns": [
           "date",
-          "jobNumber",
+          "jobNo",
           "retortNo"
         ],
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "stage": "retorting"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "retort-inspection-report",
@@ -15301,7 +15301,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -15342,7 +15342,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -15765,7 +15765,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -15777,14 +15777,14 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "listColumns": [
           "date",
-          "jobNumber",
+          "jobNo",
           "productDescription"
         ]
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "dry-cooking",
@@ -15804,7 +15804,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -15840,7 +15840,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -16418,7 +16418,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -16430,14 +16430,14 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "listColumns": [
           "intakeDate",
-          "jobNumber",
+          "jobNo",
           "potNumber"
         ]
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "drying-process",
@@ -16452,7 +16452,7 @@
       "sections": [],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": true,
@@ -17046,7 +17046,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -17058,7 +17058,7 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "instructions": [
           {
             "label": "Note",
@@ -17069,7 +17069,7 @@
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "dried-abalone-transfer",
@@ -17089,7 +17089,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -17121,7 +17121,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": true,
@@ -17322,7 +17322,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -17334,16 +17334,16 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "stage": "dry-transfer",
         "listColumns": [
           "intakeDate",
-          "jobNumber",
+          "jobNo",
           "totalDriedWeight",
           "dryYield"
         ]
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "dry-monitoring",
@@ -17358,7 +17358,7 @@
       "sections": [],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -17743,7 +17743,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -17755,12 +17755,12 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "specFields": [],
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "grading-production-log-cultivated",
@@ -17780,7 +17780,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -17817,7 +17817,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": true,
@@ -18762,7 +18762,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -18774,15 +18774,15 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "listColumns": [
           "intakeDate",
-          "jobNumber",
+          "jobNo",
           "actualGradedWeight",
           "yield"
         ]
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "grading-production-log-ranched",
@@ -18802,7 +18802,7 @@
           "extraJson": {
             "collapsible": true,
             "summaryField": [
-              "jobNumber",
+              "jobNo",
               "jiProcessingFor"
             ]
           }
@@ -18839,7 +18839,7 @@
       ],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": true,
@@ -19576,7 +19576,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -19588,15 +19588,15 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "listColumns": [
           "intakeDate",
-          "jobNumber",
+          "jobNo",
           "actualGradedWeight",
           "yield"
         ]
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "grading-boxing-traceability",
@@ -21243,7 +21243,7 @@
       "sections": [],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -21732,7 +21732,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -21744,7 +21744,7 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "stage": "live-packing",
         "specFields": [
           {
@@ -21765,7 +21765,7 @@
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "live-pack-checklist",
@@ -34920,7 +34920,7 @@
       "sections": [],
       "fields": [
         {
-          "key": "jobNumber",
+          "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
           "required": false,
@@ -35302,7 +35302,7 @@
       ],
       "autofills": [
         {
-          "watchKey": "jobNumber",
+          "watchKey": "jobNo",
           "sourceRecordKey": "abalone-receiving",
           "matchField": "jobNo",
           "fillMap": {
@@ -35314,12 +35314,12 @@
         }
       ],
       "extraJson": {
-        "batchField": "jobNumber",
+        "batchField": "jobNo",
         "specFields": [],
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation"
       },
-      "primaryBatchField": "jobNumber"
+      "primaryBatchField": "jobNo"
     },
     {
       "recordKey": "water-monitoring",

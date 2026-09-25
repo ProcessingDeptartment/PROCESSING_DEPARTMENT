@@ -83,7 +83,7 @@ for (const key of ['labelling-of-dry-boxes', 'dry-stock-transfers']) {
     unit: null, options: null, group: null, sectionIndex: checklistSecIdx, parentFieldKey: null,
     position: 100 + i, computeFn: null, computeArgs: null, recordPickSource: c.source,
     linkField: null, linkRelation: null, validateJson: null,
-    extraJson: { jobField: 'jobNumber', sourceRecordKey: c.sourceRecordKey }
+    extraJson: { jobField: 'jobNo', sourceRecordKey: c.sourceRecordKey }
   }));
   const tail = [
     { key: 'signedPackingListsAttached', label: 'Signed packing lists attached?', type: 'yesno', required: false, readOnly: false, unit: null, options: null, group: null, sectionIndex: checklistSecIdx, parentFieldKey: null, position: 200, computeFn: null, computeArgs: null, recordPickSource: null, linkField: null, linkRelation: null, validateJson: null },

@@ -25,22 +25,22 @@
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/traceability.js?v=8"></script>
 <script src="../lib/signoff-block.js?v=6"></script>
-<script src="../lib/monitoring-log.js?v=35"></script>
+<script src="../lib/monitoring-log.js?v=36"></script>
 <script>(function () {
   MonitoringLog.init({
     mount: '#mlRoot',
     recordKey: 'dispatch-receiving-checklist',
-    batchField: 'jobNumber',
+    batchField: 'jobNo',
     docCode: 'REC 7.8.8.1',
     title: 'Dispatch Receiving Checklist',
     docRevisionStart: 1,
 
     jobInfoGroup: 'Job info',
     autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
     entryFields: [
-      { group: 'Job info', key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
+      { group: 'Job info', key: 'jobNo', label: 'Job number', type: 'jobsearch' },
       { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
       { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
       { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },

@@ -27,7 +27,7 @@
 <script src="../lib/traceability.js?v=8"></script>
 <script src="../lib/signoff-block.js?v=6"></script>
 <script src="../lib/compute/registry.js?v=1"></script>
-<script src="../lib/monitoring-log.js?v=35"></script>
+<script src="../lib/monitoring-log.js?v=36"></script>
 <script>(function () {
 
   MonitoringLog.init({
@@ -39,12 +39,12 @@
 
     jobInfoGroup: 'Job info',
     autofill: [
-      { watch: 'jobNumber', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
+      { watch: 'jobNo', source: 'abalone-receiving', matchField: 'jobNo', fill: { jiReceivingDate: 'receivingDate', jiReceivedFrom: 'receivedFrom', jiProcessingFor: 'toBeProcessedFor', jiIntakeWeight: 'intakeWeight' } }
     ],
-    batchField: 'jobNumber',
+    batchField: 'jobNo',
     stage: 'live-packing',
     entryFields: [
-      { group: 'Job info', key: 'jobNumber', label: 'Job number', type: 'jobsearch' },
+      { group: 'Job info', key: 'jobNo', label: 'Job number', type: 'jobsearch' },
       { group: 'Job info', key: 'jiReceivingDate', label: 'Receiving date', type: 'date', readOnly: true },
       { group: 'Job info', key: 'jiReceivedFrom', label: 'Received from (farm)', type: 'text', readOnly: true },
       { group: 'Job info', key: 'jiProcessingFor', label: 'Processing for', type: 'text', readOnly: true },

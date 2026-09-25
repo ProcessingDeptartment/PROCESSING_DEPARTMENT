@@ -69,6 +69,13 @@
   .jp-opt.active, .jp-opt:hover{ background:var(--palette-hover,#eef2f7); }
   .jp-empty{ padding:9px 12px; color:#6b7380; font-size:13px; }
   .jp-picked{ display:flex; align-items:center; gap:10px; min-height:36px; }
+  .jp-picked[hidden], .jp-search[hidden]{ display:none; }
+  /* the picker owns its row: Can/Dry sits beside the search box, so the job-info fields after it
+     line up as one even row instead of wrapping around a double-height cell */
+  .fr-field.jp-field, .ml-field.jp-field{ grid-column:1 / -1; }
+  .jp-field .jp-wrap{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .jp-field .jp-route{ margin-bottom:0; }
+  .jp-field .jp-search{ flex:1 1 220px; width:auto; max-width:420px; }
   .jp-picked-no{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-weight:700; font-size:15px; }
   .jp-change{ background:none; border:0; padding:4px 6px; color:var(--palette-link,#1f5fa8); text-decoration:underline; cursor:pointer; font-size:13px; }
   .jp-modal{ font-family:"Segoe UI",system-ui,sans-serif; position:fixed; inset:0; z-index:1000; background:rgba(15,20,30,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
@@ -171,6 +178,8 @@
     injectCss();
     const wrap = document.createElement('span');
     wrap.className = 'jp-wrap';
+    const field = sel.closest('.fr-field, .ml-field');
+    if (field) field.classList.add('jp-field');
     sel.parentNode.insertBefore(wrap, sel);
     wrap.appendChild(sel);
     wrap.insertAdjacentHTML('beforeend', `

@@ -88,12 +88,12 @@ const mortalitiesSub = [{
   inSpec: true,
 }];
 
-// precooking fields: jobNumber (linkField), precookingDate, sizeRange, temperature, etc.
+// precooking fields: jobNo (linkField), precookingDate, sizeRange, temperature, etc.
 const precookingSub = [{
   id: 'test_cook_001', status: 'submitted', submittedAt: Date.now(),
   source: 'manual', createdAt: Date.now(), updatedAt: Date.now(), history: [], signOffs: [],
   values: {
-    jobNumber: TEST_JOB, precookingDate: '2026-09-10', sizeRange: '50-100g',
+    jobNo: TEST_JOB, precookingDate: '2026-09-10', sizeRange: '50-100g',
     litresWaterPerCook: '200', temperature: '121', cleanWeight: '45.2', precookWeight: '38.1',
   },
 }];
@@ -212,7 +212,7 @@ async function main() {
     await syncRecordLinks(prisma, cookKey, cookJson);
 
     const links = await prisma.recordLink.findMany({ where: { linkValue: TEST_JOB } });
-    // abalone-receiving and precooking both use the canonical linkField jobNo (its field key is jobNumber).
+    // abalone-receiving and precooking both use the canonical linkField jobNo.
     // mortalities-log has NO linkField — so only 2 records produce links.
     check('RecordLink: rows for TEST999999 exist', links.length >= 2, 'got ' + links.length);
 

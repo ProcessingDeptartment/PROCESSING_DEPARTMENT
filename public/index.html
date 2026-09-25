@@ -324,7 +324,7 @@
       canBatches++;
       cans += num(v.numberOfCans) || 0;
       damaged += (num(v.totalDamagedCans) != null ? num(v.totalDamagedCans) : (num(v.damagedCans) || 0));
-      var job = String(v.jobNumber || '').trim();
+      var job = String(v.jobNo || '').trim();
       if (job) canJobs[job] = true;
     });
     var canIntakeKg = Object.keys(canJobs).reduce(function (a, job) {
