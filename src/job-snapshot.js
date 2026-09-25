@@ -2,7 +2,7 @@
 // the job, and live once: in REC 7.1.2 Abalone Receiving (sub_abalone_receiving), exposed to
 // queries through the `job_info` view keyed by job number. Downstream records only SHOW them —
 // the form autofills them read-only from 7.1.2 — so their sub_* tables do not store a copy.
-// Join a record's job-number column to job_info."jobNo" to get them.
+// Join any sub_* table to job_info ON "jobNo" (every table names its job column jobNo) to get them.
 //
 // A field is a job snapshot when it is a read-only target of an autofill whose source is
 // abalone-receiving. Editable autofill targets are kept: an operator could have typed a
@@ -34,4 +34,18 @@ function jobSnapshotKeys(def) {
   return keys;
 }
 
-module.exports = { jobSnapshotKeys, JOB_SOURCE };
+// Every sub_* table names its job-number column "jobNo", whatever the form calls the field
+// (jobNo on most records, jobNumber on ~15). Only the DB column is renamed; the form field key,
+// autofill watchKey and saved JSON keep the form's own name.
+const JOB_COL = 'jobNo';
+
+// The record's top-level job picker field key, or null for records not scoped to a job.
+function jobFieldKey(def) {
+  const sections = (def && def.sections) || [];
+  const f = ((def && def.fields) || []).find(f =>
+    (f.type === 'jobsearch' || f.type === 'jobnumber') &&
+    !(sections[f.sectionIndex] && sections[f.sectionIndex].kind === 'roster'));
+  return f ? f.key : null;
+}
+
+module.exports = { jobSnapshotKeys, jobFieldKey, JOB_SOURCE, JOB_COL };

@@ -200,7 +200,7 @@ async function main() {
     check('sub_precooking_check_sheet: 1 row', cookRows.length === 1);
     if (cookRows.length) {
       check('  temperature = 121', cookRows[0].temperature === '121');
-      check('  jobNumber = TEST999999', cookRows[0].jobNumber === TEST_JOB);
+      check('  jobNo = TEST999999', cookRows[0].jobNo === TEST_JOB);
       check('  cleanWeight = 45.2', cookRows[0].cleanWeight === '45.2');
     }
 

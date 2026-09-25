@@ -287,7 +287,7 @@ model Sub_dry_export_pack_front_page {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber                  String?
+  jobNo                      String?
   packingDate                DateTime? @db.Date
   noOfBoxesExported          Float?
   rec747Attached             String?
@@ -299,7 +299,7 @@ model Sub_dry_export_pack_front_page {
   checkedByQC                String?
   verificationBy             String?
 
-  @@index([jobNumber], map: "sub_dry_export_pack_front_page_jobNumber_idx")
+  @@index([jobNo], map: "sub_dry_export_pack_front_page_jobNo_idx")
   @@map("sub_dry_export_pack_front_page")
 }
 
@@ -491,7 +491,7 @@ model Sub_dry_nrcs_packs {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber               String?
+  jobNo                   String?
   receivingDate           DateTime? @db.Date
   dateOfInspection        DateTime? @db.Date
   jobNumberProductionDate String?
@@ -1104,7 +1104,7 @@ model Sub_qc_report {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber          String?
+  jobNo              String?
   harvestFarm        String?
   date               DateTime? @db.Date
   productionCode     String?
@@ -1130,7 +1130,7 @@ model Sub_qc_report {
   tasteOfProduct     Boolean?
   comments           String?
 
-  @@index([jobNumber], map: "sub_qc_report_jobNumber_idx")
+  @@index([jobNo], map: "sub_qc_report_jobNo_idx")
   @@map("sub_qc_report")
 }
 
@@ -1349,7 +1349,7 @@ model Sub_precooking_check_sheet {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber            String?
+  jobNo                String?
   precookingDate       DateTime? @db.Date
   sizeRange            String?
   litresWaterPerCook   Float?
@@ -1367,7 +1367,7 @@ model Sub_precooking_check_sheet {
   percentCleanWeight   Float?
   percentPrecookWeight Float?
 
-  @@index([jobNumber], map: "sub_precooking_check_sheet_jobNumber_idx")
+  @@index([jobNo], map: "sub_precooking_check_sheet_jobNo_idx")
   @@map("sub_precooking_check_sheet")
 }
 
@@ -1480,7 +1480,7 @@ model Sub_cans_produced {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber                String?
+  jobNo                    String?
   intakeDate               DateTime? @db.Date
   productionCode           String?
   timeTrolleyIn            DateTime? @db.Time
@@ -1495,7 +1495,7 @@ model Sub_cans_produced {
 
   rows Sub_cans_produced_Row[]
 
-  @@index([jobNumber], map: "sub_cans_produced_jobNumber_idx")
+  @@index([jobNo], map: "sub_cans_produced_jobNo_idx")
   @@map("sub_cans_produced")
 }
 
@@ -1524,7 +1524,7 @@ model Sub_retorting_control_sheet {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber          String?
+  jobNo              String?
   date               DateTime? @db.Date
   time               String?
   productionCode     String?
@@ -1540,7 +1540,7 @@ model Sub_retorting_control_sheet {
   timeTrolleyOut     String?
   processDeviation   String?
 
-  @@index([jobNumber], map: "sub_retorting_control_sheet_jobNumber_idx")
+  @@index([jobNo], map: "sub_retorting_control_sheet_jobNo_idx")
   @@map("sub_retorting_control_sheet")
 }
 
@@ -1741,7 +1741,7 @@ model Sub_brine_mixing_report {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber          String?
+  jobNo              String?
   date               DateTime? @db.Date
   sample             String?
   productDescription String?
@@ -1760,7 +1760,7 @@ model Sub_brine_mixing_report {
   maltBatchNo        String?
   commentsDeviations String?
 
-  @@index([jobNumber], map: "sub_brine_mixing_report_jobNumber_idx")
+  @@index([jobNo], map: "sub_brine_mixing_report_jobNo_idx")
   @@map("sub_brine_mixing_report")
 }
 
@@ -1774,7 +1774,7 @@ model Sub_dry_cooking {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber          String?
+  jobNo              String?
   harvestFarm        String?
   intakeDate         DateTime? @db.Date
   cookingDate        DateTime? @db.Date
@@ -1803,7 +1803,7 @@ model Sub_dry_cooking {
   cooker             String?
   comments           String?
 
-  @@index([jobNumber], map: "sub_dry_cooking_jobNumber_idx")
+  @@index([jobNo], map: "sub_dry_cooking_jobNo_idx")
   @@map("sub_dry_cooking")
 }
 
@@ -1817,7 +1817,7 @@ model Sub_drying_process {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber                 String?
+  jobNo                     String?
   wholeWeight               Float?
   cookingDate               DateTime? @db.Date
   cookingWeight             Float?
@@ -1845,7 +1845,7 @@ model Sub_drying_process {
   dryWeight                 Float?
   estimateYield             Float?
 
-  @@index([jobNumber], map: "sub_drying_process_jobNumber_idx")
+  @@index([jobNo], map: "sub_drying_process_jobNo_idx")
   @@map("sub_drying_process")
 }
 
@@ -1859,7 +1859,7 @@ model Sub_dried_abalone_transfer {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber        String?
+  jobNo            String?
   intakeDate       DateTime? @db.Date
   intakeWeight     Float?
   actualDriedDate  DateTime? @db.Date
@@ -1870,7 +1870,7 @@ model Sub_dried_abalone_transfer {
 
   rows Sub_dried_abalone_transfer_Row[]
 
-  @@index([jobNumber], map: "sub_dried_abalone_transfer_jobNumber_idx")
+  @@index([jobNo], map: "sub_dried_abalone_transfer_jobNo_idx")
   @@map("sub_dried_abalone_transfer")
 }
 
@@ -1897,7 +1897,7 @@ model Sub_dry_monitoring {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber             String?
+  jobNo                 String?
   intakeWeight          Float?
   intakeDate            DateTime? @db.Date
   date                  DateTime? @db.Date
@@ -1916,7 +1916,7 @@ model Sub_dry_monitoring {
   qcCheck               String?
   supervisor            String?
 
-  @@index([jobNumber], map: "sub_dry_monitoring_jobNumber_idx")
+  @@index([jobNo], map: "sub_dry_monitoring_jobNo_idx")
   @@map("sub_dry_monitoring")
 }
 
@@ -1930,7 +1930,7 @@ model Sub_grading_production_log_cultivated {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber           String?
+  jobNo               String?
   intakeDate          DateTime? @db.Date
   driedWeightReceived Float?
   actualDriedWeight   Float?
@@ -1962,7 +1962,7 @@ model Sub_grading_production_log_cultivated {
 
   rows Sub_grading_production_log_cultivated_Row[]
 
-  @@index([jobNumber], map: "sub_grading_production_log_cultivated_jobNumber_idx")
+  @@index([jobNo], map: "sub_grading_production_log_cultivated_jobNo_idx")
   @@map("sub_grading_production_log_cultivated")
 }
 
@@ -1995,7 +1995,7 @@ model Sub_grading_production_log_ranched {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber           String?
+  jobNo               String?
   intakeDate          DateTime? @db.Date
   driedWeightReceived Float?
   actualDriedWeight   Float?
@@ -2019,7 +2019,7 @@ model Sub_grading_production_log_ranched {
 
   rows Sub_grading_production_log_ranched_Row[]
 
-  @@index([jobNumber], map: "sub_grading_production_log_ranched_jobNumber_idx")
+  @@index([jobNo], map: "sub_grading_production_log_ranched_jobNo_idx")
   @@map("sub_grading_production_log_ranched")
 }
 
@@ -2214,7 +2214,7 @@ model Sub_live_production_pack {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber                   String?
+  jobNo                       String?
   packingDate                 DateTime? @db.Date
   idnsPacked                  String?
   livePackChecklistAttached   Boolean?
@@ -2236,7 +2236,7 @@ model Sub_live_production_pack {
   completedBySupervisor       String?
   checkedByQC                 String?
 
-  @@index([jobNumber], map: "sub_live_production_pack_jobNumber_idx")
+  @@index([jobNo], map: "sub_live_production_pack_jobNo_idx")
   @@map("sub_live_production_pack")
 }
 
@@ -3761,7 +3761,7 @@ model Sub_dispatch_receiving_checklist {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNumber                 String?
+  jobNo                     String?
   date                      DateTime? @db.Date
   clientDetails             String?
   noOfPalletsBoxes          Float?
@@ -3778,7 +3778,7 @@ model Sub_dispatch_receiving_checklist {
   correctiveActions         String?
   checkedBy                 String?
 
-  @@index([jobNumber], map: "sub_dispatch_receiving_checklist_jobNumber_idx")
+  @@index([jobNo], map: "sub_dispatch_receiving_checklist_jobNo_idx")
   @@map("sub_dispatch_receiving_checklist")
 }
 
