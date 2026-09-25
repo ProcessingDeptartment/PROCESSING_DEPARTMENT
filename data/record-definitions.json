@@ -3488,8 +3488,8 @@
             "450g+"
           ],
           "group": null,
-          "sectionIndex": 0,
-          "parentFieldKey": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
           "computeArgs": null,
@@ -3715,7 +3715,7 @@
         "listColumns": [
           "intakeDate",
           "jobNo",
-          "sizeRange"
+          "processingFor"
         ]
       },
       "primaryBatchField": "jobNo"
