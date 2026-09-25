@@ -17088,9 +17088,12 @@
           "position": 1
         },
         {
-          "title": "Totals",
+          "title": "Totals (from crates)",
           "kind": "fields",
-          "position": 2
+          "position": 2,
+          "extraJson": {
+            "afterRoster": true
+          }
         },
         {
           "title": "Crates",
@@ -17216,10 +17219,10 @@
         {
           "key": "totalDriedWeight",
           "label": "Total dried weight",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
-          "unit": null,
+          "readOnly": true,
+          "unit": "kg",
           "options": null,
           "group": null,
           "sectionIndex": 2,
@@ -17230,60 +17233,28 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "weight"
+          }
         },
         {
           "key": "dryYield",
           "label": "Dry yield",
-          "type": "number",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
-          "unit": null,
+          "readOnly": true,
+          "unit": "%",
           "options": null,
           "group": null,
           "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 7,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "receivedBy",
-          "label": "Received by",
-          "type": "text",
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 2,
-          "parentFieldKey": null,
-          "position": 8,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "verifiedBy",
-          "label": "Verified by",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 2,
-          "parentFieldKey": null,
-          "position": 9,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "ratioPct",
+          "computeArgs": {
+            "x": "totalDriedWeight",
+            "y": "intakeWeight"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
@@ -17300,7 +17271,7 @@
           "group": null,
           "sectionIndex": 3,
           "parentFieldKey": "@roster",
-          "position": 10,
+          "position": 8,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -17319,7 +17290,7 @@
           "group": null,
           "sectionIndex": 3,
           "parentFieldKey": "@roster",
-          "position": 11,
+          "position": 9,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
