@@ -723,7 +723,6 @@ model Sub_basket_removal_shucking_gutting {
   jobNo                String?
   intakeDate           DateTime? @db.Date
   processingFor        String?
-  sizeRange            String?
   damagesAfterShucking Boolean?
   beakCutCorrect       Boolean?
   damagesAfterGutting  Boolean?
@@ -741,6 +740,7 @@ model Sub_basket_removal_shucking_gutting_Row {
   parent   Sub_basket_removal_shucking_gutting @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int                                 @default(0)
 
+  sizeRange        String?
   incomingTemp     Float?
   noOfMortalities  Float?
   signsOfParasites Boolean?

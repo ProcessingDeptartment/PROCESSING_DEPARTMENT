@@ -155,7 +155,8 @@
         let warn = '';
         if (status && status.status === 'closed') warn = 'This job has been closed out. Only confirm if this record genuinely belongs to it. ';
         if (!rec) warn += 'No Abalone Receiving record (REC 7.1.2) was found for this job. Check the job number before confirming.';
-        else if (r.__status && r.__status !== 'submitted') warn += 'The Abalone Receiving record (REC 7.1.2) for this job is still a draft — its details are provisional.';
+        else if (r.__status && r.__status !== 'submitted') warn += 'The Abalone Receiving record (REC 7.1.2) for this job is still a draft — its details are provisional. ';
+        if (rec && !(Array.isArray(sizes) && sizes.length)) warn += 'No size ranges are captured on the Abalone Receiving record (REC 7.1.2) for this job, so size-range pickers will list every size.';
         modal.querySelector('.jp-body').innerHTML = `<dl class="jp-dl">${rows.map(([k, v]) =>
           `<dt>${esc(k)}</dt><dd>${esc(v == null || v === '' ? '—' : v)}</dd>`).join('')}</dl>` +
           (warn ? `<div class="jp-warn">${esc(warn)}</div>` : '');
