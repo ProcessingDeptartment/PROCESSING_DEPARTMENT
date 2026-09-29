@@ -1466,10 +1466,11 @@
     `;
 
     function suggestCompletedBy() {
-      const by = el('fr_cb_by');
-      if (!by || by.value.trim()) return;
+      // the login name is a role/account name, so it goes in Title; the person types their own name
+      const title = el('fr_cb_title');
+      if (!title || title.value.trim()) return;
       const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
-      if (name) by.value = name;
+      if (name) title.value = name;
     }
     suggestCompletedBy();
     if (typeof document !== 'undefined') document.addEventListener('authSuccess', suggestCompletedBy);

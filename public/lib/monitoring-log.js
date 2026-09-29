@@ -1200,10 +1200,11 @@
         i.value = cb && cb[k] ? cb[k] : '';
         i.disabled = !!locked;
       });
-      const by = cbInput('by');
-      if (by && !locked && !by.value.trim()) {
+      // the login name is a role/account name, so it goes in Title; the person types their own name
+      const title = cbInput('title');
+      if (title && !locked && !title.value.trim()) {
         const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
-        if (name) by.value = name;
+        if (name) title.value = name;
       }
     }
     function readCompletedBy() {
@@ -1211,10 +1212,10 @@
       return { by: v('by'), title: v('title'), date: v('date'), signature: v('signature') };
     }
     document.addEventListener('authSuccess', () => {
-      const by = cbInput('by');
-      if (by && !by.disabled && !by.value.trim()) {
+      const title = cbInput('title');
+      if (title && !title.disabled && !title.value.trim()) {
         const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
-        if (name) by.value = name;
+        if (name) title.value = name;
       }
     });
 
@@ -1319,8 +1320,8 @@
           return;
         }
         // a draft keeps whatever was typed so it comes back when the draft is reopened
-        if (!(completedBy.title || completedBy.date || completedBy.signature) && !completedBy.by) completedBy = null;
-        else if (submitFlow && !finalize && !(completedBy.title || completedBy.date || completedBy.signature)) completedBy = null;
+        // (Title is pre-filled from the login, so a draft keeps the block only if the person typed a name, date or signature)
+        if (!(completedBy.by || completedBy.date || completedBy.signature)) completedBy = null;
       }
 
 
