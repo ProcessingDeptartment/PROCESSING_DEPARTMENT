@@ -37,9 +37,8 @@
 <script src="../lib/record-shell.js?v=6"></script>
 <script>
 (function () {
-  // Live list of EVERY record submission linked to the selected job number (read-only, always
-  // current, nothing is dropped). Top table = the records this pack expects, with Attached Yes/No;
-  // bottom table = every other linked record, so no submission is ever left out.
+  // Live check of the records this pack requires for the selected job number (read-only, always
+  // current): Attached Yes/No per required record, every linked submission listed, missing ones flagged.
   var EXPECTED = [
     ['REC 7.1.2 Abalone Receiving', ['abalone-receiving']],
     ['REC 7.1.1 Basket Removal / Shucking / Gutting', ['basket-removal-shucking-gutting']],
@@ -83,19 +82,18 @@
     var seen = {}, list = [];
     rows.forEach(function (r) { var k = r.record_key + '|' + r.submission_id; if (!seen[k]) { seen[k] = 1; list.push(r); } });
     list.sort(function (a, b) { return String(a.occurred_on || '').localeCompare(String(b.occurred_on || '')); });
-    var used = {};
     var expectedRows = EXPECTED.map(function (e) {
       var hits = list.filter(function (r) { return e[1].indexOf(r.record_key) !== -1; });
-      hits.forEach(function (r) { used[r.record_key + '|' + r.submission_id] = 1; });
-      return '<tr><td>' + esc(e[0]) + '</td><td><strong>' + (hits.length ? 'Yes' : 'No') + '</strong>' + (hits.length > 1 ? ' (' + hits.length + ')' : '') + '</td><td>' +
+            return '<tr' + (hits.length ? '' : ' style="background:rgba(192,57,43,.10);color:#c0392b"') + '><td>' + esc(e[0]) + '</td><td><strong>' + (hits.length ? 'Yes' : 'No') + '</strong>' + (hits.length > 1 ? ' (' + hits.length + ')' : '') + '</td><td>' +
         (hits.length ? hits.map(function (r) { return '<div>' + item(r, codes) + '</div>'; }).join('') : '<span class="fr-muted">Not found for this job</span>') + '</td></tr>';
     }).join('');
-    var others = list.filter(function (r) { return !used[r.record_key + '|' + r.submission_id]; });
+    var missing = EXPECTED.filter(function (e) { return !list.some(function (r) { return e[1].indexOf(r.record_key) !== -1; }); });
     var t = 'class="fr-table" style="width:100%"';
-    p.innerHTML = h('Records linked to ' + esc(jobNo) + ' (' + list.length + ' submission' + (list.length === 1 ? '' : 's') + ')') +
-      '<div class="fr-table-wrap"><table ' + t + '><thead><tr><th>Record</th><th>Attached</th><th>Linked submissions</th></tr></thead><tbody>' + expectedRows + '</tbody></table></div>' +
-      (others.length ? '<h3 style="margin:14px 0 6px">Other records linked to this job (' + others.length + ')</h3><div class="fr-table-wrap"><table ' + t + '><tbody>' +
-        others.map(function (r) { return '<tr><td>' + item(r, codes) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '');
+    var summary = missing.length
+      ? '<div style="margin:0 0 8px;padding:8px 10px;border:1px solid #c0392b;border-radius:6px;color:#c0392b;font-weight:600">Missing for this job (' + missing.length + ' of ' + EXPECTED.length + '): ' + missing.map(function (e) { return esc(e[0].split(' ').slice(0, 2).join(' ')); }).join(', ') + '</div>'
+      : '<div style="margin:0 0 8px;padding:8px 10px;border:1px solid #1e8449;border-radius:6px;color:#1e8449;font-weight:600">All ' + EXPECTED.length + ' required records are attached for this job</div>';
+    p.innerHTML = h('Required records for ' + esc(jobNo)) + summary +
+      '<div class="fr-table-wrap"><table ' + t + '><thead><tr><th>Record</th><th>Attached</th><th>Submissions</th></tr></thead><tbody>' + expectedRows + '</tbody></table></div>';
   }
   function check() {
     var el = document.getElementById('fr_f_jobNo');
