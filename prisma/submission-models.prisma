@@ -63,6 +63,7 @@ model Sub_master_cleaning_checklist {
   responsibleOperator      String?
 
   rows Sub_master_cleaning_checklist_Row[]
+  completedBy String?
 
   @@map("sub_master_cleaning_checklist")
 }
@@ -97,6 +98,7 @@ model Sub_master_cleaning_plan {
   approvedBy               String?
 
   rows Sub_master_cleaning_plan_Row[]
+  completedBy String?
 
   @@map("sub_master_cleaning_plan")
 }
@@ -150,6 +152,7 @@ model Sub_mortality_counts_by_customer {
   date                     DateTime? @db.Date
 
   rows Sub_mortality_counts_by_customer_Row[]
+  completedBy String?
 
   @@map("sub_mortality_counts_by_customer")
 }
@@ -369,6 +372,7 @@ model Sub_training_register {
   trainer                  String?
 
   rows Sub_training_register_Row[]
+  completedBy String?
 
   @@map("sub_training_register")
 }
@@ -461,6 +465,7 @@ model Sub_basket_removal_shucking_gutting {
   processDeviations        String?
 
   rows Sub_basket_removal_shucking_gutting_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_basket_removal_shucking_gutting_jobNo_idx")
   @@map("sub_basket_removal_shucking_gutting")
@@ -500,6 +505,7 @@ model Sub_abalone_receiving {
   intakeWeight             Float?
 
   rows Sub_abalone_receiving_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_abalone_receiving_jobNo_idx")
   @@map("sub_abalone_receiving")
@@ -599,6 +605,7 @@ model Sub_bleeding_and_salting {
   saltBatchCode            String?
   bakingSodaG              Float?
   bakingSodaBatchCode      String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_bleeding_and_salting_jobNo_idx")
   @@index([saltBatchCode], map: "sub_bleeding_and_salting_saltBatchCode_idx")
@@ -860,6 +867,7 @@ model Sub_qc_report {
   textureOfAbalone         Boolean?
   tasteOfProduct           Boolean?
   comments                 String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_qc_report_jobNo_idx")
   @@map("sub_qc_report")
@@ -999,6 +1007,7 @@ model Sub_labelling_of_cans {
   labellingRequirementCorrect Boolean?
   cartonLabelsCorrespond   Boolean?
   correctiveActions        String?
+  completedBy String?
 
   @@map("sub_labelling_of_cans")
 }
@@ -1026,6 +1035,7 @@ model Sub_stock_transfers {
   qcVerification           String?
   fg02Verification         String?
   fg01Verification         String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_stock_transfers_jobNo_idx")
   @@map("sub_stock_transfers")
@@ -1095,6 +1105,7 @@ model Sub_precooking_check_sheet {
   totalPrecookWeight       Float?
   percentCleanWeight       Float?
   percentPrecookWeight     Float?
+  completedBy String?
 
   @@index([jobNo], map: "sub_precooking_check_sheet_jobNo_idx")
   @@map("sub_precooking_check_sheet")
@@ -1172,6 +1183,7 @@ model Sub_can_filling_and_printing {
   verifiedBeforePrinting   Boolean?
   verifiedAfterPrinting    Boolean?
   processDeviations        String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_can_filling_and_printing_jobNo_idx")
   @@map("sub_can_filling_and_printing")
@@ -1195,6 +1207,7 @@ model Sub_printing_control_sheet {
   actualCanPieces          Float?
   piecesOnCan              Float?
   correctiveActions        String?
+  completedBy String?
 
   @@map("sub_printing_control_sheet")
 }
@@ -1223,6 +1236,7 @@ model Sub_cans_produced {
   comments                 String?
 
   rows Sub_cans_produced_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_cans_produced_jobNo_idx")
   @@map("sub_cans_produced")
@@ -1268,6 +1282,7 @@ model Sub_retorting_control_sheet {
   startCooling             String?
   timeTrolleyOut           DateTime? @db.Time
   processDeviation         String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_retorting_control_sheet_jobNo_idx")
   @@map("sub_retorting_control_sheet")
@@ -1300,6 +1315,7 @@ model Sub_retort_inspection_report {
   correctTempOnRecipe      Boolean?
   correctPressureOnRecipe  Boolean?
   processDeviationAlarms   String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_retort_inspection_report_jobNo_idx")
   @@map("sub_retort_inspection_report")
@@ -1402,6 +1418,7 @@ model Sub_sauce_mixing {
   mdMixBatchCode           String?
   tsMixBatchCode           String?
   soMixBatchCode           String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_sauce_mixing_jobNo_idx")
   @@index([brothBatchDate], map: "sub_sauce_mixing_brothBatchDate_idx")
@@ -1434,6 +1451,7 @@ model Sub_final_sauce_mix {
   brownSugarAdjustment     String?
   maltAdjustment           String?
   comments                 String?
+  completedBy String?
 
   @@map("sub_final_sauce_mix")
 }
@@ -1485,6 +1503,7 @@ model Sub_brine_mixing_report {
   maltG                    Float?
   maltBatchNo              String?
   commentsDeviations       String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_brine_mixing_report_jobNo_idx")
   @@map("sub_brine_mixing_report")
@@ -1593,6 +1612,7 @@ model Sub_dried_abalone_transfer {
   dryYield                 Float?
 
   rows Sub_dried_abalone_transfer_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_dried_abalone_transfer_jobNo_idx")
   @@map("sub_dried_abalone_transfer")
@@ -2230,6 +2250,7 @@ model Sub_daily_cleaning_inspection {
   shift                    String?
 
   rows Sub_daily_cleaning_inspection_Row[]
+  completedBy String?
 
   @@map("sub_daily_cleaning_inspection")
 }
@@ -2264,6 +2285,7 @@ model Sub_deep_cleaning_record_weekly {
   shift                    String?
 
   rows Sub_deep_cleaning_record_weekly_Row[]
+  completedBy String?
 
   @@map("sub_deep_cleaning_record_weekly")
 }
@@ -2725,6 +2747,7 @@ model Sub_glass_breakage_clearance_certificate {
   verifiedBy               String?
 
   rows Sub_glass_breakage_clearance_certificate_Row[]
+  completedBy String?
 
   @@map("sub_glass_breakage_clearance_certificate")
 }
@@ -3692,6 +3715,7 @@ model Sub_internal_car {
   closeDate                DateTime? @db.Date
   verifiedBy               String?
   verifiedDate             DateTime? @db.Date
+  completedBy String?
 
   @@map("sub_internal_car")
 }
@@ -3728,6 +3752,7 @@ model Sub_disposition_investigation_record {
   allPartiesNotified       Boolean?
   approvedBy               String?
   dateReviewed             DateTime? @db.Date
+  completedBy String?
 
   @@index([productionCode], map: "sub_disposition_investigation_record_productionCode_idx")
   @@map("sub_disposition_investigation_record")
@@ -3762,6 +3787,7 @@ model Sub_withdrawal_mock_recall_record {
   actionsTaken             String?
 
   rows Sub_withdrawal_mock_recall_record_Row[]
+  completedBy String?
 
   @@map("sub_withdrawal_mock_recall_record")
 }
@@ -3806,6 +3832,7 @@ model Sub_traceability {
   amountShipped            Float?
   percentageAccountedFor   Float?
   managementSignature      String?
+  completedBy String?
 
   @@map("sub_traceability")
 }
@@ -3825,6 +3852,7 @@ model Sub_traceability_mock_recall_canned_braised_abalone {
   agCode                   String?
 
   rows Sub_traceability_mock_recall_canned_braised_abalone_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_traceability_mock_recall_canned_braised_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_canned_braised_abalone")
@@ -3861,6 +3889,7 @@ model Sub_traceability_mock_recall_canned_abalone {
   agCode                   String?
 
   rows Sub_traceability_mock_recall_canned_abalone_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_traceability_mock_recall_canned_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_canned_abalone")
@@ -3897,6 +3926,7 @@ model Sub_traceability_mock_recall_canned_minced_abalone {
   agCode                   String?
 
   rows Sub_traceability_mock_recall_canned_minced_abalone_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_traceability_mock_recall_canned_minced_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_canned_minced_abalone")
@@ -3933,6 +3963,7 @@ model Sub_traceability_mock_recall_dried_abalone {
   agCode                   String?
 
   rows Sub_traceability_mock_recall_dried_abalone_Row[]
+  completedBy String?
 
   @@index([jobNo], map: "sub_traceability_mock_recall_dried_abalone_jobNo_idx")
   @@map("sub_traceability_mock_recall_dried_abalone")
@@ -3968,6 +3999,7 @@ model Sub_traceability_mock_recall_live_abalone {
   packingDate              DateTime? @db.Date
 
   rows Sub_traceability_mock_recall_live_abalone_Row[]
+  completedBy String?
 
   @@map("sub_traceability_mock_recall_live_abalone")
 }
@@ -4058,6 +4090,7 @@ model Sub_supplier_approval_record {
   actionIfNotApproved      String?
   managementVerification   String?
   verificationDate         DateTime? @db.Date
+  completedBy String?
 
   @@map("sub_supplier_approval_record")
 }
@@ -4096,6 +4129,7 @@ model Sub_rapid_food_handler_medicals {
   medicalExaminer          String?
   practiceNo               String?
   signatureDate            DateTime? @db.Date
+  completedBy String?
 
   @@map("sub_rapid_food_handler_medicals")
 }
@@ -4122,6 +4156,7 @@ model Sub_rfh_medical_result {
   examinerDate             DateTime? @db.Date
   verifiedBy               String?
   verifiedDate             DateTime? @db.Date
+  completedBy String?
 
   @@map("sub_rfh_medical_result")
 }
@@ -4225,6 +4260,7 @@ model Sub_daily_factory_feedback_meeting {
   wasteManagement          String?
 
   rows Sub_daily_factory_feedback_meeting_Row[]
+  completedBy String?
 
   @@map("sub_daily_factory_feedback_meeting")
 }
@@ -4266,6 +4302,7 @@ model Sub_rtw_medical_questionnaire {
   employeeSignature        String?
   employeeSignatureDate    DateTime? @db.Date
   supervisorSignature      String?
+  completedBy String?
 
   @@map("sub_rtw_medical_questionnaire")
 }
