@@ -36,5 +36,183 @@
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>
+<script>
+(function () {
+  // Attachments checklist. One row per record this pack requires. Attached (Yes/No) and the linked
+  // submissions fill in automatically from the selected job number (read-only, always current):
+  // Attached = at least 1 record AND every record that exists for the job is completed (submitted,
+  // not draft). Comments is a normal form field saved with the submission. Submit is blocked while
+  // any row is not complete. REC 7.4.8 is not linked to the job, so it is picked by hand.
+  var EXPECTED = [
+    { c: 'cmt745', label: 'REC 7.4.5 Boxing & Labelling', keys: ['boxing-and-labelling'], mode: 'bin' },
+    { c: 'cmt746', label: 'REC 7.4.6 Dry Stock Control', keys: ['dry-stock-control'] },
+    { c: 'cmt747', label: 'REC 7.4.7 Labelling of Dry Boxes', keys: ['labelling-of-dry-boxes'] },
+    { c: 'cmt748', label: 'REC 7.4.8 Dry Labelling List', keys: ['dry-labelling-list'], mode: 'pick', pick: 'rec748Attached' },
+    { c: 'cmt749', label: 'REC 7.4.9 Dry Stock Transfers', keys: ['dry-stock-transfers'] },
+    { c: 'cmt7410', label: 'REC 7.4.10 Dried Abalone Transfer', keys: ['dried-abalone-transfer'] }
+  ];
+  var HIDE_PICKS = ['rec745Attached', 'rec746Attached', 'rec747Attached', 'rec749Attached', 'rec7410Attached'];
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var pickSig = '', lastJob = null, panel = null, summary = null, cells = {}, codes = {}, jobRows = [], loaded = false, state = { ok: false, msg: 'Select a job number first.' };
+  function loadCodes() {
+    ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (r) { if (r.recordKey) codes[r.recordKey] = String(r.docNo || '').trim(); });
+  }
+  function ensurePanel() {
+    var host = document.getElementById('fr_modalSections');
+    if (!host) return false;
+    if (panel && host.contains(panel)) return true;
+    panel = document.createElement('div');
+    lastJob = null;
+    panel.id = 'attachmentsChecklist';
+    panel.style.cssText = 'margin-top:16px';
+    var rows = EXPECTED.map(function (e) {
+      return '<tr data-k="' + e.c + '"><td>' + esc(e.label) + '</td><td class="ac-att"><strong>—</strong></td><td class="ac-subs"></td><td class="ac-com"></td></tr>';
+    }).join('');
+    panel.innerHTML = '<div class="fr-section-title">ATTACHMENTS CHECKLIST</div><div class="ac-summary" style="margin:8px 0"></div>' +
+      '<div class="fr-table-wrap"><table class="fr-table" style="width:100%"><thead><tr><th>Record</th><th>Attached</th><th>Submissions</th><th>Comments</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    var title = null;
+    Array.prototype.forEach.call(host.querySelectorAll('.fr-section-title'), function (t) { if (!panel.contains(t) && /attachments checklist/i.test(t.textContent)) title = t; });
+    if (title) host.insertBefore(panel, title); else host.appendChild(panel);
+    summary = panel.querySelector('.ac-summary');
+    cells = {};
+    EXPECTED.forEach(function (e) {
+      var tr = panel.querySelector('tr[data-k="' + e.c + '"]');
+      cells[e.c] = { tr: tr, att: tr.querySelector('.ac-att'), subs: tr.querySelector('.ac-subs'), com: tr.querySelector('.ac-com') };
+    });
+    return true;
+  }
+  function hideLabel(input) {
+    var lab = input && input.closest('label.fr-field');
+    if (lab) lab.style.display = 'none';
+  }
+  function adoptInputs() {
+    EXPECTED.forEach(function (e) {
+      var c = cells[e.c], input = document.getElementById('fr_f_' + e.c);
+      if (c && input && !c.com.contains(input)) {
+        var lab = input.closest('label.fr-field');
+        c.com.appendChild(input); input.style.width = '100%';
+        input.setAttribute('aria-label', 'Comments — ' + e.label);
+        if (lab) lab.style.display = 'none';
+      }
+      if (e.pick && c) {
+        var sel = document.getElementById('fr_f_' + e.pick), wrap = sel && sel.closest('.fr-recordpick');
+        if (wrap && !c.subs.contains(wrap)) { var l2 = sel.closest('label.fr-field'); c.subs.innerHTML = ''; c.subs.appendChild(wrap); if (l2) l2.style.display = 'none'; }
+      }
+    });
+    HIDE_PICKS.forEach(function (k) { hideLabel(document.getElementById('fr_f_' + k)); });
+    // the engine's own section now only holds the file uploads
+    var host = document.getElementById('fr_modalSections');
+    Array.prototype.forEach.call(host ? host.querySelectorAll('.fr-section-title') : [], function (t) {
+      if (!panel.contains(t) && /^attachments checklist$/i.test(t.textContent.trim())) t.textContent = 'Attached files';
+    });
+  }
+  function badge(st) { return st === 'verified' ? 'Verified' : st === 'draft' ? 'Draft' : 'Awaiting verification'; }
+  function link(r) {
+    var txt = esc((codes[r.record_key] ? codes[r.record_key] + ' — ' : '') + (r.record_title || r.record_key)) + (r.stage ? ' [' + esc(r.stage) + ']' : '') + (r.occurred_on ? ' · ' + esc(r.occurred_on) : '') + ' · ' + badge(r.status);
+    return r.href ? '<a href="' + esc(r.href) + '" target="_blank" rel="noopener">' + txt + '</a>' : txt;
+  }
+  function counts(hits) {
+    var v = hits.filter(function (r) { return r.status === 'verified'; }).length;
+    var d = hits.filter(function (r) { return r.status === 'draft'; }).length;
+    return hits.length + ' submission' + (hits.length === 1 ? '' : 's') + ' · ' + v + ' verified' + (hits.length - v - d ? ' · ' + (hits.length - v - d) + ' awaiting verification' : '') + (d ? ' · ' + d + ' draft' : '');
+  }
+  function paintEmpty(msg) {
+    summary.innerHTML = '<span class="fr-muted">' + msg + '</span>';
+    EXPECTED.forEach(function (e) { var c = cells[e.c]; if (e.mode !== 'pick') c.subs.innerHTML = ''; c.att.innerHTML = '<strong>—</strong>'; c.tr.style.cssText = ''; });
+  }
+  async function fetchRows(jobNo) {
+    var rows = window.Traceability ? await window.Traceability.trace(jobNo) : [];
+    // REC 7.4.5 carries a bin code, not a job number: hop job -> bin(s) -> records on those bins
+    try {
+      var bins = window.Traceability && window.Traceability.binsForJob ? await window.Traceability.binsForJob(jobNo) : [];
+      var codesSeen = {};
+      for (var i = 0; i < bins.length; i++) {
+        var b = bins[i].bin_code; if (!b || codesSeen[b]) continue; codesSeen[b] = 1;
+        rows = rows.concat(await window.Traceability.trace(b));
+      }
+    } catch (e) { /* bin hop is best effort; job-linked rows still show */ }
+    return rows;
+  }
+  function paintPick() {
+    var e = EXPECTED.filter(function (x) { return x.mode === 'pick'; })[0], c = cells[e.c];
+    var sel = document.getElementById('fr_f_' + e.pick);
+    var st = sel && sel.value ? String((sel.options[sel.selectedIndex] || {}).getAttribute('data-status') || 'submitted') : '';
+    var done = !!sel && !!sel.value && st !== 'draft';
+    c.att.innerHTML = '<strong>' + (done ? 'Yes' : 'No') + '</strong>';
+    c.tr.style.cssText = done ? '' : 'background:rgba(192,57,43,.10);color:#c0392b';
+    return { done: done, label: e.label.split(' ').slice(0, 2).join(' ') + (sel && sel.value ? ' (draft only)' : ' (not picked)') };
+  }
+  async function render(jobNo) {
+    if (!ensurePanel()) return;
+    state = { ok: false, msg: jobNo ? 'Still checking attachments…' : 'Select a job number first.' };
+    if (!jobNo) { paintEmpty('Select a job number to check which required records are attached.'); return; }
+    paintEmpty('Loading…');
+    var rows = [], failed = false;
+    try { rows = await fetchRows(jobNo); } catch (e) { failed = true; }
+    if (jobNo !== lastJob) return;
+    if (failed || !window.Traceability) { state.msg = 'Could not load linked records.'; paintEmpty('Could not load linked records — check your connection and re-select the job number.'); return; }
+    loadCodes();
+    var seen = {}, list = [];
+    rows.forEach(function (r) { var k = r.record_key + '|' + r.submission_id; if (!seen[k]) { seen[k] = 1; list.push(r); } });
+    list.sort(function (a, b) { return String(a.occurred_on || '').localeCompare(String(b.occurred_on || '')); });
+    jobRows = list; loaded = true; pickSig = '';
+    paintAll();
+  }
+  function paintAll() {
+    var missing = [], unverified = 0;
+    EXPECTED.forEach(function (e) {
+      if (e.mode === 'pick') { var p = paintPick(); if (!p.done) missing.push(p.label); return; }
+      var c = cells[e.c], all = jobRows.filter(function (r) { return e.keys.indexOf(r.record_key) !== -1; });
+      var done = all.filter(function (r) { return r.status !== 'draft'; });
+      var drafts = all.length - done.length;
+      var detail = all.length === 1 ? link(all[0]) :
+        '<details' + (drafts ? ' open' : '') + '><summary>' + esc(counts(all)) + '</summary>' + all.map(function (r) { return '<div>' + link(r) + '</div>'; }).join('') + '</details>';
+      var label = e.label.split(' ').slice(0, 2).join(' ');
+      if (!all.length) {
+        missing.push(label + ' (none found)');
+        c.att.innerHTML = '<strong>No</strong>'; c.subs.innerHTML = 'Not found for this job';
+        c.tr.style.cssText = 'background:rgba(192,57,43,.10);color:#c0392b';
+        return;
+      }
+      if (drafts) {
+        missing.push(label + ' (' + done.length + ' of ' + all.length + ' completed)');
+        c.att.innerHTML = '<strong>' + (done.length ? 'Incomplete' : 'No') + '</strong> (' + done.length + ' of ' + all.length + ')';
+        c.subs.innerHTML = detail;
+        c.tr.style.cssText = 'background:rgba(192,57,43,.10);color:#c0392b';
+        return;
+      }
+      var open = done.filter(function (r) { return r.status !== 'verified'; }).length; unverified += open;
+      c.tr.style.cssText = open ? 'background:rgba(214,137,16,.10)' : '';
+      c.att.innerHTML = '<strong>Yes</strong>' + (all.length > 1 ? ' (all ' + all.length + ')' : '');
+      c.subs.innerHTML = detail;
+    });
+    state = { ok: !missing.length, msg: missing.length ? 'Cannot submit — not complete: ' + missing.join(', ') + '.' : '' };
+    summary.innerHTML = (missing.length
+      ? '<div style="padding:8px 10px;border:1px solid #c0392b;border-radius:6px;color:#c0392b;font-weight:600">Not complete for this job (' + missing.length + ' of ' + EXPECTED.length + '): ' + esc(missing.join(', ')) + '</div>'
+      : '<div style="padding:8px 10px;border:1px solid #1e8449;border-radius:6px;color:#1e8449;font-weight:600">All ' + EXPECTED.length + ' required records are attached and completed for this job</div>') +
+      (unverified ? '<div class="fr-muted" style="margin-top:4px">' + unverified + ' attached submission' + (unverified === 1 ? ' is' : 's are') + ' not yet verified (shaded amber).</div>' : '');
+  }
+  function tick() {
+    if (!ensurePanel()) return;
+    adoptInputs();
+    var el = document.getElementById('fr_f_jobNo');
+    var job = el ? String(el.value || '').trim() : '';
+    if (job !== lastJob) { lastJob = job; loaded = false; render(job); }
+    else if (loaded) {   // keeps the hand-picked REC 7.4.8 row current (repaints only when the pick changes)
+      var ps = document.getElementById('fr_f_rec748Attached'), sig = ps ? ps.value + '|' + (ps.options[ps.selectedIndex] ? ps.options[ps.selectedIndex].getAttribute('data-status') : '') : '';
+      if (sig !== pickSig) { pickSig = sig; paintAll(); }
+    }
+  }
+  // Block Submit (not Save draft) while any required row is not complete.
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target && ev.target.closest ? ev.target.closest('#fr_submitBtn') : null;
+    if (!btn || state.ok) return;
+    ev.preventDefault(); ev.stopImmediatePropagation();
+    if (summary) summary.innerHTML = '<div style="padding:8px 10px;border:1px solid #c0392b;border-radius:6px;color:#c0392b;font-weight:600">' + esc(state.msg) + '</div>';
+    if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: 'center' });
+  }, true);
+  setInterval(tick, 800);
+})();
+</script>
 </body>
 </html>
