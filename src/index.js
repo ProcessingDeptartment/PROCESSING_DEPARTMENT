@@ -483,7 +483,7 @@ async function attachSubmissionStatus(records) {
   }));
 }
 
-// REC 7.4.0 Dry Cooking: attach each pot (process, pot number, cooking date, kg, salt/sugar/vinegar
+// REC 7.4.0 Dry Cooking: attach each pot (process, pot no., record date, kg, salt/sugar/vinegar
 // batch numbers) from the dry_cooking_pot view so the trace shows "Pot 2 - Cooking - 120 kg".
 async function attachDryCookingPots(records) {
   const ids = [...new Set(records.filter(r => r.record_key === 'dry-cooking' && r.submission_id).map(r => r.submission_id))];
@@ -491,14 +491,14 @@ async function attachDryCookingPots(records) {
   let rows;
   try {
     rows = await prisma.$queryRawUnsafe(
-      `SELECT "submissionId", "rowNo", "process", "potNumber", "cookingDate", "abaloneKg", "blanchBatchNumber", "saltBatchNumber", "sugarBatchNumber", "vinegarBatchNumber"
+      `SELECT "submissionId", "rowNo", "potNo", "process", "recordDate", "abaloneKg", "blanchBatchNumber", "saltBatchNumber", "sugarBatchNumber", "vinegarBatchNumber"
        FROM "dry_cooking_pot" WHERE "submissionId" = ANY($1::text[]) ORDER BY "submissionId", "rowNo"`, ids);
   } catch (e) { return; }
   for (const r of records) {
     if (r.record_key !== 'dry-cooking') continue;
     r.pots = rows.filter(x => x.submissionId === r.submission_id).map(x => ({
-      rowNo: x.rowNo, process: x.process, potNumber: x.potNumber, abaloneKg: x.abaloneKg,
-      cookingDate: x.cookingDate ? new Date(x.cookingDate).toISOString().slice(0, 10) : null,
+      rowNo: x.rowNo, potNo: x.potNo || x.rowNo, process: x.process, abaloneKg: x.abaloneKg,
+      cookingDate: x.recordDate ? new Date(x.recordDate).toISOString().slice(0, 10) : null,
       batches: { blanch: x.blanchBatchNumber, salt: x.saltBatchNumber, sugar: x.sugarBatchNumber, vinegar: x.vinegarBatchNumber },
     }));
   }
