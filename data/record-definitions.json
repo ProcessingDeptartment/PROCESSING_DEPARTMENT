@@ -16258,6 +16258,7 @@
             "cardRows": true,
             "collapseRows": false,
             "startEmpty": true,
+            "enforceRequired": true,
             "rowTitle": "Steam",
             "addLabel": "+ Add steam",
             "previousRows": {
@@ -16413,8 +16414,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "serverStamp": true,
-            "recordDate": true
+            "serverStamp": true
           }
         },
         {
@@ -16535,10 +16535,11 @@
           "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 10,
-          "computeFn": "cookLossPct",
+          "computeFn": "lossPct",
           "computeArgs": {
-            "whole": "jiIntakeWeight",
-            "cooked": "cookedWeight"
+            "into": "jiIntakeWeight",
+            "outOf": "cookedWeight",
+            "dp": 1
           },
           "recordPickSource": null,
           "linkField": null,
@@ -16961,7 +16962,7 @@
           "sectionIndex": 5,
           "parentFieldKey": null,
           "position": 28,
-          "computeFn": "rosterCount",
+          "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
@@ -17304,6 +17305,21 @@
           "roster:count"
         ],
         "entryLog": true,
+        "checkRanges": {
+          "placeholder": true,
+          "steamingTempC": [
+            70,
+            100
+          ],
+          "steamingTimeMin": [
+            20,
+            90
+          ],
+          "cookLossPct": [
+            20,
+            50
+          ]
+        },
         "submitChecks": "drying-process",
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation"

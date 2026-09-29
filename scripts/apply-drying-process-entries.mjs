@@ -45,7 +45,7 @@ const fields = [
   // Section 1 - Job so far (read-only panel, drawn by the engine from the job's earlier entries): no fields.
 
   // Section 2 - Entry date, cooked weight and trolleys
-  fld(S_TROLLEY, 'entryDate', 'Entry date', 'timestamp', { readOnly: true, extra: { serverStamp: true, recordDate: true } }),
+  fld(S_TROLLEY, 'entryDate', 'Entry date', 'timestamp', { readOnly: true, extra: { serverStamp: true } }),
   fld(S_TROLLEY, 'cookedWeight', 'Cooked weight (kg)', 'number', { readOnly: true, unit: 'kg', extra: {
     recordSum: { source: 'dry-cooking', matchField: 'jobNo', rosterCol: 'abaloneKg', filterCol: 'process', filterIn: ['Cooking'],
       idsField: 'cookedWeightSourceIds', note: 'From REC 7.4.0', missing: 'No REC 7.4.0 found for this job', unlockWhenMissing: true } } }),
@@ -54,8 +54,8 @@ const fields = [
     vital: true, prefillFromJob: { source: 'drying-process', field: 'noOfTrolleys', matchField: 'jobNo' },
     changeReasonField: 'trolleyChangeReason' } }),
   fld(S_TROLLEY, 'trolleyChangeReason', 'Reason trolley count changed', 'text', { extra: { showWhenChanged: 'noOfTrolleys' } }),
-  fld(S_TROLLEY, 'cookLossPct', 'Cook loss', 'computed', { readOnly: true, unit: '%', computeFn: 'cookLossPct',
-    computeArgs: { whole: 'jiIntakeWeight', cooked: 'cookedWeight' } }),
+  fld(S_TROLLEY, 'cookLossPct', 'Cook loss', 'computed', { readOnly: true, unit: '%', computeFn: 'lossPct',
+    computeArgs: { into: 'jiIntakeWeight', outOf: 'cookedWeight', dp: 1 } }),
 
   // Section 3 - Movements (Yes/No while open, read-only line once Yes; stamps come from the server)
   fld(S_MOVE, 'movedIntoDryRoom', 'Move into drying rooms', 'yesno', { extra: {
@@ -82,7 +82,7 @@ const fields = [
   col(S_STEAMS, 'steamNoOld', 'Steam no. (old)', 'digits', { readOnly: true, extra: { hidden: true, legacy: true } }),
 
   // Section 5 - checks and warning override (the values behind the red "not recorded" lines)
-  fld(S_CHECKS, 'steamCount', 'Steams in this entry', 'computed', { readOnly: true, computeFn: 'rosterCount' }),
+  fld(S_CHECKS, 'steamCount', 'Steams in this entry', 'computed', { readOnly: true }),
   fld(S_CHECKS, 'warningAck', 'Warning confirmed', 'yesno', { readOnly: true, extra: { hidden: true } }),
   fld(S_CHECKS, 'warningNote', 'Warning note', 'text', { readOnly: true, extra: { hidden: true } }),
 
@@ -113,7 +113,7 @@ def.sections = [
   { title: 'Movements', kind: 'fields', position: 3, extraJson: { movementBlock: true } },
   {
     title: 'Steams', kind: 'roster', position: rosterIdx, extraJson: {
-      cardRows: true, collapseRows: false, startEmpty: true, rowTitle: 'Steam', addLabel: '+ Add steam',
+      cardRows: true, collapseRows: false, startEmpty: true, enforceRequired: true, rowTitle: 'Steam', addLabel: '+ Add steam',
       previousRows: { source: 'drying-process', matchField: 'jobNo', showSummary: true, summaryLabel: 'Last steam' },
       totals: [{ label: 'Steams this entry', count: true }],
     },
@@ -126,6 +126,8 @@ def.extraJson = {
   batchField: 'jobNo',
   listColumns: ['entryDate', 'jobNo', 'roster:count'],
   entryLog: true,
+  // PLACEHOLDER ranges until QC give real ones (spec D3): soft warnings only.
+  checkRanges: { placeholder: true, steamingTempC: [70, 100], steamingTimeMin: [20, 90], cookLossPct: [20, 50] },
   submitChecks: 'drying-process',
   deviationLabel: 'Deviation',
   deviationPolarity: 'deviation',
