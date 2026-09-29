@@ -46,9 +46,9 @@ const fields = [
   // Section 1 - Job so far (read-only panel, drawn by the engine from the job's earlier entries): no fields.
 
   // Section 2 - Entry date, cooked weight and trolleys
-  fld(S_TROLLEY, 'entryDate', 'Entry date', 'timestamp', { readOnly: true, extra: { serverStamp: true } }),
+  fld(S_TROLLEY, 'entryDate', 'Entry date', 'timestamp', { readOnly: true, extra: { serverStamp: true, hidden: true } }),
   fld(S_TROLLEY, 'cookedWeight', 'Cooked weight', 'number', { readOnly: true, unit: 'kg', extra: {
-    recordSum: { source: 'dry-cooking', matchField: 'jobNo', rosterCol: 'abaloneKg', filterCol: 'process', filterIn: ['Cooking'],
+    hidden: true, recordSum: { source: 'dry-cooking', matchField: 'jobNo', rosterCol: 'abaloneKg', filterCol: 'process', filterIn: ['Cooking'],
       idsField: 'cookedWeightSourceIds', note: 'From REC 7.4.0', missing: 'No REC 7.4.0 found for this job' } } }),
   fld(S_TROLLEY, 'cookedWeightSourceIds', 'Cooked weight source entries', 'text', { readOnly: true, extra: { hidden: true } }),
   // the trolley count is asked ONCE, in a pop-up, when the first steam is added; it is held here (hidden) and never edited
@@ -105,7 +105,7 @@ def.mount = '#frRoot';
 def.sections = [
   { title: 'Job info', kind: 'fields', position: 0, extraJson: { collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'] } },
   { title: 'Job so far', kind: 'fields', position: 1, extraJson: { jobSoFarPanel: true } },
-  { title: 'Cooked weight', kind: 'fields', position: 2, extraJson: {} },
+  { title: 'Cooked weight (not shown: copied from REC 7.4.0)', kind: 'fields', position: 2, extraJson: {} },
   {
     title: 'Steams', kind: 'roster', position: rosterIdx, extraJson: {
       cardRows: true, collapseRows: false, startEmpty: true, enforceRequired: true, titleFrom: 'steamNo', rowTitle: 'Steam', addLabel: '+ Add steam',

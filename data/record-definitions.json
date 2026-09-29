@@ -16237,7 +16237,7 @@
           }
         },
         {
-          "title": "Cooked weight",
+          "title": "Cooked weight (not shown: copied from REC 7.4.0)",
           "kind": "fields",
           "position": 2,
           "extraJson": {}
@@ -16409,7 +16409,8 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "serverStamp": true
+            "serverStamp": true,
+            "hidden": true
           }
         },
         {
@@ -16431,6 +16432,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
+            "hidden": true,
             "recordSum": {
               "source": "dry-cooking",
               "matchField": "jobNo",

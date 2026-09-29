@@ -285,10 +285,12 @@
       const f = allFields(config).find((x) => x.recordSum);
       if (!f) return;
       const rs = f.recordSum, target = inp(f.key), idsEl = inp(rs.idsField);
-      const label = target && target.closest('label');
-      if (!target || !label) return;
-      let note = label.querySelector('.el-note');
-      if (!note) { note = document.createElement('div'); note.className = 'el-note'; label.appendChild(note); }
+      if (!target) return;
+      // the field is not shown (hidden input); the value is still copied from REC 7.4.0 and stored with the entry
+      const label = target.closest('label');
+      let note = label ? label.querySelector('.el-note') : null;
+      if (label && !note) { note = document.createElement('div'); note.className = 'el-note'; label.appendChild(note); }
+      if (!note) note = { className: '', textContent: '' };
       if (locked) { note.textContent = idsEl && idsEl.value ? rs.note + ' (saved with this entry)' : ''; return; }
       if (!job) { note.textContent = ''; return; }
       let pots = 0, kg = 0, drafts = 0; const ids = [];
