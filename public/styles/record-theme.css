@@ -1553,6 +1553,13 @@ body.rt-tablet .rt-rail { border-radius: 0 0 var(--block-radius) var(--block-rad
 body.rt-tablet .rt-actionbar-fixed { border-radius: var(--block-radius) var(--block-radius) 0 0; }
 body.rt-tablet .rt-wi-bubble { border-radius: var(--block-radius); }
 
+/* save chip: icon-only ready/saved (green tick) and saving (red hourglass) */
+body.rt-tablet .rt-savechip[data-state="ready"], body.rt-tablet .rt-savechip[data-state="saved"], body.rt-tablet .rt-savechip[data-state="saving"] {
+  width: 28px; height: 28px; padding: 0; justify-content: center; font-size: 16px; line-height: 1; border-radius: 50%;
+}
+body.rt-tablet .rt-savechip[data-state="ready"], body.rt-tablet .rt-savechip[data-state="saved"] { background: var(--ok); color: #fff; }
+body.rt-tablet .rt-savechip[data-state="saving"] { background: var(--fail); color: #fff; }
+
 /* print: the pilot adds no chrome to paper */
 @media print {
   body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }

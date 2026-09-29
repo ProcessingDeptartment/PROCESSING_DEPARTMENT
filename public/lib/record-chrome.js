@@ -72,7 +72,11 @@
     lastState = { state: state, text: text };
     if (!chip) return;
     chip.dataset.state = state;
-    chip.textContent = text;
+    // ready / saved and saving are icon-only (small green tick / red hourglass); the words stay in the tooltip and for screen readers
+    var icon = (state === 'saved' || state === 'ready') ? '✓' : state === 'saving' ? '⌛' : null;
+    chip.textContent = icon || text;
+    chip.title = text;
+    chip.setAttribute('aria-label', text);
   }
   function stateFromToast(msg) {
     var t = String(msg || '');
@@ -440,7 +444,7 @@
         if (chip.dataset.state === 'error') { var real = findEngineBtn('save'); if (real && !real.disabled) proxy('save')(); }
       });
       actions.parentNode.insertBefore(chip, actions);
-      setState(lastState ? lastState.state : 'saved', lastState ? lastState.text : 'Ready');
+      setState(lastState ? lastState.state : 'ready', lastState ? lastState.text : 'Ready');
     }
     syncBar();
     scheduleFloor();
