@@ -118,6 +118,15 @@ function guardWrite(prevValue, incomingValue, now) {
       return reject(422, 'No steaming is possible once the job is moved into the grading room.');
     }
 
+    // the trolley count is set ONCE (first entry that has one); every later entry carries it unchanged
+    const setCount = earlier.map((o) => parseInt(vals(o).noOfTrolleys, 10)).filter((n) => n > 0)[0];
+    if (setCount) v.noOfTrolleys = String(setCount);
+
+    // the trolley count must be set before steaming: this entry's count, or one from an earlier entry
+    if (rows.some((r) => r) && !(parseInt(v.noOfTrolleys, 10) > 0) && !earlier.some((o) => parseInt(vals(o).noOfTrolleys, 10) > 0)) {
+      return reject(422, 'Enter the No. of trolleys before steaming.');
+    }
+
     // the steam date is never typed: every steam of a newly submitted entry is dated with the server's day
     rows.forEach((r) => { if (r) r.steamDate = today; });
 

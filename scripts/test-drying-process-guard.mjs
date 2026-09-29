@@ -6,7 +6,7 @@ const { guardWrite, reverseMovement } = createRequire(import.meta.url)('../src/d
 
 let n = 0, failed = 0;
 const t = (name, fn) => { n++; try { fn(); console.log('  ok  ', name); } catch (e) { failed++; console.log('  FAIL', name, '\n      ', e.message); } };
-const entry = (id, status, values, roster) => ({ id, status, values: { jobNo: 'DPR0001', ...values }, roster: roster || [] });
+const entry = (id, status, values, roster) => ({ id, status, values: { jobNo: 'DPR0001', noOfTrolleys: '5', ...values }, roster: roster || [] });
 const send = (prev, inc, now) => guardWrite(prev ? JSON.stringify(prev) : null, JSON.stringify(inc), now);
 const D1 = new Date('2026-09-10T06:00:00Z'), D2 = new Date('2026-09-11T06:30:00Z'), D3 = new Date('2026-09-12T07:00:00Z');
 const parse = (r) => JSON.parse(r.value);
@@ -103,6 +103,11 @@ t('no steaming once the job is in the grading room (earlier, or in the same entr
   assert(!send(s1, [...s1, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-11' }])], D2).ok);
   assert(!send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoGradingRoom: 'Yes' }, [{ steamDate: '2026-09-10' }])], D1).ok);
   assert(send(s1, [...s1, entry('e2', 'submitted', {})], D2).ok, 'an entry without steams is still fine');
+});
+t('no steaming until the trolley count has been set (this entry or an earlier one)', () => {
+  assert(!send(null, [entry('e1', 'submitted', { noOfTrolleys: '' }, [{ steamDate: '2026-09-10' }])], D1).ok);
+  const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes' })], D1));
+  assert(send(s1, [...s1, entry('e2', 'submitted', { noOfTrolleys: '' }, [{ steamDate: '2026-09-11' }])], D2).ok, 'count from an earlier entry is enough');
 });
 console.log(`\n${n - failed}/${n} passed`);
 process.exit(failed ? 1 : 0);

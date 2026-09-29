@@ -1863,7 +1863,6 @@ model Sub_drying_process {
   cookedWeight               Float?
   cookedWeightSourceIds      String?
   noOfTrolleys               Int?
-  trolleyChangeReason        String?
   movedIntoDryRoom           Boolean?
   dateIntoDryRoomAt          DateTime?
   movedIntoDryContainer      Boolean?

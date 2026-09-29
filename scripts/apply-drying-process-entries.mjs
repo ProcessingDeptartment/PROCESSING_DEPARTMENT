@@ -33,7 +33,7 @@ const fld = (sectionIndex, key, label, type, o = {}) => ({
 const col = (sectionIndex, key, label, type, o = {}) => fld(sectionIndex, key, label, type, { ...o, roster: true });
 
 // order on screen: job info, job so far, movements, steams, then trolleys/cooked weight (low prominence, collapsed)
-const S_JOB = 0, S_SO_FAR = 1, S_STEAMS = 2, S_MOVE = 3, S_TROLLEY = 4, S_CHECKS = 5, S_OLD = 6;
+const S_JOB = 0, S_SO_FAR = 1, S_TROLLEY = 2, S_STEAMS = 3, S_MOVE = 4, S_CHECKS = 5, S_OLD = 6;
 
 const fields = [
   // Section 0 - Job info (unchanged: autofill from abalone-receiving, read-only)
@@ -51,10 +51,8 @@ const fields = [
     recordSum: { source: 'dry-cooking', matchField: 'jobNo', rosterCol: 'abaloneKg', filterCol: 'process', filterIn: ['Cooking'],
       idsField: 'cookedWeightSourceIds', note: 'From REC 7.4.0', missing: 'No REC 7.4.0 found for this job' } } }),
   fld(S_TROLLEY, 'cookedWeightSourceIds', 'Cooked weight source entries', 'text', { readOnly: true, extra: { hidden: true } }),
-  fld(S_TROLLEY, 'noOfTrolleys', 'No. of trolleys', 'digits', { extra: {
-    vital: true, prefillFromJob: { source: 'drying-process', field: 'noOfTrolleys', matchField: 'jobNo' },
-    changeReasonField: 'trolleyChangeReason' } }),
-  fld(S_TROLLEY, 'trolleyChangeReason', 'Reason trolley count changed', 'text', { extra: { showWhenChanged: 'noOfTrolleys' } }),
+  // the trolley count is asked ONCE, in a pop-up, when the first steam is added; it is held here (hidden) and never edited
+  fld(S_TROLLEY, 'noOfTrolleys', 'No. of trolleys', 'digits', { extra: { hidden: true, askOnAddRow: true } }),
 
   // Section 3 - Movements (Yes/No while open, read-only line once Yes; stamps come from the server)
   fld(S_MOVE, 'movedIntoDryRoom', 'Move into drying rooms', 'yesno', { extra: {
@@ -107,14 +105,14 @@ def.mount = '#frRoot';
 def.sections = [
   { title: 'Job info', kind: 'fields', position: 0, extraJson: { collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'] } },
   { title: 'Job so far', kind: 'fields', position: 1, extraJson: { jobSoFarPanel: true } },
+  { title: 'Cooked weight', kind: 'fields', position: 2, extraJson: {} },
   {
     title: 'Steams', kind: 'roster', position: rosterIdx, extraJson: {
       cardRows: true, collapseRows: false, startEmpty: true, enforceRequired: true, titleFrom: 'steamNo', rowTitle: 'Steam', addLabel: '+ Add steam',
       previousRows: { source: 'drying-process', matchField: 'jobNo', showSummary: true, summaryLabel: 'Last steam' },
     },
   },
-  { title: 'Movements', kind: 'fields', position: 3, extraJson: { movementBlock: true } },
-  { title: 'Trolleys and cooked weight', kind: 'fields', position: 4, extraJson: { collapsible: true, collapsedByDefault: true, summaryField: ['noOfTrolleys'] } },
+  { title: 'Movements', kind: 'fields', position: 4, extraJson: { movementBlock: true } },
   { title: 'Checks', kind: 'fields', position: 5, extraJson: { collapsible: true } },
   { title: 'Old values', kind: 'fields', position: 6, extraJson: { legacyBlock: true } },
 ];

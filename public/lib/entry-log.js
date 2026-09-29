@@ -133,6 +133,7 @@
     const line = (k, v) => `<div style="margin:4px 0"><span class="el-muted" style="display:inline-block;min-width:150px">${k}</span> ${v}</div>`;
     return '<div class="el-panel">'
       + line('Location', `${whereText(st, moves)} <span id="el_where" class="el-muted"></span>`)
+      + (st.trolleys != null ? line('Trolleys', `<b>${st.trolleys}</b>`) : '')
       + line('Last steam', r ? esc(fmtD(r.steamDate)) : '<span class="el-muted">No steams yet</span>')
       + (r ? line('Steam number', esc(r.steamNo || st.steams.length)) + line('Steam info', info ? esc(info) : '<span class="el-muted">not recorded</span>') : '')
       + line('Next steam number', `<b>${st.maxSteam + 1}</b>`)
@@ -206,12 +207,13 @@
     // steaming is closed once the job is in the grading room (moved earlier, or being moved in this entry)
     function syncSteamLock(st) {
       const g = moves.find((m) => m.key === 'gradingRoom');
-      const closed = !!g && (!!st.moves[g.key] || (!locked && yesNow(g.key)));
+      const inGrading = !!g && (!!st.moves[g.key] || (!locked && yesNow(g.key)));
+      const closed = inGrading;
       const add = el('fr_addRosterRowBtn');
       if (add && !locked) add.style.display = closed ? 'none' : '';
       let note = el('el_steamLock');
       if (!note && rosterEl) { note = document.createElement('div'); note.id = 'el_steamLock'; note.className = 'el-note bad'; rosterEl.parentNode.insertBefore(note, rosterEl); }
-      if (note) note.textContent = closed ? 'No steaming is possible — the job is in the grading room.' : '';
+      if (note) note.textContent = inGrading ? 'No steaming is possible — the job is in the grading room.' : '';
       st._steamClosed = closed;
     }
 
@@ -316,30 +318,49 @@
       target.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    // ---- Trolleys: prefill from the last entry, ask for a reason when it changes ----
+    // ---- Trolleys: asked ONCE, in a pop-up, when the first steam is added to a job with no count yet ----
+    function askTrolleys() {
+      return new Promise((resolve) => {
+        const back = document.createElement('div');
+        back.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+        back.innerHTML = `<div role="dialog" aria-modal="true" style="background:#fff;border-radius:10px;padding:22px;max-width:420px;width:100%;font-size:16px">
+          <div style="font-weight:700;font-size:18px;margin-bottom:6px">No. of trolleys</div>
+          <div class="el-muted" style="margin-bottom:12px">Enter the number of trolleys for this job. It is set once and cannot be changed afterwards.</div>
+          <input type="number" inputmode="numeric" min="1" step="1" style="width:100%;font-size:22px;padding:10px;border:1px solid #9a978d;border-radius:6px;box-sizing:border-box">
+          <div class="el-note bad" data-err style="min-height:18px"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
+            <button type="button" class="fr-btn fr-btn-flat" data-cancel>Cancel</button>
+            <button type="button" class="fr-btn fr-btn-primary" data-ok>OK</button></div></div>`;
+        document.body.appendChild(back);
+        const input = back.querySelector('input'), err = back.querySelector('[data-err]');
+        const done = (v) => { back.remove(); resolve(v); };
+        const ok = () => { const n = parseInt(input.value, 10); if (!(n > 0)) { err.textContent = 'Enter a whole number of 1 or more.'; input.focus(); return; } done(n); };
+        back.querySelector('[data-ok]').addEventListener('click', ok);
+        back.querySelector('[data-cancel]').addEventListener('click', () => done(null));
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ok(); } if (e.key === 'Escape') done(null); });
+        setTimeout(() => { try { input.focus(); } catch (e) { /* ignore */ } }, 0);
+      });
+    }
     function wireTrolleys(st) {
-      const f = allFields(config).find((x) => x.prefillFromJob);
-      if (!f) return;
-      const t = inp(f.key), why = inp(f.changeReasonField);
-      if (!t) return;
-      const label = t.closest('label');
-      const whyLabel = why && why.closest('label');
-      let note = label && label.querySelector('.el-note');
-      if (label && !note) { note = document.createElement('div'); note.className = 'el-note'; label.appendChild(note); }
-      if (!locked && blank(t.value) && st.trolleys != null) { t.value = String(st.trolleys); }
-      function sync() {
-        const cur = parseInt(t.value, 10);
-        const changed = st.trolleys != null && !isNaN(cur) && cur !== st.trolleys;
-        if (whyLabel) whyLabel.style.display = changed ? '' : 'none';
-        if (!changed && why && !locked) why.value = '';
-        if (note) {
-          if (changed) { note.className = 'el-note warn'; note.textContent = `Changed from ${st.trolleys} to ${cur} — give a short reason below.`; }
-          else if (st.trolleys != null) { note.className = 'el-note'; note.textContent = `Same as the last entry (${st.trolleys}).`; }
-          else { note.className = 'el-note'; note.textContent = 'No trolley count recorded for this job yet.'; }
-        }
-      }
-      if (!t._elWired) { t._elWired = true; ['input', 'change'].forEach((ev) => t.addEventListener(ev, () => t._elSync && t._elSync())); }
-      t._elSync = sync; sync();
+      const t = inp('noOfTrolleys');
+      if (!t || locked) return;
+      if (st.trolleys != null) t.value = String(st.trolleys);   // already set on an earlier entry: carried, never edited
+      const add = el('fr_addRosterRowBtn');
+      if (!add || add._elAsk) return;
+      add._elAsk = true;
+      // capture phase: runs before the engine's own "+ Add steam" handler
+      add.addEventListener('click', async (e) => {
+        if (add._elGo) return;
+        const cur = state(), have = cur.trolleys != null || parseInt(t.value, 10) > 0;
+        if (have) return;
+        e.stopImmediatePropagation(); e.preventDefault();
+        const n = await askTrolleys();
+        if (!n) return;
+        t.value = String(n);
+        t.dispatchEvent(new Event('input', { bubbles: true }));
+        drawPanel(cur, lastJob);
+        add._elGo = true; add.click(); add._elGo = false;
+      }, true);
     }
 
     // ---- Steams: per-job numbering, previous steams, suggestions ----
@@ -375,32 +396,8 @@
           });
         });
       }
-      // No. of trolleys: while the job has no count yet, the field pops up right under the steam card as soon as
-      // "+ Add steam" is pressed (it is the same field as in the Trolleys section, kept in step with it).
-      const real = inp('noOfTrolleys');
-      let ask = el('el_trolleyAsk');
-      if (ask) ask.remove();
-      if (real && !locked && st.trolleys == null && rosterEl) {
-        ask = document.createElement('label');
-        ask.id = 'el_trolleyAsk'; ask.className = 'fr-field'; ask.style.display = 'none';
-        ask.innerHTML = 'No. of trolleys *';
-        const c = real.cloneNode(); c.id = 'el_trolleyAsk_in'; c.disabled = false; c.value = real.value; c.removeAttribute('readonly');
-        ask.appendChild(c);
-        rosterEl.parentNode.insertBefore(ask, rosterEl.nextSibling);
-        c.addEventListener('input', () => { real.value = c.value; real.dispatchEvent(new Event('input', { bubbles: true })); });
-        real.addEventListener('input', () => { if (document.activeElement !== c) c.value = real.value; });
-      }
-      const inner = apply;
-      rosterEl._onDraw = () => {
-        inner();
-        const box = el('el_trolleyAsk');
-        if (!box) return;
-        const has = rosterEl.querySelectorAll('.fr-roster-row').length > 0;
-        const wasHidden = box.style.display === 'none';
-        box.style.display = has ? '' : 'none';
-        if (has && wasHidden && blank(box.querySelector('input').value)) { try { box.querySelector('input').focus(); } catch (e) { /* ignore */ } }
-      };
-      rosterEl._onDraw();
+      rosterEl._onDraw = apply;
+      apply();
     }
 
     function refresh(force) {
@@ -413,6 +410,7 @@
       syncSteamLock(st);
       wireTrolleys(st);
       wireSteams(st);
+      syncSteamLock(st);
       loadCooked(job);
     }
     ctx._refresh = refresh;
@@ -456,17 +454,15 @@
       if (d > today()) { toast(`Steam ${no} is dated ${fmtD(d)}, which is in the future (today is ${fmtD(today())}).`); return false; }
       if (dryDay && d < dryDay) { toast(`Steam ${no} is dated ${fmtD(d)}, before the date into the dry room (${fmtD(dryDay)}).`); return false; }
     }
+    // the trolley count must be set before steaming
+    if (rows.length && st.trolleys == null && !(parseInt(values.noOfTrolleys, 10) > 0)) { toast('Enter the No. of trolleys before steaming.'); return false; }
     // no steaming once the job is in (or going into) the grading room
     const gm = moves.find((m) => m.key === 'gradingRoom');
     if (gm && rows.length && (st.moves[gm.key] || values[gm.flag] === 'Yes')) { toast('No steaming is possible once the job is moved into the grading room. Remove the steam rows.'); return false; }
     // 7: cooked weight not greater than the whole weight
     const whole = parseFloat(values.jiIntakeWeight), cooked = parseFloat(values.cookedWeight);
     if (!isNaN(whole) && !isNaN(cooked) && cooked > whole) { toast(`Cooked weight (${cooked} kg) is more than the whole weight (${whole} kg).`); return false; }
-    // 9: a changed trolley count needs a reason
     const n = parseInt(values.noOfTrolleys, 10);
-    if (st.trolleys != null && !isNaN(n) && n !== st.trolleys && blank(values.trolleyChangeReason)) {
-      toast(`Trolley count changed from ${st.trolleys} to ${n} — give a short reason.`); return false;
-    }
 
     const warn = [];
     // 8: trolley count not recorded
