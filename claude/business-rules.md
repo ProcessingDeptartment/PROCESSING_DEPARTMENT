@@ -55,7 +55,7 @@ Parameters:
 |---|---|
 | `ownJobField` | this record's own field holding the job number |
 | `ownWeightField` | this record's own numeric field to total. If it is a column of the record's roster, the roster column is totalled across all rows (this entry's rows plus earlier submitted entries' rows) |
-| `ownRowFilter` | optional `{ "column": "process", "in": ["Cooking", "Both"] }` - with a roster column, count only rows whose `column` is one of `in` |
+| `ownRowFilter` | optional `{ "column": "process", "equals": "Cooking" }` (or `"in": [...]` for several values) - with a roster column, count only rows whose `column` matches |
 | `source` | `recordKey` of the record holding the cap |
 | `matchField` | that record's job-number field |
 | `sumColumn` | the roster column on that record to sum for the cap |
@@ -71,11 +71,11 @@ Example (first rule of this kind — REC 7.4.0 Dry Cooking vs REC 7.1.5 OOSW):
   "why": "Abalone processed for dry cooking cannot exceed the OOSW weight recorded for the job on REC 7.1.5 - a higher total means batches from different jobs got mixed.",
   "ownJobField": "jobNo",
   "ownWeightField": "abaloneKg",
-  "ownRowFilter": { "column": "process", "in": ["Cooking", "Both"] },
+  "ownRowFilter": { "column": "process", "equals": "Cooking" },
   "source": "salting-oosw",
   "matchField": "jobNo",
   "sumColumn": "weight",
-  "message": "Cooked pot weight exceeding OOSW - possible batch mix"
+  "message": "Cooking pot weight exceeding OOSW - possible batch mix"
 }
 ```
 
@@ -92,7 +92,7 @@ Example (first rule of this kind — REC 7.4.0 Dry Cooking vs REC 7.1.5 OOSW):
      the cap side, e.g. REC 7.1.5's `weight` roster column).
    - `__matchRosterSum` - when the request carries `?rosterCol=&filterCol=&filterIn=a,b`, the sum of that
      roster column over the other submitted entries' rows whose `filterCol` value is in `filterIn`
-     (REC 7.4.0: kg of cooked pots).
+     (REC 7.4.0: kg of Cooking pot cards).
    - `__matchValueSums` — sum of a numeric top-level field across every *other submitted* entry
      matching the same job (`?excludeId=` skips the record currently being edited) — used for the
      "own total across many separate batch submissions" side.

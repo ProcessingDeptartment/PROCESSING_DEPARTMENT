@@ -448,9 +448,9 @@
       }
       if (field.type === 'yesno') {
         return `<span class="ml-yesno" data-yesno-for="${id}" data-good="${field.good === 'No' ? 'No' : 'Yes'}" role="radiogroup">
-            <button type="button" role="radio" data-v="" class="${v === '' ? 'on' : ''}" aria-checked="${v === '' ? 'true' : 'false'}" tabindex="${v === '' ? 0 : -1}">None</button>
-            <button type="button" role="radio" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}" aria-checked="${v === 'Yes' ? 'true' : 'false'}" tabindex="${v === 'Yes' ? 0 : -1}">Y</button>
-            <button type="button" role="radio" data-v="No" class="${v === 'No' ? 'on' : ''}" aria-checked="${v === 'No' ? 'true' : 'false'}" tabindex="${v === 'No' ? 0 : -1}">N</button>
+            ${field.noNone ? '' : `<button type="button" role="radio" data-v="" class="${v === '' ? 'on' : ''}" aria-checked="${v === '' ? 'true' : 'false'}" tabindex="${v === '' ? 0 : -1}">None</button>`}
+            <button type="button" role="radio" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}" aria-checked="${v === 'Yes' ? 'true' : 'false'}" tabindex="${v === 'Yes' || (field.noNone && v === '') ? 0 : -1}">${field.noNone ? 'Yes' : 'Y'}</button>
+            <button type="button" role="radio" data-v="No" class="${v === 'No' ? 'on' : ''}" aria-checked="${v === 'No' ? 'true' : 'false'}" tabindex="${v === 'No' || (field.noNone && v === '') ? 0 : -1}">${field.noNone ? 'No' : 'N'}</button>
             <input type="hidden" id="${id}" value="${esc(v)}">
           </span>`;
       }
@@ -1062,8 +1062,9 @@
     const rosters = config.rosters || (config.roster ? [config.roster] : []);
     const rosterIdx = rosters.findIndex(r => (r.columns || []).some(c => c.key === rule.ownWeightField));
     const filt = rule.ownRowFilter || null;
+    const filtIn = filt ? (filt.in || [filt.equals]) : null;
     const ownRosterQuery = rosterIdx === -1 ? null : {
-      rosterCol: rule.ownWeightField, filterCol: filt ? filt.column : '', filterIn: filt ? filt.in.join(',') : ''
+      rosterCol: rule.ownWeightField, filterCol: filt ? filt.column : '', filterIn: filtIn ? filtIn.join(',') : ''
     };
     try {
       const [capData, ownData] = await Promise.all([
@@ -1077,7 +1078,7 @@
       if (rosterIdx !== -1) {
         priorOwn = (ownData && ownData.__matchRosterSum != null) ? parseFloat(ownData.__matchRosterSum) : 0;
         thisOwn = ((rosterRowsByIndex || [])[rosterIdx] || []).reduce((a, r) =>
-          a + ((!filt || filt.in.indexOf(String(r[filt.column] || '')) !== -1) ? (parseFloat(r[rule.ownWeightField]) || 0) : 0), 0);
+          a + ((!filt || filtIn.indexOf(String(r[filt.column] || '')) !== -1) ? (parseFloat(r[rule.ownWeightField]) || 0) : 0), 0);
       } else {
         priorOwn = (ownData && ownData.__matchValueSums && ownData.__matchValueSums[rule.ownWeightField] != null)
           ? parseFloat(ownData.__matchValueSums[rule.ownWeightField]) : 0;
@@ -1433,6 +1434,7 @@
 
     const listCols = config.listColumns || [];
     function labelFor(key) {
+      if (key === 'roster:count') return 'No. of pots';
       if (key.indexOf('roster:') === 0) return 'Pots';
       const f = allFields(config).find(x => x.key === key);
       return f ? f.label : key;
@@ -1561,7 +1563,9 @@
         html += `<tr>`;
         cols.forEach(k => {
           let v;
-          if (k.indexOf('roster:') === 0) {
+          if (k === 'roster:count') {
+            v = String(getRosterRows(sub, 0, (rosterList[0] || {}).key).length || '');
+          } else if (k.indexOf('roster:') === 0) {
             const rk = k.slice(7);
             v = Array.from(new Set(getRosterRows(sub, 0, (rosterList[0] || {}).key)
               .map(r => String(r[rk] == null ? '' : r[rk]).trim()).filter(Boolean))).join(', ');
@@ -1592,20 +1596,21 @@
           ${fieldInputHtml(`${ns}_roster_${idx}_${c.key}`, c, row[c.key], row)}
         </label>`;
       if (roster.cardRows) {
-        const groups = [];
+        const proc = row.process || '';
+        const lines = [];
         roster.columns.forEach(c => {
-          const g = c.group || '';
-          let grp = groups.find(x => x.name === g);
-          if (!grp) { grp = { name: g, cols: [] }; groups.push(grp); }
-          grp.cols.push(c);
+          if (c.hidden) return;
+          const ln = c.layoutRow || 1;
+          (lines[ln] = lines[ln] || []).push(c);
         });
+        const hiddenIn = roster.columns.filter(c => c.hidden).map(c =>
+          `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${esc(c.key === roster.autoNumber ? String(idx + 1) : (row[c.key] == null ? '' : row[c.key]))}">`).join('');
         return `<div class="fr-roster-row fr-pot-card" data-roster-row="${idx}">
-          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}</strong>
+          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1} &mdash; ${esc(proc)}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button></div>
-          ${groups.map(g => `<div class="fr-pot-group" data-group="${esc(g.name)}">
-            ${g.name && g.name !== 'Pot' ? `<div class="fr-pot-group-title">${esc(g.name)}</div>` : ''}
-            <div class="fr-grid fr-grid-2">${g.cols.map(cell).join('')}</div></div>`).join('')}
+          ${hiddenIn}
+          ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
         </div>`;
       }
       return `<div class="fr-roster-row" data-roster-row="${idx}">
@@ -1737,7 +1742,7 @@
       const container = el(containerId);
       let rows = (existingRows || []).slice();
       // A checklist-style roster can pre-list its rows (roster.defaultRows) on a new record.
-      if (!rows.length) (roster.defaultRows || (roster.quickEntry ? [] : [{}])).forEach(r => rows.push(Object.assign({}, r)));
+      if (!rows.length) (roster.defaultRows || ((roster.quickEntry || roster.startEmpty) ? [] : [{}])).forEach(r => rows.push(Object.assign({}, r)));
 
       // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
       // from the Abalone Receiving baskets for this job). One fetch per job, cached; a column
@@ -1812,7 +1817,7 @@
 
 
       function renderRosterDerived() {
-        const specials = (roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived' || c.deriveJoin);
+        const specials = (roster.columns || []).filter(c => c.type === 'batchseq' || c.type === 'derived' || c.deriveJoin || c.deriveDuration);
         if (!specials.length) return;
         const dateEl = el('fr_f_' + (roster.batchSeqDateField || 'date'));
         const batchSeqDate = dateEl ? dateEl.value : '';
@@ -2028,8 +2033,16 @@
             const c = roster.columns.find(x => x.key === lab.dataset.col);
             lab.style.display = c && rowColVisible(c, row) ? '' : 'none';
           });
-          card.querySelectorAll('.fr-pot-group').forEach(g => {
+          card.querySelectorAll('.fr-pot-line').forEach(g => {
             g.style.display = Array.from(g.querySelectorAll('[data-col]')).some(l => l.style.display !== 'none') ? '' : 'none';
+          });
+          roster.columns.filter(c => c.naWhen).forEach(c => {
+            const inp = el(fid(i, c.key));
+            if (!inp) return;
+            const na = rowCond(c.naWhen, c, row);
+            inp.disabled = na;
+            if (na) { inp.value = ''; inp.placeholder = 'N/A'; }
+            else inp.placeholder = '';
           });
           const w = card.querySelector('[data-dup-warn]');
           const d = roster.dupWarn;
@@ -2092,14 +2105,20 @@
               renderRosterTotals();
               applyRowVisibility();
               paintCarried();
+              if (container._onDraw) container._onDraw();
               container.querySelectorAll('[data-remove-roster-row]').forEach(btn => {
                 btn.addEventListener('click', () => {
                   const i = Number(btn.dataset.removeRosterRow);
+                  if (roster.cardRows) {
+                    const cur = readRow(i);
+                    if (roster.columns.some(c => !c.hidden && c.key !== 'process' && String(cur[c.key] || '').trim() !== '')
+                      && !confirm('Remove ' + (roster.rowTitle || 'row') + ' ' + (i + 1) + '? Everything entered on it will be lost.')) return;
+                  }
                   rows.splice(i, 1);
                   const nc = new Set();
                   carried.forEach(k => { const [ci, ck] = k.split(':'); const n = Number(ci); if (n < i) nc.add(k); else if (n > i) nc.add((n - 1) + ':' + ck); });
                   carried.clear(); nc.forEach(k => carried.add(k));
-                  if (!rows.length && !roster.quickEntry) rows.push({});
+                  if (!rows.length && !roster.quickEntry && !roster.startEmpty) rows.push({});
 
                   const next = new Set();
                   collapsedRows.forEach(x => { if (x < i) next.add(x); else if (x > i) next.add(x - 1); });
@@ -2211,23 +2230,38 @@
           applyCollapse();
         }
       };
-      container._addRow = () => {
+      container._addRow = (process) => {
 
         rows = rows.map((_, i) => readRow(i));
         const newRow = {};
-        if (roster.cardRows && rows.length) {
+        if (roster.cardRows) {
+          if (process) newRow.process = process;
+          const visibleFor = c => rowColVisible(c, newRow);
+          // Columns sharing a carryGroup (the salt batch on both card types) take the most recent
+          // value from ANY earlier card; other batch codes from the latest card that has them.
+          roster.columns.filter(c => c.carryOnAdd && visibleFor(c)).forEach(c => {
+            const g = c.carryGroup || c.key;
+            const peers = roster.columns.filter(x => (x.carryGroup || x.key) === g).map(x => x.key);
+            for (let j = rows.length - 1; j >= 0; j--) {
+              const hit = peers.find(k => String(rows[j][k] || '').trim() !== '');
+              if (hit) { newRow[c.key] = rows[j][hit]; carried.add(rows.length + ':' + c.key); return; }
+            }
+          });
+          // A Cooking card straight after a Blanching card is the same pot contents: carry the kg.
           const prev = rows[rows.length - 1];
-          carryCols2.forEach(c => {
-            if (String(prev[c.key] || '').trim() === '') return;
-            newRow[c.key] = prev[c.key];
-            carried.add(rows.length + ':' + c.key);
+          roster.columns.filter(c => c.carryFromPrevProcess).forEach(c => {
+            if (prev && prev.process === c.carryFromPrevProcess.process && process === c.carryFromPrevProcess.into
+              && String(prev[c.key] || '').trim() !== '') {
+              newRow[c.key] = prev[c.key];
+              carried.add(rows.length + ':' + c.key);
+            }
           });
         }
         rows.push(newRow);
 
         if (canCollapse) rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
         draw();
-        const first = el(fid(rows.length - 1, (dataCols[0] || roster.columns[0]).key));
+        const first = el(fid(rows.length - 1, (dataCols.find(c => !c.hidden) || roster.columns[0]).key));
         if (first) { try { first.focus(); } catch (err) {} }
       };
     }
@@ -2271,6 +2305,7 @@
         ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
         <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : ''}></div>
         ${roster.quickEntry ? '' : `<button type="button" class="fr-btn ${roster.cardRows ? '' : 'fr-btn-flat '}fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">${esc(roster.addLabel || '+ Add row')}</button>
+        ${roster.processChoice ? `<span class="fr-pot-choose" id="${rosterDomId('fr_potChoose', i)}" hidden><span class="fr-pot-choose-lbl">Which process?</span>${roster.processChoice.options.map(o => `<button type="button" class="fr-btn fr-seg-btn" data-choose="${esc(o)}">${esc(o)}</button>`).join('')}</span>` : ''}
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows ? ' style="display:none;"' : ''}>Import CSV</button>
         <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">`}
         ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals"></div>` : ''}`).join('');
@@ -2292,6 +2327,21 @@
           renderRosterEditor(existing ? getRosterRows(existing, i, roster.key) : null, roster, i);
           const rowsId = rosterDomId('fr_rosterRows', i);
           if (roster.quickEntry) { wireQuickEntry(roster, i, container.querySelector('#' + rowsId)); return; }
+          const rowsEl = container.querySelector('#' + rowsId);
+          if (roster.processChoice) {
+            const chooser = el(rosterDomId('fr_potChoose', i));
+            const addBtn = el(rosterDomId('fr_addRosterRowBtn', i));
+            const sync = () => {
+              const empty = !rowsEl.querySelector('.fr-pot-card');
+              const open = empty || chooser.dataset.open === '1';
+              chooser.hidden = !open;
+              addBtn.style.display = empty ? 'none' : '';
+            };
+            rowsEl._onDraw = () => { chooser.dataset.open = ''; sync(); };
+            addBtn.addEventListener('click', () => { chooser.dataset.open = '1'; sync(); });
+            chooser.querySelectorAll('[data-choose]').forEach(b => b.addEventListener('click', () => rowsEl._addRow(b.dataset.choose)));
+            sync();
+          } else
           el(rosterDomId('fr_addRosterRowBtn', i)).addEventListener('click',
             () => container.querySelector('#' + rowsId)._addRow());
           el(rosterDomId('fr_importCsvBtn', i)).addEventListener('click',
@@ -2439,6 +2489,10 @@
       // Card rosters (REC 7.4.0 pots): required columns are enforced per row (respecting
       // requiredWhen), at least minRows rows are needed to finalize, and values typed into a
       // column group the row's process hides are cleared -- after a confirm if any would be lost.
+      // recordDate fields: read-only date stamped with the day the entry is completed.
+      allFields(config).filter(f => f.recordDate).forEach(f => {
+        if (finalize) { const d = new Date(); values[f.key] = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+      });
       if (rosterRowsByIndex) {
         for (let ri = 0; ri < rosterList.length; ri++) {
           const roster = rosterList[ri];
@@ -2534,7 +2588,7 @@
           rosterRowsByIndex[i].forEach((r, idx) => {
             rosterCols.forEach((c) => {
               if (c.type === 'batchseq') r[c.key] = formatBatchSeq(batchSeqDate, idx);
-              else if ((c.type === 'derived' || c.deriveJoin) && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
+              else if ((c.type === 'derived' || c.deriveJoin || c.deriveDuration) && !c.deriveGroupSum) r[c.key] = computeRowDerived(c, r);
             });
           });
         });
@@ -2654,9 +2708,15 @@
         const prow = getRosterRows(sub, i, roster.key).filter(r => cols.some(c => !c.legacy && String(r[c.key] || '').trim() !== ''));
         const show = (c, v) => c.type === 'segmented' ? ((c.optionLabels || {})[v] || v) : c.type === 'yesno' ? v : displayValue(c, v);
         const cards = prow.map((r, n) => {
-          const trs = cols.filter(c => rowColVisible(c, r) && String(r[c.key] || '').trim() !== '').map(c =>
-            `<tr><td class="fr-sheet-lbl">${esc(c.label)}</td><td>${esc(show(c, r[c.key]))}</td></tr>`).join('');
-          return `<div style="page-break-inside:avoid;"><h4>${esc(roster.rowTitle || 'Row')} ${n + 1}</h4><table><tbody>${trs}</tbody></table></div>`;
+          const trs = cols.filter(c => !c.hidden && rowColVisible(c, r)).map(c => {
+            const raw = r[c.key];
+            const empty = String(raw == null ? '' : raw).trim() === '';
+            if (c.naWhen && rowCond(c.naWhen, c, r)) return `<tr><td class="fr-sheet-lbl" style="color:#999;">${esc(c.label)}</td><td style="color:#999;">N/A</td></tr>`;
+            if (empty && c.type !== 'yesno') return '';
+            const shown = empty ? 'Not recorded' : show(c, raw);
+            return `<tr><td class="fr-sheet-lbl">${esc(c.label)}</td><td>${esc(shown)}</td></tr>`;
+          }).join('');
+          return `<div style="page-break-inside:avoid;"><h4>${esc(roster.rowTitle || 'Row')} ${n + 1} &mdash; ${esc(r.process || '')}</h4><table><tbody>${trs}</tbody></table></div>`;
         }).join('') || '<p>No pots recorded.</p>';
         return `<h3>${esc(roster.title)}</h3>${cards}` +
           (roster.totals ? `<p class="fr-roster-totals"><strong>${esc(rosterTotalsText(roster, prow))}</strong></p>` : '');

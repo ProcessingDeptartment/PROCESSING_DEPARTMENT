@@ -1795,6 +1795,7 @@ model Sub_dry_cooking {
   jobNo                    String?
   harvestFarm              String?
   intakeDate               DateTime? @db.Date
+  cookingDate              DateTime? @db.Date
   completedBy              String?
 
   rows Sub_dry_cooking_Row[]
@@ -1810,35 +1811,40 @@ model Sub_dry_cooking_Row {
   position Int             @default(0)
 
   process              String?
-  potNumber            String?
-  cookingDate          DateTime? @db.Date
+  potNo                Int?
   abaloneKg            Float?
   blanchSeaWater       Boolean?
-  blanchSeaWaterLitres Float?
-  blanchPh             Float?
   blanchSaltKg         Float?
-  blanchTemp           Float?
-  cookingTime          String?
   blanchBatchNumber    String?
-  startTime            DateTime? @db.Time
-  startingTemp         Float?
-  temp20MinAfter       Float?
-  endOfCookingTemp     Float?
-  timeOut              DateTime? @db.Time
-  totalCookingTime     String?
+  blanchStartTime      DateTime? @db.Time
+  blanchStartingTemp   Float?
+  blanchPh             Float?
+  blanchEndTime        DateTime? @db.Time
+  blanchEndTemp        Float?
+  cookingTime          String?
   cookSeaWater         Boolean?
-  cookSeaWaterLitres   Float?
-  cookPh               Float?
   saltKg               Float?
   saltBatchNumber      String?
+  startTime            DateTime? @db.Time
+  startingTemp         Float?
+  cookPh               Float?
+  temp20MinAfter       Float?
+  timeOut              DateTime? @db.Time
+  endOfCookingTemp     Float?
+  totalCookingTime     String?
   sugarKg              Float?
   sugarBatchNumber     String?
   vinegarKg            Float?
   vinegarBatchNumber   String?
+  potNumberOld         String?
+  cookingDateOld       DateTime? @db.Date
+  blanchTempOld        Float?
+  blanchSeaWaterLtOld  Float?
+  cookSeaWaterLtOld    Float?
 
   @@index([parentId])
-  @@index([process, cookingDate], map: "sub_dry_cooking_row_process_cookingDate_idx")
-  @@index([potNumber], map: "sub_dry_cooking_row_potNumber_idx")
+  @@index([parentId, potNo], map: "sub_dry_cooking_row_parentId_potNo_idx")
+  @@index([process], map: "sub_dry_cooking_row_process_idx")
   @@map("sub_dry_cooking_row")
 }
 

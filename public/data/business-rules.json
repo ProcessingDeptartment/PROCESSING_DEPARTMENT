@@ -3,19 +3,16 @@
     "recordKey": "dry-cooking",
     "type": "capAgainstOtherRecord",
     "label": "Dry cooking batch weight vs OOSW",
-    "why": "Abalone cooked for dry cooking cannot exceed the OOSW weight recorded for the job on REC 7.1.5 - a higher total means batches from different jobs got mixed. Blanching-only pots are not counted; a pot that is blanched then cooked counts once.",
+    "why": "Abalone cooked for dry cooking cannot exceed the OOSW weight recorded for the job on REC 7.1.5 - a higher total means batches from different jobs got mixed. Only Cooking pot cards count; Blanching cards are ignored, so a pot that is blanched then cooked is counted once.",
     "ownJobField": "jobNo",
     "ownWeightField": "abaloneKg",
     "source": "salting-oosw",
     "matchField": "jobNo",
     "sumColumn": "weight",
-    "message": "Cooked pot weight exceeding OOSW - possible batch mix",
+    "message": "Cooking pot weight exceeding OOSW - possible batch mix",
     "ownRowFilter": {
       "column": "process",
-      "in": [
-        "Cooking",
-        "Both"
-      ]
+      "equals": "Cooking"
     }
   }
 ]
