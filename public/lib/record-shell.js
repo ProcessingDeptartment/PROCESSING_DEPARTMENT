@@ -3,7 +3,7 @@
 
    Wraps whatever a record engine (form-record.js / monitoring-log.js /
    cleaning-register.js) or a bespoke record page has already rendered in the
-   navy top-bar + left-sidebar shell from the redesign brief. It moves nodes,
+   navy top-bar shell (hamburger dropdown menu, see nav-menu.js) from the redesign brief. It moves nodes,
    it does NOT re-render them -- so every field, event listener, calculation,
    validation and CSV/print path the engine set up is left exactly as it was.
 
@@ -20,17 +20,18 @@
 (function () {
   'use strict';
 
-  var NAV = [
-    { label: 'Record List', href: '../records/record-list.html', primary: true },
-    { label: 'Home', href: '../index.html' },
-    { label: 'Dashboard', href: '../pages/dashboard.html' },
-    { label: 'Job Status', href: '../pages/job-status.html' },
-    { label: 'Traceability', href: '../records/batch-trace.html' },
-    { label: 'Submissions', href: '../pages/submissions-log.html' },
-    { label: 'FSMS', href: '../pages/fsms.html' },
-    { label: 'Handovers', href: '../pages/handovers.html' },
-    { label: 'Quick Receiving', href: '../records/quick-abalone-receiving.html' }
-  ];
+  /* Menu items now live in nav-menu.js (single source). Load it beside this
+     script, keeping the same ?v= cache-buster. */
+  var SELF = document.currentScript && document.currentScript.src;
+  function withNavMenu(fn) {
+    if (window.NavMenu) return fn();
+    document.addEventListener('navmenu:ready', fn, { once: true });
+    if (document.querySelector('script[data-nm-js]')) return;
+    var s = document.createElement('script');
+    s.setAttribute('data-nm-js', '1');
+    s.src = SELF ? SELF.replace(/record-shell\.js/, 'nav-menu.js') : '../lib/nav-menu.js';
+    document.head.appendChild(s);
+  }
 
   function h(tag, cls, html) {
     var e = document.createElement(tag);
@@ -62,24 +63,6 @@
     return { top: top, body: body, root: root || body, docLine: docLine };
   }
 
-  function currentFile() {
-    return (location.pathname.split('/').pop() || '').toLowerCase();
-  }
-
-  function buildSidebar() {
-    var nav = h('nav', 'rt-sidebar');
-    nav.appendChild(h('div', 'rt-nav-head', 'Navigation'));
-    var here = currentFile();
-    NAV.forEach(function (item) {
-      var a = h('a', null, (item.primary ? '← ' : '') + item.label);
-      a.href = item.href;
-      var target = (item.href.split('/').pop() || '').toLowerCase();
-      if (here && target && here === target) a.classList.add('is-active');
-      nav.appendChild(a);
-    });
-    return nav;
-  }
-
   function buildTopbar(parts) {
     var bar = h('header', 'rt-topbar');
     bar.appendChild(h('div', 'rt-logo', 'AB'));
@@ -107,9 +90,85 @@
     }
 
     bar.appendChild(h('span', 'rt-spacer'));
+    bar.insertBefore(h('span', 'rt-wi-slot'), bar.lastChild);
 
     bar.appendChild(h('div', 'rt-actions'));
+    withNavMenu(function () { window.NavMenu.attach(bar); });
     return bar;
+  }
+
+  /* "View work instruction" -- the engines render a collapsed Work instructions
+     panel above the form. In the shell that panel is hidden by CSS and its
+     content is shown on demand in a temporary bubble anchored under a button
+     that sits right after the revision date. Content is read from the panel at
+     click time, so it always reflects what the engine rendered. */
+  var WI_PANEL = '.rt-content .fr-instr-panel, .rt-content .ml-instr-panel';
+  var wiBubble = null;
+
+  function closeWi() {
+    if (!wiBubble) return;
+    wiBubble.parentNode && wiBubble.parentNode.removeChild(wiBubble);
+    wiBubble = null;
+    document.removeEventListener('keydown', wiKey, true);
+    document.removeEventListener('mousedown', wiOutside, true);
+    document.removeEventListener('touchstart', wiOutside, true);
+    var b = document.querySelector('.rt-wi-btn');
+    if (b) { b.setAttribute('aria-expanded', 'false'); }
+  }
+  function wiKey(e) { if (e.key === 'Escape') { closeWi(); var b = document.querySelector('.rt-wi-btn'); if (b) b.focus(); } }
+  function wiOutside(e) {
+    if (wiBubble && !wiBubble.contains(e.target) && !(e.target.closest && e.target.closest('.rt-wi-btn'))) closeWi();
+  }
+
+  function openWi(btn) {
+    var panel = document.querySelector(WI_PANEL);
+    if (!panel) return;
+    closeWi();
+    var items = panel.querySelectorAll('.instr-item');
+    var bub = h('div', 'rt-wi-bubble');
+    bub.setAttribute('role', 'dialog');
+    bub.setAttribute('aria-label', 'Work instruction');
+    var head = h('div', 'rt-wi-head');
+    head.appendChild(h('strong', null, 'Work instruction'));
+    var x = h('button', 'rt-wi-close', '\u2715');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Close work instruction');
+    x.addEventListener('click', function () { closeWi(); btn.focus(); });
+    head.appendChild(x);
+    bub.appendChild(head);
+    var body = h('div', 'rt-wi-body');
+    Array.prototype.forEach.call(items, function (it) { body.appendChild(it.cloneNode(true)); });
+    bub.appendChild(body);
+    document.body.appendChild(bub);
+    var r = btn.getBoundingClientRect();
+    var left = Math.max(8, Math.min(r.left, window.innerWidth - bub.offsetWidth - 8));
+    bub.style.left = left + 'px';
+    bub.style.top = Math.round(r.bottom + 8) + 'px';
+    bub.style.maxHeight = (window.innerHeight - r.bottom - 24) + 'px';
+    wiBubble = bub;
+    btn.setAttribute('aria-expanded', 'true');
+    document.addEventListener('keydown', wiKey, true);
+    document.addEventListener('mousedown', wiOutside, true);
+    document.addEventListener('touchstart', wiOutside, true);
+  }
+
+  // keep the button present exactly when the engine rendered a panel
+  function ensureWiButton() {
+    var slot = document.querySelector('.rt-topbar .rt-wi-slot');
+    if (!slot) return;
+    var has = !!document.querySelector(WI_PANEL);
+    var btn = slot.querySelector('.rt-wi-btn');
+    if (has && !btn) {
+      btn = h('button', 'rt-wi-btn', 'View work instruction');
+      btn.type = 'button';
+      btn.setAttribute('aria-haspopup', 'dialog');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.addEventListener('click', function () { wiBubble ? closeWi() : openWi(btn); });
+      slot.appendChild(btn);
+    } else if (!has && btn) {
+      closeWi();
+      slot.removeChild(btn);
+    }
   }
 
   function mount() {
@@ -128,13 +187,11 @@
     var shell = h('div', 'rt-shell');
     var topbar = buildTopbar(parts);
     var bodyWrap = h('div', 'rt-body');
-    var sidebar = buildSidebar();
     var content = h('main', 'rt-content');
 
     // move the engine's outermost wrapper (mount div / .ml-app / .fr-app)
     // into the shell content column, so id-scoped page CSS keeps matching
     content.appendChild(parts.root || parts.body);
-    bodyWrap.appendChild(sidebar);
     bodyWrap.appendChild(content);
     shell.appendChild(topbar);
     shell.appendChild(bodyWrap);
@@ -142,6 +199,7 @@
     document.body.insertBefore(shell, document.body.firstChild);
     document.body.classList.add('rt-has-shell');
     syncToolbar();
+    ensureWiButton();
     return true;
   }
 
@@ -220,7 +278,7 @@
         var body = document.querySelector('.fr-body, .ml-body, .cr-body');
         var shell = document.querySelector('.rt-shell');
         if (body && (!shell || !shell.contains(body))) mount();
-        else syncToolbar();   // engine re-rendered its mount inside the shell
+        else { syncToolbar(); ensureWiButton(); }   // engine re-rendered its mount inside the shell
       });
     });
     obs.observe(document.body, { childList: true, subtree: true });
@@ -234,5 +292,5 @@
     boot();
   }
 
-  window.RecordShell = { mount: mount, NAV: NAV };
+  window.RecordShell = { mount: mount };
 })();

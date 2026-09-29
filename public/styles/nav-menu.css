@@ -1,0 +1,65 @@
+/* ========================================================================
+   nav-menu.css -- hamburger button + top-right dropdown (2026-09-29)
+   Everything is scoped to .nm-* so it can load on any page without leaking.
+   ======================================================================== */
+.nm-btn {
+  width: 48px; height: 48px; flex-shrink: 0;
+  margin: -6px -8px -6px 0;              /* keep the 48px target inside a ~36px bar */
+  padding: 0;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 5px;
+  background: transparent; border: 0; border-radius: 8px;
+  cursor: pointer; color: #fff;
+  -webkit-tap-highlight-color: transparent;
+}
+.nm-btn:hover, .nm-btn:active, .nm-btn[aria-expanded="true"] { background: rgba(255,255,255,.08); }
+.nm-btn:focus-visible { outline: 2px solid #A9763A; outline-offset: 2px; }
+.nm-btn .nm-bar {
+  display: block; width: 22px; height: 2px; border-radius: 1px; background: #fff;
+  transition: transform .15s ease, opacity .15s ease;
+}
+/* three lines -> X */
+.nm-btn[aria-expanded="true"] .nm-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nm-btn[aria-expanded="true"] .nm-bar:nth-child(2) { opacity: 0; }
+.nm-btn[aria-expanded="true"] .nm-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.nm-scrim {
+  position: fixed; inset: 0; z-index: 9990;
+  background: rgba(0,0,0,.35);
+  opacity: 0; visibility: hidden;
+  transition: opacity .15s ease, visibility 0s linear .15s;
+  touch-action: none;
+}
+.nm-scrim.is-open { opacity: 1; visibility: visible; transition-delay: 0s; }
+
+.nm-panel {
+  position: fixed; right: 8px; top: 0;   /* top is set from the bar height on open */
+  z-index: 9995;
+  width: 320px; max-width: calc(100vw - 16px);
+  max-height: calc(100vh - var(--nm-top, 57px) - 16px);
+  overflow-y: auto; overscroll-behavior: contain;
+  background: #1D2B38;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.35);
+  padding: 8px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  opacity: 0; visibility: hidden; transform: translateY(-8px);
+  transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
+}
+.nm-panel.is-open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.nm-panel a {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 48px; padding: 12px 20px;
+  font-size: 16px; color: #E6EBEF; text-decoration: none;
+  border-left: 4px solid transparent;
+}
+.nm-panel a:hover, .nm-panel a:active { background: #26384A; }
+.nm-panel a:focus-visible { outline: 2px solid #A9763A; outline-offset: -2px; background: #26384A; }
+.nm-panel a.is-active { border-left-color: #A9763A; color: #fff; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nm-scrim, .nm-panel, .nm-btn .nm-bar { transition: none !important; }
+}
+@media print {
+  .nm-btn, .nm-scrim, .nm-panel { display: none !important; }
+}

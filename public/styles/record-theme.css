@@ -38,11 +38,9 @@
   --rt-radius-btn:     12px;
   --rt-tap:            44px;      /* min interactive height */
   --rt-tap-sm:        36px;      /* inline icon buttons only */
-  --rt-sidebar-w:      200px;
   --rt-shadow:         0 1px 2px rgba(0,0,0,.05);
   --rt-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  --rt-tabbar-h:       60px;      /* height reserved when sidebar collapses */
-  --rt-topbar-h:       57px;      /* sticky-offset for the sidebar */
+  --rt-topbar-h:       57px;      /* sticky top bar height (scroll-margin offsets) */
 }
 
 /* ---- shell frame -------------------------------------------------------- */
@@ -112,50 +110,40 @@ body.rt-has-shell { overflow-x: hidden; }
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* body = sidebar + content. Document is the scroller; the sidebar sticks so
-   the nav (esp. "← Record List", the way back) is always reachable. */
-.rt-body { display: flex; flex: 1; min-width: 0; align-items: flex-start; }
+/* Work instructions: panel hidden, shown in a bubble from the top bar button */
+.rt-content .fr-instr-panel, .rt-content .ml-instr-panel { display: none !important; }
+.rt-topbar .rt-wi-slot { display: flex; align-items: center; }
+.rt-topbar .rt-wi-btn {
+  min-height: var(--rt-tap-sm); padding: 6px 12px;
+  font: inherit; font-size: 12px; font-weight: 600; white-space: nowrap;
+  color: var(--rt-white); background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.25); border-radius: var(--rt-radius-sm);
+  cursor: pointer;
+}
+.rt-topbar .rt-wi-btn:hover, .rt-topbar .rt-wi-btn[aria-expanded="true"] { background: rgba(255,255,255,.22); }
+.rt-wi-bubble {
+  position: fixed; z-index: 9985; width: min(560px, calc(100vw - 16px));
+  overflow-y: auto; overscroll-behavior: contain;
+  background: var(--rt-white); color: var(--rt-navy-primary);
+  border: 1px solid var(--rt-border); border-radius: var(--rt-radius);
+  box-shadow: 0 12px 32px rgba(0,0,0,.28);
+  font-family: var(--rt-font); font-size: 14px;
+}
+.rt-wi-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--rt-border); }
+.rt-wi-close { width: 40px; height: 40px; border: 0; background: transparent; font-size: 18px; cursor: pointer; border-radius: 8px; color: inherit; }
+.rt-wi-close:hover { background: var(--rt-bg); }
+.rt-wi-body { display: grid; gap: 8px; padding: 12px 16px 16px; }
+.rt-wi-body .instr-item { background: var(--rt-bg); border: 1px solid var(--rt-border); border-radius: 6px; padding: 8px 10px; }
+.rt-wi-body .instr-item strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--rt-slate); margin-bottom: 3px; }
+@media print { .rt-wi-bubble { display: none !important; } }
 
-.rt-sidebar {
-  background: var(--rt-navy-secondary);
-  width: var(--rt-sidebar-w);
-  flex-shrink: 0;
-  padding: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: sticky;
-  top: var(--rt-topbar-h);
-  height: calc(100vh - var(--rt-topbar-h));
-  overflow-y: auto;
-}
-.rt-sidebar .rt-nav-head {
-  padding: 12px 16px;
-  font-size: 11px; font-weight: 600; letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--rt-white);
-  opacity: .6;
-}
-.rt-sidebar a {
-  padding: 12px 16px;
-  min-height: var(--rt-tap);
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px;
-  color: var(--rt-slate);
-  text-decoration: none;
-  border-left: 3px solid transparent;
-}
-.rt-sidebar a:hover { color: var(--rt-white); }
-.rt-sidebar a.is-active {
-  color: var(--rt-white);
-  background: var(--rt-navy-primary);
-  border-left-color: var(--rt-gold);
-}
+/* body = content only (menu is the hamburger dropdown, see nav-menu.css) */
+.rt-body { display: flex; flex: 1; min-width: 0; align-items: flex-start; }
 
 .rt-content {
   flex: 1;
   min-width: 0;
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -321,45 +309,16 @@ body.rt-has-shell { overflow-x: hidden; }
 .rt-disclosure[open] > summary::before { content: "\25BE"; }
 .rt-disclosure > summary + * { margin-top: 12px; }
 
-/* ---- responsive: sidebar -> bottom tab bar (provisional 800px) ------- */
+/* ---- responsive (phone gutters; no sidebar / tab bar at any width) ---- */
 @media (max-width: 800px) {
   .rt-body { flex-direction: column; overflow: visible; }
-  .rt-content { padding: 16px; padding-bottom: calc(var(--rt-tabbar-h) + 16px); }
-  .rt-sidebar {
-    position: fixed;
-    left: 0; right: 0; bottom: 0; top: auto;
-    width: auto;
-    height: var(--rt-tabbar-h);
-    flex-direction: row;
-    gap: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 0;
-    border-top: 1px solid rgba(255,255,255,.12);
-    z-index: 20;
-  }
-  .rt-sidebar .rt-nav-head { display: none; }
-  .rt-sidebar a {
-    flex: 1;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    border-left: none;
-    border-top: 3px solid transparent;
-    font-size: 11px;
-    text-align: center;
-    padding: 6px 4px;
-  }
-  .rt-sidebar a.is-active {
-    border-left: none;
-    border-top-color: var(--rt-gold);
-  }
+  .rt-content { padding: 16px; }
   .rt-tally .rt-stat-value { font-size: 24px; }
 }
 
 /* the shell frame is app furniture -- never on a printed controlled copy */
 @media print {
-  .rt-topbar, .rt-sidebar { display: none !important; }
+  .rt-topbar { display: none !important; }
   .rt-body, .rt-content { display: block !important; overflow: visible !important; padding: 0 !important; }
   .rt-card { box-shadow: none !important; border: 1px solid #000 !important; }
 }
