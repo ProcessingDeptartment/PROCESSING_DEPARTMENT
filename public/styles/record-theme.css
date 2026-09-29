@@ -74,6 +74,13 @@ body.rt-has-shell { overflow-x: hidden; }
   top: 0;
   z-index: 30;
 }
+.rt-topbar .rt-back {
+  width: 44px; height: 44px; flex-shrink: 0; margin: -6px 0 -6px -8px;
+  font-size: 22px; line-height: 1; color: var(--rt-white);
+  background: transparent; border: 0; border-radius: var(--rt-radius-sm); cursor: pointer;
+}
+.rt-topbar .rt-back:hover, .rt-topbar .rt-back:active { background: rgba(255,255,255,.08); }
+.rt-topbar .rt-back:focus-visible { outline: 2px solid var(--rt-gold); outline-offset: 2px; }
 .rt-topbar .rt-logo {
   width: 32px; height: 32px; flex-shrink: 0;
   background: var(--rt-gold);
