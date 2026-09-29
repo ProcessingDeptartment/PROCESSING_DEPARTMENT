@@ -288,6 +288,7 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
     // so a form re-checking its own in-progress total doesn't double-count itself.
     const matchValueSums = {};
     const matchNumericOk = {};
+    let matchRosterSum = 0;
     for (const prefix of ['formrecord:', 'monitoring_log:']) {
       const row = await prisma.keyValue.findUnique({ where: { key: prefix + recordKey } });
       if (!row) continue;
@@ -376,6 +377,18 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
         const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
         if (!best || stamp > best.stamp) best = { stamp, values };
 
+        if (entry.status === 'submitted' && entry.id !== excludeId && req.query.rosterCol && Array.isArray(entry.roster)) {
+          // Sum of one roster column over the matching rows (e.g. kg of pots that were cooked),
+          // optionally only rows whose filterCol is one of the comma-separated filterIn values.
+          const fc = String(req.query.filterCol || '');
+          const fin = String(req.query.filterIn || '').split(',').filter(Boolean);
+          for (const row of entry.roster) {
+            if (!row) continue;
+            if (fc && fin.indexOf(String(row[fc] == null ? '' : row[fc])) === -1) continue;
+            const n = parseFloat(row[req.query.rosterCol]);
+            if (!Number.isNaN(n)) matchRosterSum += n;
+          }
+        }
         if (entry.status === 'submitted' && entry.id !== excludeId) {
           const rawValues = entry.values || entry;
           for (const [k, v] of Object.entries(rawValues)) {
@@ -393,6 +406,7 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
         }
       }
     }
+    if (best && req.query.rosterCol) best.values.__matchRosterSum = String(matchRosterSum);
     if (best && Object.keys(matchValueSums).length) {
       best.values.__matchValueSums = {};
       for (const [k, sum] of Object.entries(matchValueSums)) {
@@ -469,6 +483,27 @@ async function attachSubmissionStatus(records) {
   }));
 }
 
+// REC 7.4.0 Dry Cooking: attach each pot (process, pot number, cooking date, kg, salt/sugar/vinegar
+// batch numbers) from the dry_cooking_pot view so the trace shows "Pot 2 - Cooking - 120 kg".
+async function attachDryCookingPots(records) {
+  const ids = [...new Set(records.filter(r => r.record_key === 'dry-cooking' && r.submission_id).map(r => r.submission_id))];
+  if (!ids.length) return;
+  let rows;
+  try {
+    rows = await prisma.$queryRawUnsafe(
+      `SELECT "submissionId", "rowNo", "process", "potNumber", "cookingDate", "abaloneKg", "blanchBatchNumber", "saltBatchNumber", "sugarBatchNumber", "vinegarBatchNumber"
+       FROM "dry_cooking_pot" WHERE "submissionId" = ANY($1::text[]) ORDER BY "submissionId", "rowNo"`, ids);
+  } catch (e) { return; }
+  for (const r of records) {
+    if (r.record_key !== 'dry-cooking') continue;
+    r.pots = rows.filter(x => x.submissionId === r.submission_id).map(x => ({
+      rowNo: x.rowNo, process: x.process, potNumber: x.potNumber, abaloneKg: x.abaloneKg,
+      cookingDate: x.cookingDate ? new Date(x.cookingDate).toISOString().slice(0, 10) : null,
+      batches: { blanch: x.blanchBatchNumber, salt: x.saltBatchNumber, sugar: x.sugarBatchNumber, vinegar: x.vinegarBatchNumber },
+    }));
+  }
+}
+
 app.get('/api/trace/:batch', async (req, res) => {
   const batch = String(req.params.batch || '').trim();
   try {
@@ -511,6 +546,7 @@ app.get('/api/trace/:batch', async (req, res) => {
       return (a.updated_at || '') < (b.updated_at || '') ? -1 : 1;
     });
     await attachSubmissionStatus(records);
+    await attachDryCookingPots(records);
     res.json({ batch, records, inputs: [...inputs], outputs: [...outputs] });
   } catch (e) {
     console.error('GET trace failed', e);

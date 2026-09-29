@@ -1220,3 +1220,29 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 .fr-confirm input[type=checkbox] { width: 24px; height: 24px; min-height: 0; margin: 0; accent-color: var(--rt-slate, #2f4550); }
 .fr-carry-hint { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; color: var(--rt-slate, #5b6770); }
 .fr-roster-row input:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ---- Pot cards (REC 7.4.0 roster.cardRows) + process tap buttons --------- */
+.rt-content .fr-pot-card {
+  display: block;
+  border: 1.5px solid var(--rt-border);
+  border-radius: var(--rt-radius-btn);
+  background: var(--rt-white);
+  padding: 12px 14px;
+  margin: 0 0 14px;
+}
+.rt-content .fr-pot-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.rt-content .fr-pot-head .fr-pot-title { font-size: 16px; color: var(--rt-navy-primary); }
+.rt-content .fr-pot-head [data-dup-warn] { flex: 1 1 auto; font-size: 13px; }
+.rt-content .fr-pot-group { margin-top: 10px; }
+.rt-content .fr-pot-group-title { font-weight: 700; color: var(--rt-navy-primary); margin: 4px 0; }
+.rt-content .fr-seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.rt-content .fr-seg-btn {
+  flex: 1 1 140px;
+  min-height: var(--rt-tap);
+  padding: 10px 14px;
+  font: inherit; font-size: 15px; font-weight: 600;
+  color: var(--rt-slate); background: var(--rt-white);
+  border: 1.5px solid var(--rt-border); border-radius: var(--rt-radius-btn);
+}
+.rt-content .fr-seg-btn.on { background: var(--rt-navy-primary); color: #fff; border-color: var(--rt-navy-primary); }
+.rt-content .fr-pot-card > .fr-pot-group:first-of-type .fr-field:first-child { grid-column: 1 / -1; }

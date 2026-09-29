@@ -322,6 +322,12 @@
           </div>
           ${tags}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
+          ${(r.pots || []).map(p => {
+            const proc = { Blanching: 'Blanching', Cooking: 'Cooking', Both: 'Blanching + cooking' }[p.process] || p.process || '';
+            const b = p.batches || {};
+            const bt = [['Blanch', b.blanch], ['Salt', b.salt], ['Sugar', b.sugar], ['Vinegar', b.vinegar]].filter(x => x[1]).map(x => x[0] + ' batch ' + x[1]).join(', ');
+            return `<div class="summary">Pot ${esc(p.potNumber || p.rowNo)} &mdash; ${esc(proc)}${p.abaloneKg != null ? ' &mdash; ' + esc(p.abaloneKg) + ' kg' : ''}${p.cookingDate ? ' &mdash; ' + esc(p.cookingDate) : ''}${bt ? ' (' + esc(bt) + ')' : ''}</div>`;
+          }).join('')}
           ${r.linked_batch && r.linked_batch !== batchNo
             ? `<div class="summary">Linked batch: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}
           ${r.href ? `<a class="open no-print" href="${esc(r.href)}">Open this record &rarr;</a>` : ''}
