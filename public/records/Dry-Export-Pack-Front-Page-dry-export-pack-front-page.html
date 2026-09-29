@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -10,6 +10,11 @@
   <script src="../lib/palette-map.js"></script>
   <link rel="stylesheet" href="../styles/record-theme.css?v=2">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
+  <style>
+    /* Attachments checklist: each item = control + its comment on ONE line (2 columns). */
+    .fr-grid.fr-grid-2.chk-2col { grid-template-columns: 1fr 1fr !important; align-items: start; }
+    @media (max-width: 700px) { .fr-grid.fr-grid-2.chk-2col { grid-template-columns: 1fr !important; } }
+  </style>
 </head>
 <body class="rt-pc">
 <div id="frRoot"></div>
@@ -33,6 +38,13 @@
     mount: '#frRoot',
     recordKey: 'dry-export-pack-front-page'
   });
+  // Layout only: put the checklist grid in 2 columns (control | comment).
+  var n = 0, t = setInterval(function () {
+    var el = document.querySelector('#fr_f_labellingListAttached');
+    var g = el && el.closest('.fr-grid');
+    if (g) { g.classList.add('chk-2col'); clearInterval(t); }
+    if (++n > 100) clearInterval(t);
+  }, 150);
 })();
 </script>
 <script src="../lib/record-shell.js?v=6"></script>
