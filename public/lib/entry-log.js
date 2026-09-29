@@ -36,14 +36,14 @@
   .el-tbl th,.el-tbl td{border-bottom:1px solid #e6e2d6;padding:6px 8px;text-align:left}
   .el-last{font-size:16px;font-weight:700;margin:8px 0}
   .el-mv{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;border-bottom:1px solid #e6e2d6;padding:8px 2px;font-size:16px;min-height:52px}
-  .el-mv.done{color:#1a5fa8}
-  .el-mv.grey{color:#8a8577}
+  .el-mv.done{color:#5f5b50;background:#efede6}
+  .el-mv.grey{color:#8a8577;background:#f6f4ee}
   .el-mv .el-muted{font-size:13px}
   .el-mv-q{font-weight:600;font-size:16px;flex:1 1 220px;margin:0}
   .el-mv-btns{display:flex;gap:8px;flex:0 0 auto}
   .el-mv-btns button{flex:0 0 84px !important;width:84px !important;min-width:0 !important;height:44px;min-height:44px !important;font-size:16px !important;padding:0 !important}
-  .el-mv-btns button.on[data-v="Yes"]{background:#1a5fa8 !important;border-color:#1a5fa8 !important;color:#fff !important;font-weight:700}
-  .el-mv-btns button.on[data-v="No"]{background:#c77700 !important;border-color:#c77700 !important;color:#fff !important;font-weight:700}
+  .el-mv-btns button.on[data-v="Yes"]{background:#5f6670 !important;border-color:#5f6670 !important;color:#fff !important;font-weight:700}
+  .el-mv-btns button.on[data-v="No"]{background:#d4d2cb !important;border-color:#9a978d !important;color:#33312b !important;font-weight:700}
   .el-note{font-size:13px;margin-top:4px;color:#6b665a;flex:1 1 100%}
   .el-note.warn{color:#8a5a10;font-weight:600}
   .el-note.bad{color:#b30000;font-weight:700}
@@ -375,8 +375,32 @@
           });
         });
       }
-      rosterEl._onDraw = apply;
-      apply();
+      // No. of trolleys: while the job has no count yet, the field pops up right under the steam card as soon as
+      // "+ Add steam" is pressed (it is the same field as in the Trolleys section, kept in step with it).
+      const real = inp('noOfTrolleys');
+      let ask = el('el_trolleyAsk');
+      if (ask) ask.remove();
+      if (real && !locked && st.trolleys == null && rosterEl) {
+        ask = document.createElement('label');
+        ask.id = 'el_trolleyAsk'; ask.className = 'fr-field'; ask.style.display = 'none';
+        ask.innerHTML = 'No. of trolleys *';
+        const c = real.cloneNode(); c.id = 'el_trolleyAsk_in'; c.disabled = false; c.value = real.value; c.removeAttribute('readonly');
+        ask.appendChild(c);
+        rosterEl.parentNode.insertBefore(ask, rosterEl.nextSibling);
+        c.addEventListener('input', () => { real.value = c.value; real.dispatchEvent(new Event('input', { bubbles: true })); });
+        real.addEventListener('input', () => { if (document.activeElement !== c) c.value = real.value; });
+      }
+      const inner = apply;
+      rosterEl._onDraw = () => {
+        inner();
+        const box = el('el_trolleyAsk');
+        if (!box) return;
+        const has = rosterEl.querySelectorAll('.fr-roster-row').length > 0;
+        const wasHidden = box.style.display === 'none';
+        box.style.display = has ? '' : 'none';
+        if (has && wasHidden && blank(box.querySelector('input').value)) { try { box.querySelector('input').focus(); } catch (e) { /* ignore */ } }
+      };
+      rosterEl._onDraw();
     }
 
     function refresh(force) {

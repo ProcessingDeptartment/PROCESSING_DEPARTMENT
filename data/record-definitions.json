@@ -16852,11 +16852,11 @@
         },
         {
           "key": "steamingTimeMin",
-          "label": "Steaming time",
+          "label": "Steaming time (minutes)",
           "type": "digits",
           "required": false,
           "readOnly": false,
-          "unit": "min",
+          "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 2,
@@ -17274,10 +17274,6 @@
         "entryLog": true,
         "checkRanges": {
           "placeholder": true,
-          "steamingTempC": [
-            70,
-            100
-          ],
           "steamingTimeMin": [
             20,
             90

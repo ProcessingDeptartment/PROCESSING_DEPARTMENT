@@ -75,7 +75,7 @@ const fields = [
   col(S_STEAMS, 'steamNo', 'Steam no.', 'digits', { readOnly: true, extra: { hidden: true, jobSequence: { source: 'drying-process', column: 'steamNo', matchField: 'jobNo' } } }),
   col(S_STEAMS, 'steamDate', 'Date', 'date', { readOnly: true, extra: { hidden: true, serverStamp: true, defaultToEntryDate: true, notBeforeStamp: 'dateIntoDryRoomAt', notInFuture: true } }),
   col(S_STEAMS, 'steamingTempC', 'Steaming temperature', 'number', { unit: '°C', extra: { copyFromPrevious: true } }),
-  col(S_STEAMS, 'steamingTimeMin', 'Steaming time', 'digits', { unit: 'min', extra: { copyFromPrevious: true } }),
+  col(S_STEAMS, 'steamingTimeMin', 'Steaming time (minutes)', 'digits', { extra: { copyFromPrevious: true } }),
   col(S_STEAMS, 'startTime', 'Start time', 'time'),
   col(S_STEAMS, 'steamNoOld', 'Steam no. (old)', 'digits', { readOnly: true, extra: { hidden: true, legacy: true } }),
 
@@ -124,7 +124,7 @@ def.extraJson = {
   listColumns: ['entryDate', 'jobNo', 'roster:count'],
   entryLog: true,
   // PLACEHOLDER ranges until QC give real ones (spec D3): soft warnings only.
-  checkRanges: { placeholder: true, steamingTempC: [70, 100], steamingTimeMin: [20, 90] },
+  checkRanges: { placeholder: true, steamingTimeMin: [20, 90] },
   submitChecks: 'drying-process',
   deviationLabel: 'Deviation',
   deviationPolarity: 'deviation',
