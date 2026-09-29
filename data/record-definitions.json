@@ -18885,29 +18885,6 @@
           }
         },
         {
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "binNo",
-          "label": "Bin no.",
-          "type": "number",
-          "extraJson": {
-            "seqWithin": "sizeGrade",
-            "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 33
-        },
-        {
           "required": false,
           "readOnly": true,
           "unit": null,
@@ -18926,12 +18903,12 @@
           "extraJson": {
             "deriveJoin": {
               "parts": [
-                "sizeGrade",
-                "binNo"
+                "sizeGrade"
               ],
               "sep": "-"
             },
-            "layoutRow": 1
+            "layoutRow": 1,
+            "hidden": true
           },
           "sectionIndex": 3,
           "position": 34
@@ -18954,7 +18931,7 @@
           "type": "number",
           "extraJson": {
             "carryPrev": {
-              "match": "binCode",
+              "match": "sizeGrade",
               "column": "finalBinWeight",
               "sources": [
                 "grading-production-log-cultivated",
@@ -18962,7 +18939,7 @@
               ],
               "dateField": "gradingDate"
             },
-            "layoutRow": 2
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 35
@@ -18986,7 +18963,7 @@
           "extraJson": {
             "confirms": "binWeightStart",
             "confirmText": "Checked on scale",
-            "layoutRow": 2
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 36
@@ -19010,7 +18987,7 @@
           "extraJson": {
             "lockUntil": "startConfirmed",
             "placeholder": "e.g. 12.4 + 11.9",
-            "layoutRow": 3
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 37
@@ -19033,7 +19010,7 @@
           "type": "number",
           "extraJson": {
             "lockUntil": "startConfirmed",
-            "layoutRow": 3
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 38
@@ -19069,7 +19046,7 @@
               ],
               "dp": 2
             },
-            "layoutRow": 3
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 39
@@ -19655,29 +19632,6 @@
           }
         },
         {
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "binNo",
-          "label": "Bin no.",
-          "type": "number",
-          "extraJson": {
-            "seqWithin": "sizeGrade",
-            "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 25
-        },
-        {
           "required": false,
           "readOnly": true,
           "unit": null,
@@ -19696,12 +19650,12 @@
           "extraJson": {
             "deriveJoin": {
               "parts": [
-                "sizeGrade",
-                "binNo"
+                "sizeGrade"
               ],
               "sep": "-"
             },
-            "layoutRow": 1
+            "layoutRow": 1,
+            "hidden": true
           },
           "sectionIndex": 3,
           "position": 26
@@ -19724,7 +19678,7 @@
           "type": "number",
           "extraJson": {
             "carryPrev": {
-              "match": "binCode",
+              "match": "sizeGrade",
               "column": "finalBinWeight",
               "sources": [
                 "grading-production-log-cultivated",
@@ -19732,7 +19686,7 @@
               ],
               "dateField": "gradingDate"
             },
-            "layoutRow": 2
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 27
@@ -19756,7 +19710,7 @@
           "extraJson": {
             "confirms": "binWeightStart",
             "confirmText": "Checked on scale",
-            "layoutRow": 2
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 28
@@ -19780,7 +19734,7 @@
           "extraJson": {
             "lockUntil": "startConfirmed",
             "placeholder": "e.g. 12.4 + 11.9",
-            "layoutRow": 3
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 29
@@ -19803,7 +19757,7 @@
           "type": "number",
           "extraJson": {
             "lockUntil": "startConfirmed",
-            "layoutRow": 3
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 30
@@ -19839,7 +19793,7 @@
               ],
               "dp": 2
             },
-            "layoutRow": 3
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 31
