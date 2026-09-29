@@ -1300,46 +1300,9 @@
           "position": 0
         },
         {
-          "title": "Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Dry Cooking (7.4.0), Dry Monitoring (7.4.2), Grading/Packing/Boxing of Dried Abalone (7.4.3)",
-          "kind": "roster",
-          "position": 1,
-          "extraJson": {
-            "collapseRows": false,
-            "defaultRows": [
-              {
-                "recordName": "Abalone Receiving",
-                "recordCode": "REC 7.1.2"
-              },
-              {
-                "recordName": "Basket Removal / Shucking / Gutting",
-                "recordCode": "REC 7.1.1"
-              },
-              {
-                "recordName": "Bleeding & Salting Checklist",
-                "recordCode": "REC 7.1.3"
-              },
-              {
-                "recordName": "Washing Control Sheet",
-                "recordCode": "REC 7.1.4"
-              },
-              {
-                "recordName": "Chiller Batch Control",
-                "recordCode": "REC 7.8.1"
-              },
-              {
-                "recordName": "Dry Cooking",
-                "recordCode": "REC 7.4.0"
-              },
-              {
-                "recordName": "Dry Monitoring",
-                "recordCode": "REC 7.4.2"
-              },
-              {
-                "recordName": "Grading / Packing / Boxing of Dried Abalone",
-                "recordCode": "REC 7.4.3"
-              }
-            ]
-          }
+          "title": "Attachments checklist",
+          "kind": "fields",
+          "position": 1
         }
       ],
       "fields": [
@@ -1461,65 +1424,211 @@
           "validateJson": null
         },
         {
-          "key": "recordName",
-          "label": "Record",
-          "type": "text",
+          "key": "rec712Attached",
+          "label": "REC 7.1.2 Abalone Receiving attached?",
+          "type": "recordpick",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 100,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": "jobtrace",
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "abalone-receiving"
+          }
+        },
+        {
+          "key": "rec711Attached",
+          "label": "REC 7.1.1 Basket Removal / Shucking / Gutting attached?",
+          "type": "recordpick",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 101,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": "jobtrace",
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "basket-removal-shucking-gutting"
+          }
+        },
+        {
+          "key": "rec713Attached",
+          "label": "REC 7.1.3 Bleeding & Salting Checklist attached?",
+          "type": "recordpick",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 102,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": "jobtrace",
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "bleeding-and-salting"
+          }
+        },
+        {
+          "key": "rec714Attached",
+          "label": "REC 7.1.4 Washing Control Sheet attached?",
+          "type": "recordpick",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 103,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": "jobtrace",
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "washing-control-sheet"
+          }
+        },
+        {
+          "key": "rec781Attached",
+          "label": "REC 7.8.1 Dry Chiller Batch Control attached?",
+          "type": "recordpick",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 104,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": "jobtrace",
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "dry-chiller-batch-control"
+          }
+        },
+        {
+          "key": "rec740Attached",
+          "label": "REC 7.4.0 Dry Cooking attached?",
+          "type": "recordpick",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 105,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": "jobtrace",
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "dry-cooking"
+          }
+        },
+        {
+          "key": "rec742Attached",
+          "label": "REC 7.4.2 Dry Monitoring attached?",
+          "type": "recordpick",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 106,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": "jobtrace",
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "dry-monitoring"
+          }
+        },
+        {
+          "key": "rec7431Attached",
+          "label": "REC 7.4.3.1 Grading Production Log (Cultivated) attached?",
+          "type": "recordpick",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 8,
+          "parentFieldKey": null,
+          "position": 107,
           "computeFn": null,
           "computeArgs": null,
-          "recordPickSource": null,
+          "recordPickSource": "jobtrace",
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "grading-production-log-cultivated"
+          }
         },
         {
-          "key": "recordCode",
-          "label": "REC code",
-          "type": "text",
+          "key": "rec7432Attached",
+          "label": "REC 7.4.3.2 Grading Production Log (Ranched) attached?",
+          "type": "recordpick",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 9,
+          "parentFieldKey": null,
+          "position": 108,
           "computeFn": null,
           "computeArgs": null,
-          "recordPickSource": null,
+          "recordPickSource": "jobtrace",
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "included",
-          "label": "Included",
-          "type": "select",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": [
-            "Yes",
-            "No",
-            "N/A"
-          ],
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 10,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "jobField": "jobNo",
+            "sourceRecordKey": "grading-production-log-ranched"
+          }
         }
       ],
       "autofills": [
