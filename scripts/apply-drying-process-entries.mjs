@@ -32,7 +32,8 @@ const fld = (sectionIndex, key, label, type, o = {}) => ({
 });
 const col = (sectionIndex, key, label, type, o = {}) => fld(sectionIndex, key, label, type, { ...o, roster: true });
 
-const S_JOB = 0, S_SO_FAR = 1, S_TROLLEY = 2, S_MOVE = 3, S_STEAMS = 4, S_CHECKS = 5, S_OLD = 6;
+// order on screen: job info, job so far, movements, steams, then trolleys/cooked weight (low prominence, collapsed)
+const S_JOB = 0, S_SO_FAR = 1, S_STEAMS = 2, S_MOVE = 3, S_TROLLEY = 4, S_CHECKS = 5, S_OLD = 6;
 
 const fields = [
   // Section 0 - Job info (unchanged: autofill from abalone-receiving, read-only)
@@ -76,7 +77,6 @@ const fields = [
   col(S_STEAMS, 'steamingTempC', 'Steaming temperature', 'number', { unit: '°C', extra: { copyFromPrevious: true } }),
   col(S_STEAMS, 'steamingTimeMin', 'Steaming time', 'digits', { unit: 'min', extra: { copyFromPrevious: true } }),
   col(S_STEAMS, 'startTime', 'Start time', 'time'),
-  col(S_STEAMS, 'doneBy', 'Done by', 'text'),
   col(S_STEAMS, 'steamNoOld', 'Steam no. (old)', 'digits', { readOnly: true, extra: { hidden: true, legacy: true } }),
 
   // Section 5 - checks and warning override (the values behind the red "not recorded" lines)
@@ -107,15 +107,14 @@ def.mount = '#frRoot';
 def.sections = [
   { title: 'Job info', kind: 'fields', position: 0, extraJson: { collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'] } },
   { title: 'Job so far', kind: 'fields', position: 1, extraJson: { jobSoFarPanel: true } },
-  { title: 'Entry, cooked weight and trolleys', kind: 'fields', position: 2, extraJson: {} },
-  { title: 'Movements', kind: 'fields', position: 3, extraJson: { movementBlock: true } },
   {
     title: 'Steams', kind: 'roster', position: rosterIdx, extraJson: {
       cardRows: true, collapseRows: false, startEmpty: true, enforceRequired: true, titleFrom: 'steamNo', rowTitle: 'Steam', addLabel: '+ Add steam',
       previousRows: { source: 'drying-process', matchField: 'jobNo', showSummary: true, summaryLabel: 'Last steam' },
-      totals: [{ label: 'Steams this entry', count: true }],
     },
   },
+  { title: 'Movements', kind: 'fields', position: 3, extraJson: { movementBlock: true } },
+  { title: 'Trolleys and cooked weight', kind: 'fields', position: 4, extraJson: { collapsible: true, collapsedByDefault: true, summaryField: ['noOfTrolleys'] } },
   { title: 'Checks', kind: 'fields', position: 5, extraJson: { collapsible: true } },
   { title: 'Old values', kind: 'fields', position: 6, extraJson: { legacyBlock: true } },
 ];

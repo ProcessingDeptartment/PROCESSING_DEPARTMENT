@@ -109,8 +109,14 @@ function guardWrite(prevValue, incomingValue, now) {
     let max = 0;
     earlier.forEach((o) => (o.roster || []).forEach((r) => { const n = parseInt(r && r.steamNo, 10); if (n > max) max = n; }));
     const rows = Array.isArray(e.roster) ? e.roster : [];
-    rows.forEach((r) => { if (r) r.steamNo = String(++max); });
+    max = Math.max(max, 0);
+    rows.forEach((r) => { if (r) r.steamNo = String(++max); });   // numbers start at 1, never blank or 0
     v.steamCount = String(rows.length);
+
+    // no steaming once the job is in the grading room (or is being moved into it in this entry)
+    if (rows.some((r) => r) && (doneBy.gradingRoom || v[MOVES[2].flag] === 'Yes')) {
+      return reject(422, 'No steaming is possible once the job is moved into the grading room.');
+    }
 
     // steam dates
     const dryStamp = doneBy.dryRoom ? vals(doneBy.dryRoom)[MOVES[0].stamp] : (v[MOVES[0].flag] === 'Yes' ? v[MOVES[0].stamp] : '');

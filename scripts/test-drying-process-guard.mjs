@@ -105,5 +105,11 @@ t('admin reversal puts the movement back to an open question, needs reason and n
   const s2 = parse(send(JSON.parse(r.value), [...JSON.parse(r.value), entry('e2', 'submitted', { movedIntoDryContainer: 'Yes' })], D2));
   assert.strictEqual(s2[1].values.dateIntoDryContainerAt, D2.toISOString());
 });
+t('no steaming once the job is in the grading room (earlier, or in the same entry)', () => {
+  const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoGradingRoom: 'Yes' })], D1));
+  assert(!send(s1, [...s1, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-11' }])], D2).ok);
+  assert(!send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoGradingRoom: 'Yes' }, [{ steamDate: '2026-09-10' }])], D1).ok);
+  assert(send(s1, [...s1, entry('e2', 'submitted', {})], D2).ok, 'an entry without steams is still fine');
+});
 console.log(`\n${n - failed}/${n} passed`);
 process.exit(failed ? 1 : 0);

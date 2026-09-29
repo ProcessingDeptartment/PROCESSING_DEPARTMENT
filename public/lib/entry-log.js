@@ -38,12 +38,15 @@
   .el-tbl{border-collapse:collapse;width:100%;font-size:12.5px;margin:4px 0 8px}
   .el-tbl th,.el-tbl td{border-bottom:1px solid #e6e2d6;padding:4px 6px;text-align:left}
   .el-last{font-weight:700;margin:6px 0}
-  .el-mv{border:1px solid #d9d4c7;border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fff}
-  .el-mv.done{background:#e4f0e6;border-color:#9cc3a4}
-  .el-mv.grey{background:#f2f0ea;color:#8a8577}
-  .el-mv-q{font-weight:700;margin-bottom:6px}
-  .el-mv-btns{display:flex;gap:8px}
-  .el-mv-btns button{min-width:88px;min-height:42px;font-size:15px}
+  .el-mv{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;border-bottom:1px solid #e6e2d6;padding:6px 2px;font-size:13px}
+  .el-mv.done{color:#1a5fa8}
+  .el-mv.grey{color:#8a8577}
+  .el-mv-q{font-weight:600;flex:1 1 200px;margin:0}
+  .el-mv-btns{display:flex;gap:6px}
+  .el-mv-btns button{min-width:56px;min-height:32px;font-size:13px;padding:2px 10px}
+  .el-mv .el-note{flex:1 1 100%;margin:0}
+  .el-mv-btns button.on[data-v="Yes"]{background:#1a5fa8 !important;border-color:#1a5fa8 !important;color:#fff !important;font-weight:700}
+  .el-mv-btns button.on[data-v="No"]{background:#c77700 !important;border-color:#c77700 !important;color:#fff !important;font-weight:700}
   .el-note{font-size:11.5px;margin-top:3px;color:#6b665a}
   .el-note.warn{color:#8a5a10;font-weight:600}
   .el-note.bad{color:#b30000;font-weight:700}
@@ -104,8 +107,8 @@
   }
   function steamsTableHtml(steams) {
     if (!steams.length) return '';
-    return `<table class="el-tbl"><thead><tr><th>Steam no.</th><th>Date</th><th>Temp (°C)</th><th>Time (min)</th><th>Start</th><th>Done by</th></tr></thead><tbody>`
-      + steams.map((r) => `<tr><td>${esc(r.steamNo)}</td><td>${esc(fmtD(r.steamDate))}</td><td>${esc(r.steamingTempC || '')}</td><td>${esc(r.steamingTimeMin || '')}</td><td>${esc(r.startTime || '')}</td><td>${esc(r.doneBy || '')}</td></tr>`).join('')
+    return `<table class="el-tbl"><thead><tr><th>Steam no.</th><th>Date</th><th>Temp (°C)</th><th>Time (min)</th><th>Start</th></tr></thead><tbody>`
+      + steams.map((r) => `<tr><td>${esc(r.steamNo)}</td><td>${esc(fmtD(r.steamDate))}</td><td>${esc(r.steamingTempC || '')}</td><td>${esc(r.steamingTimeMin || '')}</td><td>${esc(r.startTime || '')}</td></tr>`).join('')
       + '</tbody></table>';
   }
 
@@ -125,15 +128,21 @@
     return `<b>${esc(STAGES[st.stage])}</b>${m && m.stamp ? ` <span class="el-muted">since ${esc(fmtDT(m.stamp))}</span>` : ''}`;
   }
   function jobSoFarHtml(ctx, st, job) {
-    if (!job) return '<div class="el-panel el-muted">Pick a job number to see where it is and its steams.</div>';
-    if (!st.entries.length) return '<div class="el-panel"><b>First entry for this job.</b></div>';
+    if (!job) return '<div class="el-panel el-muted">Pick a job number to see where it is and its last steam.</div>';
+    if (!st.entries.length) return '<div class="el-panel"><b>First entry for this job.</b> <span class="el-muted">Next steam number: 1</span></div>';
     const moves = moveList(ctx.config);
-    const last = lastSteamLine(st);
-    return `<div class="el-panel">
-      <div>Where it is: ${whereText(st, moves)} <span id="el_where" class="el-muted"></span></div>
-      ${last ? `<div class="el-last">Last steam: ${esc(last)}</div>` : '<div class="el-muted">No steams yet.</div>'}
-      ${steamsTableHtml(st.steams)}</div>`;
+    const r = st.steams[st.steams.length - 1];
+    const info = r ? [blank(r.steamingTempC) ? '' : r.steamingTempC + ' °C', blank(r.steamingTimeMin) ? '' : r.steamingTimeMin + ' min',
+      blank(r.startTime) ? '' : 'started ' + r.startTime].filter(Boolean).join(', ') : '';
+    const line = (k, v) => `<div style="margin:3px 0"><span class="el-muted" style="display:inline-block;min-width:120px">${k}</span> ${v}</div>`;
+    return '<div class="el-panel">'
+      + line('Location', `${whereText(st, moves)} <span id="el_where" class="el-muted"></span>`)
+      + line('Last steam', r ? esc(fmtD(r.steamDate)) : '<span class="el-muted">No steams yet</span>')
+      + (r ? line('Steam number', esc(r.steamNo || st.steams.length)) + line('Steam info', info ? esc(info) : '<span class="el-muted">not recorded</span>') : '')
+      + line('Next steam number', `<b>${st.maxSteam + 1}</b>`)
+      + '</div>';
   }
+
 
   // ---------------------------------------------------------------------------------------------
   function attach(ctx) {
@@ -198,6 +207,18 @@
       const r = window.Auth && window.Auth.getCurrentRole && window.Auth.getCurrentRole();
       return r === 'ADMINISTRATOR' || r === 'QA_MANAGER';
     }
+    // steaming is closed once the job is in the grading room (moved earlier, or being moved in this entry)
+    function syncSteamLock(st) {
+      const g = moves.find((m) => m.key === 'gradingRoom');
+      const closed = !!g && (!!st.moves[g.key] || (!locked && yesNow(g.key)));
+      const add = el('fr_addRosterRowBtn');
+      if (add && !locked) add.style.display = closed ? 'none' : '';
+      let note = el('el_steamLock');
+      if (!note && rosterEl) { note = document.createElement('div'); note.id = 'el_steamLock'; note.className = 'el-note bad'; rosterEl.parentNode.insertBefore(note, rosterEl); }
+      if (note) note.textContent = closed ? 'No steaming is possible — the job is in the grading room.' : '';
+      st._steamClosed = closed;
+    }
+
     function drawMovements(st) {
       const box = el('fr_movements');
       if (!box) return;
@@ -239,6 +260,7 @@
         if (b.dataset.v === 'Yes') moves.filter((x) => (x.notAfter || []).indexOf(m.key) !== -1 || (x.notWithInEntry || []).indexOf(m.key) !== -1 || (m.notWithInEntry || []).indexOf(x.key) !== -1).forEach((x) => { const f = inp(x.flag); if (f) f.value = ''; });
         flag.dispatchEvent(new Event('input', { bubbles: true }));
         drawMovements(st);
+        syncSteamLock(st);
       }));
       box.querySelectorAll('[data-el-reverse]').forEach((b) => b.addEventListener('click', async () => {
         const m = moves.find((x) => x.key === b.dataset.elReverse);
@@ -304,7 +326,7 @@
       if (!f) return;
       const t = inp(f.key), why = inp(f.changeReasonField);
       if (!t) return;
-      const label = t.closest('label'); if (label) label.classList.add('el-vital');
+      const label = t.closest('label');
       const whyLabel = why && why.closest('label');
       let note = label && label.querySelector('.el-note');
       if (label && !note) { note = document.createElement('div'); note.className = 'el-note'; label.appendChild(note); }
@@ -339,8 +361,11 @@
       function apply() {
         const rows = rosterEl.querySelectorAll('.fr-roster-row');
         rows.forEach((row, i) => {
-          const no = el(rid(i, 'steamNo')); if (no) { no.value = String(st.maxSteam + i + 1); no.readOnly = true; }
-          const title = row.querySelector('.fr-pot-title'); if (title) title.textContent = `Steam ${st.maxSteam + i + 1}`;
+          const no = el(rid(i, 'steamNo'));
+          const stored = locked && no && parseInt(no.value, 10) > 0 ? parseInt(no.value, 10) : 0;
+          const num = stored || Math.max(1, st.maxSteam + i + 1);   // steam numbers start at 1: never blank, never 0
+          if (no) { no.value = String(num); no.readOnly = true; }
+          const title = row.querySelector('.fr-pot-title'); if (title) title.textContent = `Steam ${num}`;
           if (locked) return;
           const g = (k) => el(rid(i, k));
           const fresh = ['steamDate', 'steamingTempC', 'steamingTimeMin', 'startTime'].every((k) => !g(k) || blank(g(k).value));
@@ -365,6 +390,7 @@
       const st = state();
       drawPanel(st, job);
       drawMovements(st);
+      syncSteamLock(st);
       wireTrolleys(st);
       wireSteams(st);
       loadCooked(job);
@@ -410,6 +436,9 @@
       if (d > today()) { toast(`Steam ${no} is dated ${fmtD(d)}, which is in the future (today is ${fmtD(today())}).`); return false; }
       if (dryDay && d < dryDay) { toast(`Steam ${no} is dated ${fmtD(d)}, before the date into the dry room (${fmtD(dryDay)}).`); return false; }
     }
+    // no steaming once the job is in (or going into) the grading room
+    const gm = moves.find((m) => m.key === 'gradingRoom');
+    if (gm && rows.length && (st.moves[gm.key] || values[gm.flag] === 'Yes')) { toast('No steaming is possible once the job is moved into the grading room. Remove the steam rows.'); return false; }
     // 7: cooked weight not greater than the whole weight
     const whole = parseFloat(values.jiIntakeWeight), cooked = parseFloat(values.cookedWeight);
     if (!isNaN(whole) && !isNaN(cooked) && cooked > whole) { toast(`Cooked weight (${cooked} kg) is more than the whole weight (${whole} kg).`); return false; }

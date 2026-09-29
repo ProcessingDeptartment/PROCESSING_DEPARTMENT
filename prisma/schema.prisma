@@ -1907,7 +1907,6 @@ model Sub_drying_process_Row {
   steamingTempC   Float?
   steamingTimeMin Int?
   startTime       DateTime? @db.Time
-  doneBy          String?
   steamNoOld      Int?
 
   @@index([parentId])
