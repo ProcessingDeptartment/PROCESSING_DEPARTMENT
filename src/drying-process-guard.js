@@ -14,8 +14,8 @@ const KEY = 'formrecord:drying-process';
 
 const MOVES = [
   { key: 'dryRoom', flag: 'movedIntoDryRoom', stamp: 'dateIntoDryRoomAt', label: 'Move into drying rooms', requires: null },
-  { key: 'dryContainer', flag: 'movedIntoDryContainer', stamp: 'dateIntoDryContainerAt', label: 'Move into dry container', requires: 'dryRoom' },
-  { key: 'gradingRoom', flag: 'movedIntoGradingRoom', stamp: 'dateIntoGradingRoomAt', label: 'Move into grading room', requires: 'dryContainer' },
+  { key: 'dryContainer', flag: 'movedIntoDryContainer', stamp: 'dateIntoDryContainerAt', label: 'Move into dry container', requires: 'dryRoom', notAfter: ['gradingRoom'] },
+  { key: 'gradingRoom', flag: 'movedIntoGradingRoom', stamp: 'dateIntoGradingRoomAt', label: 'Move into grading room', requires: 'dryRoom', notWithInEntry: ['dryContainer'] },
 ];
 // values that belong to the entry as a whole once submitted
 const LOCKED_VALUE_KEYS = ['entryDate', 'stampSource', 'movementReversedBy', 'movementReversedAt', 'movementReversedReason']
@@ -88,6 +88,15 @@ function guardWrite(prevValue, incomingValue, now) {
           const req = MOVES.find((x) => x.key === m.requires);
           if (!doneBy[req.key] && v[req.flag] !== 'Yes') return reject(422, `"${m.label}" needs "${req.label}" first.`);
         }
+        // the grading room is the final room: nothing can be moved into another room after it
+        for (const k of (m.notAfter || [])) {
+          const o = MOVES.find((x) => x.key === k);
+          if (doneBy[k] || v[o.flag] === 'Yes') return reject(422, `"${m.label}" is not possible: the job is ${doneBy[k] ? 'already' : 'going'} into the ${o.label.replace('Move into ', '')}, the final room.`);
+        }
+        for (const k of (m.notWithInEntry || [])) {
+          const o = MOVES.find((x) => x.key === k);
+          if (v[o.flag] === 'Yes') return reject(422, `"${m.label}" and "${o.label}" cannot both be answered Yes in one entry; log the ${o.label.replace('Move into ', '')} first.`);
+        }
         v[m.stamp] = nowIso; v.stampSource = 'system';
       } else {
         v[m.stamp] = '';
@@ -129,7 +138,7 @@ function reverseMovement(prevValue, { jobNo, movement, reason, name }, now) {
   const live = entries.filter((e) => e && !isDraft(e) && job(e) === j);
   const target = live.find((e) => vals(e)[m.flag] === 'Yes');
   if (!target) return reject(404, `No "${m.label}" Yes recorded for job ${j}.`);
-  const blocking = MOVES.slice(MOVES.indexOf(m) + 1).find((x) => live.some((e) => vals(e)[x.flag] === 'Yes'));
+  const blocking = MOVES.find((x) => x.requires === m.key && live.some((e) => vals(e)[x.flag] === 'Yes'));
   if (blocking) return reject(409, `"${blocking.label}" is already Done for this job; reverse that one first.`);
   const v = vals(target);
   const audit = { jobNo: j, movement: m.key, entryId: target.id, oldStamp: v[m.stamp] || null, reversedBy: String(name).trim(), reason: String(reason).trim(), at: now.toISOString() };

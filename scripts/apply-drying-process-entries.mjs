@@ -48,24 +48,22 @@ const fields = [
   fld(S_TROLLEY, 'entryDate', 'Entry date', 'timestamp', { readOnly: true, extra: { serverStamp: true } }),
   fld(S_TROLLEY, 'cookedWeight', 'Cooked weight', 'number', { readOnly: true, unit: 'kg', extra: {
     recordSum: { source: 'dry-cooking', matchField: 'jobNo', rosterCol: 'abaloneKg', filterCol: 'process', filterIn: ['Cooking'],
-      idsField: 'cookedWeightSourceIds', note: 'From REC 7.4.0', missing: 'No REC 7.4.0 found for this job', unlockWhenMissing: true } } }),
+      idsField: 'cookedWeightSourceIds', note: 'From REC 7.4.0', missing: 'No REC 7.4.0 found for this job' } } }),
   fld(S_TROLLEY, 'cookedWeightSourceIds', 'Cooked weight source entries', 'text', { readOnly: true, extra: { hidden: true } }),
   fld(S_TROLLEY, 'noOfTrolleys', 'No. of trolleys', 'digits', { extra: {
     vital: true, prefillFromJob: { source: 'drying-process', field: 'noOfTrolleys', matchField: 'jobNo' },
     changeReasonField: 'trolleyChangeReason' } }),
   fld(S_TROLLEY, 'trolleyChangeReason', 'Reason trolley count changed', 'text', { extra: { showWhenChanged: 'noOfTrolleys' } }),
-  fld(S_TROLLEY, 'cookLossPct', 'Cook loss', 'computed', { readOnly: true, unit: '%', computeFn: 'lossPct',
-    computeArgs: { into: 'jiIntakeWeight', outOf: 'cookedWeight', dp: 1 } }),
 
   // Section 3 - Movements (Yes/No while open, read-only line once Yes; stamps come from the server)
   fld(S_MOVE, 'movedIntoDryRoom', 'Move into drying rooms', 'yesno', { extra: {
     noNone: true, movement: { key: 'dryRoom', order: 1, question: 'Move into drying rooms?', done: 'Moved into drying rooms', stamp: 'dateIntoDryRoomAt' } } }),
   fld(S_MOVE, 'dateIntoDryRoomAt', 'Date into dry room', 'timestamp', { readOnly: true, extra: { serverStamp: true, hidden: true } }),
   fld(S_MOVE, 'movedIntoDryContainer', 'Move into dry container', 'yesno', { extra: {
-    noNone: true, movement: { key: 'dryContainer', order: 2, requires: 'dryRoom', question: 'Move into dry container?', done: 'Moved into dry container', stamp: 'dateIntoDryContainerAt' } } }),
+    noNone: true, movement: { key: 'dryContainer', order: 2, requires: 'dryRoom', notAfter: ['gradingRoom'], question: 'Move into dry container?', done: 'Moved into dry container', stamp: 'dateIntoDryContainerAt' } } }),
   fld(S_MOVE, 'dateIntoDryContainerAt', 'Date into dry container', 'timestamp', { readOnly: true, extra: { serverStamp: true, hidden: true } }),
   fld(S_MOVE, 'movedIntoGradingRoom', 'Move into grading room', 'yesno', { extra: {
-    noNone: true, movement: { key: 'gradingRoom', order: 3, requires: 'dryContainer', question: 'Move into grading room?', done: 'Moved into grading room', stamp: 'dateIntoGradingRoomAt' } } }),
+    noNone: true, movement: { key: 'gradingRoom', order: 3, requires: 'dryRoom', notWithInEntry: ['dryContainer'], question: 'Move into grading room?', done: 'Moved into grading room', stamp: 'dateIntoGradingRoomAt' } } }),
   fld(S_MOVE, 'dateIntoGradingRoomAt', 'Date into grading room', 'timestamp', { readOnly: true, extra: { serverStamp: true, hidden: true } }),
   fld(S_MOVE, 'stampSource', 'Stamp source', 'text', { readOnly: true, extra: { hidden: true } }),
   fld(S_MOVE, 'movementReversedBy', 'Movement reversed by', 'text', { readOnly: true, extra: { hidden: true } }),
@@ -127,7 +125,7 @@ def.extraJson = {
   listColumns: ['entryDate', 'jobNo', 'roster:count'],
   entryLog: true,
   // PLACEHOLDER ranges until QC give real ones (spec D3): soft warnings only.
-  checkRanges: { placeholder: true, steamingTempC: [70, 100], steamingTimeMin: [20, 90], cookLossPct: [20, 50] },
+  checkRanges: { placeholder: true, steamingTempC: [70, 100], steamingTimeMin: [20, 90] },
   submitChecks: 'drying-process',
   deviationLabel: 'Deviation',
   deviationPolarity: 'deviation',

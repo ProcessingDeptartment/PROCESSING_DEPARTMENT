@@ -87,8 +87,8 @@
     });
     st.steams.sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
     st.maxSteam = st.steams.reduce((a, r) => Math.max(a, parseInt(r.steamNo, 10) || 0), 0);
-    const reached = moves.filter((m) => st.moves[m.key]).length;
-    st.stage = reached; // 0 Loaded, 1 In dry room, 2 In container, 3 In grading room
+    // 0 Loaded, 1 In dry room, 2 In container, 3 In grading room: the furthest movement done (grading can follow the dry room directly)
+    st.stage = moves.reduce((a, m, i) => (st.moves[m.key] ? i + 1 : a), 0);
     return st;
   }
   const STAGES = ['Loaded', 'In dry room', 'In container', 'In grading room'];
@@ -118,30 +118,21 @@
     }).join('') + '</div>';
   }
 
+  // Where the job is now (stage from the movements, plus the dry room area from the latest REC 7.4.2 check,
+  // filled in by loadWhere) and the steam information. Nothing else.
+  function whereText(st, moves) {
+    const m = st.stage > 0 ? st.moves[moves[st.stage - 1].key] : null;
+    return `<b>${esc(STAGES[st.stage])}</b>${m && m.stamp ? ` <span class="el-muted">since ${esc(fmtDT(m.stamp))}</span>` : ''}`;
+  }
   function jobSoFarHtml(ctx, st, job) {
-    if (!job) return '<div class="el-panel el-muted">Pick a job number to see what has already been recorded for it.</div>';
+    if (!job) return '<div class="el-panel el-muted">Pick a job number to see where it is and its steams.</div>';
     if (!st.entries.length) return '<div class="el-panel"><b>First entry for this job.</b></div>';
     const moves = moveList(ctx.config);
-    const dry = st.moves[moves[0] && moves[0].key];
-    const days = dry && !st.moves[moves[2] && moves[2].key] && dry.stamp
-      ? Math.max(0, Math.round((Date.now() - new Date(dry.stamp).getTime()) / 86400000)) : null;
-    const same = st.entries.some((e) => dayKey(entryAt(e)) === today());
     const last = lastSteamLine(st);
-    const list = st.entries.slice().reverse().map((e) => {
-      const yes = moves.filter((m) => V(e, m.flag) === 'Yes').map((m) => m.done || m.label);
-      const n = (e.roster || []).length;
-      const tr = V(e, 'noOfTrolleys');
-      return `<tr><td>${esc(fmtDT(entryAt(e)))}</td><td>${esc(whoOf(e))}</td><td>${esc(yes.join(', '))}</td><td>${n ? n + ' steam' + (n === 1 ? '' : 's') : ''}</td><td>${blank(tr) ? '' : esc(tr) + ' trolleys'}</td>`
-        + `<td><button type="button" class="el-link" data-keep-enabled data-el-view="${esc(e.id)}">View</button></td></tr>`;
-    }).join('');
     return `<div class="el-panel">
-      ${stageStripHtml(st, moves)}
-      <div class="el-muted">${st.entries.length} entr${st.entries.length === 1 ? 'y' : 'ies'} so far · ${st.steams.length} steam${st.steams.length === 1 ? '' : 's'} so far`
-      + (days != null ? ` · ${days} day${days === 1 ? '' : 's'} since date into dry room` : '') + '</div>'
-      + (st.trolleys != null ? `<div class="el-muted">Trolleys now: <b>${st.trolleys}</b>${st.trolleysChanged ? ' (the count changed during this job)' : ''}</div>` : '')
-      + (same ? '<div class="el-note warn">Another entry for this job was already made today (allowed — several people or shifts may add entries).</div>' : '')
-      + (last ? `<div class="el-last">Last steam: ${esc(last)}</div>` : '')
-      + `<table class="el-tbl"><thead><tr><th>Entry</th><th>By</th><th>Movements</th><th>Steams</th><th>Trolleys</th><th></th></tr></thead><tbody>${list}</tbody></table></div>`;
+      <div>Where it is: ${whereText(st, moves)} <span id="el_where" class="el-muted"></span></div>
+      ${last ? `<div class="el-last">Last steam: ${esc(last)}</div>` : '<div class="el-muted">No steams yet.</div>'}
+      ${steamsTableHtml(st.steams)}</div>`;
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -173,18 +164,36 @@
       const box = el('fr_jobSoFar');
       if (!box) return;
       box.innerHTML = jobSoFarHtml(ctx, st, job);
-      box.querySelectorAll('[data-el-view]').forEach((b) => b.addEventListener('click', () => {
-        if (!locked && ctx.formHasInput() && !confirm('Open this earlier entry? What you have typed on this form will be cleared.')) return;
-        ctx.openForm(b.dataset.elView);
-        window.scrollTo(0, 0);
-      }));
+      if (job && st.entries.length) loadWhere(job);
+    }
+    // the dry room area the job was last checked in (latest submitted REC 7.4.2 entry)
+    async function loadWhere(job) {
+      try {
+        const raw = await ctx.storeGet('monitoring_log:dry-monitoring', true);
+        let best = null;
+        (raw ? JSON.parse(raw) : []).forEach((e) => {
+          const v = (e && e.values) || {};
+          if (!e || e.status === 'draft' || String(v.jobNo || '').trim() !== job || blank(v.dryRoomArea)) return;
+          const at = v.entryDate || e.submittedAt || e.createdAt || 0;
+          if (!best || String(at) > String(best.at)) best = { at, area: v.dryRoomArea };
+        });
+        const span = el('el_where');
+        if (span && best && lastJob === job) span.textContent = `— ${best.area} (REC 7.4.2, ${fmtD(typeof best.at === 'number' ? new Date(best.at).toISOString() : best.at)})`;
+      } catch (e) { /* the stage alone is shown */ }
     }
 
     // ---- Movements ----
-    function canAsk(m, st) {
-      if (!m.requires) return true;
-      return !!st.moves[m.requires] || (inp(moves.find((x) => x.key === m.requires).flag) || {}).value === 'Yes';
+    const yesNow = (k) => { const x = moves.find((y) => y.key === k); return !!x && (inp(x.flag) || {}).value === 'Yes'; };
+    // why a movement cannot be asked right now ('' = it can): the earlier room is missing, or the grading room (final) is involved
+    function blockedWhy(m, st) {
+      if (m.requires && !st.moves[m.requires] && !yesNow(m.requires)) {
+        return `Not yet — needs "${(moves.find((x) => x.key === m.requires) || {}).label}"`;
+      }
+      for (const k of (m.notAfter || [])) if (st.moves[k] || yesNow(k)) return 'Not possible — the grading room is the final room, nothing moves out of it';
+      for (const k of (m.notWithInEntry || [])) if (yesNow(k)) return 'Not in the same entry as the dry container move — log the container move first';
+      return '';
     }
+    const canAsk = (m, st) => !blockedWhy(m, st);
     function isAdmin() {
       const r = window.Auth && window.Auth.getCurrentRole && window.Auth.getCurrentRole();
       return r === 'ADMINISTRATOR' || r === 'QA_MANAGER';
@@ -209,8 +218,7 @@
         }
         if (!canAsk(m, st)) {
           if (flag) flag.value = '';
-          const req = moves.find((x) => x.key === m.requires);
-          return `<div class="el-mv grey"><b>${esc(m.label)}:</b> Not yet — needs "${esc(req ? req.label : '')}"</div>`;
+          return `<div class="el-mv grey"><b>${esc(m.label)}:</b> ${esc(blockedWhy(m, st))}</div>`;
         }
         const v = flag ? flag.value : '';
         return `<div class="el-mv"><div class="el-mv-q">${esc(m.question || m.label + '?')} <span class="el-note bad" style="display:${v === '' ? 'inline' : 'none'}">*</span></div>`
@@ -226,7 +234,9 @@
         const flag = inp(m.flag); if (!flag) return;
         flag.value = b.dataset.v;
         // answering No on a movement resets any later movement answered Yes in this entry
-        if (b.dataset.v !== 'Yes') moves.filter((x) => x.order > m.order).forEach((x) => { const f = inp(x.flag); if (f) f.value = ''; });
+        if (b.dataset.v !== 'Yes') moves.filter((x) => x.requires === m.key).forEach((x) => { const f = inp(x.flag); if (f) f.value = ''; });
+        // a Yes here closes any movement this one excludes
+        if (b.dataset.v === 'Yes') moves.filter((x) => (x.notAfter || []).indexOf(m.key) !== -1 || (x.notWithInEntry || []).indexOf(m.key) !== -1 || (m.notWithInEntry || []).indexOf(x.key) !== -1).forEach((x) => { const f = inp(x.flag); if (f) f.value = ''; });
         flag.dispatchEvent(new Event('input', { bubbles: true }));
         drawMovements(st);
       }));
@@ -281,9 +291,9 @@
         note.className = 'el-note';
         note.textContent = `${rs.note} — ${pots} cooking pot${pots === 1 ? '' : 's'}` + (drafts ? ` (${drafts} draft entr${drafts === 1 ? 'y' : 'ies'} ignored)` : '');
       } else {
-        target.readOnly = false; if (idsEl) idsEl.value = '';
+        target.value = ''; target.readOnly = true; if (idsEl) idsEl.value = '';
         note.className = 'el-note warn';
-        note.textContent = rs.missing + (drafts ? ` (${drafts} draft entr${drafts === 1 ? 'y' : 'ies'} ignored)` : '') + ' — type the cooked weight if you have it.';
+        note.textContent = rs.missing + (drafts ? ` (${drafts} draft entr${drafts === 1 ? 'y' : 'ies'} ignored)` : '');
       }
       target.dispatchEvent(new Event('input', { bubbles: true }));
     }
@@ -381,8 +391,12 @@
     // 2/5: every movement still shown as an open question is answered, in order
     for (const m of moves) {
       if (st.moves[m.key]) continue;
-      const reqOk = !m.requires || st.moves[m.requires] || values[moves.find((y) => y.key === m.requires).flag] === 'Yes';
+      const yes = (k) => values[moves.find((y) => y.key === k).flag] === 'Yes';
+      const reqOk = !m.requires || st.moves[m.requires] || yes(m.requires);
       if (!reqOk) { if (values[m.flag] === 'Yes') { toast(`"${m.label}" needs "${moves.find((y) => y.key === m.requires).label}" first.`); return false; } continue; }
+      const finalRoom = (m.notAfter || []).find((k) => st.moves[k] || yes(k));
+      const clash = (m.notWithInEntry || []).find((k) => yes(k));
+      if (finalRoom || clash) { if (values[m.flag] === 'Yes') { toast(`"${m.label}" is not possible here: ${finalRoom ? 'the grading room is the final room' : 'it cannot be in the same entry as the dry container move'}.`); return false; } continue; }
       if (values[m.flag] !== 'Yes' && values[m.flag] !== 'No') { toast(`Answer "${m.question || m.label + '?'}" Yes or No before submitting.`); return false; }
     }
     // 6: steam dates not in the future and not before the date into the dry room
@@ -421,8 +435,6 @@
     });
     if (missing.length) warn.push(`Steam ${missing.join(', ')}: temperature, time or start time not filled in`);
     if (odd.length) warn.push(`Outside the normal range: ${odd.join(', ')}`);
-    const loss = parseFloat(values.cookLossPct);
-    if (ranges.cookLossPct && !isNaN(loss) && (loss < ranges.cookLossPct[0] || loss > ranges.cookLossPct[1])) warn.push(`Cook loss ${loss} % is outside the normal range`);
 
     if (warn.length) {
       const ok = confirm('Please check before submitting:\n\n• ' + warn.join('\n• ') + '\n\nOK to submit anyway (this is recorded on the entry), or Cancel to go back?');

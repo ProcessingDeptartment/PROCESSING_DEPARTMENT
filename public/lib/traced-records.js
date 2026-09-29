@@ -329,7 +329,7 @@ window.TracedRecords = [
     "batchDateField": null,
     "stage": null,
     "extraBatchFields": [],
-    "store": "monitoring_log:drying-process"
+    "store": "formrecord:drying-process"
   },
   {
     "recordKey": "dried-abalone-transfer",

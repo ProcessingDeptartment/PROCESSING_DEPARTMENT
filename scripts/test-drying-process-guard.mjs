@@ -53,10 +53,20 @@ t('the same movement on a different job is fine', () => {
   const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes' })], D1));
   assert(send(s1, [...s1, entry('e2', 'submitted', { jobNo: 'DPR0002', movedIntoDryRoom: 'Yes' })], D2).ok);
 });
-t('container / grading room need the earlier movement Done or Yes in the same entry', () => {
+t('container and grading room each need the dry room (not each other)', () => {
   assert(!send(null, [entry('e1', 'submitted', { movedIntoDryContainer: 'Yes' })], D1).ok);
-  assert(!send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoGradingRoom: 'Yes' })], D1).ok);
+  assert(!send(null, [entry('e1', 'submitted', { movedIntoGradingRoom: 'Yes' })], D1).ok);
   assert(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoDryContainer: 'Yes' })], D1).ok);
+  assert(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoGradingRoom: 'Yes' })], D1).ok, 'grading straight from the dry room is allowed');
+});
+t('the grading room is the final room: nothing moves into the container after it, or in the same entry', () => {
+  const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoGradingRoom: 'Yes' })], D1));
+  const r = send(s1, [...s1, entry('e2', 'submitted', { movedIntoDryContainer: 'Yes' })], D2);
+  assert(!r.ok && /final room/.test(r.error), JSON.stringify(r));
+  const both = send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoDryContainer: 'Yes', movedIntoGradingRoom: 'Yes' })], D1);
+  assert(!both.ok, 'container and grading in one entry refused');
+  const s2 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoDryContainer: 'Yes' })], D1));
+  assert(send(s2, [...s2, entry('e2', 'submitted', { movedIntoGradingRoom: 'Yes' })], D2).ok, 'container first, grading later is fine');
 });
 t('a stale device that drops a submitted entry does not delete it', () => {
   const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes' })], D1));
@@ -85,6 +95,8 @@ t('a migrated (typed, midnight SAST) dry-room stamp is honoured for steam dates'
 t('admin reversal puts the movement back to an open question, needs reason and name, and respects order', () => {
   const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoDryContainer: 'Yes' })], D1));
   assert(!reverseMovement(JSON.stringify(s1), { jobNo: 'DPR0001', movement: 'dryRoom', reason: 'x', name: 'M' }).ok, 'container blocks dry-room reversal');
+  const g = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoGradingRoom: 'Yes' })], D1));
+  assert(reverseMovement(JSON.stringify(g), { jobNo: 'DPR0001', movement: 'gradingRoom', reason: 'x', name: 'M' }).ok, 'grading can be reversed on its own');
   assert(!reverseMovement(JSON.stringify(s1), { jobNo: 'DPR0001', movement: 'dryContainer', reason: '', name: 'M' }).ok);
   const r = reverseMovement(JSON.stringify(s1), { jobNo: 'DPR0001', movement: 'dryContainer', reason: 'tapped by mistake', name: 'Michaela' });
   assert(r.ok); const v = JSON.parse(r.value)[0].values;

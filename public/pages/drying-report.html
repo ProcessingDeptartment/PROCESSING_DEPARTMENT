@@ -151,20 +151,19 @@
     return rows;
   }
 
-  const TIMELINE_STEPS = [
-    ['cookingDate', 'Cooking date'],
-    ['movementToDryRoom1Date', 'Movement to dry room 1'],
-    ['steam1Date', 'Steam 1'], ['steam2Date', 'Steam 2'], ['steam3Date', 'Steam 3'],
-    ['steam4Date', 'Steam 4'], ['steam5Date', 'Steam 5'], ['steam6Date', 'Steam 6'],
-    ['steam7Date', 'Steam 7'], ['steam8Date', 'Steam 8'], ['steam9Date', 'Steam 9'],
-    ['steam10Date', 'Steam 10'], ['steam11Date', 'Steam 11'], ['steam12Date', 'Steam 12'],
-    ['steam13Date', 'Steam 13'], ['steam14Date', 'Steam 14'],
-    ['movementToContainerDate', 'Movement to container'],
-    ['removedFromTrolleysDate', 'Removed from trolleys'],
-    ['movementToGradingRoomDate', 'Movement to grading room'],
-    ['dateDeString', 'De-string'],
-    ['dateGraded', 'Graded']
-  ];
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const pad2 = (n) => String(n).padStart(2, '0');
+  // an instant (server stamp) -> "12 Sep 2026 06:00"; a plain date -> "12 Sep 2026"
+  function fmtWhen(v, withTime) {
+    if (!v) return '';
+    const str = String(v);
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(str) ? new Date(str + 'T00:00:00') : new Date(str);
+    if (isNaN(d)) return str;
+    return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear() + (withTime ? ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : '');
+  }
+  const dayOf = (v) => { const d = new Date(v); return isNaN(d) ? '' : d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
+  const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+  const submitted = (subs) => subs.filter((s) => s.status !== 'draft');
 
   const SIZE_GRADES = [
     ['under8g', 'Under 8g'], ['g8to10', '8g–10g'], ['g11to13', '11g–13g'], ['g14to16', '14g–16g'],
@@ -172,55 +171,108 @@
     ['g29to31', '29g–31g'], ['g32to35', '32g–35g'], ['g36to39', '36g–39g'], ['g40to44', '40g–44g'],
     ['g45to50', '45g–50g'], ['g51to55', '51g–55g'], ['g56to60', '56g–60g'], ['g60plus', '60g+']
   ];
+  const SIZE_GRADES_RANCHED = [
+    ['under50g', 'Under 50g'], ['g51to80', '51g–80g'], ['g81to100', '81g–100g'], ['g101to150', '101g–150g'],
+    ['g151to200', '151g–200g'], ['g200plus', '200g+'], ['darkUnder100g', 'Dark under 100g'], ['dark100gPlus', 'Dark 100g+']
+  ];
 
   async function loadAll() {
-    const [receiving, drying, grading] = await Promise.all([
+    const [receiving, drying, grading, gradingRanched, cooking] = await Promise.all([
       getRecord('formrecord:abalone-receiving'),
-      getRecord('monitoring_log:drying-process'),
-      getRecord('formrecord:grading-production-log-cultivated')
+      getRecord('formrecord:drying-process'),
+      getRecord('formrecord:grading-production-log-cultivated'),
+      getRecord('formrecord:grading-production-log-ranched'),
+      getRecord('formrecord:dry-cooking')
     ]);
-    CACHE = { receiving, drying, grading };
+    CACHE = { receiving, drying, grading, gradingRanched, cooking };
   }
 
+  // REC 7.4.1 is an entry log: many entries per job. Everything job-level is worked out here from ALL of the
+  // job's submitted entries (same rules as the v_dry_job_progress database view). Weights that no longer live
+  // on 7.4.1 come from where they now live: whole weight from receiving, yield / dried weight / size grades /
+  // graded date from the grading logs (REC 7.4.3.1 / 7.4.3.2), cooking date from REC 7.4.0.
   function buildReport(jobNo) {
     const receiving = forJob(CACHE.receiving, jobNo);
-    const drying = forJob(CACHE.drying, jobNo);
-    const grading = forJob(CACHE.grading, jobNo);
+    const entries = submitted(forJob(CACHE.drying, jobNo))
+      .sort((a, b) => String((a.values || {}).entryDate || '').localeCompare(String((b.values || {}).entryDate || '')));
+    const grading = submitted(forJob(CACHE.grading, jobNo));
+    const gradingRanched = submitted(forJob(CACHE.gradingRanched, jobNo));
+    const cooking = submitted(forJob(CACHE.cooking, jobNo));
+    const gradingAll = grading.concat(gradingRanched);
 
     const harvest = harvestRows(receiving);
     const totalMass = harvest.reduce((a, h) => a + (h.mass || 0), 0);
     const totalAnimals = harvest.reduce((a, h) => a + (h.animals || 0), 0);
+    const wholeWeight = totalMass || pickNum(receiving, 'intakeWeight') || pickNum(entries, 'wholeWeightOld');
 
-    const wholeWeight = pickNum(drying, 'wholeWeight') != null ? pickNum(drying, 'wholeWeight') : (totalMass || null);
-    const cookingWeight = pickNum(drying, 'cookingWeight');
-    const driedWeight = pickNum(grading, 'actualDriedWeight') != null
-      ? pickNum(grading, 'actualDriedWeight') : pickNum(drying, 'dryWeight');
-    const actualYield = pickNum(grading, 'yield') != null ? pickNum(grading, 'yield')
-      : (pickNum(drying, 'estimateYield') != null ? pickNum(drying, 'estimateYield')
-        : ((driedWeight != null && wholeWeight) ? (driedWeight / wholeWeight * 100) : null));
+    // movements: the entry where each was answered Yes (server stamp; migrated ones are typed dates, midnight)
+    const moved = (flag, stamp) => {
+      const e = entries.find((x) => (x.values || {})[flag] === 'Yes' && (x.values || {})[stamp]);
+      return e ? { at: e.values[stamp], typed: e.values.stampSource === 'migrated_typed' } : null;
+    };
+    const intoDry = moved('movedIntoDryRoom', 'dateIntoDryRoomAt');
+    const intoContainer = moved('movedIntoDryContainer', 'dateIntoDryContainerAt');
+    const intoGrading = moved('movedIntoGradingRoom', 'dateIntoGradingRoomAt');
 
-    const timeline = TIMELINE_STEPS
-      .map(([k, label]) => ({ label, date: pick(drying, k) }))
-      .filter((r) => r.date);
-    const totalDryingTimeDays = pickNum(drying, 'totalDryingTimeDays');
+    // steams from every entry, in steam-number order
+    const steams = [];
+    entries.forEach((e) => (e.roster || []).forEach((r) => { if (r) steams.push(r); }));
+    steams.sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
 
-    const gradeRows = SIZE_GRADES.map(([k, label]) => ({ label, weight: sumNum(grading, k) }))
-      .filter((r) => r.weight != null);
-    const bGrade = sumNum(grading, 'bGrade');
-    const actualGradedWeight = pickNum(grading, 'actualGradedWeight');
-    const gradeTotal = actualGradedWeight != null ? actualGradedWeight
-      : (gradeRows.reduce((a, r) => a + (r.weight || 0), 0) + (bGrade || 0)) || null;
+    // cooking date: the latest submitted REC 7.4.0 entry that has a Cooking card
+    const cookEntry = cooking.filter((e) => (e.roster || []).some((r) => r && r.process === 'Cooking'))
+      .sort((a, b) => String((b.values || {}).cookingDate || '').localeCompare(String((a.values || {}).cookingDate || '')))[0];
+    const cookingDate = cookEntry ? (cookEntry.values || {}).cookingDate : null;
+
+    const latestNum = (key) => { for (let i = entries.length - 1; i >= 0; i--) { const n = num((entries[i].values || {})[key]); if (n != null) return n; } return null; };
+    const cookedWeight = latestNum('cookedWeight');
+    const trolleys = latestNum('noOfTrolleys');
+
+    const gradedDried = gradingAll.reduce((a, s) => a + (num((s.values || {}).actualDriedWeight) || 0), 0) || null;
+    const oldDried = pickNum(entries, 'dryWeightOld');
+    const driedWeight = gradedDried != null ? gradedDried : oldDried;
+    const driedSource = gradedDried != null ? '' : (oldDried != null ? ' (old)' : '');
+    const gradingYield = pickNum(gradingAll, 'yield');
+    const actualYield = (driedWeight != null && wholeWeight) ? (driedWeight / wholeWeight * 100)
+      : (gradingYield != null ? gradingYield : pickNum(entries, 'estimateYieldPctOld'));
+    const dryingLoss = (cookedWeight && driedWeight != null) ? ((cookedWeight - driedWeight) / cookedWeight * 100) : null;
+
+    const gradedDate = pick(gradingAll, 'gradingDate') || pick(entries, 'gradedDateOld');
+    const dateIntoGrading = intoGrading ? dayOf(intoGrading.at) : (pick(gradingAll, 'dateIntoGradingRoom') || gradedDate);
+    // drying days = date into grading room - date into dry room (7.4.1), falling back to the 7.4.3 dates
+    const dryingDays = (intoDry && dateIntoGrading) ? daysBetween(dayOf(intoDry.at), dateIntoGrading) : pickNum(entries, 'totalDryingDaysOld');
+
+    const timeline = [];
+    if (cookingDate) timeline.push({ label: 'Cooking date (REC 7.4.0)', when: fmtWhen(cookingDate) });
+    if (intoDry) timeline.push({ label: 'Moved into drying rooms', when: fmtWhen(intoDry.at, !intoDry.typed) });
+    steams.forEach((r) => {
+      const bits = [];
+      if (r.steamingTempC) bits.push(r.steamingTempC + ' \u00b0C');
+      if (r.steamingTimeMin) bits.push(r.steamingTimeMin + ' min');
+      if (r.startTime) bits.push('start ' + r.startTime);
+      timeline.push({ label: 'Steam ' + (r.steamNo || ''), when: fmtWhen(r.steamDate), detail: bits.join(', ') });
+    });
+    if (intoContainer) timeline.push({ label: 'Moved into dry container', when: fmtWhen(intoContainer.at, !intoContainer.typed) });
+    if (intoGrading) timeline.push({ label: 'Moved into grading room', when: fmtWhen(intoGrading.at, !intoGrading.typed) });
+    else if (dateIntoGrading) timeline.push({ label: 'Into grading room (REC 7.4.3)', when: fmtWhen(dateIntoGrading) });
+    if (gradedDate) timeline.push({ label: 'Graded', when: fmtWhen(gradedDate) });
+
+    const gradeSets = [];
+    if (grading.length) gradeSets.push({ title: 'Cultivated', grades: SIZE_GRADES, subs: grading });
+    if (gradingRanched.length) gradeSets.push({ title: 'Ranched', grades: SIZE_GRADES_RANCHED, subs: gradingRanched });
+    gradeSets.forEach((gs) => {
+      gs.rows = gs.grades.map(([k, label]) => ({ label, weight: sumNum(gs.subs, k) })).filter((r) => r.weight != null);
+      gs.bGrade = sumNum(gs.subs, 'bGrade');
+      const total = pickNum(gs.subs, 'actualGradedWeight');
+      gs.total = total != null ? total : ((gs.rows.reduce((a, r) => a + (r.weight || 0), 0) + (gs.bGrade || 0)) || null);
+    });
 
     return {
       jobNo, harvest, totalMass, totalAnimals,
-      wholeWeight, cookingWeight, driedWeight, actualYield,
-      timeline, totalDryingTimeDays,
-      gradeRows, bGrade, gradeTotal,
-      driedWeightReceived: pickNum(grading, 'driedWeightReceived'),
-      dateIntoGradingRoom: pick(grading, 'dateIntoGradingRoom'),
-      gradingDate: pick(grading, 'gradingDate'),
+      wholeWeight, cookedWeight, trolleys, driedWeight, driedSource, actualYield, dryingLoss,
+      timeline, dryingDays, gradeSets,
       header: (receiving[0] && receiving[0].values) || {},
-      counts: { receiving: receiving.length, drying: drying.length, grading: grading.length }
+      counts: { receiving: receiving.length, drying: entries.length, grading: gradingAll.length, cooking: cooking.length }
     };
   }
 
@@ -230,7 +282,8 @@
     const missing = [];
     if (!rep.counts.receiving) missing.push('Abalone Receiving (REC 7.1.2)');
     if (!rep.counts.drying) missing.push('Drying Process (REC 7.4.1)');
-    if (!rep.counts.grading) missing.push('Grading Production Log — Cultivated (REC 7.4.3.1)');
+    if (!rep.counts.grading) missing.push('Grading Production Log (REC 7.4.3.1 / 7.4.3.2)');
+    if (!rep.counts.cooking) missing.push('Dry Cooking (REC 7.4.0)');
 
     $('reportPanel').innerHTML = `
       <div class="jobline">
@@ -252,12 +305,14 @@
         <thead><tr><th>Measure</th><th class="num">Value</th></tr></thead>
         <tbody>
           <tr><td>Whole weight (in)</td><td class="num">${fmt(rep.wholeWeight)} kg</td></tr>
-          <tr><td>Cooking weight</td><td class="num">${fmt(rep.cookingWeight)} kg</td></tr>
-          <tr><td>Actual dried weight</td><td class="num">${fmt(rep.driedWeight)} kg</td></tr>
+          <tr><td>Cooked weight (REC 7.4.0)</td><td class="num">${fmt(rep.cookedWeight)} kg</td></tr>
+          <tr><td>No. of trolleys</td><td class="num">${rep.trolleys == null ? '—' : rep.trolleys}</td></tr>
+          <tr><td>Actual dried weight${esc(rep.driedSource)}</td><td class="num">${fmt(rep.driedWeight)} kg</td></tr>
+          <tr><td>Drying loss (cooked to dried)</td><td class="num">${fmt(rep.dryingLoss)} %</td></tr>
           <tr class="total"><td>Actual yield</td><td class="num statbig">${fmt(rep.actualYield)} %</td></tr>
         </tbody>
       </table>
-      <div class="muted" style="margin-top:4px;">Yield = dried weight ÷ whole weight × 100 (or the value recorded on REC 7.4.1 / 7.4.3.1 where present).</div>
+      <div class="muted" style="margin-top:4px;">Yield = dried weight ÷ whole weight × 100. Dried weight and grading come from REC 7.4.3.1 / 7.4.3.2; an old REC 7.4.1 dry weight is used only when there is no grading record and is marked (old).</div>
 
       <h2 class="sec">Harvest breakdown (receiving)</h2>
       <table>
@@ -284,26 +339,27 @@
 
       <h2 class="sec">Drying process timeline</h2>
       <table>
-        <thead><tr><th>Step</th><th>Date</th></tr></thead>
+        <thead><tr><th>Step</th><th>Date</th><th>Detail</th></tr></thead>
         <tbody>
           ${rep.timeline.length ? rep.timeline.map((r) => `<tr>
-            <td>${esc(r.label)}</td><td class="num">${esc(r.date)}</td>
-          </tr>`).join('') : '<tr><td colspan="2" class="muted">No Drying Process dates recorded for this job.</td></tr>'}
-          <tr class="total"><td>Total drying time</td><td class="num">${rep.totalDryingTimeDays == null ? '—' : rep.totalDryingTimeDays + ' days'}</td></tr>
+            <td>${esc(r.label)}</td><td class="num">${esc(r.when)}</td><td>${esc(r.detail || '')}</td>
+          </tr>`).join('') : '<tr><td colspan="3" class="muted">No Drying Process entries recorded for this job.</td></tr>'}
+          <tr class="total"><td>Total drying time</td><td class="num" colspan="2">${rep.dryingDays == null ? '—' : rep.dryingDays + ' days'}</td></tr>
         </tbody>
       </table>
 
       <h2 class="sec">Size grade breakdown</h2>
+      ${rep.gradeSets.length ? rep.gradeSets.map((gs) => `
+      ${rep.gradeSets.length > 1 ? `<h3 style="margin:10px 0 4px;font-size:13px;">${esc(gs.title)}</h3>` : ''}
       <table>
         <thead><tr><th>Size range</th><th class="num">Weight (kg)</th></tr></thead>
         <tbody>
-          ${rep.gradeRows.length ? rep.gradeRows.map((r) => `<tr>
-            <td>${esc(r.label)}</td><td class="num">${fmt(r.weight, 2)}</td>
-          </tr>`).join('') : '<tr><td colspan="2" class="muted">No grading weights recorded for this job.</td></tr>'}
-          ${rep.bGrade != null ? `<tr><td>B-grade</td><td class="num">${fmt(rep.bGrade, 2)}</td></tr>` : ''}
-          ${rep.gradeTotal != null ? `<tr class="total"><td>TOTAL (actual graded weight)</td><td class="num">${fmt(rep.gradeTotal, 2)}</td></tr>` : ''}
+          ${gs.rows.length ? gs.rows.map((r) => `<tr><td>${esc(r.label)}</td><td class="num">${fmt(r.weight, 2)}</td></tr>`).join('')
+            : '<tr><td colspan="2" class="muted">No grading weights recorded.</td></tr>'}
+          ${gs.bGrade != null ? `<tr><td>B-grade</td><td class="num">${fmt(gs.bGrade, 2)}</td></tr>` : ''}
+          ${gs.total != null ? `<tr class="total"><td>TOTAL (actual graded weight)</td><td class="num">${fmt(gs.total, 2)}</td></tr>` : ''}
         </tbody>
-      </table>
+      </table>`).join('') : '<table><tbody><tr><td class="muted">No grading weights recorded for this job.</td></tr></tbody></table>'}
 
       ${missing.length ? `<div class="warn no-print"><strong>No data yet from:</strong> ${esc(missing.join(', '))}. Those sections stay blank until those records are submitted against this job.</div>` : ''}
     `;
@@ -327,8 +383,10 @@
     lines.push(q('YIELD SUMMARY'));
     lines.push(['Measure', 'Value'].map(q).join(','));
     lines.push([q('Whole weight (kg)'), q(fmt(rep.wholeWeight))].join(','));
-    lines.push([q('Cooking weight (kg)'), q(fmt(rep.cookingWeight))].join(','));
-    lines.push([q('Actual dried weight (kg)'), q(fmt(rep.driedWeight))].join(','));
+    lines.push([q('Cooked weight (kg)'), q(fmt(rep.cookedWeight))].join(','));
+    lines.push([q('No. of trolleys'), q(rep.trolleys)].join(','));
+    lines.push([q('Actual dried weight (kg)' + rep.driedSource), q(fmt(rep.driedWeight))].join(','));
+    lines.push([q('Drying loss (%)'), q(fmt(rep.dryingLoss))].join(','));
     lines.push([q('Actual yield (%)'), q(fmt(rep.actualYield))].join(','));
     lines.push('');
     lines.push(q('HARVEST BREAKDOWN'));
@@ -340,15 +398,18 @@
     lines.push([q('TOTAL'), '', q(fmt(rep.totalMass, 2)), q(rep.totalAnimals), ''].join(','));
     lines.push('');
     lines.push(q('DRYING TIMELINE'));
-    lines.push(['Step', 'Date'].map(q).join(','));
-    rep.timeline.forEach((r) => lines.push([q(r.label), q(r.date)].join(',')));
-    lines.push([q('Total drying time (days)'), q(rep.totalDryingTimeDays)].join(','));
+    lines.push(['Step', 'Date', 'Detail'].map(q).join(','));
+    rep.timeline.forEach((r) => lines.push([q(r.label), q(r.when), q(r.detail || '')].join(',')));
+    lines.push([q('Total drying time (days)'), q(rep.dryingDays), ''].join(','));
     lines.push('');
-    lines.push(q('SIZE GRADE BREAKDOWN'));
-    lines.push(['Size range', 'Weight (kg)'].map(q).join(','));
-    rep.gradeRows.forEach((r) => lines.push([q(r.label), q(fmt(r.weight, 2))].join(',')));
-    if (rep.bGrade != null) lines.push([q('B-grade'), q(fmt(rep.bGrade, 2))].join(','));
-    if (rep.gradeTotal != null) lines.push([q('TOTAL (actual graded weight)'), q(fmt(rep.gradeTotal, 2))].join(','));
+    rep.gradeSets.forEach((gs) => {
+      lines.push(q('SIZE GRADE BREAKDOWN' + (rep.gradeSets.length > 1 ? ' - ' + gs.title : '')));
+      lines.push(['Size range', 'Weight (kg)'].map(q).join(','));
+      gs.rows.forEach((r) => lines.push([q(r.label), q(fmt(r.weight, 2))].join(',')));
+      if (gs.bGrade != null) lines.push([q('B-grade'), q(fmt(gs.bGrade, 2))].join(','));
+      if (gs.total != null) lines.push([q('TOTAL (actual graded weight)'), q(fmt(gs.total, 2))].join(','));
+      lines.push('');
+    });
 
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -378,7 +439,7 @@
     const rep = buildReport(jobNo);
     render(rep, JOB_STATUSES.find((s) => String(s.job_no) === String(jobNo)));
     $('statusLine').textContent =
-      `${rep.counts.receiving} receiving · ${rep.counts.drying} drying process · ${rep.counts.grading} grading log record(s) for this job`;
+      `${rep.counts.receiving} receiving · ${rep.counts.drying} drying process entr${rep.counts.drying === 1 ? 'y' : 'ies'} · ${rep.counts.grading} grading log record(s) for this job`;
   }
 
   async function refresh() {

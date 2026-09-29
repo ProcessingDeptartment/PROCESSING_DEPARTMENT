@@ -153,16 +153,19 @@ function completedByText(entry, values) {
 
 // Discover which columns belong to the parent and which to the child (roster) table, using the
 // RecordFieldDef rows in Neon. Cached per record key for the lifetime of the process.
+// Entries expire after a minute so a re-seeded definition (seed-definitions.mjs) takes effect without restarting the API.
 const schemaCache = new Map();
+const SCHEMA_TTL_MS = 60 * 1000;
 
 async function getSchema(prisma, recordKey) {
-  if (schemaCache.has(recordKey)) return schemaCache.get(recordKey);
+  const hit = schemaCache.get(recordKey);
+  if (hit && Date.now() - hit.at < SCHEMA_TTL_MS) return hit.schema;
 
   const def = await prisma.recordDefinition.findUnique({
     where: { recordKey },
     include: { sections: true, fields: true, autofills: true },
   });
-  if (!def) { schemaCache.set(recordKey, null); return null; }
+  if (!def) { schemaCache.set(recordKey, { at: Date.now(), schema: null }); return null; }
 
   // Job-level copies (receiving date, farm, ...) are not stored per record — see job-snapshot.js.
   const skip = jobSnapshotKeys(def);
@@ -202,7 +205,7 @@ async function getSchema(prisma, recordKey) {
       schema.blockCompletedBy = Array.isArray(rows) && rows.length > 0;
     } catch { schema.blockCompletedBy = false; }
   }
-  schemaCache.set(recordKey, schema);
+  schemaCache.set(recordKey, { at: Date.now(), schema });
   return schema;
 }
 
