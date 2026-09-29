@@ -139,6 +139,18 @@ function toCol(fieldKey) {
   return col;
 }
 
+// The COMPLETED BY block on every form-record page saves as entry.completedBy =
+// { by, title, date, signature } (not as a field in entry.values). Its name goes into the
+// submission table's single `completedBy` TEXT column; title/date/signature stay in rawJson.
+// Falls back to a legacy values.completedBy so rows migrated from the old Sign-off fields
+// survive a rewrite of the table.
+function completedByText(entry, values) {
+  const cb = entry && entry.completedBy;
+  const by = cb && typeof cb === 'object' ? cb.by : cb;
+  const name = (by != null && String(by).trim() !== '') ? by : (values && values.completedBy);
+  return name == null || String(name).trim() === '' ? null : String(name).trim();
+}
+
 // Discover which columns belong to the parent and which to the child (roster) table, using the
 // RecordFieldDef rows in Neon. Cached per record key for the lifetime of the process.
 const schemaCache = new Map();
@@ -176,7 +188,20 @@ async function getSchema(prisma, recordKey) {
     childTable: rosterCols.length ? toTable(recordKey) + '_row' : null,
     topCols,
     rosterCols,
+    blockCompletedBy: false,
   };
+  // form-record pages carry the COMPLETED BY block. When the record has no completedBy field of
+  // its own, fill the table's completedBy column from the block -- but only if the column exists
+  // (checked once per record), so a table without it can never break the sync.
+  if (def.engine === 'form-record' && !topCols.some((c) => c.col === 'completedBy')) {
+    try {
+      const rows = await prisma.$queryRawUnsafe(
+        `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = 'completedBy' LIMIT 1`,
+        schema.table
+      );
+      schema.blockCompletedBy = Array.isArray(rows) && rows.length > 0;
+    } catch { schema.blockCompletedBy = false; }
+  }
   schemaCache.set(recordKey, schema);
   return schema;
 }
@@ -227,6 +252,11 @@ async function syncSubmissionRows(prisma, key, value) {
       const v = values[fk];
       cols.push(`"${col}"`);
       params.push(coerce(v, kind, recordKey, fk));
+    }
+
+    if (schema.blockCompletedBy) {
+      cols.push('"completedBy"');
+      params.push(completedByText(entry, values));
     }
 
     const placeholders = params.map((_, i) => `$${i + 1}`).join(', ');
