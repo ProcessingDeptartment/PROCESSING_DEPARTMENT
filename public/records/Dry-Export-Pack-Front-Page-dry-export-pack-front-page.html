@@ -8,9 +8,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dry Export Pack Front Page</title>
   <script src="../lib/palette-map.js"></script>
-  <link rel="stylesheet" href="../styles/record-theme.css?v=2">
+  <link rel="stylesheet" href="../styles/record-theme.css?v=3">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
-  <link rel="stylesheet" href="../styles/desktop-layout.css?v=1">
+  <link rel="stylesheet" href="../styles/desktop-layout.css?v=2">
 </head>
 <body class="rt-pc">
 <div id="frRoot"></div>
@@ -34,7 +34,7 @@
     mount: '#frRoot',
     recordKey: 'dry-export-pack-front-page'
   });
-  // Layout only: put the checklist grid in 2 columns (control | comment); styles in desktop-layout.css.
+  // Layout only: put the checklist grid in 2 columns (control | comment).
   var n = 0, t = setInterval(function () {
     var el = document.querySelector('#fr_f_labellingListAttached');
     var g = el && el.closest('.fr-grid');
