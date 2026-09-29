@@ -17,9 +17,6 @@ model Sub_dry_export_pack_front_page {
   jobNo                    String?
   packingDate              DateTime? @db.Date
   noOfBoxesExported        Float?
-  completedBySupervisor    String?
-  checkedByQC              String?
-  verificationBy           String?
   rec745Attached           String?
   rec746Attached           String?
   rec747Attached           String?
@@ -28,6 +25,7 @@ model Sub_dry_export_pack_front_page {
   rec7410Attached          String?
   salesPackingListAttached String?
   healthCertificatesAttached String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_dry_export_pack_front_page_jobNo_idx")
   @@map("sub_dry_export_pack_front_page")
@@ -184,8 +182,7 @@ model Sub_production_information_nrcs {
   productionCode           String?
   nrcsAgCode               String?
   productDescription       String?
-  checkedByQC              String?
-  verificationBy           String?
+  completedBy              String?
 
   rows Sub_production_information_nrcs_Row[]
 
@@ -227,8 +224,7 @@ model Sub_dry_nrcs_packs {
   jobNumberProductionDate  String?
   nrcsAgCode               String?
   productDescription       String?
-  checkedByQC              String?
-  verificationBy           String?
+  completedBy              String?
 
   rows Sub_dry_nrcs_packs_Row[]
 
@@ -265,8 +261,7 @@ model Sub_production_information_nrcs_rework {
   nrcsAgCode               String?
   productDescription       String?
   reasonsForRework         String?
-  checkedByQC              String?
-  verificationBy           String?
+  completedBy              String?
 
   rows Sub_production_information_nrcs_rework_Row[]
 
@@ -534,8 +529,7 @@ model Sub_salting_and_tumbling {
   harvestFarm              String?
   date                     DateTime? @db.Date
   processingFor            String?
-  qualityController        String?
-  processDeviation         String?
+  completedBy              String?
 
   rows Sub_salting_and_tumbling_Row[]
 
@@ -616,8 +610,7 @@ model Sub_washing_control_sheet {
   inSpec      Boolean?
 
   jobNo                    String?
-  qcOnline                 String?
-  processDeviation         String?
+  completedBy              String?
 
   rows Sub_washing_control_sheet_Row[]
 
@@ -658,10 +651,7 @@ model Sub_salting_oosw {
   intakeDate               DateTime? @db.Date
   harvestFarm              String?
   processingFor            String?
-  supervisor               String?
-  supervisorTitle          String?
-  supervisorDate           DateTime? @db.Date
-  comments                 String?
+  completedBy              String?
 
   rows Sub_salting_oosw_Row[]
 
@@ -940,7 +930,7 @@ model Sub_rework_log {
   quantityCans             Float?
   newProductionDate        DateTime? @db.Date
   quantityProduced         Float?
-  checkedByQC              String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_rework_log_jobNo_idx")
   @@map("sub_rework_log")
@@ -968,8 +958,7 @@ model Sub_product_label_checklist {
   ingredientStatementCorrect Boolean?
   allergenDeclarationComplies Boolean?
   labelCompliesApproved    Boolean?
-  receivedBy               String?
-  comments                 String?
+  completedBy              String?
 
   @@map("sub_product_label_checklist")
 }
@@ -1041,8 +1030,7 @@ model Sub_scrubbing_checklist_qc {
 
   jobNo                    String?
   date                     DateTime? @db.Date
-  processDeviation         String?
-  checkedBy                String?
+  completedBy              String?
 
   rows Sub_scrubbing_checklist_qc_Row[]
 
@@ -1143,8 +1131,7 @@ model Sub_can_packing_control_sheet {
   piecesSizes              String?
   ingoWeightSpec           Float?
   actualIngoWeight         Float?
-  qcOnline                 String?
-  processDeviation         String?
+  completedBy              String?
 
   @@map("sub_can_packing_control_sheet")
 }
@@ -1325,8 +1312,7 @@ model Sub_broth_cooking {
   ph                       Float?
   salt                     Float?
   brix                     Float?
-  cookedBy                 String?
-  comments                 String?
+  completedBy              String?
 
   @@map("sub_broth_cooking")
 }
@@ -1359,8 +1345,7 @@ model Sub_ingredient_weighing {
   brownSugarBatchCode      String?
   sherloneSauceWeight      Float?
   sherloneSauceBatchCode   String?
-  weighedBy                String?
-  comments                 String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_ingredient_weighing_jobNo_idx")
   @@index([chickenFlavourBatchCode], map: "sub_ingredient_weighing_chickenFlavourBatchCode_idx")
@@ -1453,8 +1438,7 @@ model Sub_sauce_batch_coding {
   potCode                  String?
   bucketNumber             Float?
   weightOfBucket           Float?
-  supervisor               String?
-  comments                 String?
+  completedBy              String?
 
   @@map("sub_sauce_batch_coding")
 }
@@ -1528,8 +1512,7 @@ model Sub_dry_cooking {
   sugarBatchNumber         String?
   vinegarKg                Float?
   vinegarBatchNumber       String?
-  cooker                   String?
-  comments                 String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_dry_cooking_jobNo_idx")
   @@map("sub_dry_cooking")
@@ -1682,9 +1665,7 @@ model Sub_grading_production_log_cultivated {
   comments                 String?
   actualGradedWeight       Float?
   yield                    Float?
-  nameOfGraders            String?
-  supervisor               String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_grading_production_log_cultivated_Row[]
 
@@ -1739,9 +1720,7 @@ model Sub_grading_production_log_ranched {
   comments                 String?
   actualGradedWeight       Float?
   yield                    Float?
-  nameOfGraders            String?
-  supervisor               String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_grading_production_log_ranched_Row[]
 
@@ -1783,7 +1762,7 @@ model Sub_grading_boxing_traceability {
   binCode                  String?
   sizeGrade                String?
   jobNumbersInBin          String?
-  supervisor               String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_grading_boxing_traceability_jobNo_idx")
   @@map("sub_grading_boxing_traceability")
@@ -1888,9 +1867,7 @@ model Sub_dry_labelling_list {
   airwaybillNr             String?
   etd                      DateTime? @db.Date
   nettWeight               Float?
-  salesDept                String?
-  driverFromFreightCo      String?
-  abagoldEmployee          String?
+  completedBy              String?
 
   rows Sub_dry_labelling_list_Row[]
 
@@ -2025,11 +2002,7 @@ model Sub_live_packing_bag_quality_check {
   noOfBagsToBeChecked      Float?
   waterTemperature         Float?
   totalMortalityWeight     Float?
-  additionalComments       String?
-  supervisorFarm           String?
-  supervisorProcessing     String?
-  qcProcessing             String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_live_packing_bag_quality_check_Row[]
 
@@ -2067,8 +2040,7 @@ model Sub_individual_abalone_weight_checks {
 
   date                     DateTime? @db.Date
   shift                    String?
-  checkedByQC              String?
-  qaVerification           String?
+  completedBy              String?
 
   rows Sub_individual_abalone_weight_checks_Row[]
 
@@ -2128,8 +2100,7 @@ model Sub_production_areas_cleaning_record {
 
   date                     DateTime? @db.Date
   shift                    String?
-  inspectedBy              String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_production_areas_cleaning_record_Row[]
 
@@ -2164,8 +2135,7 @@ model Sub_live_product_areas_cleaning_record {
 
   date                     DateTime? @db.Date
   shift                    String?
-  inspectedBy              String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_live_product_areas_cleaning_record_Row[]
 
@@ -2200,8 +2170,7 @@ model Sub_personnel_facilities_cleaning_record {
 
   date                     DateTime? @db.Date
   shift                    String?
-  inspectedBy              String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_personnel_facilities_cleaning_record_Row[]
 
@@ -2304,8 +2273,7 @@ model Sub_weekly_cleaning_record {
   inSpec      Boolean?
 
   weekOf                   DateTime? @db.Date
-  checkedBy                String?
-  supervisor               String?
+  completedBy              String?
 
   rows Sub_weekly_cleaning_record_Row[]
 
@@ -2485,8 +2453,7 @@ model Sub_pest_inspection_record {
   birdDroppingsCorrectiveAction String?
   baitStationsObstructed   Boolean?
   baitStationsCorrectiveAction String?
-  inspectedBy              String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_pest_inspection_record_Row[]
 
@@ -2524,7 +2491,7 @@ model Sub_staff_hygiene_inspection_weekends {
   inSpec      Boolean?
 
   date                     DateTime? @db.Date
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_staff_hygiene_inspection_weekends_Row[]
 
@@ -2565,7 +2532,7 @@ model Sub_staff_hygiene_inspection {
 
   weekStarting             DateTime? @db.Date
   shift                    String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_staff_hygiene_inspection_Row[]
 
@@ -2636,9 +2603,7 @@ model Sub_daily_equipment_checklist {
   inSpec      Boolean?
 
   weekOf                   DateTime? @db.Date
-  checkedBy                String?
-  deviations               String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_daily_equipment_checklist_Row[]
 
@@ -2671,8 +2636,7 @@ model Sub_glass_plastic_equipment_inspection {
   inSpec      Boolean?
 
   weekOf                   DateTime? @db.Date
-  inspectorInitials        String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_glass_plastic_equipment_inspection_Row[]
 
@@ -2766,9 +2730,7 @@ model Sub_utensil_issue_record {
 
   date                     DateTime? @db.Date
   shift                    String?
-  correctiveActionComment  String?
-  checkedBy                String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_utensil_issue_record_Row[]
 
@@ -2804,7 +2766,7 @@ model Sub_safety_glass_register {
 
   weekStarting             DateTime? @db.Date
   shift                    String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_safety_glass_register_Row[]
 
@@ -2842,7 +2804,7 @@ model Sub_goggles_register {
 
   weekStarting             DateTime? @db.Date
   shift                    String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_goggles_register_Row[]
 
@@ -2879,7 +2841,7 @@ model Sub_knife_register {
 
   weekStarting             DateTime? @db.Date
   shift                    String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_knife_register_Row[]
 
@@ -3109,8 +3071,7 @@ model Sub_factory_maintenance_inspection {
 
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
-  checkedBy                String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_factory_maintenance_inspection_Row[]
 
@@ -3143,8 +3104,7 @@ model Sub_equipment_checklist_roof {
   inSpec      Boolean?
 
   date                     DateTime? @db.Date
-  checkedBy                String?
-  verifiedBy               String?
+  completedBy              String?
 
   rows Sub_equipment_checklist_roof_Row[]
 
@@ -4019,14 +3979,7 @@ model Sub_supplier_questionnaire {
   auditingCarriedOut       String?
   liabilityInsurance       String?
   otherFoodSafetyControls  String?
-  completedByName          String?
-  completedByPosition      String?
-  completedByPhone         String?
-  completedByDate          DateTime? @db.Date
-  sqaApprovalName          String?
-  sqaApprovalPosition      String?
-  sqaApprovalDate          DateTime? @db.Date
-  provisionalApproval      String?
+  completedBy              String?
 
   @@map("sub_supplier_questionnaire")
 }
@@ -4138,9 +4091,7 @@ model Sub_emergency_evacuation_attendance_register {
   typeOfDrill              String?
   timeStarted              DateTime? @db.Time
   timeEnded                DateTime? @db.Time
-  notesComments            String?
-  safetyOfficer            String?
-  management               String?
+  completedBy              String?
 
   rows Sub_emergency_evacuation_attendance_register_Row[]
 
@@ -4193,9 +4144,6 @@ model Sub_handling_of_emergencies_and_incidences {
   ppeChangedAfterEvacuation Boolean?
   ppeChangedComments       String?
   completedBy              String?
-  completedDate            DateTime? @db.Date
-  verifiedBy               String?
-  verifiedDate             DateTime? @db.Date
 
   @@map("sub_handling_of_emergencies_and_incidences")
 }

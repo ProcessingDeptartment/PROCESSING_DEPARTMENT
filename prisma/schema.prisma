@@ -287,17 +287,18 @@ model Sub_dry_export_pack_front_page {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo                      String?
-  packingDate                DateTime? @db.Date
-  noOfBoxesExported          Float?
-  rec747Attached             String?
-  rec748Attached             String?
-  rec749Attached             String?
-  signedPackingListsAttached Boolean?
-  healthCertificatesAttached Boolean?
-  completedBySupervisor      String?
-  checkedByQC                String?
-  verificationBy             String?
+  jobNo                    String?
+  packingDate              DateTime? @db.Date
+  noOfBoxesExported        Float?
+  rec745Attached           String?
+  rec746Attached           String?
+  rec747Attached           String?
+  rec748Attached           String?
+  rec749Attached           String?
+  rec7410Attached          String?
+  salesPackingListAttached String?
+  healthCertificatesAttached String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_dry_export_pack_front_page_jobNo_idx")
   @@map("sub_dry_export_pack_front_page")
@@ -449,13 +450,12 @@ model Sub_production_information_nrcs {
   inSpec      Boolean?
 
   jobNo                    String?
-  receivingDate      DateTime? @db.Date
-  dateOfInspection   DateTime? @db.Date
-  productionCode     String?
-  nrcsAgCode         String?
-  productDescription String?
-  checkedByQC        String?
-  verificationBy     String?
+  receivingDate            DateTime? @db.Date
+  dateOfInspection         DateTime? @db.Date
+  productionCode           String?
+  nrcsAgCode               String?
+  productDescription       String?
+  completedBy              String?
 
   rows Sub_production_information_nrcs_Row[]
 
@@ -491,14 +491,13 @@ model Sub_dry_nrcs_packs {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo                   String?
-  receivingDate           DateTime? @db.Date
-  dateOfInspection        DateTime? @db.Date
-  jobNumberProductionDate String?
-  nrcsAgCode              String?
-  productDescription      String?
-  checkedByQC             String?
-  verificationBy          String?
+  jobNo                    String?
+  receivingDate            DateTime? @db.Date
+  dateOfInspection         DateTime? @db.Date
+  jobNumberProductionDate  String?
+  nrcsAgCode               String?
+  productDescription       String?
+  completedBy              String?
 
   rows Sub_dry_nrcs_packs_Row[]
 
@@ -529,14 +528,13 @@ model Sub_production_information_nrcs_rework {
   rawJson     String?
   inSpec      Boolean?
 
-  reworkDate         DateTime? @db.Date
-  dateOfInspection   DateTime? @db.Date
-  productionCode     String?
-  nrcsAgCode         String?
-  productDescription String?
-  reasonsForRework   String?
-  checkedByQC        String?
-  verificationBy     String?
+  reworkDate               DateTime? @db.Date
+  dateOfInspection         DateTime? @db.Date
+  productionCode           String?
+  nrcsAgCode               String?
+  productDescription       String?
+  reasonsForRework         String?
+  completedBy              String?
 
   rows Sub_production_information_nrcs_rework_Row[]
 
@@ -799,13 +797,12 @@ model Sub_salting_and_tumbling {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo             String?
-  intakeDate        DateTime? @db.Date
-  harvestFarm       String?
-  date              DateTime? @db.Date
-  processingFor     String?
-  qualityController String?
-  processDeviation  String?
+  jobNo                    String?
+  intakeDate               DateTime? @db.Date
+  harvestFarm              String?
+  date                     DateTime? @db.Date
+  processingFor            String?
+  completedBy              String?
 
   rows Sub_salting_and_tumbling_Row[]
 
@@ -885,9 +882,8 @@ model Sub_washing_control_sheet {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo            String?
-  qcOnline         String?
-  processDeviation String?
+  jobNo                    String?
+  completedBy              String?
 
   rows Sub_washing_control_sheet_Row[]
 
@@ -924,14 +920,11 @@ model Sub_salting_oosw {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo           String?
-  intakeDate      DateTime? @db.Date
-  harvestFarm     String?
-  processingFor   String?
-  supervisor      String?
-  supervisorTitle String?
-  supervisorDate  DateTime? @db.Date
-  comments        String?
+  jobNo                    String?
+  intakeDate               DateTime? @db.Date
+  harvestFarm              String?
+  processingFor            String?
+  completedBy              String?
 
   rows Sub_salting_oosw_Row[]
 
@@ -1201,16 +1194,16 @@ model Sub_rework_log {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo                            String?
-  date                             DateTime? @db.Date
-  reasonForRework                  String?
-  reworkApprovalBy                 String?
-  productDescriptionDw             String?
+  jobNo                    String?
+  date                     DateTime? @db.Date
+  reasonForRework          String?
+  reworkApprovalBy         String?
+  productDescriptionDw     String?
   productionDateOrFg01TransferDate DateTime? @db.Date
-  quantityCans                     Float?
-  newProductionDate                DateTime? @db.Date
-  quantityProduced                 Float?
-  checkedByQC                      String?
+  quantityCans             Float?
+  newProductionDate        DateTime? @db.Date
+  quantityProduced         Float?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_rework_log_jobNo_idx")
   @@map("sub_rework_log")
@@ -1226,20 +1219,19 @@ model Sub_product_label_checklist {
   rawJson     String?
   inSpec      Boolean?
 
-  date                        DateTime? @db.Date
-  supplier                    String?
-  labelDescription            String?
-  labelVersion                String?
-  quantityOrdered             Float?
-  quantityReceived            Float?
+  date                     DateTime? @db.Date
+  supplier                 String?
+  labelDescription         String?
+  labelVersion             String?
+  quantityOrdered          Float?
+  quantityReceived         Float?
   generalConditionAtReceiving Boolean?
-  labelDimensionsCorrect      Boolean?
-  artworkCorrect              Boolean?
-  ingredientStatementCorrect  Boolean?
+  labelDimensionsCorrect   Boolean?
+  artworkCorrect           Boolean?
+  ingredientStatementCorrect Boolean?
   allergenDeclarationComplies Boolean?
-  labelCompliesApproved       Boolean?
-  receivedBy                  String?
-  comments                    String?
+  labelCompliesApproved    Boolean?
+  completedBy              String?
 
   @@map("sub_product_label_checklist")
 }
@@ -1309,10 +1301,9 @@ model Sub_scrubbing_checklist_qc {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo            String?
-  date             DateTime? @db.Date
-  processDeviation String?
-  checkedBy        String?
+  jobNo                    String?
+  date                     DateTime? @db.Date
+  completedBy              String?
 
   rows Sub_scrubbing_checklist_qc_Row[]
 
@@ -1405,16 +1396,15 @@ model Sub_can_packing_control_sheet {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo            String?
-  date             DateTime? @db.Date
-  time             String?
-  sizeRange        String?
-  qualityOfAbalone String?
-  piecesSizes      String?
-  ingoWeightSpec   Float?
-  actualIngoWeight Float?
-  qcOnline         String?
-  processDeviation String?
+  jobNo                    String?
+  date                     DateTime? @db.Date
+  time                     DateTime? @db.Time
+  sizeRange                String?
+  qualityOfAbalone         String?
+  piecesSizes              String?
+  ingoWeightSpec           Float?
+  actualIngoWeight         Float?
+  completedBy              String?
 
   @@map("sub_can_packing_control_sheet")
 }
@@ -1584,19 +1574,18 @@ model Sub_broth_cooking {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo                   String?
-  date                    DateTime? @db.Date
-  potNo                   String?
-  waterLitres             Float?
-  abaloneShellsIntakeDate DateTime? @db.Date
-  driedKelpWeight         Float?
-  scallopJuiceWeight      Float?
-  finalBrothLitres        Float?
-  ph                      Float?
-  salt                    Float?
-  brix                    Float?
-  cookedBy                String?
-  comments                String?
+  jobNo                    String?
+  date                     DateTime? @db.Date
+  potNo                    String?
+  waterLitres              Float?
+  abaloneShellsIntakeDate  DateTime? @db.Date
+  driedKelpWeight          Float?
+  scallopJuiceWeight       Float?
+  finalBrothLitres         Float?
+  ph                       Float?
+  salt                     Float?
+  brix                     Float?
+  completedBy              String?
 
   @@map("sub_broth_cooking")
 }
@@ -1611,26 +1600,25 @@ model Sub_ingredient_weighing {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo                   String?
-  date                    DateTime? @db.Date
-  chickenFlavourWeight    Float?
-  chickenFlavourBatchCode String?
-  vegetableBaseWeight     Float?
-  vegetableBaseBatchCode  String?
-  gelatineWeight          Float?
-  gelatineBatchCode       String?
-  xanthanGumWeight        Float?
-  xanthanGumBatchCode     String?
-  maltSugarWeight         Float?
-  maltSugarBatchCode      String?
-  tapiocaStarchWeight     Float?
-  tapiocaStarchBatchCode  String?
-  brownSugarWeight        Float?
-  brownSugarBatchCode     String?
-  sherloneSauceWeight     Float?
-  sherloneSauceBatchCode  String?
-  weighedBy               String?
-  comments                String?
+  jobNo                    String?
+  date                     DateTime? @db.Date
+  chickenFlavourWeight     Float?
+  chickenFlavourBatchCode  String?
+  vegetableBaseWeight      Float?
+  vegetableBaseBatchCode   String?
+  gelatineWeight           Float?
+  gelatineBatchCode        String?
+  xanthanGumWeight         Float?
+  xanthanGumBatchCode      String?
+  maltSugarWeight          Float?
+  maltSugarBatchCode       String?
+  tapiocaStarchWeight      Float?
+  tapiocaStarchBatchCode   String?
+  brownSugarWeight         Float?
+  brownSugarBatchCode      String?
+  sherloneSauceWeight      Float?
+  sherloneSauceBatchCode   String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_ingredient_weighing_jobNo_idx")
   @@index([chickenFlavourBatchCode], map: "sub_ingredient_weighing_chickenFlavourBatchCode_idx")
@@ -1719,12 +1707,11 @@ model Sub_sauce_batch_coding {
   rawJson     String?
   inSpec      Boolean?
 
-  dateOfMix      DateTime? @db.Date
-  potCode        String?
-  bucketNumber   Float?
-  weightOfBucket Float?
-  supervisor     String?
-  comments       String?
+  dateOfMix                DateTime? @db.Date
+  potCode                  String?
+  bucketNumber             Float?
+  weightOfBucket           Float?
+  completedBy              String?
 
   @@map("sub_sauce_batch_coding")
 }
@@ -1772,34 +1759,33 @@ model Sub_dry_cooking {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo              String?
-  harvestFarm        String?
-  intakeDate         DateTime? @db.Date
-  cookingDate        DateTime? @db.Date
-  potNumber          String?
-  abaloneKg          Float?
-  blanchSeaWater     Float?
-  blanchPh           Float?
-  blanchSaltKg       Float?
-  blanchTemp         Float?
-  cookingTime        String?
-  blanchBatchNumber  String?
-  startTime          String?
-  startingTemp       Float?
-  temp20MinAfter     Float?
-  endOfCookingTemp   Float?
-  timeOut            String?
-  totalCookingTime   String?
-  cookSeaWater       Float?
-  cookPh             Float?
-  saltKg             Float?
-  saltBatchNumber    String?
-  sugarKg            Float?
-  sugarBatchNumber   String?
-  vinegarKg          Float?
-  vinegarBatchNumber String?
-  cooker             String?
-  comments           String?
+  jobNo                    String?
+  harvestFarm              String?
+  intakeDate               DateTime? @db.Date
+  cookingDate              DateTime? @db.Date
+  potNumber                String?
+  abaloneKg                Float?
+  blanchSeaWater           Float?
+  blanchPh                 Float?
+  blanchSaltKg             Float?
+  blanchTemp               Float?
+  cookingTime              String?
+  blanchBatchNumber        String?
+  startTime                DateTime? @db.Time
+  startingTemp             Float?
+  temp20MinAfter           Float?
+  endOfCookingTemp         Float?
+  timeOut                  DateTime? @db.Time
+  totalCookingTime         String?
+  cookSeaWater             Float?
+  cookPh                   Float?
+  saltKg                   Float?
+  saltBatchNumber          String?
+  sugarKg                  Float?
+  sugarBatchNumber         String?
+  vinegarKg                Float?
+  vinegarBatchNumber       String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_dry_cooking_jobNo_idx")
   @@map("sub_dry_cooking")
@@ -1928,35 +1914,33 @@ model Sub_grading_production_log_cultivated {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo               String?
-  intakeDate          DateTime? @db.Date
-  driedWeightReceived Float?
-  actualDriedWeight   Float?
-  dateIntoGradingRoom DateTime? @db.Date
-  gradingDate         DateTime? @db.Date
-  under8g             Float?
-  g8to10              Float?
-  g11to13             Float?
-  g14to16             Float?
-  g17to20             Float?
-  g21to23             Float?
-  g24to25             Float?
-  g26to28             Float?
-  g29to31             Float?
-  g32to35             Float?
-  g36to39             Float?
-  g40to44             Float?
-  g45to50             Float?
-  g51to55             Float?
-  g56to60             Float?
-  g60plus             Float?
-  bGrade              Float?
-  comments            String?
-  actualGradedWeight  Float?
-  yield               Float?
-  nameOfGraders       String?
-  supervisor          String?
-  verifiedBy          String?
+  jobNo                    String?
+  intakeDate               DateTime? @db.Date
+  driedWeightReceived      Float?
+  actualDriedWeight        Float?
+  dateIntoGradingRoom      DateTime? @db.Date
+  gradingDate              DateTime? @db.Date
+  under8g                  Float?
+  g8to10                   Float?
+  g11to13                  Float?
+  g14to16                  Float?
+  g17to20                  Float?
+  g21to23                  Float?
+  g24to25                  Float?
+  g26to28                  Float?
+  g29to31                  Float?
+  g32to35                  Float?
+  g36to39                  Float?
+  g40to44                  Float?
+  g45to50                  Float?
+  g51to55                  Float?
+  g56to60                  Float?
+  g60plus                  Float?
+  bGrade                   Float?
+  comments                 String?
+  actualGradedWeight       Float?
+  yield                    Float?
+  completedBy              String?
 
   rows Sub_grading_production_log_cultivated_Row[]
 
@@ -1993,27 +1977,25 @@ model Sub_grading_production_log_ranched {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo               String?
-  intakeDate          DateTime? @db.Date
-  driedWeightReceived Float?
-  actualDriedWeight   Float?
-  dateIntoGradingRoom DateTime? @db.Date
-  gradingDate         DateTime? @db.Date
-  under50g            Float?
-  g51to80             Float?
-  g81to100            Float?
-  g101to150           Float?
-  g151to200           Float?
-  g200plus            Float?
-  darkUnder100g       Float?
-  dark100gPlus        Float?
-  bGrade              Float?
-  comments            String?
-  actualGradedWeight  Float?
-  yield               Float?
-  nameOfGraders       String?
-  supervisor          String?
-  verifiedBy          String?
+  jobNo                    String?
+  intakeDate               DateTime? @db.Date
+  driedWeightReceived      Float?
+  actualDriedWeight        Float?
+  dateIntoGradingRoom      DateTime? @db.Date
+  gradingDate              DateTime? @db.Date
+  under50g                 Float?
+  g51to80                  Float?
+  g81to100                 Float?
+  g101to150                Float?
+  g151to200                Float?
+  g200plus                 Float?
+  darkUnder100g            Float?
+  dark100gPlus             Float?
+  bGrade                   Float?
+  comments                 String?
+  actualGradedWeight       Float?
+  yield                    Float?
+  completedBy              String?
 
   rows Sub_grading_production_log_ranched_Row[]
 
@@ -2050,12 +2032,12 @@ model Sub_grading_boxing_traceability {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo           String?
-  dateCreated     DateTime? @db.Date
-  binCode         String?
-  sizeGrade       String?
-  jobNumbersInBin String?
-  supervisor      String?
+  jobNo                    String?
+  dateCreated              DateTime? @db.Date
+  binCode                  String?
+  sizeGrade                String?
+  jobNumbersInBin          String?
+  completedBy              String?
 
   @@index([jobNo], map: "sub_grading_boxing_traceability_jobNo_idx")
   @@map("sub_grading_boxing_traceability")
@@ -2152,15 +2134,13 @@ model Sub_dry_labelling_list {
   rawJson     String?
   inSpec      Boolean?
 
-  customer            String?
-  flight              String?
-  address             String?
-  airwaybillNr        String?
-  etd                 DateTime? @db.Date
-  nettWeight          Float?
-  salesDept           String?
-  driverFromFreightCo String?
-  abagoldEmployee     String?
+  customer                 String?
+  flight                   String?
+  address                  String?
+  airwaybillNr             String?
+  etd                      DateTime? @db.Date
+  nettWeight               Float?
+  completedBy              String?
 
   rows Sub_dry_labelling_list_Row[]
 
@@ -2286,17 +2266,13 @@ model Sub_live_packing_bag_quality_check {
   rawJson     String?
   inSpec      Boolean?
 
-  dateOfChecking       DateTime? @db.Date
-  dateOfPacking        DateTime? @db.Date
-  noOfBagsScheduled    Float?
-  noOfBagsToBeChecked  Float?
-  waterTemperature     Float?
-  totalMortalityWeight Float?
-  additionalComments   String?
-  supervisorFarm       String?
-  supervisorProcessing String?
-  qcProcessing         String?
-  verifiedBy           String?
+  dateOfChecking           DateTime? @db.Date
+  dateOfPacking            DateTime? @db.Date
+  noOfBagsScheduled        Float?
+  noOfBagsToBeChecked      Float?
+  waterTemperature         Float?
+  totalMortalityWeight     Float?
+  completedBy              String?
 
   rows Sub_live_packing_bag_quality_check_Row[]
 
@@ -2332,10 +2308,9 @@ model Sub_individual_abalone_weight_checks {
   rawJson     String?
   inSpec      Boolean?
 
-  date           DateTime? @db.Date
-  shift          String?
-  checkedByQC    String?
-  qaVerification String?
+  date                     DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_individual_abalone_weight_checks_Row[]
 
@@ -2393,10 +2368,9 @@ model Sub_production_areas_cleaning_record {
   rawJson     String?
   inSpec      Boolean?
 
-  date        DateTime? @db.Date
-  shift       String?
-  inspectedBy String?
-  verifiedBy  String?
+  date                     DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_production_areas_cleaning_record_Row[]
 
@@ -2429,10 +2403,9 @@ model Sub_live_product_areas_cleaning_record {
   rawJson     String?
   inSpec      Boolean?
 
-  date        DateTime? @db.Date
-  shift       String?
-  inspectedBy String?
-  verifiedBy  String?
+  date                     DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_live_product_areas_cleaning_record_Row[]
 
@@ -2465,10 +2438,9 @@ model Sub_personnel_facilities_cleaning_record {
   rawJson     String?
   inSpec      Boolean?
 
-  date        DateTime? @db.Date
-  shift       String?
-  inspectedBy String?
-  verifiedBy  String?
+  date                     DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_personnel_facilities_cleaning_record_Row[]
 
@@ -2570,9 +2542,8 @@ model Sub_weekly_cleaning_record {
   rawJson     String?
   inSpec      Boolean?
 
-  weekOf     DateTime? @db.Date
-  checkedBy  String?
-  supervisor String?
+  weekOf                   DateTime? @db.Date
+  completedBy              String?
 
   rows Sub_weekly_cleaning_record_Row[]
 
@@ -2747,13 +2718,12 @@ model Sub_pest_inspection_record {
   rawJson     String?
   inSpec      Boolean?
 
-  date                          DateTime? @db.Date
-  birdDroppingsSeen             Boolean?
+  date                     DateTime? @db.Date
+  birdDroppingsSeen        Boolean?
   birdDroppingsCorrectiveAction String?
-  baitStationsObstructed        Boolean?
-  baitStationsCorrectiveAction  String?
-  inspectedBy                   String?
-  verifiedBy                    String?
+  baitStationsObstructed   Boolean?
+  baitStationsCorrectiveAction String?
+  completedBy              String?
 
   rows Sub_pest_inspection_record_Row[]
 
@@ -2790,8 +2760,8 @@ model Sub_staff_hygiene_inspection_weekends {
   rawJson     String?
   inSpec      Boolean?
 
-  date       DateTime? @db.Date
-  verifiedBy String?
+  date                     DateTime? @db.Date
+  completedBy              String?
 
   rows Sub_staff_hygiene_inspection_weekends_Row[]
 
@@ -2830,9 +2800,9 @@ model Sub_staff_hygiene_inspection {
   rawJson     String?
   inSpec      Boolean?
 
-  weekStarting DateTime? @db.Date
-  shift        String?
-  verifiedBy   String?
+  weekStarting             DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_staff_hygiene_inspection_Row[]
 
@@ -2902,10 +2872,8 @@ model Sub_daily_equipment_checklist {
   rawJson     String?
   inSpec      Boolean?
 
-  weekOf     DateTime? @db.Date
-  checkedBy  String?
-  deviations String?
-  verifiedBy String?
+  weekOf                   DateTime? @db.Date
+  completedBy              String?
 
   rows Sub_daily_equipment_checklist_Row[]
 
@@ -2937,9 +2905,8 @@ model Sub_glass_plastic_equipment_inspection {
   rawJson     String?
   inSpec      Boolean?
 
-  weekOf            DateTime? @db.Date
-  inspectorInitials String?
-  verifiedBy        String?
+  weekOf                   DateTime? @db.Date
+  completedBy              String?
 
   rows Sub_glass_plastic_equipment_inspection_Row[]
 
@@ -3031,11 +2998,9 @@ model Sub_utensil_issue_record {
   rawJson     String?
   inSpec      Boolean?
 
-  date                    DateTime? @db.Date
-  shift                   String?
-  correctiveActionComment String?
-  checkedBy               String?
-  verifiedBy              String?
+  date                     DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_utensil_issue_record_Row[]
 
@@ -3069,9 +3034,9 @@ model Sub_safety_glass_register {
   rawJson     String?
   inSpec      Boolean?
 
-  weekStarting DateTime? @db.Date
-  shift        String?
-  verifiedBy   String?
+  weekStarting             DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_safety_glass_register_Row[]
 
@@ -3107,9 +3072,9 @@ model Sub_goggles_register {
   rawJson     String?
   inSpec      Boolean?
 
-  weekStarting DateTime? @db.Date
-  shift        String?
-  verifiedBy   String?
+  weekStarting             DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_goggles_register_Row[]
 
@@ -3144,9 +3109,9 @@ model Sub_knife_register {
   rawJson     String?
   inSpec      Boolean?
 
-  weekStarting DateTime? @db.Date
-  shift        String?
-  verifiedBy   String?
+  weekStarting             DateTime? @db.Date
+  shift                    String?
+  completedBy              String?
 
   rows Sub_knife_register_Row[]
 
@@ -3374,10 +3339,9 @@ model Sub_factory_maintenance_inspection {
   rawJson     String?
   inSpec      Boolean?
 
-  month      DateTime? @db.Date
-  date       DateTime? @db.Date
-  checkedBy  String?
-  verifiedBy String?
+  month                    DateTime? @db.Date
+  date                     DateTime? @db.Date
+  completedBy              String?
 
   rows Sub_factory_maintenance_inspection_Row[]
 
@@ -3409,9 +3373,8 @@ model Sub_equipment_checklist_roof {
   rawJson     String?
   inSpec      Boolean?
 
-  date       DateTime? @db.Date
-  checkedBy  String?
-  verifiedBy String?
+  date                     DateTime? @db.Date
+  completedBy              String?
 
   rows Sub_equipment_checklist_roof_Row[]
 
@@ -4254,46 +4217,39 @@ model Sub_supplier_questionnaire {
   rawJson     String?
   inSpec      Boolean?
 
-  companyName                         String?
-  companyAddress                      String?
-  emergencyContactName                String?
-  emergencyContactNumbers             String?
-  productsSupplied                    String?
-  foodSafetyContact                   String?
-  accountsContact                     String?
-  productionContact                   String?
-  technicalQualityContact             String?
-  certificateOfAcceptability          Boolean?
-  facilityCertified                   Boolean?
-  certificationType                   String?
-  certificateDate                     DateTime? @db.Date
-  certificateAttached                 Boolean?
-  writtenQualityPolicy                String?
-  riskAssessmentUndertaken            String?
-  foodSafetySystem                    String?
-  cleaningProcedures                  String?
-  employeeHygieneProgram              String?
-  personnelTrainedHygiene             String?
-  pestControlProgram                  String?
-  crossContaminationControlled        String?
-  recallProgram                       String?
-  fullTraceability                    String?
-  complaintsHandlingSystem            String?
-  handlesAllergens                    String?
-  allergenControlProgram              String?
-  supplierApprovalProgram             String?
+  companyName              String?
+  companyAddress           String?
+  emergencyContactName     String?
+  emergencyContactNumbers  String?
+  productsSupplied         String?
+  foodSafetyContact        String?
+  accountsContact          String?
+  productionContact        String?
+  technicalQualityContact  String?
+  certificateOfAcceptability Boolean?
+  facilityCertified        Boolean?
+  certificationType        String?
+  certificateDate          DateTime? @db.Date
+  certificateAttached      Boolean?
+  writtenQualityPolicy     String?
+  riskAssessmentUndertaken String?
+  foodSafetySystem         String?
+  cleaningProcedures       String?
+  employeeHygieneProgram   String?
+  personnelTrainedHygiene  String?
+  pestControlProgram       String?
+  crossContaminationControlled String?
+  recallProgram            String?
+  fullTraceability         String?
+  complaintsHandlingSystem String?
+  handlesAllergens         String?
+  allergenControlProgram   String?
+  supplierApprovalProgram  String?
   manufacturingInstructionsDocumented String?
-  auditingCarriedOut                  String?
-  liabilityInsurance                  String?
-  otherFoodSafetyControls             String?
-  completedByName                     String?
-  completedByPosition                 String?
-  completedByPhone                    String?
-  completedByDate                     DateTime? @db.Date
-  sqaApprovalName                     String?
-  sqaApprovalPosition                 String?
-  sqaApprovalDate                     DateTime? @db.Date
-  provisionalApproval                 String?
+  auditingCarriedOut       String?
+  liabilityInsurance       String?
+  otherFoodSafetyControls  String?
+  completedBy              String?
 
   @@map("sub_supplier_questionnaire")
 }
@@ -4400,14 +4356,12 @@ model Sub_emergency_evacuation_attendance_register {
   rawJson     String?
   inSpec      Boolean?
 
-  date          DateTime? @db.Date
-  buildingArea  String?
-  typeOfDrill   String?
-  timeStarted   String?
-  timeEnded     String?
-  notesComments String?
-  safetyOfficer String?
-  management    String?
+  date                     DateTime? @db.Date
+  buildingArea             String?
+  typeOfDrill              String?
+  timeStarted              DateTime? @db.Time
+  timeEnded                DateTime? @db.Time
+  completedBy              String?
 
   rows Sub_emergency_evacuation_attendance_register_Row[]
 
@@ -4437,32 +4391,29 @@ model Sub_handling_of_emergencies_and_incidences {
   rawJson     String?
   inSpec      Boolean?
 
-  typeOfDrill                 String?
-  timeEvacuating              String?
-  timeReturning               String?
-  durationOfDrill             String?
-  durationComments            String?
-  durationDeviation           String?
-  chillerTempAfterDrill       String?
-  chillerTempComments         String?
-  chillerTempDeviation        String?
-  tableTempAfterDrill         String?
-  tableTempComments           String?
-  tableTempDeviation          String?
-  foreignMatterSigns          Boolean?
-  foreignMatterComments       String?
-  dryCookingWithinSpec        Boolean?
-  dryCookingComments          String?
-  retortReportWithinSpec      Boolean?
-  retortReportComments        String?
+  typeOfDrill              String?
+  timeEvacuating           DateTime? @db.Time
+  timeReturning            DateTime? @db.Time
+  durationOfDrill          String?
+  durationComments         String?
+  durationDeviation        String?
+  chillerTempAfterDrill    String?
+  chillerTempComments      String?
+  chillerTempDeviation     String?
+  tableTempAfterDrill      String?
+  tableTempComments        String?
+  tableTempDeviation       String?
+  foreignMatterSigns       Boolean?
+  foreignMatterComments    String?
+  dryCookingWithinSpec     Boolean?
+  dryCookingComments       String?
+  retortReportWithinSpec   Boolean?
+  retortReportComments     String?
   hygieneInspectionAfterDrill Boolean?
-  hygieneInspectionComments   String?
-  ppeChangedAfterEvacuation   Boolean?
-  ppeChangedComments          String?
-  completedBy                 String?
-  completedDate               DateTime? @db.Date
-  verifiedBy                  String?
-  verifiedDate                DateTime? @db.Date
+  hygieneInspectionComments String?
+  ppeChangedAfterEvacuation Boolean?
+  ppeChangedComments       String?
+  completedBy              String?
 
   @@map("sub_handling_of_emergencies_and_incidences")
 }
