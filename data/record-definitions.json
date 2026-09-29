@@ -1301,40 +1301,8 @@
         },
         {
           "title": "Attachments checklist",
-          "kind": "roster",
-          "position": 1,
-          "extraJson": {
-            "collapseRows": false,
-            "defaultRows": [
-              {
-                "recordName": "REC 7.1.2 Abalone Receiving"
-              },
-              {
-                "recordName": "REC 7.1.1 Basket Removal / Shucking / Gutting"
-              },
-              {
-                "recordName": "REC 7.1.3 Bleeding & Salting Checklist"
-              },
-              {
-                "recordName": "REC 7.1.4 Washing Control Sheet"
-              },
-              {
-                "recordName": "REC 7.8.1 Dry Chiller Batch Control"
-              },
-              {
-                "recordName": "REC 7.4.0 Dry Cooking"
-              },
-              {
-                "recordName": "REC 7.4.2 Dry Monitoring"
-              },
-              {
-                "recordName": "REC 7.4.3.1 Grading Production Log (Cultivated)"
-              },
-              {
-                "recordName": "REC 7.4.3.2 Grading Production Log (Ranched)"
-              }
-            ]
-          }
+          "kind": "fields",
+          "position": 1
         }
       ],
       "fields": [
@@ -1456,64 +1424,156 @@
           "validateJson": null
         },
         {
+          "key": "cmt712",
+          "label": "Comments — REC 7.1.2 Abalone Receiving",
+          "type": "text",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": "@roster",
+          "parentFieldKey": null,
+          "position": 6,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "key": "recordName",
-          "label": "Record",
+          "validateJson": null
+        },
+        {
+          "key": "cmt711",
+          "label": "Comments — REC 7.1.1 Basket Removal / Shucking / Gutting",
           "type": "text",
-          "position": 8
-        },
-        {
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": [
-            "Yes",
-            "No"
-          ],
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "attached",
-          "label": "Attached",
-          "type": "select",
-          "position": 9
-        },
-        {
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 1,
-          "parentFieldKey": "@roster",
+          "parentFieldKey": null,
+          "position": 7,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "key": "comments",
-          "label": "Comments",
+          "validateJson": null
+        },
+        {
+          "key": "cmt713",
+          "label": "Comments — REC 7.1.3 Bleeding & Salting Checklist",
           "type": "text",
-          "position": 10
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 8,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "cmt714",
+          "label": "Comments — REC 7.1.4 Washing Control Sheet",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 9,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "cmt781",
+          "label": "Comments — REC 7.8.1 Chiller Batch Control",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 10,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "cmt740",
+          "label": "Comments — REC 7.4.0 Dry Cooking",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 11,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "cmt742",
+          "label": "Comments — REC 7.4.2 Dry Monitoring",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 12,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "cmt743",
+          "label": "Comments — REC 7.4.3 Grading / Packing / Boxing of Dried Abalone",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 13,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
         }
       ],
       "autofills": [
