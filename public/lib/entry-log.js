@@ -28,29 +28,25 @@
   const today = () => dayKey(new Date());
 
   const STYLE = `
-  .el-panel{border:1px solid var(--palette-line,#d9d4c7);border-radius:6px;padding:10px 12px;margin-bottom:10px;background:#fff}
-  .el-muted{color:#6b665a;font-size:12px}
-  .el-stages{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
-  .el-stage{flex:1 1 130px;border:1px solid #d9d4c7;border-radius:6px;padding:6px 8px;background:#f6f4ee;color:#8a8577;font-size:12px}
-  .el-stage.reached{background:#e4f0e6;border-color:#9cc3a4;color:#2f6b3a}
-  .el-stage.current{box-shadow:0 0 0 2px #2f6b3a inset;font-weight:700}
-  .el-stage b{display:block;font-size:12.5px}
-  .el-tbl{border-collapse:collapse;width:100%;font-size:12.5px;margin:4px 0 8px}
-  .el-tbl th,.el-tbl td{border-bottom:1px solid #e6e2d6;padding:4px 6px;text-align:left}
-  .el-last{font-weight:700;margin:6px 0}
-  .el-mv{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;border-bottom:1px solid #e6e2d6;padding:6px 2px;font-size:13px}
+  /* one type scale for everything this extension draws: 16px body (matches the inputs), 13px for secondary text */
+  .el-panel{border:1px solid var(--palette-line,#d9d4c7);border-radius:6px;padding:10px 14px;margin-bottom:10px;background:#fff;font-size:16px}
+  .el-muted{color:#6b665a;font-size:13px}
+  .el-tbl{border-collapse:collapse;width:100%;font-size:15px;margin:4px 0 10px}
+  .el-tbl th{font-size:13px;color:#6b665a;font-weight:700}
+  .el-tbl th,.el-tbl td{border-bottom:1px solid #e6e2d6;padding:6px 8px;text-align:left}
+  .el-last{font-size:16px;font-weight:700;margin:8px 0}
+  .el-mv{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;border-bottom:1px solid #e6e2d6;padding:8px 2px;font-size:16px;min-height:52px}
   .el-mv.done{color:#1a5fa8}
   .el-mv.grey{color:#8a8577}
-  .el-mv-q{font-weight:600;flex:1 1 200px;margin:0}
-  .el-mv-btns{display:flex;gap:6px}
-  .el-mv-btns button{min-width:56px;min-height:32px;font-size:13px;padding:2px 10px}
-  .el-mv .el-note{flex:1 1 100%;margin:0}
+  .el-mv .el-muted{font-size:13px}
+  .el-mv-q{font-weight:600;font-size:16px;flex:1 1 220px;margin:0}
+  .el-mv-btns{display:flex;gap:8px;flex:0 0 auto}
+  .el-mv-btns button{flex:0 0 84px !important;width:84px !important;min-width:0 !important;height:44px;min-height:44px !important;font-size:16px !important;padding:0 !important}
   .el-mv-btns button.on[data-v="Yes"]{background:#1a5fa8 !important;border-color:#1a5fa8 !important;color:#fff !important;font-weight:700}
   .el-mv-btns button.on[data-v="No"]{background:#c77700 !important;border-color:#c77700 !important;color:#fff !important;font-weight:700}
-  .el-note{font-size:11.5px;margin-top:3px;color:#6b665a}
+  .el-note{font-size:13px;margin-top:4px;color:#6b665a;flex:1 1 100%}
   .el-note.warn{color:#8a5a10;font-weight:600}
   .el-note.bad{color:#b30000;font-weight:700}
-  .el-vital input{font-size:22px;font-weight:700;min-height:48px}
   .el-suggest{color:#8a8577;font-style:italic}
   .el-warn{color:#b30000;font-weight:700;margin:8px 0}
   .el-link{background:none;border:0;color:#1a5fa8;text-decoration:underline;cursor:pointer;padding:0;font:inherit}
@@ -134,7 +130,7 @@
     const r = st.steams[st.steams.length - 1];
     const info = r ? [blank(r.steamingTempC) ? '' : r.steamingTempC + ' °C', blank(r.steamingTimeMin) ? '' : r.steamingTimeMin + ' min',
       blank(r.startTime) ? '' : 'started ' + r.startTime].filter(Boolean).join(', ') : '';
-    const line = (k, v) => `<div style="margin:3px 0"><span class="el-muted" style="display:inline-block;min-width:120px">${k}</span> ${v}</div>`;
+    const line = (k, v) => `<div style="margin:4px 0"><span class="el-muted" style="display:inline-block;min-width:150px">${k}</span> ${v}</div>`;
     return '<div class="el-panel">'
       + line('Location', `${whereText(st, moves)} <span id="el_where" class="el-muted"></span>`)
       + line('Last steam', r ? esc(fmtD(r.steamDate)) : '<span class="el-muted">No steams yet</span>')
