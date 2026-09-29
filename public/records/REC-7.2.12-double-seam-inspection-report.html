@@ -440,12 +440,10 @@
       '<div class="ds-panel"><div class="ds-panel-head"><h3 id="ds_stageTitle"></h3></div><div class="ds-panel-body" id="ds_stageContent"></div></div>' +
       '<div class="ds-panel"><div class="ds-panel-head"><h3>Comments</h3></div><div class="ds-panel-body">' +
         '<textarea id="ds_comments" rows="3" style="width:100%;">' + esc(state.comments) + '</textarea></div></div>' +
-      '<div class="ds-panel"><div class="ds-panel-head"><h3>Completed by</h3></div><div class="ds-panel-body"><div class="ds-grid">' +
-        '<label class="ds-field">Completed by<input id="ds_completedBy" value="' + esc(state.completedBy) + '"></label>' +
-        '<label class="ds-field">Title<input id="ds_completedSig" value="' + esc(state.completedSig) + '"></label>' +
-        '<label class="ds-field">Date<input id="ds_completedDate" type="date" value="' + esc(state.completedDate) + '"></label>' +
-        '<label class="ds-field">Signature<input id="ds_completedBySignature" value="' + esc(state.completedBySignature) + '"></label>' +
-      '</div></div></div>';
+      '<div class="ds-panel"><div class="ds-panel-head"><h3>Completed by</h3></div><div class="ds-panel-body">' +
+        // the shared COMPLETED BY block (same markup as every other record); ids keep this page's own wiring
+        window.SignOffBlock.completedByHtml({ byId: 'ds_completedBy', titleId: 'ds_completedSig', dateId: 'ds_completedDate', signatureId: 'ds_completedBySignature', gridClass: 'ds-grid', fieldClass: 'ds-field' }) +
+      '</div></div>';
 
     // stage content
     const paintStage = () => {
@@ -481,8 +479,16 @@
     container.querySelector('#ds_comments').addEventListener('input', e => { state.comments = e.target.value; });
     SIGNOFF_KEYS.forEach(k => {
       const el = container.querySelector('#ds_' + k);
-      if (el) el.addEventListener('input', () => { state[k] = el.value; });
+      if (!el) return;
+      el.value = state[k] || '';
+      el.addEventListener('input', () => { state[k] = el.value; });
     });
+    // same as every other record: the login name is pre-filled in Title, the person types their own name
+    if (!ctx.locked && !state.completedSig) {
+      const titleEl = container.querySelector('#ds_completedSig');
+      const loginName = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
+      if (titleEl && loginName) { titleEl.value = loginName; state.completedSig = loginName; }
+    }
     container.querySelector('#ds_specSelect').addEventListener('change', e => {
       state.specProfileId = e.target.value;
       state.specVersionAtSave = null;
