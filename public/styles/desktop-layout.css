@@ -1,0 +1,9 @@
+/* desktop-layout.css
+   Standalone desktop (PC) layout rules for record pages.
+   Use: add <body class="rt-pc"> and <link rel="stylesheet" href="../styles/desktop-layout.css?v=1">
+   after record-theme.css. Page-level layout tweaks go here, never inline in the page HTML. */
+
+/* Attachments checklist: each item = control + its comment on ONE line (2 columns).
+   The page adds class "chk-2col" to the checklist grid. */
+.fr-grid.fr-grid-2.chk-2col { grid-template-columns: 1fr 1fr !important; align-items: start; }
+@media (max-width: 700px) { .fr-grid.fr-grid-2.chk-2col { grid-template-columns: 1fr !important; } }
