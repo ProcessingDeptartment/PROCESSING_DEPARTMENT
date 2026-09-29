@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dry NRCS Packs — Production Information NRCS</title>
+  <script src="../lib/palette-map.js"></script>
+  <link rel="stylesheet" href="../styles/record-theme.css?v=3">
+  <link rel="stylesheet" href="../styles/desktop-layout.css?v=2">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body class="rt-pc">
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
+<script src="../lib/api-backend.js?v=14"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/traceability.js?v=8"></script>
+<script src="../lib/signoff-block.js?v=6"></script>
+<script src="../lib/form-record.js?v=53"></script>
+<script>(function () {
+  // Definition (fields, sections, autofill...) lives in the DB and is fetched by the engine from
+  // GET /api/record-def/dry-nrcs-packs (same as the Dry Export Pack Front Page).
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'dry-nrcs-packs'
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=10"></script>
+<script>
+(function () {
+  // Attachments checklist. One row per record this pack requires. Attached = at least 1 record for that record number AND every record that exists for the job is
+  // completed (submitted, not draft). It and the linked submissions fill in automatically from the selected job number (read-only, always current);
+  // Comments is a normal form field that is saved with the submission.
+  var EXPECTED = [
+    ['cmt712', 'REC 7.1.2 Abalone Receiving', ['abalone-receiving']],
+    ['cmt711', 'REC 7.1.1 Basket Removal / Shucking / Gutting', ['basket-removal-shucking-gutting']],
+    ['cmt713', 'REC 7.1.3 Bleeding & Salting Checklist', ['salting-and-tumbling', 'bleeding-and-salting']],
+    ['cmt714', 'REC 7.1.4 Washing Control Sheet', ['washing-control-sheet']],
+    ['cmt781', 'REC 7.8.1 Chiller Batch Control', ['dry-chiller-batch-control', 'chiller-batch-control']],
+    ['cmt740', 'REC 7.4.0 Dry Cooking', ['dry-cooking']],
+    ['cmt742', 'REC 7.4.2 Dry Monitoring', ['dry-monitoring']],
+    ['cmt743', 'REC 7.4.3 Grading / Packing / Boxing of Dried Abalone', ['grading-production-log-cultivated', 'grading-production-log-ranched']]
+  ];
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var lastJob = null, panel = null, summary = null, cells = {};
+  var codes = {};
+  function loadCodes() {
+    ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (r) { if (r.recordKey) codes[r.recordKey] = String(r.docNo || '').trim(); });
+  }
+  function ensurePanel() {
+    var host = document.getElementById('fr_modalSections');
+    if (!host) return false;
+    if (panel && host.contains(panel)) return true;
+    panel = document.createElement('div');
+    lastJob = null;
+    panel.id = 'attachmentsChecklist';
+    panel.style.cssText = 'margin-top:16px';
+    var rows = EXPECTED.map(function (e) {
+      return '<tr data-k="' + e[0] + '"><td>' + esc(e[1]) + '</td><td class="ac-att"><strong>—</strong></td><td class="ac-subs"></td><td class="ac-com"></td></tr>';
+    }).join('');
+    panel.innerHTML = '<div class="fr-section-title">ATTACHMENTS CHECKLIST</div><div class="ac-summary" style="margin:8px 0"></div>' +
+      '<div class="fr-table-wrap"><table class="fr-table" style="width:100%"><thead><tr><th>Record</th><th>Attached</th><th>Submissions</th><th>Comments</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    host.appendChild(panel);
+    summary = panel.querySelector('.ac-summary');
+    cells = {};
+    EXPECTED.forEach(function (e) {
+      var tr = panel.querySelector('tr[data-k="' + e[0] + '"]');
+      cells[e[0]] = { tr: tr, att: tr.querySelector('.ac-att'), subs: tr.querySelector('.ac-subs'), com: tr.querySelector('.ac-com') };
+    });
+    return true;
+  }
+  // Move the real (saved) Comments inputs into the table and hide the engine's own copy of the section.
+  function adoptInputs() {
+    EXPECTED.forEach(function (e) {
+      var c = cells[e[0]], input = document.getElementById('fr_f_' + e[0]);
+      if (!c || !input || c.com.contains(input)) return;
+      var grid = input.closest('.fr-grid'), title = grid && grid.previousElementSibling;
+      c.com.appendChild(input);
+      input.style.width = '100%';
+      input.setAttribute('aria-label', 'Comments — ' + e[1]);
+      if (grid) grid.style.display = 'none';
+      if (title && title.classList.contains('fr-section-title')) title.style.display = 'none';
+    });
+  }
+  function badge(st) { return st === 'verified' ? 'Verified' : st === 'draft' ? 'Draft' : 'Awaiting verification'; }
+  function link(r) {
+    var txt = esc((codes[r.record_key] ? codes[r.record_key] + ' — ' : '') + (r.record_title || r.record_key)) + (r.stage ? ' [' + esc(r.stage) + ']' : '') + (r.occurred_on ? ' · ' + esc(r.occurred_on) : '') + ' · ' + badge(r.status);
+    return r.href ? '<a href="' + esc(r.href) + '" target="_blank" rel="noopener">' + txt + '</a>' : txt;
+  }
+  function counts(hits) {
+    var v = hits.filter(function (r) { return r.status === 'verified'; }).length;
+    var d = hits.filter(function (r) { return r.status === 'draft'; }).length;
+    return hits.length + ' submission' + (hits.length === 1 ? '' : 's') + ' · ' + v + ' verified' + (hits.length - v - d ? ' · ' + (hits.length - v - d) + ' awaiting verification' : '') + (d ? ' · ' + d + ' draft' : '');
+  }
+  function paintEmpty(msg) {
+    summary.innerHTML = '<span class="fr-muted">' + msg + '</span>';
+    EXPECTED.forEach(function (e) { var c = cells[e[0]]; c.att.innerHTML = '<strong>—</strong>'; c.subs.innerHTML = ''; c.tr.style.cssText = ''; });
+  }
+  async function render(jobNo) {
+    if (!ensurePanel()) return;
+    if (!jobNo) { paintEmpty('Select a job number to check which required records are attached.'); return; }
+    paintEmpty('Loading…');
+    var rows = [], failed = false;
+    try { rows = window.Traceability ? await window.Traceability.trace(jobNo) : []; } catch (e) { failed = true; }
+    if (jobNo !== lastJob) return;
+    if (failed || !window.Traceability) { paintEmpty('Could not load linked records — check your connection and re-select the job number.'); return; }
+    loadCodes();
+    var seen = {}, list = [];
+    rows.forEach(function (r) { var k = r.record_key + '|' + r.submission_id; if (!seen[k]) { seen[k] = 1; list.push(r); } });
+    list.sort(function (a, b) { return String(a.occurred_on || '').localeCompare(String(b.occurred_on || '')); });
+    var missing = [], unverified = 0;
+    EXPECTED.forEach(function (e) {
+      // Rule: at least 1 record per record number, and every record that exists for the job must be
+      // completed (submitted or verified). Any draft leaves the row incomplete.
+      var c = cells[e[0]], all = list.filter(function (r) { return e[2].indexOf(r.record_key) !== -1; });
+      var done = all.filter(function (r) { return r.status !== 'draft'; });
+      var drafts = all.length - done.length;
+      var detail = all.length === 1 ? link(all[0]) :
+        '<details' + (drafts ? ' open' : '') + '><summary>' + esc(counts(all)) + '</summary>' + all.map(function (r) { return '<div>' + link(r) + '</div>'; }).join('') + '</details>';
+      var label = e[1].split(' ').slice(0, 2).join(' ');
+      if (!all.length) {
+        missing.push(label + ' (none found)');
+        c.att.innerHTML = '<strong>No</strong>'; c.subs.innerHTML = 'Not found for this job';
+        c.tr.style.cssText = 'background:rgba(192,57,43,.10);color:#c0392b';
+        return;
+      }
+      if (drafts) {
+        missing.push(label + ' (' + done.length + ' of ' + all.length + ' completed)');
+        c.att.innerHTML = '<strong>' + (done.length ? 'Incomplete' : 'No') + '</strong> (' + done.length + ' of ' + all.length + ')';
+        c.subs.innerHTML = detail;
+        c.tr.style.cssText = 'background:rgba(192,57,43,.10);color:#c0392b';
+        return;
+      }
+      var open = done.filter(function (r) { return r.status !== 'verified'; }).length; unverified += open;
+      c.tr.style.cssText = open ? 'background:rgba(214,137,16,.10)' : '';
+      c.att.innerHTML = '<strong>Yes</strong>' + (all.length > 1 ? ' (all ' + all.length + ')' : '');
+      c.subs.innerHTML = detail;
+    });
+    summary.innerHTML = (missing.length
+      ? '<div style="padding:8px 10px;border:1px solid #c0392b;border-radius:6px;color:#c0392b;font-weight:600">Not complete for this job (' + missing.length + ' of ' + EXPECTED.length + '): ' + esc(missing.join(', ')) + '</div>'
+      : '<div style="padding:8px 10px;border:1px solid #1e8449;border-radius:6px;color:#1e8449;font-weight:600">All ' + EXPECTED.length + ' required records are attached and completed for this job</div>') +
+      (unverified ? '<div class="fr-muted" style="margin-top:4px">' + unverified + ' attached submission' + (unverified === 1 ? ' is' : 's are') + ' not yet verified (shaded amber).</div>' : '');
+  }
+  function tick() {
+    if (!ensurePanel()) return;
+    adoptInputs();
+    var el = document.getElementById('fr_f_jobNo');
+    var job = el ? String(el.value || '').trim() : '';
+    if (job !== lastJob) { lastJob = job; render(job); }
+  }
+  setInterval(tick, 800);   // job number can come from the picker, autofill or a reopened draft
+})();
+</script>
+</body>
+</html>

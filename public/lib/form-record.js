@@ -1620,10 +1620,14 @@
       if (roster.cardLayout) {
         const lines = [];
         roster.columns.forEach(c => { if (!c.hidden) (lines[c.layoutRow || 1] = lines[c.layoutRow || 1] || []).push(c); });
+        // hidden columns (e.g. a seqWithin counter) still need an input to be filled and read
+        const hiddenIn = roster.columns.filter(c => c.hidden).map(c =>
+          `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${esc(row[c.key] == null ? '' : row[c.key])}">`).join('');
         return `<div class="fr-roster-row fr-pot-card fr-bin-card" data-roster-row="${idx}">
           <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button></div>
+          ${hiddenIn}
           ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
         </div>`;
       }

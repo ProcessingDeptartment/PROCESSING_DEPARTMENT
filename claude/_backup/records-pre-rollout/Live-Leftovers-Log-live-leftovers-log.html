@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Leftovers Log</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div id="mlRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=14"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/signoff-block.js?v=6"></script>
+<script src="../lib/monitoring-log.js?v=36"></script>
+<script>(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'live-leftovers-log',
+    docCode: 'Live Leftovers Log',
+    title: 'Live Leftovers Log',
+    docRevisionStart: 1,
+    instructions: [
+      { label: 'Note', text: 'Tracks live product leftover weight by size class after packing â€” a standalone running log, separate from the per-pack leftovers fields on REC 7.5.2 Live Pack Checklist.' }
+    ],
+    entryFields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'sizeClass', label: 'Size range', type: 'select', options: ['30-40g', '40-50g', '50-60g', '60-70g', '70-90g', '90-110g', '110-150g', '150-200g', '350-500g', 'Wild'] },
+      { key: 'weight', label: 'Weight', type: 'number', unit: 'kg' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=10"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.1.1.a Internal CAR</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=14"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/signoff-block.js?v=6"></script>
+<script src="../lib/form-record.js?v=53"></script>
+<script>(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'internal-car',
+    docCode: 'REC 8.1.1.a',
+    title: 'Internal CAR',
+    docRevisionStart: 1,
+    listColumns: ['date', 'raisedBy', 'category'],
+    sections: [
+      { title: 'CAR details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true },
+        { key: 'raisedBy', label: 'Raised by', type: 'text', required: true },
+        { key: 'raisedForArea', label: 'Raised for which area', type: 'text' },
+        { key: 'category', label: 'CAR category', type: 'select', options: ['Personnel', 'Equipment', 'Production Environment', 'Production Methods', 'Quality/Food Safety'] },
+        { key: 'investigationTeam', label: 'Investigation team', type: 'text' }
+      ]},
+      { title: 'Description of non-conformance (WHAT)', fields: [
+        { key: 'where', label: 'Where did it happen?', type: 'text' },
+        { key: 'who', label: 'Who was involved?', type: 'text' },
+        { key: 'when', label: 'When did it happen?', type: 'text' },
+        { key: 'visibleTrends', label: 'Any visible trends?', type: 'textarea' },
+        { key: 'details', label: 'Details of the non-conformance', type: 'textarea', wide: true },
+        { key: 'immediateAction', label: 'Action taken right away', type: 'textarea', wide: true }
+      ]},
+      { title: 'Root cause & corrective action', fields: [
+        { key: 'rootCause', label: 'Root cause analysis (why did this happen?)', type: 'textarea', wide: true },
+        { key: 'correctiveAction', label: 'Corrective action (long term action/plan)', type: 'textarea', wide: true },
+        { key: 'verification', label: 'Verification (proof the issue is resolved)', type: 'textarea', wide: true }
+      ]},
+      { title: 'Close-out', fields: [
+        { key: 'closedBy', label: 'CAR closed out by', type: 'text' },
+        { key: 'closeDate', label: 'Close out date', type: 'date' },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' },
+        { key: 'verifiedDate', label: 'Date', type: 'date' }
+      ]}
+    ]
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=10"></script>
+</body>
+</html>

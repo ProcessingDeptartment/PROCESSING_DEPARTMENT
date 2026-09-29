@@ -1223,15 +1223,17 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 .rt-content .fr-seg-btn:active { background: var(--rt-navy-primary); color: #fff; }
 
 /* ---- Collection bin cards (REC 7.4.3.1 / 7.4.3.2, roster.cardLayout) -- the largest section of the
-   grading log, so the roomiest layout. A bin is its size grade (no bin number). Line 1 = size grade +
-   start weight check, line 2 = the weighing, with the graded weight as the headline number. ---- */
+   grading log, so the roomiest layout. The bin code counts up by itself per size grade (no bin number
+   to enter). Line 1 = which bin + start weight check, line 2 = the weighing, with the graded weight as
+   the headline number. ---- */
 .rt-content .fr-bin-card { border-left: 5px solid var(--rt-gold, #a9763a); padding: 12px 16px 14px; margin-bottom: 14px; }
 .rt-content .fr-bin-card .fr-pot-head .fr-pot-title { font-size: 19px; }
 .rt-content .fr-bin-card .fr-pot-line { margin-top: 10px; gap: 8px 14px; }
 .rt-content .fr-bin-card .fr-pot-line .fr-field { font-size: 14px; font-weight: 600; }
 .rt-content .fr-bin-card .fr-pot-line input:not([type=checkbox]):not([type=hidden]),
 .rt-content .fr-bin-card .fr-pot-line select { min-height: 48px; font-size: 18px; }
-.rt-content .fr-bin-card .fr-pot-line[data-line="0"] { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+.rt-content .fr-bin-card .fr-pot-line[data-line="0"] { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+.rt-content .fr-bin-card [data-col="binCode"] input { font-weight: 700; background: #f4f1e8; text-align: center; }
 .rt-content .fr-bin-card .fr-pot-line[data-line="1"] { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
 .rt-content .fr-bin-card [data-col="gradedWeight"] input { font-size: 24px; font-weight: 700; background: #f4f1e8; color: var(--rt-navy-primary); }
 .rt-content .fr-bin-card .fr-confirm { min-height: 48px; }
@@ -1252,3 +1254,269 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 }
 .rt-content .fr-viewer .fr-field.wide { grid-column: 1 / -1; font-size: 13px; }
 .rt-content .fr-viewer .fr-field textarea { min-height: 64px; font-size: 15px; font-weight: 400; text-align: left; }
+
+/* ========================================================================
+   TABLET UI v2  --  PILOT (2026-09-29)   see claude/tablet-ui-implementation-instructions.md
+
+   OPT-IN. Everything below except the inert :root tokens is scoped to
+   `body.rt-tablet`, which only the pilot pages set (Mortalities Log + the
+   test page pages/tablet-test.html). job-status.html and all other pages
+   that load this file are unaffected. At rollout, record-shell.js will set
+   the class for every record and the aliases in the `body.rt-tablet` rule
+   move up into :root.
+
+   Sizing sits inside ONE touch query; colour restraint applies at any width
+   once opted in. @media print is not touched: pilot chrome is hidden for
+   print at the bottom of this block.
+   ======================================================================== */
+:root {
+  --bg:#F4F1E8; --surface:#FFFFFF; --ink:#1B2330; --ink-2:#54606B;
+  --line:#E2E4E3; --field-line:#8A949C; --field-ro:#EEF1F0;
+  --chrome:#1B2330; --chrome-2:#1D2B38;
+  --action:#96652B; --action-press:#7C5222;
+  --ok:#15803D; --ok-tint:#E8F3EC;
+  --warn:#B45309; --warn-tint:#FBF0DC;
+  --fail:#A3352D; --fail-tint:#FBE8E6;
+  --info:#1D4ED8;
+  /* text ON the ok/warn tints: the brief's --ok/--warn measure 4.41 / 4.45 there, just under 4.5 */
+  --ok-ink:#116B32; --warn-ink:#8F4108;
+  --fs-title:18px; --fs-section:18px; --fs-label:15px; --fs-value:18px;
+  --fs-hint:14px; --fs-btn:17px; --fs-table:16px; --fs-th:14px;
+  --tap:48px; --tap-primary:56px; --tap-row:40px; --gap-min:8px;
+  --field-border:1.5px solid var(--field-line); --field-radius:8px;
+}
+
+/* old token names re-pointed at the new set -- pilot pages only for now */
+body.rt-tablet {
+  --rt-gold: var(--action);
+  --rt-gold-hover: var(--action-press);
+  --rt-border: var(--line);
+  --palette-primary: var(--action);
+  --palette-primary-hover: var(--action-press);
+  --palette-primary-text: #fff;
+  --palette-border: var(--line);
+  --palette-focus: var(--action);
+  --palette-ok: var(--ok); --palette-ok-bg: var(--ok-tint);
+  --palette-fail: var(--fail); --palette-fail-bg: var(--fail-tint);
+}
+
+/* ---- B: colour restraint (any width) ---------------------------------- */
+body.rt-tablet .rt-topbar { background: var(--chrome-2); }
+body.rt-tablet .rt-topbar .rt-logo { background: var(--action); }
+body.rt-tablet .rt-content .fr-btn-primary,
+body.rt-tablet .rt-content .ml-btn-primary { background: var(--action); color: #fff; box-shadow: none; }
+body.rt-tablet .rt-content .fr-btn-primary:hover,
+body.rt-tablet .rt-content .ml-btn-primary:hover,
+body.rt-tablet .rt-content .fr-btn-primary:active,
+body.rt-tablet .rt-content .ml-btn-primary:active { background: var(--action-press); }
+body.rt-tablet .rt-card--accent { border-left: 0; }
+body.rt-tablet .rt-status.is-queued { color: var(--ink-2); }
+body.rt-tablet .rt-status.is-queued::before { background: var(--ink-2); }
+/* status = colour + icon + word */
+body.rt-tablet .rt-content .fr-badge-ok::before, body.rt-tablet .rt-content .ml-badge-ok::before { content: "\2713\00a0"; }
+body.rt-tablet .rt-content .fr-badge-fail::before, body.rt-tablet .rt-content .ml-badge-fail::before { content: "\2715\00a0"; }
+body.rt-tablet .rt-content .fr-badge-ok, body.rt-tablet .rt-content .ml-badge-ok { background: var(--ok-tint); color: var(--ok-ink); }
+body.rt-tablet .rt-content .fr-badge-fail, body.rt-tablet .rt-content .ml-badge-fail { background: var(--fail-tint); color: var(--fail); }
+body.rt-tablet .rt-content .fr-provisional, body.rt-tablet .rt-content .ml-provisional { background: var(--warn-tint) !important; border-color: var(--warn) !important; }
+body.rt-tablet .rt-content .ml-notice-provisional { background: var(--warn-tint); color: var(--warn-ink); border-color: var(--warn); }
+/* input boundary = --field-line; card/table dividers stay --line */
+body.rt-tablet .rt-content .fr-field input, body.rt-tablet .rt-content .fr-field select, body.rt-tablet .rt-content .fr-field textarea,
+body.rt-tablet .rt-content .ml-field input, body.rt-tablet .rt-content .ml-field select, body.rt-tablet .rt-content .ml-field textarea {
+  border: var(--field-border); border-radius: var(--field-radius); box-shadow: none;
+}
+body.rt-tablet .rt-content .fr-field input:focus, body.rt-tablet .rt-content .fr-field select:focus, body.rt-tablet .rt-content .fr-field textarea:focus,
+body.rt-tablet .rt-content .ml-field input:focus, body.rt-tablet .rt-content .ml-field select:focus, body.rt-tablet .rt-content .ml-field textarea:focus {
+  outline: 3px solid var(--action); outline-offset: 1px; border-color: var(--action);
+}
+body.rt-tablet .rt-content input[readonly], body.rt-tablet .rt-content input:disabled,
+body.rt-tablet .rt-content .ml-field.ml-readonly-calc input:disabled { background: var(--field-ro); color: var(--ink); opacity: 1; }
+body.rt-tablet .rt-content .fr-field.invalid input, body.rt-tablet .rt-content .ml-field.invalid input { border-color: var(--fail); }
+
+/* ---- C1: one container level -- flat white section, hairline under heading ---- */
+body.rt-tablet .rt-content .ml-body, body.rt-tablet .rt-content .fr-body { gap: 24px; }
+body.rt-tablet .rt-content .fr-panel, body.rt-tablet .rt-content .ml-panel {
+  background: var(--surface); border: 0; border-radius: 0; box-shadow: none;
+}
+body.rt-tablet .rt-content .fr-panel-head, body.rt-tablet .rt-content .ml-panel-head {
+  background: var(--surface); border-radius: 0; border-bottom: 1px solid var(--line);
+}
+body.rt-tablet .rt-content .fr-roster-row { background: none; border: 0; border-radius: 0; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
+body.rt-tablet .rt-content .fr-roster-row-collapsed { padding: 12px 0; }
+
+/* ---- C7: segmented Yes/No -- selected = filled + tick ---- */
+body.rt-tablet .rt-content .ml-yesno, body.rt-tablet .rt-content .fr-yesno { border: var(--field-border); border-radius: var(--field-radius); }
+body.rt-tablet .rt-content .ml-yesno button, body.rt-tablet .rt-content .fr-yesno button {
+  background: var(--surface); color: var(--ink); border-right: 1px solid var(--field-line) !important;
+}
+body.rt-tablet .rt-content .ml-yesno button.on::before, body.rt-tablet .rt-content .fr-yesno button.on::before { content: "\2713\00a0"; }
+body.rt-tablet .rt-content .ml-yesno button.on, body.rt-tablet .rt-content .fr-yesno button.on { background: var(--chrome-2) !important; color: #fff !important; box-shadow: none !important; }
+body.rt-tablet .rt-content .ml-yesno[data-good="Yes"] button.on[data-v="Yes"], body.rt-tablet .rt-content .ml-yesno[data-good="No"] button.on[data-v="No"],
+body.rt-tablet .rt-content .ml-yesno:not([data-good]) button.on[data-v="Yes"], body.rt-tablet .rt-content .fr-yesno button.on[data-v="Yes"] { background: var(--ok) !important; color: #fff !important; }
+body.rt-tablet .rt-content .ml-yesno[data-good="Yes"] button.on[data-v="No"], body.rt-tablet .rt-content .ml-yesno[data-good="No"] button.on[data-v="Yes"],
+body.rt-tablet .rt-content .ml-yesno:not([data-good]) button.on[data-v="No"], body.rt-tablet .rt-content .fr-yesno button.on[data-v="No"] { background: var(--fail) !important; color: #fff !important; }
+
+/* ---- C4 / C5 / C6 / C12 chrome built by lib/record-chrome.js ---- */
+.rt-actionbar-fixed, .rt-savechip, .rt-wake { display: none; }
+body.rt-tablet .rt-savechip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+  font-size: 14px; font-weight: 700; color: #fff; background: rgba(255,255,255,.14); white-space: nowrap;
+}
+body.rt-tablet .rt-savechip[data-state="saved"], body.rt-tablet .rt-savechip[data-state="draft"] { background: var(--ok); }
+body.rt-tablet .rt-savechip[data-state="saving"] { background: rgba(255,255,255,.22); }
+body.rt-tablet .rt-savechip[data-state="offline"] { background: var(--warn); }
+body.rt-tablet .rt-savechip[data-state="error"] { background: var(--fail); cursor: pointer; }
+body.rt-tablet .rt-wake { display: block; position: fixed; top: var(--rt-topbar-h); left: 0; right: 0; z-index: 35; background: var(--warn-tint); color: var(--ink); border-bottom: 1px solid var(--warn); padding: 12px 24px; font-size: 16px; font-weight: 600; }
+body.rt-tablet .rt-wake[hidden] { display: none; }
+body.rt-tablet .rt-wake .rt-wake-bar { height: 4px; margin-top: 8px; background: var(--line); border-radius: 2px; overflow: hidden; position: relative; }
+body.rt-tablet .rt-wake .rt-wake-bar::after { content: ""; position: absolute; top: 0; bottom: 0; width: 35%; background: var(--warn); animation: rt-wake 1.4s ease-in-out infinite; }
+@keyframes rt-wake { 0% { left: -35%; } 100% { left: 100%; } }
+body.rt-tablet .rt-actionbar-fixed {
+  display: flex; align-items: center; gap: 12px; justify-content: flex-end;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  padding: 10px 24px calc(10px + env(safe-area-inset-bottom));
+  background: var(--surface); border-top: 1px solid var(--line);
+}
+body.rt-tablet .rt-actionbar-fixed[hidden] { display: none; }
+body.rt-tablet .rt-actionbar-fixed .rt-ab-note { margin-right: auto; font-size: 16px; font-weight: 700; color: var(--fail); background: none; border: 0; cursor: pointer; min-height: var(--tap); text-align: left; }
+body.rt-tablet .rt-actionbar-fixed .rt-ab-note[hidden] { display: none; }
+body.rt-tablet .rt-actionbar-fixed button { font-family: var(--rt-font); font-size: var(--fs-btn); font-weight: 700; border-radius: var(--field-radius); cursor: pointer; }
+body.rt-tablet .rt-actionbar-fixed .rt-ab-clear { min-height: var(--tap); padding: 0 16px; background: none; border: 0; color: var(--ink-2); }
+body.rt-tablet .rt-actionbar-fixed .rt-ab-save { min-height: var(--tap); padding: 0 22px; background: var(--surface); border: 2px solid var(--action); color: var(--action); }
+body.rt-tablet .rt-actionbar-fixed .rt-ab-submit { min-height: var(--tap-primary); padding: 0 24px; flex: 1; max-width: 320px; background: var(--action); border: 0; color: #fff; }
+body.rt-tablet .rt-actionbar-fixed button:disabled { opacity: .5; cursor: not-allowed; }
+body.rt-tablet .rt-actionbar-fixed button:focus-visible { outline: 3px solid var(--action); outline-offset: 2px; }
+/* the engine's own buttons stay in the DOM (the bar clicks them) but leave the layout */
+@media screen { body.rt-tablet .rt-content .rt-actions-proxied { display: none !important; } }
+body.rt-tablet .rt-content .fr-body, body.rt-tablet .rt-content .ml-body { padding-bottom: 96px; }
+
+/* an engine panel head whose only children are hidden (entry form title) draws nothing */
+body.rt-tablet .rt-content .ml-panel-head:not(:has(> :not([hidden]))), body.rt-tablet .rt-content .fr-panel-head:not(:has(> :not([hidden]))) { display: none; }
+
+/* ---- C11: Entries / Verification headings become 56px full-width bars ---- */
+body.rt-tablet .rt-content .rt-bar-panel > .ml-panel-head, body.rt-tablet .rt-content .rt-bar-panel > .fr-panel-head { min-height: 56px; cursor: pointer; border-bottom: 0; }
+body.rt-tablet .rt-content .rt-bar-panel > .ml-panel-head::after, body.rt-tablet .rt-content .rt-bar-panel > .fr-panel-head::after { content: "\203A"; font-size: 28px; color: var(--ink-2); transition: transform .15s; }
+body.rt-tablet .rt-content .rt-bar-panel.rt-bar-open > .ml-panel-head::after, body.rt-tablet .rt-content .rt-bar-panel.rt-bar-open > .fr-panel-head::after { transform: rotate(90deg); }
+body.rt-tablet .rt-content .rt-bar-panel > .ml-panel-head, body.rt-tablet .rt-content .rt-bar-panel > .fr-panel-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; }
+body.rt-tablet .rt-content .rt-bar-panel > .ml-panel-head .ml-reveal-btn, body.rt-tablet .rt-content .rt-bar-panel > .fr-panel-head .fr-reveal-btn { display: none; }
+body.rt-tablet .rt-content .rt-bar-panel > .ml-panel-head > span:has(> .ml-reveal-btn:only-child), body.rt-tablet .rt-content .rt-bar-panel > .fr-panel-head > span:has(> .fr-reveal-btn:only-child) { display: none; }
+body.rt-tablet .rt-content .rt-bar-panel > .ml-panel-head h2, body.rt-tablet .rt-content .rt-bar-panel > .fr-panel-head h2 { flex: 1; }
+body.rt-tablet .rt-content .rt-bar-panel { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+/* ---- A: type scale, touch targets, gaps (tablet / touch only) ---- */
+@media (pointer: coarse), (max-width: 1099px) {
+  body.rt-tablet { --rt-topbar-h: 72px; }
+  /* bespoke 7.x pages size themselves from these vars (see 1.5 above) */
+  body.rt-tablet {
+    --form-fs-root: var(--fs-label); --form-fs-input: var(--fs-value); --form-fs-button: var(--fs-btn);
+    --form-fs-small: var(--fs-hint); --form-fs-label: var(--fs-label); --form-fs-hint: var(--fs-hint); --form-fs-panel-head: var(--fs-section);
+  }
+  body.rt-tablet .rt-content .field, body.rt-tablet .rt-content label.field { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--ink-2); }
+  body.rt-tablet .rt-content .panel-head h2, body.rt-tablet .rt-content .panel-head h3 { font-size: var(--fs-section) !important; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--ink); }
+  body.rt-tablet .rt-content .hint, body.rt-tablet .rt-content .field-hint, body.rt-tablet .rt-content small { font-size: var(--fs-hint) !important; }
+  body.rt-tablet .rt-content label.field input, body.rt-tablet .rt-content label.field select, body.rt-tablet .rt-content label.field textarea,
+  body.rt-tablet .rt-content .field input:not([type=checkbox]):not([type=radio]), body.rt-tablet .rt-content .field select, body.rt-tablet .rt-content .field textarea {
+    font-size: var(--fs-value) !important; min-height: var(--tap) !important; padding: 10px 12px !important; border: var(--field-border); border-radius: var(--field-radius);
+  }
+  body.rt-tablet .rt-content .btn, body.rt-tablet .rt-content .btn-sm { font-size: var(--fs-btn) !important; font-weight: 700; min-height: var(--tap); border-radius: var(--field-radius); }
+  body.rt-tablet .rt-content table input:not([type=checkbox]):not([type=radio]), body.rt-tablet .rt-content table select { font-size: var(--fs-table) !important; min-height: var(--tap-row) !important; padding: 6px 8px !important; }
+  body.rt-tablet .rt-content table th { font-size: var(--fs-th); }
+  body.rt-tablet .rt-topbar .rt-title { font-size: var(--fs-title); }
+  body.rt-tablet .rt-topbar .rt-doc-code, body.rt-tablet .rt-topbar .rt-rev { font-size: var(--fs-hint); opacity: .85; }
+  body.rt-tablet .rt-topbar .rt-actions button, body.rt-tablet .rt-topbar .rt-wi-btn,
+  body.rt-tablet .rt-topbar .rt-actions .ml-btn, body.rt-tablet .rt-topbar .rt-actions .fr-btn { font-size: var(--fs-hint); min-height: var(--tap); }
+  body.rt-tablet .rt-topbar .rt-logo { font-size: var(--fs-hint); }
+  body.rt-tablet .rt-topbar .rt-back { width: var(--tap); height: var(--tap); }
+  body.rt-tablet .rt-wi-body .instr-item strong, body.rt-tablet .rt-wi-bubble { font-size: var(--fs-hint); }
+  body.rt-tablet .rt-wi-close { width: var(--tap); height: var(--tap); }
+
+  body.rt-tablet .rt-content { padding: 24px; gap: 24px; }
+  body.rt-tablet .rt-content .ml-app, body.rt-tablet .rt-content .fr-app { font-size: var(--fs-label); }
+
+  /* section headings: 18 / 700, sentence case */
+  body.rt-tablet .rt-content .fr-panel-head h2, body.rt-tablet .rt-content .ml-panel-head h2,
+  body.rt-tablet .rt-content .fr-section-title, body.rt-tablet .rt-content .fr-grouphead, body.rt-tablet .rt-content .ml-grouphead,
+  body.rt-tablet .rt-content .fr-section-collapsible > summary, body.rt-tablet .rt-content .ml-section-collapsible > summary,
+  body.rt-tablet .rt-content .ml-modal-inner h2, body.rt-tablet .rt-content .ml-modal-inner h3 {
+    font-size: var(--fs-section); font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--ink);
+  }
+  body.rt-tablet .rt-content .fr-section-collapsible > summary, body.rt-tablet .rt-content .ml-section-collapsible > summary { min-height: var(--tap); }
+
+  /* field labels 15 / 600, sentence case; hints 14 / 400 */
+  body.rt-tablet .rt-content .fr-field, body.rt-tablet .rt-content .ml-field, body.rt-tablet .rt-content .cr-field {
+    font-size: var(--fs-label); font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--ink-2); gap: 6px;
+  }
+  body.rt-tablet .rt-content .fr-field span.hint, body.rt-tablet .rt-content .ml-field span.hint,
+  body.rt-tablet .rt-content .fr-upload-info, body.rt-tablet .rt-content .fr-carry-hint, body.rt-tablet .rt-content .ml-fromnote,
+  body.rt-tablet .rt-content .ml-muted, body.rt-tablet .rt-content .ml-instructions .instr-item strong { font-size: var(--fs-hint); font-weight: 400; font-family: var(--rt-font); }
+  body.rt-tablet .rt-content .ml-muted { color: var(--ink-2); }
+  /* engine sets 10.5px inline on the 'Completed by' caption */
+  body.rt-tablet .rt-content .fr-muted, body.rt-tablet .rt-content .fr-muted[style] { font-size: var(--fs-hint) !important; text-transform: none !important; letter-spacing: 0 !important; color: var(--ink-2); }
+  body.rt-tablet .rt-content .rt-tally .rt-stat-label, body.rt-tablet .rt-content .rt-jobhead .rt-field-label { font-size: var(--fs-hint); text-transform: none; letter-spacing: 0; color: var(--ink-2); }
+  body.rt-tablet .rt-content .ml-muted[style] { font-size: var(--fs-hint) !important; text-transform: none !important; letter-spacing: 0 !important; }
+
+  /* inputs: 18 / 500, 48px, 1.5px --field-line. !important beats responsive.css phone rules. */
+  body.rt-tablet .rt-content .fr-field input:not([type=checkbox]):not([type=radio]):not([type=hidden]), body.rt-tablet .rt-content .fr-field select, body.rt-tablet .rt-content .fr-field textarea,
+  body.rt-tablet .rt-content .ml-field input:not([type=checkbox]):not([type=radio]):not([type=hidden]), body.rt-tablet .rt-content .ml-field select, body.rt-tablet .rt-content .ml-field textarea,
+  body.rt-tablet .rt-content .ml-filters input:not([type=checkbox]) {
+    font-size: var(--fs-value) !important; font-weight: 500; min-height: var(--tap) !important; padding: 10px 12px !important;
+  }
+  /* in-table / roster inputs: 16 / 500, 40px */
+  body.rt-tablet .rt-content table input:not([type=checkbox]):not([type=radio]), body.rt-tablet .rt-content table select, body.rt-tablet .rt-content table textarea,
+  body.rt-tablet .rt-content .fr-roster-row input:not([type=checkbox]):not([type=radio]), body.rt-tablet .rt-content .fr-roster-row select {
+    font-size: var(--fs-table) !important; font-weight: 500; min-height: var(--tap-row) !important; padding: 6px 8px !important; border: var(--field-border);
+  }
+
+  /* buttons 17 / 700, 48px; "small" buttons keep 48px tap and a 14px floor */
+  body.rt-tablet .rt-content .fr-btn, body.rt-tablet .rt-content .ml-btn, body.rt-tablet .rt-content .cr-btn {
+    font-size: var(--fs-btn); font-weight: 700; min-height: var(--tap); border-radius: var(--field-radius);
+  }
+  body.rt-tablet .rt-content .fr-btn-sm, body.rt-tablet .rt-content .ml-btn-sm { font-size: var(--fs-hint); min-height: var(--tap); padding: 10px 14px; }
+  body.rt-tablet .rt-content .ml-yesno button, body.rt-tablet .rt-content .fr-yesno button { min-height: var(--tap); font-size: var(--fs-btn); font-weight: 700; }
+  body.rt-tablet .rt-content table .fr-btn, body.rt-tablet .rt-content table .ml-btn, body.rt-tablet .rt-content table button,
+  body.rt-tablet .rt-content .fr-roster-row [data-remove-roster-row] { min-height: var(--tap-row); min-width: var(--tap-row); font-size: var(--fs-hint); }
+
+  /* tables: body 16 / 500, th 14 / 700, sentence case */
+  body.rt-tablet .rt-content table.fr-table, body.rt-tablet .rt-content table.ml-table { font-size: var(--fs-table); }
+  body.rt-tablet .rt-content table.fr-table td, body.rt-tablet .rt-content table.ml-table td { font-size: var(--fs-table); font-weight: 500; }
+  body.rt-tablet .rt-content table.fr-table th, body.rt-tablet .rt-content table.ml-table th {
+    font-size: var(--fs-th); font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--ink-2);
+  }
+  body.rt-tablet .rt-content .fr-badge, body.rt-tablet .rt-content .ml-badge { font-size: var(--fs-hint); padding: 4px 10px; }
+
+  /* checkbox / radio: 28px box inside a 48px tappable label row */
+  body.rt-tablet .rt-content input[type=checkbox], body.rt-tablet .rt-content input[type=radio] { width: 28px; height: 28px; min-height: 28px; margin: 0; flex: 0 0 auto; accent-color: var(--action); }
+  body.rt-tablet .rt-content label:has(> input[type=checkbox]), body.rt-tablet .rt-content label:has(> input[type=radio]) {
+    min-height: var(--tap); display: inline-flex; align-items: center; gap: 10px; font-size: var(--fs-label);
+  }
+
+  /* gaps: 8 min between neighbours, 16 between field groups */
+  body.rt-tablet .rt-content .fr-grid, body.rt-tablet .rt-content .ml-grid { gap: 16px 16px; }
+  body.rt-tablet .rt-content .ml-filters { gap: var(--gap-min) 12px; }
+  body.rt-tablet .rt-content .fr-actions, body.rt-tablet .rt-content .ml-actions { gap: 12px; }
+  body.rt-tablet .rt-content .fr-panel-body, body.rt-tablet .rt-content .ml-panel-body { padding: 16px 0; }
+  body.rt-tablet .rt-content .fr-panel-head, body.rt-tablet .rt-content .ml-panel-head { padding: 12px 0; min-height: var(--tap); }
+}
+@media (max-width: 700px) {
+  body.rt-tablet .rt-content { padding: 16px; }
+  body.rt-tablet .rt-actionbar-fixed { padding-left: 16px; padding-right: 16px; }
+  body.rt-tablet .rt-wake { padding: 12px 16px; }
+}
+
+/* ---- generic floor for pages that draw their own classes (customBody / bespoke) ----
+   Screen + touch only, so print is untouched. .rt-fs-floor is added by record-chrome.js to any
+   visible text under 14px; controls get the 48px (40px in tables / roster rows) minimum. */
+@media screen and (pointer: coarse), screen and (max-width: 1099px) {
+  body.rt-tablet .rt-content .rt-fs-floor { font-size: var(--fs-hint) !important; }
+  body.rt-tablet .rt-content input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not(:where(table, .fr-roster-row) *),
+  body.rt-tablet .rt-content select:not(:where(table, .fr-roster-row) *),
+  body.rt-tablet .rt-content textarea:not(:where(table, .fr-roster-row) *),
+  body.rt-tablet .rt-content button:not(:where(table, .fr-roster-row) *) { min-height: var(--tap) !important; }
+  body.rt-tablet .rt-content table input:not([type=checkbox]):not([type=radio]):not([type=hidden]), body.rt-tablet .rt-content table select,
+  body.rt-tablet .rt-content table button { min-height: var(--tap-row) !important; }
+}
+
+/* print: the pilot adds no chrome to paper */
+@media print {
+  body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }
+  body.rt-tablet .rt-actionbar-fixed, body.rt-tablet .rt-savechip, body.rt-tablet .rt-wake { display: none !important; }
+}

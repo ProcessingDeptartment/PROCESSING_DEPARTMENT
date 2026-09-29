@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.8.12 Factory Maintenance Inspection</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=14"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/signoff-block.js?v=6"></script>
+<script src="../lib/form-record.js?v=53"></script>
+<script>(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'factory-maintenance-inspection',
+    docCode: 'REC 7.8.12',
+    title: 'Factory Maintenance Inspection',
+    docRevisionStart: 7,
+    listColumns: ['month', 'date', 'checkedBy'],
+    instructions: [
+      { label: 'Work instruction', text: 'Conduct inspections at start of shift, checking that all listed areas are clean and in good, functioning condition, and that equipment/machinery is in a good state of repair and intact. Detail any non-conformance in the Comments column. Key: Y = Inspected and in order, N = Inspected but not conforming.' }
+    ],
+    sections: [
+      { title: 'Inspection details', fields: [
+        { key: 'month', label: 'Month', type: 'month', required: true },
+        { key: 'date', label: 'Date', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Equipment checks — covers Conveyors/Seamer, Washing machines/tumblers, Retort 1&2, Steamer, Boiler room, Can Drier, tanks (sea/fresh water), Compressor, Cooling system, Effluent water, Live area seawater tank, Sewage, etc.',
+      columns: [
+        { key: 'category', label: 'Category', type: 'text' },
+        { key: 'equipment', label: 'Equipment', type: 'text' },
+        { key: 'inspected', label: 'Inspected (Y/N)', type: 'select', options: ['Y', 'N'] },
+        { key: 'commentsAction', label: 'Comments / action to be taken', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=10"></script>
+</body>
+</html>

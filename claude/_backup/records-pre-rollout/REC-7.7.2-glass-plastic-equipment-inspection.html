@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.2 Glass, Plastic &amp; Equipment Inspection</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=14"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/signoff-block.js?v=6"></script>
+<script src="../lib/form-record.js?v=53"></script>
+<script>(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'glass-plastic-equipment-inspection',
+    docCode: 'REC 7.7.2',
+    title: 'Glass, Plastic & Equipment Inspection',
+    docRevisionStart: 5,
+    listColumns: ['weekOf', 'inspectorInitials'],
+    instructions: [
+      { label: 'Key', text: 'Y = Inspected and in order. N = Inspected but not conforming.' },
+      { label: 'What to check', text: 'Every morning before starting up, check light fittings, windows, temperature dial displays, extractor fan grids, wall clocks, computer screens and plastic crates. Check equipment/machinery (rollers, conveyers, racking, trolleys, tanks) is in good repair. Detail any non-conformance in Comments.' }
+    ],
+    sections: [
+      { title: 'Week', fields: [
+        { key: 'weekOf', label: 'Week of', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'inspectorInitials', label: 'Inspector initials', type: 'text', required: true },
+        { key: 'verifiedBy', label: 'Verified by', type: 'text' }
+      ]}
+    ],
+    roster: {
+      title: 'Areas checked — Sorting, Live Holding, Live Packing, Receiving, Shucking, Salting & Washing/Metal grid, Grading, Pre-cooking, Filling & Seam, Retort, Washing bay, Can Storage, Cold rooms, Dry room, Dry cooking room, Dry grading room',
+      columns: [
+        { key: 'areaChecked', label: 'Area checked', type: 'text' },
+        { key: 'day', label: 'Day', type: 'select', options: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] },
+        { key: 'glassPlastics', label: 'Glass & plastics (Y/N)', type: 'select', options: ['Y', 'N'] },
+        { key: 'equipment', label: 'Equipment (Y/N)', type: 'select', options: ['Y', 'N'] },
+        { key: 'comments', label: 'Comments', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=10"></script>
+</body>
+</html>

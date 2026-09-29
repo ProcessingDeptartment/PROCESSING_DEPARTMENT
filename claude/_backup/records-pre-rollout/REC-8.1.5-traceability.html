@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.1.5 Traceability</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=14"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/signoff-block.js?v=6"></script>
+<script src="../lib/form-record.js?v=53"></script>
+<script>(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'traceability',
+    docCode: 'REC 8.1.5',
+    title: 'Traceability Exercise',
+    docRevisionStart: 2,
+    listColumns: ['dateInitiated', 'selectedItemDescription', 'lotBatchNumber'],
+    sections: [
+      { title: 'Exercise details', fields: [
+        { key: 'dateInitiated', label: 'Date initiated', type: 'date', required: true },
+        { key: 'startTime', label: 'Start time', type: 'time' },
+        { key: 'finishTime', label: 'Finish time', type: 'time' },
+        { key: 'selectedItemDescription', label: 'Selected item description', type: 'text', required: true },
+        { key: 'itemType', label: 'Item type', type: 'select', options: ['Finished Product', 'Ingredient', 'Processing Aid', 'Packaging Material'] },
+        { key: 'lotBatchNumber', label: 'Lot/batch number', type: 'text' }
+      ]},
+      { title: 'Effectiveness of exercise', fields: [
+        { key: 'totalAmountReceivedProduced', label: 'Total amount received or produced', type: 'number' },
+        { key: 'receivingMatchesShipped', label: 'Receiving record matches amount confirmed shipped from supplier?', type: 'yesno' },
+        { key: 'amountRawWarehouse', label: 'Amount — raw warehouse storage', type: 'number' },
+        { key: 'amountOnHold', label: 'Amount — currently on hold', type: 'number' },
+        { key: 'amountInProcess', label: 'Amount — in process', type: 'number' },
+        { key: 'amountFinishedWarehouse', label: 'Amount — finished warehouse storage', type: 'number' },
+        { key: 'amountShipped', label: 'Amount — shipped', type: 'number' },
+        { key: 'percentageAccountedFor', label: 'Percentage of product accounted for', type: 'number', unit: '%' },
+        { key: 'managementSignature', label: 'Management signature', type: 'text', required: true }
+      ]}
+    ]
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=10"></script>
+</body>
+</html>

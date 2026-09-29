@@ -18897,21 +18897,45 @@
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
+          "key": "binNo",
+          "label": "Bin no.",
+          "type": "number",
+          "extraJson": {
+            "layoutRow": 1,
+            "seqWithin": "sizeGrade",
+            "hidden": true
+          },
+          "sectionIndex": 3,
+          "position": 33
+        },
+        {
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
           "key": "binCode",
           "label": "Bin code",
           "type": "text",
           "extraJson": {
             "deriveJoin": {
               "parts": [
-                "sizeGrade"
+                "sizeGrade",
+                "binNo"
               ],
               "sep": "-"
             },
-            "layoutRow": 1,
-            "hidden": true
+            "layoutRow": 1
           },
           "sectionIndex": 3,
-          "position": 34
+          "position": 35
         },
         {
           "required": false,
@@ -18931,7 +18955,7 @@
           "type": "number",
           "extraJson": {
             "carryPrev": {
-              "match": "sizeGrade",
+              "match": "binCode",
               "column": "finalBinWeight",
               "sources": [
                 "grading-production-log-cultivated",
@@ -18942,7 +18966,7 @@
             "layoutRow": 1
           },
           "sectionIndex": 3,
-          "position": 35
+          "position": 36
         },
         {
           "required": true,
@@ -18966,7 +18990,7 @@
             "layoutRow": 1
           },
           "sectionIndex": 3,
-          "position": 36
+          "position": 37
         },
         {
           "required": false,
@@ -18990,7 +19014,7 @@
             "layoutRow": 2
           },
           "sectionIndex": 3,
-          "position": 37
+          "position": 38
         },
         {
           "required": false,
@@ -19013,7 +19037,7 @@
             "layoutRow": 2
           },
           "sectionIndex": 3,
-          "position": 38
+          "position": 39
         },
         {
           "required": false,
@@ -19049,7 +19073,7 @@
             "layoutRow": 2
           },
           "sectionIndex": 3,
-          "position": 39
+          "position": 40
         },
         {
           "key": "actualGradedWeight",
@@ -19062,7 +19086,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 40,
+          "position": 41,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19084,7 +19108,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 41,
+          "position": 42,
           "computeFn": "ratioPct",
           "computeArgs": {
             "x": "actualGradedWeight",
@@ -19644,21 +19668,45 @@
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
+          "key": "binNo",
+          "label": "Bin no.",
+          "type": "number",
+          "extraJson": {
+            "layoutRow": 1,
+            "seqWithin": "sizeGrade",
+            "hidden": true
+          },
+          "sectionIndex": 3,
+          "position": 25
+        },
+        {
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "parentFieldKey": "@roster",
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
           "key": "binCode",
           "label": "Bin code",
           "type": "text",
           "extraJson": {
             "deriveJoin": {
               "parts": [
-                "sizeGrade"
+                "sizeGrade",
+                "binNo"
               ],
               "sep": "-"
             },
-            "layoutRow": 1,
-            "hidden": true
+            "layoutRow": 1
           },
           "sectionIndex": 3,
-          "position": 26
+          "position": 27
         },
         {
           "required": false,
@@ -19678,7 +19726,7 @@
           "type": "number",
           "extraJson": {
             "carryPrev": {
-              "match": "sizeGrade",
+              "match": "binCode",
               "column": "finalBinWeight",
               "sources": [
                 "grading-production-log-cultivated",
@@ -19689,7 +19737,7 @@
             "layoutRow": 1
           },
           "sectionIndex": 3,
-          "position": 27
+          "position": 28
         },
         {
           "required": true,
@@ -19713,7 +19761,7 @@
             "layoutRow": 1
           },
           "sectionIndex": 3,
-          "position": 28
+          "position": 29
         },
         {
           "required": false,
@@ -19737,7 +19785,7 @@
             "layoutRow": 2
           },
           "sectionIndex": 3,
-          "position": 29
+          "position": 30
         },
         {
           "required": false,
@@ -19760,7 +19808,7 @@
             "layoutRow": 2
           },
           "sectionIndex": 3,
-          "position": 30
+          "position": 31
         },
         {
           "required": false,
@@ -19796,7 +19844,7 @@
             "layoutRow": 2
           },
           "sectionIndex": 3,
-          "position": 31
+          "position": 32
         },
         {
           "key": "actualGradedWeight",
@@ -19809,7 +19857,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 32,
+          "position": 33,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19831,7 +19879,7 @@
           "group": null,
           "sectionIndex": 4,
           "parentFieldKey": null,
-          "position": 33,
+          "position": 34,
           "computeFn": "ratioPct",
           "computeArgs": {
             "x": "actualGradedWeight",

@@ -1,0 +1,330 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.1.2 Abalone Receiving</title>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body>
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=2"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=14"></script>
+<script src="../lib/lookups.js?v=4"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/traceability.js?v=8"></script>
+<script src="../lib/signoff-block.js?v=6"></script>
+<script src="../lib/permission-rules.js?v=2"></script>
+<script src="../lib/form-record.js?v=53"></script>
+<script>(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'abalone-receiving',
+    batchField: 'jobNo',
+    docCode: 'REC 7.1.2',
+    title: 'Abalone Receiving',
+    docRevisionStart: 1,
+    listColumns: ['receivingDate', 'jobNo', 'toBeProcessedFor', 'intakeWeight'],
+    sections: [
+      { title: 'Job info', collapsible: true, summaryField: ['jobNo', 'toBeProcessedFor'], fields: [
+        { key: 'jobNo', label: 'Job no.', type: 'jobnumber' },
+        { key: 'receivingDate', label: 'Receiving date', type: 'date', required: true },
+        Lookups.field({ key: 'receivedFrom', label: 'Received from', list: 'farms' }),
+
+        { key: 'toBeProcessedFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'], matchJobRoute: 'jobNo' },
+        { key: 'intakeWeight', label: 'Whole weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
+      ]}
+    ],
+    roster: {
+      title: 'Baskets received',
+      totalsRow: ['wholeWeight', 'farmCount', 'mortalityCount'],
+      columns: [
+        Lookups.field({ key: 'sizeRange', label: 'Size range', list: 'sizeRanges' }),
+        { key: 'basketNr', label: 'Basket nr.', type: 'number' },
+        { key: 'wholeWeight', label: 'Whole weight (kg)', type: 'number' },
+        { key: 'farmCount', label: 'Count', type: 'number' },
+        { key: 'mortalityCount', label: 'Mortality count', type: 'number' }
+      ]
+    }
+  });
+})();
+</script>
+
+
+<script>(function () {
+  'use strict';
+
+  var COLS = ['sizeRange', 'basketNr', 'wholeWeight', 'farmCount', 'mortalityCount'];
+
+  var stickySize = '';
+
+  function $(id) { return document.getElementById(id); }
+
+  function convertSize(lower) {
+    if (lower >= 450) return '450g+';
+    var start = Math.floor(lower / 50) * 50;
+    return start + '-' + (start + 50) + 'g';
+  }
+
+  function parseBarcode(raw) {
+    raw = String(raw || '').trim();
+    if (!raw) return null;
+    var out = { basketNr: '', farmCount: '', sizeRange: '' };
+
+    var sizeM = raw.match(/(\d{1,3})\s*[-–—]\s*(\d{1,3})\s*g/i) || raw.match(/(\d{3})\s*g\s*\+/);
+    if (sizeM) out.sizeRange = convertSize(parseInt(sizeM[1], 10));
+
+    var bM = raw.match(/(?:basket|bkt)\D*(\d+)/i);
+    var cM = raw.match(/(?:count|cnt|qty)\D*(\d+)/i);
+    if (bM) out.basketNr = bM[1];
+    if (cM) out.farmCount = cM[1];
+
+    if (!bM || !cM) {
+      var rest = raw;
+      if (sizeM) rest = rest.replace(sizeM[0], ' ');
+      if (bM) rest = rest.replace(bM[0], ' ');
+      if (cM) rest = rest.replace(cM[0], ' ');
+      var nums = rest.match(/\d+/g) || [];
+      if (!bM && nums.length) out.basketNr = nums.shift();
+      if (!cM && nums.length) out.farmCount = nums.shift();
+    }
+    return out;
+  }
+
+  function cbInput(key) { return $('cb_' + key); }
+  function cbVal(key) { var i = cbInput(key); return i ? String(i.value || '').trim() : ''; }
+
+  function cbSet(key, val) {
+    var inp = cbInput(key);
+    if (!inp) return;
+    if (inp.tagName === 'SELECT' && !Array.prototype.some.call(inp.options, function (o) { return o.value === val; })) {
+      var o = document.createElement('option');
+      o.value = val; o.textContent = val;
+      inp.appendChild(o);
+    }
+    inp.value = val;
+  }
+
+  function setMsg(text) { var m = $('cb_msg'); if (m) m.textContent = text || ''; }
+
+  function applyBarcode(raw) {
+    var data = parseBarcode(raw);
+    if (!data) return;
+    var size = data.sizeRange || stickySize || '';
+    if (size) { stickySize = size; cbSet('sizeRange', size); }
+    if (data.basketNr) cbSet('basketNr', data.basketNr);
+    if (data.farmCount) cbSet('farmCount', data.farmCount);
+    var w = cbInput('wholeWeight');
+    if (w) { try { w.focus(); w.select(); } catch (e) {} }
+    setMsg('Scanned basket ' + (data.basketNr || '?') + ', count ' + (data.farmCount || '?') +
+      ', size ' + (size || '?') + ' - enter/confirm weight, then + Add basket.');
+  }
+
+  function applyScaleWeight(kg) {
+    var n = parseFloat(kg);
+    if (isNaN(n)) return;
+    cbSet('wholeWeight', String(n));
+    var w = cbInput('wholeWeight');
+    if (w) { try { w.focus(); } catch (e) {} }
+    setMsg('Weight ' + n + ' kg from scale - press + Add basket to record it.');
+  }
+  window.RecScale = { submitWeight: applyScaleWeight };
+
+  function rosterHost() { return $('fr_rosterRows'); }
+  function rosterRows() {
+    var h = rosterHost();
+    return h ? Array.prototype.slice.call(h.querySelectorAll('.fr-roster-row')) : [];
+  }
+  function rowVal(row, key) {
+    var i = row.querySelector('[id$="_' + key + '"]');
+    return i ? String(i.value || '').trim() : '';
+  }
+  function rowIsBlank(row) { return COLS.every(function (k) { return !rowVal(row, k); }); }
+  function basketCount() { return rosterRows().filter(function (r) { return !rowIsBlank(r); }).length; }
+
+  function addBasket() {
+    if (!cbVal('sizeRange')) { setMsg('Pick a size range before adding the basket.'); return; }
+    if (!cbVal('wholeWeight')) { setMsg('Enter the whole weight before adding the basket.'); return; }
+    var host = rosterHost();
+    if (!host || typeof host._importRows !== 'function') { setMsg('Basket list not ready - try again.'); return; }
+
+    var line = {};
+    COLS.forEach(function (k) { line[k] = cbVal(k); });
+    stickySize = line.sizeRange;
+    host._importRows([line]);
+
+    ['basketNr', 'wholeWeight', 'farmCount', 'mortalityCount'].forEach(function (k) { cbSet(k, ''); });
+    cbSet('sizeRange', stickySize);
+    renderPanel();
+    var bc = $('recBarcode');
+    if (bc) { try { bc.focus(); } catch (e) {} }
+    setMsg('Basket added (' + basketCount() + ' on this record). Scan or enter the next one.');
+  }
+
+  function receivingComplete() {
+    return ['jobNo', 'receivingDate', 'receivedFrom', 'toBeProcessedFor'].every(function (k) {
+      var i = $('fr_f_' + k);
+      return i && String(i.value || '').trim();
+    });
+  }
+
+  function setText(el, txt) { if (el && el.textContent !== txt) el.textContent = txt; }
+  function renderPanel() {
+    setText($('cb_stickyLabel'), stickySize || 'not set');
+    var chg = $('recChangeSize');
+    if (chg) chg.disabled = !stickySize;
+    var c = basketCount();
+    setText($('cb_count'), c + (c === 1 ? ' basket' : ' baskets') + ' on this record');
+  }
+
+  function sizeOptionsHtml() {
+    var list = (window.Lookups && window.Lookups.get('sizeRanges')) || [];
+    return '<option value="">—</option>' + list.map(function (v) {
+      return '<option value="' + v + '">' + v + '</option>';
+    }).join('');
+  }
+
+  function buildPanel() {
+    var box = document.createElement('div');
+    box.id = 'recBasketPanel';
+    box.className = 'no-print';
+    box.style.cssText = 'margin:6px 0 14px;padding:12px;border:1px solid var(--palette-border,#e2e4e3);' +
+      'border-radius:6px;background:var(--palette-head-bg,#fbfbfa);';
+    box.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;">' +
+        '<strong style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--palette-label,#54606b);">Current basket</strong>' +
+        '<span id="cb_count" class="fr-muted" style="font-size:11px;"></span>' +
+      '</div>' +
+      '<label class="fr-field" style="margin-bottom:8px;">Scan basket barcode' +
+        '<input type="text" id="recBarcode" autocomplete="off" placeholder="Scan or type barcode, then Enter">' +
+      '</label>' +
+      '<div class="fr-grid fr-grid-3" style="margin-bottom:8px;">' +
+        '<label class="fr-field">Size range' +
+          '<select id="cb_sizeRange">' + sizeOptionsHtml() + '</select>' +
+        '</label>' +
+        '<label class="fr-field">Basket nr.' +
+          '<input type="number" step="1" id="cb_basketNr">' +
+        '</label>' +
+        '<label class="fr-field">Whole weight (kg)' +
+          '<input type="number" step="0.01" id="cb_wholeWeight">' +
+        '</label>' +
+        '<label class="fr-field">Count' +
+          '<input type="number" step="1" id="cb_farmCount">' +
+        '</label>' +
+        '<label class="fr-field">Mortality count' +
+          '<input type="number" step="1" id="cb_mortalityCount">' +
+        '</label>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+        '<button type="button" class="fr-btn fr-btn-primary fr-btn-sm" id="cb_addBtn">+ Add basket</button>' +
+        '<span class="fr-muted" style="font-size:11px;">Size for next basket:</span>' +
+        '<strong id="cb_stickyLabel" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;">not set</strong>' +
+        '<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="recChangeSize">Change size</button>' +
+      '</div>' +
+      '<div id="cb_msg" class="fr-muted" style="font-size:11px;margin-top:6px;"></div>' +
+      '<input type="hidden" id="recScaleWeight">';
+    return box;
+  }
+
+  function wirePanel(box) {
+    var bc = box.querySelector('#recBarcode');
+    bc.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); applyBarcode(bc.value); bc.value = ''; }
+    });
+    bc.addEventListener('change', function () {
+      if (bc.value.trim()) { applyBarcode(bc.value); bc.value = ''; }
+    });
+
+    var sizeSel = box.querySelector('#cb_sizeRange');
+    sizeSel.addEventListener('change', function () {
+      if (sizeSel.value) stickySize = sizeSel.value;
+      renderPanel();
+    });
+
+    box.querySelector('#cb_addBtn').addEventListener('click', addBasket);
+
+    box.querySelector('#recChangeSize').addEventListener('click', function () {
+      stickySize = '';
+      cbSet('sizeRange', '');
+      renderPanel();
+      try { sizeSel.focus(); } catch (e) {}
+    });
+
+    var scale = box.querySelector('#recScaleWeight');
+    scale.addEventListener('change', function () {
+      if (scale.value !== '') { applyScaleWeight(scale.value); scale.value = ''; }
+    });
+  }
+
+  function enhance() {
+    var host = rosterHost();
+    if (!host) return;
+
+    var box = $('recBasketPanel');
+    if (!box || !box.isConnected) {
+      box = buildPanel();
+      host.parentNode.insertBefore(box, host);
+      wirePanel(box);
+
+      var addRow = $('fr_addRosterRowBtn');
+      if (addRow) addRow.style.display = 'none';
+      var submit = $('fr_submitBtn');
+      if (submit) submit.textContent = '+ Submit record';
+    }
+    if (stickySize && !cbVal('sizeRange')) cbSet('sizeRange', stickySize);
+
+    var rows = rosterRows();
+    var anyFilled = rows.some(function (r) { return !rowIsBlank(r); });
+    rows.forEach(function (r) { r.style.display = (anyFilled && rowIsBlank(r)) ? 'none' : ''; });
+    var note = $('recNoBaskets');
+    if (!anyFilled) {
+      if (!note) {
+        note = document.createElement('div');
+        note.id = 'recNoBaskets';
+        note.className = 'fr-muted no-print';
+        note.style.cssText = 'font-size:11px;margin:2px 0 8px;';
+        note.textContent = 'No baskets added yet - use the Current basket panel above.';
+        host.parentNode.insertBefore(note, host);
+      }
+      note.style.display = '';
+    } else if (note) {
+      note.style.display = 'none';
+    }
+    renderPanel();
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest && e.target.closest('#fr_saveBtn');
+    if (!b || receivingComplete()) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    alert('Complete the Receiving info section (job no., receiving date, received from, processing for) before saving a draft.');
+    var jn = $('fr_f_jobNo'); if (jn) try { jn.focus(); } catch (err) {}
+  }, true);
+
+  (function boot() {
+    var host = $('fr_modalSections');
+    if (!host) { setTimeout(boot, 200); return; }
+    var pending = false;
+    new MutationObserver(function () {
+      if (pending) return;
+      pending = true;
+      setTimeout(function () { pending = false; enhance(); }, 0);
+    }).observe(host, { childList: true, subtree: true });
+    enhance();
+  })();
+})();
+</script>
+<script src="../lib/record-shell.js?v=10"></script>
+</body>
+</html>

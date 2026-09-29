@@ -182,6 +182,17 @@
     }
   }
 
+  /* record-chrome.js is normally loaded early by each page (so its fetch wrapper
+     sees the first API call); this covers a page that only loads the shell. */
+  function ensureChrome() {
+    if (window.RecordChrome || document.querySelector('script[data-rc-js]')) return;
+    var s = document.createElement('script');
+    s.setAttribute('data-rc-js', '1');
+    s.onload = function () { if (window.RecordChrome) window.RecordChrome.boot(); };
+    s.src = SELF ? SELF.replace(/record-shell\.js/, 'record-chrome.js') : '../lib/record-chrome.js';
+    document.head.appendChild(s);
+  }
+
   function mount() {
     var parts = findParts();
     if (!parts.body) return false;                 // nothing recognisable yet
@@ -209,6 +220,8 @@
 
     document.body.insertBefore(shell, document.body.firstChild);
     document.body.classList.add('rt-has-shell');
+    document.body.classList.add('rt-tablet');            // Tablet UI v2 (rolled out 2026-09-29)
+    ensureChrome();
     syncToolbar();
     ensureWiButton();
     return true;

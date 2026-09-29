@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tablet UI test page</title>
+<link rel="stylesheet" href="../styles/record-theme.css?v=tv6">
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+<style>
+  /* test-page scaffolding only: stands in for what the engines + record-shell.js render */
+  body { margin: 0; }
+  .ml-collapsible{ display:none; } .ml-collapsible.ml-open{ display:block; }
+  .ml-grid{ display:grid; } .ml-field{ display:flex; flex-direction:column; }
+</style>
+</head>
+<body class="rt-tablet rt-has-shell">
+<script src="../lib/record-chrome.js?v=4"></script>
+<div class="rt-shell">
+  <header class="rt-topbar">
+    <button class="rt-back" type="button" aria-label="Back">←</button>
+    <div class="rt-logo">AB</div>
+    <span class="rt-doc-code">TEST 0.0</span>
+    <span class="rt-title">Tablet UI test page</span>
+    <span class="rt-rev">Rev 1</span>
+    <span class="rt-spacer"></span>
+    <div class="rt-actions"><button type="button">Toolbar button</button></div>
+  </header>
+  <div class="rt-body"><main class="rt-content">
+    <div id="mlRoot" class="ml-app"><div class="ml-body">
+
+      <div class="ml-panel no-print">
+        <div class="ml-panel-head"><h2>Entry form</h2></div>
+        <div class="ml-panel-body">
+          <div class="ml-grid ml-grid-2">
+            <label class="ml-field" data-field="date">Date<input type="date" id="ml_p_f_date"></label>
+            <label class="ml-field" data-field="kg">Mortalities <span class="hint">(kg)</span><input type="number" id="ml_p_f_kg" placeholder="0.00"></label>
+            <label class="ml-field" data-field="pack">Total pack <span class="hint">(kg)</span><input type="number" id="ml_p_f_pack"></label>
+            <label class="ml-field ml-readonly-calc" data-field="pct">Mortalities <span class="hint">(%)</span><input type="number" id="ml_p_f_pct" readonly value="1.25"></label>
+            <label class="ml-field" data-field="grade">Size grade
+              <select id="ml_p_f_grade"><option>— select —</option><option>Small</option><option>Medium</option><option>Large</option></select></label>
+            <div class="ml-field" data-field="tidy">Area tidy?
+              <span class="ml-yesno" data-good="Yes"><button type="button" data-v="Yes" class="on">Yes</button><button type="button" data-v="No">No</button></span></div>
+            <div class="ml-field" data-field="seal">Seals intact?
+              <span class="ml-yesno" data-good="Yes"><button type="button" data-v="Yes">Yes</button><button type="button" data-v="No" class="on">No</button></span></div>
+            <label class="ml-field" data-field="locked">Locked value<input type="text" id="ml_p_f_locked" disabled value="Read-only"></label>
+            <label class="ml-field wide" data-field="notes">Notes<textarea id="ml_p_f_notes" rows="3"></textarea></label>
+            <label><input type="checkbox" checked> Confirm weights checked</label>
+          </div>
+          <div class="ml-actions">
+            <button class="ml-btn ml-btn-flat" id="ml_p_cancelBtn" type="button">Clear</button>
+            <button class="ml-btn ml-btn-flat" id="ml_p_saveBtn" type="button">Save draft</button>
+            <button class="ml-btn ml-btn-primary" id="ml_p_submitBtn" type="button">Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ml-panel no-print">
+        <div class="ml-panel-head"><h2>Entries (2)</h2>
+          <span><button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_p_entriesBody">View entries</button></span></div>
+        <div class="ml-panel-body ml-collapsible" id="ml_p_entriesBody">
+          <div class="ml-table-wrap"><table class="ml-table">
+            <thead><tr><th>Date</th><th>Mortalities (kg)</th><th>Result</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>2026-09-28</td><td class="ml-num">12.40</td><td><span class="ml-badge ml-badge-ok">Pass</span></td><td><button class="ml-btn ml-btn-sm" type="button">Open</button></td></tr>
+              <tr class="ml-fail"><td>2026-09-27</td><td class="ml-num">48.10</td><td><span class="ml-badge ml-badge-fail">Fail</span></td><td><button class="ml-btn ml-btn-sm" type="button">Open</button></td></tr>
+            </tbody></table></div>
+        </div>
+      </div>
+
+      <div class="ml-panel no-print">
+        <div class="ml-panel-head"><h2>Verification</h2>
+          <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verificationBody">View verification</button></div>
+        <div class="ml-panel-body ml-collapsible" id="ml_verificationBody"><div class="ml-muted">Nothing awaiting verification.</div></div>
+      </div>
+
+    </div></div>
+    <div class="ml-toast no-print" id="ml_toast"></div>
+  </main></div>
+</div>
+
+<script>
+/* Test-page stand-ins for the engine: the engine's own buttons produce toasts,
+   record-chrome.js reacts to them exactly as it does on a real record. */
+(function () {
+  function toast(m) { var t = document.getElementById('ml_toast'); t.textContent = m; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 2200); }
+  document.getElementById('ml_p_saveBtn').addEventListener('click', function () { setTimeout(function () { toast('Draft saved.'); }, 700); });
+  document.getElementById('ml_p_submitBtn').addEventListener('click', function () {
+    var d = document.getElementById('ml_p_f_date');
+    setTimeout(function () { d.value ? toast('Entry submitted.') : toast('"Date" is required.'); }, 500);
+  });
+  document.getElementById('ml_p_cancelBtn').addEventListener('click', function () { document.getElementById('ml_p_f_date').value = ''; });
+  document.querySelectorAll('.ml-yesno').forEach(function (g) {
+    g.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; g.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); });
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-reveal]'); if (!b) return;
+    document.getElementById(b.getAttribute('data-reveal')).classList.toggle('ml-open');
+  });
+})();
+</script>
+</body>
+</html>
