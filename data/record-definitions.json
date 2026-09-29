@@ -16207,15 +16207,90 @@
     },
     {
       "recordKey": "drying-process",
-      "engine": "monitoring-log",
-      "mount": "#mlRoot",
+      "engine": "form-record",
+      "mount": "#frRoot",
       "pageFile": "REC-7.4.1-drying-process.html",
       "docCode": "REC 7.4.1",
       "title": "Drying Process",
       "docRevisionStart": 1,
       "jobInfoGroup": "Job info",
       "clientHook": null,
-      "sections": [],
+      "sections": [
+        {
+          "title": "Job info",
+          "kind": "fields",
+          "position": 0,
+          "extraJson": {
+            "collapsible": true,
+            "summaryField": [
+              "jobNo",
+              "jiProcessingFor"
+            ]
+          }
+        },
+        {
+          "title": "Job so far",
+          "kind": "fields",
+          "position": 1,
+          "extraJson": {
+            "jobSoFarPanel": true
+          }
+        },
+        {
+          "title": "Entry, cooked weight and trolleys",
+          "kind": "fields",
+          "position": 2,
+          "extraJson": {}
+        },
+        {
+          "title": "Movements",
+          "kind": "fields",
+          "position": 3,
+          "extraJson": {
+            "movementBlock": true
+          }
+        },
+        {
+          "title": "Steams",
+          "kind": "roster",
+          "position": 4,
+          "extraJson": {
+            "cardRows": true,
+            "collapseRows": false,
+            "startEmpty": true,
+            "rowTitle": "Steam",
+            "addLabel": "+ Add steam",
+            "previousRows": {
+              "source": "drying-process",
+              "matchField": "jobNo",
+              "showSummary": true,
+              "summaryLabel": "Last steam"
+            },
+            "totals": [
+              {
+                "label": "Steams this entry",
+                "count": true
+              }
+            ]
+          }
+        },
+        {
+          "title": "Checks",
+          "kind": "fields",
+          "position": 5,
+          "extraJson": {
+            "collapsible": true
+          }
+        },
+        {
+          "title": "Old values",
+          "kind": "fields",
+          "position": 6,
+          "extraJson": {
+            "legacyBlock": true
+          }
+        }
+      ],
       "fields": [
         {
           "key": "jobNo",
@@ -16225,8 +16300,8 @@
           "readOnly": false,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 0,
           "computeFn": null,
@@ -16247,8 +16322,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 1,
           "computeFn": null,
@@ -16256,7 +16331,8 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
           "key": "jiReceivedFrom",
@@ -16266,8 +16342,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 2,
           "computeFn": null,
@@ -16275,7 +16351,8 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
           "key": "jiProcessingFor",
@@ -16285,8 +16362,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 3,
           "computeFn": null,
@@ -16294,7 +16371,8 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
           "key": "jiIntakeWeight",
@@ -16304,8 +16382,8 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Job info",
-          "sectionIndex": null,
+          "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
           "position": 4,
           "computeFn": null,
@@ -16313,18 +16391,19 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
-          "key": "wholeWeight",
-          "label": "Whole weight",
-          "type": "number",
+          "key": "entryDate",
+          "label": "Entry date",
+          "type": "timestamp",
           "required": false,
-          "readOnly": false,
-          "unit": "kg",
+          "readOnly": true,
+          "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 5,
           "computeFn": null,
@@ -16332,18 +16411,22 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "serverStamp": true,
+            "recordDate": true
+          }
         },
         {
-          "key": "cookingDate",
-          "label": "Cooking date",
-          "type": "date",
+          "key": "cookedWeight",
+          "label": "Cooked weight (kg)",
+          "type": "number",
           "required": false,
-          "readOnly": false,
-          "unit": null,
+          "readOnly": true,
+          "unit": "kg",
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 6,
           "computeFn": null,
@@ -16351,18 +16434,33 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "recordSum": {
+              "source": "dry-cooking",
+              "matchField": "jobNo",
+              "rosterCol": "abaloneKg",
+              "filterCol": "process",
+              "filterIn": [
+                "Cooking"
+              ],
+              "idsField": "cookedWeightSourceIds",
+              "note": "From REC 7.4.0",
+              "missing": "No REC 7.4.0 found for this job",
+              "unlockWhenMissing": true
+            }
+          }
         },
         {
-          "key": "cookingWeight",
-          "label": "Cooking weight",
-          "type": "number",
+          "key": "cookedWeightSourceIds",
+          "label": "Cooked weight source entries",
+          "type": "text",
           "required": false,
-          "readOnly": false,
-          "unit": "kg",
+          "readOnly": true,
+          "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 7,
           "computeFn": null,
@@ -16370,18 +16468,21 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
-          "key": "movementToDryRoom1Date",
-          "label": "Movement to dry room 1",
-          "type": "date",
+          "key": "noOfTrolleys",
+          "label": "No. of trolleys",
+          "type": "digits",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 8,
           "computeFn": null,
@@ -16389,18 +16490,27 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "vital": true,
+            "prefillFromJob": {
+              "source": "drying-process",
+              "field": "noOfTrolleys",
+              "matchField": "jobNo"
+            },
+            "changeReasonField": "trolleyChangeReason"
+          }
         },
         {
-          "key": "steam1Date",
-          "label": "Steam 1",
-          "type": "date",
+          "key": "trolleyChangeReason",
+          "label": "Reason trolley count changed",
+          "type": "text",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 9,
           "computeFn": null,
@@ -16408,37 +16518,44 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "showWhenChanged": "noOfTrolleys"
+          }
         },
         {
-          "key": "steam2Date",
-          "label": "Steam 2",
-          "type": "date",
+          "key": "cookLossPct",
+          "label": "Cook loss",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
-          "unit": null,
+          "readOnly": true,
+          "unit": "%",
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 2,
           "parentFieldKey": null,
           "position": 10,
-          "computeFn": null,
-          "computeArgs": null,
+          "computeFn": "cookLossPct",
+          "computeArgs": {
+            "whole": "jiIntakeWeight",
+            "cooked": "cookedWeight"
+          },
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
-          "key": "steam3Date",
-          "label": "Steam 3",
-          "type": "date",
+          "key": "movedIntoDryRoom",
+          "label": "Move into drying rooms",
+          "type": "yesno",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 11,
           "computeFn": null,
@@ -16446,18 +16563,28 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "noNone": true,
+            "movement": {
+              "key": "dryRoom",
+              "order": 1,
+              "question": "Move into drying rooms?",
+              "done": "Moved into drying rooms",
+              "stamp": "dateIntoDryRoomAt"
+            }
+          }
         },
         {
-          "key": "steam4Date",
-          "label": "Steam 4",
-          "type": "date",
+          "key": "dateIntoDryRoomAt",
+          "label": "Date into dry room",
+          "type": "timestamp",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 12,
           "computeFn": null,
@@ -16465,18 +16592,22 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "serverStamp": true,
+            "hidden": true
+          }
         },
         {
-          "key": "steam5Date",
-          "label": "Steam 5",
-          "type": "date",
+          "key": "movedIntoDryContainer",
+          "label": "Move into dry container",
+          "type": "yesno",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 13,
           "computeFn": null,
@@ -16484,18 +16615,29 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "noNone": true,
+            "movement": {
+              "key": "dryContainer",
+              "order": 2,
+              "requires": "dryRoom",
+              "question": "Move into dry container?",
+              "done": "Moved into dry container",
+              "stamp": "dateIntoDryContainerAt"
+            }
+          }
         },
         {
-          "key": "steam6Date",
-          "label": "Steam 6",
-          "type": "date",
+          "key": "dateIntoDryContainerAt",
+          "label": "Date into dry container",
+          "type": "timestamp",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 14,
           "computeFn": null,
@@ -16503,18 +16645,22 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "serverStamp": true,
+            "hidden": true
+          }
         },
         {
-          "key": "steam7Date",
-          "label": "Steam 7",
-          "type": "date",
+          "key": "movedIntoGradingRoom",
+          "label": "Move into grading room",
+          "type": "yesno",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 15,
           "computeFn": null,
@@ -16522,18 +16668,29 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "noNone": true,
+            "movement": {
+              "key": "gradingRoom",
+              "order": 3,
+              "requires": "dryContainer",
+              "question": "Move into grading room?",
+              "done": "Moved into grading room",
+              "stamp": "dateIntoGradingRoomAt"
+            }
+          }
         },
         {
-          "key": "steam8Date",
-          "label": "Steam 8",
-          "type": "date",
+          "key": "dateIntoGradingRoomAt",
+          "label": "Date into grading room",
+          "type": "timestamp",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 16,
           "computeFn": null,
@@ -16541,18 +16698,22 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "serverStamp": true,
+            "hidden": true
+          }
         },
         {
-          "key": "steam9Date",
-          "label": "Steam 9",
-          "type": "date",
+          "key": "stampSource",
+          "label": "Stamp source",
+          "type": "text",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 17,
           "computeFn": null,
@@ -16560,18 +16721,21 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
-          "key": "steam10Date",
-          "label": "Steam 10",
-          "type": "date",
+          "key": "movementReversedBy",
+          "label": "Movement reversed by",
+          "type": "text",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 18,
           "computeFn": null,
@@ -16579,18 +16743,21 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
-          "key": "steam11Date",
-          "label": "Steam 11",
-          "type": "date",
+          "key": "movementReversedAt",
+          "label": "Movement reversed at",
+          "type": "timestamp",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 19,
           "computeFn": null,
@@ -16598,18 +16765,21 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
-          "key": "steam12Date",
-          "label": "Steam 12",
-          "type": "date",
+          "key": "movementReversedReason",
+          "label": "Movement reversed - reason",
+          "type": "text",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 3,
           "parentFieldKey": null,
           "position": 20,
           "computeFn": null,
@@ -16617,170 +16787,198 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
-          "key": "steam13Date",
-          "label": "Steam 13",
-          "type": "date",
+          "key": "steamNo",
+          "label": "Steam no.",
+          "type": "digits",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
           "position": 21,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "jobSequence": {
+              "source": "drying-process",
+              "column": "steamNo",
+              "matchField": "jobNo"
+            }
+          }
         },
         {
-          "key": "steam14Date",
-          "label": "Steam 14",
+          "key": "steamDate",
+          "label": "Date",
           "type": "date",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
           "position": 22,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "defaultToEntryDate": true,
+            "notBeforeStamp": "dateIntoDryRoomAt",
+            "notInFuture": true
+          }
         },
         {
-          "key": "movementToContainerDate",
-          "label": "Movement to container",
-          "type": "date",
+          "key": "steamingTempC",
+          "label": "Steaming temperature",
+          "type": "number",
           "required": false,
           "readOnly": false,
-          "unit": null,
+          "unit": "°C",
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
           "position": 23,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "copyFromPrevious": true
+          }
         },
         {
-          "key": "removedFromTrolleysDate",
-          "label": "Removed from trolleys",
-          "type": "date",
+          "key": "steamingTimeMin",
+          "label": "Steaming time",
+          "type": "digits",
           "required": false,
           "readOnly": false,
-          "unit": null,
+          "unit": "min",
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
           "position": 24,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "copyFromPrevious": true
+          }
         },
         {
-          "key": "movementToGradingRoomDate",
-          "label": "Movement to grading room",
-          "type": "date",
+          "key": "startTime",
+          "label": "Start time",
+          "type": "time",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
           "position": 25,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
-          "key": "dateDeString",
-          "label": "Date de-string",
-          "type": "date",
+          "key": "doneBy",
+          "label": "Done by",
+          "type": "text",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
           "position": 26,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
-          "key": "dateGraded",
-          "label": "Date graded",
-          "type": "date",
+          "key": "steamNoOld",
+          "label": "Steam no. (old)",
+          "type": "digits",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
           "position": 27,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true,
+            "legacy": true
+          }
         },
         {
-          "key": "totalDryingTimeDays",
-          "label": "Total drying time",
-          "type": "number",
+          "key": "steamCount",
+          "label": "Steams in this entry",
+          "type": "computed",
           "required": false,
-          "readOnly": false,
-          "unit": "days",
+          "readOnly": true,
+          "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 5,
           "parentFieldKey": null,
           "position": 28,
-          "computeFn": null,
+          "computeFn": "rosterCount",
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {}
         },
         {
-          "key": "dryWeight",
-          "label": "Dry weight",
-          "type": "number",
+          "key": "warningAck",
+          "label": "Warning confirmed",
+          "type": "yesno",
           "required": false,
-          "readOnly": false,
-          "unit": "kg",
+          "readOnly": true,
+          "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 5,
           "parentFieldKey": null,
           "position": 29,
           "computeFn": null,
@@ -16788,18 +16986,21 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
-          "key": "estimateYield",
-          "label": "Estimate yield",
-          "type": "number",
+          "key": "warningNote",
+          "label": "Warning note",
+          "type": "text",
           "required": false,
-          "readOnly": false,
-          "unit": "%",
+          "readOnly": true,
+          "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": null,
+          "sectionIndex": 5,
           "parentFieldKey": null,
           "position": 30,
           "computeFn": null,
@@ -16807,7 +17008,279 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
+        },
+        {
+          "key": "wholeWeightOld",
+          "label": "Whole weight (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 31,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "cookingDateOld",
+          "label": "Cooking date (old)",
+          "type": "date",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 32,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "cookingWeightOld",
+          "label": "Cooking weight (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 33,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "removedFromTrolleysDateOld",
+          "label": "Removed from trolleys (old)",
+          "type": "date",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 34,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "deStringDateOld",
+          "label": "Date de-string (old)",
+          "type": "date",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 35,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "gradedDateOld",
+          "label": "Date graded (old)",
+          "type": "date",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 36,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "totalDryingDaysOld",
+          "label": "Total drying time (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 37,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "dryWeightOld",
+          "label": "Dry weight (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 38,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "estimateYieldPctOld",
+          "label": "Estimate yield (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 39,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "calculatedByMigration",
+          "label": "Migrated entry",
+          "type": "yesno",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 40,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
+        },
+        {
+          "key": "dateRawJson",
+          "label": "Unusable old dates (raw text)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 6,
+          "parentFieldKey": null,
+          "position": 41,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         }
       ],
       "autofills": [
@@ -16825,13 +17298,13 @@
       ],
       "extraJson": {
         "batchField": "jobNo",
-        "instructions": [
-          {
-            "label": "Note",
-            "text": "The paper form has one Date/Time per steam cycle (up to 14). This digital version records the date of each steam turn — steam 1 through 14 — plus the milestone dates either side."
-          }
+        "listColumns": [
+          "entryDate",
+          "jobNo",
+          "roster:count"
         ],
-        "specFields": [],
+        "entryLog": true,
+        "submitChecks": "drying-process",
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation"
       },

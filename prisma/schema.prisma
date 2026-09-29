@@ -1858,37 +1858,61 @@ model Sub_drying_process {
   rawJson     String?
   inSpec      Boolean?
 
-  jobNo                     String?
-  wholeWeight               Float?
-  cookingDate               DateTime? @db.Date
-  cookingWeight             Float?
-  movementToDryRoom1Date    DateTime? @db.Date
-  steam1Date                DateTime? @db.Date
-  steam2Date                DateTime? @db.Date
-  steam3Date                DateTime? @db.Date
-  steam4Date                DateTime? @db.Date
-  steam5Date                DateTime? @db.Date
-  steam6Date                DateTime? @db.Date
-  steam7Date                DateTime? @db.Date
-  steam8Date                DateTime? @db.Date
-  steam9Date                DateTime? @db.Date
-  steam10Date               DateTime? @db.Date
-  steam11Date               DateTime? @db.Date
-  steam12Date               DateTime? @db.Date
-  steam13Date               DateTime? @db.Date
-  steam14Date               DateTime? @db.Date
-  movementToContainerDate   DateTime? @db.Date
-  removedFromTrolleysDate   DateTime? @db.Date
-  movementToGradingRoomDate DateTime? @db.Date
-  dateDeString              DateTime? @db.Date
-  dateGraded                DateTime? @db.Date
-  totalDryingTimeDays       Float?
-  dryWeight                 Float?
-  estimateYield             Float?
+  jobNo                      String?
+  entryDate                  DateTime?
+  cookedWeight               Float?
+  cookedWeightSourceIds      String?
+  noOfTrolleys               Int?
+  trolleyChangeReason        String?
+  cookLossPct                Float?
+  movedIntoDryRoom           Boolean?
+  dateIntoDryRoomAt          DateTime?
+  movedIntoDryContainer      Boolean?
+  dateIntoDryContainerAt     DateTime?
+  movedIntoGradingRoom       Boolean?
+  dateIntoGradingRoomAt      DateTime?
+  stampSource                String?
+  movementReversedBy         String?
+  movementReversedAt         DateTime?
+  movementReversedReason     String?
+  steamCount                 Float?
+  warningAck                 Boolean?
+  warningNote                String?
+  wholeWeightOld             Float?
+  cookingDateOld             DateTime? @db.Date
+  cookingWeightOld           Float?
+  removedFromTrolleysDateOld DateTime? @db.Date
+  deStringDateOld            DateTime? @db.Date
+  gradedDateOld              DateTime? @db.Date
+  totalDryingDaysOld         Float?
+  dryWeightOld               Float?
+  estimateYieldPctOld        Float?
+  calculatedByMigration      Boolean?
+  dateRawJson                String?
   completedBy String?
+
+  rows Sub_drying_process_Row[]
 
   @@index([jobNo], map: "sub_drying_process_jobNo_idx")
   @@map("sub_drying_process")
+}
+
+model Sub_drying_process_Row {
+  id       Int                @id @default(autoincrement())
+  parentId String
+  parent   Sub_drying_process @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  position Int                @default(0)
+
+  steamNo         Int?
+  steamDate       DateTime? @db.Date
+  steamingTempC   Float?
+  steamingTimeMin Int?
+  startTime       DateTime? @db.Time
+  doneBy          String?
+  steamNoOld      Int?
+
+  @@index([parentId])
+  @@map("sub_drying_process_row")
 }
 
 model Sub_dried_abalone_transfer {

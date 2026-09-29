@@ -295,6 +295,21 @@
     obs.observe(document.body, { childList: true, subtree: true });
     // stop watching once things have settled
     setTimeout(function () { obs.disconnect(); }, 8000);
+
+    // The work-instruction button must appear whenever the engine renders its
+    // panel, however late (auth/permission re-render, slow API). Timer-based
+    // (not rAF) so it also runs in background tabs; the check is one querySelector.
+    var wiPending = false;
+    new MutationObserver(function () {
+      if (wiPending) return;
+      wiPending = true;
+      setTimeout(function () {
+        wiPending = false;
+        if (!document.querySelector('.rt-shell')) { mount(); }
+        ensureWiButton();
+      }, 100);
+    }).observe(document.body, { childList: true, subtree: true });
+    setInterval(ensureWiButton, 1500);
   }
 
   if (document.readyState === 'loading') {
