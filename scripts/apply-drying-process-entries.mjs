@@ -72,8 +72,8 @@ const fields = [
   fld(S_MOVE, 'movementReversedReason', 'Movement reversed - reason', 'text', { readOnly: true, extra: { hidden: true } }),
 
   // Section 4 - Steams (roster, one row per steam done in this entry)
-  col(S_STEAMS, 'steamNo', 'Steam no.', 'digits', { readOnly: true, extra: { jobSequence: { source: 'drying-process', column: 'steamNo', matchField: 'jobNo' } } }),
-  col(S_STEAMS, 'steamDate', 'Date', 'date', { required: true, extra: { defaultToEntryDate: true, notBeforeStamp: 'dateIntoDryRoomAt', notInFuture: true } }),
+  col(S_STEAMS, 'steamNo', 'Steam no.', 'digits', { readOnly: true, extra: { hidden: true, jobSequence: { source: 'drying-process', column: 'steamNo', matchField: 'jobNo' } } }),
+  col(S_STEAMS, 'steamDate', 'Date', 'date', { readOnly: true, extra: { hidden: true, serverStamp: true, defaultToEntryDate: true, notBeforeStamp: 'dateIntoDryRoomAt', notInFuture: true } }),
   col(S_STEAMS, 'steamingTempC', 'Steaming temperature', 'number', { unit: '°C', extra: { copyFromPrevious: true } }),
   col(S_STEAMS, 'steamingTimeMin', 'Steaming time', 'digits', { unit: 'min', extra: { copyFromPrevious: true } }),
   col(S_STEAMS, 'startTime', 'Start time', 'time'),

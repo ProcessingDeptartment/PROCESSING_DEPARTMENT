@@ -368,9 +368,9 @@
           const title = row.querySelector('.fr-pot-title'); if (title) title.textContent = `Steam ${num}`;
           if (locked) return;
           const g = (k) => el(rid(i, k));
-          const fresh = ['steamDate', 'steamingTempC', 'steamingTimeMin', 'startTime'].every((k) => !g(k) || blank(g(k).value));
+          if (g('steamDate') && blank(g('steamDate').value)) g('steamDate').value = today();   // never typed; the server dates it on submit
+          const fresh = ['steamingTempC', 'steamingTimeMin', 'startTime'].every((k) => !g(k) || blank(g(k).value));
           if (!fresh) return;
-          if (g('steamDate')) g('steamDate').value = today();
           const src = i > 0 ? { steamingTempC: (el(rid(i - 1, 'steamingTempC')) || {}).value, steamingTimeMin: (el(rid(i - 1, 'steamingTimeMin')) || {}).value }
             : (st.steams.length ? st.steams[st.steams.length - 1] : {});
           ['steamingTempC', 'steamingTimeMin'].forEach((k) => {

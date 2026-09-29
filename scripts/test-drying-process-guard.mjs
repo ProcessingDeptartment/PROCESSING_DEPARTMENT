@@ -79,18 +79,11 @@ t('steam numbers continue per job across entries; steamCount is set', () => {
   const s2 = parse(send(s1, [...s1, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-11' }]), entry('e3', 'submitted', { jobNo: 'DPR0002' }, [{ steamDate: '2026-09-11' }])], D2));
   assert.strictEqual(s2[1].roster[0].steamNo, '3'); assert.strictEqual(s2[1].values.steamCount, '1'); assert.strictEqual(s2[2].roster[0].steamNo, '1');
 });
-t('a steam dated before the stamped dry-room date, or in the future, is refused naming both dates', () => {
-  const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes' })], D1));
-  const early = send(s1, [...s1, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-09' }])], D2);
-  assert(!early.ok && /09\/09\/2026/.test(early.error) && /10\/09\/2026/.test(early.error), early.error);
-  const late = send(s1, [...s1, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-20' }])], D2);
-  assert(!late.ok && /future/.test(late.error), late.error);
-  assert(send(s1, [...s1, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-11' }])], D2).ok);
-});
-t('a migrated (typed, midnight SAST) dry-room stamp is honoured for steam dates', () => {
-  const mig = [{ ...entry('m1', 'submitted', { movedIntoDryRoom: 'Yes', dateIntoDryRoomAt: '2026-09-02T00:00:00+02:00' }), calculatedByMigration: true }];
-  assert(!send(mig, [...mig, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-01' }])], D2).ok);
-  assert(send(mig, [...mig, entry('e2', 'submitted', {}, [{ steamDate: '2026-09-02' }])], D2).ok);
+t('steam dates are never typed: every steam is dated with the server day', () => {
+  const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes' }, [{ steamDate: '2020-01-01' }])], D1));
+  assert.strictEqual(s1[0].roster[0].steamDate, '2026-09-10');
+  const s2 = parse(send(s1, [...s1, entry('e2', 'submitted', {}, [{ steamDate: '2030-01-01' }])], D2));
+  assert.strictEqual(s2[1].roster[0].steamDate, '2026-09-11');
 });
 t('admin reversal puts the movement back to an open question, needs reason and name, and respects order', () => {
   const s1 = parse(send(null, [entry('e1', 'submitted', { movedIntoDryRoom: 'Yes', movedIntoDryContainer: 'Yes' })], D1));

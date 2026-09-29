@@ -118,6 +118,9 @@ function guardWrite(prevValue, incomingValue, now) {
       return reject(422, 'No steaming is possible once the job is moved into the grading room.');
     }
 
+    // the steam date is never typed: every steam of a newly submitted entry is dated with the server's day
+    rows.forEach((r) => { if (r) r.steamDate = today; });
+
     // steam dates
     const dryStamp = doneBy.dryRoom ? vals(doneBy.dryRoom)[MOVES[0].stamp] : (v[MOVES[0].flag] === 'Yes' ? v[MOVES[0].stamp] : '');
     const dryDay = dryStamp ? sastDay(dryStamp) : '';

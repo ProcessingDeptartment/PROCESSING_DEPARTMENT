@@ -16794,6 +16794,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
+            "hidden": true,
             "jobSequence": {
               "source": "drying-process",
               "column": "steamNo",
@@ -16805,8 +16806,8 @@
           "key": "steamDate",
           "label": "Date",
           "type": "date",
-          "required": true,
-          "readOnly": false,
+          "required": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -16820,6 +16821,8 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
+            "hidden": true,
+            "serverStamp": true,
             "defaultToEntryDate": true,
             "notBeforeStamp": "dateIntoDryRoomAt",
             "notInFuture": true
