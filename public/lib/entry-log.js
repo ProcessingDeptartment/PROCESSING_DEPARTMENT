@@ -351,7 +351,7 @@
       })();
       const last = lastSteamLine(st);
       prevBox.innerHTML = st.steams.length
-        ? `<div class="el-last">Last steam: ${esc(last)}</div>${steamsTableHtml(st.steams)}`
+        ? steamsTableHtml(st.steams)
         : '<div class="el-muted" style="margin:4px 0 8px">No earlier steams for this job.</div>';
       const rid = (i, k) => `fr_roster_${i}_${k}`;
       function apply() {
