@@ -1983,6 +1983,15 @@ model Sub_dry_monitoring {
   qcCheck               String?
   supervisor            String?
   completedBy String?
+  // REC 7.4.2 field changes (2026-09-29): date/qcCheck/supervisor are dropped once the new code is live
+  entryDate                  DateTime? @db.Date
+  dateOld                    DateTime? @db.Date
+  qcCheckOld                 String?
+  supervisorOld              String?
+  cookingDateSourceIds       String?
+  cookingDateTypedManually   Boolean?
+  trolleysSourceSubmissionId String?
+  trolleysTypedManually      Boolean?
 
   @@index([jobNo], map: "sub_dry_monitoring_jobNo_idx")
   @@map("sub_dry_monitoring")

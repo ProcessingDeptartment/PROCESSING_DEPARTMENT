@@ -46,7 +46,7 @@ const fields = [
 
   // Section 2 - Entry date, cooked weight and trolleys
   fld(S_TROLLEY, 'entryDate', 'Entry date', 'timestamp', { readOnly: true, extra: { serverStamp: true } }),
-  fld(S_TROLLEY, 'cookedWeight', 'Cooked weight (kg)', 'number', { readOnly: true, unit: 'kg', extra: {
+  fld(S_TROLLEY, 'cookedWeight', 'Cooked weight', 'number', { readOnly: true, unit: 'kg', extra: {
     recordSum: { source: 'dry-cooking', matchField: 'jobNo', rosterCol: 'abaloneKg', filterCol: 'process', filterIn: ['Cooking'],
       idsField: 'cookedWeightSourceIds', note: 'From REC 7.4.0', missing: 'No REC 7.4.0 found for this job', unlockWhenMissing: true } } }),
   fld(S_TROLLEY, 'cookedWeightSourceIds', 'Cooked weight source entries', 'text', { readOnly: true, extra: { hidden: true } }),
@@ -82,7 +82,7 @@ const fields = [
   col(S_STEAMS, 'steamNoOld', 'Steam no. (old)', 'digits', { readOnly: true, extra: { hidden: true, legacy: true } }),
 
   // Section 5 - checks and warning override (the values behind the red "not recorded" lines)
-  fld(S_CHECKS, 'steamCount', 'Steams in this entry', 'computed', { readOnly: true }),
+  fld(S_CHECKS, 'steamCount', 'Steams in this entry', 'computed', { readOnly: true, extra: { hidden: true } }),
   fld(S_CHECKS, 'warningAck', 'Warning confirmed', 'yesno', { readOnly: true, extra: { hidden: true } }),
   fld(S_CHECKS, 'warningNote', 'Warning note', 'text', { readOnly: true, extra: { hidden: true } }),
 
@@ -113,7 +113,7 @@ def.sections = [
   { title: 'Movements', kind: 'fields', position: 3, extraJson: { movementBlock: true } },
   {
     title: 'Steams', kind: 'roster', position: rosterIdx, extraJson: {
-      cardRows: true, collapseRows: false, startEmpty: true, enforceRequired: true, rowTitle: 'Steam', addLabel: '+ Add steam',
+      cardRows: true, collapseRows: false, startEmpty: true, enforceRequired: true, titleFrom: 'steamNo', rowTitle: 'Steam', addLabel: '+ Add steam',
       previousRows: { source: 'drying-process', matchField: 'jobNo', showSummary: true, summaryLabel: 'Last steam' },
       totals: [{ label: 'Steams this entry', count: true }],
     },

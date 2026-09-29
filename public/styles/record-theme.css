@@ -1221,3 +1221,36 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
   border: 1.5px solid var(--rt-navy-primary); border-radius: var(--rt-radius-btn);
 }
 .rt-content .fr-seg-btn:active { background: var(--rt-navy-primary); color: #fff; }
+
+/* ---- Collection bin cards (REC 7.4.3.1 / 7.4.3.2, roster.cardLayout) -- the largest section of the
+   grading log, so the roomiest layout. Line 1 = which bin, line 2 = start weight check,
+   line 3 = the weighing, with the graded weight as the headline number. ---- */
+.rt-content .fr-bin-card { border-left: 5px solid var(--rt-gold, #a9763a); padding: 12px 16px 14px; margin-bottom: 14px; }
+.rt-content .fr-bin-card .fr-pot-head .fr-pot-title { font-size: 19px; }
+.rt-content .fr-bin-card .fr-pot-line { margin-top: 10px; gap: 8px 14px; }
+.rt-content .fr-bin-card .fr-pot-line .fr-field { font-size: 14px; font-weight: 600; }
+.rt-content .fr-bin-card .fr-pot-line input:not([type=checkbox]):not([type=hidden]),
+.rt-content .fr-bin-card .fr-pot-line select { min-height: 48px; font-size: 18px; }
+.rt-content .fr-bin-card .fr-pot-line[data-line="0"] { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+.rt-content .fr-bin-card .fr-pot-line[data-line="1"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+.rt-content .fr-bin-card .fr-pot-line[data-line="2"] { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+.rt-content .fr-bin-card [data-col="binCode"] input { font-weight: 700; background: #f4f1e8; text-align: center; }
+.rt-content .fr-bin-card [data-col="gradedWeight"] input { font-size: 24px; font-weight: 700; background: #f4f1e8; color: var(--rt-navy-primary); }
+.rt-content .fr-bin-card .fr-confirm { min-height: 48px; }
+@media (max-width: 700px) {
+  .rt-content .fr-bin-card .fr-pot-line[data-line] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rt-content .fr-bin-card [data-col="fullBoxWeight"], .rt-content .fr-bin-card [data-col="sizeGrade"] { grid-column: 1 / -1; }
+}
+
+/* ---- Read-only summary strip (section.viewer): calculated values shown as small tiles, not a form.
+   Used for the grading logs' "Size grade weights" -- a viewer, so it stays quiet next to the bins. ---- */
+.rt-content .fr-grid.fr-viewer {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px 8px;
+}
+.rt-content .fr-viewer .fr-field { font-size: 11px; font-weight: 600; color: var(--rt-slate, #5c6771); gap: 2px; margin: 0; }
+.rt-content .fr-viewer .fr-field input {
+  min-height: 30px; padding: 2px 6px; font-size: 14px; font-weight: 700; text-align: right;
+  background: #f4f1e8; border-color: transparent; color: var(--rt-navy-primary);
+}
+.rt-content .fr-viewer .fr-field.wide { grid-column: 1 / -1; font-size: 13px; }
+.rt-content .fr-viewer .fr-field textarea { min-height: 64px; font-size: 15px; font-weight: 400; text-align: left; }

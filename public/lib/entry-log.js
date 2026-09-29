@@ -1,0 +1,471 @@
+// Entry-log extension for form-record.js (config.entryLog: true) -- built for REC 7.4.1 Drying Process.
+// One submission = one ENTRY; every entry that shares a job number adds to that job's history. form-record.js
+// calls attach() when the form is drawn, beforeSave() before every save, and sheetSection()/warningHtml() when
+// printing. Everything here is driven by flags in the record definition (movement, recordSum, jobSequence,
+// copyFromPrevious, changeReasonField, checkRanges, ...), so a second record could reuse it.
+//
+// What the browser does NOT decide: the entry date, each movement's date stamp, the lock on submitted entries,
+// one-Yes-per-movement and the per-job steam numbers are all set by the server (src/drying-process-guard.js);
+// this file only previews them and refuses obvious mistakes early.
+(function () {
+  'use strict';
+
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const pad = (n) => String(n).padStart(2, '0');
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const blank = (v) => v == null || String(v).trim() === '';
+  function fmtD(v) {
+    if (blank(v)) return '';
+    const s = String(v);
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s);
+    return isNaN(d) ? s : `${pad(d.getDate())} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  }
+  function fmtDT(v) {
+    const d = new Date(v);
+    return blank(v) || isNaN(d) ? '' : `${fmtD(d.toISOString())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  const dayKey = (v) => { const d = new Date(v); return isNaN(d) ? '' : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  const today = () => dayKey(new Date());
+
+  const STYLE = `
+  .el-panel{border:1px solid var(--palette-line,#d9d4c7);border-radius:6px;padding:10px 12px;margin-bottom:10px;background:#fff}
+  .el-muted{color:#6b665a;font-size:12px}
+  .el-stages{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+  .el-stage{flex:1 1 130px;border:1px solid #d9d4c7;border-radius:6px;padding:6px 8px;background:#f6f4ee;color:#8a8577;font-size:12px}
+  .el-stage.reached{background:#e4f0e6;border-color:#9cc3a4;color:#2f6b3a}
+  .el-stage.current{box-shadow:0 0 0 2px #2f6b3a inset;font-weight:700}
+  .el-stage b{display:block;font-size:12.5px}
+  .el-tbl{border-collapse:collapse;width:100%;font-size:12.5px;margin:4px 0 8px}
+  .el-tbl th,.el-tbl td{border-bottom:1px solid #e6e2d6;padding:4px 6px;text-align:left}
+  .el-last{font-weight:700;margin:6px 0}
+  .el-mv{border:1px solid #d9d4c7;border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fff}
+  .el-mv.done{background:#e4f0e6;border-color:#9cc3a4}
+  .el-mv.grey{background:#f2f0ea;color:#8a8577}
+  .el-mv-q{font-weight:700;margin-bottom:6px}
+  .el-mv-btns{display:flex;gap:8px}
+  .el-mv-btns button{min-width:88px;min-height:42px;font-size:15px}
+  .el-note{font-size:11.5px;margin-top:3px;color:#6b665a}
+  .el-note.warn{color:#8a5a10;font-weight:600}
+  .el-note.bad{color:#b30000;font-weight:700}
+  .el-vital input{font-size:22px;font-weight:700;min-height:48px}
+  .el-suggest{color:#8a8577;font-style:italic}
+  .el-warn{color:#b30000;font-weight:700;margin:8px 0}
+  .el-link{background:none;border:0;color:#1a5fa8;text-decoration:underline;cursor:pointer;padding:0;font:inherit}
+  `;
+  function injectStyle() {
+    if (document.getElementById('el-style')) return;
+    const s = document.createElement('style'); s.id = 'el-style'; s.textContent = STYLE; document.head.appendChild(s);
+  }
+
+  // ---- config helpers ----
+  function allFields(config) { const out = []; (config.sections || []).forEach((s) => (s.fields || []).forEach((f) => out.push(f))); return out; }
+  function moveList(config) {
+    return allFields(config).filter((f) => f.movement).map((f) => Object.assign({ flag: f.key, label: f.label }, f.movement))
+      .sort((a, b) => a.order - b.order);
+  }
+  const jobKey = (config) => config.batchField || 'jobNo';
+  const V = (e, k) => (e && e.values ? e.values[k] : undefined);
+  const isDraft = (e) => e.status === 'draft';
+  function whoOf(e) {
+    const cb = e.completedBy;
+    return cb ? (typeof cb === 'object' ? (cb.by || cb.title || '') : String(cb)) : '';
+  }
+  const entryAt = (e) => V(e, 'entryDate') || (e.submittedAt ? new Date(e.submittedAt).toISOString() : '') || (e.createdAt ? new Date(e.createdAt).toISOString() : '');
+
+  // ---- the job's history, built from the other (submitted) entries ----
+  function jobState(config, submissions, job, excludeId, beforeAt) {
+    const jk = jobKey(config), moves = moveList(config);
+    let entries = (submissions || []).filter((e) => e && !isDraft(e) && e.id !== excludeId && String(V(e, jk) || '').trim() === job && job);
+    if (beforeAt) entries = entries.filter((e) => entryAt(e) < beforeAt);
+    entries.sort((a, b) => String(entryAt(a)).localeCompare(String(entryAt(b))));
+    const st = { entries, steams: [], moves: {}, trolleys: null, trolleysChanged: false };
+    entries.forEach((e) => {
+      moves.forEach((m) => { if (V(e, m.flag) === 'Yes' && !st.moves[m.key]) st.moves[m.key] = { entry: e, stamp: V(e, m.stamp) || '' }; });
+      (e.roster || []).forEach((r) => { if (r) st.steams.push(Object.assign({ _entry: e }, r)); });
+      const n = parseInt(V(e, 'noOfTrolleys'), 10);
+      if (!isNaN(n) && n > 0) { if (st.trolleys != null && st.trolleys !== n) st.trolleysChanged = true; st.trolleys = n; }
+    });
+    st.steams.sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
+    st.maxSteam = st.steams.reduce((a, r) => Math.max(a, parseInt(r.steamNo, 10) || 0), 0);
+    const reached = moves.filter((m) => st.moves[m.key]).length;
+    st.stage = reached; // 0 Loaded, 1 In dry room, 2 In container, 3 In grading room
+    return st;
+  }
+  const STAGES = ['Loaded', 'In dry room', 'In container', 'In grading room'];
+
+  function lastSteamLine(st) {
+    const r = st.steams[st.steams.length - 1];
+    if (!r) return '';
+    const bits = [`no. ${r.steamNo}`, fmtD(r.steamDate)];
+    if (!blank(r.steamingTempC)) bits.push(`${r.steamingTempC} °C`);
+    if (!blank(r.steamingTimeMin)) bits.push(`${r.steamingTimeMin} min`);
+    if (!blank(r.startTime)) bits.push(`started ${r.startTime}`);
+    return bits.join(', ');
+  }
+  function steamsTableHtml(steams) {
+    if (!steams.length) return '';
+    return `<table class="el-tbl"><thead><tr><th>Steam no.</th><th>Date</th><th>Temp (°C)</th><th>Time (min)</th><th>Start</th><th>Done by</th></tr></thead><tbody>`
+      + steams.map((r) => `<tr><td>${esc(r.steamNo)}</td><td>${esc(fmtD(r.steamDate))}</td><td>${esc(r.steamingTempC || '')}</td><td>${esc(r.steamingTimeMin || '')}</td><td>${esc(r.startTime || '')}</td><td>${esc(r.doneBy || '')}</td></tr>`).join('')
+      + '</tbody></table>';
+  }
+
+  function stageStripHtml(st, moves) {
+    return '<div class="el-stages">' + STAGES.map((name, i) => {
+      const m = i > 0 ? moves[i - 1] : null;
+      const hit = i === 0 || (m && st.moves[m.key]);
+      const stamp = m && st.moves[m.key] ? fmtDT(st.moves[m.key].stamp) : '';
+      return `<div class="el-stage${hit ? ' reached' : ''}${i === st.stage ? ' current' : ''}"><b>${esc(name)}</b>${esc(stamp)}</div>`;
+    }).join('') + '</div>';
+  }
+
+  function jobSoFarHtml(ctx, st, job) {
+    if (!job) return '<div class="el-panel el-muted">Pick a job number to see what has already been recorded for it.</div>';
+    if (!st.entries.length) return '<div class="el-panel"><b>First entry for this job.</b></div>';
+    const moves = moveList(ctx.config);
+    const dry = st.moves[moves[0] && moves[0].key];
+    const days = dry && !st.moves[moves[2] && moves[2].key] && dry.stamp
+      ? Math.max(0, Math.round((Date.now() - new Date(dry.stamp).getTime()) / 86400000)) : null;
+    const same = st.entries.some((e) => dayKey(entryAt(e)) === today());
+    const last = lastSteamLine(st);
+    const list = st.entries.slice().reverse().map((e) => {
+      const yes = moves.filter((m) => V(e, m.flag) === 'Yes').map((m) => m.done || m.label);
+      const n = (e.roster || []).length;
+      const tr = V(e, 'noOfTrolleys');
+      return `<tr><td>${esc(fmtDT(entryAt(e)))}</td><td>${esc(whoOf(e))}</td><td>${esc(yes.join(', '))}</td><td>${n ? n + ' steam' + (n === 1 ? '' : 's') : ''}</td><td>${blank(tr) ? '' : esc(tr) + ' trolleys'}</td>`
+        + `<td><button type="button" class="el-link" data-keep-enabled data-el-view="${esc(e.id)}">View</button></td></tr>`;
+    }).join('');
+    return `<div class="el-panel">
+      ${stageStripHtml(st, moves)}
+      <div class="el-muted">${st.entries.length} entr${st.entries.length === 1 ? 'y' : 'ies'} so far · ${st.steams.length} steam${st.steams.length === 1 ? '' : 's'} so far`
+      + (days != null ? ` · ${days} day${days === 1 ? '' : 's'} since date into dry room` : '') + '</div>'
+      + (st.trolleys != null ? `<div class="el-muted">Trolleys now: <b>${st.trolleys}</b>${st.trolleysChanged ? ' (the count changed during this job)' : ''}</div>` : '')
+      + (same ? '<div class="el-note warn">Another entry for this job was already made today (allowed — several people or shifts may add entries).</div>' : '')
+      + (last ? `<div class="el-last">Last steam: ${esc(last)}</div>` : '')
+      + `<table class="el-tbl"><thead><tr><th>Entry</th><th>By</th><th>Movements</th><th>Steams</th><th>Trolleys</th><th></th></tr></thead><tbody>${list}</tbody></table></div>`;
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  function attach(ctx) {
+    injectStyle();
+    const { config, existing, locked, container, el } = ctx;
+    const jk = jobKey(config);
+    const jobEl = el('fr_f_' + jk);
+    const moves = moveList(config);
+    const rosterEl = el('fr_rosterRows');
+    const ranges = config.checkRanges || {};
+    let lastJob = null;
+    let seq = 0;
+
+    // saved-entry warning banner
+    if (existing && existing.values && existing.values.warningAck) {
+      const w = document.createElement('div'); w.className = 'el-warn';
+      w.textContent = existing.values.warningNote || 'Entry submitted with a warning.';
+      container.insertBefore(w, container.firstChild);
+    }
+
+    // a submitted entry is shown as the job stood at that entry (only earlier entries count)
+    const state = () => jobState(config, ctx.submissions(), jobEl ? String(jobEl.value || '').trim() : '',
+      existing && existing.id, locked && existing ? entryAt(existing) : undefined);
+    const inp = (k) => el('fr_f_' + k);
+
+    // ---- Job so far ----
+    function drawPanel(st, job) {
+      const box = el('fr_jobSoFar');
+      if (!box) return;
+      box.innerHTML = jobSoFarHtml(ctx, st, job);
+      box.querySelectorAll('[data-el-view]').forEach((b) => b.addEventListener('click', () => {
+        if (!locked && ctx.formHasInput() && !confirm('Open this earlier entry? What you have typed on this form will be cleared.')) return;
+        ctx.openForm(b.dataset.elView);
+        window.scrollTo(0, 0);
+      }));
+    }
+
+    // ---- Movements ----
+    function canAsk(m, st) {
+      if (!m.requires) return true;
+      return !!st.moves[m.requires] || (inp(moves.find((x) => x.key === m.requires).flag) || {}).value === 'Yes';
+    }
+    function isAdmin() {
+      const r = window.Auth && window.Auth.getCurrentRole && window.Auth.getCurrentRole();
+      return r === 'ADMINISTRATOR' || r === 'QA_MANAGER';
+    }
+    function drawMovements(st) {
+      const box = el('fr_movements');
+      if (!box) return;
+      const job = jobEl ? String(jobEl.value || '').trim() : '';
+      box.innerHTML = moves.map((m) => {
+        const flag = inp(m.flag), stamp = inp(m.stamp);
+        const earlier = st.moves[m.key];
+        if (earlier) {
+          const e = earlier.entry;
+          const rev = isAdmin() && !locked ? ` <button type="button" class="el-link" data-keep-enabled data-el-reverse="${esc(m.key)}">Admin: reverse</button>` : '';
+          return `<div class="el-mv done"><b>${esc(m.done || m.label)}:</b> ${esc(fmtDT(earlier.stamp))} <span class="el-muted">(entry of ${esc(fmtD(entryAt(e)))}${whoOf(e) ? ', ' + esc(whoOf(e)) : ''})</span>${rev}</div>`;
+        }
+        if (locked) {
+          const v = flag ? flag.value : '';
+          if (v === 'Yes') return `<div class="el-mv done"><b>${esc(m.done || m.label)}:</b> ${esc(fmtDT(stamp && stamp.value))} <span class="el-muted">(this entry)</span></div>`;
+          if (v === 'No') return `<div class="el-mv grey"><b>${esc(m.label)}:</b> answered No in this entry (did not happen yet)</div>`;
+          return `<div class="el-mv grey"><b>${esc(m.label)}:</b> not answered</div>`;
+        }
+        if (!canAsk(m, st)) {
+          if (flag) flag.value = '';
+          const req = moves.find((x) => x.key === m.requires);
+          return `<div class="el-mv grey"><b>${esc(m.label)}:</b> Not yet — needs "${esc(req ? req.label : '')}"</div>`;
+        }
+        const v = flag ? flag.value : '';
+        return `<div class="el-mv"><div class="el-mv-q">${esc(m.question || m.label + '?')} <span class="el-note bad" style="display:${v === '' ? 'inline' : 'none'}">*</span></div>`
+          + `<div class="el-mv-btns" role="radiogroup">`
+          + ['Yes', 'No'].map((a) => `<button type="button" class="fr-btn fr-seg-btn${v === a ? ' on' : ''}" role="radio" aria-checked="${v === a}" data-el-mv="${esc(m.key)}" data-v="${a}">${a}</button>`).join('')
+          + `</div>`
+          + (v === 'Yes' ? `<div class="el-note">Will be stamped ${esc(fmtDT(new Date().toISOString()))} on submit — the date cannot be typed or changed.</div>` : '')
+          + (v === 'No' ? '<div class="el-note">Did not happen in this entry — it stays a question on the next entry.</div>' : '')
+          + `</div>`;
+      }).join('');
+      box.querySelectorAll('[data-el-mv]').forEach((b) => b.addEventListener('click', () => {
+        const m = moves.find((x) => x.key === b.dataset.elMv);
+        const flag = inp(m.flag); if (!flag) return;
+        flag.value = b.dataset.v;
+        // answering No on a movement resets any later movement answered Yes in this entry
+        if (b.dataset.v !== 'Yes') moves.filter((x) => x.order > m.order).forEach((x) => { const f = inp(x.flag); if (f) f.value = ''; });
+        flag.dispatchEvent(new Event('input', { bubbles: true }));
+        drawMovements(st);
+      }));
+      box.querySelectorAll('[data-el-reverse]').forEach((b) => b.addEventListener('click', async () => {
+        const m = moves.find((x) => x.key === b.dataset.elReverse);
+        const reason = prompt(`Reverse "${m.done || m.label}" for job ${job}?\nThis puts it back to an open question and is logged.\n\nReason:`);
+        if (!reason || !reason.trim()) return;
+        const name = prompt('Your name:', (window.Auth && window.Auth.getCurrentUsername && window.Auth.getCurrentUsername()) || '');
+        if (!name || !name.trim()) return;
+        try {
+          const res = await window.FacilityApi.fetch('/api/drying-process/reverse-movement', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jobNo: job, movement: m.key, reason: reason.trim(), name: name.trim() })
+          });
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) { alert(body.error || 'Could not reverse this movement.'); return; }
+          await ctx.reload();
+          ctx.toast('Movement reversed and logged.');
+          refresh(true);
+        } catch (e) { alert('Could not reach the server.'); }
+      }));
+    }
+
+    // ---- Cooked weight (from REC 7.4.0 Cooking cards) ----
+    async function loadCooked(job) {
+      const f = allFields(config).find((x) => x.recordSum);
+      if (!f) return;
+      const rs = f.recordSum, target = inp(f.key), idsEl = inp(rs.idsField);
+      const label = target && target.closest('label');
+      if (!target || !label) return;
+      let note = label.querySelector('.el-note');
+      if (!note) { note = document.createElement('div'); note.className = 'el-note'; label.appendChild(note); }
+      if (locked) { note.textContent = idsEl && idsEl.value ? rs.note + ' (saved with this entry)' : ''; return; }
+      if (!job) { note.textContent = ''; return; }
+      let pots = 0, kg = 0, drafts = 0; const ids = [];
+      try {
+        const raw = await ctx.storeGet('formrecord:' + rs.source, true);
+        (raw ? JSON.parse(raw) : []).forEach((e) => {
+          if (!e || String(V(e, rs.matchField) || '').trim() !== job) return;
+          if (isDraft(e)) { drafts++; return; }
+          let hit = false;
+          (e.roster || []).forEach((r) => {
+            if (r && (rs.filterIn || []).indexOf(r[rs.filterCol]) !== -1) { const n = parseFloat(r[rs.rosterCol]); if (!isNaN(n)) kg += n; pots++; hit = true; }
+          });
+          if (hit) ids.push(e.id);
+        });
+      } catch (e) { /* leave as is */ }
+      if (jobEl && String(jobEl.value || '').trim() !== job) return; // job changed while loading
+      if (pots) {
+        target.value = String(Math.round(kg * 100) / 100); target.readOnly = true;
+        if (idsEl) idsEl.value = ids.join(',');
+        note.className = 'el-note';
+        note.textContent = `${rs.note} — ${pots} cooking pot${pots === 1 ? '' : 's'}` + (drafts ? ` (${drafts} draft entr${drafts === 1 ? 'y' : 'ies'} ignored)` : '');
+      } else {
+        target.readOnly = false; if (idsEl) idsEl.value = '';
+        note.className = 'el-note warn';
+        note.textContent = rs.missing + (drafts ? ` (${drafts} draft entr${drafts === 1 ? 'y' : 'ies'} ignored)` : '') + ' — type the cooked weight if you have it.';
+      }
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // ---- Trolleys: prefill from the last entry, ask for a reason when it changes ----
+    function wireTrolleys(st) {
+      const f = allFields(config).find((x) => x.prefillFromJob);
+      if (!f) return;
+      const t = inp(f.key), why = inp(f.changeReasonField);
+      if (!t) return;
+      const label = t.closest('label'); if (label) label.classList.add('el-vital');
+      const whyLabel = why && why.closest('label');
+      let note = label && label.querySelector('.el-note');
+      if (label && !note) { note = document.createElement('div'); note.className = 'el-note'; label.appendChild(note); }
+      if (!locked && blank(t.value) && st.trolleys != null) { t.value = String(st.trolleys); }
+      function sync() {
+        const cur = parseInt(t.value, 10);
+        const changed = st.trolleys != null && !isNaN(cur) && cur !== st.trolleys;
+        if (whyLabel) whyLabel.style.display = changed ? '' : 'none';
+        if (!changed && why && !locked) why.value = '';
+        if (note) {
+          if (changed) { note.className = 'el-note warn'; note.textContent = `Changed from ${st.trolleys} to ${cur} — give a short reason below.`; }
+          else if (st.trolleys != null) { note.className = 'el-note'; note.textContent = `Same as the last entry (${st.trolleys}).`; }
+          else { note.className = 'el-note'; note.textContent = 'No trolley count recorded for this job yet.'; }
+        }
+      }
+      if (!t._elWired) { t._elWired = true; ['input', 'change'].forEach((ev) => t.addEventListener(ev, () => t._elSync && t._elSync())); }
+      t._elSync = sync; sync();
+    }
+
+    // ---- Steams: per-job numbering, previous steams, suggestions ----
+    function wireSteams(st) {
+      if (!rosterEl) return;
+      
+      const prevBox = rosterEl.parentNode.querySelector('#el_prevSteams') || (() => {
+        const d = document.createElement('div'); d.id = 'el_prevSteams'; rosterEl.parentNode.insertBefore(d, rosterEl); return d;
+      })();
+      const last = lastSteamLine(st);
+      prevBox.innerHTML = st.steams.length
+        ? `<div class="el-last">Last steam: ${esc(last)}</div>${steamsTableHtml(st.steams)}`
+        : '<div class="el-muted" style="margin:4px 0 8px">No earlier steams for this job.</div>';
+      const rid = (i, k) => `fr_roster_${i}_${k}`;
+      function apply() {
+        const rows = rosterEl.querySelectorAll('.fr-roster-row');
+        rows.forEach((row, i) => {
+          const no = el(rid(i, 'steamNo')); if (no) { no.value = String(st.maxSteam + i + 1); no.readOnly = true; }
+          const title = row.querySelector('.fr-pot-title'); if (title) title.textContent = `Steam ${st.maxSteam + i + 1}`;
+          if (locked) return;
+          const g = (k) => el(rid(i, k));
+          const fresh = ['steamDate', 'steamingTempC', 'steamingTimeMin', 'startTime'].every((k) => !g(k) || blank(g(k).value));
+          if (!fresh) return;
+          if (g('steamDate')) g('steamDate').value = today();
+          const src = i > 0 ? { steamingTempC: (el(rid(i - 1, 'steamingTempC')) || {}).value, steamingTimeMin: (el(rid(i - 1, 'steamingTimeMin')) || {}).value }
+            : (st.steams.length ? st.steams[st.steams.length - 1] : {});
+          ['steamingTempC', 'steamingTimeMin'].forEach((k) => {
+            const c = g(k);
+            if (c && !blank(src[k])) { c.value = String(src[k]); c.classList.add('el-suggest'); c.addEventListener('input', () => c.classList.remove('el-suggest'), { once: true }); }
+          });
+        });
+      }
+      rosterEl._onDraw = apply;
+      apply();
+    }
+
+    function refresh(force) {
+      const job = jobEl ? String(jobEl.value || '').trim() : '';
+      if (job === lastJob && !force) return;
+      lastJob = job;
+      const st = state();
+      drawPanel(st, job);
+      drawMovements(st);
+      wireTrolleys(st);
+      wireSteams(st);
+      loadCooked(job);
+    }
+    ctx._refresh = refresh;
+    if (jobEl) ['input', 'change'].forEach((ev) => jobEl.addEventListener(ev, () => refresh(false)));
+    refresh(true);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Runs before every save. Draft saves are never blocked. On Submit: hard blocks first (toast, return
+  // false), then one confirm listing the soft warnings; a confirmed override is stamped on the entry
+  // (warningAck / warningNote) and shows as a red line on screen and print.
+  async function beforeSave(x) {
+    const { config, finalize, values, rosterRows, submissions, editingId, toast } = x;
+    const rows = rosterRows || [];
+    values.steamCount = String(rows.length);
+    values.warningAck = ''; values.warningNote = '';
+    if (!finalize) return true;
+    const moves = moveList(config), ranges = config.checkRanges || {};
+    const job = String(values[jobKey(config)] || '').trim();
+    const st = jobState(config, submissions, job, editingId);
+
+    // 2/5: every movement still shown as an open question is answered, in order
+    for (const m of moves) {
+      if (st.moves[m.key]) continue;
+      const reqOk = !m.requires || st.moves[m.requires] || values[moves.find((y) => y.key === m.requires).flag] === 'Yes';
+      if (!reqOk) { if (values[m.flag] === 'Yes') { toast(`"${m.label}" needs "${moves.find((y) => y.key === m.requires).label}" first.`); return false; } continue; }
+      if (values[m.flag] !== 'Yes' && values[m.flag] !== 'No') { toast(`Answer "${m.question || m.label + '?'}" Yes or No before submitting.`); return false; }
+    }
+    // 6: steam dates not in the future and not before the date into the dry room
+    const dry = moves[0];
+    const dryStamp = st.moves[dry.key] ? st.moves[dry.key].stamp : (values[dry.flag] === 'Yes' ? new Date().toISOString() : '');
+    const dryDay = dryStamp ? dayKey(dryStamp) : '';
+    for (let i = 0; i < rows.length; i++) {
+      const d = String(rows[i].steamDate || '').slice(0, 10);
+      if (!d) continue;
+      const no = st.maxSteam + i + 1;
+      if (d > today()) { toast(`Steam ${no} is dated ${fmtD(d)}, which is in the future (today is ${fmtD(today())}).`); return false; }
+      if (dryDay && d < dryDay) { toast(`Steam ${no} is dated ${fmtD(d)}, before the date into the dry room (${fmtD(dryDay)}).`); return false; }
+    }
+    // 7: cooked weight not greater than the whole weight
+    const whole = parseFloat(values.jiIntakeWeight), cooked = parseFloat(values.cookedWeight);
+    if (!isNaN(whole) && !isNaN(cooked) && cooked > whole) { toast(`Cooked weight (${cooked} kg) is more than the whole weight (${whole} kg).`); return false; }
+    // 9: a changed trolley count needs a reason
+    const n = parseInt(values.noOfTrolleys, 10);
+    if (st.trolleys != null && !isNaN(n) && n !== st.trolleys && blank(values.trolleyChangeReason)) {
+      toast(`Trolley count changed from ${st.trolleys} to ${n} — give a short reason.`); return false;
+    }
+
+    const warn = [];
+    // 8: trolley count not recorded
+    if ((isNaN(n) || n <= 0) && (values[dry.flag] === 'Yes' || st.trolleys == null)) warn.push('No. of trolleys not recorded');
+    // 11: empty entry
+    if (!moves.some((m) => values[m.flag] === 'Yes') && !rows.length) warn.push('Nothing recorded in this entry');
+    // 12/13: steam rows
+    const missing = [], odd = [];
+    rows.forEach((r, i) => {
+      const no = st.maxSteam + i + 1;
+      if (blank(r.steamingTempC) || blank(r.steamingTimeMin) || blank(r.startTime)) missing.push(no);
+      const t = parseFloat(r.steamingTempC), mn = parseFloat(r.steamingTimeMin);
+      if (ranges.steamingTempC && !isNaN(t) && (t < ranges.steamingTempC[0] || t > ranges.steamingTempC[1])) odd.push(`steam ${no} temperature ${t} °C`);
+      if (ranges.steamingTimeMin && !isNaN(mn) && (mn < ranges.steamingTimeMin[0] || mn > ranges.steamingTimeMin[1])) odd.push(`steam ${no} time ${mn} min`);
+    });
+    if (missing.length) warn.push(`Steam ${missing.join(', ')}: temperature, time or start time not filled in`);
+    if (odd.length) warn.push(`Outside the normal range: ${odd.join(', ')}`);
+    const loss = parseFloat(values.cookLossPct);
+    if (ranges.cookLossPct && !isNaN(loss) && (loss < ranges.cookLossPct[0] || loss > ranges.cookLossPct[1])) warn.push(`Cook loss ${loss} % is outside the normal range`);
+
+    if (warn.length) {
+      const ok = confirm('Please check before submitting:\n\n• ' + warn.join('\n• ') + '\n\nOK to submit anyway (this is recorded on the entry), or Cancel to go back?');
+      if (!ok) return false;
+      values.warningAck = 'Yes';
+      values.warningNote = warn.join('; ');
+    }
+    return true;
+  }
+
+  // ---- printing ----
+  function sheetSection(sec, sub, submissions, config) {
+    const moves = moveList(config);
+    const job = String(V(sub, jobKey(config)) || '').trim();
+    const at = entryAt(sub);
+    const st = jobState(config, submissions, job, sub.id, at);
+    if (sec.jobSoFarPanel) {
+      if (!job) return '';
+      const last = lastSteamLine(st);
+      return `<div><h3>${esc(sec.title)}</h3>` + (st.entries.length
+        ? `<p>${st.entries.length} earlier entr${st.entries.length === 1 ? 'y' : 'ies'} · ${st.steams.length} steam(s) before this entry · stage before this entry: <b>${esc(STAGES[st.stage])}</b>`
+          + (st.trolleys != null ? ` · trolleys before: ${st.trolleys}` : '') + '</p>'
+          + (last ? `<p><b>Last steam:</b> ${esc(last)}</p>` : '') + steamsTableHtml(st.steams)
+        : '<p>First entry for this job.</p>') + '</div>';
+    }
+    if (sec.movementBlock) {
+      const rows = moves.map((m) => {
+        const earlier = st.moves[m.key];
+        let txt;
+        if (earlier) txt = `${esc(fmtDT(earlier.stamp))} (entry of ${esc(fmtD(entryAt(earlier.entry)))}${whoOf(earlier.entry) ? ', ' + esc(whoOf(earlier.entry)) : ''})`;
+        else if (V(sub, m.flag) === 'Yes') txt = `${esc(fmtDT(V(sub, m.stamp)))} (this entry)`;
+        else if (V(sub, m.flag) === 'No') txt = 'Answered No in this entry (not yet)';
+        else txt = 'Not yet';
+        return `<tr><td class="fr-sheet-lbl">${esc(earlier || V(sub, m.flag) === 'Yes' ? (m.done || m.label) : m.label)}</td><td>${txt}</td></tr>`;
+      }).join('');
+      return `<div><h3>${esc(sec.title)}</h3><table><tbody>${rows}</tbody></table></div>`;
+    }
+    return '';
+  }
+  function warningHtml(sub) {
+    if (!sub || !sub.values || !sub.values.warningAck) return '';
+    return `<p style="color:#b30000;font-weight:bold;">${esc(sub.values.warningNote || 'Submitted with a warning.')}</p>`;
+  }
+
+  window.EntryLog = { attach, beforeSave, sheetSection, warningHtml, jobState, fmtDT, fmtD };
+})();

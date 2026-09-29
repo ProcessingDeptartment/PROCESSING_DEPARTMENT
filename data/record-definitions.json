@@ -16259,6 +16259,7 @@
             "collapseRows": false,
             "startEmpty": true,
             "enforceRequired": true,
+            "titleFrom": "steamNo",
             "rowTitle": "Steam",
             "addLabel": "+ Add steam",
             "previousRows": {
@@ -16419,7 +16420,7 @@
         },
         {
           "key": "cookedWeight",
-          "label": "Cooked weight (kg)",
+          "label": "Cooked weight",
           "type": "number",
           "required": false,
           "readOnly": true,
@@ -16968,7 +16969,9 @@
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "extraJson": {}
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
           "key": "warningAck",
@@ -17616,7 +17619,7 @@
           "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -17711,11 +17714,11 @@
           "validateJson": null
         },
         {
-          "key": "date",
-          "label": "Date",
+          "key": "entryDate",
+          "label": "Entry date",
           "type": "date",
-          "required": true,
-          "readOnly": false,
+          "required": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17727,14 +17730,18 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "serverStamp": true,
+            "timeZone": "Africa/Johannesburg"
+          }
         },
         {
           "key": "cookingDate",
           "label": "Cooking date",
           "type": "date",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17746,16 +17753,38 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "fromRecord": {
+              "source": "dry-cooking",
+              "matchField": "jobNo",
+              "pick": "latest",
+              "field": "recordDate",
+              "filterCol": "process",
+              "filterIn": [
+                "Cooking"
+              ],
+              "submittedOnly": true,
+              "idsField": "cookingDateSourceIds",
+              "manualFlag": "cookingDateTypedManually",
+              "note": "From REC 7.4.0",
+              "missing": "No REC 7.4.0 cooking date for this job. Fill in REC 7.4.0 first",
+              "unlockWhenMissing": true
+            }
+          }
         },
         {
           "key": "dryRoomArea",
           "label": "Dry room area",
-          "type": "text",
-          "required": false,
+          "type": "select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "Main dry room",
+            "Dry container",
+            "Grading room"
+          ],
           "group": null,
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -17772,7 +17801,7 @@
           "label": "No. of trolleys",
           "type": "number",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17784,7 +17813,22 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "fromRecord": {
+              "source": "drying-process",
+              "matchField": "jobNo",
+              "pick": "latest",
+              "field": "noOfTrolleys",
+              "nonEmpty": true,
+              "submittedOnly": true,
+              "idsField": "trolleysSourceSubmissionId",
+              "manualFlag": "trolleysTypedManually",
+              "note": "From REC 7.4.1",
+              "missing": "No REC 7.4.1 trolley count for this job. Fill in REC 7.4.1 first",
+              "unlockWhenMissing": true
+            }
+          }
         },
         {
           "key": "trolleysClearlyMarked",
@@ -17803,14 +17847,18 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "Yes",
+            "redPrompt": "correctiveActions"
+          }
         },
         {
           "key": "estimatedDryDate",
-          "label": "Estimated dry date",
+          "label": "Estimated drying date",
           "type": "date",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17822,7 +17870,14 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "addDays": {
+              "from": "cookingDate",
+              "days": 22,
+              "configKey": "dryingDaysEstimate"
+            }
+          }
         },
         {
           "key": "mouldVisible",
@@ -17841,7 +17896,11 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
         },
         {
           "key": "whiteSaltOnSurface",
@@ -17860,7 +17919,11 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
         },
         {
           "key": "caseHardening",
@@ -17879,7 +17942,11 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
         },
         {
           "key": "surfaceShine",
@@ -17898,7 +17965,11 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
         },
         {
           "key": "footDamage",
@@ -17917,11 +17988,15 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
         },
         {
           "key": "correctiveActions",
-          "label": "Corrective actions",
+          "label": "Comment / corrective action",
           "type": "textarea",
           "required": false,
           "readOnly": false,
@@ -17958,11 +18033,11 @@
           "validateJson": null
         },
         {
-          "key": "qcCheck",
-          "label": "QC check",
+          "key": "cookingDateSourceIds",
+          "label": "Cooking date source entries",
           "type": "text",
-          "required": true,
-          "readOnly": false,
+          "required": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17974,14 +18049,17 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
         },
         {
-          "key": "supervisor",
-          "label": "Supervisor",
-          "type": "text",
+          "key": "cookingDateTypedManually",
+          "label": "Cooking date typed manually",
+          "type": "yesno",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
@@ -17993,7 +18071,132 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
+        },
+        {
+          "key": "trolleysSourceSubmissionId",
+          "label": "Trolley count source entry",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 20,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
+        },
+        {
+          "key": "trolleysTypedManually",
+          "label": "Trolley count typed manually",
+          "type": "yesno",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 21,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
+        },
+        {
+          "key": "dateOld",
+          "label": "Date (old)",
+          "type": "date",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 22,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "date",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "qcCheckOld",
+          "label": "QC check (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 23,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "qcCheck",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "supervisorOld",
+          "label": "Supervisor (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 24,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "supervisor",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
         }
       ],
       "autofills": [
@@ -18013,7 +18216,28 @@
         "batchField": "jobNo",
         "specFields": [],
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
+        "deviationPolarity": "deviation",
+        "dryingDaysEstimate": 22,
+        "dryRoomAreas": [
+          "Main dry room",
+          "Dry container",
+          "Grading room"
+        ],
+        "redPrompt": {
+          "field": "correctiveActions",
+          "blocksSubmit": false
+        },
+        "submitChecks": {
+          "hardBlock": [
+            "jobNo",
+            "dryRoomArea"
+          ],
+          "softWarn": [
+            "cookingDate",
+            "noOfTrolleys",
+            "estimatedDryDate"
+          ]
+        }
       },
       "primaryBatchField": "jobNo"
     },
@@ -18050,7 +18274,8 @@
           "kind": "fields",
           "position": 2,
           "extraJson": {
-            "afterRoster": true
+            "afterRoster": true,
+            "viewer": true
           }
         },
         {
@@ -18061,7 +18286,9 @@
             "binIdColumn": "binCode",
             "totalsRow": [
               "gradedWeight"
-            ]
+            ],
+            "cardLayout": true,
+            "rowTitle": "Bin"
           }
         },
         {
@@ -18727,7 +18954,10 @@
           "label": "Size grade",
           "type": "select",
           "sectionIndex": 3,
-          "position": 32
+          "position": 32,
+          "extraJson": {
+            "layoutRow": 1
+          }
         },
         {
           "required": true,
@@ -18746,7 +18976,8 @@
           "label": "Bin no.",
           "type": "number",
           "extraJson": {
-            "seqWithin": "sizeGrade"
+            "seqWithin": "sizeGrade",
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 33
@@ -18774,7 +19005,8 @@
                 "binNo"
               ],
               "sep": "-"
-            }
+            },
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 34
@@ -18804,7 +19036,8 @@
                 "grading-production-log-ranched"
               ],
               "dateField": "gradingDate"
-            }
+            },
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 35
@@ -18827,7 +19060,8 @@
           "type": "confirm",
           "extraJson": {
             "confirms": "binWeightStart",
-            "confirmText": "Checked on scale"
+            "confirmText": "Checked on scale",
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 36
@@ -18850,7 +19084,8 @@
           "type": "numlist",
           "extraJson": {
             "lockUntil": "startConfirmed",
-            "placeholder": "e.g. 12.4 + 11.9"
+            "placeholder": "e.g. 12.4 + 11.9",
+            "layoutRow": 3
           },
           "sectionIndex": 3,
           "position": 37
@@ -18872,7 +19107,8 @@
           "label": "Final bin weight (kg)",
           "type": "number",
           "extraJson": {
-            "lockUntil": "startConfirmed"
+            "lockUntil": "startConfirmed",
+            "layoutRow": 3
           },
           "sectionIndex": 3,
           "position": 38
@@ -18907,7 +19143,8 @@
                 "finalBinWeight"
               ],
               "dp": 2
-            }
+            },
+            "layoutRow": 3
           },
           "sectionIndex": 3,
           "position": 39
@@ -19015,7 +19252,8 @@
           "kind": "fields",
           "position": 2,
           "extraJson": {
-            "afterRoster": true
+            "afterRoster": true,
+            "viewer": true
           }
         },
         {
@@ -19026,7 +19264,9 @@
             "binIdColumn": "binCode",
             "totalsRow": [
               "gradedWeight"
-            ]
+            ],
+            "cardLayout": true,
+            "rowTitle": "Bin"
           }
         },
         {
@@ -19484,7 +19724,10 @@
           "label": "Size grade",
           "type": "select",
           "sectionIndex": 3,
-          "position": 24
+          "position": 24,
+          "extraJson": {
+            "layoutRow": 1
+          }
         },
         {
           "required": true,
@@ -19503,7 +19746,8 @@
           "label": "Bin no.",
           "type": "number",
           "extraJson": {
-            "seqWithin": "sizeGrade"
+            "seqWithin": "sizeGrade",
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 25
@@ -19531,7 +19775,8 @@
                 "binNo"
               ],
               "sep": "-"
-            }
+            },
+            "layoutRow": 1
           },
           "sectionIndex": 3,
           "position": 26
@@ -19561,7 +19806,8 @@
                 "grading-production-log-ranched"
               ],
               "dateField": "gradingDate"
-            }
+            },
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 27
@@ -19584,7 +19830,8 @@
           "type": "confirm",
           "extraJson": {
             "confirms": "binWeightStart",
-            "confirmText": "Checked on scale"
+            "confirmText": "Checked on scale",
+            "layoutRow": 2
           },
           "sectionIndex": 3,
           "position": 28
@@ -19607,7 +19854,8 @@
           "type": "numlist",
           "extraJson": {
             "lockUntil": "startConfirmed",
-            "placeholder": "e.g. 12.4 + 11.9"
+            "placeholder": "e.g. 12.4 + 11.9",
+            "layoutRow": 3
           },
           "sectionIndex": 3,
           "position": 29
@@ -19629,7 +19877,8 @@
           "label": "Final bin weight (kg)",
           "type": "number",
           "extraJson": {
-            "lockUntil": "startConfirmed"
+            "lockUntil": "startConfirmed",
+            "layoutRow": 3
           },
           "sectionIndex": 3,
           "position": 30
@@ -19664,7 +19913,8 @@
                 "finalBinWeight"
               ],
               "dp": 2
-            }
+            },
+            "layoutRow": 3
           },
           "sectionIndex": 3,
           "position": 31

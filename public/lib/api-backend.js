@@ -257,8 +257,18 @@
       console.warn('storage set failed, queueing (api)', e);
     }
     if (res && res.ok) {
+      window.FacilityApi.lastReject = null;
       if (queueCount()) drain();
       return true;
+    }
+    // A refusal by the server's rules (e.g. REC 7.4.1 guard: 409/422) will never succeed on retry, so it
+    // is NOT queued: the write fails and the reason is left in FacilityApi.lastReject for the form to show.
+    if (res && res.status >= 400 && res.status < 500 && [401, 408, 429].indexOf(res.status) === -1) {
+      let why = '';
+      try { const b = await res.json(); why = (b && b.error) || ''; } catch (e) {}
+      window.FacilityApi.lastReject = why || ('The server refused this save (' + res.status + ').');
+      console.warn('storage set refused:', key, res.status, why);
+      return false;
     }
     console.warn('storage set queued for retry:', key, res ? res.status : 'network');
     return enqueue('set', key, value);

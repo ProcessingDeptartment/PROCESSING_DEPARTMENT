@@ -94,6 +94,14 @@
   .ml-yesno[data-good="Yes"] button.on[data-v="Yes"], .ml-yesno[data-good="No"] button.on[data-v="No"], .ml-yesno:not([data-good]) button.on[data-v="Yes"]{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
   .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"], .ml-yesno:not([data-good]) button.on[data-v="No"]{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); }
   .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
+  /* Problem answer (the non-good one) is not colour-only: bold text plus a warning mark, and a border on paper. */
+  .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"]{ font-weight:800; }
+  .ml-yesno[data-good="Yes"] button.on[data-v="No"]::after, .ml-yesno[data-good="No"] button.on[data-v="Yes"]::after{ content:' \\26A0'; }
+  .ml-bad{ color:var(--palette-fail,#a3352d); background:var(--palette-fail-bg,#fbe8e6); font-weight:800; border:1px solid var(--palette-fail,#a3352d); border-radius:4px; padding:1px 6px; white-space:nowrap; }
+  .ml-fromnote{ display:block; margin-top:3px; font-size:11px; color:#6b7680; }
+  .ml-fromnote.warn{ color:#8a5a00; background:#fff4d6; border:1px solid #e6c46a; border-radius:4px; padding:3px 6px; }
+  .ml-commentprompt{ outline:2px solid var(--palette-fail,#a3352d); }
+  .ml-field.ml-readonly-calc input:disabled, .ml-field input[readonly]{ background:#f2f4f6; color:#3a444d; }
   .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
     font-weight:700; border-bottom:1px solid var(--palette-border,#e2e4e3); padding-bottom:4px; margin:12px 0 2px; }
   .ml-grouphead:first-child{ margin-top:0; }
@@ -288,11 +296,16 @@
     const id = `${ns}_f_${field.key}`;
     const v = value == null ? '' : value;
 
+    // hidden bookkeeping fields (source ids, "typed manually" flags) carry a value but draw nothing
+    if (field.hidden) return `<input type="hidden" id="${id}" value="${esc(v)}">`;
+
     if (field.type === 'yesno') {
+      // a record that flags problem answers (redPrompt) spells the answer out: colour is never the only signal
+      const yes = field.redPrompt ? 'Yes' : 'Y', no = field.redPrompt ? 'No' : 'N';
       return `<span class="ml-yesno" data-yesno-for="${id}" data-good="${field.good === 'No' ? 'No' : 'Yes'}" role="radiogroup">
         <button type="button" role="radio" data-v="" class="${v === '' ? 'on' : ''}" aria-checked="${v === '' ? 'true' : 'false'}" tabindex="${v === '' ? 0 : -1}">None</button>
-        <button type="button" role="radio" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}" aria-checked="${v === 'Yes' ? 'true' : 'false'}" tabindex="${v === 'Yes' ? 0 : -1}">Y</button>
-        <button type="button" role="radio" data-v="No" class="${v === 'No' ? 'on' : ''}" aria-checked="${v === 'No' ? 'true' : 'false'}" tabindex="${v === 'No' ? 0 : -1}">N</button>
+        <button type="button" role="radio" data-v="Yes" class="${v === 'Yes' ? 'on' : ''}" aria-checked="${v === 'Yes' ? 'true' : 'false'}" tabindex="${v === 'Yes' ? 0 : -1}">${yes}</button>
+        <button type="button" role="radio" data-v="No" class="${v === 'No' ? 'on' : ''}" aria-checked="${v === 'No' ? 'true' : 'false'}" tabindex="${v === 'No' ? 0 : -1}">${no}</button>
         <input type="hidden" id="${id}" value="${esc(v)}">
       </span>`;
     }
@@ -347,10 +360,10 @@
       return `<input type="text" inputmode="numeric" pattern="[0-9]*" id="${id}" value="${esc(v)}">`;
     }
 
-    if (field.type === 'timestamp') {
+    if (isStamp(field)) {
 
       return `<span class="ml-stamp" data-stamp-for="${id}">
-        <input type="text" id="${id}__shown" value="${esc(stampText(v))}" disabled
+        <input type="text" id="${id}__shown" value="${esc(stampText(v))}" disabled readonly
                placeholder="stamped on submit">
         <input type="hidden" id="${id}" value="${esc(v)}">
       </span>`;
@@ -362,6 +375,30 @@
     return `<input type="text" id="${id}" value="${esc(v)}"${patternAttrs}${ro}>`;
   }
 
+
+  // A stamped field is filled by the system when the entry is submitted, never typed: type 'timestamp',
+  // or any field marked serverStamp (REC 7.4.2's date-only Entry date).
+  function isStamp(f) { return f.type === 'timestamp' || !!f.serverStamp; }
+
+  // Today's date in the facility's time zone (Africa/Johannesburg), so a late-night save never lands a day off.
+  function facilityToday() {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date()); }
+    catch (e) { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`; }
+  }
+  function facilityDateOf(ms) {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date(ms)); }
+    catch (e) { return ''; }
+  }
+  // Calendar-day arithmetic on a YYYY-MM-DD string (no local-time drift); '' when the input is not a date.
+  function addDaysISO(iso, days) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    if (!m || !isFinite(days)) return '';
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + Number(days)));
+    if (Number.isNaN(d.getTime())) return '';
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  }
+  // The answer that counts as a problem for a Yes/No check, or null when the field does not flag problems.
+  function badAnswerOf(f) { return f.type === 'yesno' && f.redPrompt ? (f.good === 'No' ? 'Yes' : 'No') : null; }
 
   function stampText(v) {
     const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(String(v || ''));
@@ -834,7 +871,7 @@
       const search = el(`${ns}_filterSearch`) ? el(`${ns}_filterSearch`).value.trim().toLowerCase() : '';
       const devOnly = el(`${ns}_filterDevOnly`) ? el(`${ns}_filterDevOnly`).checked : false;
       return entries.filter(e => {
-        const d = e.values.date || '';
+        const d = entryDateOf(e);
         if (from && d && d < from) return false;
         if (to && d && d > to) return false;
         if (devOnly && e.inSpec !== false) return false;
@@ -843,8 +880,33 @@
           if (!hay.includes(search)) return false;
         }
         return true;
-      }).sort((a, b) => (b.values.date || '').localeCompare(a.values.date || '') || b.createdAt - a.createdAt);
+      }).sort((a, b) => entryDateOf(b).localeCompare(entryDateOf(a)) || b.createdAt - a.createdAt);
     }
+
+    // The date an entry belongs to for filtering and sorting: the typed date on records that have one, the
+    // system-stamped entry date on records that dropped it (REC 7.4.2), else the day it was submitted or saved.
+    function entryDateOf(e) {
+      const v = e.values || {};
+      const d = v.date || v.entryDate;
+      if (d) return String(d).slice(0, 10);
+      return (entryFields.some(isStampDate) && facilityDateOf(e.submittedAt || e.createdAt)) || '';
+    }
+    function isStampDate(f) { return !!f.serverStamp && f.type === 'date'; }
+
+    // Fields that appear in the list, CSV and JSON: not the hidden bookkeeping ones, and not the "(old)" copies
+    // of removed fields (those show only when an old entry is opened or printed).
+    function listFields() { return entryFields.filter(f => f.showInTable !== false && !f.hidden && !f.legacy); }
+
+    // Stored value of a field for display. Old entries saved before a field existed fall back to what they hold:
+    // a "(old)" field reads the removed key (legacyFrom), and a stamped Entry date reads the submit date.
+    function valueFor(entryRow, f) {
+      const v = entryRow.values || {};
+      if (v[f.key] != null && v[f.key] !== '') return v[f.key];
+      if (f.legacyFrom && v[f.legacyFrom] != null && v[f.legacyFrom] !== '') return v[f.legacyFrom];
+      if (isStampDate(f) && isSubmitted(entryRow)) return facilityDateOf(entryRow.submittedAt || entryRow.createdAt);
+      return v[f.key];
+    }
+    function isBadValue(f, val) { const bad = badAnswerOf(f); return !!bad && val === bad; }
 
 
     function openBatches() {
@@ -919,7 +981,7 @@
       }
       const cols = customBody && Array.isArray(customBody.listColumns)
         ? customBody.listColumns.map(c => ({ label: c.label, custom: true, get: c.get }))
-        : entryFields.filter(f => f.showInTable !== false);
+        : listFields();
 
       let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}${submitFlow ? '<th class="no-print">Submission</th>' : ''}<th>Status</th><th class="no-print"></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
@@ -928,12 +990,13 @@
           let v;
           if (f.custom) { try { v = f.get(entryRow.values, entryRow); } catch (e) { v = ''; } }
           else {
-            v = entryRow.values[f.key];
-            if (f.type === 'timestamp') v = stampText(v);
+            v = valueFor(entryRow, f);
+            if (isStamp(f)) v = stampText(v);
           }
+          const bad = !f.custom && isBadValue(f, v);
           if (f.type === 'yesno' || f.type === 'select') v = v || '—';
           else if (v === '' || v == null) v = '—';
-          html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${esc(v)}</td>`;
+          html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${bad ? `<span class="ml-bad">${esc(v)} &#9888;</span>` : esc(v)}</td>`;
         });
         if (submitFlow) {
           if (entryRow.verification) html += `<td class="no-print"><span class="ml-badge ml-badge-ok">✓ Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
@@ -1046,6 +1109,8 @@
 
     function conditionMet(f) {
       if (!f.showWhen) return true;
+      // "(old)" fields of removed inputs: shown only when the entry actually holds an old value
+      if (f.showWhen.nonEmpty) { const own = el(`${ns}_f_${f.key}`); return !!(own && String(own.value || '').trim()); }
       const src = el(`${ns}_f_${f.showWhen.field}`);
       if (!src) return false;
       const want = f.showWhen.equals;
@@ -1064,6 +1129,106 @@
           if (inp && inp.value) inp.value = '';
         }
       });
+    }
+
+    // A small line under a field's input: grey for "From REC 7.4.0", amber when the source record is missing.
+    function setFieldNote(key, text, warn) {
+      const wrap = document.querySelector(`#${ns}_f_${key}`) ? document.querySelector(`#${ns}_f_${key}`).closest('label.ml-field') : null;
+      if (!wrap) return;
+      let n = wrap.querySelector('.ml-fromnote');
+      if (!text) { if (n) n.remove(); return; }
+      if (!n) { n = document.createElement('span'); n.className = 'ml-fromnote'; wrap.appendChild(n); }
+      n.className = 'ml-fromnote' + (warn ? ' warn' : '');
+      n.textContent = text;
+    }
+
+    // Fields marked fromRecord are read-only copies of what another record already holds for the job (REC 7.4.2
+    // cooking date from REC 7.4.0, trolley count from REC 7.4.1). When the source record has nothing the field
+    // unlocks so the person can type it, an amber note says why, and the entry is flagged "typed manually".
+    // The stored value is a snapshot: submitted entries never re-read it.
+    function wireFromRecord(container) {
+      const rules = entryFields.filter(f => f.fromRecord);
+      if (!rules.length) return;
+      const jobField = entryFields.find(f => f.type === 'jobsearch');
+      const jobEl = jobField ? el(`${ns}_f_${jobField.key}`) : null;
+      if (!jobEl) return;
+      rules.forEach((f) => {
+        const r = f.fromRecord, inp = el(`${ns}_f_${f.key}`), flag = r.manualFlag ? el(`${ns}_f_${r.manualFlag}`) : null;
+        if (!inp) return;
+        inp.addEventListener('input', () => { if (!inp.readOnly && flag) flag.value = String(inp.value || '').trim() ? 'Yes' : ''; });
+      });
+      let lastJob = null;
+      const apply = async () => {
+        const job = String(jobEl.value || '').trim();
+        if (job === lastJob) return;
+        lastJob = job;
+        if (!job) { rules.forEach(f => { setFieldNote(f.key, '', false); const i = el(`${ns}_f_${f.key}`); if (i) i.readOnly = true; }); return; }
+        let facts = null, failed = false;
+        try {
+          const path = `/api/dry-monitoring/job-facts/${encodeURIComponent(job)}`;
+          const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
+            : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
+          if (res.ok) facts = await res.json(); else failed = true;
+        } catch (e) { failed = true; console.error('job facts lookup failed', e); }
+        if (String(jobEl.value || '').trim() !== job) return;   // the job changed while we were asking
+        rules.forEach((f) => {
+          const r = f.fromRecord, inp = el(`${ns}_f_${f.key}`);
+          if (!inp) return;
+          const flag = r.manualFlag ? el(`${ns}_f_${r.manualFlag}`) : null;
+          const ids = r.idsField ? el(`${ns}_f_${r.idsField}`) : null;
+          const hit = facts && facts[r.source];
+          if (hit && hit.value != null && hit.value !== '') {
+            inp.readOnly = true;
+            inp.value = hit.value;
+            if (ids) ids.value = (hit.ids || []).join(',');
+            if (flag) flag.value = 'No';
+            setFieldNote(f.key, r.note || '', false);
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            inp.readOnly = !r.unlockWhenMissing;
+            if (ids) ids.value = '';
+            // a value copied from the previous job must not linger; only something a person typed is kept
+            if (flag && flag.value === 'No' && String(inp.value || '').trim()) {
+              inp.value = '';
+              inp.dispatchEvent(new Event('input', { bubbles: true }));
+              inp.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            if (flag) flag.value = String(inp.value || '').trim() ? 'Yes' : '';
+            setFieldNote(f.key, failed ? 'Could not check the source record just now. You can type this in.' : (r.missing || ''), true);
+          }
+        });
+      };
+      jobEl.addEventListener('input', apply);
+      jobEl.addEventListener('change', apply);
+      apply();
+    }
+
+    // Calculated read-only dates (addDays) and the "a check is red, add a comment" prompt.
+    function wireCalcAndFlags(container, locked) {
+      if (locked) return;   // a submitted entry keeps exactly what it was saved with
+      entryFields.filter(f => f.addDays).forEach((f) => {
+        const a = f.addDays, src = el(`${ns}_f_${a.from}`), dst = el(`${ns}_f_${f.key}`);
+        if (!src || !dst) return;
+        const cfgDays = a.configKey && traceConfig ? Number(traceConfig[a.configKey]) : NaN;
+        const days = isFinite(cfgDays) && cfgDays > 0 ? cfgDays : Number(a.days);
+        const calc = () => { dst.value = addDaysISO(src.value, days); };
+        src.addEventListener('input', calc);
+        src.addEventListener('change', calc);
+        calc();
+      });
+      const flagged = entryFields.filter(f => badAnswerOf(f));
+      if (!flagged.length) return;
+      const target = flagged[0].redPrompt;
+      const box = el(`${ns}_f_${target}`);
+      const refresh = () => {
+        const anyBad = flagged.some(f => { const i = el(`${ns}_f_${f.key}`); return i && isBadValue(f, i.value); });
+        if (box) box.classList.toggle('ml-commentprompt', anyBad && !String(box.value || '').trim());
+        setFieldNote(target, anyBad ? 'A check is marked as a problem. Please describe what was found and what was done.' : '', anyBad);
+      };
+      flagged.forEach((f) => { const i = el(`${ns}_f_${f.key}`); if (i) i.addEventListener('input', refresh); });
+      if (box) box.addEventListener('input', refresh);
+      refresh();
     }
 
     function openForm(id) {
@@ -1119,9 +1284,11 @@
 
         if (entryStages && f.stage && f.stage !== activeKey
             && !stageDone(existing, f.stage) && !unlockedStages.has(f.stage)) return head;
+        const shownValue = existing ? valueFor(existing, f) : (f.default || '');
+        if (f.hidden) return head + fieldInputHtml(ns, f, shownValue);
         return head + `
         <label class="ml-field" data-field="${esc(f.key)}">${fieldLabel(f)}
-          ${fieldInputHtml(ns, f, existing ? existing.values[f.key] : (f.default || ''))}
+          ${fieldInputHtml(ns, f, shownValue)}
         </label>`;
       }).join('');
       wireYesNo(container);
@@ -1129,6 +1296,8 @@
       wireDigits(container);
       wireJobInfoCollapsible(container, ns, entryFields, jobInfoGroup);
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
+      if (!locked) wireFromRecord(container);
+      wireCalcAndFlags(container, locked);
 
       // resumeByJob: this record is completed over more than one sitting. On a fresh entry,
       // picking a job that already has an unsubmitted draft reopens that draft so the earlier
@@ -1230,6 +1399,7 @@
 
       const existingForStage = editingId ? entries.find(e => e.id === editingId) : null;
       let values, inSpec;
+      let softNote = '';
       let correctingStage = null, savingStage = null;
 
       if (customBody) {
@@ -1263,7 +1433,7 @@
 
         if (f.showWhen && !conditionMet(f)) { raw[f.key] = ''; return; }
 
-        if (f.type === 'timestamp') return;
+        if (isStamp(f)) return;
         if (f.required && !String(raw[f.key] || '').trim()) missingRequired = f.label;
 
         if (f.pattern && !badPattern && String(raw[f.key] || '').trim()
@@ -1288,16 +1458,30 @@
 
       if (finalize) {
         entryFields.forEach(f => {
-          if (f.type !== 'timestamp' || !stageInPlay(f) || String(raw[f.key] || '').trim()) return;
+          if (!isStamp(f) || !stageInPlay(f) || String(raw[f.key] || '').trim()) return;
           const now = new Date();
           const pad = (n) => String(n).padStart(2, '0');
-          raw[f.key] = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-            + `T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+          raw[f.key] = f.type === 'timestamp'
+            ? `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+            : facilityToday();
           const inp = el(`${ns}_f_${f.key}`);
           if (inp) inp.value = raw[f.key];
           const shown = el(`${ns}_f_${f.key}__shown`);
           if (shown) shown.value = stampText(raw[f.key]);
         });
+      }
+      // A red (problem) answer asks for a comment / corrective action. Never blocks a draft; blocks a submit
+      // only if the record says so (redPrompt.blocksSubmit), otherwise it asks once.
+      const rp = traceConfig && traceConfig.redPrompt;
+      if (finalize && rp && rp.field && entryFields.some(f => isBadValue(f, raw[f.key])) && !String(raw[rp.field] || '').trim()) {
+        if (rp.blocksSubmit) { toast('A check is marked as a problem. Please add a comment / corrective action.'); return; }
+        if (window.confirm('A check is marked as a problem (red) but no comment / corrective action is entered.\n\nSubmit anyway?') === false) return;
+      }
+      const soft = traceConfig && traceConfig.submitChecks && traceConfig.submitChecks.softWarn;
+      if (finalize && Array.isArray(soft)) {
+        const missing = soft.filter(k => !String(raw[k] == null ? '' : raw[k]).trim())
+          .map(k => (entryFields.find(f => f.key === k) || { label: k }).label);
+        if (missing.length) softNote = ' Missing: ' + missing.join(', ') + '.';
       }
       values = computeAll(raw);
       inSpec = evaluateEntry(values);
@@ -1395,7 +1579,7 @@
           toast(allStagesDone
             ? 'Final section submitted — this entry is now complete and locked.'
             : `${st ? st.label : 'Section'} submitted. Come back by job no. for the next section.`);
-        } else toast(finalize ? 'Entry submitted.' : 'Draft saved.');
+        } else toast(finalize ? 'Entry submitted.' + softNote : 'Draft saved.');
       }
       else toast(editingId ? 'Entry updated.' : 'Entry added.');
     }
@@ -1409,11 +1593,11 @@
     }
 
     function exportCsv() {
-      const cols = entryFields.filter(f => f.showInTable !== false);
+      const cols = listFields();
       const rows = [cols.map(f => f.label).concat(submitFlow ? ['Submission', 'Status'] : ['Status'])];
       filteredEntries().forEach(e => {
         const tail = e.inSpec === null || e.inSpec === undefined ? '' : (e.inSpec ? 'OK' : 'DEVIATION');
-        rows.push(cols.map(f => e.values[f.key] == null ? '' : String(e.values[f.key]))
+        rows.push(cols.map(f => { const val = valueFor(e, f); return val == null ? '' : String(val); })
           .concat(submitFlow ? [isSubmitted(e) ? 'Submitted' : 'Draft', tail] : [tail]));
       });
       const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -1483,23 +1667,26 @@
 
     function sheetRowFields() {
 
-      return entryFields.filter(f => !f.role && !f.isComment);
+      return entryFields.filter(f => !f.role && !f.isComment && !f.hidden);
     }
 
     function buildEntrySheet(entryRow) {
       const v = entryRow.values || {};
       const dateF = roleField('date'), opF = roleField('operator');
+      const stampDateF = entryFields.find(isStampDate) || null;   // records with a system-stamped Entry date print it in the header
       const m = sheetMeta || {};
       if (customBody && typeof customBody.sheetHtml === 'function') {
         try { return customBody.sheetHtml(entryRow, { docCode, docTitle, meta: m }); }
         catch (e) { console.error('customBody.sheetHtml failed', e); }
       }
       const rows = sheetRowFields().map(f => {
-        const raw = v[f.key];
-        const shown = (raw === '' || raw == null) ? '' : String(raw);
+        const raw = valueFor(entryRow, f);
+        if (f.legacy && (raw === '' || raw == null)) return '';   // "(old)" rows print only on old entries
+        const shown = (raw === '' || raw == null) ? '' : (isStamp(f) ? stampText(raw) : String(raw));
         const comment = v[f.key + '__comment'] || '';
+        const cell = isBadValue(f, shown) ? `<span class="ml-bad">${esc(shown)} &#9888;</span>` : esc(shown);
         return `<tr><td class="sheet-item">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</td>
-          <td class="sheet-rec">${esc(shown)}</td><td>${esc(comment)}</td></tr>`;
+          <td class="sheet-rec">${cell}</td><td>${esc(comment)}</td></tr>`;
       }).join('');
       const verified = entryRow.verification || null;
       const cb = entryRow.completedBy || {};
@@ -1517,7 +1704,7 @@
         <tr><td colspan="5">Distribution approved as controlled copy:</td></tr>
       </table>
       <table class="sheet-body">
-        <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : '')}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
+        <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : (stampDateF ? stampText(valueFor(entryRow, stampDateF)) : ''))}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
         ${rows}
       </table>
       <table class="sheet-sign">
@@ -1657,7 +1844,7 @@
       const t = el('ml_toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2200);
+      setTimeout(() => t.classList.remove('show'), msg.length > 60 ? 5000 : 2200);
     }
 
     const specKey = config.recordKey + '-spec';

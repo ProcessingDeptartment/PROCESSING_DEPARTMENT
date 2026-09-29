@@ -20,6 +20,7 @@ const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
 const { syncSubmissionDates } = require('./submission-dates');
 const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
+const dryGuard = require('./drying-process-guard');
 
 // Query events feed the status page's query counter (src/status-page.js); emit:'event' logs nothing.
 const prisma = new PrismaClient({ log: [{ emit: 'event', level: 'query' }] });
@@ -89,8 +90,19 @@ app.get('/api/storage/key/:key', async (req, res) => {
 
 app.put('/api/storage/key/:key', async (req, res) => {
   try {
-    const { value } = req.body;
+    let { value } = req.body;
     if (typeof value !== 'string') return res.status(400).json({ ok: false });
+
+    // REC 7.4.1 Drying Process: server-side stamps, locks, one Yes per movement, per-job steam numbers.
+    if (req.params.key === dryGuard.KEY) {
+      const prevRow = await prisma.keyValue.findUnique({ where: { key: req.params.key } });
+      const g = dryGuard.guardWrite(prevRow ? prevRow.value : null, value);
+      if (!g.ok) {
+        console.warn('PUT', req.params.key, 'REFUSED by drying-process guard:', g.error);
+        return res.status(g.status).json({ ok: false, guard: true, error: g.error });
+      }
+      value = g.value;
+    }
 
     // Layer 2: validate the submission against its record definition. Report-only unless
     // VALIDATE_WRITES=enforce, in which case a submitted-and-invalid entry is rejected 422.
@@ -420,6 +432,36 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
   }
 });
 
+// REC 7.4.2 Dry Monitoring autofill: what the rest of the system already knows about a job, read from the
+// relational projections (submitted entries only, drafts ignored). Keyed by source record so the form's
+// `fromRecord.source` picks its own answer.
+//   'dry-cooking'    -> latest REC 7.4.0 Cooking-card date (Blanching cards never count) + the entries it came from
+//   'drying-process' -> current trolley count = the latest submitted REC 7.4.1 entry that has one
+app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
+  const jobNo = String(req.params.jobNo || '').trim();
+  const out = { 'dry-cooking': null, 'drying-process': null };
+  if (!jobNo) return res.json(out);
+  try {
+    const cook = await prisma.$queryRawUnsafe(
+      `SELECT DISTINCT "submissionId", to_char("recordDate", 'YYYY-MM-DD') AS d FROM "dry_cooking_pot"
+       WHERE UPPER("jobNo") = UPPER($1) AND "process" = 'Cooking' AND "recordDate" IS NOT NULL
+         AND COALESCE("status", 'submitted') <> 'draft'`, jobNo);
+    if (cook.length) {
+      const dates = [...new Set(cook.map((r) => r.d))].sort();
+      const latest = dates[dates.length - 1];
+      out['dry-cooking'] = { value: latest, ids: cook.filter((r) => r.d === latest).map((r) => r.submissionId), dates };
+    }
+  } catch (e) { console.error('job-facts cooking failed', e.message); }
+  try {
+    const dry = await prisma.$queryRawUnsafe(
+      `SELECT "id", "noOfTrolleys" FROM "sub_drying_process"
+       WHERE UPPER("jobNo") = UPPER($1) AND "noOfTrolleys" IS NOT NULL AND COALESCE("status", 'submitted') <> 'draft'
+       ORDER BY "entryDate" DESC NULLS LAST LIMIT 1`, jobNo);
+    if (dry.length) out['drying-process'] = { value: String(dry[0].noOfTrolleys), ids: [dry[0].id] };
+  } catch (e) { console.error('job-facts trolleys failed', e.message); }
+  res.json(out);
+});
+
 // Read-only view over the extracted date fields, for reporting/audits.
 app.get('/api/dates', async (req, res) => {
   try {
@@ -584,6 +626,32 @@ app.get('/api/links/:value', async (req, res) => {
   } catch (e) {
     console.error('GET links failed', e);
     res.status(500).json([]);
+  }
+});
+
+// REC 7.4.1: an administrator reverses a wrongly answered Yes (reason + name required). The movement goes back
+// to an open question; every reversal is also kept as a row in dry_process_movement_audit.
+app.post('/api/drying-process/reverse-movement', async (req, res) => {
+  try {
+    const role = String(req.get('x-role') || '').toUpperCase();
+    if (!['ADMINISTRATOR', 'QA_MANAGER'].includes(role)) return res.status(403).json({ ok: false, error: 'Only an administrator or the QA manager can reverse a movement.' });
+    const b = req.body || {};
+    const key = dryGuard.KEY;
+    const prev = await prisma.keyValue.findUnique({ where: { key } });
+    const r = dryGuard.reverseMovement(prev ? prev.value : '[]', { jobNo: b.jobNo, movement: b.movement, reason: b.reason, name: b.name });
+    if (!r.ok) return res.status(r.status).json({ ok: false, error: r.error });
+    await prisma.$transaction(async (tx) => {
+      await tx.keyValue.update({ where: { key }, data: { value: r.value } });
+      await tx.keyValueHistory.create({ data: { ...who(req), key, action: 'set', before: prev.value, after: r.value } });
+      await tx.$executeRawUnsafe(
+        'INSERT INTO "dry_process_movement_audit" ("job_no","movement","entry_id","old_stamp","reversed_by","reason") VALUES ($1,$2,$3,$4,$5,$6)',
+        r.audit.jobNo, r.audit.movement, r.audit.entryId, r.audit.oldStamp ? new Date(r.audit.oldStamp) : null, r.audit.reversedBy, r.audit.reason);
+    });
+    try { await syncSubmissionRows(prisma, key, r.value); } catch (e) { console.error('syncSubmissionRows failed (reversal saved)', e); }
+    res.json({ ok: true, audit: r.audit });
+  } catch (e) {
+    console.error('reverse-movement failed', e);
+    res.status(500).json({ ok: false });
   }
 });
 

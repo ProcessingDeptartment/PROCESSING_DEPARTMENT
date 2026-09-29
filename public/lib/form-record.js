@@ -1434,7 +1434,7 @@
 
     const listCols = config.listColumns || [];
     function labelFor(key) {
-      if (key === 'roster:count') return 'No. of pots';
+      if (key === 'roster:count') return config.entryLog ? 'Steams' : 'No. of pots';
       if (key.indexOf('roster:') === 0) return 'Pots';
       const f = allFields(config).find(x => x.key === key);
       return f ? f.label : key;
@@ -1529,6 +1529,7 @@
     function isSubmitted(sub) { return !!sub && (sub.status == null || sub.status === 'submitted'); }
 
     function dateOf(values) {
+      if (config.entryLog) { const d = new Date(values.entryDate); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
       const dateField = allFields(config).find(f => f.type === 'date');
       return dateField ? (values[dateField.key] || '') : '';
     }
@@ -1570,6 +1571,7 @@
             v = Array.from(new Set(getRosterRows(sub, 0, (rosterList[0] || {}).key)
               .map(r => String(r[rk] == null ? '' : r[rk]).trim()).filter(Boolean))).join(', ');
           } else v = sub.values[k];
+          if (v && config.entryLog && k === 'entryDate') v = fmtDateTime(v);
           if (v === '' || v == null) v = '—';
           html += `<td>${esc(v)}</td>`;
         });
@@ -1606,10 +1608,22 @@
         const hiddenIn = roster.columns.filter(c => c.hidden).map(c =>
           `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${esc(c.key === roster.autoNumber ? String(idx + 1) : (row[c.key] == null ? '' : row[c.key]))}">`).join('');
         return `<div class="fr-roster-row fr-pot-card" data-roster-row="${idx}">
-          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1} &mdash; ${esc(proc)}</strong>
+          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}${proc ? ' &mdash; ' + esc(proc) : ''}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button></div>
           ${hiddenIn}
+          ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
+        </div>`;
+      }
+      // cardLayout: on-screen entry only -- each row is a card with the columns grouped into lines
+      // (column.layoutRow). Validation, save and the printed table are the normal roster ones.
+      if (roster.cardLayout) {
+        const lines = [];
+        roster.columns.forEach(c => { if (!c.hidden) (lines[c.layoutRow || 1] = lines[c.layoutRow || 1] || []).push(c); });
+        return `<div class="fr-roster-row fr-pot-card fr-bin-card" data-roster-row="${idx}">
+          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}</strong>
+            <span class="fr-pot-warn no-print" data-dup-warn></span>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button></div>
           ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
         </div>`;
       }
@@ -2279,12 +2293,24 @@
         html += `<div class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
           ${esc(existing.values.oosWarningNote || 'Batch weight exceeding OOSW - possible batch mix')}</div>`;
       }
+      // Entry-log records (REC 7.4.1): hidden/movement/stamp fields are held in hidden inputs (the
+      // EntryLog extension draws the movement UI); old-entry legacy values show only when present.
+      const elVal = f => existing && existing.values && existing.values[f.key] != null ? String(existing.values[f.key]) : '';
+      const elHidden = f => config.entryLog && (f.hidden || f.movement || (f.legacy && f.showWhen && f.showWhen.nonEmpty && elVal(f).trim() === ''));
+      const elHiddenInputs = fs => fs.filter(elHidden).map(f => `<input type="hidden" id="fr_f_${f.key}" value="${esc(elVal(f))}">`).join('');
       const renderSection = sec => {
+        if (config.entryLog && sec.jobSoFarPanel) return `<div class="fr-section-title">${esc(sec.title)}</div><div id="fr_jobSoFar"></div>`;
+        if (config.entryLog && sec.movementBlock) return `<div class="fr-section-title">${esc(sec.title)}</div><div id="fr_movements"></div>${elHiddenInputs(sec.fields)}`;
+        if (config.entryLog) {
+          const shown = sec.fields.filter(f => !elHidden(f));
+          if (!shown.length) return elHiddenInputs(sec.fields);
+          sec = Object.assign({}, sec, { fields: shown, __hiddenHtml: elHiddenInputs(sec.fields) });
+        }
         const compact = sec.fields.length && sec.fields.every(f => f.type === 'computed' || f.readOnly);
-        const fieldsHtml = `<div class="fr-grid fr-grid-2${compact ? ' fr-compact' : ''}">
+        const fieldsHtml = `<div class="fr-grid fr-grid-2${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
-            ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}
-          </label>`).join('')}
+            ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}
+          </label>`).join('')}${sec.__hiddenHtml || ''}
         </div>`;
         if (sec.collapsible) {
 
@@ -2407,8 +2433,10 @@
         }
       }
 
+      if (config.entryLog && window.EntryLog) window.EntryLog.attach({ config, existing, locked, container, el, toast, storeGet,
+        submissions: () => submissions, openForm, formHasInput, reload: load });
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
-      container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = locked || computedIds.has(i.id); });
+      container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = (locked && !i.hasAttribute('data-keep-enabled')) || computedIds.has(i.id); });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
@@ -2524,6 +2552,10 @@
             }));
           }
         }
+      }
+
+      if (config.entryLog && window.EntryLog) {
+        if (!await window.EntryLog.beforeSave({ config, finalize, values, rosterRows: rosterRowsByIndex ? rosterRowsByIndex[0] : [], submissions, editingId, toast })) return;
       }
 
       // Business rules (see public/data/business-rules.json): every cross-record check lives in
@@ -2646,7 +2678,14 @@
         }
       }
       const ok = await persist();
-      if (!ok) { toast('Save failed — please retry.'); return; }
+      if (!ok) {
+        const why = window.FacilityApi && window.FacilityApi.lastReject;
+        if (config.entryLog) await load();   // the server refused: drop the unsaved in-memory copy
+        if (why) alert(why); else toast('Save failed — please retry.');
+        return;
+      }
+      // entry-log records: the server stamps dates/steam numbers, so pick up what it actually stored
+      if (config.entryLog) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       if (finalize) {
@@ -2680,6 +2719,7 @@
     function displayValue(field, raw) {
       if (raw === '' || raw == null) return '';
       if (field && field.type === 'date') return window.DocHeader.fmtDate(raw);
+      if (field && field.type === 'timestamp') return fmtDateTime(raw) || String(raw);
       return String(raw);
     }
 
@@ -2687,7 +2727,8 @@
       const { pre, post } = sectionsAroundRoster(config);
       const secs = which === 'post' ? post : which === 'pre' ? pre : (config.sections || []);
       return secs.map(sec => {
-        const rows = (sec.fields || []).map(f =>
+        if (config.entryLog && (sec.jobSoFarPanel || sec.movementBlock)) return window.EntryLog ? window.EntryLog.sheetSection(sec, sub, submissions, config) : '';
+        const rows = (sec.fields || []).filter(f => !(config.entryLog && (f.hidden || f.movement || (f.legacy && String(sub.values[f.key] == null ? '' : sub.values[f.key]).trim() === '')))).map(f =>
           `<tr><td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td>
              <td>${esc(displayValue(f, sub.values[f.key]))}</td></tr>`).join('');
         if (!rows) return '';
@@ -2716,7 +2757,7 @@
             const shown = empty ? 'Not recorded' : show(c, raw);
             return `<tr><td class="fr-sheet-lbl">${esc(c.label)}</td><td>${esc(shown)}</td></tr>`;
           }).join('');
-          return `<div style="page-break-inside:avoid;"><h4>${esc(roster.rowTitle || 'Row')} ${n + 1} &mdash; ${esc(r.process || '')}</h4><table><tbody>${trs}</tbody></table></div>`;
+          return `<div style="page-break-inside:avoid;"><h4>${esc(roster.rowTitle || 'Row')} ${roster.titleFrom ? esc(r[roster.titleFrom] || (n + 1)) : (n + 1)}${r.process ? ' &mdash; ' + esc(r.process) : ''}</h4><table><tbody>${trs}</tbody></table></div>`;
         }).join('') || '<p>No pots recorded.</p>';
         return `<h3>${esc(roster.title)}</h3>${cards}` +
           (roster.totals ? `<p class="fr-roster-totals"><strong>${esc(rosterTotalsText(roster, prow))}</strong></p>` : '');
@@ -2789,7 +2830,7 @@
 
     function buildSheet(sub) {
       return `<div class="fr-sheet-page">
-        ${sheetSectionsHtml(sub, 'pre')}${sheetRosterHtml(sub)}${sheetSectionsHtml(sub, 'post')}${oosWarningHtml(sub)}${sheetSignHtml(sub)}
+        ${sheetSectionsHtml(sub, 'pre')}${sheetRosterHtml(sub)}${sheetSectionsHtml(sub, 'post')}${oosWarningHtml(sub)}${config.entryLog && window.EntryLog ? window.EntryLog.warningHtml(sub) : ''}${sheetSignHtml(sub)}
       </div>`;
     }
 
