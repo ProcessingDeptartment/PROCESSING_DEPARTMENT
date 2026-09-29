@@ -44,6 +44,7 @@ model Sub_live_leftovers_log {
   date                     DateTime? @db.Date
   sizeClass                String?
   weight                   Float?
+  completedBy String?
 
   @@map("sub_live_leftovers_log")
 }
@@ -131,6 +132,7 @@ model Sub_mortalities_log {
   mortalitiesKg            Float?
   totalPack                Float?
   percent                  Float?
+  completedBy String?
 
   @@map("sub_mortalities_log")
 }
@@ -297,6 +299,7 @@ model Sub_qa1_damaged_cans_and_lids {
   palletNumberProductionDate String?
   supervisor               String?
   checkedByQC              String?
+  completedBy String?
 
   @@map("sub_qa1_damaged_cans_and_lids")
 }
@@ -318,6 +321,7 @@ model Sub_cans_released_form {
   noOfCans                 Float?
   agCode                   String?
   checkedByQC              String?
+  completedBy String?
 
   @@index([agCode], map: "sub_cans_released_form_agCode_idx")
   @@map("sub_cans_released_form")
@@ -342,6 +346,7 @@ model Sub_gonad_inspection_report {
   damagesAfterGutting      String?
   basketReceivingComments  String?
   checkedBy                String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_gonad_inspection_report_jobNo_idx")
   @@map("sub_gonad_inspection_report")
@@ -408,6 +413,7 @@ model Sub_incubator_cans_log {
   notClearedReason         String?
   dateCleared              DateTime?
   clearedByName            String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_incubator_cans_log_jobNo_idx")
   @@map("sub_incubator_cans_log")
@@ -431,6 +437,7 @@ model Sub_fixed_reader_checks {
   rfidTagNumber            String?
   qdeMatch                 Boolean?
   comment                  String?
+  completedBy String?
 
   @@map("sub_fixed_reader_checks")
 }
@@ -692,6 +699,7 @@ model Sub_scrubbing_check_supervisor {
   weightDamagedAbalone     Float?
   weightDamagedTrimmed     Float?
   supervisor               String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_scrubbing_check_supervisor_jobNo_idx")
   @@map("sub_scrubbing_check_supervisor")
@@ -714,6 +722,7 @@ model Sub_ph_verification {
   buffer10Reading          Float?
   checkedBy                String?
   comments                 String?
+  completedBy String?
 
   @@map("sub_ph_verification")
 }
@@ -740,6 +749,7 @@ model Sub_thermometer_verification {
   checkedBy                String?
   verifiedBy               String?
   verifiedDate             DateTime? @db.Date
+  completedBy String?
 
   @@map("sub_thermometer_verification")
 }
@@ -763,6 +773,7 @@ model Sub_thermometer_correction_factors {
   difference               Float?
   correctionUsed           Boolean?
   checkedBy                String?
+  completedBy String?
 
   @@map("sub_thermometer_correction_factors")
 }
@@ -784,6 +795,7 @@ model Sub_sampling_log {
   quantity                 Float?
   reason                   String?
   sampledBy                String?
+  completedBy String?
 
   @@map("sub_sampling_log")
 }
@@ -807,6 +819,7 @@ model Sub_stock_loading {
   numberOfCans             Float?
   commentsDents            String?
   checkedBy                String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_stock_loading_jobNo_idx")
   @@map("sub_stock_loading")
@@ -1108,6 +1121,7 @@ model Sub_abalone_packing_specification {
   newMinIngo               Float?
   newMaxIngo               Float?
   comments                 String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_abalone_packing_specification_jobNo_idx")
   @@map("sub_abalone_packing_specification")
@@ -1555,6 +1569,7 @@ model Sub_drying_process {
   totalDryingTimeDays      Float?
   dryWeight                Float?
   estimateYield            Float?
+  completedBy String?
 
   @@index([jobNo], map: "sub_drying_process_jobNo_idx")
   @@map("sub_drying_process")
@@ -1624,6 +1639,7 @@ model Sub_dry_monitoring {
   comments                 String?
   qcCheck                  String?
   supervisor               String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_dry_monitoring_jobNo_idx")
   @@map("sub_dry_monitoring")
@@ -1789,6 +1805,7 @@ model Sub_boxing_and_labelling {
   nettWeight               Float?
   qualityController        String?
   supervisor               String?
+  completedBy String?
 
   @@map("sub_boxing_and_labelling")
 }
@@ -1817,6 +1834,7 @@ model Sub_dry_stock_control {
   dateOut                  DateTime? @db.Date
   countOutFactory          Float?
   countOutFinance          Float?
+  completedBy String?
 
   @@index([jobNo], map: "sub_dry_stock_control_jobNo_idx")
   @@map("sub_dry_stock_control")
@@ -1846,6 +1864,7 @@ model Sub_labelling_of_dry_boxes {
   inspectedByProcessing    String?
   inspectedByQC            String?
   inspectedByFG01          String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_labelling_of_dry_boxes_jobNo_idx")
   @@map("sub_labelling_of_dry_boxes")
@@ -1907,6 +1926,7 @@ model Sub_dry_stock_transfers {
   timeOfTransfer           DateTime? @db.Time
   transferredBy            String?
   receivedBy               String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_dry_stock_transfers_jobNo_idx")
   @@map("sub_dry_stock_transfers")
@@ -1943,6 +1963,7 @@ model Sub_live_production_pack {
   signedPackingListsAttached Boolean?
   completedBySupervisor    String?
   checkedByQC              String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_live_production_pack_jobNo_idx")
   @@map("sub_live_production_pack")
@@ -1982,6 +2003,7 @@ model Sub_live_pack_checklist {
   leftoversSizeClass       String?
   leftoversWeight          Float?
   supervisor               String?
+  completedBy String?
 
   @@map("sub_live_pack_checklist")
 }
@@ -2084,6 +2106,7 @@ model Sub_receiving_live_returns {
   basketNumberTrackingNo   String?
   positionNo               String?
   supervisor               String?
+  completedBy String?
 
   @@map("sub_receiving_live_returns")
 }
@@ -2316,6 +2339,7 @@ model Sub_dispatch_cleaning_inspection {
   cleaningEquipmentStoredCorrectly Boolean?
   correctiveActions        String?
   checkedBy                String?
+  completedBy String?
 
   @@map("sub_dispatch_cleaning_inspection")
 }
@@ -2410,6 +2434,7 @@ model Sub_chemical_stock_issue_register {
   issuedTo                 String?
   issuedBy                 String?
   areaToBeCleaned          Boolean?
+  completedBy String?
 
   @@index([batchNumber], map: "sub_chemical_stock_issue_register_batchNumber_idx")
   @@map("sub_chemical_stock_issue_register")
@@ -2434,6 +2459,7 @@ model Sub_internal_pest_sightings_log {
   internalPestController   String?
   managementVerification   String?
   comment                  String?
+  completedBy String?
 
   @@map("sub_internal_pest_sightings_log")
 }
@@ -2882,6 +2908,7 @@ model Sub_glove_issuing_register {
   conditionWhenReturned    String?
   correctiveAction         String?
   signature                String?
+  completedBy String?
 
   @@map("sub_glove_issuing_register")
 }
@@ -2906,6 +2933,7 @@ model Sub_plaster_dressing_inspection {
   breakTime                DateTime? @db.Time
   lunchTime                DateTime? @db.Time
   knockOffTime             DateTime? @db.Time
+  completedBy String?
 
   @@map("sub_plaster_dressing_inspection")
 }
@@ -2929,6 +2957,7 @@ model Sub_first_aid_checklist_record {
   firstAider               String?
   nameOfInjured            String?
   breakTime                DateTime? @db.Time
+  completedBy String?
 
   @@map("sub_first_aid_checklist_record")
 }
@@ -2948,6 +2977,7 @@ model Sub_salt_issuing_register {
   batchNumber              String?
   issuedTo                 String?
   issuedBy                 String?
+  completedBy String?
 
   @@index([batchNumber], map: "sub_salt_issuing_register_batchNumber_idx")
   @@map("sub_salt_issuing_register")
@@ -2975,6 +3005,7 @@ model Sub_chiller_batch_control {
   chillerTemp              Float?
   totalDaysInChiller       Float?
   supervisor               String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_chiller_batch_control_jobNo_idx")
   @@map("sub_chiller_batch_control")
@@ -3002,6 +3033,7 @@ model Sub_dry_chiller_batch_control {
   totalDaysInChiller       Float?
   supervisor               String?
   factoryManager           String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_dry_chiller_batch_control_jobNo_idx")
   @@map("sub_dry_chiller_batch_control")
@@ -3055,6 +3087,7 @@ model Sub_water_tank_inspection {
   reasonForCleaning        String?
   managementVerification   String?
   dateOfVerification       DateTime? @db.Date
+  completedBy String?
 
   @@map("sub_water_tank_inspection")
 }
@@ -3145,6 +3178,7 @@ model Sub_daily_waste_removal {
   vehicleRegNr             String?
   driver                   String?
   supervisor               String?
+  completedBy String?
 
   @@map("sub_daily_waste_removal")
 }
@@ -3175,6 +3209,7 @@ model Sub_boiler_inspection_report {
   dieselReading            Float?
   comments                 String?
   boilerOperator           String?
+  completedBy String?
 
   @@map("sub_boiler_inspection_report")
 }
@@ -3213,6 +3248,7 @@ model Sub_seamer_inspection_report {
   checkedByEnd             String?
   verifiedByEnd            String?
   managementEnd            String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_seamer_inspection_report_jobNo_idx")
   @@map("sub_seamer_inspection_report")
@@ -3237,6 +3273,7 @@ model Sub_incoming_ppe_inspection {
   carRequired              Boolean?
   carNr                    String?
   receivedBy               String?
+  completedBy String?
 
   @@map("sub_incoming_ppe_inspection")
 }
@@ -3260,6 +3297,7 @@ model Sub_incoming_goods_inspection_log {
   carRequired              Boolean?
   carNr                    String?
   receivedBy               String?
+  completedBy String?
 
   @@map("sub_incoming_goods_inspection_log")
 }
@@ -3299,6 +3337,7 @@ model Sub_cans_incoming_inspection {
   otherIrregularities      String?
   cansAcceptedRejected     String?
   receivedInspectedBy      String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_cans_incoming_inspection_jobNo_idx")
   @@map("sub_cans_incoming_inspection")
@@ -3336,6 +3375,7 @@ model Sub_lids_incoming_inspection {
   otherIrregularities      String?
   cansAcceptedRejected     String?
   receivedInspectedBy      String?
+  completedBy String?
 
   @@map("sub_lids_incoming_inspection")
 }
@@ -3374,6 +3414,7 @@ model Sub_lids_incoming_inspection_internal {
   otherIrregularities      String?
   cansAcceptedRejected     String?
   receivedInspectedBy      String?
+  completedBy String?
 
   @@map("sub_lids_incoming_inspection_internal")
 }
@@ -3406,6 +3447,7 @@ model Sub_incoming_goods_inspection {
   conformsToSpecification  Boolean?
   otherConcerns            String?
   inspectedReceivedBy      String?
+  completedBy String?
 
   @@map("sub_incoming_goods_inspection")
 }
@@ -3437,6 +3479,7 @@ model Sub_dispatch_loading_inspection_checklist {
   truckSecuredLocked       Boolean?
   correctiveActions        String?
   checkedBy                String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_dispatch_loading_inspection_checklist_jobNo_idx")
   @@map("sub_dispatch_loading_inspection_checklist")
@@ -3468,6 +3511,7 @@ model Sub_dispatch_receiving_checklist {
   truckSecuredLocked       Boolean?
   correctiveActions        String?
   checkedBy                String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_dispatch_receiving_checklist_jobNo_idx")
   @@map("sub_dispatch_receiving_checklist")
@@ -3490,6 +3534,7 @@ model Sub_water_monitoring {
   seaWaterPh               Float?
   checkedBy                String?
   comments                 String?
+  completedBy String?
 
   @@map("sub_water_monitoring")
 }
@@ -3511,6 +3556,7 @@ model Sub_lha_water_monitoring {
   chillerUnitOperating     Boolean?
   temperature              Float?
   checkedBy                String?
+  completedBy String?
 
   @@map("sub_lha_water_monitoring")
 }
@@ -3537,6 +3583,7 @@ model Sub_chiller_temperature_monitoring {
   freezerDialTemp          Float?
   checkedBy                String?
   correctiveAction         String?
+  completedBy String?
 
   @@index([jobNo], map: "sub_chiller_temperature_monitoring_jobNo_idx")
   @@map("sub_chiller_temperature_monitoring")
@@ -3558,6 +3605,7 @@ model Sub_incubator_temperature_check {
   lunchTemp                Float?
   endShiftTemp             Float?
   checkedBy                String?
+  completedBy String?
 
   @@map("sub_incubator_temperature_check")
 }
@@ -3584,6 +3632,7 @@ model Sub_dry_room_temp_humidity_log {
   endShiftHumidity         Float?
   checkedBy                String?
   correctiveAction         String?
+  completedBy String?
 
   @@map("sub_dry_room_temp_humidity_log")
 }
@@ -3610,6 +3659,7 @@ model Sub_grading_room_temp_humidity_log {
   endShiftHumidity         Float?
   checkedBy                String?
   correctiveAction         String?
+  completedBy String?
 
   @@map("sub_grading_room_temp_humidity_log")
 }

@@ -1184,8 +1184,39 @@
       }
 
       applyStageLocks(container, existing);
+      fillCompletedBy(existing, locked);
       if (!inline) el(modalIds.overlay).style.display = 'flex';
     }
+
+    // COMPLETED BY block (Completed by / Title / Date / Signature): the entry keeps it as
+    // entry.completedBy = { by, title, date, signature }; the name also feeds the record's
+    // completedBy column (src/submission-store.js).
+    const cbInput = (k) => el(`${ns}_cb_${k}`);
+    function fillCompletedBy(existing, locked) {
+      const cb = (existing && existing.completedBy) || null;
+      ['by', 'title', 'date', 'signature'].forEach((k) => {
+        const i = cbInput(k);
+        if (!i) return;
+        i.value = cb && cb[k] ? cb[k] : '';
+        i.disabled = !!locked;
+      });
+      const by = cbInput('by');
+      if (by && !locked && !by.value.trim()) {
+        const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
+        if (name) by.value = name;
+      }
+    }
+    function readCompletedBy() {
+      const v = (k) => { const i = cbInput(k); return i ? (i.value || '').trim() : ''; };
+      return { by: v('by'), title: v('title'), date: v('date'), signature: v('signature') };
+    }
+    document.addEventListener('authSuccess', () => {
+      const by = cbInput('by');
+      if (by && !by.disabled && !by.value.trim()) {
+        const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
+        if (name) by.value = name;
+      }
+    });
 
     function closeForm() {
       if (inline) { editingId = null; openForm(null); return; }
@@ -1271,6 +1302,27 @@
       inSpec = evaluateEntry(values);
       } // end non-customBody field gathering
 
+      // COMPLETED BY block. A customBody page that draws its own block (ownsCompletedBy) hands
+      // the engine its values; everything else reads the engine's block.
+      let completedBy = null;
+      if (customBody) {
+        if (customBody.ownsCompletedBy) {
+          const cb = { by: String(values.completedBy || '').trim(), title: String(values.completedSig || '').trim(),
+            date: String(values.completedDate || '').trim(), signature: String(values.completedBySignature || '').trim() };
+          if (cb.by || cb.title || cb.date || cb.signature) completedBy = cb;
+        }
+      } else {
+        completedBy = readCompletedBy();
+        if ((finalize || !submitFlow) && window.AUTH_GATES_ENABLED === true
+            && (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature)) {
+          toast('Completed by, title, date and signature are required to submit.');
+          return;
+        }
+        // a draft keeps whatever was typed so it comes back when the draft is reopened
+        if (!(completedBy.title || completedBy.date || completedBy.signature) && !completedBy.by) completedBy = null;
+        else if (submitFlow && !finalize && !(completedBy.title || completedBy.date || completedBy.signature)) completedBy = null;
+      }
+
 
       let stageMap = null;
       if (entryStages && finalize && savingStage && !correctingStage) {
@@ -1298,6 +1350,7 @@
           pendingStageEdits = [];
         }
         if (submitFlow) { existing.status = status; if (finalize) existing.submittedAt = Date.now(); }
+        if (completedBy) existing.completedBy = completedBy;
         savedEntry = existing;
       } else {
         savedEntry = {
@@ -1307,6 +1360,7 @@
           status,
           stages: stageMap || undefined,
           submittedAt: finalize ? Date.now() : undefined,
+          completedBy: completedBy || undefined,
           source: 'manual',
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -1447,6 +1501,7 @@
           <td class="sheet-rec">${esc(shown)}</td><td>${esc(comment)}</td></tr>`;
       }).join('');
       const verified = entryRow.verification || null;
+      const cb = entryRow.completedBy || {};
       return `
       <table class="sheet-head">
         <tr><td class="sheet-logo" rowspan="4">${esc(m.logoText || 'ABAGOLD')}</td>
@@ -1465,10 +1520,10 @@
         ${rows}
       </table>
       <table class="sheet-sign">
-        <tr><td class="sheet-lbl">Completed by:</td><td>${esc(opF ? (v[opF.key] || '') : '')}</td>
-            <td class="sheet-lbl">Title:</td><td></td>
-            <td class="sheet-lbl">Date:</td><td>${esc(entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : '')}</td>
-            <td class="sheet-lbl">Signature:</td><td></td></tr>
+        <tr><td class="sheet-lbl">Completed by:</td><td>${esc(cb.by || (opF ? (v[opF.key] || '') : ''))}</td>
+            <td class="sheet-lbl">Title:</td><td>${esc(cb.title || '')}</td>
+            <td class="sheet-lbl">Date:</td><td>${esc(cb.date || (entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : ''))}</td>
+            <td class="sheet-lbl">Signature:</td><td>${esc(cb.signature || '')}</td></tr>
         <tr><td class="sheet-lbl">Verified by:</td><td>${esc(verified ? verified.verifiedBy : '')}</td>
             <td class="sheet-lbl">Title:</td><td>${esc(verified ? verified.verifiedSig : '')}</td>
             <td class="sheet-lbl">Date:</td><td>${esc(verified ? verified.verifiedDate : '')}</td>
@@ -1684,8 +1739,13 @@
           </div>
         </div>
       </div>` : '';
+      // Same COMPLETED BY block as every form-record page (Completed by / Title / Date / Signature).
+      // A customBody page draws its own copy of the block, so the engine skips it there.
+      const completedByPanel = config.customBody ? '' : `
+          <div class="ml-muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;">Completed by</div>
+          ${window.SignOffBlock.completedByHtml({ byId: ns + '_cb_by', titleId: ns + '_cb_title', dateId: ns + '_cb_date', signatureId: ns + '_cb_signature', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}`;
       const fieldsAndActions = `
-          <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>
+          <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>${completedByPanel}
           <div class="ml-actions">
             <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">${inline ? 'Clear' : 'Cancel'}</button>
             <button class="ml-btn ${submitFlow ? 'ml-btn-flat' : 'ml-btn-primary'}" id="${ns}_saveBtn">${submitFlow ? 'Save draft' : 'Save entry'}</button>

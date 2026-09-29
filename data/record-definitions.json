@@ -25347,25 +25347,6 @@
           "linkField": null,
           "linkRelation": null,
           "validateJson": null
-        },
-        {
-          "key": "completedBy",
-          "label": "Completed by",
-          "type": "text",
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 16,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
         }
       ],
       "autofills": [],

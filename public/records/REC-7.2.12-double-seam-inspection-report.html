@@ -763,6 +763,7 @@
       { label: 'Submitting', text: 'A record with any out-of-spec item, or an unacknowledged spec update, cannot be submitted as complete.' }
     ],
     customBody: {
+      ownsCompletedBy: true,   // this page draws its own COMPLETED BY block; the engine maps it to entry.completedBy
       init: async (ctx) => {
         mlCtx = ctx;
         buildSpecModal();

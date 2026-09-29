@@ -190,10 +190,10 @@ async function getSchema(prisma, recordKey) {
     rosterCols,
     blockCompletedBy: false,
   };
-  // form-record pages carry the COMPLETED BY block. When the record has no completedBy field of
+  // form-record and monitoring-log pages carry the COMPLETED BY block. When the record has no completedBy field of
   // its own, fill the table's completedBy column from the block -- but only if the column exists
   // (checked once per record), so a table without it can never break the sync.
-  if (def.engine === 'form-record' && !topCols.some((c) => c.col === 'completedBy')) {
+  if ((def.engine === 'form-record' || def.engine === 'monitoring-log') && !topCols.some((c) => c.col === 'completedBy')) {
     try {
       const rows = await prisma.$queryRawUnsafe(
         `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = 'completedBy' LIMIT 1`,
