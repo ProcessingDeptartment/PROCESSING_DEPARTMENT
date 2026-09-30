@@ -1617,7 +1617,7 @@
         });
         const hiddenIn = roster.columns.filter(c => c.hidden).map(c =>
           `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${esc(c.key === roster.autoNumber ? String(idx + 1) : (row[c.key] == null ? '' : row[c.key]))}">`).join('');
-        return `<div class="fr-roster-row fr-pot-card" data-roster-row="${idx}">
+        return `<div class="fr-roster-row fr-pot-card fr-pot-${esc(proc)}" data-roster-row="${idx}">
           <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}${proc ? ' &mdash; ' + esc(proc) : ''}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button></div>
@@ -2490,7 +2490,25 @@
 
         if (canCollapse) rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
         draw();
-        const first = el(fid(rows.length - 1, (dataCols.find(c => !c.hidden) || roster.columns[0]).key));
+        const newIdx = rows.length - 1;
+        const first = el(fid(newIdx, (dataCols.find(c => !c.hidden) || roster.columns[0]).key));
+        if (roster.cardRows) {
+          // Bring the new card into view under the sticky header. Touch screens: no auto-focus, so
+          // the on-screen keyboard does not open and cover the card.
+          const touch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
+          const card = () => container.querySelector('.fr-pot-card[data-roster-row="' + newIdx + '"]');
+          const reveal = () => { const c = card(); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+          setTimeout(() => {
+            reveal();
+            if (!touch && first) { try { first.focus({ preventScroll: true }); } catch (err) {} }
+            // If smooth scrolling did not land (some browsers throttle the animation), jump there.
+            setTimeout(() => {
+              const c = card();
+              if (c && Math.abs(c.getBoundingClientRect().top - 84) > 40) c.scrollIntoView({ behavior: 'auto', block: 'start' });
+            }, 600);
+          }, 30);
+          return;
+        }
         if (first) { try { first.focus(); } catch (err) {} }
       };
     }
@@ -2545,11 +2563,12 @@
         <div class="fr-section-title">${esc(roster.title)}</div>
         ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
         <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : ''}></div>
-        ${roster.quickEntry ? '' : `<button type="button" class="fr-btn ${roster.cardRows ? '' : 'fr-btn-flat '}fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}"${roster.fixedGroups ? ' style="display:none;"' : ''}>${esc(roster.addLabel || '+ Add row')}</button>
-        ${roster.processChoice ? `<span class="fr-pot-choose" id="${rosterDomId('fr_potChoose', i)}" hidden><span class="fr-pot-choose-lbl">Which process?</span>${roster.processChoice.options.map(o => `<button type="button" class="fr-btn fr-seg-btn" data-choose="${esc(o)}">${esc(o)}</button>`).join('')}</span>` : ''}
+        ${roster.quickEntry ? '' : `${roster.processChoice
+          ? `<div class="fr-pot-add no-print" id="${rosterDomId('fr_potChoose', i)}">${roster.processChoice.options.map(o => `<button type="button" class="fr-btn fr-pot-add-btn fr-pot-add-${esc(o)}" data-choose="${esc(o)}">+ Add ${esc(o.toLowerCase())} pot</button>`).join('')}</div>`
+          : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">${esc(roster.addLabel || '+ Add row')}</button>`}
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows || roster.fixedGroups ?' style="display:none;"' : ''}>Import CSV</button>
         <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">`}
-        ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals"></div>` : ''}`).join('');
+        ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals${roster.cardRows ? ' fr-pot-totals no-print' : ''}"></div>` : ''}`).join('');
       }
       html += postSecs.map(renderSection).join('');
 
@@ -2570,22 +2589,12 @@
           if (roster.quickEntry) { wireQuickEntry(roster, i, container.querySelector('#' + rowsId)); return; }
           const rowsEl = container.querySelector('#' + rowsId);
           if (roster.processChoice) {
-            const chooser = el(rosterDomId('fr_potChoose', i));
-            const addBtn = el(rosterDomId('fr_addRosterRowBtn', i));
-            const sync = () => {
-              const empty = !rowsEl.querySelector('.fr-pot-card');
-              const open = empty || chooser.dataset.open === '1';
-              chooser.hidden = !open;
-              addBtn.style.display = empty ? 'none' : '';
-            };
-            rowsEl._onDraw = () => { chooser.dataset.open = ''; sync(); };
-            addBtn.addEventListener('click', () => { chooser.dataset.open = '1'; sync(); });
-            chooser.querySelectorAll('[data-choose]').forEach(b => b.addEventListener('click', () => rowsEl._addRow(b.dataset.choose)));
-            sync();
+            el(rosterDomId('fr_potChoose', i)).querySelectorAll('[data-choose]').forEach(b =>
+              b.addEventListener('click', () => rowsEl._addRow(b.dataset.choose)));
           } else
           el(rosterDomId('fr_addRosterRowBtn', i)).addEventListener('click',
             () => container.querySelector('#' + rowsId)._addRow());
-          el(rosterDomId('fr_importCsvBtn', i)).addEventListener('click',
+          if (el(rosterDomId('fr_importCsvBtn', i))) el(rosterDomId('fr_importCsvBtn', i)).addEventListener('click',
             () => el(rosterDomId('fr_csvFile', i)).click());
           el(rosterDomId('fr_csvFile', i)).addEventListener('change', function () {
             const file = this.files && this.files[0];
@@ -2649,6 +2658,7 @@
       }
 
       if (config.entryLog && window.EntryLog) window.EntryLog.attach({ config, existing, locked, container, el, toast, storeGet,
+        saveDraft: (message) => saveForm(false, { stayOpen: true, message }),
         submissions: () => submissions, openForm, formHasInput, reload: load });
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = (locked && !i.hasAttribute('data-keep-enabled')) || computedIds.has(i.id); });
@@ -2662,7 +2672,8 @@
     function closeForm() { editingId = null; openForm(null); }
 
 
-    async function saveForm(finalize) {
+    // opts.stayOpen: save a draft quietly and keep the form open on it (entry-log autosave of a completed steam).
+    async function saveForm(finalize, opts) {
 
       if (!await refreshProvisional(el('fr_modalSections'), config, finalize, toast)) return;
 
@@ -2907,6 +2918,12 @@
         ['fr_cb_by', 'fr_cb_title', 'fr_cb_date', 'fr_cb_signature'].forEach(id => { const i = el(id); if (i) i.value = ''; });
         suggestCompletedBy();
       }
+      if (!finalize && opts && opts.stayOpen) {
+        editingId = savedSub.id;
+        renderTable();
+        toast(opts.message || 'Saved.');
+        return true;
+      }
       closeForm();
       renderTable();
 
@@ -2974,8 +2991,7 @@
           }).join('');
           return `<div style="page-break-inside:avoid;"><h4>${esc(roster.rowTitle || 'Row')} ${roster.titleFrom ? esc(r[roster.titleFrom] || (n + 1)) : (n + 1)}${r.process ? ' &mdash; ' + esc(r.process) : ''}</h4><table><tbody>${trs}</tbody></table></div>`;
         }).join('') || '<p>No pots recorded.</p>';
-        return `<h3>${esc(roster.title)}</h3>${cards}` +
-          (roster.totals ? `<p class="fr-roster-totals"><strong>${esc(rosterTotalsText(roster, prow))}</strong></p>` : '');
+        return `<h3>${esc(roster.title)}</h3>${cards}`;
       }
       const rows = getRosterRows(sub, i, roster.key).filter(r =>
         cols.some(c => String(r[c.key] || '').trim() !== ''));

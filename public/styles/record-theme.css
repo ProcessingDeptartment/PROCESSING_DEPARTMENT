@@ -1765,3 +1765,21 @@ body.rt-tablet .rt-savechip[data-state="noauth"] { width: 28px; height: 28px; pa
   body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }
   body.rt-tablet .rt-actionbar-fixed, body.rt-tablet .rt-savechip, body.rt-tablet .rt-wake { display: none !important; }
 }
+
+/* Pot cards: add buttons, process tags, grey on-screen tally, portrait wrap */
+.rt-content .fr-pot-add { display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 10px; }
+.rt-content .fr-pot-add-btn {
+  flex: 1 1 220px; min-height: 56px; font-size: 17px; font-weight: 700;
+  border-radius: var(--rt-radius-btn); background: var(--rt-white);
+  border: 2px solid var(--rt-navy-primary); color: var(--rt-navy-primary);
+}
+.rt-content .fr-pot-add-btn:active { background: var(--rt-navy-primary); color: #fff; }
+.rt-content .fr-pot-card { scroll-margin-top: 84px; }
+.rt-content .fr-pot-head [data-remove-roster-row] { font-size: 12px; padding: 4px 10px; min-height: 32px; }
+.rt-content .fr-roster-totals.fr-pot-totals {
+  border: 0; background: none; padding: 2px 0; font-size: 13px; font-weight: 400; color: #777;
+}
+@media (max-width: 820px) {
+  .rt-content .fr-pot-line { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media print { .fr-pot-totals, .fr-pot-add { display: none !important; } }
