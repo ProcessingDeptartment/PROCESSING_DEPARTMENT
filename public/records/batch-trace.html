@@ -243,6 +243,13 @@
       <span class="spacer"></span>
       <button type="button" class="btn-flat no-print" id="printBtn">View / print PDF</button>
     </div>
+    <div id="binPanel" hidden>
+      <h3 style="margin:14px 0 6px;">In this bin</h3>
+      <table class="bin-table" style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead><tr style="text-align:left;border-bottom:1px solid #ccc;"><th>Job no.</th><th>Graded on</th><th>Record</th><th>Boxes</th><th>Graded kg</th><th></th></tr></thead>
+        <tbody id="binRows"></tbody>
+      </table>
+    </div>
     <div class="genealogy" id="genealogy">
       <div class="box up"><h3>Made from &mdash; one up</h3><div id="inputs"></div></div>
       <div class="box down"><h3>Went into &mdash; one down</h3><div id="outputs"></div></div>
@@ -260,7 +267,7 @@
 <script src="../lib/api-backend.js?v=14"></script>
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=3"></script>
-<script src="../lib/traceability.js?v=8"></script>
+<script src="../lib/traceability.js?v=9"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script>  const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -336,6 +343,29 @@
     }).join('');
   }
 
+  // A bin code (collection bin = box code, e.g. 8g-10g-3): which jobs were graded into it and when.
+  async function renderBin(code) {
+    const panel = $('binPanel');
+    let rows = [];
+    try { rows = window.Traceability.jobsForBin ? await window.Traceability.jobsForBin(code) : []; } catch (e) { rows = []; }
+    rows = rows.filter(r => r.link_field === 'binCode' || r.row);
+    panel.hidden = !rows.length;
+    if (!rows.length) return;
+    const d = s => { s = String(s || ''); return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : s; };
+    let total = 0, boxes = 0;
+    $('binRows').innerHTML = rows.map(r => {
+      const row = r.row || {};
+      const nb = String(row.fullBoxWeight || '').split(/[+,;\s]+/).filter(Boolean).length;
+      const g = parseFloat(row.gradedWeight);
+      if (!isNaN(g)) total += g;
+      boxes += nb;
+      return `<tr style="border-bottom:1px solid #eee;"><td><a href="?batch=${encodeURIComponent(r.job_no || '')}">${esc(r.job_no || '')}</a></td>
+        <td>${esc(d(r.occurred_on || (r.values || {}).gradingDate))}</td><td>${esc(r.record_title || r.record_key || '')}${r.status === 'draft' ? ' (draft)' : ''}</td>
+        <td>${nb || ''}</td><td>${isNaN(g) ? '' : g.toFixed(2)}</td>
+        <td>${r.href ? `<a class="no-print" href="${esc(r.href)}">Open &rarr;</a>` : ''}</td></tr>`;
+    }).join('') + `<tr style="font-weight:700;"><td colspan="3">Total</td><td>${boxes || ''}</td><td>${total.toFixed(2)}</td><td></td></tr>`;
+  }
+
   async function doTrace() {
     const batchNo = $('batchInput').value.trim();
     if (!batchNo) { setStatus('Enter a batch number to trace.'); $('results').hidden = true; return; }
@@ -343,6 +373,7 @@
     $('results').hidden = true;
     $('traceBtn').disabled = true;
     try {
+      await renderBin(batchNo);
       let graph = await window.Traceability.traceGraph(batchNo);
       if (!graph.records.length) { await sleep(2000); graph = await window.Traceability.traceGraph(batchNo); }
       if (!graph.records.length) {

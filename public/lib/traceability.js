@@ -154,7 +154,7 @@
           await window.storage.set(
             binKeyFor(binCode, config.recordKey, sub.id + ':bin' + i),
             JSON.stringify(Object.assign(
-              { bin_code: binCode, job_no: batchNo, link_field: binCol },
+              { bin_code: binCode, job_no: batchNo, link_field: binCol, row: sub.roster[i] },
               baseRow
             )),
             true

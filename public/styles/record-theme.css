@@ -1232,9 +1232,19 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 .rt-content .fr-bin-card .fr-pot-line .fr-field { font-size: 14px; font-weight: 600; }
 .rt-content .fr-bin-card .fr-pot-line input:not([type=checkbox]):not([type=hidden]),
 .rt-content .fr-bin-card .fr-pot-line select { min-height: 48px; font-size: 18px; }
-.rt-content .fr-bin-card .fr-pot-line[data-line="0"] { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+.rt-content .fr-bin-card .fr-pot-line[data-line="0"] { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
 .rt-content .fr-bin-card [data-col="binCode"] input { font-weight: 700; background: #f4f1e8; text-align: center; }
-.rt-content .fr-bin-card .fr-pot-line[data-line="1"] { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+.rt-content .fr-bin-card .fr-pot-line[data-line="1"] { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+.rt-content .fr-bin-card .fr-pot-head { display: flex; align-items: center; gap: 8px; }
+.rt-content .fr-bin-card .fr-pot-head .fr-pot-title { margin-right: auto; }
+.rt-content .fr-boxes { display: flex; flex-direction: column; gap: 6px; font-weight: 400; }
+.rt-content .fr-box-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rt-content .fr-box-chip { background: #f4f1e8; border: 1px solid #e0d6bd; border-radius: 16px; padding: 4px 4px 4px 10px; font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
+.rt-content .fr-box-del { border: 0; background: none; font-size: 18px; line-height: 1; padding: 2px 8px; cursor: pointer; color: #8a6d3b; }
+.rt-content .fr-box-sum { font-size: 13px; color: #666; margin-left: 4px; }
+.rt-content .fr-box-entry { display: flex; gap: 8px; }
+.rt-content .fr-box-entry .fr-box-new { flex: 1 1 auto; }
+.rt-content .fr-box-entry .fr-box-add { min-height: 48px; white-space: nowrap; }
 .rt-content .fr-bin-card [data-col="gradedWeight"] input { font-size: 24px; font-weight: 700; background: #f4f1e8; color: var(--rt-navy-primary); }
 .rt-content .fr-bin-card .fr-confirm { min-height: 48px; }
 @media (max-width: 700px) {

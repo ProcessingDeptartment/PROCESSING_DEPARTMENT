@@ -18213,7 +18213,20 @@
               "gradedWeight"
             ],
             "cardLayout": true,
-            "rowTitle": "Bin"
+            "rowTitle": "Bin",
+            "fixedGroups": {
+              "column": "sizeGrade",
+              "seqColumn": "binNo",
+              "dateField": "gradingDate",
+              "sources": [
+                "grading-production-log-cultivated",
+                "grading-production-log-ranched"
+              ],
+              "clearOnNew": [
+                "binWeightStart",
+                "startConfirmed"
+              ]
+            }
           }
         },
         {
@@ -18881,7 +18894,8 @@
           "sectionIndex": 3,
           "position": 32,
           "extraJson": {
-            "layoutRow": 1
+            "layoutRow": 1,
+            "hidden": true
           }
         },
         {
@@ -19010,8 +19024,8 @@
           "type": "numlist",
           "extraJson": {
             "lockUntil": "startConfirmed",
-            "placeholder": "e.g. 12.4 + 11.9",
-            "layoutRow": 2
+            "layoutRow": 2,
+            "boxEntry": true
           },
           "sectionIndex": 3,
           "position": 38
@@ -19192,7 +19206,20 @@
               "gradedWeight"
             ],
             "cardLayout": true,
-            "rowTitle": "Bin"
+            "rowTitle": "Bin",
+            "fixedGroups": {
+              "column": "sizeGrade",
+              "seqColumn": "binNo",
+              "dateField": "gradingDate",
+              "sources": [
+                "grading-production-log-cultivated",
+                "grading-production-log-ranched"
+              ],
+              "clearOnNew": [
+                "binWeightStart",
+                "startConfirmed"
+              ]
+            }
           }
         },
         {
@@ -19652,7 +19679,8 @@
           "sectionIndex": 3,
           "position": 24,
           "extraJson": {
-            "layoutRow": 1
+            "layoutRow": 1,
+            "hidden": true
           }
         },
         {
@@ -19781,8 +19809,8 @@
           "type": "numlist",
           "extraJson": {
             "lockUntil": "startConfirmed",
-            "placeholder": "e.g. 12.4 + 11.9",
-            "layoutRow": 2
+            "layoutRow": 2,
+            "boxEntry": true
           },
           "sectionIndex": 3,
           "position": 30

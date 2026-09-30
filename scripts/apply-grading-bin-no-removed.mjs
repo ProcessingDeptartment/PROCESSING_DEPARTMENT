@@ -1,8 +1,10 @@
 // REC 7.4.3.1 / 7.4.3.2 Collection bins: no bin number to enter -- the bin code counts up by itself
 // within each size grade (8g-10g-1, 8g-10g-2 ...). binNo is a hidden seqWithin counter; binCode =
-// sizeGrade-binNo, read-only and shown. Card laid out on two lines:
-//   1: Size grade | Bin code | Bin weight start | Start weight checked
-//   2: Full box weights | Final bin weight | Graded weight
+// sizeGrade-binNo, read-only and shown. roster.fixedGroups: a new log opens with one card per
+// size grade (grade = card title), each on its current bin no. from the database; "New bin"
+// counts it up. Full boxes are added one weight at a time (numlist boxEntry). Card lines:
+//   1: Bin code | Bin weight start | Start weight checked
+//   2: Full boxes | Final bin weight | Graded weight
 // Idempotent. Then: snapshot-one-def.mjs for both keys, seed-definitions.mjs.
 import fs from 'fs';
 import path from 'path';
@@ -28,12 +30,20 @@ for (const key of ['grading-production-log-cultivated', 'grading-production-log-
       validateJson: null, key: 'binNo', label: 'Bin no.', type: 'number', extraJson: {},
       sectionIndex: ri, position: grade.position + 1 });
   }
+  // One fixed card per size grade, current bin no. from the database; "New bin" counts it up.
+  const sec = def.sections[ri];
+  sec.extraJson = { ...(sec.extraJson || {}), fixedGroups: {
+    column: 'sizeGrade', seqColumn: 'binNo', dateField: 'gradingDate',
+    sources: ['grading-production-log-cultivated', 'grading-production-log-ranched'],
+    clearOnNew: ['binWeightStart', 'startConfirmed'] } };
   for (const f of def.fields) {
     if (f.sectionIndex !== ri || f.parentFieldKey !== '@roster') continue;
     if (!LINE[f.key]) throw new Error('unexpected column ' + f.key);
     const x = { ...(f.extraJson || {}), layoutRow: LINE[f.key] };
     if (f.key === 'binNo') { f.required = false; x.seqWithin = 'sizeGrade'; x.hidden = true; }
     if (f.key === 'binCode') { x.deriveJoin = { parts: ['sizeGrade', 'binNo'], sep: '-' }; delete x.hidden; }
+    if (f.key === 'sizeGrade') x.hidden = true;           // it is the card title
+    if (f.key === 'fullBoxWeight') { x.boxEntry = true; delete x.placeholder; }
     if (f.key === 'binWeightStart') x.carryPrev = { ...x.carryPrev, match: 'binCode' };
     f.extraJson = x;
   }

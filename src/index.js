@@ -285,6 +285,54 @@ app.get('/api/roster-last/:column', async (req, res) => {
   }
 });
 
+// Latest value of :column for EVERY group at once, e.g. each size grade's current bin number:
+//   GET /api/roster-last-by-group/binNo?sources=a,b&match=sizeGrade&dateField=gradingDate&before=...&excludeId=...
+// -> { "8g-10g": { value: "3", date, jobNumber, status }, ... }. Same "latest" rule as roster-last.
+app.get('/api/roster-last-by-group/:column', async (req, res) => {
+  try {
+    const column = req.params.column;
+    const sources = String(req.query.sources || '').split(',').map(s => s.trim()).filter(Boolean);
+    const match = String(req.query.match || '');
+    const dateField = req.query.dateField ? String(req.query.dateField) : null;
+    const before = req.query.before ? String(req.query.before) : null;
+    const excludeId = req.query.excludeId ? String(req.query.excludeId) : null;
+    if (!sources.length || !match) return res.json({});
+    const best = {};
+    for (const recordKey of sources) {
+      for (const prefix of ['formrecord:', 'monitoring_log:']) {
+        const row = await prisma.keyValue.findUnique({ where: { key: prefix + recordKey } });
+        if (!row) continue;
+        let entries;
+        try { entries = JSON.parse(row.value); } catch { continue; }
+        if (!Array.isArray(entries)) continue;
+        for (const entry of entries) {
+          if (excludeId && entry.id === excludeId) continue;
+          const values = entry.values || entry;
+          const date = dateField ? String(values[dateField] || '') : '';
+          if (before && date && date > before) continue;
+          const stamp = entry.submittedAt || entry.updatedAt || entry.createdAt || 0;
+          const hits = {};
+          for (const r of (Array.isArray(entry.roster) ? entry.roster : [])) {
+            const g = String((r || {})[match] || '').trim();
+            const v = String(r[column] == null ? '' : r[column]).trim();
+            if (g && v) hits[g] = v;
+          }
+          for (const [g, value] of Object.entries(hits)) {
+            const b = best[g];
+            if (!b || date > b.date || (date === b.date && stamp > b.stamp)) {
+              best[g] = { date, stamp, value, jobNumber: values.jobNumber || values.jobNo || '', status: entry.status || 'submitted' };
+            }
+          }
+        }
+      }
+    }
+    res.json(best);
+  } catch (e) {
+    console.error('GET roster-last-by-group failed', e);
+    res.status(500).json({});
+  }
+});
+
 // Finds the most recent entry in a record whose field matches value, for cross-record autofill
 // (e.g. selecting a job number on one record pulls in details already captured on another).
 // Checks both storage prefixes since callers don't know which one a given record uses.

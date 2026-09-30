@@ -490,6 +490,16 @@
         if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
         return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
       }
+      if (field.type === 'numlist' && field.boxEntry) {
+        const parts = String(v || '').split(/[+,;\s]+/).filter(Boolean);
+        const total = sumNumList(v);
+        return `<span class="fr-boxes" data-boxes-for="${id}"><span class="fr-box-chips">${parts.map((p, n) =>
+          `<span class="fr-box-chip">Box ${n + 1}: <b>${esc(p)}</b> kg<button type="button" class="fr-box-del" data-box-del="${n}" aria-label="Remove box ${n + 1}">×</button></span>`).join('')}${parts.length
+          ? `<span class="fr-box-sum">${parts.length} box${parts.length === 1 ? '' : 'es'} · ${total == null ? '?' : total.toFixed(2)} kg</span>` : ''}</span>`
+          + `<span class="fr-box-entry"><input type="number" step="0.01" inputmode="decimal" class="fr-box-new" placeholder="Box kg"${ro}>`
+          + `<button type="button" class="fr-btn fr-btn-sm fr-box-add"${ro ? ' disabled' : ''}>+ Full box</button></span>`
+          + `<input type="hidden" id="${id}" value="${esc(v)}"></span>`;
+      }
       if (field.type === 'numlist') {
         return `<input type="text" id="${id}" value="${esc(v)}" inputmode="decimal" placeholder="${esc(field.placeholder || 'e.g. 12.4 + 11.9')}"${ro}>`;
       }
@@ -1623,10 +1633,20 @@
         // hidden columns (e.g. a seqWithin counter) still need an input to be filled and read
         const hiddenIn = roster.columns.filter(c => c.hidden).map(c =>
           `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${esc(row[c.key] == null ? '' : row[c.key])}">`).join('');
-        return `<div class="fr-roster-row fr-pot-card fr-bin-card" data-roster-row="${idx}">
-          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}</strong>
+        // fixedGroups: the card is titled by its group (size grade), with "New bin" and a link to
+        // what is in the bin (batch-trace for the bin code) instead of Remove.
+        const fg = roster.fixedGroups;
+        const code = fg && roster.binIdColumn ? String(row[roster.binIdColumn] || '') : '';
+        const head = fg
+          ? `<strong class="fr-pot-title">${esc(row[fg.column] || '')}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
-            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button></div>
+            <a class="fr-btn fr-btn-flat fr-btn-sm no-print fr-bin-trace" data-bin-trace="${idx}" href="batch-trace.html?batch=${encodeURIComponent(code)}" target="_blank" rel="noopener">What's in this bin</a>
+            ${fg.seqColumn ? `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-new-bin="${idx}">New bin</button>` : ''}`
+          : `<strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}</strong>
+            <span class="fr-pot-warn no-print" data-dup-warn></span>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button>`;
+        return `<div class="fr-roster-row fr-pot-card fr-bin-card" data-roster-row="${idx}">
+          <div class="fr-pot-head">${head}</div>
           ${hiddenIn}
           ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
         </div>`;
@@ -1760,6 +1780,13 @@
       const container = el(containerId);
       let rows = (existingRows || []).slice();
       // A checklist-style roster can pre-list its rows (roster.defaultRows) on a new record.
+      // roster.fixedGroups: one fixed card per option of a column (every size grade on a grading
+      // log), no add/remove. { column, seqColumn, sources, dateField } -- a new record takes each
+      // group's current number (seqColumn) from the latest earlier record; "New bin" counts it up.
+      const fg = roster.fixedGroups;
+      const fgCol = fg && roster.columns.find(c => c.key === fg.column);
+      const fgNew = !!fgCol && !rows.length;
+      if (fgNew) (fgCol.options || []).forEach(o => rows.push({ [fg.column]: o }));
       if (!rows.length) (roster.defaultRows || ((roster.quickEntry || roster.startEmpty) ? [] : [{}])).forEach(r => rows.push(Object.assign({}, r)));
 
       // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
@@ -1949,6 +1976,11 @@
             const open = cur[c.lockUntil] === 'Yes';
             inp.disabled = !open;
             inp.title = open ? '' : 'Tick the start-weight check first';
+            const bx = inp.closest('[data-boxes-for]');
+            if (bx) bx.querySelectorAll('.fr-box-new, .fr-box-add, .fr-box-del').forEach(x => {
+              x.disabled = !open;
+              x.title = inp.title;
+            });
           });
           confirmCols.forEach(c => {
             const target = c.confirms ? el(fid(i, c.confirms)) : null;
@@ -2151,6 +2183,10 @@
       container.addEventListener('input', (e) => {
         autoSeq(e);
         renderRosterDerived();
+        if (fg && roster.binIdColumn) container.querySelectorAll('[data-bin-trace]').forEach(a => {
+          const c = el(fid(a.dataset.binTrace, roster.binIdColumn));
+          a.href = 'batch-trace.html?batch=' + encodeURIComponent(c ? c.value : '');
+        });
         renderRosterCarry();
         applyRowLocks();
         renderRosterTotals();
@@ -2209,6 +2245,94 @@
       }
       draw();
       loadGroupSums();
+      if (fgNew && fg.seqColumn) loadFixedGroupSeq();
+
+      function loadFixedGroupSeq() {
+        const dateEl = fg.dateField ? el('fr_f_' + fg.dateField) : null;
+        const before = (dateEl && dateEl.value) || new Date().toISOString().slice(0, 10);
+        const path = `/api/roster-last-by-group/${encodeURIComponent(fg.seqColumn)}?sources=${encodeURIComponent((fg.sources || [config.recordKey]).join(','))}`
+          + `&match=${encodeURIComponent(fg.column)}&before=${encodeURIComponent(before)}`
+          + (fg.dateField ? `&dateField=${encodeURIComponent(fg.dateField)}` : '')
+          + (editingId ? `&excludeId=${encodeURIComponent(editingId)}` : '');
+        (window.FacilityApi ? window.FacilityApi.fetch(path)
+          : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path))
+          .then(res => (res.ok ? res.json() : {}))
+          .catch(() => ({}))
+          .then(found => {
+            found = found || {};
+            let touched = null;
+            rows.forEach((_, i) => {
+              const inp = el(fid(i, fg.seqColumn));
+              const g = el(fid(i, fg.column));
+              if (!inp || !g || String(inp.value).trim()) return;
+              const hit = found[String(g.value).trim()];
+              inp.value = String((hit && parseInt(hit.value, 10)) || 1);
+              touched = inp;
+            });
+            if (touched) touched.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+      }
+
+      // "New bin": the grade's bin was emptied -- next number, start weight to be weighed again.
+      container.addEventListener('click', (e) => {
+        const b = e.target.closest && e.target.closest('[data-new-bin]');
+        if (!b || !fg) return;
+        const i = Number(b.dataset.newBin);
+        const seq = el(fid(i, fg.seqColumn));
+        if (!seq) return;
+        const n = (parseInt(seq.value, 10) || 0) + 1;
+        const g = (el(fid(i, fg.column)) || {}).value || '';
+        if (!confirm(`Start a new bin for ${g}? The bin code becomes ${g}-${n} and the start weight must be weighed again.`)) return;
+        seq.value = String(n);
+        (fg.clearOnNew || []).forEach(k => {
+          const x = el(fid(i, k));
+          if (x) x.value = '';
+          const cb = el(fid(i, k) + '__cb');
+          if (cb) cb.checked = false;
+        });
+        seq.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+
+      // numlist boxEntry: "+ Full box" records each box's weight; the hidden cell holds "a + b + c".
+      function paintBoxes(wrap) {
+        const hidden = el(wrap.dataset.boxesFor);
+        const parts = String(hidden.value || '').split(/[+,;\s]+/).filter(Boolean);
+        const total = sumNumList(hidden.value);
+        wrap.querySelector('.fr-box-chips').innerHTML = parts.map((p, n) =>
+          `<span class="fr-box-chip">Box ${n + 1}: <b>${esc(p)}</b> kg<button type="button" class="fr-box-del" data-box-del="${n}" aria-label="Remove box ${n + 1}">×</button></span>`).join('')
+          + (parts.length ? `<span class="fr-box-sum">${parts.length} box${parts.length === 1 ? '' : 'es'} · ${total == null ? '?' : total.toFixed(2)} kg</span>` : '');
+      }
+      function addBox(wrap) {
+        const nw = wrap.querySelector('.fr-box-new');
+        const v = parseFloat(nw.value);
+        if (!(v > 0)) { nw.focus(); return; }
+        const hidden = el(wrap.dataset.boxesFor);
+        hidden.value = String(hidden.value || '').trim() ? hidden.value + ' + ' + v : String(v);
+        nw.value = '';
+        paintBoxes(wrap);
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+        nw.focus();
+      }
+      container.addEventListener('click', (e) => {
+        const add = e.target.closest && e.target.closest('.fr-box-add');
+        const del = e.target.closest && e.target.closest('[data-box-del]');
+        const wrap = (add || del) && (add || del).closest('[data-boxes-for]');
+        if (!wrap) return;
+        if (add) { addBox(wrap); return; }
+        const hidden = el(wrap.dataset.boxesFor);
+        const parts = String(hidden.value || '').split(/[+,;\s]+/).filter(Boolean);
+        const n = Number(del.dataset.boxDel);
+        if (!confirm(`Remove box ${n + 1} (${parts[n]} kg)?`)) return;
+        parts.splice(n, 1);
+        hidden.value = parts.join(' + ');
+        paintBoxes(wrap);
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      container.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('fr-box-new')) return;
+        e.preventDefault();
+        addBox(e.target.closest('[data-boxes-for]'));
+      });
 
       if (canCollapse) {
         rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
@@ -2334,9 +2458,9 @@
         <div class="fr-section-title">${esc(roster.title)}</div>
         ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
         <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : ''}></div>
-        ${roster.quickEntry ? '' : `<button type="button" class="fr-btn ${roster.cardRows ? '' : 'fr-btn-flat '}fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">${esc(roster.addLabel || '+ Add row')}</button>
+        ${roster.quickEntry ? '' : `<button type="button" class="fr-btn ${roster.cardRows ? '' : 'fr-btn-flat '}fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}"${roster.fixedGroups ? ' style="display:none;"' : ''}>${esc(roster.addLabel || '+ Add row')}</button>
         ${roster.processChoice ? `<span class="fr-pot-choose" id="${rosterDomId('fr_potChoose', i)}" hidden><span class="fr-pot-choose-lbl">Which process?</span>${roster.processChoice.options.map(o => `<button type="button" class="fr-btn fr-seg-btn" data-choose="${esc(o)}">${esc(o)}</button>`).join('')}</span>` : ''}
-        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows ? ' style="display:none;"' : ''}>Import CSV</button>
+        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows || roster.fixedGroups ?' style="display:none;"' : ''}>Import CSV</button>
         <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">`}
         ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals"></div>` : ''}`).join('');
       }
