@@ -122,7 +122,7 @@ def.extraJson = {
   listColumns: ['entryDate', 'jobNo', 'roster:count'],
   entryLog: true,
   // PLACEHOLDER ranges until QC give real ones (spec D3): soft warnings only.
-  checkRanges: { placeholder: true, steamingTimeMin: [20, 90] },
+  checkRanges: {},
   submitChecks: 'drying-process',
   deviationLabel: 'Deviation',
   deviationPolarity: 'deviation',

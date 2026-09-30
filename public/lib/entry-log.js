@@ -476,9 +476,8 @@
     rows.forEach((r, i) => {
       const no = st.maxSteam + i + 1;
       if (blank(r.steamingTempC) || blank(r.steamingTimeMin) || blank(r.startTime)) missing.push(no);
-      const t = parseFloat(r.steamingTempC), mn = parseFloat(r.steamingTimeMin);
+      const t = parseFloat(r.steamingTempC);
       if (ranges.steamingTempC && !isNaN(t) && (t < ranges.steamingTempC[0] || t > ranges.steamingTempC[1])) odd.push(`steam ${no} temperature ${t} °C`);
-      if (ranges.steamingTimeMin && !isNaN(mn) && (mn < ranges.steamingTimeMin[0] || mn > ranges.steamingTimeMin[1])) odd.push(`steam ${no} time ${mn} min`);
     });
     if (missing.length) warn.push(`Steam ${missing.join(', ')}: temperature, time or start time not filled in`);
     if (odd.length) warn.push(`Outside the normal range: ${odd.join(', ')}`);
