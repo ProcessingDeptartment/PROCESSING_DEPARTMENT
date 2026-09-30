@@ -1712,40 +1712,6 @@ body.rt-tablet .rt-actionbar-fixed .rt-ab-print { min-height: var(--tap-primary)
 }
 @media (max-width: 700px) { body.rt-tablet .rt-actionbar-fixed { padding-left: 12px; padding-right: 12px; } }
 
-/* ---- header / strip / footer, second pass: smaller height and text (tokens, one place) ---- */
-:root { --bar-btn-h: 40px; --rail-h: 34px; --fs-bar: 13px; --fs-bar-btn: 14px; --fs-bar-title: 15px; }
-@media screen and (pointer: coarse), screen and (max-width: 1099px) {
-  /* top bar */
-  body.rt-tablet .rt-topbar { padding: 4px 14px; gap: 8px; }
-  body.rt-tablet .rt-topbar .rt-title { font-size: var(--fs-bar-title); }
-  body.rt-tablet .rt-topbar .rt-doc-code, body.rt-tablet .rt-topbar .rt-rev { font-size: var(--fs-bar); }
-  body.rt-tablet .rt-topbar .rt-back { width: var(--bar-btn-h); height: var(--bar-btn-h); font-size: 20px; margin-left: -6px; }
-  body.rt-tablet .rt-topbar .rt-logo { width: 28px; height: 28px; font-size: var(--fs-bar); }
-  body.rt-tablet .rt-topbar .rt-actions button, body.rt-tablet .rt-topbar .rt-wi-btn,
-  body.rt-tablet .rt-topbar .rt-actions .ml-btn, body.rt-tablet .rt-topbar .rt-actions .fr-btn { min-height: var(--bar-btn-h); padding: 0 12px; font-size: var(--fs-bar); }
-  body.rt-tablet .rt-savechip { font-size: var(--fs-bar); padding: 4px 10px; }
-  /* section strip */
-  body.rt-tablet .rt-rail-btn { min-height: var(--rail-h); padding: 0 10px; font-size: var(--fs-bar); border-bottom-width: 2px; }
-  body.rt-tablet .rt-rail-tick { width: 14px; height: 14px; border-width: 1.5px; }
-  body.rt-tablet .rt-rail-btn.rt-done .rt-rail-tick::after { font-size: 10px; line-height: 11px; }
-  /* footer */
-  body.rt-tablet .rt-actionbar-fixed { padding: 5px 20px calc(5px + env(safe-area-inset-bottom)); gap: 8px; }
-  body.rt-tablet .rt-actionbar-fixed button { font-size: var(--fs-bar-btn); }
-  body.rt-tablet .rt-actionbar-fixed .rt-ab-clear, body.rt-tablet .rt-actionbar-fixed .rt-ab-save, body.rt-tablet .rt-actionbar-fixed .rt-ab-subs,
-  body.rt-tablet .rt-actionbar-fixed .rt-ab-submit, body.rt-tablet .rt-actionbar-fixed .rt-ab-print { min-height: var(--bar-btn-h); padding-top: 0; padding-bottom: 0; }
-  body.rt-tablet .rt-actionbar-fixed .rt-ab-clear, body.rt-tablet .rt-actionbar-fixed .rt-ab-save, body.rt-tablet .rt-actionbar-fixed .rt-ab-subs { padding-left: 12px; padding-right: 12px; }
-  body.rt-tablet .rt-actionbar-fixed .rt-ab-note { font-size: var(--fs-bar-btn); min-height: var(--bar-btn-h); }
-  body.rt-tablet .rt-content .fr-body, body.rt-tablet .rt-content .ml-body { padding-bottom: 64px; }
-  body.rt-tablet .rt-undo-toast { bottom: calc(64px + env(safe-area-inset-bottom)); }
-}
-
-/* second-pass fixes: the generic `.rt-content button` rules (48px, !important) out-rank the strip; be explicit */
-@media screen and (pointer: coarse), screen and (max-width: 1099px) {
-  body.rt-tablet .rt-content .rt-rail .rt-rail-btn { min-height: var(--rail-h) !important; height: var(--rail-h); font-size: var(--fs-bar); }
-  body.rt-tablet .rt-topbar .rt-back { min-height: var(--bar-btn-h); min-width: var(--bar-btn-h); }
-  body.rt-tablet .rt-topbar .nm-btn { width: var(--bar-btn-h); height: var(--bar-btn-h); min-height: var(--bar-btn-h); min-width: var(--bar-btn-h); }
-}
-
 /* print: the pilot adds no chrome to paper */
 @media print {
   body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }
