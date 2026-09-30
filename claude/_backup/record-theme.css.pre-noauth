@@ -1757,9 +1757,6 @@ body.rt-tablet .rt-undo-toast { bottom: calc(24px + env(safe-area-inset-bottom))
 }
 @media (max-width: 700px) { body.rt-tablet .rt-actionbar-fixed { padding: 8px 12px; } }
 
-/* save chip: red warning while this device has no access key */
-body.rt-tablet .rt-savechip[data-state="noauth"] { width: 28px; height: 28px; padding: 0; justify-content: center; font-size: 16px; line-height: 1; border-radius: 50%; background: var(--fail); color: #fff; cursor: pointer; }
-
 /* print: the pilot adds no chrome to paper */
 @media print {
   body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }

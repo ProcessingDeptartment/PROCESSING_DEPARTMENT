@@ -59,10 +59,7 @@
       if (!gotResponse && !wakeTimer) {
         wakeTimer = setTimeout(function () { showWake(true); }, WAKE_AFTER_MS);
       }
-      p.then(function (res) {
-        try { if (res && /\/api\//.test(res.url || '')) { if (res.status === 401) setAuth(true); else if (res.ok) setAuth(false); } } catch (e) { /* detection only */ }
-        settled();
-      }, function () { /* a failed call is not a wake-up; leave the banner to the timer */ });
+      p.then(settled, function () { /* a failed call is not a wake-up; leave the banner to the timer */ });
       return p;
     };
     wrapped.__rtChrome = true;
@@ -71,22 +68,12 @@
 
   /* ---------------- C5: save-state chip ---------------- */
   var chip = null, saveTimer = null, saving = false, lastState = null, stateBeforeSave = null;
-  var authBad = false;
-  var NOAUTH_TEXT = 'This device is not authorised for the records database \u2014 nothing will save. Tap to enter the access key.';
-  function typedSomething() {
-    var f = document.querySelectorAll('.rt-content input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([disabled]):not([readonly]), .rt-content textarea');
-    for (var i = 0; i < f.length; i++) if (String(f[i].value || '').trim() !== '') return true;
-    return false;
-  }
-  function setAuth(bad) { if (authBad === bad) return; authBad = bad; setState(lastState ? lastState.state : 'ready', lastState ? lastState.text : 'Ready'); }
   function setState(state, text) {
     lastState = { state: state, text: text };
     if (!chip) return;
-    // with no access key, a quiet state (ready / saved / draft) is not true: nothing will save
-    if (authBad && (state === 'ready' || state === 'saved' || state === 'draft')) { state = 'noauth'; text = NOAUTH_TEXT; }
     chip.dataset.state = state;
     // ready / saved and saving are icon-only (small green tick / red hourglass); the words stay in the tooltip and for screen readers
-    var icon = (state === 'saved' || state === 'ready') ? '✓' : state === 'saving' ? '⌛' : state === 'noauth' ? '⚠' : null;
+    var icon = (state === 'saved' || state === 'ready') ? '✓' : state === 'saving' ? '⌛' : null;
     chip.textContent = icon || text;
     chip.title = text;
     chip.setAttribute('aria-label', text);
@@ -258,18 +245,15 @@
   }
 
   /* api-backend.js pins a red 'not authorised' banner to the bottom of the screen; sit above it */
-  // api-backend.js pins a red 'not authorised' bar to the bottom of the screen. The red warning in the top bar replaces it.
   function liftAboveBanner() {
-    var kids = document.body.children;
+    var b = null, kids = document.body.children;
     for (var i = 0; i < kids.length; i++) {
       var k = kids[i];
       if (k === bar || k.nodeType !== 1 || !k.style || k.style.zIndex !== '99999' || k.style.position !== 'fixed') continue;
-      if (k.id === 'api-auth-warning' || (k.style.bottom === '0px' && /not authorised/i.test(k.textContent || ''))) {
-        k.style.setProperty('display', 'none', 'important');
-        setAuth(true);
-      }
+      if (k.style.bottom === '0px') { b = k; break; }
     }
-    if (document.body.style.paddingBottom) document.body.style.paddingBottom = '';
+    var px = b ? b.offsetHeight + 'px' : '';
+    if (document.body.style.paddingBottom !== px) document.body.style.paddingBottom = px;
   }
 
   /* ---------------- generic 14px floor for self-styled (customBody) pages ---------------- */
@@ -704,10 +688,6 @@
       chip = h('span', 'rt-savechip');
       chip.setAttribute('role', 'status');
       chip.addEventListener('click', function () {
-        if (chip.dataset.state === 'noauth') {
-          if (!typedSomething() || window.confirm('Open the access-key page? Anything typed on this page will be lost.')) location.href = '/pages/api-key.html';
-          return;
-        }
         if (chip.dataset.state === 'error') { var real = findEngineBtn('save'); if (real && !real.disabled) proxy('save')(); }
       });
       actions.parentNode.insertBefore(chip, actions);
