@@ -693,16 +693,6 @@
   // the engine print flow expects its table in place: put it back before the browser prints
   window.addEventListener('beforeprint', closeSheet);
 
-  /* status is just the word: the engine writes 'tick Submitted' / 'tick Verified'; show 'Submitted' / 'Verified' */
-  function plainStatus() {
-    var badges = document.querySelectorAll('.rt-content .fr-badge, .rt-content .ml-badge, .rt-sheet .fr-badge, .rt-sheet .ml-badge');
-    Array.prototype.forEach.call(badges, function (b) {
-      var t = b.textContent || '';
-      var m = t.match(/^[\u2713\u2714\u2715\u2716\u2717\u2718\s]+/);
-      if (m && !b.firstElementChild) b.textContent = t.slice(m[0].length);
-    });
-  }
-
   /* ---------------- wiring ---------------- */
   function ensure() {
     if (!optedIn()) return;
@@ -731,7 +721,6 @@
     countStrips();
     liftAboveBanner();
     hideSubmissionPanels();
-    plainStatus();
     barPanels();
     var toast = document.querySelector('.ml-toast, .fr-toast');
     if (toast && !toast.__rtWatched) {
