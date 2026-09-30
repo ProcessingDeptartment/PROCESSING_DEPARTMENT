@@ -1247,6 +1247,38 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 .rt-content .fr-box-entry .fr-box-add { min-height: 48px; white-space: nowrap; }
 .rt-content .fr-bin-card [data-col="gradedWeight"] input { font-size: 24px; font-weight: 700; background: #f4f1e8; color: var(--rt-navy-primary); }
 .rt-content .fr-bin-card .fr-confirm { min-height: 48px; }
+/* Fixed grade rows (roster.fixedGroups): tap a grade to open it; big touch targets for tablet. */
+.rt-content .fr-bin-fixed { padding: 0; margin-bottom: 8px; border: 1px solid #d9d2c0; border-left: 6px solid #c9c2b0; border-radius: 10px; background: #fff; overflow: hidden; }
+.rt-content .fr-bin-fixed[data-state="busy"] { border-left-color: var(--rt-gold, #a9763a); }
+.rt-content .fr-bin-fixed[data-state="done"] { border-left-color: #2e7d32; }
+.rt-content .fr-bin-head { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 16px; border: 0; background: none; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.rt-content .fr-bin-fixed.open .fr-bin-head { background: #f7f3ea; border-bottom: 1px solid #e6dfcc; }
+.rt-content .fr-bin-grade { font-size: 20px; font-weight: 700; min-width: 96px; }
+.rt-content .fr-bin-code { font-size: 15px; font-weight: 700; background: #f4f1e8; border: 1px solid #e0d6bd; border-radius: 6px; padding: 3px 10px; font-variant-numeric: tabular-nums; }
+.rt-content .fr-bin-status { margin-left: auto; font-size: 15px; color: #777; text-align: right; }
+.rt-content .fr-bin-fixed[data-state="busy"] .fr-bin-status { color: #8a5a14; font-weight: 600; }
+.rt-content .fr-bin-fixed[data-state="done"] .fr-bin-status { color: #2e7d32; font-weight: 600; }
+.rt-content .fr-bin-chev { font-size: 26px; color: #999; transition: transform .15s; }
+.rt-content .fr-bin-fixed.open .fr-bin-chev { transform: rotate(90deg); }
+.rt-content .fr-bin-fixed .fr-bin-body { display: none; padding: 4px 16px 14px; }
+.rt-content .fr-bin-fixed.open .fr-bin-body { display: block; }
+.rt-content .fr-bin-fixed [data-col="binCode"] { display: none; }
+.rt-content .fr-bin-fixed .fr-pot-line[data-line="0"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.rt-content .fr-bin-fixed .fr-pot-line[data-line="1"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.rt-content .fr-bin-fixed [data-col="fullBoxWeight"] { grid-column: 1 / -1; order: -1; }
+.rt-content .fr-bin-fixed .fr-confirm { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 14px; border: 2px solid #d9d2c0; border-radius: 8px; cursor: pointer; }
+.rt-content .fr-bin-fixed .fr-confirm input[type=checkbox] { width: 28px; height: 28px; }
+.rt-content .fr-bin-fixed .fr-box-entry .fr-box-new { font-size: 22px; min-height: 56px; }
+.rt-content .fr-bin-fixed .fr-box-entry .fr-box-add { min-height: 56px; font-size: 18px; padding: 0 22px; background: var(--rt-gold, #a9763a); color: #fff; border: 0; border-radius: 8px; }
+.rt-content .fr-bin-fixed .fr-box-entry .fr-box-add:disabled { background: #ccc; }
+.rt-content .fr-bin-fixed .fr-box-chip { font-size: 16px; padding: 6px 4px 6px 12px; }
+.rt-content .fr-bin-fixed .fr-box-del { min-width: 36px; min-height: 36px; }
+.rt-content .fr-bin-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; padding-top: 10px; border-top: 1px dashed #e0d6bd; }
+.rt-content .fr-bin-foot .fr-btn { min-height: 44px; }
+.rt-content .fr-bin-fixed .fr-carry-hint { display: block; font-size: 12.5px; font-weight: 400; color: #777; margin-top: 4px; }
+/* Tablet shell: the section tab bar must not widen the page. */
+body.rt-tablet .rt-content { max-width: 100%; overflow-x: clip; }
+body.rt-tablet .rt-rail { max-width: 100%; min-width: 0; }
 @media (max-width: 700px) {
   .rt-content .fr-bin-card .fr-pot-line[data-line] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rt-content .fr-bin-card [data-col="fullBoxWeight"], .rt-content .fr-bin-card [data-col="sizeGrade"] { grid-column: 1 / -1; }

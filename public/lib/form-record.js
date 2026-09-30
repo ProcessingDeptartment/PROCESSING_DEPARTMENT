@@ -1637,12 +1637,26 @@
         // what is in the bin (batch-trace for the bin code) instead of Remove.
         const fg = roster.fixedGroups;
         const code = fg && roster.binIdColumn ? String(row[roster.binIdColumn] || '') : '';
-        const head = fg
-          ? `<strong class="fr-pot-title">${esc(row[fg.column] || '')}</strong>
-            <span class="fr-pot-warn no-print" data-dup-warn></span>
-            <a class="fr-btn fr-btn-flat fr-btn-sm no-print fr-bin-trace" data-bin-trace="${idx}" href="batch-trace.html?batch=${encodeURIComponent(code)}" target="_blank" rel="noopener">What's in this bin</a>
-            ${fg.seqColumn ? `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-new-bin="${idx}">New bin</button>` : ''}`
-          : `<strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}</strong>
+        // Tablet: each grade is one tap-to-open row (head = grade, bin code, status); one open at a time.
+        if (fg) {
+          return `<div class="fr-roster-row fr-pot-card fr-bin-card fr-bin-fixed" data-roster-row="${idx}">
+            <button type="button" class="fr-bin-head" data-bin-toggle="${idx}" aria-expanded="false">
+              <span class="fr-bin-grade">${esc(row[fg.column] || '')}</span>
+              <span class="fr-bin-code" data-bin-codechip>${esc(code)}</span>
+              <span class="fr-bin-status" data-bin-status></span>
+              <span class="fr-bin-chev" aria-hidden="true">›</span>
+            </button>
+            <div class="fr-bin-body">
+              ${hiddenIn}
+              ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
+              <div class="fr-bin-foot no-print">
+                <a class="fr-btn fr-btn-flat fr-bin-trace" data-bin-trace="${idx}" href="batch-trace.html?batch=${encodeURIComponent(code)}" target="_blank" rel="noopener">What's in this bin</a>
+                ${fg.seqColumn ? `<button type="button" class="fr-btn fr-btn-flat" data-new-bin="${idx}">Bin emptied — start new bin</button>` : ''}
+              </div>
+            </div>
+          </div>`;
+        }
+        const head = `<strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button>`;
         return `<div class="fr-roster-row fr-pot-card fr-bin-card" data-roster-row="${idx}">
@@ -2027,7 +2041,7 @@
         hidden.dispatchEvent(new Event('input', { bubbles: true }));
       });
 
-      const canCollapse = roster.collapseRows !== false && roster.columns.length > 2;
+      const canCollapse = roster.collapseRows !== false && !roster.fixedGroups && roster.columns.length > 2;
       const collapsedRows = new Set();
       const dataCols = roster.columns.filter(c => c.type !== 'batchseq');
 
@@ -2183,10 +2197,6 @@
       container.addEventListener('input', (e) => {
         autoSeq(e);
         renderRosterDerived();
-        if (fg && roster.binIdColumn) container.querySelectorAll('[data-bin-trace]').forEach(a => {
-          const c = el(fid(a.dataset.binTrace, roster.binIdColumn));
-          a.href = 'batch-trace.html?batch=' + encodeURIComponent(c ? c.value : '');
-        });
         renderRosterCarry();
         applyRowLocks();
         renderRosterTotals();
@@ -2272,6 +2282,48 @@
             if (touched) touched.dispatchEvent(new Event('input', { bubbles: true }));
           });
       }
+
+      // Tap-to-open grade rows: one open at a time; the head shows bin code + where the bin is at.
+      function paintBinHeads() {
+        if (!fg) return;
+        container.querySelectorAll('.fr-bin-fixed').forEach(card => {
+          const i = Number(card.dataset.rosterRow);
+          const r = readRow(i);
+          const code = roster.binIdColumn ? String(r[roster.binIdColumn] || '') : '';
+          const chip = card.querySelector('[data-bin-codechip]');
+          if (chip) chip.textContent = code;
+          const a = card.querySelector('[data-bin-trace]');
+          if (a) a.href = 'batch-trace.html?batch=' + encodeURIComponent(code);
+          const nBox = String(r.fullBoxWeight || '').split(/[+,;\s]+/).filter(Boolean).length;
+          const boxKg = sumNumList(r.fullBoxWeight);
+          const graded = String(r.gradedWeight || '').trim();
+          let st = 'todo', txt = 'Not started';
+          if (graded) { st = 'done'; txt = `✓ ${nBox} box${nBox === 1 ? '' : 'es'} · graded ${graded} kg`; }
+          else if (r.startConfirmed === 'Yes' || nBox) {
+            st = 'busy';
+            txt = nBox ? `${nBox} box${nBox === 1 ? '' : 'es'} · ${boxKg == null ? '?' : boxKg.toFixed(2)} kg` : 'Start weight checked';
+          }
+          card.dataset.state = st;
+          const s = card.querySelector('[data-bin-status]');
+          if (s) s.textContent = txt;
+        });
+      }
+      container.addEventListener('click', (e) => {
+        const h = e.target.closest && e.target.closest('[data-bin-toggle]');
+        if (!h) return;
+        const card = h.closest('.fr-bin-fixed');
+        const open = !card.classList.contains('open');
+        container.querySelectorAll('.fr-bin-fixed.open').forEach(c => {
+          c.classList.remove('open');
+          c.querySelector('[data-bin-toggle]').setAttribute('aria-expanded', 'false');
+        });
+        if (open) {
+          card.classList.add('open');
+          h.setAttribute('aria-expanded', 'true');
+          card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
+      });
+      if (fg) { paintBinHeads(); container.addEventListener('input', paintBinHeads); }
 
       // "New bin": the grade's bin was emptied -- next number, start weight to be weighed again.
       container.addEventListener('click', (e) => {
