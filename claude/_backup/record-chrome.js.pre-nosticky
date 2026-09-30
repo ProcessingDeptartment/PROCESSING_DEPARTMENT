@@ -246,6 +246,7 @@
 
   /* api-backend.js pins a red 'not authorised' banner to the bottom of the screen; sit above it */
   function liftAboveBanner() {
+    if (!bar) return;
     var b = null, kids = document.body.children;
     for (var i = 0; i < kids.length; i++) {
       var k = kids[i];
@@ -253,7 +254,7 @@
       if (k.style.bottom === '0px') { b = k; break; }
     }
     var px = b ? b.offsetHeight + 'px' : '';
-    if (document.body.style.paddingBottom !== px) document.body.style.paddingBottom = px;
+    if (bar.style.bottom !== px) bar.style.bottom = px;
   }
 
   /* ---------------- generic 14px floor for self-styled (customBody) pages ---------------- */
@@ -681,8 +682,6 @@
   function ensure() {
     if (!optedIn()) return;
     if (!bar || !bar.parentNode) buildBar();
-    var shellEl = document.querySelector('.rt-shell');
-    if (bar && shellEl && bar.parentNode !== shellEl) shellEl.appendChild(bar);
     var actions = document.querySelector('.rt-topbar .rt-actions');
     if (actions && (!chip || !chip.parentNode)) {
       chip = h('span', 'rt-savechip');

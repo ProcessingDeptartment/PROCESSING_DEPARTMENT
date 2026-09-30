@@ -1746,17 +1746,6 @@ body.rt-tablet .rt-actionbar-fixed .rt-ab-print { min-height: var(--tap-primary)
   body.rt-tablet .rt-topbar .nm-btn { width: var(--bar-btn-h); height: var(--bar-btn-h); min-height: var(--bar-btn-h); min-width: var(--bar-btn-h); }
 }
 
-/* ---- bottom action bar is no longer sticky: it sits at the end of the page ---- */
-body.rt-tablet .rt-actionbar-fixed { position: static; left: auto; right: auto; bottom: auto; z-index: auto; flex: 0 0 auto; margin: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 8px 24px 8px; }
-body.rt-tablet .rt-content .fr-body, body.rt-tablet .rt-content .ml-body { padding-bottom: 0; }
-body.rt-tablet .rt-undo-toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
-@media screen and (pointer: coarse), screen and (max-width: 1099px) {
-  body.rt-tablet .rt-actionbar-fixed { padding: 8px 24px; }
-  body.rt-tablet .rt-content .fr-body, body.rt-tablet .rt-content .ml-body { padding-bottom: 0; }
-  body.rt-tablet .rt-undo-toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
-}
-@media (max-width: 700px) { body.rt-tablet .rt-actionbar-fixed { padding: 8px 12px; } }
-
 /* print: the pilot adds no chrome to paper */
 @media print {
   body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }
