@@ -246,7 +246,7 @@
     <div id="binPanel" hidden>
       <h3 style="margin:14px 0 6px;">In this bin</h3>
       <table class="bin-table" style="width:100%;border-collapse:collapse;font-size:14px;">
-        <thead><tr style="text-align:left;border-bottom:1px solid #ccc;"><th>Job no.</th><th>Graded on</th><th>Record</th><th>Boxes</th><th>Graded kg</th><th></th></tr></thead>
+        <thead><tr style="text-align:left;border-bottom:1px solid #ccc;"><th>Job no.</th><th>Graded on</th><th>Record</th><th>Boxes</th><th>kg</th><th></th></tr></thead>
         <tbody id="binRows"></tbody>
       </table>
     </div>
@@ -267,7 +267,7 @@
 <script src="../lib/api-backend.js?v=14"></script>
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=3"></script>
-<script src="../lib/traceability.js?v=9"></script>
+<script src="../lib/traceability.js?v=10"></script>
 <script src="../lib/master-index-data.js?v=2"></script>
 <script>  const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -355,8 +355,9 @@
     let total = 0, boxes = 0;
     $('binRows').innerHTML = rows.map(r => {
       const row = r.row || {};
-      const nb = String(row.fullBoxWeight || '').split(/[+,;\s]+/).filter(Boolean).length;
-      const g = parseFloat(row.gradedWeight);
+      // A box code (one full box off a grading bin) carries its own box_weight.
+      const nb = r.box_weight != null ? 1 : String(row.fullBoxWeight || '').split(/[+,;\s]+/).filter(Boolean).length;
+      const g = parseFloat(r.box_weight != null ? r.box_weight : row.gradedWeight);
       if (!isNaN(g)) total += g;
       boxes += nb;
       return `<tr style="border-bottom:1px solid #eee;"><td><a href="?batch=${encodeURIComponent(r.job_no || '')}">${esc(r.job_no || '')}</a></td>

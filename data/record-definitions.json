@@ -18222,10 +18222,7 @@
                 "grading-production-log-cultivated",
                 "grading-production-log-ranched"
               ],
-              "clearOnNew": [
-                "binWeightStart",
-                "startConfirmed"
-              ]
+              "boxList": "fullBoxWeight"
             }
           }
         },
@@ -18969,7 +18966,7 @@
           "type": "number",
           "extraJson": {
             "carryPrev": {
-              "match": "binCode",
+              "match": "sizeGrade",
               "column": "finalBinWeight",
               "sources": [
                 "grading-production-log-cultivated",
@@ -19215,10 +19212,7 @@
                 "grading-production-log-cultivated",
                 "grading-production-log-ranched"
               ],
-              "clearOnNew": [
-                "binWeightStart",
-                "startConfirmed"
-              ]
+              "boxList": "fullBoxWeight"
             }
           }
         },
@@ -19754,7 +19748,7 @@
           "type": "number",
           "extraJson": {
             "carryPrev": {
-              "match": "binCode",
+              "match": "sizeGrade",
               "column": "finalBinWeight",
               "sources": [
                 "grading-production-log-cultivated",

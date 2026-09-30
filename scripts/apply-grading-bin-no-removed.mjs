@@ -2,7 +2,8 @@
 // within each size grade (8g-10g-1, 8g-10g-2 ...). binNo is a hidden seqWithin counter; binCode =
 // sizeGrade-binNo, read-only and shown. roster.fixedGroups: a new log opens with one card per
 // size grade (grade = card title), each on its current bin no. from the database; "New bin"
-// counts it up. Full boxes are added one weight at a time (numlist boxEntry). Card lines:
+// counts it up. Every "+ Full box" takes the current bin code as that box's code and counts the
+// bin on by one (fixedGroups.boxList); start weight carries by size grade. Card lines:
 //   1: Bin code | Bin weight start | Start weight checked
 //   2: Full boxes | Final bin weight | Graded weight
 // Idempotent. Then: snapshot-one-def.mjs for both keys, seed-definitions.mjs.
@@ -35,7 +36,7 @@ for (const key of ['grading-production-log-cultivated', 'grading-production-log-
   sec.extraJson = { ...(sec.extraJson || {}), fixedGroups: {
     column: 'sizeGrade', seqColumn: 'binNo', dateField: 'gradingDate',
     sources: ['grading-production-log-cultivated', 'grading-production-log-ranched'],
-    clearOnNew: ['binWeightStart', 'startConfirmed'] } };
+    boxList: 'fullBoxWeight' } };
   for (const f of def.fields) {
     if (f.sectionIndex !== ri || f.parentFieldKey !== '@roster') continue;
     if (!LINE[f.key]) throw new Error('unexpected column ' + f.key);
@@ -44,7 +45,7 @@ for (const key of ['grading-production-log-cultivated', 'grading-production-log-
     if (f.key === 'binCode') { x.deriveJoin = { parts: ['sizeGrade', 'binNo'], sep: '-' }; delete x.hidden; }
     if (f.key === 'sizeGrade') x.hidden = true;           // it is the card title
     if (f.key === 'fullBoxWeight') { x.boxEntry = true; delete x.placeholder; }
-    if (f.key === 'binWeightStart') x.carryPrev = { ...x.carryPrev, match: 'binCode' };
+    if (f.key === 'binWeightStart') x.carryPrev = { ...x.carryPrev, match: 'sizeGrade' };
     f.extraJson = x;
   }
   console.log(key + ': bin code auto-numbered, card laid out');

@@ -1638,16 +1638,15 @@
         const fg = roster.fixedGroups;
         const code = fg && roster.binIdColumn ? String(row[roster.binIdColumn] || '') : '';
         // Tablet: each grade is one tap-to-open row (head = grade, bin code, status); one open at a time.
-        // Tablet table: one row per grade -- grade | bin code | start | ✓ | full boxes (+) | final | graded.
-        // Tapping the bin code offers "What's in this bin" / "New bin"; "+ Full box" opens the box pad.
+        // Tablet table: one row per grade -- bin code (grade-n, so no separate grade column) | start | ✓ | full boxes (+) | final | graded.
+        // "+ Full box" opens the box pad; each box takes the current bin code and the code counts on.
         if (fg) {
           const col = k => roster.columns.find(c => c.key === k);
           const inp = k => { const c = col(k); return c ? fieldInputHtml(`${ns}_roster_${idx}_${k}`, c, row[k], row) : ''; };
           const hid = k => `<input type="hidden" id="${ns}_roster_${idx}_${k}" value="${esc(row[k] == null ? '' : row[k])}">`;
           return `<div class="fr-roster-row fr-bin-row" data-roster-row="${idx}" data-state="todo">
             ${hid(fg.column)}${fg.seqColumn ? hid(fg.seqColumn) : ''}
-            <span class="fr-bin-grade">${esc(row[fg.column] || '')}</span>
-            <span class="fr-bin-codecell"><button type="button" class="fr-bin-code" data-bin-menu="${idx}" data-bin-codechip>${esc(code)}</button>
+            <span class="fr-bin-codecell"><span class="fr-bin-code" data-bin-codechip>${esc(code)}</span>
               <span data-col="${esc(roster.binIdColumn || '')}" hidden>${roster.binIdColumn ? inp(roster.binIdColumn) : ''}</span></span>
             <span class="fr-bin-cell" data-col="binWeightStart">${inp('binWeightStart')}</span>
             <span class="fr-bin-cell fr-bin-tick" data-col="startConfirmed">${inp('startConfirmed')}</span>
@@ -2157,7 +2156,7 @@
       container._isCarried = (i, key) => carried.has(i + ':' + key);
 
       function draw() {
-        container.innerHTML = (roster.fixedGroups ? `<div class="fr-bin-row fr-bin-thead" aria-hidden="true"><span>Size grade</span><span>Bin</span><span>Start kg</span><span>✓</span><span>Full boxes</span><span>Final kg</span><span>Graded kg</span></div>` : '')
+        container.innerHTML = (roster.fixedGroups ? `<div class="fr-bin-row fr-bin-thead" aria-hidden="true"><span>Bin</span><span>Start kg</span><span>✓</span><span>Full boxes</span><span>Final kg</span><span>Graded kg</span></div>` : '')
           + rows.map((r, i) => rosterRowHtml(ns, i, r, roster)).join('');
 
               if (typeof wireYesNo === 'function') wireYesNo(container);
@@ -2318,47 +2317,41 @@
         return sh;
       }
       container.addEventListener('click', (e) => {
-        const m = e.target.closest && e.target.closest('[data-bin-menu]');
-        if (!m) return;
-        const i = Number(m.dataset.binMenu);
-        const r = readRow(i);
-        const code = String(r[roster.binIdColumn] || '');
-        const sh = binSheet(`<h3>${esc(r[fg.column] || '')} — bin ${esc(code)}</h3>
-          <a class="fr-btn fr-bin-sheet-btn" href="batch-trace.html?batch=${encodeURIComponent(code)}" target="_blank" rel="noopener">What's in this bin</a>
-          ${fg.seqColumn ? `<button type="button" class="fr-btn fr-bin-sheet-btn" data-new-bin="${i}">Bin emptied — start new bin</button>` : ''}
-          <button type="button" class="fr-btn fr-btn-flat fr-bin-sheet-btn" data-sheet-close>Close</button>`);
-        const nb = sh.querySelector('[data-new-bin]');
-        if (nb) nb.addEventListener('click', () => { sh.hidden = true; newBin(i); });
-      });
-      container.addEventListener('click', (e) => {
         const o = e.target.closest && e.target.closest('[data-box-open]');
         if (!o || o.disabled) return;
         const i = Number(o.dataset.boxOpen);
         const hidden = el(fid(i, 'fullBoxWeight'));
+        const seq = fg.seqColumn ? el(fid(i, fg.seqColumn)) : null;
         const r = readRow(i);
-        const sh = binSheet(`<h3>${esc(r[fg.column] || '')} — bin ${esc(r[roster.binIdColumn] || '')}</h3>
-          <div class="fr-pad-list"></div>
-          <div class="fr-pad-entry"><input type="number" step="0.01" inputmode="decimal" class="fr-pad-new" placeholder="Full box kg">
-          <button type="button" class="fr-btn fr-pad-add">+ Add box</button></div>
-          <button type="button" class="fr-btn fr-btn-flat fr-bin-sheet-btn" data-sheet-close>Done</button>`);
+        const grade = String(r[fg.column] || '');
+        // box k's code = grade-(seq - n + k): each box took the bin code of its moment.
+        const codeOf = (k, n) => grade + '-' + ((parseInt(seq && seq.value, 10) || 1) - n + k);
+        // One box per open: weigh, "Add full box", sheet closes. Tap outside to cancel.
+        const n0 = nBoxes(hidden.value).length;
+        const sh = binSheet(`<h3>Full box ${esc(codeOf(n0, n0))}</h3>
+          <div class="fr-pad-entry"><input type="number" step="0.01" inputmode="decimal" class="fr-pad-new" placeholder="Box weight kg">
+          <button type="button" class="fr-btn fr-pad-add">Add full box</button></div>
+          <div class="fr-pad-list"></div>`);
         const list = sh.querySelector('.fr-pad-list');
         const nw = sh.querySelector('.fr-pad-new');
         const paint = () => {
           const parts = nBoxes(hidden.value);
           const t = sumNumList(hidden.value);
-          list.innerHTML = parts.length
-            ? parts.map((p, n) => `<span class="fr-box-chip">Box ${n + 1}: <b>${esc(p)}</b> kg<button type="button" class="fr-box-del" data-pad-del="${n}" aria-label="Remove box ${n + 1}">×</button></span>`).join('')
-              + `<div class="fr-pad-total">${parts.length} box${parts.length === 1 ? '' : 'es'} · ${t == null ? '?' : t.toFixed(2)} kg</div>`
-            : '<div class="fr-pad-total">No boxes yet</div>';
+          const n = parts.length;
+          list.innerHTML = n
+            ? `<div class="fr-pad-total">${n} box${n === 1 ? '' : 'es'} so far · ${t == null ? '?' : t.toFixed(2)} kg</div>
+              <span class="fr-box-chip">Last: <b>${esc(codeOf(n - 1, n))}</b> ${esc(parts[n - 1])} kg<button type="button" class="fr-box-del" data-pad-del="${n - 1}" aria-label="Undo last box">Undo</button></span>`
+            : '';
         };
+        const bump = d => { if (seq) seq.value = String((parseInt(seq.value, 10) || 1) + d); };
         const commit = () => { paint(); hidden.dispatchEvent(new Event('input', { bubbles: true })); };
         const add = () => {
           const v = parseFloat(nw.value);
           if (!(v > 0)) { nw.focus(); return; }
           hidden.value = String(hidden.value || '').trim() ? hidden.value + ' + ' + v : String(v);
-          nw.value = '';
+          bump(1);
           commit();
-          nw.focus();
+          sh.hidden = true;
         };
         sh.querySelector('.fr-pad-add').addEventListener('click', add);
         nw.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); add(); } });
@@ -2367,31 +2360,17 @@
           if (!d) return;
           const parts = nBoxes(hidden.value);
           const n = Number(d.dataset.padDel);
-          if (!confirm(`Remove box ${n + 1} (${parts[n]} kg)?`)) return;
+          if (n !== parts.length - 1) return;
+          if (!confirm(`Remove box ${codeOf(n, parts.length)} (${parts[n]} kg)?`)) return;
           parts.splice(n, 1);
           hidden.value = parts.join(' + ');
+          bump(-1);
           commit();
+          sh.querySelector('h3').textContent = 'Full box ' + codeOf(parts.length, parts.length);
         });
         paint();
         nw.focus();
       });
-
-      // "New bin": the grade's bin was emptied -- next number, start weight to be weighed again.
-      function newBin(i) {
-        const seq = el(fid(i, fg.seqColumn));
-        if (!seq) return;
-        const n = (parseInt(seq.value, 10) || 0) + 1;
-        const g = (el(fid(i, fg.column)) || {}).value || '';
-        if (!confirm(`Start a new bin for ${g}? The bin code becomes ${g}-${n} and the start weight must be weighed again.`)) return;
-        seq.value = String(n);
-        (fg.clearOnNew || []).forEach(k => {
-          const x = el(fid(i, k));
-          if (x) x.value = '';
-          const cb = el(fid(i, k) + '__cb');
-          if (cb) cb.checked = false;
-        });
-        seq.dispatchEvent(new Event('input', { bubbles: true }));
-      }
 
       // numlist boxEntry: "+ Full box" records each box's weight; the hidden cell holds "a + b + c".
       function paintBoxes(wrap) {

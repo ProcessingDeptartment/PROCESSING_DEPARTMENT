@@ -147,7 +147,30 @@
       }
 
       const binCol = rosterCfg.binIdColumn;
-      if (binCol && Array.isArray(sub.roster)) {
+      // Grading bins (roster.fixedGroups.boxList): every full box took the bin's code at the time
+      // and the bin counted on, so the row's boxes are codes grade-(seq-n) .. grade-(seq-1).
+      // Index each box code (its own weight); the row's current bin code is the next, empty one.
+      const fgc = rosterCfg.fixedGroups;
+      if (binCol && fgc && fgc.boxList && Array.isArray(sub.roster)) {
+        for (let i = 0; i < sub.roster.length; i++) {
+          const r = sub.roster[i] || {};
+          const grade = String(r[fgc.column] || '').trim();
+          const seq = parseInt(r[fgc.seqColumn], 10);
+          const boxes = String(r[fgc.boxList] || '').split(/[+,;\s]+/).filter(Boolean);
+          if (!grade || isNaN(seq)) continue;
+          for (let k = 0; k < boxes.length; k++) {
+            const code = grade + '-' + (seq - boxes.length + k);
+            await window.storage.set(
+              binKeyFor(code, config.recordKey, sub.id + ':bin' + i + ':b' + k),
+              JSON.stringify(Object.assign(
+                { bin_code: code, job_no: batchNo, link_field: binCol, box_weight: boxes[k], row: r },
+                baseRow
+              )),
+              true
+            );
+          }
+        }
+      } else if (binCol && Array.isArray(sub.roster)) {
         for (let i = 0; i < sub.roster.length; i++) {
           const binCode = String((sub.roster[i] || {})[binCol] || '').trim();
           if (!binCode) continue;
