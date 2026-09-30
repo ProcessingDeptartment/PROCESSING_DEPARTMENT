@@ -237,7 +237,7 @@
       for (var c = e.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.nodeValue.trim()) { hasText = true; break; }
       if (!hasText && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.tagName)) continue;
       if (e.type === 'checkbox' || e.type === 'radio' || e.type === 'hidden') continue;
-      if (parseFloat(getComputedStyle(e).fontSize) < 14) e.classList.add('rt-fs-floor');
+      if (parseFloat(getComputedStyle(e).fontSize) < 13) e.classList.add('rt-fs-floor');
     }
   }
   function scheduleFloor() {
