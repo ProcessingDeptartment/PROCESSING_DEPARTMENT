@@ -1652,7 +1652,7 @@
             <span class="fr-bin-cell fr-bin-tick" data-col="startConfirmed">${inp('startConfirmed')}</span>
             <span class="fr-bin-cell fr-bin-boxes" data-boxes-for="${ns}_roster_${idx}_fullBoxWeight">
               ${hid('fullBoxWeight')}<span class="fr-bin-boxsum" data-bin-boxsum></span>
-              <button type="button" class="fr-bin-boxbtn" data-box-open="${idx}">+ Full box</button></span>
+              <button type="button" class="fr-bin-boxbtn" data-box-open="${idx}" aria-label="Add full box">+ Box</button></span>
             <span class="fr-bin-cell" data-col="finalBinWeight">${inp('finalBinWeight')}</span>
             <span class="fr-bin-cell fr-bin-graded" data-col="gradedWeight">${inp('gradedWeight')}</span>
           </div>`;
@@ -2156,7 +2156,7 @@
       container._isCarried = (i, key) => carried.has(i + ':' + key);
 
       function draw() {
-        container.innerHTML = (roster.fixedGroups ? `<div class="fr-bin-row fr-bin-thead" aria-hidden="true"><span>Bin</span><span>Start kg</span><span>✓</span><span>Full boxes</span><span>Final kg</span><span>Graded kg</span></div>` : '')
+        container.innerHTML = (roster.fixedGroups ? `<div class="fr-bin-row fr-bin-thead" aria-hidden="true"><span>Bin</span><span>Start kg</span><span>Confirm start</span><span>Full boxes</span><span>Final kg</span><span>Graded kg</span></div>` : '')
           + rows.map((r, i) => rosterRowHtml(ns, i, r, roster)).join('');
 
               if (typeof wireYesNo === 'function') wireYesNo(container);
@@ -2296,11 +2296,21 @@
           const n = nBoxes(r.fullBoxWeight).length;
           const kg = sumNumList(r.fullBoxWeight);
           const sum = tr.querySelector('[data-bin-boxsum]');
-          if (sum) sum.textContent = n ? `${n} box${n === 1 ? '' : 'es'} · ${kg == null ? '?' : kg.toFixed(1)} kg` : '';
+          if (sum) sum.innerHTML = n ? `<b>${n}</b> box${n === 1 ? '' : 'es'}<br>${kg == null ? '?' : kg.toFixed(1)} kg` : '';
+          const ct = tr.querySelector('.fr-bin-tick .fr-confirm-text');
+          if (ct) ct.textContent = r.startConfirmed === 'Yes' ? 'Confirmed' : 'Confirm';
+          tr.querySelector('.fr-bin-tick').classList.toggle('on', r.startConfirmed === 'Yes');
           tr.dataset.state = String(r.gradedWeight || '').trim() ? 'done' : (r.startConfirmed === 'Yes' || n ? 'busy' : 'todo');
         });
       }
       if (fg) { paintBinRows(); container.addEventListener('input', paintBinRows); }
+      // The whole Confirm box is the tap target, not just the small checkbox.
+      container.addEventListener('click', (e) => {
+        const box = fg && e.target.closest && e.target.closest('.fr-bin-tick .fr-confirm');
+        if (!box || e.target.matches('input[type=checkbox]')) return;
+        const cb = box.querySelector('input[type=checkbox]');
+        if (cb && !cb.disabled) cb.click();
+      });
 
       // One shared bottom sheet for the bin menu and the box pad.
       function binSheet(html) {
