@@ -1688,14 +1688,6 @@ body.rt-tablet .rt-sheet-body .ml-filters label:has(> input[type=date]), body.rt
 body.rt-tablet .rt-sheet-body .ml-filters, body.rt-tablet .rt-sheet-body .fr-filters { padding: 12px 16px 0; }
 @media print { body.rt-tablet .rt-sheet { display: none !important; } }
 
-/* ---- bottom bar: View submissions far left, Submit and print beside Submit ---- */
-body.rt-tablet .rt-actionbar-fixed { flex-wrap: nowrap; }
-body.rt-tablet .rt-actionbar-fixed .rt-ab-subs { order: -2; margin-right: auto; min-height: var(--tap); padding: 0 16px; background: var(--surface); color: var(--ink); border: var(--field-border); white-space: nowrap; }
-body.rt-tablet .rt-actionbar-fixed .rt-ab-note { order: -1; margin-right: 0; flex: 1 1 auto; }
-body.rt-tablet .rt-actionbar-fixed .rt-ab-subs ~ .rt-ab-note { margin-left: 8px; }
-body.rt-tablet .rt-actionbar-fixed .rt-ab-print { min-height: var(--tap-primary); padding: 0 20px; background: var(--surface); color: var(--action); border: 2px solid var(--action); white-space: nowrap; }
-@media (max-width: 700px) { body.rt-tablet .rt-actionbar-fixed { flex-wrap: wrap; } body.rt-tablet .rt-actionbar-fixed .rt-ab-subs { order: -3; flex: 1 1 100%; margin-right: 0; } }
-
 /* print: the pilot adds no chrome to paper */
 @media print {
   body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }

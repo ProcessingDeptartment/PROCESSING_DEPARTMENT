@@ -99,38 +99,8 @@
   window.addEventListener('offline', function () { setState('offline', 'Offline — will retry'); });
   window.addEventListener('online', function () { if (lastState && lastState.state === 'offline') setState('saved', 'Back online'); });
 
-  /* ---------------- Submit and print ----------------
-     Clicks the engine's Submit (so all validation and saving is the engine's), waits for its 'submitted' message, then presses
-     the engine's own Print button for that entry (the row's [data-pdf] button, which prints the controlled-copy sheet). */
-  var printAfterSubmit = false, printTimer = null;
-  function pdfIds() {
-    return Array.prototype.map.call(document.querySelectorAll('.rt-content [data-pdf], .rt-sheet [data-pdf]'), function (b) { return b.getAttribute('data-pdf'); });
-  }
-  var idsBeforeSubmit = [];
-  function submitAndPrint() {
-    var real = findEngineBtn('submit');
-    if (!real || real.disabled || saving) return;
-    idsBeforeSubmit = pdfIds();
-    printAfterSubmit = true;
-    clearTimeout(printTimer);
-    printTimer = setTimeout(function () { printAfterSubmit = false; }, 20000);   // never leave it armed
-    proxy('submit')();
-  }
-  function printSubmitted() {
-    printAfterSubmit = false; clearTimeout(printTimer);
-    var tries = 0;
-    (function look() {
-      var all = document.querySelectorAll('.rt-content [data-pdf], .rt-sheet [data-pdf]');
-      var pick = null;
-      Array.prototype.forEach.call(all, function (b) { if (!pick && idsBeforeSubmit.indexOf(b.getAttribute('data-pdf')) < 0) pick = b; });
-      if (!pick && all.length && tries >= 3) pick = all[0];         // resubmitted draft: same id, newest row is first
-      if (pick) { pick.click(); return; }
-      if (++tries < 12) setTimeout(look, 300);
-    })();
-  }
-
   /* ---------------- C4 + C12: action bar ---------------- */
-  var bar = null, btnClear, btnSave, btnSubmit, btnPrint, note;
+  var bar = null, btnClear, btnSave, btnSubmit, note;
   var IDS = { clear: /^(ml_p|fr)_cancelBtn$/, save: /^(ml_p|fr)_saveBtn$/, submit: /^(ml_p|fr)_submitBtn$/ };
   function findEngineBtn(kind) {
     var list = document.querySelectorAll('.rt-content button[id$="Btn"]');
@@ -154,13 +124,11 @@
     btnClear = h('button', 'rt-ab-clear', 'Clear'); btnClear.type = 'button';
     btnSave = h('button', 'rt-ab-save', 'Save draft'); btnSave.type = 'button';
     btnSubmit = h('button', 'rt-ab-submit', 'Submit'); btnSubmit.type = 'button';
-    btnPrint = h('button', 'rt-ab-print', 'Submit and print'); btnPrint.type = 'button';
     btnClear.addEventListener('click', proxy('clear'));
     btnSave.addEventListener('click', proxy('save'));
     btnSubmit.addEventListener('click', proxy('submit'));
-    btnPrint.addEventListener('click', submitAndPrint);
     note.addEventListener('click', jumpToProblem);
-    [note, btnClear, btnSave, btnPrint, btnSubmit].forEach(function (b) { bar.appendChild(b); });
+    [note, btnClear, btnSave, btnSubmit].forEach(function (b) { bar.appendChild(b); });
     document.body.appendChild(bar);
   }
   function txt(e, v) { if (e.textContent !== v) e.textContent = v; }
@@ -174,13 +142,11 @@
     btnClear.hidden = hiddenReal(rc);
     btnSave.hidden = hiddenReal(rs);
     btnSubmit.hidden = hiddenReal(rm);
-    btnPrint.hidden = hiddenReal(rm);
     if (rc) txt(btnClear, rc.textContent);
     if (rs) txt(btnSave, rs.textContent);
     if (rm) txt(btnSubmit, rm.textContent);
     btnSave.disabled = saving || (rs ? rs.disabled : false);
     btnSubmit.disabled = saving || (rm ? rm.disabled : false);
-    btnPrint.disabled = btnSubmit.disabled;
     // the engine's own row leaves the layout (still in the DOM, still clickable)
     [rc, rs, rm].forEach(function (b) {
       var row = b && b.parentElement;
@@ -285,16 +251,13 @@
   var FIELD_SEL = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea';
 
   // the engine draws the sign-off block's heading as a small caption, not a section title; treat it as a section of its own
-  var SIGNOFF_RE = /^(completed by|sign off)$/i;
-  // the sign-off block's heading: the engines call it 'Completed by'; on screen it is the 'Sign off' section
-  function renameSignoff(el) { if ((el.textContent || '').trim().toLowerCase() === 'completed by') el.textContent = 'Sign off'; }
-  function isCaption(el) { return el.nodeType === 1 && el.classList.contains('fr-muted') && SIGNOFF_RE.test((el.textContent || '').trim()); }
+  function isCaption(el) { return el.nodeType === 1 && el.classList.contains('fr-muted') && (el.textContent || '').trim().toLowerCase() === 'completed by'; }
   function isTitle(el) { return el.nodeType === 1 && (el.classList.contains('fr-section-title') || isCaption(el) || (el.tagName === 'DETAILS' && el.classList.contains('fr-section-collapsible'))); }
   function collectSections() {
     var app = document.querySelector('.rt-content .fr-app');
     if (!app) return [];
     var titles = Array.prototype.filter.call(app.querySelectorAll('.fr-section-title, .fr-muted'), function (t) { return t.classList.contains('fr-section-title') || isCaption(t); }), out = [];
-    titles.forEach(function (t) { if (isCaption(t)) { t.classList.add('rt-cap'); renameSignoff(t); } });
+    titles.forEach(function (t) { if (isCaption(t)) t.classList.add('rt-cap'); });
     titles.forEach(function (t) {
       if (t.closest('.fr-instr-panel, .fr-modal-overlay, .rt-wi-bubble')) return;
       var details = t.tagName === 'SUMMARY' ? t.parentElement : null;
@@ -376,12 +339,11 @@
         });
       }
       var cap = null;
-      Array.prototype.forEach.call(body.children, function (k) { if (!cap && k.classList.contains('ml-muted') && SIGNOFF_RE.test((k.textContent || '').trim())) cap = k; });
-      if (cap) renameSignoff(cap);
+      Array.prototype.forEach.call(body.children, function (k) { if (!cap && k.classList.contains('ml-muted') && (k.textContent || '').trim().toLowerCase() === 'completed by') cap = k; });
       if (cap && !cap.parentNode.classList.contains('rt-bubble') && cap.nextElementSibling) {
         var next = cap.nextElementSibling;
         var w = h('div', 'rt-bubble');
-        cap.classList.add('rt-cap'); renameSignoff(cap);
+        cap.classList.add('rt-cap');
         body.insertBefore(w, cap); w.appendChild(cap); w.appendChild(next);
       }
     });
@@ -570,7 +532,7 @@
   }
   function hideSubmissionPanels() {
     if (!optedIn() || window.RT_KEEP_SUBMISSION_PANELS) return;
-    var actions = bar;                                    // the bottom action bar, far left
+    var actions = document.querySelector('.rt-topbar .rt-actions');
     var panels = document.querySelectorAll('.rt-content .ml-panel, .rt-content .fr-panel');
     var primary = true;
     Array.prototype.forEach.call(panels, function (panel) {
@@ -585,7 +547,7 @@
       var title = head ? head.textContent.trim() : '';
       var label = primary || !title || /^entries$/i.test(title) ? 'View submissions' : 'View ' + title.toLowerCase();
       primary = false;
-      var b = h('button', 'rt-ab-subs', label); b.type = 'button'; b.setAttribute('data-rt-subs', key);
+      var b = h('button', 'rt-subs-btn', label); b.type = 'button'; b.setAttribute('data-rt-subs', key);
       b.addEventListener('click', function () { openSheet(key, label); });
       actions.insertBefore(b, actions.firstChild);
     });
@@ -631,7 +593,6 @@
   function closeSheet() {
     if (!sheet || !sheetState) return;
     var st = sheetState;
-    setDay(st.target, '');
     if (st.parent) st.parent.insertBefore(st.target, st.next && st.next.parentNode === st.parent ? st.next : null);
     if (!st.wasOpen) st.target.classList.remove('ml-open', 'fr-open');
     if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
@@ -671,8 +632,7 @@
       new MutationObserver(function () {
         var msg = toast.textContent;
         if (!msg) return;
-        if (!stateFromToast(msg)) { if (saving) { endSaving(); if (stateBeforeSave) setState(stateBeforeSave.state, stateBeforeSave.text); } printAfterSubmit = false; }
-        else if (printAfterSubmit && /submitted/i.test(msg)) setTimeout(printSubmitted, 500);
+        if (!stateFromToast(msg)) { if (saving) { endSaving(); if (stateBeforeSave) setState(stateBeforeSave.state, stateBeforeSave.text); } }
         noteFromToast(msg);
       }).observe(toast, { childList: true, characterData: true, subtree: true });
     }

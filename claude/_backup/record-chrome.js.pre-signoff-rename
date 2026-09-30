@@ -285,16 +285,13 @@
   var FIELD_SEL = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea';
 
   // the engine draws the sign-off block's heading as a small caption, not a section title; treat it as a section of its own
-  var SIGNOFF_RE = /^(completed by|sign off)$/i;
-  // the sign-off block's heading: the engines call it 'Completed by'; on screen it is the 'Sign off' section
-  function renameSignoff(el) { if ((el.textContent || '').trim().toLowerCase() === 'completed by') el.textContent = 'Sign off'; }
-  function isCaption(el) { return el.nodeType === 1 && el.classList.contains('fr-muted') && SIGNOFF_RE.test((el.textContent || '').trim()); }
+  function isCaption(el) { return el.nodeType === 1 && el.classList.contains('fr-muted') && (el.textContent || '').trim().toLowerCase() === 'completed by'; }
   function isTitle(el) { return el.nodeType === 1 && (el.classList.contains('fr-section-title') || isCaption(el) || (el.tagName === 'DETAILS' && el.classList.contains('fr-section-collapsible'))); }
   function collectSections() {
     var app = document.querySelector('.rt-content .fr-app');
     if (!app) return [];
     var titles = Array.prototype.filter.call(app.querySelectorAll('.fr-section-title, .fr-muted'), function (t) { return t.classList.contains('fr-section-title') || isCaption(t); }), out = [];
-    titles.forEach(function (t) { if (isCaption(t)) { t.classList.add('rt-cap'); renameSignoff(t); } });
+    titles.forEach(function (t) { if (isCaption(t)) t.classList.add('rt-cap'); });
     titles.forEach(function (t) {
       if (t.closest('.fr-instr-panel, .fr-modal-overlay, .rt-wi-bubble')) return;
       var details = t.tagName === 'SUMMARY' ? t.parentElement : null;
@@ -376,12 +373,11 @@
         });
       }
       var cap = null;
-      Array.prototype.forEach.call(body.children, function (k) { if (!cap && k.classList.contains('ml-muted') && SIGNOFF_RE.test((k.textContent || '').trim())) cap = k; });
-      if (cap) renameSignoff(cap);
+      Array.prototype.forEach.call(body.children, function (k) { if (!cap && k.classList.contains('ml-muted') && (k.textContent || '').trim().toLowerCase() === 'completed by') cap = k; });
       if (cap && !cap.parentNode.classList.contains('rt-bubble') && cap.nextElementSibling) {
         var next = cap.nextElementSibling;
         var w = h('div', 'rt-bubble');
-        cap.classList.add('rt-cap'); renameSignoff(cap);
+        cap.classList.add('rt-cap');
         body.insertBefore(w, cap); w.appendChild(cap); w.appendChild(next);
       }
     });
