@@ -17241,7 +17241,6 @@
           "roster:count"
         ],
         "entryLog": true,
-        "resumeByJob": true,
         "checkRanges": {
           "placeholder": true,
           "steamingTimeMin": [

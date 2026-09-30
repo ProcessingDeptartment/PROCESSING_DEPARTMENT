@@ -398,75 +398,8 @@
           });
         });
       }
-      // Autosave: when the operator leaves a steam card whose fields are all filled in, the card folds to one line
-      // (Edit reopens it) and the entry is saved as a draft straight away. `saved` maps row index -> the values it
-      // was saved with, so a redraw (another "+ Add steam") keeps saved cards folded.
-      const FIELDS = ['steamingTempC', 'steamingTimeMin', 'startTime'];
-      const saved = rosterEl._elSaved || (rosterEl._elSaved = new Map());
-      const sig = (i) => FIELDS.map((k) => String((el(rid(i, k)) || {}).value || '').trim()).join('|');
-      const complete = (i) => FIELDS.every((k) => !blank((el(rid(i, k)) || {}).value));
-      function fold(row, i, folded) {
-        let sum = row.querySelector('.el-steam-sum');
-        row.querySelectorAll('.fr-pot-line').forEach((l) => { l.style.display = folded ? 'none' : ''; });
-        if (!folded) { if (sum) sum.remove(); return; }
-        if (!sum) {
-          sum = document.createElement('div'); sum.className = 'el-steam-sum';
-          sum.style.cssText = 'display:flex;align-items:center;gap:12px;font-size:16px;padding:4px 0';
-          row.appendChild(sum);
-        }
-        const v = FIELDS.map((k) => (el(rid(i, k)) || {}).value);
-        sum.innerHTML = `<span>${esc(v[0])} °C · ${esc(v[1])} min · started ${esc(v[2])}</span>`
-          + '<span class="el-muted">Saved</span>'
-          + (locked ? '' : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" data-keep-enabled data-el-edit="${i}">Edit</button>`);
-      }
-      let saving = Promise.resolve();
-      function autosave(i) {
-        if (locked || !complete(i) || saved.get(i) === sig(i)) return;
-        saved.set(i, sig(i));
-        const row = rosterEl.querySelectorAll('.fr-roster-row')[i];
-        if (row) fold(row, i, true);
-        saving = saving.then(() => ctx.saveDraft && ctx.saveDraft(`Steam ${st.maxSteam + i + 1} saved.`)).catch(() => {});
-      }
-      const baseApply = apply;
-      const applyAll = () => {
-        baseApply();
-        rosterEl.querySelectorAll('.fr-roster-row').forEach((row, i) => {
-          // a submitted entry, or a reopened draft, shows its complete steams folded
-          if ((locked || !saved.has(i)) && complete(i) && (locked || existing)) saved.set(i, sig(i));
-          fold(row, i, saved.get(i) === sig(i) && complete(i));
-        });
-      };
-      if (!rosterEl._elAuto) {
-        rosterEl._elAuto = true;
-        rosterEl.addEventListener('focusout', (e) => {
-          const row = e.target.closest && e.target.closest('.fr-roster-row');
-          if (!row) return;
-          const i = Number(row.dataset.rosterRow);
-          setTimeout(() => { if (!row.contains(document.activeElement)) autosave(i); }, 0);
-        });
-        rosterEl.addEventListener('click', (e) => {
-          const ed = e.target.closest && e.target.closest('[data-el-edit]');
-          if (ed) {
-            const i = Number(ed.dataset.elEdit), row = ed.closest('.fr-roster-row');
-            saved.delete(i); fold(row, i, false);
-            const f = el(rid(i, FIELDS[0])); if (f) { try { f.focus(); } catch (err) { /* ignore */ } }
-            return;
-          }
-          // a removed card: shift the saved marks down and save the entry without it
-          const rm = e.target.closest && e.target.closest('[data-remove-roster-row]');
-          if (rm) {
-            const i = Number(rm.dataset.removeRosterRow), wasSaved = saved.has(i), next = new Map();
-            saved.forEach((v, k) => { if (k < i) next.set(k, v); else if (k > i) next.set(k - 1, v); });
-            setTimeout(() => {
-              if (document.body.contains(rm)) return;   // the removal was cancelled (the card is still drawn)
-              saved.clear(); next.forEach((v, k) => saved.set(k, v));
-              if (wasSaved && !locked && ctx.saveDraft) saving = saving.then(() => ctx.saveDraft('Steam removed.')).catch(() => {});
-            }, 0);
-          }
-        }, true);
-      }
-      rosterEl._onDraw = applyAll;
-      applyAll();
+      rosterEl._onDraw = apply;
+      apply();
     }
 
     function refresh(force) {

@@ -1612,8 +1612,8 @@ body.rt-tablet .rt-savechip[data-state="saving"] { background: var(--fail); colo
 /* auto-collapsed (completed) sections; screen only so print always shows everything */
 @media screen { body.rt-tablet .rt-content .rt-collapsed { display: none !important; } }
 body.rt-tablet .rt-content .fr-section-title.rt-toggle { cursor: pointer; display: flex; align-items: center; min-height: var(--tap); }
-body.rt-tablet .rt-content .fr-section-title.rt-toggle::before { content: "BE"; display: inline-block; width: 1em; margin-right: 6px; color: var(--action); }
-body.rt-tablet .rt-content .fr-section-title.rt-toggle.rt-collapsed-title::before { content: "B8"; }
+body.rt-tablet .rt-content .fr-section-title.rt-toggle::before { content: "\25BE"; display: inline-block; width: 1em; margin-right: 6px; color: var(--action); }
+body.rt-tablet .rt-content .fr-section-title.rt-toggle.rt-collapsed-title::before { content: "\25B8"; }
 
 body.rt-tablet .rt-content .rt-tally .rt-stat-value { font-size: var(--fs-display); }
 @media screen and (pointer: coarse), screen and (max-width: 1099px) {

@@ -2658,7 +2658,6 @@
       }
 
       if (config.entryLog && window.EntryLog) window.EntryLog.attach({ config, existing, locked, container, el, toast, storeGet,
-        saveDraft: (message) => saveForm(false, { stayOpen: true, message }),
         submissions: () => submissions, openForm, formHasInput, reload: load });
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = (locked && !i.hasAttribute('data-keep-enabled')) || computedIds.has(i.id); });
@@ -2672,8 +2671,7 @@
     function closeForm() { editingId = null; openForm(null); }
 
 
-    // opts.stayOpen: save a draft quietly and keep the form open on it (entry-log autosave of a completed steam).
-    async function saveForm(finalize, opts) {
+    async function saveForm(finalize) {
 
       if (!await refreshProvisional(el('fr_modalSections'), config, finalize, toast)) return;
 
@@ -2917,12 +2915,6 @@
       if (finalize) {
         ['fr_cb_by', 'fr_cb_title', 'fr_cb_date', 'fr_cb_signature'].forEach(id => { const i = el(id); if (i) i.value = ''; });
         suggestCompletedBy();
-      }
-      if (!finalize && opts && opts.stayOpen) {
-        editingId = savedSub.id;
-        renderTable();
-        toast(opts.message || 'Saved.');
-        return true;
       }
       closeForm();
       renderTable();
