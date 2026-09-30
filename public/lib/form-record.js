@@ -2156,7 +2156,7 @@
       container._isCarried = (i, key) => carried.has(i + ':' + key);
 
       function draw() {
-        container.innerHTML = (roster.fixedGroups ? `<div class="fr-bin-row fr-bin-thead" aria-hidden="true"><span>Bin</span><span>Start kg</span><span>Confirm start</span><span>Full boxes</span><span>Final kg</span><span>Graded kg</span></div>` : '')
+        container.innerHTML = (roster.fixedGroups ? `<div class="fr-bin-row fr-bin-thead" aria-hidden="true"><span>Bin</span><span>Start kg</span><span>Confirm kg</span><span>Full boxes</span><span>Final kg</span><span>Graded kg</span></div>` : '')
           + rows.map((r, i) => rosterRowHtml(ns, i, r, roster)).join('');
 
               if (typeof wireYesNo === 'function') wireYesNo(container);
@@ -2297,8 +2297,6 @@
           const kg = sumNumList(r.fullBoxWeight);
           const sum = tr.querySelector('[data-bin-boxsum]');
           if (sum) sum.innerHTML = n ? `<b>${n}</b> box${n === 1 ? '' : 'es'}<br>${kg == null ? '?' : kg.toFixed(1)} kg` : '';
-          const ct = tr.querySelector('.fr-bin-tick .fr-confirm-text');
-          if (ct) ct.textContent = r.startConfirmed === 'Yes' ? 'Confirmed' : 'Confirm';
           tr.querySelector('.fr-bin-tick').classList.toggle('on', r.startConfirmed === 'Yes');
           tr.dataset.state = String(r.gradedWeight || '').trim() ? 'done' : (r.startConfirmed === 'Yes' || n ? 'busy' : 'todo');
         });
