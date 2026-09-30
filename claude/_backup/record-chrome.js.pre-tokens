@@ -229,7 +229,6 @@
   function floorText() {
     var root = document.querySelector('.rt-content');
     if (!root) return;
-    var floorPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs-hint')) || 13;   // the floor IS the hint token
     var els = root.querySelectorAll('*');
     for (var i = 0; i < els.length; i++) {
       var e = els[i];
@@ -238,7 +237,7 @@
       for (var c = e.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.nodeValue.trim()) { hasText = true; break; }
       if (!hasText && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.tagName)) continue;
       if (e.type === 'checkbox' || e.type === 'radio' || e.type === 'hidden') continue;
-      if (parseFloat(getComputedStyle(e).fontSize) < floorPx) e.classList.add('rt-fs-floor');
+      if (parseFloat(getComputedStyle(e).fontSize) < 13) e.classList.add('rt-fs-floor');
     }
   }
   function scheduleFloor() {

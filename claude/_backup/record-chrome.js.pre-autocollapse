@@ -229,7 +229,6 @@
   function floorText() {
     var root = document.querySelector('.rt-content');
     if (!root) return;
-    var floorPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs-hint')) || 13;   // the floor IS the hint token
     var els = root.querySelectorAll('*');
     for (var i = 0; i < els.length; i++) {
       var e = els[i];
@@ -238,7 +237,7 @@
       for (var c = e.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.nodeValue.trim()) { hasText = true; break; }
       if (!hasText && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.tagName)) continue;
       if (e.type === 'checkbox' || e.type === 'radio' || e.type === 'hidden') continue;
-      if (parseFloat(getComputedStyle(e).fontSize) < floorPx) e.classList.add('rt-fs-floor');
+      if (parseFloat(getComputedStyle(e).fontSize) < 13) e.classList.add('rt-fs-floor');
     }
   }
   function scheduleFloor() {
@@ -278,7 +277,7 @@
     sec.nodes.forEach(function (n) {
       Array.prototype.forEach.call(n.querySelectorAll(FIELD_SEL), function (f) {
         if (f.disabled || f.readOnly || f.closest('[hidden]')) return;
-        var shown = f.getClientRects().length || f.closest('details:not([open])') || f.closest('.rt-collapsed');
+        var shown = f.getClientRects().length || f.closest('details:not([open])');
         if (!shown) return;
         total++;
         if (String(f.value || '').trim() !== '') done++;
@@ -331,8 +330,6 @@
           for (var j = i + 1; j < secs.length; j++) if (secs[j].details) { if (!secs[j].details.open && !sectionProgress(secs[j]).complete) secs[j].details.open = true; break; }
         }
       }
-      if (p.complete && prevComplete[i] === false) sec.title.__rtPendingCollapse = true;
-      if (!p.complete) sec.title.__rtPendingCollapse = false;
       prevComplete[i] = p.complete;
       if (rail) {
         var btn = rail.children[i];
@@ -343,33 +340,7 @@
         }
       }
     });
-    tryCollapse(secs);
     updateActive(secs);
-  }
-  /* A section that has just been completed folds away once focus leaves it (never while the person is still typing in it). */
-  function inSection(sec) { var a = document.activeElement; return !!a && sec.nodes.some(function (n) { return n.contains(a); }); }
-  function tryCollapse(secs) {
-    secs.forEach(function (sec, i) {
-      if (!sec.title.__rtPendingCollapse || inSection(sec)) return;
-      sec.title.__rtPendingCollapse = false;
-      if (sec.details) sec.details.open = false;
-      else {
-        sec.nodes.forEach(function (n) { n.classList.add('rt-collapsed'); });
-        sec.title.classList.add('rt-toggle', 'rt-collapsed-title');
-      }
-      // bring the next unfinished section to the top
-      for (var j = i + 1; j < secs.length; j++) {
-        if (!sectionProgress(secs[j]).complete) { if (secs[j].details && !secs[j].details.open) secs[j].details.open = true; goToSection(secs[j]); break; }
-      }
-    });
-  }
-  function onTitleToggle(e) {
-    var t = e.target.closest && e.target.closest('.fr-section-title.rt-toggle');
-    if (!t || t.tagName === 'SUMMARY') return;
-    var sec = collectSections().filter(function (x) { return x.title === t; })[0];
-    if (!sec) return;
-    var closed = t.classList.toggle('rt-collapsed-title');
-    sec.nodes.forEach(function (n) { n.classList.toggle('rt-collapsed', closed); });
   }
   function updateActive(secs) {
     if (!rail) return;
@@ -511,8 +482,6 @@
     document.addEventListener('click', onAnyClickCapture, true);
     document.addEventListener('click', onRemoveClick, true);
     document.addEventListener('click', onAddRowClick, false);
-    document.addEventListener('click', onTitleToggle, false);
-    document.addEventListener('focusout', function () { setTimeout(scheduleSections, 120); }, true);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
