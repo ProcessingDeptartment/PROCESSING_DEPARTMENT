@@ -1538,6 +1538,34 @@
 
     function isSubmitted(sub) { return !!sub && (sub.status == null || sub.status === 'submitted'); }
 
+    function fmtSubmittedAt(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      if (isNaN(d)) return '—';
+      const p = n => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
+    function subCompletedBy(sub) {
+      const cb = sub && sub.completedBy;
+      if (cb && typeof cb === 'object' && cb.by && String(cb.by).trim()) return String(cb.by).trim();
+      if (cb && typeof cb === 'string' && cb.trim()) return cb.trim();
+      const v = sub && sub.values;
+      if (!v) return '';
+      const k = Object.keys(v).find(key => /(completed|recorded|checked|done|performed).*by|^operator$|^name$/i.test(key) && v[key]);
+      return k ? String(v[k]) : '';
+    }
+
+    function subJobRef(sub) {
+      const v = sub && sub.values;
+      if (!v) return '';
+      const jobKey = Object.keys(v).find(k => /job.*(no|number)/i.test(k) && v[k]);
+      if (jobKey) return { val: String(v[jobKey]).trim(), isJob: true };
+      const batchKey = Object.keys(v).find(k => /(batch|lot).*(no|num|id|code)/i.test(k) && v[k]);
+      if (batchKey) return { val: String(v[batchKey]).trim(), isJob: false };
+      return { val: sub.id ? String(sub.id).slice(0, 8) : '', isJob: false };
+    }
+
     function dateOf(values) {
       if (config.entryLog) { const d = new Date(values.entryDate); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
       const dateField = allFields(config).find(f => f.type === 'date');
@@ -1569,28 +1597,22 @@
       }
       const cols = listCols.length ? listCols : allFields(config).slice(0, 4).map(f => f.key);
 
-      let html = `<table class="fr-table"><thead><tr>${cols.map(k => `<th>${esc(labelFor(k))}</th>`).join('')}<th class="no-print">Status</th><th class="no-print"></th></tr></thead><tbody>`;
+      let html = `<table class="fr-table"><thead><tr><th>Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th><th></th></tr></thead><tbody>`;
       list.forEach(sub => {
+        const ref = subJobRef(sub);
+        const refCell = ref.val
+          ? (ref.isJob ? `<strong>${esc(ref.val)}</strong>` : `<span style="color:#8a939b;font-size:11px;">${esc(ref.val)}</span>`)
+          : '—';
         html += `<tr>`;
-        cols.forEach(k => {
-          let v;
-          if (k === 'roster:count') {
-            v = String(getRosterRows(sub, 0, (rosterList[0] || {}).key).length || '');
-          } else if (k.indexOf('roster:') === 0) {
-            const rk = k.slice(7);
-            v = Array.from(new Set(getRosterRows(sub, 0, (rosterList[0] || {}).key)
-              .map(r => String(r[rk] == null ? '' : r[rk]).trim()).filter(Boolean))).join(', ');
-          } else v = sub.values[k];
-          if (v && config.entryLog && k === 'entryDate') v = fmtDateTime(v);
-          if (v === '' || v == null) v = '—';
-          html += `<td>${esc(v)}</td>`;
-        });
-        html += `<td class="no-print">${sub.verification
+        html += `<td style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${fmtSubmittedAt(sub.submittedAt)}</td>`;
+        html += `<td>${esc(subCompletedBy(sub) || '—')}</td>`;
+        html += `<td>${refCell}</td>`;
+        html += `<td>${sub.verification
           ? '<span class="fr-badge fr-badge-ok">✓ Verified</span>'
           : isSubmitted(sub)
             ? '<span class="fr-badge fr-badge-ok">✓ Submitted</span>'
             : '<span class="fr-badge">Draft</span>'}</td>`;
-        html += `<td class="no-print" style="white-space:nowrap;">
+        html += `<td style="white-space:nowrap;">
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">${isSubmitted(sub) ? 'View' : 'Open'}</button>
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-pdf="${sub.id}" title="Print this submission as the paper form">PDF</button>
         </td>`;

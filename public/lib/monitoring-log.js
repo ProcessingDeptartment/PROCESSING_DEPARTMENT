@@ -803,6 +803,34 @@
       return submitFlow && (entryRow.status == null || entryRow.status === 'submitted');
     }
 
+    function fmtSubmittedAt(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      if (isNaN(d)) return '—';
+      const p = n => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
+    function entryCompletedBy(entryRow) {
+      const cb = entryRow && entryRow.completedBy;
+      if (cb && typeof cb === 'object' && cb.by && String(cb.by).trim()) return String(cb.by).trim();
+      if (cb && typeof cb === 'string' && cb.trim()) return cb.trim();
+      const v = entryRow && entryRow.values;
+      if (!v) return '';
+      const k = Object.keys(v).find(key => /(completed|recorded|checked|done|performed).*by|^operator$|^name$/i.test(key) && v[key]);
+      return k ? String(v[k]) : '';
+    }
+
+    function entryJobRef(entryRow) {
+      const v = entryRow && entryRow.values;
+      if (!v) return { val: '', isJob: false };
+      const jobKey = Object.keys(v).find(k => /job.*(no|number)/i.test(k) && v[k]);
+      if (jobKey) return { val: String(v[jobKey]).trim(), isJob: true };
+      const batchKey = Object.keys(v).find(k => /(batch|lot).*(no|num|id|code)/i.test(k) && v[k]);
+      if (batchKey) return { val: String(v[batchKey]).trim(), isJob: false };
+      return { val: entryRow.id ? String(entryRow.id).slice(0, 8) : '', isJob: false };
+    }
+
     function specFor(key) {
       const spec = specGetter();
       return spec ? spec[key] : null;
@@ -983,28 +1011,36 @@
         ? customBody.listColumns.map(c => ({ label: c.label, custom: true, get: c.get }))
         : listFields();
 
-      let html = `<table class="ml-table"><thead><tr>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}${submitFlow ? '<th class="no-print">Submission</th>' : ''}<th>Status</th><th class="no-print"></th></tr></thead><tbody>`;
+      let html = `<table class="ml-table"><thead><tr>${submitFlow ? '<th>Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th>' : ''}${!submitFlow ? cols.map(f => `<th>${esc(f.label)}</th>`).join('') : ''}<th>In spec</th><th></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
+        const ref = entryJobRef(entryRow);
+        const refCell = ref.val
+          ? (ref.isJob ? `<strong>${esc(ref.val)}</strong>` : `<span style="color:#8a939b;font-size:11px;">${esc(ref.val)}</span>`)
+          : '—';
         html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
-        cols.forEach(f => {
-          let v;
-          if (f.custom) { try { v = f.get(entryRow.values, entryRow); } catch (e) { v = ''; } }
-          else {
-            v = valueFor(entryRow, f);
-            if (isStamp(f)) v = stampText(v);
-          }
-          const bad = !f.custom && isBadValue(f, v);
-          if (f.type === 'yesno' || f.type === 'select') v = v || '—';
-          else if (v === '' || v == null) v = '—';
-          html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${bad ? `<span class="ml-bad">${esc(v)} &#9888;</span>` : esc(v)}</td>`;
-        });
         if (submitFlow) {
-          if (entryRow.verification) html += `<td class="no-print"><span class="ml-badge ml-badge-ok">✓ Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
-          else if (isSubmitted(entryRow)) html += `<td class="no-print"><span class="ml-badge ml-badge-ok">✓ Submitted</span></td>`;
-          else html += `<td class="no-print"><span class="ml-badge ml-badge-muted">Draft</span></td>`;
+          html += `<td style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${fmtSubmittedAt(entryRow.submittedAt)}</td>`;
+          html += `<td>${esc(entryCompletedBy(entryRow) || '—')}</td>`;
+          html += `<td>${refCell}</td>`;
+          if (entryRow.verification) html += `<td><span class="ml-badge ml-badge-ok">✓ Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
+          else if (isSubmitted(entryRow)) html += `<td><span class="ml-badge ml-badge-ok">✓ Submitted</span></td>`;
+          else html += `<td><span class="ml-badge ml-badge-muted">Draft</span></td>`;
+        } else {
+          cols.forEach(f => {
+            let v;
+            if (f.custom) { try { v = f.get(entryRow.values, entryRow); } catch (e) { v = ''; } }
+            else {
+              v = valueFor(entryRow, f);
+              if (isStamp(f)) v = stampText(v);
+            }
+            const bad = !f.custom && isBadValue(f, v);
+            if (f.type === 'yesno' || f.type === 'select') v = v || '—';
+            else if (v === '' || v == null) v = '—';
+            html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${bad ? `<span class="ml-bad">${esc(v)} &#9888;</span>` : esc(v)}</td>`;
+          });
         }
         html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
-        html += `<td class="no-print" style="white-space:nowrap;">
+        html += `<td style="white-space:nowrap;">
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">${isSubmitted(entryRow) ? 'View' : 'Edit'}</button>
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${entryRow.id}" title="Print this entry as the paper form">PDF</button>
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${entryRow.id}" title="Export this entry as JSON">JSON</button>
