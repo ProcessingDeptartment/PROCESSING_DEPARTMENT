@@ -95,8 +95,8 @@
           <option value="draft">Draft</option>
         </select>
         <select id="fRecord"><option value="">All records</option></select>
-        <input type="date" id="fFrom" title="From date">
-        <input type="date" id="fTo" title="To date">
+        <input type="date" id="fFrom" title="Submitted from (date)">
+        <input type="date" id="fTo" title="Submitted to (date)">
         <button class="btn" id="btnReset">Reset</button>
         <button class="btn btn-primary" id="btnCsv">Export CSV</button>
       </div>
@@ -165,37 +165,50 @@
     return k ? String(values[k]) : '';
   }
 
-  function entryRef(values) {
+  function jobNoOf(values) {
     if (!values) return '';
-    const jobKey = Object.keys(values).find((k) => /job.*(no|number)/i.test(k) && values[k]);
-    if (jobKey) return String(values[jobKey]);
-    const k = Object.keys(values).find((key) => {
-      const v = values[key];
-      return v != null && typeof v !== 'object' && !DATEISH.test(key)
-        && String(v).trim() !== '' && String(v).length <= 30;
-    });
-    return k ? String(values[k]) : '';
+    const k = Object.keys(values).find((k) => /job.*(no|number)/i.test(k) && values[k]);
+    return k ? String(values[k]).trim() : '';
   }
 
-  function personOf(values) {
-    if (!values) return '';
-    const k = Object.keys(values).find((key) => /(completed|recorded|checked|done|performed).*by|^operator$|^name$/i.test(key) && values[key]);
-    return k ? String(values[k]) : '';
+  // Fallback unique ref when there's no job number: batch/lot fields, then entry ID prefix.
+  function fallbackRef(values, entryId) {
+    if (values) {
+      const k = Object.keys(values).find((key) => /(batch|lot).*(no|num|id|code)/i.test(key) && values[key]);
+      if (k) return String(values[k]).trim();
+    }
+    return entryId ? String(entryId).slice(0, 8) : '';
+  }
+
+  // Read completedBy from the sign-off block object (entry.completedBy.by), with
+  // fallback to scanning values fields for legacy data.
+  function completedByOf(entry) {
+    const cb = entry && entry.completedBy;
+    if (cb && typeof cb === 'object' && cb.by && String(cb.by).trim()) return String(cb.by).trim();
+    if (cb && typeof cb === 'string' && cb.trim()) return cb.trim();
+    const v = entry && entry.values;
+    if (!v) return '';
+    const k = Object.keys(v).find((key) => /(completed|recorded|checked|done|performed).*by|^operator$|^name$/i.test(key) && v[key]);
+    return k ? String(v[k]) : '';
   }
 
   let EVENTS = [];
   let sortKey = 'ts', sortDir = -1;
 
   function pushEvents(rec, entry) {
+    const jobNo = jobNoOf(entry.values);
+    const ref = jobNo || fallbackRef(entry.values, entry.id);
     const base = {
       recordKey: rec.recordKey, name: rec.name, docNo: rec.docNo, href: rec.href,
       engine: rec.engine, entryId: entry.id || '',
-      entryDate: entryDate(entry.values), ref: entryRef(entry.values)
+      entryDate: entryDate(entry.values),
+      jobNo: jobNo, ref: ref,
+      hasJobNo: !!jobNo,
     };
 
     const submitted = entry.status == null || entry.status === 'submitted';
     const ver = entry.verification || null;
-    const who = personOf(entry.values);
+    const who = completedByOf(entry);
 
     if (submitted) {
       EVENTS.push(Object.assign({}, base, {
@@ -203,6 +216,7 @@
         ts: entry.submittedAt || entry.updatedAt || entry.createdAt || 0,
         who: who,
         status: ver ? 'verified' : 'pending',
+        verifiedBy: ver ? (ver.verifiedBy || '') : '',
         detail: ver ? '' : 'Not yet verified'
       }));
     } else {
@@ -211,6 +225,7 @@
         ts: entry.updatedAt || entry.createdAt || 0,
         who: who,
         status: 'draft',
+        verifiedBy: '',
         detail: 'Draft — not submitted'
       }));
     }
@@ -221,6 +236,7 @@
         ts: verifyTs(ver),
         who: ver.verifiedBy || '',
         status: 'verified',
+        verifiedBy: ver.verifiedBy || '',
         detail: [ver.verifiedSig ? 'Title: ' + ver.verifiedSig : '', ver.verifiedSignature ? 'Sig: ' + ver.verifiedSignature : '']
           .filter(Boolean).join(' · ')
       }));
@@ -268,7 +284,7 @@
       if (st && e.status !== st) return false;
       if (rk && e.recordKey !== rk) return false;
       if (from || to) {
-        const d = /^\d{4}-\d{2}-\d{2}/.test(e.entryDate) ? e.entryDate.slice(0, 10) : dayOf(e.ts);
+        const d = dayOf(e.ts);
         if (from && (!d || d < from)) return false;
         if (to && (!d || d > to)) return false;
       }
@@ -296,15 +312,22 @@
     return e.href ? '<a href="' + esc(e.href) + '">' + label + '</a>' : label;
   }
 
+  // Job/ref cell: job number in bold if present, otherwise fallback ref in muted style.
+  function refCell(e) {
+    if (e.jobNo) return '<strong>' + esc(e.jobNo) + '</strong>';
+    if (e.ref) return '<span style="color:#8a939b;font-family:\'IBM Plex Mono\',monospace;font-size:11px;">' + esc(e.ref) + '</span>';
+    return '<span style="color:#ccc;">—</span>';
+  }
+
   const COLS = [
-    { key: 'ts', label: 'When' },
-    { key: 'event', label: 'Event' },
-    { key: 'name', label: 'Record' },
-    { key: 'who', label: 'By' },
-    { key: 'entryDate', label: 'Entry date' },
-    { key: 'ref', label: 'Ref' },
-    { key: 'status', label: 'Status' },
-    { key: 'detail', label: 'Detail' }
+    { key: 'ts',         label: 'Submitted' },
+    { key: 'who',        label: 'Completed by' },
+    { key: 'ref',        label: 'Job / Ref' },
+    { key: 'name',       label: 'Record' },
+    { key: 'event',      label: 'Event' },
+    { key: 'entryDate',  label: 'Activity date' },
+    { key: 'verifiedBy', label: 'Verified by' },
+    { key: 'status',     label: 'Status' },
   ];
 
   function render() {
@@ -326,14 +349,16 @@
         (sortKey === c.key ? (sortDir === 1 ? ' ▲' : ' ▼') : '') + '</th>').join('') +
       '</tr></thead><tbody>' +
       rows.map((e) =>
-        '<tr><td class="when">' + fmtWhen(e.ts) + '</td>' +
-        '<td>' + (EVENT_BADGE[e.event] || esc(e.event)) + '</td>' +
-        '<td class="doc">' + docLabel(e) + '</td>' +
+        '<tr>' +
+        '<td class="when" style="white-space:nowrap;">' + fmtWhen(e.ts) + '</td>' +
         '<td>' + esc(e.who || '—') + '</td>' +
+        '<td>' + refCell(e) + '</td>' +
+        '<td class="doc">' + docLabel(e) + '</td>' +
+        '<td>' + (EVENT_BADGE[e.event] || esc(e.event)) + '</td>' +
         '<td class="when">' + esc(e.entryDate || '—') + '</td>' +
-        '<td>' + esc(e.ref || '—') + '</td>' +
+        '<td>' + esc(e.verifiedBy || '—') + '</td>' +
         '<td>' + (STATUS_BADGE[e.status] || '') + '</td>' +
-        '<td class="detail">' + esc(e.detail || '') + '</td></tr>').join('') +
+        '</tr>').join('') +
       '</tbody></table>';
 
     wrap.querySelectorAll('th[data-sort]').forEach((th) => {
@@ -348,9 +373,9 @@
 
   function toCsv() {
     const rows = filtered();
-    const head = ['When', 'Event', 'Doc no', 'Record', 'By', 'Entry date', 'Ref', 'Status', 'Detail', 'Record key', 'Entry id'];
+    const head = ['Submitted', 'Completed by', 'Job / Ref', 'Event', 'Doc no', 'Record', 'Activity date', 'Verified by', 'Status', 'Detail', 'Record key', 'Entry id'];
     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-    const body = rows.map((e) => [fmtWhen(e.ts), e.event, e.docNo, e.name, e.who, e.entryDate, e.ref, e.status, e.detail, e.recordKey, e.entryId].map(q).join(','));
+    const body = rows.map((e) => [fmtWhen(e.ts), e.who, e.ref, e.event, e.docNo, e.name, e.entryDate, e.verifiedBy, e.status, e.detail, e.recordKey, e.entryId].map(q).join(','));
     const csv = [head.map(q).join(',')].concat(body).join('\r\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

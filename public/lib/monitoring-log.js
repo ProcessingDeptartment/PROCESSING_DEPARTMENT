@@ -1498,8 +1498,7 @@
         }
       } else {
         completedBy = readCompletedBy();
-        if ((finalize || !submitFlow) && window.AUTH_GATES_ENABLED === true
-            && (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature)) {
+        if ((finalize || !submitFlow) && (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature)) {
           toast('Completed by, title, date and signature are required to submit.');
           return;
         }

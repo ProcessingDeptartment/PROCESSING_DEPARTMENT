@@ -17241,13 +17241,7 @@
           "roster:count"
         ],
         "entryLog": true,
-        "checkRanges": {
-          "placeholder": true,
-          "steamingTimeMin": [
-            20,
-            90
-          ]
-        },
+        "checkRanges": {},
         "submitChecks": "drying-process",
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation"
