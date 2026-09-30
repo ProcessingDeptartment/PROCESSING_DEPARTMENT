@@ -315,44 +315,9 @@
       sec.nodes.forEach(function (n) { w.appendChild(n); });
     });
   }
-  /* monitoring-log pages: the entry form's field grid holds group headings, collapsible blocks and plain fields side by side.
-     Each group becomes its own block (nodes moved, not re-created); a grid with no groups, or a customBody page, is one block;
-     the engine's 'Completed by' caption + grid is its own block. The engine redraws the grid on open/clear/save, so this re-runs. */
-  function bubbleMl() {
-    if (!optedIn()) return;
-    var hosts = document.querySelectorAll('.rt-content .ml-app [id$="_modalFields"]');
-    Array.prototype.forEach.call(hosts, function (host) {
-      var panel = host.closest('.ml-panel'), body = host.parentElement;
-      if (!panel || !body) return;
-      panel.classList.add('rt-bubbled');
-      var kids = Array.prototype.slice.call(host.children);
-      var grouped = kids.some(function (k) { return k.classList.contains('ml-grouphead') || k.classList.contains('ml-section-collapsible') || k.classList.contains('rt-bubble'); });
-      if (host.classList.contains('ml-custom-body') || !grouped) { host.classList.add('rt-bubble'); host.classList.remove('rt-bubble-host'); }
-      else {
-        host.classList.remove('rt-bubble'); host.classList.add('rt-bubble-host');
-        var cur = null;
-        kids.forEach(function (k) {
-          if (k.classList.contains('rt-bubble')) { cur = null; return; }
-          if (k.classList.contains('ml-section-collapsible')) { k.classList.add('rt-bubble'); cur = null; return; }
-          if (k.classList.contains('ml-grouphead') || !cur) { cur = h('div', 'rt-bubble ml-grid ml-grid-2'); host.insertBefore(cur, k); }
-          cur.appendChild(k);
-        });
-      }
-      var cap = null;
-      Array.prototype.forEach.call(body.children, function (k) { if (!cap && k.classList.contains('ml-muted') && (k.textContent || '').trim().toLowerCase() === 'completed by') cap = k; });
-      if (cap && !cap.parentNode.classList.contains('rt-bubble') && cap.nextElementSibling) {
-        var next = cap.nextElementSibling;
-        var w = h('div', 'rt-bubble');
-        cap.classList.add('rt-cap');
-        body.insertBefore(w, cap); w.appendChild(cap); w.appendChild(next);
-      }
-    });
-  }
-
   var prevComplete = [];
   function updateSections() {
     bubbleSections();
-    bubbleMl();
     var secs = collectSections();
     var host = document.querySelector('.rt-content');
     if (!host) return;

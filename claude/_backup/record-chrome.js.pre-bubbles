@@ -251,15 +251,12 @@
   var rail = null, sectionsPending = false, activeIdx = -1;
   var FIELD_SEL = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea';
 
-  // the engine draws the sign-off block's heading as a small caption, not a section title; treat it as a section of its own
-  function isCaption(el) { return el.nodeType === 1 && el.classList.contains('fr-muted') && (el.textContent || '').trim().toLowerCase() === 'completed by'; }
-  function isTitle(el) { return el.nodeType === 1 && (el.classList.contains('fr-section-title') || isCaption(el) || (el.tagName === 'DETAILS' && el.classList.contains('fr-section-collapsible'))); }
+  function isTitle(el) { return el.nodeType === 1 && (el.classList.contains('fr-section-title') || (el.tagName === 'DETAILS' && el.classList.contains('fr-section-collapsible'))); }
   function collectSections() {
     var app = document.querySelector('.rt-content .fr-app');
     if (!app) return [];
-    var titles = Array.prototype.filter.call(app.querySelectorAll('.fr-section-title, .fr-muted'), function (t) { return t.classList.contains('fr-section-title') || isCaption(t); }), out = [];
-    titles.forEach(function (t) { if (isCaption(t)) t.classList.add('rt-cap'); });
-    titles.forEach(function (t) {
+    var titles = app.querySelectorAll('.fr-section-title'), out = [];
+    Array.prototype.forEach.call(titles, function (t) {
       if (t.closest('.fr-instr-panel, .fr-modal-overlay, .rt-wi-bubble')) return;
       var details = t.tagName === 'SUMMARY' ? t.parentElement : null;
       var nodes = [];
@@ -297,62 +294,8 @@
     if (sec.details && !sec.details.open) sec.details.open = true;
     window.scrollTo({ top: sec.anchor.getBoundingClientRect().top + window.pageYOffset - topOffset(), behavior: 'smooth' });
   }
-  /* Every section is its own rounded block: the engine puts all sections in one host, so each title + its content is wrapped
-     (nodes are moved, never re-created, so ids, listeners and the engine's lookups are untouched). Idempotent. */
-  function bubbleSections() {
-    var host = document.getElementById('fr_modalSections');
-    if (!host || !optedIn()) return;
-    host.classList.add('rt-bubble-host');
-    var panel = host.closest('.fr-panel');
-    if (panel) panel.classList.add('rt-bubbled');
-    collectSections().forEach(function (sec) {
-      if (sec.details) { sec.details.classList.add('rt-bubble'); return; }
-      var par = sec.title.parentNode;
-      if (!par || par.classList.contains('rt-bubble')) return;
-      var w = h('div', 'rt-bubble');
-      par.insertBefore(w, sec.title);
-      w.appendChild(sec.title);
-      sec.nodes.forEach(function (n) { w.appendChild(n); });
-    });
-  }
-  /* monitoring-log pages: the entry form's field grid holds group headings, collapsible blocks and plain fields side by side.
-     Each group becomes its own block (nodes moved, not re-created); a grid with no groups, or a customBody page, is one block;
-     the engine's 'Completed by' caption + grid is its own block. The engine redraws the grid on open/clear/save, so this re-runs. */
-  function bubbleMl() {
-    if (!optedIn()) return;
-    var hosts = document.querySelectorAll('.rt-content .ml-app [id$="_modalFields"]');
-    Array.prototype.forEach.call(hosts, function (host) {
-      var panel = host.closest('.ml-panel'), body = host.parentElement;
-      if (!panel || !body) return;
-      panel.classList.add('rt-bubbled');
-      var kids = Array.prototype.slice.call(host.children);
-      var grouped = kids.some(function (k) { return k.classList.contains('ml-grouphead') || k.classList.contains('ml-section-collapsible') || k.classList.contains('rt-bubble'); });
-      if (host.classList.contains('ml-custom-body') || !grouped) { host.classList.add('rt-bubble'); host.classList.remove('rt-bubble-host'); }
-      else {
-        host.classList.remove('rt-bubble'); host.classList.add('rt-bubble-host');
-        var cur = null;
-        kids.forEach(function (k) {
-          if (k.classList.contains('rt-bubble')) { cur = null; return; }
-          if (k.classList.contains('ml-section-collapsible')) { k.classList.add('rt-bubble'); cur = null; return; }
-          if (k.classList.contains('ml-grouphead') || !cur) { cur = h('div', 'rt-bubble ml-grid ml-grid-2'); host.insertBefore(cur, k); }
-          cur.appendChild(k);
-        });
-      }
-      var cap = null;
-      Array.prototype.forEach.call(body.children, function (k) { if (!cap && k.classList.contains('ml-muted') && (k.textContent || '').trim().toLowerCase() === 'completed by') cap = k; });
-      if (cap && !cap.parentNode.classList.contains('rt-bubble') && cap.nextElementSibling) {
-        var next = cap.nextElementSibling;
-        var w = h('div', 'rt-bubble');
-        cap.classList.add('rt-cap');
-        body.insertBefore(w, cap); w.appendChild(cap); w.appendChild(next);
-      }
-    });
-  }
-
   var prevComplete = [];
   function updateSections() {
-    bubbleSections();
-    bubbleMl();
     var secs = collectSections();
     var host = document.querySelector('.rt-content');
     if (!host) return;

@@ -1646,7 +1646,7 @@ body.rt-tablet .fr-bin-sheet .fr-pad-total { font-size: var(--fs-label); }
 /* ---- every section its own rounded block (form-record pages) ---- */
 body.rt-tablet .rt-content .fr-panel.rt-bubbled { background: none; border: 0; box-shadow: none; border-radius: 0; overflow: visible; }
 body.rt-tablet .rt-content .fr-panel.rt-bubbled > .fr-panel-body { padding: 0; background: none; display: flex; flex-direction: column; gap: 16px; }
-body.rt-tablet .rt-bubble-host { display: flex; flex-direction: column; align-items: stretch; gap: 16px; }
+body.rt-tablet .rt-bubble-host { display: flex; flex-direction: column; gap: 16px; }
 body.rt-tablet .rt-content .rt-bubble { background: var(--surface); border-radius: var(--block-radius, 18px); padding: 16px 20px 20px; margin: 0; }
 body.rt-tablet .rt-content .rt-bubble > .fr-section-title, body.rt-tablet .rt-content .rt-bubble > .rt-cap {
   margin: 0 0 14px; padding: 0 0 10px; border-bottom: 1px solid var(--line);
@@ -1655,17 +1655,6 @@ body.rt-tablet .rt-content details.rt-bubble:not([open]) > summary.fr-section-ti
 body.rt-tablet .rt-content .rt-bubble > .rt-cap { font-size: var(--fs-section) !important; font-weight: 700; color: var(--ink) !important; }
 body.rt-tablet .rt-content .rt-bubble.rt-collapsed-bubble > :not(.fr-section-title):not(.rt-cap) { display: none; }
 @media print { body.rt-tablet .rt-bubble { background: none; padding: 0; border-radius: 0; } }
-
-/* ---- monitoring-log pages: same rounded block per group ---- */
-body.rt-tablet .rt-content .ml-panel.rt-bubbled { background: none; border: 0; box-shadow: none; border-radius: 0; overflow: visible; }
-body.rt-tablet .rt-content .ml-panel.rt-bubbled > .ml-panel-body { padding: 0; background: none; display: flex; flex-direction: column; gap: 16px; }
-body.rt-tablet .rt-content .ml-grid.rt-bubble-host, body.rt-tablet .rt-content .fr-grid.rt-bubble-host { display: flex; flex-direction: column; align-items: stretch; background: none; padding: 0; gap: 16px; }
-body.rt-tablet .rt-content .ml-grid.rt-bubble-host > .rt-bubble { grid-column: 1 / -1; }
-body.rt-tablet .rt-content .rt-bubble > .ml-grouphead, body.rt-tablet .rt-content .rt-bubble > summary.ml-grouphead {
-  grid-column: 1 / -1; margin: 0 0 4px; padding: 0 0 10px; border-bottom: 1px solid var(--line);
-}
-body.rt-tablet .rt-content details.rt-bubble:not([open]) > summary.ml-grouphead { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
-body.rt-tablet .rt-content details.rt-bubble > label.ml-field { margin-bottom: 12px; }
 
 /* print: the pilot adds no chrome to paper */
 @media print {
