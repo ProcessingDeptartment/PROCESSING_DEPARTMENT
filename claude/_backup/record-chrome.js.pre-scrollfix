@@ -178,7 +178,8 @@
     }
     if (!target) target = document.querySelector('.rt-content .ml-field input:not([type=hidden]):invalid, .rt-content .fr-field.invalid');
     if (!target) return;
-    var offset = topOffset() + 4;
+    var topbar = document.querySelector('.rt-topbar');
+    var offset = (topbar ? topbar.offsetHeight : 0) + 16;
     window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
     var inp = target.querySelector('input:not([type=hidden]), select, textarea');
     if (inp) setTimeout(function () { inp.focus({ preventScroll: true }); }, 250);
@@ -268,7 +269,7 @@
         if (/(^|\s)fr-actions(\s|$)/.test(n.className)) break;
         nodes.push(n);
       }
-      out.push({ title: t, anchor: details || t.closest('.rt-bubble') || t, details: details, nodes: nodes });
+      out.push({ title: t, anchor: details || t, details: details, nodes: nodes });
     });
     return out;
   }
@@ -288,10 +289,9 @@
     });
     return { done: done, total: total, complete: total > 0 && done === total };
   }
-  // room to leave above a scroll target: the real sticky top bar + the section strip (if any) + a little air
   function topOffset() {
     var tb = document.querySelector('.rt-topbar');
-    return (tb ? tb.offsetHeight : 0) + (rail && rail.parentNode ? rail.offsetHeight : 0) + 12;
+    return (tb ? tb.offsetHeight : 0) + (rail && rail.parentNode ? rail.offsetHeight : 0) + 8;
   }
   function goToSection(sec) {
     if (sec.details && !sec.details.open) sec.details.open = true;
@@ -518,91 +518,6 @@
     }, 60);
   }
 
-  /* ---------------- Submissions / Verification move out of the record ----------------
-     The Verification panel and the Submissions panel are hidden on screen (kept in the DOM, so every engine handler still works).
-     A small "View submissions" button in the top bar opens the submissions in a full-height sheet with a day picker.
-     Verification is done from the separate Awaiting Verification page. Set window.RT_KEEP_SUBMISSION_PANELS = true to undo. */
-  var sheet = null, sheetState = null;
-  function panelKind(panel) {
-    var r = panel.querySelector('[data-reveal]');
-    var id = r ? r.getAttribute('data-reveal') : '';
-    if (/verificationBody$/.test(id)) return 'verification';
-    if (/(entriesBody|submissionsBody)$/.test(id)) return 'submissions';
-    return '';
-  }
-  function hideSubmissionPanels() {
-    if (!optedIn() || window.RT_KEEP_SUBMISSION_PANELS) return;
-    var actions = document.querySelector('.rt-topbar .rt-actions');
-    var panels = document.querySelectorAll('.rt-content .ml-panel, .rt-content .fr-panel');
-    var primary = true;
-    Array.prototype.forEach.call(panels, function (panel) {
-      var kind = panelKind(panel);
-      if (!kind) return;
-      panel.classList.add('rt-panel-hidden');
-      if (kind !== 'submissions' || !actions) return;
-      var reveal = panel.querySelector('[data-reveal]');
-      var key = reveal.getAttribute('data-reveal');
-      if (actions.querySelector('[data-rt-subs="' + key + '"]')) { primary = false; return; }
-      var head = panel.querySelector('h2');
-      var title = head ? head.textContent.trim() : '';
-      var label = primary || !title || /^entries$/i.test(title) ? 'View submissions' : 'View ' + title.toLowerCase();
-      primary = false;
-      var b = h('button', 'rt-subs-btn', label); b.type = 'button'; b.setAttribute('data-rt-subs', key);
-      b.addEventListener('click', function () { openSheet(key, label); });
-      actions.insertBefore(b, actions.firstChild);
-    });
-  }
-  function filterInputs(root) {
-    return { from: root.querySelector('input[id$="filterFrom"]'), to: root.querySelector('input[id$="filterTo"]') };
-  }
-  function fire(inp) { inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); }
-  function setDay(target, day) {
-    var f = filterInputs(target);
-    [f.from, f.to].forEach(function (i) { if (i) { i.value = day; fire(i); } });
-  }
-  function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-  function openSheet(key, label) {
-    var target = document.getElementById(key);
-    var host = document.querySelector('.rt-content');
-    if (!target || !host || sheet) return;
-    sheetState = { target: target, parent: target.parentNode, next: target.nextSibling, wasOpen: /ml-open|fr-open/.test(target.className) };
-    sheet = h('div', 'rt-sheet no-print');
-    var card = h('div', 'rt-sheet-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-label', label);
-    var head = h('div', 'rt-sheet-head');
-    head.appendChild(h('h2', null, label.replace(/^View /, '').replace(/^./, function (c) { return c.toUpperCase(); })));
-    var day = h('input'); day.type = 'date'; day.setAttribute('aria-label', 'Show one day');
-    day.addEventListener('change', function () { setDay(target, day.value); });
-    var bToday = h('button', 'rt-sheet-btn', 'Today'); bToday.type = 'button';
-    bToday.addEventListener('click', function () { day.value = todayStr(); setDay(target, day.value); });
-    var bAll = h('button', 'rt-sheet-btn', 'All days'); bAll.type = 'button';
-    bAll.addEventListener('click', function () { day.value = ''; setDay(target, ''); });
-    var bClose = h('button', 'rt-sheet-close', '\u2715'); bClose.type = 'button'; bClose.setAttribute('aria-label', 'Close');
-    bClose.addEventListener('click', closeSheet);
-    [day, bToday, bAll, bClose].forEach(function (x) { head.appendChild(x); });
-    var body = h('div', 'rt-sheet-body');
-    card.appendChild(head); card.appendChild(body); sheet.appendChild(card);
-    sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
-    host.appendChild(sheet);
-    body.appendChild(target);                                  // the engine node itself: filters, table and handlers come with it
-    target.classList.add('ml-open', 'fr-open');
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('keydown', sheetKey, true);
-    bClose.focus();
-  }
-  function sheetKey(e) { if (e.key === 'Escape') closeSheet(); }
-  function closeSheet() {
-    if (!sheet || !sheetState) return;
-    var st = sheetState;
-    if (st.parent) st.parent.insertBefore(st.target, st.next && st.next.parentNode === st.parent ? st.next : null);
-    if (!st.wasOpen) st.target.classList.remove('ml-open', 'fr-open');
-    if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
-    sheet = null; sheetState = null;
-    document.body.style.overflow = '';
-    document.removeEventListener('keydown', sheetKey, true);
-  }
-  // the engine print flow expects its table in place: put it back before the browser prints
-  window.addEventListener('beforeprint', closeSheet);
-
   /* ---------------- wiring ---------------- */
   function ensure() {
     if (!optedIn()) return;
@@ -617,14 +532,11 @@
       actions.parentNode.insertBefore(chip, actions);
       setState(lastState ? lastState.state : 'ready', lastState ? lastState.text : 'Ready');
     }
-    var tbar = document.querySelector('.rt-topbar');
-    if (tbar) { var th = tbar.offsetHeight + 'px'; if (document.body.style.getPropertyValue('--rt-topbar-h') !== th) document.body.style.setProperty('--rt-topbar-h', th); }
     syncBar();
     scheduleFloor();
     scheduleSections();
     countStrips();
     liftAboveBanner();
-    hideSubmissionPanels();
     barPanels();
     var toast = document.querySelector('.ml-toast, .fr-toast');
     if (toast && !toast.__rtWatched) {

@@ -1669,25 +1669,6 @@ body.rt-tablet .rt-content .rt-bubble > .ml-grouphead, body.rt-tablet .rt-conten
 body.rt-tablet .rt-content details.rt-bubble:not([open]) > summary.ml-grouphead { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
 body.rt-tablet .rt-content details.rt-bubble > label.ml-field { margin-bottom: 12px; }
 
-/* ---- Submissions / Verification: hidden on the record; "View submissions" opens a sheet ---- */
-@media screen { body.rt-tablet .rt-content .rt-panel-hidden { display: none !important; } }
-body.rt-tablet .rt-topbar .rt-subs-btn { min-height: var(--tap); padding: 0 16px; font-family: var(--rt-font); font-size: var(--fs-hint); font-weight: 600; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: var(--field-radius); cursor: pointer; white-space: nowrap; }
-body.rt-tablet .rt-topbar .rt-subs-btn:hover { background: rgba(255,255,255,.22); }
-body.rt-tablet .rt-sheet { position: fixed; inset: 0; z-index: 200; display: flex; justify-content: center; align-items: flex-end; background: rgba(20,25,30,.5); }
-body.rt-tablet .rt-sheet-card { display: flex; flex-direction: column; width: min(1000px, 100%); height: calc(100% - 40px); background: var(--bg); border-radius: var(--block-radius, 18px) var(--block-radius, 18px) 0 0; overflow: hidden; }
-body.rt-tablet .rt-sheet-head { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
-body.rt-tablet .rt-sheet-head h2 { flex: 1 1 auto; margin: 0; font-family: var(--rt-font); font-size: var(--fs-section); font-weight: 700; color: var(--ink); }
-body.rt-tablet .rt-sheet-head input[type=date] { min-height: var(--tap); padding: 0 12px; font-family: var(--rt-font); font-size: var(--fs-value); border: var(--field-border); border-radius: var(--field-radius); background: var(--surface); color: var(--ink); }
-body.rt-tablet .rt-sheet-btn { min-height: var(--tap); padding: 0 18px; font-family: var(--rt-font); font-size: var(--fs-btn); font-weight: 700; color: var(--action); background: var(--surface); border: 2px solid var(--action); border-radius: var(--field-radius); cursor: pointer; }
-body.rt-tablet .rt-sheet-close { width: var(--tap); height: var(--tap); font-size: var(--fs-value); color: var(--ink); background: none; border: 0; border-radius: var(--field-radius); cursor: pointer; }
-body.rt-tablet .rt-sheet-close:hover { background: var(--bg); }
-body.rt-tablet .rt-sheet-body { flex: 1 1 auto; overflow: auto; padding: 16px 20px; }
-body.rt-tablet .rt-sheet-body > .ml-panel-body, body.rt-tablet .rt-sheet-body > .fr-panel-body { display: block !important; padding: 0; background: var(--surface); border-radius: var(--block-radius, 18px); overflow: hidden; }
-/* the sheet's day picker replaces the engine's From / To boxes */
-body.rt-tablet .rt-sheet-body .ml-filters label:has(> input[type=date]), body.rt-tablet .rt-sheet-body .fr-filters label:has(> input[type=date]) { display: none; }
-body.rt-tablet .rt-sheet-body .ml-filters, body.rt-tablet .rt-sheet-body .fr-filters { padding: 12px 16px 0; }
-@media print { body.rt-tablet .rt-sheet { display: none !important; } }
-
 /* print: the pilot adds no chrome to paper */
 @media print {
   body.rt-tablet { --form-fs-root: 12px; --form-fs-input: 12px; --form-fs-button: 12px; --form-fs-small: 12px; --form-fs-label: 12px; --form-fs-hint: 12px; --form-fs-panel-head: 12px; }
