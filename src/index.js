@@ -522,7 +522,7 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
 //   'drying-process' -> current trolley count = the latest submitted REC 7.4.1 entry that has one
 app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
   const jobNo = String(req.params.jobNo || '').trim();
-  const out = { 'dry-cooking': null, 'drying-process': null };
+  const out = { 'dry-cooking': null, 'drying-process': null, 'drying-entry-date': null, 'drying-location': null };
   if (!jobNo) return res.json(out);
   try {
     const cook = await prisma.$queryRawUnsafe(
@@ -542,6 +542,28 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
        ORDER BY "entryDate" DESC NULLS LAST LIMIT 1`, jobNo);
     if (dry.length) out['drying-process'] = { value: String(dry[0].noOfTrolleys), ids: [dry[0].id] };
   } catch (e) { console.error('job-facts trolleys failed', e.message); }
+  // REC 7.4.2 Entry date + Dry room area come from REC 7.4.1 (submitted entries only):
+  //   'drying-entry-date' -> the day the job's first REC 7.4.1 entry was made (facility time zone)
+  //   'drying-location'   -> the room of the job's latest movement marked Done (a reversed movement is blank, so it never counts)
+  try {
+    const ents = await prisma.$queryRawUnsafe(
+      `SELECT "id", to_char(dry_local_date("entryDate"), 'YYYY-MM-DD') AS d, "entryDate",
+              "movedIntoDryRoom", "dateIntoDryRoomAt", "movedIntoDryContainer", "dateIntoDryContainerAt",
+              "movedIntoGradingRoom", "dateIntoGradingRoomAt"
+       FROM "sub_drying_process"
+       WHERE UPPER("jobNo") = UPPER($1) AND COALESCE("status", 'submitted') <> 'draft'
+       ORDER BY "entryDate" ASC NULLS LAST`, jobNo);
+    const first = ents.find((r) => r.d);
+    if (first) out['drying-entry-date'] = { value: first.d, ids: [first.id] };
+    const MOVES = [['movedIntoDryRoom', 'dateIntoDryRoomAt', 'Main dry room'], ['movedIntoDryContainer', 'dateIntoDryContainerAt', 'Dry container'], ['movedIntoGradingRoom', 'dateIntoGradingRoomAt', 'Grading room']];
+    let best = null;
+    for (const r of ents) for (const [flag, at, area] of MOVES) {
+      if (r[flag] !== true) continue;
+      const t = new Date(r[at] || r.entryDate || 0).getTime();
+      if (!best || t >= best.t) best = { t, area, id: r.id };
+    }
+    if (best) out['drying-location'] = { value: best.area, ids: [best.id] };
+  } catch (e) { console.error('job-facts drying entry failed', e.message); }
   res.json(out);
 });
 

@@ -93,6 +93,9 @@
      data-good="Yes"|"No" on the .ml-yesno span (defaults to Yes when absent). */
   .ml-yesno[data-good="Yes"] button.on[data-v="Yes"], .ml-yesno[data-good="No"] button.on[data-v="No"], .ml-yesno:not([data-good]) button.on[data-v="Yes"]{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
   .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"], .ml-yesno:not([data-good]) button.on[data-v="No"]{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); }
+  .ml-tick{ display:flex; align-items:center; gap:10px; min-height:44px; font-size:14px; }
+  .ml-tick input[type=checkbox]{ width:26px !important; height:26px !important; min-width:26px; padding:0 !important; margin:0; flex:none; }
+  .ml-tick > span{ flex:1; min-width:0; white-space:normal; text-transform:none; letter-spacing:0; font-weight:600; }
   .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
   /* Problem answer (the non-good one) is not colour-only: bold text plus a warning mark, and a border on paper. */
   .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"]{ font-weight:800; }
@@ -309,6 +312,10 @@
     // hideInForm: job data the record still stores/prints (filled by autofill) but does not draw on the form
     if (field.hidden || field.hideInForm) return `<input type="hidden" id="${id}" value="${esc(v)}">`;
 
+    // tick: a single confirmation box (stored as Yes / blank, like a Yes/No answer)
+    if (field.type === 'yesno' && field.tick) {
+      return `<span class="ml-tick"><input type="checkbox" data-tick-for="${id}"${v === 'Yes' ? ' checked' : ''}><span>${esc(field.tickText || 'Confirmed')}</span></span><input type="hidden" id="${id}" value="${esc(v)}">`;
+    }
     if (field.type === 'yesno') {
       // a record that flags problem answers (redPrompt) spells the answer out: colour is never the only signal
       const yes = field.redPrompt ? 'Yes' : 'Y', no = field.redPrompt ? 'No' : 'N';
@@ -578,6 +585,16 @@
     });
   }
 
+  function wireTicks(container) {
+    container.querySelectorAll('input[data-tick-for]').forEach((cb) => {
+      const hidden = document.getElementById(cb.getAttribute('data-tick-for'));
+      if (!hidden) return;
+      cb.addEventListener('change', () => {
+        hidden.value = cb.checked ? 'Yes' : '';
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+  }
   function wireYesNo(container) {
     container.querySelectorAll('.ml-yesno').forEach(group => {
       const hidden = group.querySelector('input[type=hidden]');
@@ -1258,12 +1275,26 @@
       rules.forEach((f) => {
         const r = f.fromRecord, inp = el(`${ns}_f_${f.key}`), flag = r.manualFlag ? el(`${ns}_f_${r.manualFlag}`) : null;
         if (!inp) return;
+        if (r.prefill) {
+          // a person changing a pulled value must confirm it again
+          inp.addEventListener('change', () => { setTick(r.confirmField, false); inp.dataset.fromRec = ''; });
+          return;
+        }
         inp.addEventListener('input', () => { if (!inp.readOnly && flag) flag.value = String(inp.value || '').trim() ? 'Yes' : ''; });
       });
+      const setTick = (key, on) => {
+        if (!key) return;
+        const h = el(`${ns}_f_${key}`);
+        if (!h) return;
+        h.value = on ? 'Yes' : '';
+        const cb = container.querySelector(`input[data-tick-for="${ns}_f_${key}"]`);
+        if (cb) cb.checked = !!on;
+      };
       let lastJob = null;
       const apply = async () => {
         const job = String(jobEl.value || '').trim();
         if (job === lastJob) return;
+        const opening = lastJob === null;   // first look at an entry that may already hold saved values
         lastJob = job;
         if (!job) { rules.forEach(f => { setFieldNote(f.key, '', false); const i = el(`${ns}_f_${f.key}`); if (i) i.readOnly = true; }); return; }
         let facts = null, failed = false;
@@ -1280,6 +1311,24 @@
           const flag = r.manualFlag ? el(`${ns}_f_${r.manualFlag}`) : null;
           const ids = r.idsField ? el(`${ns}_f_${r.idsField}`) : null;
           const hit = facts && facts[r.source];
+          if (r.prefill) {
+            // pulled but not locked: the person ticks the confirm box on the form
+            const ids = r.idsField ? el(`${ns}_f_${r.idsField}`) : null;
+            if (hit && hit.value != null && hit.value !== '') {
+              if (opening && String(inp.value || '').trim()) return;   // keep what the saved entry holds
+              inp.value = hit.value;
+              inp.dataset.fromRec = '1';
+              if (ids) ids.value = (hit.ids || []).join(',');
+              setTick(r.confirmField, false);
+              setFieldNote(f.key, r.note || '', false);
+              inp.dispatchEvent(new Event('input', { bubbles: true }));
+            } else {
+              if (inp.dataset.fromRec === '1') { inp.value = ''; inp.dataset.fromRec = ''; setTick(r.confirmField, false); }
+              if (ids) ids.value = '';
+              setFieldNote(f.key, failed ? 'Could not check REC 7.4.1 just now. Choose the area.' : (r.missing || ''), true);
+            }
+            return;
+          }
           if (hit && hit.value != null && hit.value !== '') {
             inp.readOnly = true;
             inp.value = hit.value;
@@ -1397,6 +1446,7 @@
         </label>`;
       }).join('');
       wireYesNo(container);
+      wireTicks(container);
       wirePrefixed(container);
       wireDigits(container);
       const blocks = wireSectionCollapsibles(container, ns, entryFields);

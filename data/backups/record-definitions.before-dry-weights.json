@@ -15284,17 +15284,7 @@
                   ]
                 }
               }
-            ],
-            "jobWeights": {
-              "column": "abaloneKg",
-              "processColumn": "process",
-              "blanch": "Blanching",
-              "cook": "Cooking",
-              "capSource": "salting-oosw",
-              "capMatchField": "jobNo",
-              "capSumColumn": "weight",
-              "legacyColumn": "legacyNoBlanching"
-            }
+            ]
           }
         }
       ],
@@ -16277,28 +16267,6 @@
               "nonEmpty": true
             },
             "legacy": true
-          }
-        },
-        {
-          "key": "legacyNoBlanching",
-          "label": "Legacy (no blanching recorded)",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 37,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
           }
         }
       ],
@@ -17784,12 +17752,7 @@
           "validateJson": null,
           "extraJson": {
             "serverStamp": true,
-            "timeZone": "Africa/Johannesburg",
-            "fromRecord": {
-              "source": "drying-entry-date",
-              "note": "From REC 7.4.1",
-              "missing": "No submitted REC 7.4.1 entry for this job yet. Today's date is used when you submit."
-            }
+            "timeZone": "Africa/Johannesburg"
           }
         },
         {
@@ -17850,40 +17813,7 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "fromRecord": {
-              "source": "drying-location",
-              "prefill": true,
-              "confirmField": "dryRoomAreaConfirmed",
-              "idsField": "dryRoomAreaSourceId",
-              "note": "From REC 7.4.1. Tick Confirm location below.",
-              "missing": "REC 7.4.1 has no room movement for this job yet. Choose the area, then tick Confirm location."
-            }
-          }
-        },
-        {
-          "key": "dryRoomAreaConfirmed",
-          "label": "Confirm location",
-          "type": "yesno",
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": "Dry room details",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 8,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "tick": true,
-            "tickText": "The dry room area above is correct"
-          }
+          "validateJson": null
         },
         {
           "key": "noOfTrolleys",
@@ -17896,7 +17826,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 9,
+          "position": 8,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -17930,7 +17860,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 10,
+          "position": 9,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -17956,7 +17886,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 11,
+          "position": 10,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -17978,7 +17908,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 12,
+          "position": 11,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18000,7 +17930,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 13,
+          "position": 12,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18022,29 +17952,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 14,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
-          }
-        },
-        {
-          "key": "dryRoomAreaSourceId",
-          "label": "Dry room area source entry",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": "Dry room details",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 15,
+          "position": 13,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18066,7 +17974,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 16,
+          "position": 14,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18092,7 +18000,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 17,
+          "position": 15,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18118,7 +18026,7 @@
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 18,
+          "position": 16,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18144,7 +18052,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 19,
+          "position": 17,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18167,7 +18075,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 20,
+          "position": 18,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18190,7 +18098,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 21,
+          "position": 19,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18213,7 +18121,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 22,
+          "position": 20,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18236,7 +18144,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 23,
+          "position": 21,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18259,7 +18167,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 24,
+          "position": 22,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18282,7 +18190,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 25,
+          "position": 23,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18301,7 +18209,7 @@
           "group": "Comments",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 26,
+          "position": 24,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,

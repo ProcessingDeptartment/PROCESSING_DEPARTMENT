@@ -1990,6 +1990,8 @@ model Sub_dry_monitoring {
   cookingDateTypedManually   Boolean?
   trolleysSourceSubmissionId String?
   trolleysTypedManually      Boolean?
+  dryRoomAreaConfirmed       Boolean?
+  dryRoomAreaSourceId        String?
 
   @@index([jobNo], map: "sub_dry_monitoring_jobNo_idx")
   @@map("sub_dry_monitoring")
