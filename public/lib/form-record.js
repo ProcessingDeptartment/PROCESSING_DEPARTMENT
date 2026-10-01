@@ -119,6 +119,11 @@
   .fr-section-collapsible[open] > .fr-section-title::before{ content:'\\25BE'; }
   .fr-section-summary{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; text-transform:none; letter-spacing:0; color:var(--palette-ink,#1b2330); font-weight:700; }
   .fr-section-summary:not(:empty){ margin-left:8px; }
+  .fr-collapse-ctl{ display:flex; justify-content:flex-end; gap:6px; align-items:center; margin:0 0 6px; font-size:12px; }
+  .fr-collapse-ctl button{ background:none; border:0; padding:6px 4px; color:var(--palette-link,#1f5fa8); text-decoration:underline; cursor:pointer; font-size:12px; }
+  .fr-collapse-ctl button:focus-visible, .fr-section-collapsible > summary:focus-visible{ outline:2px solid var(--palette-ink,#1b2330); outline-offset:2px; }
+  .fr-section-collapsible > summary.fr-section-title{ min-height:44px; display:flex; align-items:center; }
+  @media (prefers-reduced-motion:reduce){ .fr-section-collapsible > .fr-section-title::before{ transition:none; } }
   .fr-roster-row{ display:flex; gap:8px; align-items:flex-end; margin-bottom:6px; flex-wrap:wrap; }
   .fr-roster-row .fr-field{ flex:1; }
   /* A row the operator has finished collapses to a one-line summary; "Edit" reopens it. */
@@ -967,19 +972,77 @@
     }
 
 
+  // One-line summary shown in a section header (e.g. "Job 3CP2026-0412 · AG123 · Intake 28 Sep").
+  const SUMMARY_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function summaryPart(key, value, isJob) {
+    const v = String(value || '').trim();
+    if (!v) return '';
+    if (isJob) return 'Job ' + v;
+    const d = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (/^(jiReceivingDate|intakeDate)$/.test(key) && d) return 'Intake ' + Number(d[3]) + ' ' + SUMMARY_MONTHS[Number(d[2]) - 1];
+    return v;
+  }
+
   function wireSectionSummaries(container) {
     container.querySelectorAll('.fr-section-summary[data-summary-for]').forEach((span) => {
       const keys = (span.getAttribute('data-summary-for') || '').split(',').map((k) => k.trim()).filter(Boolean);
-      const srcs = keys.map((k) => container.querySelector('#fr_f_' + k)).filter(Boolean);
-      if (!srcs.length) return;
+      const pairs = keys.map((k) => ({ k, src: container.querySelector('#fr_f_' + k) })).filter((p) => p.src);
+      if (!pairs.length) return;
+      const jobKey = pairs[0].src.hasAttribute('data-jobsearch') ? pairs[0].k : null;
       const paint = () => {
-        const parts = srcs.map((s) => String(s.value || '').trim()).filter(Boolean);
+        const parts = pairs.map((p) => summaryPart(p.k, p.src.value, p.k === jobKey)).filter(Boolean);
         span.textContent = parts.length ? '— ' + parts.join('  ·  ') : '';
       };
-      srcs.forEach((s) => { s.addEventListener('input', paint); s.addEventListener('change', paint); });
+      pairs.forEach((p) => { p.src.addEventListener('input', paint); p.src.addEventListener('change', paint); });
       paint();
     });
   }
+
+  // "Collapse all / Expand all" for the section blocks (hide only: nothing is removed or reset).
+  function wireCollapseAll(container) {
+    if (container._frCollapseWired) return;
+    container._frCollapseWired = true;
+    container.addEventListener('click', (ev) => {
+      const b = ev.target.closest && ev.target.closest('[data-fr-collapse]');
+      if (!b) return;
+      const open = b.getAttribute('data-fr-collapse') === 'open';
+      (container.parentElement || container).querySelectorAll('details.fr-section-collapsible').forEach((d) => { d.open = open; });
+    });
+  }
+
+  // Open every collapsed block around a field, then scroll to it and focus it (validation failures).
+  function revealField(target) {
+    if (!target) return;
+    if (target.matches && target.matches('select[data-jobsearch]')) {
+      const wrap = target.closest('.jp-wrap');
+      target = (wrap && (wrap.querySelector('.jp-search:not([hidden])') || wrap.querySelector('.jp-change'))) || target.closest('.fr-field, .ml-field') || target;
+    }
+    for (let d = target.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+    try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+    if (target.focus) { try { target.focus({ preventScroll: true }); } catch (e) { /* not focusable */ } }
+  }
+
+  function focusFreshJobNumber(container) {
+    const go = () => {
+      const prefix = container.querySelector('.fr-jobnumber .fr-jn-prefix');
+      const hidden = container.querySelector('.fr-jobnumber input[type=hidden]');
+      if (!prefix || !prefix.isConnected || prefix.disabled || (hidden && hidden.value)) return;
+      if (document.activeElement && document.activeElement !== document.body) return;
+      try { prefix.focus({ preventScroll: true }); } catch (e) { /* not focusable */ }
+    };
+    // the record shell re-parents the form shortly after it opens, which drops focus: retry
+    go();
+    [350, 900].forEach((ms) => setTimeout(go, ms));
+  }
+
+  // Print / PDF always shows every block open, whatever is collapsed on screen.
+  (function wirePrintExpand() {
+    let reopen = [];
+    window.addEventListener('beforeprint', () => {
+      reopen = Array.prototype.filter.call(document.querySelectorAll('details.fr-section-collapsible:not([open])'), (d) => { d.open = true; return true; });
+    });
+    window.addEventListener('afterprint', () => { reopen.forEach((d) => { d.open = false; }); reopen = []; });
+  })();
 
 
   function wireJobRouteCheck(container, config) {
@@ -1011,11 +1074,19 @@
   }
 
 
-  function wireJobSearch(container, config) {
+  function wireJobSearch(container, config, autofocus) {
     const fields = allFields(config).filter((f) => f.type === 'jobsearch');
     const sels = fields.map((f) => container.querySelector('#fr_f_' + f.key)).filter(Boolean);
-    if (!sels.length) return;
-    loadLib('job-picker.js?v=4', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
+    if (!sels.length) {
+      // No searchable job list (e.g. a job number being created on REC 7.1.2): start on its prefix.
+      if (autofocus) focusFreshJobNumber(container);
+      return;
+    }
+    loadLib('job-picker.js?v=5', 'JobPicker').then((jp) => {
+      if (!jp) return;
+      sels.forEach((sel) => jp.enhance(sel));
+      if (autofocus && sels[0] && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
+    });
     loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
       if (!js) throw new Error('job-status.js unavailable');
       return js.list();
@@ -1494,8 +1565,10 @@
           </div>
           <div class="fr-panel-body">
             <div id="fr_modalSections"></div>
-            <div class="fr-muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;">Completed by</div>
-            ${window.SignOffBlock.completedByHtml({ byId: 'fr_cb_by', titleId: 'fr_cb_title', dateId: 'fr_cb_date', signatureId: 'fr_cb_signature', gridClass: 'fr-grid fr-grid-4 fr-compact', fieldClass: 'fr-field' })}
+            <details class="fr-section-collapsible fr-signoff-block" open>
+              <summary class="fr-section-title">Completed by</summary>
+              ${window.SignOffBlock.completedByHtml({ byId: 'fr_cb_by', titleId: 'fr_cb_title', dateId: 'fr_cb_date', signatureId: 'fr_cb_signature', gridClass: 'fr-grid fr-grid-4 fr-compact', fieldClass: 'fr-field' })}
+            </details>
             <div class="fr-actions">
               <button class="fr-btn fr-btn-flat" id="fr_cancelBtn">Clear</button>
               <button class="fr-btn fr-btn-flat" id="fr_saveBtn">Save draft</button>
@@ -2553,9 +2626,29 @@
       const elVal = f => existing && existing.values && existing.values[f.key] != null ? String(existing.values[f.key]) : '';
       const elHidden = f => config.entryLog && (f.hidden || f.movement || (f.legacy && f.showWhen && f.showWhen.nonEmpty && elVal(f).trim() === ''));
       const elHiddenInputs = fs => fs.filter(elHidden).map(f => `<input type="hidden" id="fr_f_${f.key}" value="${esc(elVal(f))}">`).join('');
+      // Every section is a collapsible block that starts open (sec.collapsible === false opts out;
+      // sec.collapsedByDefault is still honoured but no record uses it).
+      const sectionKeys = sec => {
+        if (sec.summaryFields) return [].concat(sec.summaryFields);
+        const jf = (sec.fields || []).find(f => f.type === 'jobsearch');
+        if (jf) {
+          const have = new Set(allFields(config).map(f => f.key));
+          return [jf.key].concat(['agCode', 'jiReceivingDate', 'intakeDate'].filter(k => have.has(k)));
+        }
+        return sec.summaryField ? [].concat(sec.summaryField) : [];
+      };
+      const wrapSection = (sec, bodyHtml) => {
+        if (sec.collapsible === false) return `<div class="fr-section-title">${esc(sec.title)}</div>${bodyHtml}`;
+        const keys = sectionKeys(sec);
+        const sfyd = keys.length ? ` data-summary-for="${esc(keys.join(','))}"` : '';
+        return `<details class="fr-section-collapsible"${sec.collapsedByDefault ? '' : ' open'}>
+            <summary class="fr-section-title">${esc(sec.title)}<span class="fr-section-summary"${sfyd}></span></summary>
+            ${bodyHtml}
+          </details>`;
+      };
       const renderSection = sec => {
-        if (config.entryLog && sec.jobSoFarPanel) return `<div class="fr-section-title">${esc(sec.title)}</div><div id="fr_jobSoFar"></div>`;
-        if (config.entryLog && sec.movementBlock) return `<div class="fr-section-title">${esc(sec.title)}</div><div id="fr_movements"></div>${elHiddenInputs(sec.fields)}`;
+        if (config.entryLog && sec.jobSoFarPanel) return wrapSection(sec, `<div id="fr_jobSoFar"></div>`);
+        if (config.entryLog && sec.movementBlock) return wrapSection(sec, `<div id="fr_movements"></div>${elHiddenInputs(sec.fields)}`);
         if (config.entryLog) {
           const shown = sec.fields.filter(f => !elHidden(f));
           if (!shown.length) return elHiddenInputs(sec.fields);
@@ -2567,22 +2660,12 @@
             ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}
           </label>`).join('')}${sec.__hiddenHtml || ''}
         </div>`;
-        if (sec.collapsible) {
-
-          const sfyd = sec.summaryField
-            ? ` data-summary-for="${esc([].concat(sec.summaryField).join(','))}"` : '';
-          return `<details class="fr-section-collapsible"${sec.collapsedByDefault ? '' : ' open'}>
-            <summary class="fr-section-title">${esc(sec.title)}<span class="fr-section-summary"${sfyd}></span></summary>
-            ${fieldsHtml}
-          </details>`;
-        }
-        return `<div class="fr-section-title">${esc(sec.title)}</div>${fieldsHtml}`;
+        return wrapSection(sec, fieldsHtml);
       };
       const { pre: preSecs, post: postSecs } = sectionsAroundRoster(config);
       html += preSecs.map(renderSection).join('');
       if (hasRoster) {
-        html += rosterList.map((roster, i) => `
-        <div class="fr-section-title">${esc(roster.title)}</div>
+        html += rosterList.map((roster, i) => wrapSection({ title: roster.title, collapsible: roster.collapsible }, `
         ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
         <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : ''}></div>
         ${roster.quickEntry ? '' : `${roster.processChoice
@@ -2590,9 +2673,12 @@
           : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">${esc(roster.addLabel || '+ Add row')}</button>`}
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows || roster.fixedGroups ?' style="display:none;"' : ''}>Import CSV</button>
         <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">`}
-        ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals${roster.cardRows ? ' fr-pot-totals no-print' : ''}"></div>` : ''}`).join('');
+        ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals${roster.cardRows ? ' fr-pot-totals no-print' : ''}"></div>` : ''}`)).join('');
       }
       html += postSecs.map(renderSection).join('');
+      if (html.indexOf('<details') >= 0) {
+        html = `<div class="fr-collapse-ctl no-print"><button type="button" data-fr-collapse="close">Collapse all</button><span aria-hidden="true">·</span><button type="button" data-fr-collapse="open">Expand all</button></div>` + html;
+      }
 
       if (existing && existing.values) {
         const currentKeys = new Set(allFields(config).map(f => f.key));
@@ -2636,7 +2722,8 @@
       if (typeof wireBinJobsAutofill === 'function') wireBinJobsAutofill(container, config);
       if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
       wireSectionSummaries(container);
-      if (!locked) { wireJobSearch(container, config); wireAutofill(container, config); wireJobRouteCheck(container, config); }
+      wireCollapseAll(container);
+      if (!locked) { wireJobSearch(container, config, !existing); wireAutofill(container, config); wireJobRouteCheck(container, config); }
       if (!locked) { container.addEventListener('input', refreshComputeFns); refreshComputeFns(); }
 
       const pickFields = allFields(config).concat(rosterList.reduce((acc, r) => acc.concat(r.columns || []), []));
@@ -2698,25 +2785,25 @@
       if (!await refreshProvisional(el('fr_modalSections'), config, finalize, toast)) return;
 
       const values = {};
-      let missingRequired = null;
-      let unverifiedRequired = null;
-      let invalidJobNumber = null;
+      let missingRequired = null, missingKey = null;
+      let unverifiedRequired = null, unverifiedKey = null;
+      let invalidJobNumber = null, invalidJobKey = null;
       let routeConflict = null;
       allFields(config).forEach(f => {
         const inp = el(`fr_f_${f.key}`);
         values[f.key] = inp ? inp.value : '';
-        if (f.required && !String(values[f.key] || '').trim()) missingRequired = f.label;
+        if (f.required && !missingRequired && !String(values[f.key] || '').trim()) { missingRequired = f.label; missingKey = f.key; }
         // A required top-level recordpick field (e.g. an attachment checklist row) must not just
         // be picked -- the real linked record it points to must have reached Verified status,
         // same gate as required recordpick columns inside a roster (see incompleteRoster below).
         if (f.type === 'recordpick' && f.required && String(values[f.key] || '').trim()) {
           const status = (el(`fr_f_${f.key}__status`) || {}).value;
           const verified = (el(`fr_f_${f.key}__verified`) || {}).value === '1';
-          if (!recordpickVerified(status, verified)) unverifiedRequired = f.label;
+          if (!recordpickVerified(status, verified)) { unverifiedRequired = f.label; unverifiedKey = f.key; }
         }
         if (f.type === 'jobnumber' && f.validate !== false && values[f.key] &&
             window.Lookups && window.Lookups.batch && !window.Lookups.batch.isValid(values[f.key])) {
-          invalidJobNumber = f.label;
+          invalidJobNumber = f.label; invalidJobKey = f.key;
         }
       });
 
@@ -2727,9 +2814,9 @@
           routeConflict = window.Lookups.batch.routeError(jobVal);
         }
       });
-      if (missingRequired && finalize) { toast(`"${missingRequired}" is required.`); return; }
-      if (unverifiedRequired && finalize) { toast(`"${unverifiedRequired}" must be attached and verified before this can be submitted.`); return; }
-      if (invalidJobNumber && finalize) { toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
+      if (missingRequired && finalize) { revealField(el(`fr_f_${missingKey}`)); toast(`"${missingRequired}" is required.`); return; }
+      if (unverifiedRequired && finalize) { revealField(el(`fr_f_${unverifiedKey}`)); toast(`"${unverifiedRequired}" must be attached and verified before this can be submitted.`); return; }
+      if (invalidJobNumber && finalize) { revealField(el(`fr_f_${invalidJobKey}`)); toast(`"${invalidJobNumber}" is not a valid job number.`); return; }
       if (routeConflict && finalize) { toast(routeConflict); return; }
 
       // Business rules (see BusinessRules.run / public/data/business-rules.json): every
@@ -2744,6 +2831,7 @@
           signature: (el('fr_cb_signature').value || '').trim()
         };
         if (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature) {
+          revealField(['by', 'title', 'date', 'signature'].map(k => el('fr_cb_' + k)).find(i => i && !String(i.value || '').trim()));
           toast('Completed by, title, date and signature are required to submit.');
           return;
         }
@@ -2773,13 +2861,17 @@
           if (!roster.cardRows) continue;
           const rows = rosterRowsByIndex[ri];
           if (finalize) {
-            if (roster.minRows && rows.length < roster.minRows) { toast(`Add at least ${roster.minRows} ${(roster.rowTitle || 'row').toLowerCase()} to "${roster.title}".`); return; }
+            if (roster.minRows && rows.length < roster.minRows) { revealField(el(rosterDomId('fr_rosterRows', ri))); toast(`Add at least ${roster.minRows} ${(roster.rowTitle || 'row').toLowerCase()} to "${roster.title}".`); return; }
             if (roster.enforceRequired) {
               for (let n = 0; n < rows.length; n++) {
                 const r = rows[n];
                 const miss = roster.columns.find(c => (c.required || (c.requiredWhen && rowCond(c.requiredWhen, c, r)))
                   && rowColVisible(c, r) && String(r[c.key] || '').trim() === '');
-                if (miss) { toast(`${roster.rowTitle || 'Row'} ${n + 1}: "${miss.label}" is required.`); return; }
+                if (miss) {
+                  const card = el(rosterDomId('fr_rosterRows', ri)).querySelectorAll('.fr-pot-card, .fr-roster-row')[n];
+                  revealField(card || el(rosterDomId('fr_rosterRows', ri)));
+                  toast(`${roster.rowTitle || 'Row'} ${n + 1}: "${miss.label}" is required.`); return;
+                }
               }
             }
           }

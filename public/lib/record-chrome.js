@@ -225,6 +225,7 @@
     }
     if (!target) target = document.querySelector('.rt-content .ml-field input:not([type=hidden]):invalid, .rt-content .fr-field.invalid');
     if (!target) return;
+    for (var d = target.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
     var offset = topOffset() + 4;
     window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
     var inp = target.querySelector('input:not([type=hidden]), select, textarea');
@@ -309,12 +310,15 @@
     var app = document.querySelector('.rt-content .fr-app');
     if (!app) return [];
     var titles = Array.prototype.filter.call(app.querySelectorAll('.fr-section-title, .fr-muted'), function (t) { return t.classList.contains('fr-section-title') || isCaption(t); }), out = [];
-    titles.forEach(function (t) { if (isCaption(t)) { t.classList.add('rt-cap'); renameSignoff(t); } });
+    titles.forEach(function (t) {
+      if (isCaption(t)) { t.classList.add('rt-cap'); renameSignoff(t); }
+      else if (t.tagName === 'SUMMARY' && t.parentElement.classList.contains('fr-signoff-block')) renameSignoff(t);
+    });
     titles.forEach(function (t) {
       if (t.closest('.fr-instr-panel, .fr-modal-overlay, .rt-wi-bubble')) return;
       var details = t.tagName === 'SUMMARY' ? t.parentElement : null;
       var nodes = [];
-      if (details) nodes = [details];
+      if (details) nodes = [details];   // every form-record section is a <details> now
       else for (var n = t.nextElementSibling; n && !isTitle(n); n = n.nextElementSibling) {
         if (n.querySelector && n.querySelector('.fr-section-title')) break;
         if (/(^|\s)fr-actions(\s|$)/.test(n.className)) break;
@@ -346,7 +350,7 @@
       if (bubbles.length) {
         bubbles.forEach(function (b) {
           var n = mlName(b);
-          out.push({ title: n.el, anchor: b, details: b.tagName === 'DETAILS' ? b : null, nodes: [b], name: n.name, noCollapse: b.tagName !== 'DETAILS' });
+          out.push({ title: n.el, anchor: b, details: b.tagName === 'DETAILS' ? b : null, nodes: [b], name: n.name, noCollapse: !(b.tagName === 'DETAILS' && b.hasAttribute('data-autofold')) });
         });
       } else if (panel.classList.contains('ml-continue-panel')) {
         var hd = panel.querySelector('h2');
@@ -426,6 +430,11 @@
           cur.appendChild(k);
         });
       }
+      Array.prototype.forEach.call(body.children, function (k) {
+        if (k.tagName !== 'DETAILS' || !k.classList.contains('ml-signoff-block')) return;
+        k.classList.add('rt-bubble');
+        var sm = k.querySelector(':scope > summary'); if (sm) renameSignoff(sm);
+      });
       var cap = null;
       Array.prototype.forEach.call(body.children, function (k) { if (!cap && k.classList.contains('ml-muted') && SIGNOFF_RE.test((k.textContent || '').trim())) cap = k; });
       if (cap) renameSignoff(cap);
@@ -477,8 +486,8 @@
           for (var j = i + 1; j < secs.length; j++) if (secs[j].details) { if (!secs[j].details.open && !sectionProgress(secs[j]).complete) secs[j].details.open = true; break; }
         }
       }
-      if (p.complete && prevComplete[i] === false && !sec.noCollapse) sec.title.__rtPendingCollapse = true;
-      if (!p.complete) sec.title.__rtPendingCollapse = false;
+      // auto-fold on completion is switched off: sections only close when the person closes them
+      sec.title.__rtPendingCollapse = false;
       prevComplete[i] = p.complete;
       if (rail) {
         var btn = rail.children[i];
