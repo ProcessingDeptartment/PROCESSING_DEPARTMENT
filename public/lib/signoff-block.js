@@ -36,7 +36,21 @@
     const fieldClass = opts.fieldClass || 'field';
     const fields = opts.fields || ['by', 'title', 'date', 'signature'];
     return `<div class="${gridClass}" style="margin-bottom:8px;">
-      ${fields.map(f => `<label class="${fieldClass}">${VERIFY_FIELD_LABELS[f]}<input id="${ids[f]}"${f === 'date' ? ' type="date"' : ''}></label>`).join('\n      ')}
+      ${fields.map(f => {
+        if (f === 'signature') {
+          return `<label class="${fieldClass}">
+            Signature
+            <div style="position: relative;">
+              <input id="${ids[f]}" type="text"
+                     placeholder="Enter passkey" readonly
+                     onclick="PasskeyInput.openForField('${ids[f]}')"
+                     style="cursor: pointer; background: #f9f9f9;">
+              <div class="passkey-verified-display" id="${ids[f]}_display"></div>
+            </div>
+          </label>`;
+        }
+        return `<label class="${fieldClass}">${VERIFY_FIELD_LABELS[f]}<input id="${ids[f]}"${f === 'date' ? ' type="date"' : ''}></label>`;
+      }).join('\n      ')}
     </div>`;
   }
 
@@ -56,7 +70,8 @@
       verifiedBy: (el(ids.by).value || '').trim(),
       verifiedSig: (el(ids.title).value || '').trim(),
       verifiedDate: el(ids.date).value,
-      verifiedSignature: (el(ids.signature).value || '').trim()
+      verifiedSignature: (el(ids.signature).value || '').trim(),
+      isPasskeyVerified: el(ids.signature).dataset.verified === 'true'
     };
   }
 

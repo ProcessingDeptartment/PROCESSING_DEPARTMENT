@@ -20,6 +20,11 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=18"></script>
+<script>(function(){
+const mem={"formrecord:dried-abalone-transfer":JSON.stringify([{id:"sub_old1",status:"submitted",source:"manual",createdAt:1,updatedAt:1,submittedAt:1,history:[],signOffs:[],values:{jobNo:"DPR00001",intakeDate:"2026-10-01",intakeWeight:"1502.85",actualDriedDate:"2026-10-01",totalDriedWeight:"170.20",dryYield:"11.33"},roster:[{crateNumber:"1",weight:"20.2",jobNo:"DPR00001",crateNoOld:"1"},{crateNumber:"2",weight:"150",jobNo:"DPR00001",crateNoOld:"1"}]}])};
+window.__mem=mem;
+window.storage.useBackend({name:"mem",get:async k=>k in mem?{key:k,value:mem[k]}:null,set:async(k,v)=>{mem[k]=v;return true;},remove:async k=>{delete mem[k];return true;},getByPrefix:async p=>Object.fromEntries(Object.entries(mem).filter(([k])=>k.startsWith(p)))});
+})();</script>
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=3"></script>
 <script src="../lib/traceability.js?v=10"></script>

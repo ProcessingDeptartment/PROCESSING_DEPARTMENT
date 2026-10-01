@@ -25,6 +25,7 @@ const { awaitingBoxes, syncBoxInspections } = require('./box-inspection');
 const { syncSubmissionDates } = require('./submission-dates');
 const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
 const dryGuard = require('./drying-process-guard');
+const crateGuard = require('./crate-number-guard');
 
 // Query events feed the status page's query counter (src/status-page.js); emit:'event' logs nothing.
 const prisma = new PrismaClient({ log: [{ emit: 'event', level: 'query' }] });
@@ -108,6 +109,21 @@ app.put('/api/storage/key/:key', async (req, res) => {
       value = g.value;
     }
 
+    // REC 7.4.10 Dried Abalone Transfer: crate numbers per job, assigned here. This first pass gives an early
+    // refusal and the numbered value to validate; the authoritative pass re-runs inside the locked transaction below.
+    const isCrateKey = req.params.key === crateGuard.KEY;
+    const incomingValue = value;
+    let crateRanges = {};
+    if (isCrateKey) {
+      const prevRow = await prisma.keyValue.findUnique({ where: { key: req.params.key } });
+      const g = crateGuard.guardWrite(prevRow ? prevRow.value : null, value);
+      if (!g.ok) {
+        console.warn('PUT', req.params.key, 'REFUSED by crate-number guard:', g.error);
+        return res.status(g.status).json({ ok: false, guard: true, error: g.error });
+      }
+      value = g.value;
+    }
+
     // Layer 2: validate the submission against its record definition. Report-only unless
     // VALIDATE_WRITES=enforce, in which case a submitted-and-invalid entry is rejected 422.
     let violations = [];
@@ -126,7 +142,14 @@ app.put('/api/storage/key/:key', async (req, res) => {
     }
 
     await prisma.$transaction(async (tx) => {
+      // Two tablets submitting for the same job queue on this lock, so they cannot get the same crate numbers.
+      if (isCrateKey) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${req.params.key}))`;
       const prev = await tx.keyValue.findUnique({ where: { key: req.params.key } });
+      if (isCrateKey) {
+        const g = crateGuard.guardWrite(prev ? prev.value : null, incomingValue);
+        if (!g.ok) throw Object.assign(new Error('crate guard'), { guard: g });
+        value = g.value; crateRanges = g.ranges;
+      }
       await tx.keyValue.upsert({
         where: { key: req.params.key },
         create: { key: req.params.key, value },
@@ -151,8 +174,9 @@ app.put('/api/storage/key/:key', async (req, res) => {
       try { await syncGovernanceKey(prisma, req.params.key, value); }
       catch (e) { console.error('syncGovernanceKey failed (write succeeded)', e); }
     }
-    res.json({ ok: true, warnings: violations });
+    res.json({ ok: true, warnings: violations, crateRanges });
   } catch (e) {
+    if (e && e.guard) return res.status(e.guard.status).json({ ok: false, guard: true, error: e.guard.error });
     console.error('PUT key failed', e);
     res.status(500).json({ ok: false });
   }

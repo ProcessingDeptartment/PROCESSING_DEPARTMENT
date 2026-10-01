@@ -1945,9 +1945,16 @@ model Sub_dried_abalone_transfer_Row {
   parent   Sub_dried_abalone_transfer @relation(fields: [parentId], references: [id], onDelete: Cascade)
   position Int                        @default(0)
 
-  crateNumber Float?
+  crateNumber Int?
   weight      Float?
+  jobNo       String?
+  crateNoOld  String?
+  voided      Boolean?
+  voidReason  String?
+  voidedBy    String?
+  voidedAt    DateTime?
 
+  @@unique([jobNo, crateNumber], map: "sub_dried_abalone_transfer_row_job_crate_uq")
   @@index([parentId])
   @@map("sub_dried_abalone_transfer_row")
 }
@@ -4735,4 +4742,30 @@ model DryWeightOverride {
   @@index([jobNo], map: "dry_weight_override_job_no_idx")
   @@index([submissionId], map: "dry_weight_override_submission_id_idx")
   @@map("dry_weight_override")
+}
+
+// Passkey system for signature verification
+model UserPasskey {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  displayName   String
+  passkey       String   // bcrypt hashed passkey
+  title         String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  createdBy     String
+  lastResetAt   DateTime @default(now())
+  lastUsedAt    DateTime?
+
+  @@map("user_passkeys")
+}
+
+model PasskeyLog {
+  id          String   @id @default(cuid())
+  username    String
+  recordKey   String?
+  recordId    String?
+  verifiedAt  DateTime @default(now())
+
+  @@map("passkey_logs")
 }

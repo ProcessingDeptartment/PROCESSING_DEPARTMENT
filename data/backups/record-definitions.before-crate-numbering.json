@@ -17410,14 +17410,8 @@
           "position": 3,
           "extraJson": {
             "quickEntry": {
-              "addLabel": "+ Add crate"
-            },
-            "jobNumbered": {
-              "column": "crateNumber",
-              "jobField": "jobNo",
-              "jobColumn": "jobNo",
-              "rowTitle": "Crate",
-              "source": "dried-abalone-transfer"
+              "addLabel": "+ Add crate",
+              "autoIncrement": "crateNumber"
             }
           }
         }
@@ -17587,9 +17581,9 @@
         {
           "key": "crateNumber",
           "label": "Crate number",
-          "type": "digits",
+          "type": "number",
           "required": false,
-          "readOnly": true,
+          "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
@@ -17621,139 +17615,6 @@
           "linkField": null,
           "linkRelation": null,
           "validateJson": null
-        },
-        {
-          "key": "jobNo",
-          "label": "Job number",
-          "type": "text",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 10,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
-          }
-        },
-        {
-          "key": "crateNoOld",
-          "label": "Crate number (old)",
-          "type": "text",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 11,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true,
-            "legacy": true
-          }
-        },
-        {
-          "key": "voided",
-          "label": "Voided",
-          "type": "yesno",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 12,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
-          }
-        },
-        {
-          "key": "voidReason",
-          "label": "Void reason",
-          "type": "text",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 13,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
-          }
-        },
-        {
-          "key": "voidedBy",
-          "label": "Voided by",
-          "type": "text",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 14,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
-          }
-        },
-        {
-          "key": "voidedAt",
-          "label": "Voided at",
-          "type": "timestamp",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 3,
-          "parentFieldKey": "@roster",
-          "position": 15,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
-          }
         }
       ],
       "autofills": [
@@ -17777,8 +17638,7 @@
           "jobNo",
           "totalDriedWeight",
           "dryYield"
-        ],
-        "crateTrace": true
+        ]
       },
       "primaryBatchField": "jobNo"
     },
