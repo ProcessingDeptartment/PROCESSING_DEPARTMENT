@@ -4679,3 +4679,41 @@ model StockLink {
   @@index([recordKey, submissionId])
   @@map("stock_link")
 }
+
+// One row per closed (full) box, created from REC 7.4.3.1 / 7.4.3.2 "+ Full box" by
+// src/closed-box.js and completed later by REC 7.4.5 on the SAME row. box_code (= bin code, upper
+// case) is the key. Columns up to `changedAfterInspection` are owned by the 7.4.3 sync and
+// overwritten on each save; the inspection columns are owned by 7.4.5 and never touched by it.
+model ClosedBox {
+  id                     Int       @id @default(autoincrement())
+  boxCode                String    @unique @map("box_code")
+  sourceRecordKey        String    @map("source_record_key")
+  sourceSubmissionId     String    @map("source_submission_id")
+  sourceStatus           String    @map("source_status") // 'draft' | 'submitted'
+  jobNo                  String    @map("job_no")        // job whose grading log closed it; others via stock_link
+  sizeGrade              String    @map("size_grade")
+  nettKg743              Float?    @map("nett_kg_7_4_3") // as typed in 7.4.3
+  closedAt               DateTime  @default(now()) @map("closed_at")
+  changedAfterInspection Boolean   @default(false) @map("changed_after_inspection")
+  // 7.4.5 inspection (null until inspected)
+  inspectionSubmissionId String?   @map("inspection_submission_id")
+  tareKg                 Float?    @map("tare_kg")
+  nettKg                 Float?    @map("nett_kg")
+  colourUniform          Boolean?  @map("colour_uniform")
+  sizeGradeCorrect       Boolean?  @map("size_grade_correct")
+  frillsPresent          Boolean?  @map("frills_present")
+  bagSealed              Boolean?  @map("bag_sealed")
+  boxSealed              Boolean?  @map("box_sealed")
+  silicaPresent          Boolean?  @map("silica_present")
+  approved               Boolean?  // all checks passed; null = not inspected
+  comment                String?
+  packingDate            DateTime? @map("packing_date") @db.Date
+  packedAt               DateTime? @map("packed_at")
+  inspectedBy            String?   @map("inspected_by")
+
+  @@index([sourceSubmissionId])
+  @@index([closedAt])
+  @@index([approved])
+  @@index([inspectionSubmissionId])
+  @@map("closed_box")
+}

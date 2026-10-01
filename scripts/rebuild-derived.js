@@ -23,7 +23,7 @@ const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 
 const ROOT = path.join(__dirname, '..');
-const STEPS = ['dates', 'links', 'rows', 'stock', 'governance'];
+const STEPS = ['dates', 'links', 'rows', 'stock', 'boxes', 'governance'];
 
 const envPath = path.join(ROOT, '.env');
 if (fs.existsSync(envPath)) {
@@ -43,6 +43,7 @@ const { syncSubmissionDates } = require('../src/submission-dates');
 const { syncRecordLinks } = require('../src/record-links');
 const { syncSubmissionRows } = require('../src/submission-store');
 const { syncStockLinks } = require('../src/stock-link');
+const { syncClosedBoxes } = require('../src/closed-box');
 const { syncGovernanceKey, isGovernanceKey } = require('../src/governance-store');
 const dateFields = require('../src/date-field-map').load();
 const recordKeys = require('../src/record-key-map').load();
@@ -63,6 +64,7 @@ async function main() {
         if (step === 'links') await syncRecordLinks(prisma, key, value);
         if (step === 'rows') await syncSubmissionRows(prisma, key, value);
         if (step === 'stock') await syncStockLinks(prisma, key, value);
+        if (step === 'boxes') await syncClosedBoxes(prisma, key, value);
       } catch (e) { failed++; console.error(`FAILED ${step} ${key}: ${e.message}`); }
     }
   }
