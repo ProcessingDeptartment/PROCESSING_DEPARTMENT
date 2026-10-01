@@ -1,0 +1,300 @@
+// MINIMAL CHANGE: Only the signature field changes to passkey
+//
+// Replace the signature input line in verifyFieldsHtml function with:
+//
+// BEFORE (line 14 in original):
+//   <label class="${fieldClass}">Signature<input id="${signatureId}"></label>
+//
+// AFTER:
+//   <label class="${fieldClass}">Signature (Passkey)
+//     <button id="${signatureId}_btn" class="btn btn-sm" type="button">🔐 Sign with Passkey</button>
+//     <input id="${signatureId}" type="hidden">
+//   </label>
+//
+// Then in mountVerification function, add after the markup is mounted:
+//
+//   const passkeyBtn = el(ids.signature + '_btn');
+//   if (window.PasskeyAuth) {
+//     window.PasskeyAuth.createAuthenticationButton({
+//       button: passkeyBtn,
+//       username: window.Auth && window.Auth.getCurrentUser ? window.Auth.getCurrentUser() : null,
+//       onSuccess: (result) => {
+//         el(ids.signature).value = result.credentialId; // Store credential ID
+//         passkeyBtn.textContent = '✓ Signed';
+//         passkeyBtn.disabled = true;
+//       },
+//       onError: (error) => {
+//         toast('Passkey authentication failed: ' + error.message);
+//       }
+//     });
+//   }
+
+(function () {
+  function el(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  function completedByHtml(opts) {
+    const byId = opts.byId, titleId = opts.titleId, dateId = opts.dateId, signatureId = opts.signatureId;
+    const byLabel = opts.byLabel || 'Completed by';
+    const gridClass = opts.gridClass || 'grid grid-4';
+    const fieldClass = opts.fieldClass || 'field';
+    return `<div class="${gridClass}">
+      <label class="${fieldClass}">${esc(byLabel)}<input id="${byId}"></label>
+      <label class="${fieldClass}">Title<input id="${titleId}"></label>
+      <label class="${fieldClass}">Date<input id="${dateId}" type="date"></label>
+      <label class="${fieldClass}">Signature<input id="${signatureId}"></label>
+    </div>`;
+  }
+
+  function printRow(opts) {
+    return `<tr style="font-size:14px;"><td class="sheet-lbl">${esc(opts.label)}:</td><td>${esc(opts.by || '')}</td>
+      <td class="sheet-lbl">Title:</td><td>${esc(opts.title || '')}</td>
+      <td class="sheet-lbl">Date:</td><td>${esc(opts.date || '')}</td>
+      <td class="sheet-lbl">Signature:</td><td>${esc(opts.signature || '')}</td></tr>`;
+  }
+
+
+  function verifyIds(idPrefix) {
+    return { by: idPrefix + '_by', title: idPrefix + '_title', date: idPrefix + '_date', signature: idPrefix + '_signature' };
+  }
+
+  const VERIFY_FIELD_LABELS = { by: 'Verified by', title: 'Title', date: 'Date', signature: 'Signature' };
+
+
+  function verifyFieldsHtml(opts) {
+    const ids = verifyIds(opts.idPrefix);
+    const gridClass = opts.gridClass || 'grid grid-4';
+    const fieldClass = opts.fieldClass || 'field';
+    const fields = opts.fields || ['by', 'title', 'date', 'signature'];
+    return `<div class="${gridClass}" style="margin-bottom:8px;">
+      ${fields.map(f => {
+        if (f === 'signature') {
+          // CHANGED: Replace signature text input with passkey button
+          return `<label class="${fieldClass}">${VERIFY_FIELD_LABELS[f]} (Passkey)
+            <button id="${ids.signature}_btn" class="btn btn-sm" type="button" style="width: 100%; margin-top: 4px;">🔐 Sign with Passkey</button>
+            <input id="${ids.signature}" type="hidden">
+          </label>`;
+        } else {
+          return `<label class="${fieldClass}">${VERIFY_FIELD_LABELS[f]}<input id="${ids[f]}"${f === 'date' ? ' type="date"' : ''}></label>`;
+        }
+      }).join('\n      ')}
+    </div>`;
+  }
+
+  function printOnlyVerifyFieldsHtml(opts) {
+    const gridClass = (opts && opts.gridClass) || 'grid grid-4';
+    return `<div class="${gridClass} print-only" style="margin-top:8px;">
+      <div class="field">Verified by<div class="sig-line"></div></div>
+      <div class="field">Title<div class="sig-line"></div></div>
+      <div class="field">Date<div class="sig-line"></div></div>
+      <div class="field">Signature<div class="sig-line"></div></div>
+    </div>`;
+  }
+
+
+  function readVerifyInputs(idPrefix) {
+    const ids = verifyIds(idPrefix);
+    return {
+      verifiedBy: (el(ids.by).value || '').trim(),
+      verifiedSig: (el(ids.title).value || '').trim(),
+      verifiedDate: el(ids.date).value,
+      verifiedSignature: (el(ids.signature).value || '').trim()
+    };
+  }
+
+  function clearVerifyInputs(idPrefix) {
+    const ids = verifyIds(idPrefix);
+    el(ids.by).value = ''; el(ids.title).value = ''; el(ids.date).value = ''; el(ids.signature).value = '';
+  }
+
+  function validateVerifyInputs(v) {
+    if (window.AUTH_GATES_ENABLED !== true) return true; // gates temporarily off (see login-ui.js)
+    return !!(v.verifiedBy && v.verifiedSig && v.verifiedDate && v.verifiedSignature);
+  }
+
+
+  function historyLine(v) {
+    const entryNote = v.entryIds && v.entryIds.length ? ` · ${v.entryIds.length} ${v.entryIds.length === 1 ? 'entry' : 'entries'}` : '';
+    return `${esc(v.verifiedDate || '(no date)')} · ${esc(v.verifiedBy)} `
+      + `<span class="muted">(title: ${esc(v.verifiedSig)} · signature: ${esc(v.verifiedSignature || '')}${entryNote})</span>`;
+  }
+
+  async function logVerification(opts) {
+    const recordKey = opts.recordKey;
+    const values = opts.values;
+    const picked = opts.picked || [];
+    const storageKey = 'verification_log:' + recordKey;
+    const record = { verifiedBy: values.verifiedBy, verifiedSig: values.verifiedSig, verifiedDate: values.verifiedDate, verifiedSignature: values.verifiedSignature, loggedAt: Date.now() };
+    const raw = await storeGet(storageKey, true);
+    let hist = [];
+    try { hist = raw ? JSON.parse(raw) : []; } catch (e) { hist = []; }
+    hist.push(Object.assign({ entryIds: picked }, record));
+    await storeSet(storageKey, JSON.stringify(hist), true);
+    return record;
+  }
+
+  var VERIFIER_ASSIGN_KEY = 'verifier_assignments';
+
+  function baseVerifierRoles() {
+    var rules = window.PermissionRules && window.PermissionRules.RULES;
+    return (rules && rules.verifyRecord) ||
+      ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'];
+  }
+
+  var ROLE_LABELS_FALLBACK = {
+    PRODUCTION_SUPERVISOR: 'Production Supervisor', SHIFT_MANAGER: 'Shift Manager',
+    QUALITY_SUPERVISOR: 'Quality Supervisor', QUALITY_CONTROLLER: 'Quality Controller',
+    QA_MANAGER: 'QA Manager', PRODUCTION_MANAGER: 'Production Manager',
+    OPERATOR: 'Operator', ADMINISTRATOR: 'Administrator'
+  };
+
+  function roleLabel(r) {
+    var labels = (window.PermissionRules && window.PermissionRules.ROLE_LABELS) || ROLE_LABELS_FALLBACK;
+    return labels[r] || ROLE_LABELS_FALLBACK[r] || String(r).replace(/_/g, ' ');
+  }
+
+  // Roles allowed to verify this record: the saved per-record assignment if any,
+  // otherwise the default verifier roles.
+  async function assignedVerifierRoles(recordKey) {
+    try {
+      var raw = await storeGet(VERIFIER_ASSIGN_KEY, true);
+      var map = raw ? JSON.parse(raw) : {};
+      var a = map && map[recordKey];
+      if (Array.isArray(a) && a.length) return a.slice();
+    } catch (e) { /* fall through to default */ }
+    return baseVerifierRoles();
+  }
+
+  // Whether the signed-in user's role may verify this record.
+  async function verifyGate(recordKey) {
+    var roles = await assignedVerifierRoles(recordKey);
+    var role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;
+    return {
+      roles: roles,
+      rolesLabel: roles.map(roleLabel).join(', '),
+      role: role,
+      signedIn: !!role,
+      allowed: window.AUTH_GATES_ENABLED !== true || role === 'ADMINISTRATOR' || (!!role && roles.indexOf(role) !== -1)
+    };
+  }
+
+  function gateMessage(gate) {
+    if (gate.allowed) return '';
+    if (!gate.signedIn) return 'Sign in as ' + gate.rolesLabel + ' to verify this record.';
+    return 'Only ' + gate.rolesLabel + ' may verify this record. You are signed in as '
+      + roleLabel(gate.role) + '.';
+  }
+
+  async function getVerificationHistory(recordKey) {
+    const raw = await storeGet('verification_log:' + recordKey, true);
+    try { return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+  }
+
+  async function storeGet(key, shared) {
+    try { const r = await window.storage.get(key, shared); return r ? r.value : null; } catch (e) { return null; }
+  }
+  async function storeSet(key, value, shared) {
+    try { await window.storage.set(key, value, shared); return true; } catch (e) { console.error('storage set failed', e); return false; }
+  }
+
+  function mountVerification(opts) {
+    const recordKey = opts.recordKey;
+    const mountEl = typeof opts.mount === 'string' ? document.querySelector(opts.mount) : opts.mount;
+    const uid = 'sob_' + Math.random().toString(36).slice(2, 8);
+    const idPrefix = uid + '_verified';
+
+    mountEl.innerHTML = `
+      <div class="panel-head"><h2>Verification</h2></div>
+      <div class="panel-body">
+        <div class="muted" style="margin-bottom:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Entries to verify</div>
+        <div id="${uid}_select" style="margin-bottom:10px;"></div>
+        ${verifyFieldsHtml({ idPrefix })}
+        <div class="actions no-print" style="justify-content:flex-start; margin-top:0;">
+          <button class="btn btn-primary" id="${uid}_log">Log verification</button>
+        </div>
+        <div class="muted" style="margin:10px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;">Verification history</div>
+        <div id="${uid}_history"></div>
+      </div>`;
+
+    const ids = verifyIds(idPrefix);
+    const passkeyBtn = el(ids.signature + '_btn');
+    const signatureInput = el(ids.signature);
+
+    // CHANGED: Setup passkey authentication button
+    if (window.PasskeyAuth) {
+      window.PasskeyAuth.createAuthenticationButton({
+        button: passkeyBtn,
+        username: window.Auth && window.Auth.getCurrentUser ? window.Auth.getCurrentUser() : null,
+        onSuccess: (result) => {
+          signatureInput.value = result.credentialId;
+          passkeyBtn.textContent = '✓ Signed';
+          passkeyBtn.disabled = true;
+        },
+        onError: (error) => {
+          toast('Passkey authentication failed: ' + error.message);
+        }
+      });
+    }
+
+    function renderSelect() {
+      const target = el(uid + '_select');
+      const pending = opts.getPending() || [];
+      if (!pending.length) {
+        target.innerHTML = `<div class="muted" style="font-size:11px;">No submitted entries are waiting to be verified.</div>`;
+        return;
+      }
+      target.innerHTML = `<div style="margin-bottom:4px;"><label style="font-weight:700; font-size:11.5px;">
+          <input type="checkbox" id="${uid}_all"> Select all (${pending.length})</label></div>` +
+        pending.map(p => `<div style="font-size:11.5px; margin-bottom:2px;"><label>
+          <input type="checkbox" class="${uid}_pick" value="${esc(p.id)}"> ${esc(p.label)}</label></div>`).join('');
+      el(uid + '_all').addEventListener('change', ev => {
+        target.querySelectorAll('.' + uid + '_pick').forEach(cb => { cb.checked = ev.target.checked; });
+      });
+    }
+
+    async function renderHistory() {
+      const hist = await getVerificationHistory(recordKey);
+      const target = el(uid + '_history');
+      if (!hist.length) { target.innerHTML = `<div class="muted" style="font-size:11px;">No verification logged yet.</div>`; return; }
+      target.innerHTML = hist.slice().reverse().map(v => `
+        <div style="font-size:11.5px; padding:4px 0; border-bottom:1px solid #e2e4e3;">${historyLine(v)}</div>`).join('');
+    }
+
+    function toast(msg) {
+      if (window.toast) { window.toast(msg); return; }
+      const t = document.getElementById('toast');
+      if (!t) { console.log(msg); return; }
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    el(uid + '_log').addEventListener('click', async () => {
+      const values = readVerifyInputs(idPrefix);
+      if (!validateVerifyInputs(values)) { toast('Verified by, title, date and signature are all required.'); return; }
+
+      const pending = opts.getPending() || [];
+      const picked = [...document.querySelectorAll('.' + uid + '_pick:checked')].map(cb => cb.value);
+      if (pending.length && !picked.length) { toast('Tick at least one entry to verify.'); return; }
+
+      const record = await logVerification({ recordKey, values, picked });
+
+      if (opts.onLogged) opts.onLogged(record, picked);
+
+      toast(picked.length ? `Verification logged for ${picked.length} ${picked.length === 1 ? 'entry' : 'entries'}.` : 'Verification logged.');
+      clearVerifyInputs(idPrefix);
+      renderSelect();
+      renderHistory();
+    });
+
+    renderSelect();
+    renderHistory();
+    return { refresh() { renderSelect(); renderHistory(); } };
+  }
+
+  window.SignOffBlock = {
+    completedByHtml, printRow, mountVerification,
+    verifyIds, verifyFieldsHtml, printOnlyVerifyFieldsHtml, readVerifyInputs, clearVerifyInputs, validateVerifyInputs,
+    historyLine, logVerification, getVerificationHistory,
+    baseVerifierRoles, assignedVerifierRoles, verifyGate, gateMessage, roleLabel
+  };
+})();

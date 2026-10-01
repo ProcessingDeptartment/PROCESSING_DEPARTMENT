@@ -1,0 +1,126 @@
+// ============================================================================
+// PASSKEY AUTHENTICATION SCHEMA ADDITIONS
+// Add these models to your prisma/schema.prisma file
+// ============================================================================
+
+// User passkey credentials storage
+// Stores registered WebAuthn/FIDO2 credentials for each user
+model UserPasskey {
+  id              String   @id @default(cuid())
+  username        String   // Username/email who owns this credential
+  credentialId    String   @unique // base64url-encoded credential ID from WebAuthn
+  publicKey       String   // base64url-encoded public key from attestation
+  signCount       Int      @default(0) // Counter for clone detection
+  transports      String[] @default([]) // Comma-separated: "usb", "ble", "nfc", "internal"
+  attestationType String?  // Type of attestation: "none", "indirect", "direct", "enterprise"
+  credentialType  String   @default("public-key") // Always "public-key" for now
+  aaguid          String?  // Authenticator AAGUID if available
+  displayName     String?  // Human-readable name for the credential (e.g., "iPhone")
+  lastUsed        DateTime? // Timestamp of last successful authentication
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([username])
+  @@index([credentialId])
+}
+
+// Challenge-response tracking for WebAuthn ceremony
+// Prevents replay attacks by tracking and validating challenges
+model PasskeyChallenge {
+  id        String   @id @default(cuid())
+  username  String   // User who initiated the ceremony
+  challenge String   @unique // base64url-encoded challenge (random bytes)
+  purpose   String   // "registration" | "authentication"
+  origin    String?  // Where the ceremony originated (origin URL)
+  rpId      String?  // Relying Party ID for verification
+  used      Boolean  @default(false) // Whether this challenge has been completed
+  expiresAt DateTime // Challenge must be used within this time
+  createdAt DateTime @default(now())
+
+  @@index([username])
+  @@index([expiresAt])
+  @@index([used])
+}
+
+// Passkey verification log entry
+// Records when a document was signed using a passkey
+// Extends/replaces the legacy verification_log for signature verification
+model PasskeySignature {
+  id               String   @id @default(cuid())
+  recordKey        String   // Which record type (e.g., 'cans-produced')
+  verifiedBy       String   // Username of verifier
+  verifiedDate     DateTime @db.Date
+  credentialId     String   // ID of the passkey credential used
+
+  // Signature metadata
+  signatureMessage String?  // The data that was signed (challenge)
+  signatureValue   String?  // base64url-encoded signature from assertion
+  authenticatorData String? // base64url-encoded authenticatorData from assertion
+  clientDataJSON   String?  // base64url-encoded clientDataJSON for verification
+
+  // Verification details
+  verified         Boolean  @default(false) // Whether signature was cryptographically valid
+  verifyError      String?  // Error message if verification failed
+
+  // Associated records
+  entryIds         String[] @default([]) // Entries this verification covers
+
+  loggedAt         DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([recordKey])
+  @@index([verifiedBy])
+  @@index([credentialId])
+  @@index([verifiedDate])
+}
+
+// ============================================================================
+// MIGRATION NOTES
+// ============================================================================
+// 1. Existing verification_log (stored as KeyValue blobs) can coexist
+// 2. New signatures use PasskeySignature for better queryability
+// 3. To migrate old signatures: see scripts/migrate-signatures-to-passkeys.mjs
+// 4. verifiedSignature field still exists in submission tables as TEXT
+//    - For new passkeys: stores credential ID
+//    - For old signed verifications: stores typed signature text
+//    - Use isPasskeySignature flag to distinguish
+//
+// 5. API layer should:
+//    - Store credential metadata in UserPasskey on registration
+//    - Store challenge temporarily in PasskeyChallenge
+//    - Verify assertion signature against stored public key
+//    - Log to PasskeySignature on successful verification
+//    - Keep backward compatibility with old verification_log entries
+
+// ============================================================================
+// OPTIONAL: Database-backed verification log (alternative to KeyValue)
+// If you want to migrate away from JSON blobs entirely, replace:
+// - verification_log:recordKey KeyValue entries
+// + PasskeySignature + VerificationLog (new)
+// ============================================================================
+
+// Optional: New relational verification log (replaces JSON storage)
+model VerificationLog {
+  id               String   @id @default(cuid())
+  recordKey        String   // Which record type
+  entryIds         String[] @default([]) // Entries verified in this action
+
+  // Verifier details
+  verifiedBy       String   // Username
+  verifiedTitle    String?  // Job title
+  verifiedDate     DateTime @db.Date
+
+  // Legacy typed signature (for backward compat)
+  typedSignature   String?  // Typed/handwritten signature text
+
+  // Passkey signature (new)
+  passkeyId        String?  // References UserPasskey.id
+  passkeyVerified  Boolean  @default(false)
+
+  loggedAt         DateTime @default(now())
+
+  @@index([recordKey])
+  @@index([verifiedBy])
+  @@index([verifiedDate])
+}
