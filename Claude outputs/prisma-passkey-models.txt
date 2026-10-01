@@ -1,0 +1,33 @@
+// Add these models to prisma/schema.prisma
+
+// UserPasskey - admin-managed numeric passkeys for users
+model UserPasskey {
+  id              String   @id @default(cuid())
+  username        String   @unique // User email/ID
+  displayName     String   // User's full name (e.g., "John Smith")
+  passkey         String   // Hashed passkey (never store plain)
+  title           String?  // Job title (e.g., "Quality Supervisor")
+
+  // Metadata
+  isActive        Boolean  @default(true) // Admin can disable
+  createdAt       DateTime @default(now())
+  createdBy       String?  // Admin who created it
+  lastResetAt     DateTime?
+  lastUsedAt      DateTime?
+
+  @@index([username])
+  @@index([isActive])
+}
+
+// PasskeyLog - audit trail of passkey usage
+model PasskeyLog {
+  id              String   @id @default(cuid())
+  username        String   // Who used the passkey
+  recordKey       String   // Record type (e.g., "cans-produced")
+  recordId        String?  // Specific record submitted
+  verifiedAt      DateTime @default(now())
+
+  @@index([username])
+  @@index([verifiedAt])
+  @@index([recordKey])
+}
