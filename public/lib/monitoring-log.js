@@ -306,7 +306,8 @@
     const v = value == null ? '' : value;
 
     // hidden bookkeeping fields (source ids, "typed manually" flags) carry a value but draw nothing
-    if (field.hidden) return `<input type="hidden" id="${id}" value="${esc(v)}">`;
+    // hideInForm: job data the record still stores/prints (filled by autofill) but does not draw on the form
+    if (field.hidden || field.hideInForm) return `<input type="hidden" id="${id}" value="${esc(v)}">`;
 
     if (field.type === 'yesno') {
       // a record that flags problem answers (redPrompt) spells the answer out: colour is never the only signal
@@ -490,7 +491,7 @@
         node = next;
       }
 
-      const inGroup = (entryFields || []).filter((f) => f.group === groupName);
+      const inGroup = (entryFields || []).filter((f) => f.group === groupName && !f.hidden && !f.hideInForm);
       const jobField = inGroup.find((f) => f.type === 'jobsearch');
       if (!jobField) return;
       det.setAttribute('data-autofold', '1');
@@ -699,7 +700,7 @@
     const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
     const sels = fields.map((f) => container.querySelector('#' + ns + '_f_' + f.key)).filter(Boolean);
     if (!sels.length) return;
-    loadLib('job-picker.js?v=5', 'JobPicker').then((jp) => {
+    loadLib('job-picker.js?v=6', 'JobPicker').then((jp) => {
       if (!jp) return;
       sels.forEach((sel) => jp.enhance(sel));
       if (autofocus && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
@@ -1389,7 +1390,7 @@
         if (entryStages && f.stage && f.stage !== activeKey
             && !stageDone(existing, f.stage) && !unlockedStages.has(f.stage)) return head;
         const shownValue = existing ? valueFor(existing, f) : (f.default || '');
-        if (f.hidden) return head + fieldInputHtml(ns, f, shownValue);
+        if (f.hidden || f.hideInForm) return head + fieldInputHtml(ns, f, shownValue);
         return head + `
         <label class="ml-field" data-field="${esc(f.key)}">${fieldLabel(f)}
           ${fieldInputHtml(ns, f, shownValue)}

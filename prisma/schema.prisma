@@ -4653,3 +4653,29 @@ model BackupRun {
   rows     Int
   host     String?
 }
+
+// Stock genealogy edges: `job -> bin` (box code = bin code), one row per bin a job's graded stock
+// went into. Replaced per record key on every write by src/stock-link.js, in the same request as
+// the submission. A bin code under two jobs gives two edges, which is how blending shows up.
+// Plain columns only so it exports to CSV or moves to another database. REC 7.4.4 report brief.
+model StockLink {
+  id           Int       @id @default(autoincrement())
+  fromType     String    @map("from_type") // 'job'
+  fromKey      String    @map("from_key")  // job no., upper-case
+  toType       String    @map("to_type")   // 'bin'
+  toKey        String    @map("to_key")    // bin / box code, trimmed + upper-case
+  recordKey    String    @map("record_key")
+  submissionId String    @map("submission_id")
+  slot         String    // which roster row / box inside the submission
+  kind         String    // 'box' | 'open' | 'legacy'
+  weightKg     Float?    @map("weight_kg")
+  occurredOn   String?   @map("occurred_on") // YYYY-MM-DD
+  status       String    // 'submitted' | 'draft'
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@unique([recordKey, submissionId, slot], name: "stock_link_slot")
+  @@index([fromType, fromKey])
+  @@index([toType, toKey])
+  @@index([recordKey, submissionId])
+  @@map("stock_link")
+}

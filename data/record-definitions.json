@@ -17573,7 +17573,10 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hideInForm": true
+          }
         },
         {
           "key": "jiProcessingFor",
@@ -17592,7 +17595,10 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hideInForm": true
+          }
         },
         {
           "key": "intakeWeight",
@@ -17611,7 +17617,10 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hideInForm": true
+          }
         },
         {
           "key": "intakeDate",
@@ -17630,7 +17639,10 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hideInForm": true
+          }
         },
         {
           "key": "entryDate",
@@ -17640,7 +17652,7 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 5,
@@ -17663,7 +17675,7 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 6,
@@ -17704,7 +17716,7 @@
             "Dry container",
             "Grading room"
           ],
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 7,
@@ -17723,7 +17735,7 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 8,
@@ -17750,29 +17762,6 @@
           }
         },
         {
-          "key": "trolleysClearlyMarked",
-          "label": "Trolleys clearly marked",
-          "type": "yesno",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 9,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "good": "Yes",
-            "redPrompt": "correctiveActions"
-          }
-        },
-        {
           "key": "estimatedDryDate",
           "label": "Estimated drying date",
           "type": "date",
@@ -17780,10 +17769,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 10,
+          "position": 9,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -17799,159 +17788,6 @@
           }
         },
         {
-          "key": "mouldVisible",
-          "label": "Mould visible",
-          "type": "yesno",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 11,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
-          }
-        },
-        {
-          "key": "whiteSaltOnSurface",
-          "label": "White salt on surface",
-          "type": "yesno",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 12,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
-          }
-        },
-        {
-          "key": "caseHardening",
-          "label": "Case hardening",
-          "type": "yesno",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 13,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
-          }
-        },
-        {
-          "key": "surfaceShine",
-          "label": "Surface shine",
-          "type": "yesno",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 14,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
-          }
-        },
-        {
-          "key": "footDamage",
-          "label": "Foot damage",
-          "type": "yesno",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 15,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
-          }
-        },
-        {
-          "key": "correctiveActions",
-          "label": "Comment / corrective action",
-          "type": "textarea",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 16,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
-          "key": "comments",
-          "label": "Comments",
-          "type": "textarea",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 17,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
-        },
-        {
           "key": "cookingDateSourceIds",
           "label": "Cooking date source entries",
           "type": "text",
@@ -17959,10 +17795,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 18,
+          "position": 10,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -17981,10 +17817,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 19,
+          "position": 11,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18003,10 +17839,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 20,
+          "position": 12,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18025,10 +17861,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 21,
+          "position": 13,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18047,10 +17883,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 22,
+          "position": 14,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18073,10 +17909,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 23,
+          "position": 15,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18099,10 +17935,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": null,
+          "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 24,
+          "position": 16,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18116,6 +17952,182 @@
               "nonEmpty": true
             }
           }
+        },
+        {
+          "key": "trolleysClearlyMarked",
+          "label": "Trolleys clearly marked",
+          "type": "yesno",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 17,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "good": "Yes",
+            "redPrompt": "correctiveActions"
+          }
+        },
+        {
+          "key": "mouldVisible",
+          "label": "Mould visible",
+          "type": "yesno",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 18,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
+        },
+        {
+          "key": "whiteSaltOnSurface",
+          "label": "White salt on surface",
+          "type": "yesno",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 19,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
+        },
+        {
+          "key": "caseHardening",
+          "label": "Case hardening",
+          "type": "yesno",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 20,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
+        },
+        {
+          "key": "surfaceShine",
+          "label": "Surface shine",
+          "type": "yesno",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 21,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
+        },
+        {
+          "key": "footDamage",
+          "label": "Foot damage",
+          "type": "yesno",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 22,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "good": "No",
+            "redPrompt": "correctiveActions"
+          }
+        },
+        {
+          "key": "correctiveActions",
+          "label": "Comment / corrective action",
+          "type": "textarea",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 23,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "comments",
+          "label": "Comments",
+          "type": "textarea",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Comments",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 24,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
         }
       ],
       "autofills": [
@@ -18221,9 +18233,24 @@
           }
         },
         {
-          "title": "Totals & sign-off",
+          "title": "Totals",
           "kind": "fields",
-          "position": 4
+          "position": 4,
+          "extraJson": {
+            "collapsedByDefault": true,
+            "summaryFields": [
+              {
+                "key": "actualGradedWeight",
+                "label": "graded",
+                "suffix": " kg"
+              },
+              {
+                "key": "yield",
+                "label": "yield",
+                "suffix": "%"
+              }
+            ]
+          }
         }
       ],
       "fields": [
@@ -19211,9 +19238,24 @@
           }
         },
         {
-          "title": "Totals & sign-off",
+          "title": "Totals",
           "kind": "fields",
-          "position": 4
+          "position": 4,
+          "extraJson": {
+            "collapsedByDefault": true,
+            "summaryFields": [
+              {
+                "key": "actualGradedWeight",
+                "label": "graded",
+                "suffix": " kg"
+              },
+              {
+                "key": "yield",
+                "label": "yield",
+                "suffix": "%"
+              }
+            ]
+          }
         }
       ],
       "fields": [

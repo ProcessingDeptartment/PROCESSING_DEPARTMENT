@@ -31,6 +31,8 @@
   /* one type scale for everything this extension draws: 16px body (matches the inputs), 13px for secondary text */
   .el-panel{border:1px solid var(--palette-line,#d9d4c7);border-radius:6px;padding:10px 14px;margin-bottom:10px;background:#fff;font-size:16px}
   .el-muted{color:#6b665a;font-size:13px}
+  .el-steambar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 0}
+  .el-steambar-last{flex:1 1 auto}
   .el-tbl{border-collapse:collapse;width:100%;font-size:15px;margin:4px 0 10px}
   .el-tbl th{font-size:13px;color:#6b665a;font-weight:700}
   .el-tbl th,.el-tbl td{border-bottom:1px solid #e6e2d6;padding:6px 8px;text-align:left}
@@ -123,20 +125,20 @@
     const m = st.stage > 0 ? st.moves[moves[st.stage - 1].key] : null;
     return `<b>${esc(STAGES[st.stage])}</b>${m && m.stamp ? ` <span class="el-muted">since ${esc(fmtDT(m.stamp))}</span>` : ''}`;
   }
+  // one row: the previous steam on the left, the "+ Add steam" button (moved in by drawPanel) on the right
+  function steamBarHtml(st) {
+    const last = lastSteamLine(st);
+    return `<div class="el-steambar"><div class="el-steambar-last"><span class="el-muted">Last steam</span> ${last ? esc(last) : '<span class="el-muted">none yet</span>'}</div><div id="el_steamAddSlot"></div></div>`;
+  }
   function jobSoFarHtml(ctx, st, job) {
     if (!job) return '<div class="el-panel el-muted">Pick a job number to see where it is and its last steam.</div>';
-    if (!st.entries.length) return '<div class="el-panel"><b>First entry for this job.</b> <span class="el-muted">Next steam number: 1</span></div>';
     const moves = moveList(ctx.config);
-    const r = st.steams[st.steams.length - 1];
-    const info = r ? [blank(r.steamingTempC) ? '' : r.steamingTempC + ' °C', blank(r.steamingTimeMin) ? '' : r.steamingTimeMin + ' min',
-      blank(r.startTime) ? '' : 'started ' + r.startTime].filter(Boolean).join(', ') : '';
     const line = (k, v) => `<div style="margin:4px 0"><span class="el-muted" style="display:inline-block;min-width:150px">${k}</span> ${v}</div>`;
+    if (!st.entries.length) return '<div class="el-panel"><b>First entry for this job.</b>' + steamBarHtml(st) + '</div>';
     return '<div class="el-panel">'
       + line('Location', `${whereText(st, moves)} <span id="el_where" class="el-muted"></span>`)
       + (st.trolleys != null ? line('Trolleys', `<b>${st.trolleys}</b>`) : '')
-      + line('Last steam', r ? esc(fmtD(r.steamDate)) : '<span class="el-muted">No steams yet</span>')
-      + (r ? line('Steam number', esc(r.steamNo || st.steams.length)) + line('Steam info', info ? esc(info) : '<span class="el-muted">not recorded</span>') : '')
-      + line('Next steam number', `<b>${st.maxSteam + 1}</b>`)
+      + steamBarHtml(st)
       + '</div>';
   }
 
@@ -169,7 +171,11 @@
     function drawPanel(st, job) {
       const box = el('fr_jobSoFar');
       if (!box) return;
+      const add = el('fr_addRosterRowBtn');
+      if (add && rosterEl) rosterEl.parentNode.appendChild(add);   // park it before the panel is redrawn
       box.innerHTML = jobSoFarHtml(ctx, st, job);
+      const slot = el('el_steamAddSlot');
+      if (add && slot && !locked) slot.appendChild(add);
       if (job && st.entries.length) loadWhere(job);
     }
     // the dry room area the job was last checked in (latest submitted REC 7.4.2 entry)
@@ -373,12 +379,12 @@
         const d = document.createElement('div'); d.id = 'el_prevSteams'; rosterEl.parentNode.insertBefore(d, rosterEl); return d;
       })();
       const last = lastSteamLine(st);
-      prevBox.innerHTML = st.steams.length
-        ? steamsTableHtml(st.steams)
-        : '<div class="el-muted" style="margin:4px 0 8px">No earlier steams for this job.</div>';
+      prevBox.innerHTML = '';   // the previous steam is shown in the Progress of product panel
       const rid = (i, k) => `fr_roster_${i}_${k}`;
       function apply() {
         const rows = rosterEl.querySelectorAll('.fr-roster-row');
+        const secBox = rosterEl.closest('details');
+        if (secBox) secBox.style.display = rows.length ? '' : 'none';
         rows.forEach((row, i) => {
           const no = el(rid(i, 'steamNo'));
           const stored = locked && no && parseInt(no.value, 10) > 0 ? parseInt(no.value, 10) : 0;
@@ -503,7 +509,7 @@
       return `<div><h3>${esc(sec.title)}</h3>` + (st.entries.length
         ? `<p>${st.entries.length} earlier entr${st.entries.length === 1 ? 'y' : 'ies'} · ${st.steams.length} steam(s) before this entry · stage before this entry: <b>${esc(STAGES[st.stage])}</b>`
           + (st.trolleys != null ? ` · trolleys before: ${st.trolleys}` : '') + '</p>'
-          + (last ? `<p><b>Last steam:</b> ${esc(last)}</p>` : '') + steamsTableHtml(st.steams)
+          + (last ? `<p><b>Last steam:</b> ${esc(last)}</p>` : '')
         : '<p>First entry for this job.</p>') + '</div>';
     }
     if (sec.movementBlock) {

@@ -989,11 +989,23 @@
       const pairs = keys.map((k) => ({ k, src: container.querySelector('#fr_f_' + k) })).filter((p) => p.src);
       if (!pairs.length) return;
       const jobKey = pairs[0].src.hasAttribute('data-jobsearch') ? pairs[0].k : null;
+      // Optional per-key format ({label, suffix}) for computed figures, e.g. "graded 842.50 kg".
+      let fmt = {};
+      try { fmt = JSON.parse(decodeURIComponent(span.getAttribute('data-summary-fmt') || '%7B%7D')); } catch (e) { fmt = {}; }
+      const numeric = Object.keys(fmt).length > 0;
       const paint = () => {
-        const parts = pairs.map((p) => summaryPart(p.k, p.src.value, p.k === jobKey)).filter(Boolean);
+        const parts = pairs.map((p) => {
+          if (!fmt[p.k]) return summaryPart(p.k, p.src.value, p.k === jobKey);
+          // computed figure: blank until a real number exists (never NaN / 0)
+          const n = parseFloat(p.src.value);
+          if (!isFinite(n) || n === 0) return '';
+          return (fmt[p.k].label ? fmt[p.k].label + ' ' : '') + p.src.value + (fmt[p.k].suffix || '');
+        }).filter(Boolean);
         span.textContent = parts.length ? '— ' + parts.join('  ·  ') : '';
       };
       pairs.forEach((p) => { p.src.addEventListener('input', paint); p.src.addEventListener('change', paint); });
+      // computed inputs are set from code (no events), so follow them while the form is on screen
+      if (numeric) { const t = setInterval(() => { if (!span.isConnected) clearInterval(t); else paint(); }, 400); }
       paint();
     });
   }
@@ -1082,7 +1094,7 @@
       if (autofocus) focusFreshJobNumber(container);
       return;
     }
-    loadLib('job-picker.js?v=5', 'JobPicker').then((jp) => {
+    loadLib('job-picker.js?v=6', 'JobPicker').then((jp) => {
       if (!jp) return;
       sels.forEach((sel) => jp.enhance(sel));
       if (autofocus && sels[0] && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
@@ -2627,9 +2639,9 @@
       const elHidden = f => config.entryLog && (f.hidden || f.movement || (f.legacy && f.showWhen && f.showWhen.nonEmpty && elVal(f).trim() === ''));
       const elHiddenInputs = fs => fs.filter(elHidden).map(f => `<input type="hidden" id="fr_f_${f.key}" value="${esc(elVal(f))}">`).join('');
       // Every section is a collapsible block that starts open (sec.collapsible === false opts out;
-      // sec.collapsedByDefault is still honoured but no record uses it).
+      // sec.collapsedByDefault is honoured for new entries only; used by the grading Totals sections).
       const sectionKeys = sec => {
-        if (sec.summaryFields) return [].concat(sec.summaryFields);
+        if (sec.summaryFields) return [].concat(sec.summaryFields).map(x => (x && x.key) || x);
         const jf = (sec.fields || []).find(f => f.type === 'jobsearch');
         if (jf) {
           const have = new Set(allFields(config).map(f => f.key));
@@ -2640,8 +2652,11 @@
       const wrapSection = (sec, bodyHtml) => {
         if (sec.collapsible === false) return `<div class="fr-section-title">${esc(sec.title)}</div>${bodyHtml}`;
         const keys = sectionKeys(sec);
-        const sfyd = keys.length ? ` data-summary-for="${esc(keys.join(','))}"` : '';
-        return `<details class="fr-section-collapsible"${sec.collapsedByDefault ? '' : ' open'}>
+        const fmtMap = {};
+        [].concat(sec.summaryFields || []).forEach(x => { if (x && x.key) fmtMap[x.key] = { label: x.label || '', suffix: x.suffix || '' }; });
+        const sfyd = (keys.length ? ` data-summary-for="${esc(keys.join(','))}"` : '') + (Object.keys(fmtMap).length ? ` data-summary-fmt="${encodeURIComponent(JSON.stringify(fmtMap))}"` : '');
+        // collapsedByDefault applies to new entries only; existing entries / drafts / submitted views open
+        return `<details class="fr-section-collapsible"${sec.collapsedByDefault && !existing ? '' : ' open'}>
             <summary class="fr-section-title">${esc(sec.title)}<span class="fr-section-summary"${sfyd}></span></summary>
             ${bodyHtml}
           </details>`;

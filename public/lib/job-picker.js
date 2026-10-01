@@ -233,6 +233,24 @@
       }
     }
 
+    // Guard: the block may only fold away when it holds the job picker plus job data. If it also holds
+    // fields someone still has to fill in (a mis-grouped record definition), folding would hide them,
+    // so leave it open and say which record needs its grouping fixed.
+    const JOB_DATA = /^(jobNo|jiReceivingDate|jiReceivedFrom|jiProcessingFor|receivingDate|intakeDate|intakeWeight|wholeWeight|agCode|nrcsAgCode|harvestFarm|receivedFrom|processingFor|processedFor|toBeProcessedFor)$/i;
+    function foldSafe() {
+      if (!details) return false;
+      const stray = [...details.querySelectorAll('input:not([type=hidden]), select, textarea')].filter((f) => {
+        if (wrap.contains(f) || f === sel || f.disabled || f.readOnly || !f.getClientRects().length) return false;
+        const m = /_f_(.+)$/.exec(f.id || '');
+        const holder = f.closest('[data-field]');
+        const key = (m && m[1]) || (holder && holder.getAttribute('data-field')) || '';
+        return !JOB_DATA.test(key);
+      });
+      if (!stray.length) return true;
+      try { console.warn('[job-picker] Job info section not auto-collapsed on "' + (document.title || location.pathname) + '": it also holds ' + stray.length + ' other field(s) (' + stray.slice(0, 5).map((f) => f.id || f.name || f.tagName).join(', ') + '). Move them to their own section in the record definition.'); } catch (e) { }
+      return false;
+    }
+
     // Start a new entry on the job number: focus the search box (which opens its list), or the
     // Can/Dry toggle when no route is chosen yet. Never when a job is already picked.
     function tryFocus() {
@@ -297,7 +315,7 @@
       sel.dispatchEvent(new Event('input', { bubbles: true }));
       sel.dispatchEvent(new Event('change', { bubbles: true }));
       paint();
-      if (details) details.open = false;
+      if (details && foldSafe()) details.open = false;
       setTimeout(focusNextField, 50);
     }
 

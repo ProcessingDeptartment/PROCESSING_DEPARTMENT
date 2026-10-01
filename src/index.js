@@ -18,6 +18,7 @@ const { assembleRecordConfig } = require('./record-def');
 const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
 const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
+const { syncStockLinks } = require('./stock-link');
 const { syncSubmissionDates } = require('./submission-dates');
 const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
 const dryGuard = require('./drying-process-guard');
@@ -137,6 +138,8 @@ app.put('/api/storage/key/:key', async (req, res) => {
     catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
     try { await syncSubmissionRows(prisma, req.params.key, value); }
     catch (e) { console.error('syncSubmissionRows failed (write succeeded)', e); }
+    try { await syncStockLinks(prisma, req.params.key, value); }
+    catch (e) { console.error('syncStockLinks failed (write succeeded)', e); }
     if (isGovernanceKey(req.params.key)) {
       try { await syncGovernanceKey(prisma, req.params.key, value); }
       catch (e) { console.error('syncGovernanceKey failed (write succeeded)', e); }
@@ -177,6 +180,7 @@ app.delete('/api/storage/key/:key', async (req, res) => {
     // Clear submission + link rows (pass empty array → deletes everything for this record)
     try { await syncSubmissionRows(prisma, req.params.key, '[]'); } catch (_) {}
     try { await syncRecordLinks(prisma, req.params.key, '[]'); } catch (_) {}
+    try { await syncStockLinks(prisma, req.params.key, '[]'); } catch (_) {}
     if (isGovernanceKey(req.params.key)) {
       try { await syncGovernanceKey(prisma, req.params.key, null); } catch (_) {}
     }

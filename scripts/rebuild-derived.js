@@ -5,6 +5,7 @@
  *   dates   SubmissionDateField   (src/submission-dates.js)
  *   links   RecordLink            (src/record-links.js)
  *   rows    sub_* tables          (src/submission-store.js)
+ *   stock   StockLink             (src/stock-link.js)
  *   governance  SpecProfile / SpecVersion / VerificationEvent / VerifierAssignment / JobStatus
  *               from the spec_*, verification_log:, verifier_assignments and job_status: keys
  *               (src/governance-store.js)
@@ -22,7 +23,7 @@ const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 
 const ROOT = path.join(__dirname, '..');
-const STEPS = ['dates', 'links', 'rows', 'governance'];
+const STEPS = ['dates', 'links', 'rows', 'stock', 'governance'];
 
 const envPath = path.join(ROOT, '.env');
 if (fs.existsSync(envPath)) {
@@ -41,6 +42,7 @@ if (unknown.length) { console.error('Unknown step: ' + unknown.join(', ') + '  (
 const { syncSubmissionDates } = require('../src/submission-dates');
 const { syncRecordLinks } = require('../src/record-links');
 const { syncSubmissionRows } = require('../src/submission-store');
+const { syncStockLinks } = require('../src/stock-link');
 const { syncGovernanceKey, isGovernanceKey } = require('../src/governance-store');
 const dateFields = require('../src/date-field-map').load();
 const recordKeys = require('../src/record-key-map').load();
@@ -60,6 +62,7 @@ async function main() {
         if (step === 'dates') await syncSubmissionDates(prisma, key, value, { dateFields, recordKeys });
         if (step === 'links') await syncRecordLinks(prisma, key, value);
         if (step === 'rows') await syncSubmissionRows(prisma, key, value);
+        if (step === 'stock') await syncStockLinks(prisma, key, value);
       } catch (e) { failed++; console.error(`FAILED ${step} ${key}: ${e.message}`); }
     }
   }
