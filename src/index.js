@@ -20,6 +20,8 @@ const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
 const { syncStockLinks } = require('./stock-link');
 const { syncClosedBoxes } = require('./closed-box');
+const { boxesForJob } = require('./recall-boxes');
+const { awaitingBoxes, syncBoxInspections } = require('./box-inspection');
 const { syncSubmissionDates } = require('./submission-dates');
 const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
 const dryGuard = require('./drying-process-guard');
@@ -143,6 +145,8 @@ app.put('/api/storage/key/:key', async (req, res) => {
     catch (e) { console.error('syncStockLinks failed (write succeeded)', e); }
     try { await syncClosedBoxes(prisma, req.params.key, value); }
     catch (e) { console.error('syncClosedBoxes failed (write succeeded)', e); }
+    try { const r = await syncBoxInspections(prisma, req.params.key, value); if (r && r.skipped.length) console.warn('box inspections skipped:', r.skipped); }
+    catch (e) { console.error('syncBoxInspections failed (write succeeded)', e); }
     if (isGovernanceKey(req.params.key)) {
       try { await syncGovernanceKey(prisma, req.params.key, value); }
       catch (e) { console.error('syncGovernanceKey failed (write succeeded)', e); }
@@ -602,43 +606,18 @@ async function attachDryCookingPots(records) {
   }
 }
 
-// Mock recall: every box / bin a job's stock went into, with the other jobs sharing each box and
-// the REC 7.4.5 inspection on the box's own closed_box row. Box code = bin code. Read-only.
+// REC 7.4.5: closed boxes still waiting for a submitted inspection (logic in src/box-inspection.js).
+app.get('/api/closed-box/awaiting', async (req, res) => {
+  try { res.json({ ok: true, boxes: await awaitingBoxes(prisma) }); }
+  catch (e) { console.error('GET awaiting boxes failed', e); res.status(500).json({ ok: false }); }
+});
+
+// Mock recall: every box / bin a job's stock went into (logic in src/recall-boxes.js). Read-only.
 app.get('/api/recall/job/:job/boxes', async (req, res) => {
-  const job = String(req.params.job || '').trim().toUpperCase();
+  const job = String(req.params.job || '').trim();
   if (!job) return res.status(400).json({ ok: false, error: 'job number required' });
   try {
-    const edges = await prisma.stockLink.findMany({ where: { fromType: 'job', fromKey: job, toType: 'bin' } });
-    const codes = [...new Set(edges.map((e) => e.toKey))];
-    const [shared, closed] = codes.length
-      ? await Promise.all([
-          prisma.stockLink.findMany({ where: { toType: 'bin', toKey: { in: codes } }, select: { fromKey: true, toKey: true } }),
-          prisma.closedBox.findMany({ where: { boxCode: { in: codes } } }),
-        ])
-      : [[], []];
-    const jobsByBin = new Map();
-    for (const s of shared) {
-      if (!jobsByBin.has(s.toKey)) jobsByBin.set(s.toKey, new Set());
-      jobsByBin.get(s.toKey).add(s.fromKey);
-    }
-    const closedByCode = new Map(closed.map((c) => [c.boxCode, c]));
-    const boxes = codes.map((code) => {
-      const c = closedByCode.get(code);
-      const mine = edges.filter((e) => e.toKey === code);
-      return {
-        boxCode: code,
-        state: c ? 'closed' : 'open bin',            // open bin = stock still in a bin, no box closed yet
-        sizeGrade: c ? c.sizeGrade : null,
-        nettKg: c ? c.nettKg743 : (mine.find((e) => e.weightKg != null) || {}).weightKg ?? null,
-        closedAt: c ? c.closedAt : null,
-        jobs: [...(jobsByBin.get(code) || [])].sort(),
-        fromDraft: mine.some((e) => e.status === 'draft'),
-        inspection: c && c.inspectionSubmissionId
-          ? { approved: c.approved === true, packingDate: c.packingDate, tareKg: c.tareKg, nettKg: c.nettKg, changedAfterInspection: c.changedAfterInspection }
-          : null,
-      };
-    }).sort((a, b) => a.boxCode.localeCompare(b.boxCode, undefined, { numeric: true }));
-    res.json({ ok: true, job, generatedAt: new Date().toISOString(), count: boxes.length, boxes });
+    res.json({ ok: true, generatedAt: new Date().toISOString(), ...(await boxesForJob(prisma, job)) });
   } catch (e) {
     console.error('GET recall boxes failed', e);
     res.status(500).json({ ok: false });

@@ -625,7 +625,18 @@ window.MasterIndexData = {
     },
     {
         "docNo": "REC 7.4.5",
-        "name": "BOXING AND LABELLING TRACEABILITY",
+        "name": "CLOSED BOX INSPECTION",
+        "details": "Replaces Boxing and Labelling Traceability",
+        "revision": 1,
+        "obsoleteRetrieved": "N/A",
+        "distributed": "Y",
+        "dateOfIssue": "01/10/2026",
+        "recordKey": "closed-box-inspection",
+        "href": "REC-7.4.5-closed-box-inspection.html"
+    },
+    {
+        "docNo": "REC 7.4.5 (legacy)",
+        "name": "BOXING AND LABELLING TRACEABILITY (legacy, superseded by Closed Box Inspection)",
         "details": "Reviewed for new process",
         "revision": 4,
         "obsoleteRetrieved": "Y",

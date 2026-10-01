@@ -1,6 +1,6 @@
 {
-  "generated": "2026-09-25",
-  "count": 131,
+  "generated": "2026-10-01",
+  "count": 132,
   "definitions": [
     {
       "recordKey": "dry-export-pack-front-page",
@@ -994,9 +994,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Records included — Abalone Receiving (7.1.2), Basket Removal/Shucking/Gutting (7.1.1), Bleeding & Salting Checklist (7.1.3), Washing Control Sheet (7.1.4), Chiller Batch Control (7.8.1), Beak Cutting & Scrubbing (7.1.6), Precooking Check Sheet (7.2.3), Retort Inspection Reports (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming Inspection for Cans & Lids (7.8.6), Double Seam Inspection Report (7.2.12), Retort reports, Temperature probe reports, Production figure (cans produced)",
           "kind": "roster",
-          "position": 1,
+          "position": 2,
           "extraJson": {
             "rosterKey": "roster"
           }
@@ -1118,6 +1123,44 @@
           "validateJson": null
         },
         {
+          "key": "checkedByQC",
+          "label": "Checked by (QC)",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 6,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verificationBy",
+          "label": "Verification by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 7,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "submissionRef",
           "label": "Record for this job",
           "type": "recordpick",
@@ -1126,7 +1169,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -1155,7 +1198,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -1174,7 +1217,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -1193,7 +1236,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
@@ -1212,7 +1255,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 12,
           "computeFn": null,
@@ -1231,7 +1274,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 13,
           "computeFn": null,
@@ -1254,7 +1297,7 @@
             "N/A"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 14,
           "computeFn": null,
@@ -1622,9 +1665,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Records included — Rework Log (7.2.13), Retort Inspection Reports (7.2.9), Cans Produced (7.2.7), Seamer Inspection (7.8.4), Incoming Inspection for Cans & Lids (7.8.6), Double Seam Inspection Report (7.2.12), Retort reports, Production figure (cans produced)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -1746,6 +1794,44 @@
           }
         },
         {
+          "key": "checkedByQC",
+          "label": "Checked by (QC)",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 6,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verificationBy",
+          "label": "Verification by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 7,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "recordName",
           "label": "Record",
           "type": "text",
@@ -1754,7 +1840,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -1773,7 +1859,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -1796,7 +1882,7 @@
             "N/A"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -8273,7 +8359,9 @@
             "text": "A record with any out-of-spec item, or an unacknowledged spec update, cannot be submitted as complete."
           }
         ],
-        "customBody": {},
+        "customBody": {
+          "ownsCompletedBy": true
+        },
         "__fn_docRevisionStart": true
       },
       "primaryBatchField": "jobNo"
@@ -20456,6 +20544,413 @@
       }
     },
     {
+      "recordKey": "closed-box-inspection",
+      "engine": "form-record",
+      "mount": "#frRoot",
+      "pageFile": "REC-7.4.5-closed-box-inspection.html",
+      "docCode": "REC 7.4.5",
+      "title": "Closed Box Inspection",
+      "docRevisionStart": 1,
+      "jobInfoGroup": null,
+      "clientHook": null,
+      "sections": [
+        {
+          "title": "Submission note",
+          "kind": "fields",
+          "position": 0,
+          "extraJson": {
+            "afterRoster": true,
+            "collapsible": false
+          }
+        },
+        {
+          "title": "Closed boxes awaiting inspection",
+          "kind": "roster",
+          "position": 1,
+          "extraJson": {
+            "cardLayout": true,
+            "fixedRows": true,
+            "startEmpty": true,
+            "rowTitle": "Box"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "outstandingNote",
+          "label": "Boxes not inspected when submitted",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 0,
+          "parentFieldKey": null,
+          "position": 0,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "wide": true
+          }
+        },
+        {
+          "key": "boxCode",
+          "label": "Box code",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 1,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "sizeGrade",
+          "label": "Size grade",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "closedAt",
+          "label": "Date / time closed",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "jobs",
+          "label": "Job(s) in box",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 4,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "nettKg743",
+          "label": "Nett weight set in 7.4.3 (kg)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 5,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "note",
+          "label": "Status",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 6,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "tareKg",
+          "label": "Tare weight (kg)",
+          "type": "number",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 7,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 2
+          }
+        },
+        {
+          "key": "nettKg",
+          "label": "Nett weight (kg)",
+          "type": "number",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 8,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 2
+          }
+        },
+        {
+          "key": "colourUniform",
+          "label": "Colour uniform",
+          "type": "confirm",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 9,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "confirmText": "Yes",
+            "layoutRow": 3
+          }
+        },
+        {
+          "key": "sizeGradeCorrect",
+          "label": "Correct size grade",
+          "type": "confirm",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 10,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "confirmText": "Yes",
+            "layoutRow": 3
+          }
+        },
+        {
+          "key": "frillsPresent",
+          "label": "Frills present",
+          "type": "confirm",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 11,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "confirmText": "Yes",
+            "layoutRow": 3
+          }
+        },
+        {
+          "key": "bagSealed",
+          "label": "Bag sealed",
+          "type": "confirm",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 12,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "confirmText": "Yes",
+            "layoutRow": 3
+          }
+        },
+        {
+          "key": "boxSealed",
+          "label": "Box sealed",
+          "type": "confirm",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 13,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "confirmText": "Yes",
+            "layoutRow": 3
+          }
+        },
+        {
+          "key": "silicaPresent",
+          "label": "Silica satchets present",
+          "type": "confirm",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 14,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "confirmText": "Yes",
+            "layoutRow": 3
+          }
+        },
+        {
+          "key": "comment",
+          "label": "Comment / corrective action",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 15,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 4
+          }
+        }
+      ],
+      "autofills": [],
+      "extraJson": {
+        "stage": "closed-box-inspection",
+        "boxInspection": true,
+        "listColumns": [
+          "outstandingNote"
+        ],
+        "instructions": [
+          {
+            "label": "How this works",
+            "text": "Every box closed with + Full box in REC 7.4.3.1 / 7.4.3.2 appears here until its inspection is submitted. Weigh the tare, type the nett weight (it must equal the weight set in 7.4.3), then tick every check that is satisfactory. A box you do not touch is not recorded and stays on the list. The packing date is stamped automatically when you submit."
+          }
+        ]
+      }
+    },
+    {
       "recordKey": "dry-stock-control",
       "engine": "monitoring-log",
       "mount": "#mlRoot",
@@ -22687,6 +23182,104 @@
           "validateJson": null
         },
         {
+          "key": "additionalComments",
+          "label": "Additional comments",
+          "type": "textarea",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 6,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "wide": true
+          }
+        },
+        {
+          "key": "supervisorFarm",
+          "label": "Supervisor — Farm",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 7,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "supervisorProcessing",
+          "label": "Supervisor — Processing",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 8,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "qcProcessing",
+          "label": "QC — Processing",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 9,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 10,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "client",
           "label": "Client",
           "type": "text",
@@ -22871,9 +23464,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Bags graded",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -22919,6 +23517,44 @@
           "validateJson": null
         },
         {
+          "key": "checkedByQC",
+          "label": "Checked by (QC)",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "qaVerification",
+          "label": "QA verification",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "nameOfGrader",
           "label": "Name of grader",
           "type": "text",
@@ -22927,7 +23563,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -22946,7 +23582,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -22965,7 +23601,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -22984,7 +23620,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -23014,7 +23650,7 @@
             "450g+"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -23044,7 +23680,7 @@
             "450g+"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -23063,7 +23699,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -23082,7 +23718,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
@@ -23301,9 +23937,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Checklist items (one row per area/equipment item checked)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -23349,6 +23990,44 @@
           "validateJson": null
         },
         {
+          "key": "inspectedBy",
+          "label": "Inspected by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "area",
           "label": "Area",
           "type": "select",
@@ -23368,7 +24047,7 @@
             "Area 10"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -23387,7 +24066,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -23409,7 +24088,7 @@
             "NC"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -23431,7 +24110,7 @@
             "NC"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -23450,7 +24129,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -23486,9 +24165,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Checklist items (one row per area/equipment item checked)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -23534,6 +24218,44 @@
           "validateJson": null
         },
         {
+          "key": "inspectedBy",
+          "label": "Inspected by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "area",
           "label": "Area",
           "type": "select",
@@ -23553,7 +24275,7 @@
             "Area 10"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -23572,7 +24294,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -23594,7 +24316,7 @@
             "NC"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -23616,7 +24338,7 @@
             "NC"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -23635,7 +24357,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -23671,9 +24393,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Checklist items (one row per area/equipment item checked)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -23719,6 +24446,44 @@
           "validateJson": null
         },
         {
+          "key": "inspectedBy",
+          "label": "Inspected by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "area",
           "label": "Area",
           "type": "select",
@@ -23738,7 +24503,7 @@
             "Area 10"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -23757,7 +24522,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -23779,7 +24544,7 @@
             "NC"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -23801,7 +24566,7 @@
             "NC"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -23820,7 +24585,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -24254,9 +25019,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Checklist items — covers floors/doors/walls, humidifiers, drains, ceilings, tanks, chillers, seamer, retort, motors, roof, outside areas, etc.",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -24280,6 +25050,44 @@
           "validateJson": null
         },
         {
+          "key": "checkedBy",
+          "label": "Checked by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 1,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "supervisor",
+          "label": "Supervisor",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "areaEquipment",
           "label": "Area / equipment",
           "type": "text",
@@ -24288,7 +25096,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -24307,7 +25115,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -24326,7 +25134,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -24636,6 +25444,25 @@
           "validateJson": null
         },
         {
+          "key": "completedBy",
+          "label": "Completed by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 0,
+          "parentFieldKey": null,
+          "position": 1,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "area",
           "label": "Area",
           "type": "select",
@@ -24740,6 +25567,25 @@
         }
       ],
       "fields": [
+        {
+          "key": "completedBy",
+          "label": "Completed by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 0,
+          "parentFieldKey": null,
+          "position": 0,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
         {
           "key": "inspectionDate",
           "label": "Inspection date",
@@ -25391,9 +26237,14 @@
           "position": 1
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 2
+        },
+        {
           "title": "Areas checked — Raw materials, Live box prep/entrance/packing/holding, Sorting, Shucking, Entrance, Outside building, Bait stations, Canteen, Toilets/Change rooms, Dry cooking/hanging/stringing, Canning, Office, NRCS room, etc. Key: blank = inspected no activity, A = activity noted.",
           "kind": "roster",
-          "position": 2
+          "position": 3
         }
       ],
       "fields": [
@@ -25493,6 +26344,44 @@
           "validateJson": null
         },
         {
+          "key": "inspectedBy",
+          "label": "Inspected by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 2,
+          "parentFieldKey": null,
+          "position": 5,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 2,
+          "parentFieldKey": null,
+          "position": 6,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "areaChecked",
           "label": "Area checked",
           "type": "text",
@@ -25501,7 +26390,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -25520,7 +26409,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -25539,7 +26428,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -25558,7 +26447,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -25577,7 +26466,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
@@ -25596,7 +26485,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 12,
           "computeFn": null,
@@ -25615,7 +26504,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 13,
           "computeFn": null,
@@ -25634,7 +26523,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 14,
           "computeFn": null,
@@ -25653,7 +26542,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 2,
+          "sectionIndex": 3,
           "parentFieldKey": "@roster",
           "position": 15,
           "computeFn": null,
@@ -25695,9 +26584,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Staff members — day shift",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -25721,6 +26615,25 @@
           "validateJson": null
         },
         {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 1,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "staffMember",
           "label": "Staff member",
           "type": "text",
@@ -25729,7 +26642,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 2,
           "computeFn": null,
@@ -25748,7 +26661,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -25767,7 +26680,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -25786,7 +26699,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -25805,7 +26718,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -25824,7 +26737,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -25843,7 +26756,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -25862,7 +26775,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -25881,7 +26794,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -25900,7 +26813,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
@@ -25919,7 +26832,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 12,
           "computeFn": null,
@@ -25960,9 +26873,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Staff members — one row per staff member per day (Mon-Fri)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -26008,6 +26926,25 @@
           "validateJson": null
         },
         {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "staffMember",
           "label": "Staff member",
           "type": "text",
@@ -26016,7 +26953,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -26041,7 +26978,7 @@
             "Fri"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -26060,7 +26997,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -26079,7 +27016,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -26098,7 +27035,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -26117,7 +27054,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -26136,7 +27073,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -26155,7 +27092,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -26174,7 +27111,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 11,
           "computeFn": null,
@@ -26193,7 +27130,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 12,
           "computeFn": null,
@@ -26212,7 +27149,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 13,
           "computeFn": null,
@@ -26638,9 +27575,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Equipment / device checks — covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -26664,6 +27606,63 @@
           "validateJson": null
         },
         {
+          "key": "checkedBy",
+          "label": "Checked by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 1,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "deviations",
+          "label": "Deviations",
+          "type": "textarea",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "equipmentOrDevice",
           "label": "Equipment / device",
           "type": "text",
@@ -26672,7 +27671,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -26691,7 +27690,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -26713,7 +27712,7 @@
             "X"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -26732,7 +27731,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -26774,9 +27773,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Areas checked — Sorting, Live Holding, Live Packing, Receiving, Shucking, Salting & Washing/Metal grid, Grading, Pre-cooking, Filling & Seam, Retort, Washing bay, Can Storage, Cold rooms, Dry room, Dry cooking room, Dry grading room",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -26800,6 +27804,44 @@
           "validateJson": null
         },
         {
+          "key": "inspectorInitials",
+          "label": "Inspector initials",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 1,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "areaChecked",
           "label": "Area checked",
           "type": "text",
@@ -26808,7 +27850,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -26833,7 +27875,7 @@
             "Friday"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -26855,7 +27897,7 @@
             "N"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -26877,7 +27919,7 @@
             "N"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -26896,7 +27938,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -27597,9 +28639,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Utensils issued — Scrapers, Scrub brushes, Needles, Scissors, Holding cups, String roll",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -27645,6 +28692,63 @@
           "validateJson": null
         },
         {
+          "key": "correctiveActionComment",
+          "label": "Corrective action / comment",
+          "type": "textarea",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "checkedBy",
+          "label": "Checked by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 4,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "utensilType",
           "label": "Utensil type",
           "type": "text",
@@ -27653,7 +28757,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -27672,7 +28776,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -27694,7 +28798,7 @@
             "X"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -27713,7 +28817,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -27735,7 +28839,7 @@
             "X"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -27754,7 +28858,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -27797,9 +28901,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Staff members — one row per staff member per day (Mon-Sat)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -27845,6 +28954,25 @@
           "validateJson": null
         },
         {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "staffMember",
           "label": "Staff member",
           "type": "text",
@@ -27853,7 +28981,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -27879,7 +29007,7 @@
             "Sat"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -27898,7 +29026,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -27917,7 +29045,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -27936,7 +29064,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -27955,7 +29083,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -27974,7 +29102,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -27993,7 +29121,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 10,
           "computeFn": null,
@@ -28035,9 +29163,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Staff members — one row per staff member per day (Mon-Sat)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -28083,6 +29216,25 @@
           "validateJson": null
         },
         {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "staffMember",
           "label": "Staff member",
           "type": "text",
@@ -28091,7 +29243,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -28117,7 +29269,7 @@
             "Sat"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -28140,7 +29292,7 @@
             "N/A"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -28163,7 +29315,7 @@
             "N/A"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -28182,7 +29334,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -28201,7 +29353,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -28220,7 +29372,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -28262,9 +29414,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Staff members — one row per staff member per day (Mon-Sat)",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -28310,6 +29467,25 @@
           "validateJson": null
         },
         {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "staffMember",
           "label": "Staff member",
           "type": "text",
@@ -28318,7 +29494,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -28344,7 +29520,7 @@
             "Sat"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -28363,7 +29539,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -28382,7 +29558,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -28401,7 +29577,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -28420,7 +29596,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -28439,7 +29615,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -29864,6 +31040,25 @@
           "validateJson": null
         },
         {
+          "key": "completedBy",
+          "label": "Completed by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 0,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "issueDate",
           "label": "Issue date",
           "type": "date",
@@ -30329,9 +31524,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Equipment checks — covers Conveyors/Seamer, Washing machines/tumblers, Retort 1&2, Steamer, Boiler room, Can Drier, tanks (sea/fresh water), Compressor, Cooling system, Effluent water, Live area seawater tank, Sewage, etc.",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -30374,6 +31574,44 @@
           "validateJson": null
         },
         {
+          "key": "checkedBy",
+          "label": "Checked by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "category",
           "label": "Category",
           "type": "text",
@@ -30382,7 +31620,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -30401,7 +31639,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -30423,7 +31661,7 @@
             "N"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -30442,7 +31680,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 7,
           "computeFn": null,
@@ -30485,9 +31723,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Daily Ozone and compressor checklist",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -30511,6 +31754,44 @@
           "validateJson": null
         },
         {
+          "key": "checkedBy",
+          "label": "Checked by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 1,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 2,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "component",
           "label": "Component",
           "type": "select",
@@ -30522,7 +31803,7 @@
             "Compressor"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 3,
           "computeFn": null,
@@ -30541,7 +31822,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 4,
           "computeFn": null,
@@ -30563,7 +31844,7 @@
             "N"
           ],
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 5,
           "computeFn": null,
@@ -30582,7 +31863,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 6,
           "computeFn": null,
@@ -39714,6 +40995,161 @@
           "extraJson": {
             "wide": true
           }
+        },
+        {
+          "key": "completedByName",
+          "label": "Form completed by — name",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 32,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "completedByPosition",
+          "label": "Position",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 33,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "completedByPhone",
+          "label": "Telephone number",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 34,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "completedByDate",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 35,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "sqaApprovalName",
+          "label": "SQA approval — name",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 36,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "sqaApprovalPosition",
+          "label": "SQA approval — position",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 37,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "sqaApprovalDate",
+          "label": "SQA approval — date",
+          "type": "date",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 38,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "provisionalApproval",
+          "label": "Provisional approval",
+          "type": "select",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": [
+            "Accepted",
+            "Rejected"
+          ],
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": null,
+          "position": 39,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
         }
       ],
       "autofills": [],
@@ -40866,9 +42302,14 @@
           "position": 0
         },
         {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 1
+        },
+        {
           "title": "Participants",
           "kind": "roster",
-          "position": 1
+          "position": 2
         }
       ],
       "fields": [
@@ -40968,6 +42409,66 @@
           "validateJson": null
         },
         {
+          "key": "notesComments",
+          "label": "Notes and comments",
+          "type": "textarea",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 5,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "wide": true
+          }
+        },
+        {
+          "key": "safetyOfficer",
+          "label": "Signed by safety officer",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 6,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "management",
+          "label": "Signed by management",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 7,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "name",
           "label": "Name",
           "type": "text",
@@ -40976,7 +42477,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 8,
           "computeFn": null,
@@ -40995,7 +42496,7 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 1,
+          "sectionIndex": 2,
           "parentFieldKey": "@roster",
           "position": 9,
           "computeFn": null,
@@ -41035,6 +42536,11 @@
           "title": "Food safety questions",
           "kind": "fields",
           "position": 1
+        },
+        {
+          "title": "Sign-off",
+          "kind": "fields",
+          "position": 2
         }
       ],
       "fields": [
@@ -41449,6 +42955,82 @@
           "sectionIndex": 1,
           "parentFieldKey": null,
           "position": 21,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "completedBy",
+          "label": "Completed by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 2,
+          "parentFieldKey": null,
+          "position": 22,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "completedDate",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 2,
+          "parentFieldKey": null,
+          "position": 23,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedBy",
+          "label": "Verified by",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 2,
+          "parentFieldKey": null,
+          "position": 24,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "verifiedDate",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 2,
+          "parentFieldKey": null,
+          "position": 25,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,

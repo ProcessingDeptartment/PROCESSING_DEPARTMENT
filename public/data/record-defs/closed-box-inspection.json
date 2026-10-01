@@ -1,0 +1,145 @@
+{
+  "recordKey": "closed-box-inspection",
+  "docCode": "REC 7.4.5",
+  "title": "Closed Box Inspection",
+  "docRevisionStart": 1,
+  "stage": "closed-box-inspection",
+  "boxInspection": true,
+  "listColumns": [
+    "outstandingNote"
+  ],
+  "instructions": [
+    {
+      "label": "How this works",
+      "text": "Every box closed with + Full box in REC 7.4.3.1 / 7.4.3.2 appears here until its inspection is submitted. Weigh the tare, type the nett weight (it must equal the weight set in 7.4.3), then tick every check that is satisfactory. A box you do not touch is not recorded and stays on the list. The packing date is stamped automatically when you submit."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Submission note",
+      "afterRoster": true,
+      "collapsible": false,
+      "fields": [
+        {
+          "key": "outstandingNote",
+          "label": "Boxes not inspected when submitted",
+          "type": "text",
+          "readOnly": true,
+          "wide": true
+        }
+      ]
+    }
+  ],
+  "roster": {
+    "title": "Closed boxes awaiting inspection",
+    "cardLayout": true,
+    "fixedRows": true,
+    "startEmpty": true,
+    "rowTitle": "Box",
+    "columns": [
+      {
+        "key": "boxCode",
+        "label": "Box code",
+        "type": "text",
+        "readOnly": true,
+        "layoutRow": 1
+      },
+      {
+        "key": "sizeGrade",
+        "label": "Size grade",
+        "type": "text",
+        "readOnly": true,
+        "layoutRow": 1
+      },
+      {
+        "key": "closedAt",
+        "label": "Date / time closed",
+        "type": "text",
+        "readOnly": true,
+        "layoutRow": 1
+      },
+      {
+        "key": "jobs",
+        "label": "Job(s) in box",
+        "type": "text",
+        "readOnly": true,
+        "layoutRow": 1
+      },
+      {
+        "key": "nettKg743",
+        "label": "Nett weight set in 7.4.3 (kg)",
+        "type": "number",
+        "readOnly": true,
+        "layoutRow": 1
+      },
+      {
+        "key": "note",
+        "label": "Status",
+        "type": "text",
+        "readOnly": true,
+        "layoutRow": 1
+      },
+      {
+        "key": "tareKg",
+        "label": "Tare weight (kg)",
+        "type": "number",
+        "layoutRow": 2
+      },
+      {
+        "key": "nettKg",
+        "label": "Nett weight (kg)",
+        "type": "number",
+        "layoutRow": 2
+      },
+      {
+        "key": "colourUniform",
+        "label": "Colour uniform",
+        "type": "confirm",
+        "confirmText": "Yes",
+        "layoutRow": 3
+      },
+      {
+        "key": "sizeGradeCorrect",
+        "label": "Correct size grade",
+        "type": "confirm",
+        "confirmText": "Yes",
+        "layoutRow": 3
+      },
+      {
+        "key": "frillsPresent",
+        "label": "Frills present",
+        "type": "confirm",
+        "confirmText": "Yes",
+        "layoutRow": 3
+      },
+      {
+        "key": "bagSealed",
+        "label": "Bag sealed",
+        "type": "confirm",
+        "confirmText": "Yes",
+        "layoutRow": 3
+      },
+      {
+        "key": "boxSealed",
+        "label": "Box sealed",
+        "type": "confirm",
+        "confirmText": "Yes",
+        "layoutRow": 3
+      },
+      {
+        "key": "silicaPresent",
+        "label": "Silica satchets present",
+        "type": "confirm",
+        "confirmText": "Yes",
+        "layoutRow": 3
+      },
+      {
+        "key": "comment",
+        "label": "Comment / corrective action",
+        "type": "text",
+        "layoutRow": 4
+      }
+    ]
+  },
+  "mount": "#frRoot"
+}

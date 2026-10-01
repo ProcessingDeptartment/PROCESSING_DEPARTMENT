@@ -2682,11 +2682,11 @@
       if (hasRoster) {
         html += rosterList.map((roster, i) => wrapSection({ title: roster.title, collapsible: roster.collapsible }, `
         ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
-        <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : ''}></div>
+        <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : (roster.fixedRows ? ' class="fr-fixed-rows"' : '')}></div>
         ${roster.quickEntry ? '' : `${roster.processChoice
           ? `<div class="fr-pot-add no-print" id="${rosterDomId('fr_potChoose', i)}">${roster.processChoice.options.map(o => `<button type="button" class="fr-btn fr-pot-add-btn fr-pot-add-${esc(o)}" data-choose="${esc(o)}">+ Add ${esc(o.toLowerCase())} pot</button>`).join('')}</div>`
-          : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}">${esc(roster.addLabel || '+ Add row')}</button>`}
-        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows || roster.fixedGroups ?' style="display:none;"' : ''}>Import CSV</button>
+          : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}"${roster.fixedRows ? ' style="display:none;"' : ''}>${esc(roster.addLabel || '+ Add row')}</button>`}
+        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows || roster.fixedGroups || roster.fixedRows ?' style="display:none;"' : ''}>Import CSV</button>
         <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">`}
         ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals${roster.cardRows ? ' fr-pot-totals no-print' : ''}"></div>` : ''}`)).join('');
       }
@@ -2707,7 +2707,8 @@
       container.innerHTML = html;
       if (hasRoster) {
         rosterList.forEach((roster, i) => {
-          renderRosterEditor(existing ? getRosterRows(existing, i, roster.key) : null, roster, i);
+          const savedRows = existing ? getRosterRows(existing, i, roster.key) : null;
+          renderRosterEditor(config.boxInspection && window.BoxInspection ? window.BoxInspection.mergeRows(savedRows, locked, editingId) : savedRows, roster, i);
           const rowsId = rosterDomId('fr_rosterRows', i);
           if (roster.quickEntry) { wireQuickEntry(roster, i, container.querySelector('#' + rowsId)); return; }
           const rowsEl = container.querySelector('#' + rowsId);
@@ -2785,6 +2786,7 @@
         submissions: () => submissions, openForm, formHasInput, reload: load });
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = (locked && !i.hasAttribute('data-keep-enabled')) || computedIds.has(i.id); });
+      if (config.boxInspection && window.BoxInspection) window.BoxInspection.afterRender({ container, locked, el });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
@@ -2909,6 +2911,11 @@
 
       if (config.entryLog && window.EntryLog) {
         if (!await window.EntryLog.beforeSave({ config, finalize, values, rosterRows: rosterRowsByIndex ? rosterRowsByIndex[0] : [], submissions, editingId, toast })) return;
+      }
+
+      // REC 7.4.5: validate inspected boxes and drop untouched ones (in place) before saving.
+      if (config.boxInspection && window.BoxInspection && rosterRowsByIndex) {
+        if (!await window.BoxInspection.beforeSave({ finalize, values, rows: rosterRowsByIndex[0], toast })) return;
       }
 
       // Business rules (see public/data/business-rules.json): every cross-record check lives in
@@ -3041,6 +3048,7 @@
       if (config.entryLog) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
+      if (config.boxInspection && window.BoxInspection) await window.BoxInspection.refresh(); // inspected boxes leave the list
       if (finalize) {
         ['fr_cb_by', 'fr_cb_title', 'fr_cb_date', 'fr_cb_signature'].forEach(id => { const i = el(id); if (i) i.value = ''; });
         suggestCompletedBy();
@@ -3370,6 +3378,8 @@
     await load();
     renderTable();
     refreshVerification();
+    // REC 7.4.5: the roster fills itself with the closed boxes awaiting inspection.
+    if (config.boxInspection && window.BoxInspection) { await window.BoxInspection.refresh(); if (!editingId) openForm(null); }
 
     // Deep link from Batch Traceability etc.: #<submissionId> opens that entry
     // (read-only if already submitted) rather than a blank new-entry form.
