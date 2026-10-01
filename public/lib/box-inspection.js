@@ -77,14 +77,46 @@
     return saved;
   }
 
-  function afterRender({ container, locked, el }) {
+  function rowValues(row) {
+    const v = {};
+    row.querySelectorAll('input[id],select[id],textarea[id]').forEach((i) => {
+      const m = /^fr_roster_\d+_(\w+?)(__cb)?$/.exec(i.id);
+      if (m && !m[2]) v[m[1]] = i.value;
+    });
+    return v;
+  }
+
+  // Done: check this box, then open the next one at the top of the screen (focusing it collapses this one).
+  function doneClick(row, container, toast) {
+    const r = rowValues(row);
+    if (!isStarted(r)) { toast('Enter the weights and ticks for this box first.'); return; }
+    const ev = evaluate([r]);
+    if (ev.problem) { toast(ev.problem); return; }
+    let next = row.nextElementSibling;
+    while (next && !(next.classList.contains('fr-roster-row') && next.dataset.biLocked !== '1')) next = next.nextElementSibling;
+    const target = next && next.querySelector('[id$="_tareKg"]');
+    if (!target) {
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      toast('All boxes done. Fill in Sign off and Submit.');
+      return;
+    }
+    const edit = next.querySelector('[data-roster-edit]');
+    if (edit) edit.click();
+    target.focus();
+    target.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    setTimeout(() => next.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60);
+  }
+
+  function afterRender({ container, locked, el, toast }) {
     if (document.getElementById('bi-style')) { /* already injected */ } else {
       const st = document.createElement('style');
       st.id = 'bi-style';
       st.textContent = '.fr-fixed-rows [data-remove-roster-row]{display:none}'
         + '.bi-row .fr-confirm input[type=checkbox]{width:44px;height:44px;margin:0 8px 0 0}'
         + '.bi-row .fr-confirm{display:flex;align-items:center;min-height:44px}'
-        + '.bi-row[data-bi-locked="1"]{opacity:.55}';
+        + '.bi-row[data-bi-locked="1"]{opacity:.55}'
+        + '.bi-done{display:block;width:100%;min-height:48px;margin-top:12px;font-weight:600}'
+        + '.bi-row.fr-roster-row-collapsed .bi-done{display:none}';
       document.head.appendChild(st);
     }
     container.querySelectorAll('.fr-roster-row').forEach((row) => {
@@ -95,6 +127,14 @@
         row.dataset.biLocked = '1';
         row.querySelectorAll('input,select,textarea,button').forEach((i) => { i.disabled = true; });
         if (code) code.title = 'This box is in a saved draft of REC 7.4.5';
+      }
+      if (!locked && !row.dataset.biLocked && !row.querySelector('.bi-done')) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'fr-btn bi-done no-print';
+        b.textContent = 'Done – next box';
+        b.addEventListener('click', () => doneClick(row, container, toast));
+        row.appendChild(b);
       }
     });
   }

@@ -2786,7 +2786,7 @@
         submissions: () => submissions, openForm, formHasInput, reload: load });
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = (locked && !i.hasAttribute('data-keep-enabled')) || computedIds.has(i.id); });
-      if (config.boxInspection && window.BoxInspection) window.BoxInspection.afterRender({ container, locked, el });
+      if (config.boxInspection && window.BoxInspection) window.BoxInspection.afterRender({ container, locked, el, toast });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
