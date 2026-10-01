@@ -1841,6 +1841,7 @@ model Sub_dry_cooking_Row {
   blanchTempOld        Float?
   blanchSeaWaterLtOld  Float?
   cookSeaWaterLtOld    Float?
+  legacyNoBlanching    String?
 
   @@index([parentId])
   @@index([parentId, potNo], map: "sub_dry_cooking_row_parentId_potNo_idx")
@@ -4716,4 +4717,20 @@ model ClosedBox {
   @@index([approved])
   @@index([inspectionSubmissionId])
   @@map("closed_box")
+}
+
+// REC 7.4.0: one row per weight rule (R1/R2/R3) an operator overrode at finalize. Rebuilt by
+// src/dry-weight-override.js on every dry-cooking sync; the full entry JSON stays the audit copy.
+model DryWeightOverride {
+  id           Int      @id @default(autoincrement())
+  submissionId String   @map("submission_id")
+  jobNo        String?  @map("job_no")
+  rule         String
+  message      String
+  signedBy     String?  @map("signed_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([jobNo], map: "dry_weight_override_job_no_idx")
+  @@index([submissionId], map: "dry_weight_override_submission_id_idx")
+  @@map("dry_weight_override")
 }

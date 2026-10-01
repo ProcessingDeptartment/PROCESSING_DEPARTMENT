@@ -15284,7 +15284,17 @@
                   ]
                 }
               }
-            ]
+            ],
+            "jobWeights": {
+              "column": "abaloneKg",
+              "processColumn": "process",
+              "blanch": "Blanching",
+              "cook": "Cooking",
+              "capSource": "salting-oosw",
+              "capMatchField": "jobNo",
+              "capSumColumn": "weight",
+              "legacyColumn": "legacyNoBlanching"
+            }
           }
         }
       ],
@@ -16267,6 +16277,28 @@
               "nonEmpty": true
             },
             "legacy": true
+          }
+        },
+        {
+          "key": "legacyNoBlanching",
+          "label": "Legacy (no blanching recorded)",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 37,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
           }
         }
       ],

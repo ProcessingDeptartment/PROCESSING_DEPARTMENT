@@ -79,6 +79,46 @@ Example (first rule of this kind — REC 7.4.0 Dry Cooking vs REC 7.1.5 OOSW):
 }
 ```
 
+### `capRowsAgainstRows`
+
+The total of this record's roster rows matching `rowFilter`, **across every submitted entry for the
+job plus the rows being saved now**, must not exceed the total of the rows matching `capFilter`.
+Both are totals of the same roster column, compared as whole-job totals (equal passes), so card
+order and which entry a card was saved on do not matter. Soft gate with the same override stamp as
+`capAgainstOtherRecord`: each overridden rule adds its own line to `oosWarningNote` (one line per
+rule), shown red on screen and on the printed sheet.
+
+| key | meaning |
+|---|---|
+| `ownJobField` | this record's own field holding the job number |
+| `column` | the roster column to total |
+| `capFilter` | `{ "column": "process", "equals": "Blanching" }` - the rows that form the cap |
+| `rowFilter` | `{ "column": "process", "equals": "Cooking" }` - the rows that must stay within it. Must use the same `column` as `capFilter` (the server groups by that column) |
+| `legacyColumn` | optional roster column; rows where it is Yes/true are left out of the `rowFilter` side (REC 7.4.0 migrated cooking-only cards, `legacyNoBlanching`) |
+| `message` | the warning line shown on override / view / print |
+
+Worked example (REC 7.4.0, R3 - cannot cook more than was blanched):
+
+```json
+{
+  "recordKey": "dry-cooking",
+  "type": "capRowsAgainstRows",
+  "ownJobField": "jobNo",
+  "column": "abaloneKg",
+  "capFilter": { "column": "process", "equals": "Blanching" },
+  "rowFilter": { "column": "process", "equals": "Cooking" },
+  "legacyColumn": "legacyNoBlanching",
+  "message": "Cooking weight exceeds blanched weight - cooked more than was blanched"
+}
+```
+
+REC 7.4.0 therefore runs three rules: R1 Cooking vs OOSW and R2 Blanching vs OOSW (both
+`capAgainstOtherRecord`, differing only in `ownRowFilter`) and R3 Cooking vs Blanching.
+
+The live "Available to blanch / Available to cook" figures on that record are not a rule; they
+come from the roster's `jobWeights` setting (see `scripts/apply-dry-cooking-weights.mjs`) and use
+the same server numbers.
+
 ## How it runs (for reference, not something you normally need to touch)
 
 1. On finalize (`saveForm`, form-record.js), `runBusinessRules(config, values, editingId)` fetches
@@ -93,6 +133,10 @@ Example (first rule of this kind — REC 7.4.0 Dry Cooking vs REC 7.1.5 OOSW):
    - `__matchRosterSum` - when the request carries `?rosterCol=&filterCol=&filterIn=a,b`, the sum of that
      roster column over the other submitted entries' rows whose `filterCol` value is in `filterIn`
      (REC 7.4.0: kg of Cooking pot cards).
+   - `__matchRosterGroupSums` / `__matchRosterGroupLegacy` - when the request also carries
+     `&groupCol=process&legacyCol=legacyNoBlanching`: the roster-column total per value of
+     `groupCol` over the other submitted entries (REC 7.4.0: kg per process), and the part of it
+     on rows whose `legacyCol` flag is Yes. Feeds `capRowsAgainstRows` and the live figures.
    - `__matchValueSums` — sum of a numeric top-level field across every *other submitted* entry
      matching the same job (`?excludeId=` skips the record currently being edited) — used for the
      "own total across many separate batch submissions" side.

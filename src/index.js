@@ -361,6 +361,8 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
     const matchValueSums = {};
     const matchNumericOk = {};
     let matchRosterSum = 0;
+    const matchGroupSums = {};
+    const matchGroupLegacy = {};
     for (const prefix of ['formrecord:', 'monitoring_log:']) {
       const row = await prisma.keyValue.findUnique({ where: { key: prefix + recordKey } });
       if (!row) continue;
@@ -460,6 +462,23 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
             const n = parseFloat(row[req.query.rosterCol]);
             if (!Number.isNaN(n)) matchRosterSum += n;
           }
+          // groupCol: the same roster-column total split per value of that column (REC 7.4.0: kg per
+          // process, Blanching vs Cooking). Rows whose legacyCol flag is set (migrated entries with no
+          // blanching values) are also totalled apart, so a caller can leave them out of a comparison.
+          const gc = String(req.query.groupCol || '');
+          const lc = String(req.query.legacyCol || '');
+          if (gc) {
+            for (const row of entry.roster) {
+              if (!row) continue;
+              const n = parseFloat(row[req.query.rosterCol]);
+              if (Number.isNaN(n)) continue;
+              const g = String(row[gc] == null ? '' : row[gc]);
+              matchGroupSums[g] = (matchGroupSums[g] || 0) + n;
+              if (lc && /^(yes|true|1)$/i.test(String(row[lc] == null ? '' : row[lc]).trim())) {
+                matchGroupLegacy[g] = (matchGroupLegacy[g] || 0) + n;
+              }
+            }
+          }
         }
         if (entry.status === 'submitted' && entry.id !== excludeId) {
           const rawValues = entry.values || entry;
@@ -479,6 +498,10 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
       }
     }
     if (best && req.query.rosterCol) best.values.__matchRosterSum = String(matchRosterSum);
+    if (best && req.query.rosterCol && req.query.groupCol) {
+      best.values.__matchRosterGroupSums = matchGroupSums;
+      best.values.__matchRosterGroupLegacy = matchGroupLegacy;
+    }
     if (best && Object.keys(matchValueSums).length) {
       best.values.__matchValueSums = {};
       for (const [k, sum] of Object.entries(matchValueSums)) {

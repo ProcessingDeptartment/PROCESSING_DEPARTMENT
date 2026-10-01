@@ -1,5 +1,6 @@
 [
   {
+    "id": "R1",
     "recordKey": "dry-cooking",
     "type": "capAgainstOtherRecord",
     "label": "Dry cooking batch weight vs OOSW",
@@ -14,5 +15,41 @@
       "column": "process",
       "equals": "Cooking"
     }
+  },
+  {
+    "id": "R2",
+    "recordKey": "dry-cooking",
+    "type": "capAgainstOtherRecord",
+    "label": "Dry blanching batch weight vs OOSW",
+    "why": "Blanching is the first stage, so it obeys the same OOSW cap as Cooking: blanched kg for the job cannot exceed the OOSW weight on REC 7.1.5 - a higher total means batches from different jobs got mixed. Only Blanching pot cards count.",
+    "ownJobField": "jobNo",
+    "ownWeightField": "abaloneKg",
+    "source": "salting-oosw",
+    "matchField": "jobNo",
+    "sumColumn": "weight",
+    "message": "Blanching pot weight exceeding OOSW - possible batch mix",
+    "ownRowFilter": {
+      "column": "process",
+      "equals": "Blanching"
+    }
+  },
+  {
+    "id": "R3",
+    "recordKey": "dry-cooking",
+    "type": "capRowsAgainstRows",
+    "label": "Dry cooking weight vs blanched weight",
+    "why": "You cannot cook more than you have blanched: the job's total Cooking kg must be equal to or lower than its total Blanching kg, compared as whole-job totals (not pot by pot). Cooking cards flagged legacyNoBlanching (migrated entries that had no blanching values) are left out.",
+    "ownJobField": "jobNo",
+    "column": "abaloneKg",
+    "capFilter": {
+      "column": "process",
+      "equals": "Blanching"
+    },
+    "rowFilter": {
+      "column": "process",
+      "equals": "Cooking"
+    },
+    "legacyColumn": "legacyNoBlanching",
+    "message": "Cooking weight exceeds blanched weight - cooked more than was blanched"
   }
 ]

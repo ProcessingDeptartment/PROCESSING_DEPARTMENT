@@ -1144,8 +1144,6 @@
   // oosWarningNote) so it keeps showing as a warning on the submitted view and the printed sheet.
   async function checkCapAgainstOtherRecord(rule, config, values, editingId, rosterRowsByIndex) {
     const jobVal = String(values[rule.ownJobField] || '').trim();
-    delete values.oosWarningAck;
-    delete values.oosWarningNote;
     if (!jobVal) return true;
     let capTotal = null;
     let ownTotal = null;
@@ -1185,19 +1183,95 @@
       `Recorded cap for this job: ${capTotal.toFixed(2)} kg\n\n` +
       `Click OK to confirm this is correct and submit anyway, or Cancel to go back and check.`);
     if (!proceed) return false;
-    values.oosWarningAck = true;
-    values.oosWarningNote = rule.message;
+    stampOverride(values, rule.message);
     return true;
+  }
+
+  // Each overridden rule adds its own line to oosWarningNote (one per line), so two broken rules
+  // show two red lines on screen and on the printed sheet. Old records hold a single line.
+  function stampOverride(values, message) {
+    values.oosWarningAck = true;
+    values.oosWarningNote = values.oosWarningNote ? values.oosWarningNote + '\n' + message : message;
+  }
+  function warningLinesHtml(note, fallback) {
+    return String(note || fallback).split('\n').filter(Boolean).map(l => esc(l)).join('<br>');
+  }
+
+  // capRowsAgainstRows: the total of this record's roster rows matching rowFilter, across every
+  // submitted entry for the job plus the rows being saved now, must not exceed the total of the
+  // rows matching capFilter (REC 7.4.0: Cooking kg must not exceed Blanching kg). Both filters
+  // must use the same column. Rows flagged legacyColumn (migrated, no blanching values) are left
+  // out of the rowFilter side. Soft gate, same override stamp as capAgainstOtherRecord.
+  async function checkCapRowsAgainstRows(rule, config, values, editingId, rosterRowsByIndex) {
+    const jobVal = String(values[rule.ownJobField] || '').trim();
+    if (!jobVal) return true;
+    const rosters = config.rosters || (config.roster ? [config.roster] : []);
+    const rosterIdx = rosters.findIndex(r => (r.columns || []).some(c => c.key === rule.column));
+    if (rosterIdx === -1) return true;
+    const gcol = rule.capFilter.column;
+    let capTotal, rowTotal;
+    try {
+      const ownData = await autofillLookup({ source: config.recordKey, matchField: rule.ownJobField }, jobVal, editingId,
+        { rosterCol: rule.column, groupCol: gcol, legacyCol: rule.legacyColumn || '' });
+      const g = (ownData && ownData.__matchRosterGroupSums) || {};
+      const l = (ownData && ownData.__matchRosterGroupLegacy) || {};
+      const rowsNow = (rosterRowsByIndex || [])[rosterIdx] || [];
+      const sumNow = eq => rowsNow.reduce((a, r) => a + (String(r[gcol] || '') === eq && !(rule.legacyColumn && isYes(r[rule.legacyColumn]))
+        ? (parseFloat(r[rule.column]) || 0) : 0), 0);
+      capTotal = (parseFloat(g[rule.capFilter.equals]) || 0) + sumNow(rule.capFilter.equals);
+      rowTotal = (parseFloat(g[rule.rowFilter.equals]) || 0) - (parseFloat(l[rule.rowFilter.equals]) || 0) + sumNow(rule.rowFilter.equals);
+    } catch (e) { console.error('business rule lookup failed', rule, e); return true; }
+    if (rowTotal <= capTotal + 1e-9) return true;
+    const proceed = confirm(
+      `${rule.message}\n\n${rule.rowFilter.equals} total for this job so far (including this batch): ${rowTotal.toFixed(2)} kg\n` +
+      `${rule.capFilter.equals} total for this job: ${capTotal.toFixed(2)} kg\n\n` +
+      `Click OK to confirm this is correct and submit anyway, or Cancel to go back and check.`);
+    if (!proceed) return false;
+    stampOverride(values, rule.message);
+    return true;
+  }
+  const isYes = v => /^(yes|true|1)$/i.test(String(v == null ? '' : v).trim());
+
+  // Live per-job weight figures for a roster with `jobWeights` (REC 7.4.0): OOSW, blanched and
+  // cooked kg for the job. `base` is fetched once per job (other submitted entries + OOSW cap);
+  // jobWeightFigures() adds the rows on screen, so the numbers move as the operator types.
+  async function fetchJobWeightBase(config, jw, jobVal, editingId) {
+    const [capData, ownData] = await Promise.all([
+      autofillLookup({ source: jw.capSource, matchField: jw.capMatchField }, jobVal),
+      autofillLookup({ source: config.recordKey, matchField: config.batchField || 'jobNo' }, jobVal, editingId,
+        { rosterCol: jw.column, groupCol: jw.processColumn, legacyCol: jw.legacyColumn || '' })
+    ]);
+    const num = x => parseFloat(x) || 0;
+    const g = (ownData && ownData.__matchRosterGroupSums) || {};
+    const l = (ownData && ownData.__matchRosterGroupLegacy) || {};
+    const oosw = capData && capData.__rosterSums && capData.__rosterSums[jw.capSumColumn] != null
+      ? parseFloat(capData.__rosterSums[jw.capSumColumn]) : null;
+    return { oosw: isNaN(oosw) ? null : oosw, blanched: num(g[jw.blanch]), cooked: num(g[jw.cook]) - num(l[jw.cook]) };
+  }
+  function jobWeightFigures(base, jw, rows) {
+    let b = base ? base.blanched : 0, c = base ? base.cooked : 0;
+    (rows || []).forEach(r => {
+      const kg = parseFloat(r[jw.column]) || 0;
+      if (r[jw.processColumn] === jw.blanch) b += kg;
+      else if (r[jw.processColumn] === jw.cook && !isYes(r[jw.legacyColumn])) c += kg;
+    });
+    const oosw = base ? base.oosw : null;
+    return { oosw, blanched: b, cooked: c,
+      availBlanch: oosw == null ? null : oosw - b,
+      availCook: b - c };
   }
 
   // Runs every registry rule that applies to this record at finalize time. Returns false the
   // moment a rule vetoes the save (operator declined to override); saveForm aborts on that.
   async function runBusinessRules(config, values, editingId, rosterRowsByIndex) {
     const rules = (await fetchBusinessRules()).filter(r => r.recordKey === config.recordKey);
+    delete values.oosWarningAck;
+    delete values.oosWarningNote;
     for (const rule of rules) {
       let ok = true;
       switch (rule.type) {
         case 'capAgainstOtherRecord': ok = await checkCapAgainstOtherRecord(rule, config, values, editingId, rosterRowsByIndex); break;
+        case 'capRowsAgainstRows': ok = await checkCapRowsAgainstRows(rule, config, values, editingId, rosterRowsByIndex); break;
         default: console.warn('business-rules.json: unknown rule type', rule.type);
       }
       if (!ok) return false;
@@ -1712,7 +1786,7 @@
     function rosterRowHtml(ns, idx, row, roster) {
       row = row || {};
       const cell = c => `<label class="fr-field" data-col="${esc(c.key)}">${esc(c.label)}${c.required || c.requiredWhen ? ' *' : ''}
-          ${fieldInputHtml(`${ns}_roster_${idx}_${c.key}`, c, row[c.key], row)}
+          ${fieldInputHtml(`${ns}_roster_${idx}_${c.key}`, c, row[c.key], row)}${roster.jobWeights && c.key === roster.jobWeights.column ? '<span class="fr-pot-avail no-print" data-avail></span>' : ''}
         </label>`;
       if (roster.cardRows) {
         const proc = row.process || '';
@@ -1948,8 +2022,62 @@
         refreshComputeFns();
       }
 
+      // roster.jobWeights (REC 7.4.0): live OOSW / available-to-blanch / available-to-cook figures,
+      // in the tally under the cards and on each pot card. Screen only (no-print). The server is
+      // asked once per job (jwState.base); every keystroke after that is local arithmetic.
+      const jw = roster.jobWeights;
+      const jwState = { job: null, base: null, timer: null };
+      const jwKg = n => String(Math.round(n * 100) / 100);
+      function jwFigures() {
+        return jwState.job ? jobWeightFigures(jwState.base, jw, rows.map((_, i) => readRow(i))) : jobWeightFigures(null, jw, rows.map((_, i) => readRow(i)));
+      }
+      function renderJobWeights() {
+        if (!jw) return;
+        const f = jwFigures();
+        const known = f.oosw != null && !!jwState.job;
+        const span = (txt, n) => `<span${n != null && n < -1e-9 ? ' style="color:#b30000;font-weight:bold;"' : ''}>${txt}${n != null ? ' ' + jwKg(n) + ' kg' : ''}</span>`;
+        const tally = el(rosterDomId('fr_jobWeights', rosterIndex));
+        if (tally) {
+          tally.innerHTML = [
+            known ? `OOSW: ${jwKg(f.oosw)} kg` : 'OOSW not found',
+            known ? span('Available to blanch:', f.availBlanch) : '',
+            span('Available to cook:', f.availCook)
+          ].filter(Boolean).join('  ·  ');
+        }
+        container.querySelectorAll('.fr-pot-card').forEach(card => {
+          const i = Number(card.dataset.rosterRow);
+          const out = card.querySelector('[data-avail]');
+          const inp = el(fid(i, jw.column));
+          if (!out) return;
+          if (inp && inp.disabled) { out.textContent = ''; return; }
+          const proc = (rows[i] && readRow(i)[jw.processColumn]) || '';
+          let txt = '', n = null;
+          if (proc === jw.blanch) { if (known) { txt = 'Available to blanch:'; n = f.availBlanch; } else txt = 'OOSW not found'; }
+          else if (proc === jw.cook) { txt = 'Available to cook:'; n = f.availCook; }
+          out.innerHTML = txt ? span(txt, n) : '';
+        });
+      }
+      function loadJobWeights() {
+        if (!jw) return;
+        clearTimeout(jwState.timer);
+        jwState.timer = setTimeout(async () => {
+          const jobEl = el('fr_f_' + (config.batchField || 'jobNo'));
+          const job = jobEl ? String(jobEl.value || '').trim() : '';
+          if (job === jwState.job && jwState.base) return;
+          jwState.job = job;
+          jwState.base = null;
+          if (job) {
+            try { jwState.base = await fetchJobWeightBase(config, jw, job, editingId); } catch (e) { jwState.base = null; }
+            if (jwState.job !== job) return;
+          }
+          renderJobWeights();
+        }, 400);
+      }
+      container._jobWeightFigures = jw ? jwFigures : null;
+
       function renderRosterTotals() {
         renderComputedFields();
+        renderJobWeights();
         if (roster.totals) {
           const tEl = el(rosterDomId('fr_rosterTotals', rosterIndex));
           if (tEl) tEl.textContent = 'Totals — ' + rosterTotalsText(roster, rows.map((_, i) => readRow(i)));
@@ -2350,6 +2478,7 @@
       if (jobWatch) ['input', 'change'].forEach(ev => {
         jobWatch.addEventListener(ev, renderRosterDerived);
         jobWatch.addEventListener(ev, loadGroupSums);
+        if (jw) jobWatch.addEventListener(ev, loadJobWeights);
       });
       // batchseq columns key off roster.batchSeqDateField (default 'date'), a separate field
       // from the job -- re-derive when it changes too, so codes update as soon as it's filled in.
@@ -2364,6 +2493,7 @@
       }
       draw();
       loadGroupSums();
+      loadJobWeights();
       if (fgNew && fg.seqColumn) loadFixedGroupSeq();
 
       function loadFixedGroupSeq() {
@@ -2589,7 +2719,13 @@
             if (prev && prev.process === c.carryFromPrevProcess.process && process === c.carryFromPrevProcess.into
               && String(prev[c.key] || '').trim() !== '') {
               newRow[c.key] = prev[c.key];
-              carried.add(rows.length + ':' + c.key);
+              // Never pre-fill more than is left to cook (blanched but not yet cooked kg for the job).
+              const fig = container._jobWeightFigures ? container._jobWeightFigures() : null;
+              if (fig) {
+                const room = Math.round(Math.min(parseFloat(prev[c.key]) || 0, fig.availCook) * 100) / 100;
+                if (room > 0) newRow[c.key] = String(room); else delete newRow[c.key];
+              }
+              if (newRow[c.key] !== undefined) carried.add(rows.length + ':' + c.key);
             }
           });
         }
@@ -2631,7 +2767,7 @@
         : '';
       if (existing && existing.values && existing.values.oosWarningAck) {
         html += `<div class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
-          ${esc(existing.values.oosWarningNote || 'Batch weight exceeding OOSW - possible batch mix')}</div>`;
+          ${warningLinesHtml(existing.values.oosWarningNote, 'Batch weight exceeding OOSW - possible batch mix')}</div>`;
       }
       // Entry-log records (REC 7.4.1): hidden/movement/stamp fields are held in hidden inputs (the
       // EntryLog extension draws the movement UI); old-entry legacy values show only when present.
@@ -2688,7 +2824,8 @@
           : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}"${roster.fixedRows ? ' style="display:none;"' : ''}>${esc(roster.addLabel || '+ Add row')}</button>`}
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows || roster.fixedGroups || roster.fixedRows ?' style="display:none;"' : ''}>Import CSV</button>
         <input type="file" id="${rosterDomId('fr_csvFile', i)}" accept=".csv,text/csv" style="display:none;">`}
-        ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals${roster.cardRows ? ' fr-pot-totals no-print' : ''}"></div>` : ''}`)).join('');
+        ${roster.totalsRow || roster.totals ? `<div id="${rosterDomId('fr_rosterTotals', i)}" class="fr-roster-totals${roster.cardRows ? ' fr-pot-totals no-print' : ''}"></div>` : ''}
+        ${roster.jobWeights ? `<div id="${rosterDomId('fr_jobWeights', i)}" class="fr-job-weights no-print"></div>` : ''}`)).join('');
       }
       html += postSecs.map(renderSection).join('');
       if (html.indexOf('<details') >= 0) {
@@ -3185,7 +3322,7 @@
     function oosWarningHtml(sub) {
       if (!sub.values || !sub.values.oosWarningAck) return '';
       return `<p class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
-        ${esc(sub.values.oosWarningNote || 'Batch weight exceeding OOSW - possible batch mix')}</p>`;
+        ${warningLinesHtml(sub.values.oosWarningNote, 'Batch weight exceeding OOSW - possible batch mix')}</p>`;
     }
 
     function buildSheet(sub) {

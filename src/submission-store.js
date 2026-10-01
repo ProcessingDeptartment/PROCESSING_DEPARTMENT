@@ -7,6 +7,7 @@
 // comes from the record key.
 
 const { jobSnapshotKeys } = require('./job-snapshot');
+const { syncDryWeightOverrides } = require('./dry-weight-override');
 
 const PREFIXES = { 'formrecord:': 'form-record', 'monitoring_log:': 'monitoring-log' };
 
@@ -294,6 +295,7 @@ async function syncSubmissionRows(prisma, key, value) {
 
   // Run all statements in a single transaction.
   await prisma.$transaction(stmts);
+  if (recordKey === 'dry-cooking') await syncDryWeightOverrides(prisma, entries, completedByText);
 }
 
 module.exports = { syncSubmissionRows };
