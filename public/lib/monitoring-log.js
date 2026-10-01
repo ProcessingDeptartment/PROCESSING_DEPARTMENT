@@ -113,6 +113,15 @@
   .ml-section-collapsible > summary.ml-grouphead::before{ content:'\\25B8'; display:inline-block; width:1em; }
   .ml-section-collapsible[open] > summary.ml-grouphead::before{ content:'\\25BE'; }
   .ml-section-collapsible > label.ml-field{ display:flex; margin-bottom:8px; }
+  .ml-section-collapsible > summary.ml-grouphead{ min-height:44px; display:flex; align-items:center; }
+  .ml-section-collapsible > summary.ml-stagehead{ justify-content:flex-start; gap:8px; }
+  .ml-section-collapsible > summary .ml-stage-state{ margin-left:auto; }
+  .ml-section-collapsible > summary:focus-visible, .ml-collapse-ctl button:focus-visible{ outline:2px solid var(--palette-ink,#1b2330); outline-offset:2px; }
+  .ml-section-body{ margin-bottom:8px; }
+  .ml-collapse-ctl{ display:flex; justify-content:flex-end; gap:6px; align-items:center; margin:0 0 6px; font-size:12px; }
+  .ml-collapse-ctl[hidden]{ display:none; }
+  .ml-collapse-ctl button{ background:none; border:0; padding:6px 4px; color:var(--palette-link,#1f5fa8); text-decoration:underline; cursor:pointer; font-size:12px; }
+  @media (prefers-reduced-motion:reduce){ .ml-section-collapsible > summary.ml-grouphead::before{ transition:none; } }
   .ml-section-summary{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; text-transform:none; letter-spacing:0; color:var(--palette-ink,#1b2330); font-weight:700; }
   .ml-section-summary:not(:empty){ margin-left:8px; }
   /* Work instructions are collapsed by default on every viewport -- they are reference
@@ -436,49 +445,102 @@
     });
   }
 
-  function wireJobInfoCollapsible(container, ns, entryFields, groupName) {
-    if (!groupName || container.querySelector('details.ml-section-collapsible')) return;
-    const heads = Array.prototype.slice.call(container.querySelectorAll('.ml-grouphead'));
-    const head = heads.find((h) => h.textContent.trim() === groupName);
-    if (!head) return;
-    const det = document.createElement('details');
-    det.className = 'ml-section-collapsible';
-    det.open = true;
-    const sum = document.createElement('summary');
-    sum.className = 'ml-grouphead';
-    sum.textContent = groupName;
-    const span = document.createElement('span');
-    span.className = 'ml-section-summary';
-    sum.appendChild(span);
-    det.appendChild(sum);
-    head.parentNode.insertBefore(det, head);
-    head.remove();
-    const inGroup = new Set((entryFields || []).filter((f) => f.group === groupName).map((f) => f.key));
-    let node = det.nextSibling;
-    while (node) {
-      const next = node.nextSibling;
-      if (node.nodeType === 1 && node.classList.contains('ml-field')
-          && inGroup.has(node.getAttribute('data-field'))) {
-        det.appendChild(node);
-      } else if (node.nodeType === 1) {
-        break;
-      }
-      node = next;
-    }
+  const SUMMARY_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function summaryPart(key, value, isJob) {
+    const v = String(value || '').trim();
+    if (!v) return '';
+    if (isJob) return 'Job ' + v;
+    const d = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (/^(jiReceivingDate|intakeDate)$/.test(key) && d) return 'Intake ' + Number(d[3]) + ' ' + SUMMARY_MONTHS[Number(d[2]) - 1];
+    return v;
+  }
 
-    const groupFields = (entryFields || []).filter((f) => f.group === groupName);
-    const summaryKeys = groupFields.filter((f) =>
-      f.type === 'jobsearch' || /processingfor|processedfor/i.test(f.key)).map((f) => f.key);
-    const srcs = summaryKeys.map((k) => container.querySelector('#' + ns + '_f_' + k)).filter(Boolean);
-    if (srcs.length) {
+  // Every group on the form (a heading plus the fields under it) becomes a collapsible block that
+  // starts open. The block holding the job search shows "Job … · AG … · Intake …" in its header so
+  // the job stays visible when it folds away. Nodes are moved, never re-created, so field ids,
+  // listeners and the engine's lookups are untouched. Returns the number of blocks made.
+  function wireSectionCollapsibles(container, ns, entryFields) {
+    if (container.classList.contains('ml-custom-body') || container.querySelector('details.ml-section-collapsible')) return 0;
+    const fieldsByKey = {};
+    (entryFields || []).forEach((f) => { fieldsByKey[f.key] = f; });
+    const heads = Array.prototype.filter.call(container.children, (k) => k.classList.contains('ml-grouphead'));
+    heads.forEach((head) => {
+      const groupName = head.getAttribute('data-group') || head.textContent.trim();
+      const det = document.createElement('details');
+      det.className = 'ml-section-collapsible';
+      det.open = true;
+      const sum = document.createElement('summary');
+      sum.className = head.className;
+      while (head.firstChild) sum.appendChild(head.firstChild);
+      const span = document.createElement('span');
+      span.className = 'ml-section-summary';
+      sum.insertBefore(span, sum.firstChild ? sum.firstChild.nextSibling : null);
+      // the stage "Edit" button lives inside the heading: pressing it must not fold the block
+      sum.addEventListener('click', (ev) => { if (ev.target.closest && ev.target.closest('button')) ev.preventDefault(); });
+      det.appendChild(sum);
+      const body = document.createElement('div');
+      body.className = 'ml-grid ml-grid-2 ml-section-body';
+      det.appendChild(body);
+      head.parentNode.insertBefore(det, head);
+      let node = head.nextSibling;
+      head.remove();
+      while (node && !(node.nodeType === 1 && node.classList.contains('ml-grouphead'))) {
+        const next = node.nextSibling;
+        body.appendChild(node);
+        node = next;
+      }
+
+      const inGroup = (entryFields || []).filter((f) => f.group === groupName);
+      const jobField = inGroup.find((f) => f.type === 'jobsearch');
+      if (!jobField) return;
+      det.setAttribute('data-autofold', '1');
+      const have = new Set(inGroup.map((f) => f.key));
+      const keys = [jobField.key].concat(['agCode', 'jiReceivingDate', 'intakeDate'].filter((k) => have.has(k)))
+        .concat(inGroup.filter((f) => /processingfor|processedfor/i.test(f.key)).map((f) => f.key));
+      const pairs = keys.map((k) => ({ k, src: container.querySelector('#' + ns + '_f_' + k) })).filter((p) => p.src);
+      if (!pairs.length) return;
       const paint = () => {
-        const parts = srcs.map((s) => String(s.value || '').trim()).filter(Boolean);
+        const parts = pairs.map((p) => summaryPart(p.k, p.src.value, p.k === jobField.key)).filter(Boolean);
         span.textContent = parts.length ? '— ' + parts.join('  ·  ') : '';
       };
-      srcs.forEach((s) => { s.addEventListener('input', paint); s.addEventListener('change', paint); });
+      pairs.forEach((p) => { p.src.addEventListener('input', paint); p.src.addEventListener('change', paint); });
       paint();
-    }
+    });
+    return heads.length;
   }
+
+  // "Collapse all / Expand all" (hide only: nothing is removed or reset), wired once per page.
+  function wireCollapseAll(ctl, scope) {
+    if (!ctl || ctl._mlWired) return;
+    ctl._mlWired = true;
+    ctl.addEventListener('click', (ev) => {
+      const b = ev.target.closest && ev.target.closest('[data-ml-collapse]');
+      if (!b) return;
+      const open = b.getAttribute('data-ml-collapse') === 'open';
+      scope().querySelectorAll('details.ml-section-collapsible').forEach((d) => { d.open = open; });
+    });
+  }
+
+  // Open every collapsed block around a field, scroll to it and focus it (validation failures).
+  function revealField(target) {
+    if (!target) return;
+    if (target.matches && target.matches('select[data-jobsearch]')) {
+      const wrap = target.closest('.jp-wrap');
+      target = (wrap && (wrap.querySelector('.jp-search:not([hidden])') || wrap.querySelector('.jp-change'))) || target.closest('.ml-field') || target;
+    }
+    for (let d = target.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+    try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+    if (target.focus) { try { target.focus({ preventScroll: true }); } catch (e) { /* not focusable */ } }
+  }
+
+  // Print / PDF always shows every block open, whatever is collapsed on screen.
+  (function wirePrintExpand() {
+    let reopen = [];
+    window.addEventListener('beforeprint', () => {
+      reopen = Array.prototype.filter.call(document.querySelectorAll('details.ml-section-collapsible:not([open])'), (d) => { d.open = true; return true; });
+    });
+    window.addEventListener('afterprint', () => { reopen.forEach((d) => { d.open = false; }); reopen = []; });
+  })();
 
 
   function digitsOnly(value) {
@@ -633,11 +695,15 @@
   }
 
 
-  function wireJobSearch(container, ns, entryFields, autofillRules) {
+  function wireJobSearch(container, ns, entryFields, autofillRules, autofocus) {
     const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
     const sels = fields.map((f) => container.querySelector('#' + ns + '_f_' + f.key)).filter(Boolean);
     if (!sels.length) return;
-    loadLib('job-picker.js?v=4', 'JobPicker').then((jp) => { if (jp) sels.forEach((sel) => jp.enhance(sel)); });
+    loadLib('job-picker.js?v=5', 'JobPicker').then((jp) => {
+      if (!jp) return;
+      sels.forEach((sel) => jp.enhance(sel));
+      if (autofocus && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
+    });
     loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
       if (!js) throw new Error('job-status.js unavailable');
       return js.list();
@@ -1079,7 +1145,7 @@
 
 
     function stageHeadHtml(field, existing, activeKey) {
-      const plain = `<div class="ml-grouphead">${esc(field.group)}</div>`;
+      const plain = `<div class="ml-grouphead" data-group="${esc(field.group)}">${esc(field.group)}</div>`;
       if (!entryStages || !field.stage) return plain;
       const st = entryStages.find((x) => x.key === field.stage);
       if (!st) return plain;
@@ -1097,7 +1163,7 @@
       } else {
         state = `<span class="ml-stage-state ml-muted">Later</span>`;
       }
-      return `<div class="ml-grouphead ml-stagehead"><span>${esc(field.group)}</span>${state}</div>`;
+      return `<div class="ml-grouphead ml-stagehead" data-group="${esc(field.group)}"><span>${esc(field.group)}</span>${state}</div>`;
     }
 
 
@@ -1303,6 +1369,8 @@
           refresh: () => { renderTable(); if (onEntriesChanged) onEntriesChanged(); }
         };
         try { customBody.render(container, existing || null, ctx); } catch (e) { console.error('customBody.render failed', e); }
+        const bodyCtl = el(`${ns}_collapseCtl`);
+        if (bodyCtl) { bodyCtl.hidden = !container.querySelector('details'); wireCollapseAll(bodyCtl, () => container.parentElement || container); }
         if (submitFlow) {
           const saveBtn = el(`${ns}_saveBtn`), submitBtn = el(`${ns}_submitBtn`);
           if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
@@ -1330,8 +1398,10 @@
       wireYesNo(container);
       wirePrefixed(container);
       wireDigits(container);
-      wireJobInfoCollapsible(container, ns, entryFields, jobInfoGroup);
-      if (!locked) { wireJobSearch(container, ns, entryFields, autofill); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
+      const blocks = wireSectionCollapsibles(container, ns, entryFields);
+      const ctl = el(`${ns}_collapseCtl`);
+      if (ctl) { ctl.hidden = !blocks; wireCollapseAll(ctl, () => container.parentElement || container); }
+      if (!locked) { wireJobSearch(container, ns, entryFields, autofill, !existing); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
       if (!locked) wireFromRecord(container);
       wireCalcAndFlags(container, locked);
 
@@ -1445,15 +1515,19 @@
         if (typeof customBody.validate === 'function') {
           try { problems = customBody.validate(values, finalize) || []; } catch (e) { problems = []; }
         }
-        if (problems.length && (finalize || !submitFlow)) { toast(problems[0]); return; }
+        if (problems.length && (finalize || !submitFlow)) {
+          el(modalIds.fields).querySelectorAll('details').forEach((d) => { d.open = true; });
+          toast(problems[0]);
+          return;
+        }
         inSpec = customBody.summary ? (customBody.summary(values) || {}).inSpec : null;
         if (inSpec === undefined) inSpec = null;
       } else {
 
       const raw = {};
-      let missingRequired = null;
-      let badPattern = null;
-      let routeConflict = null;
+      let missingRequired = null, missingKey = null;
+      let badPattern = null, badPatternKey = null;
+      let routeConflict = null, routeConflictKey = null;
 
       correctingStage = (entryStages && unlockedStages.size) ? Array.from(unlockedStages)[0] : null;
       savingStage = entryStages ? (correctingStage || activeStageKey(existingForStage)) : null;
@@ -1470,11 +1544,12 @@
         if (f.showWhen && !conditionMet(f)) { raw[f.key] = ''; return; }
 
         if (isStamp(f)) return;
-        if (f.required && !String(raw[f.key] || '').trim()) missingRequired = f.label;
+        if (f.required && !missingRequired && !String(raw[f.key] || '').trim()) { missingRequired = f.label; missingKey = f.key; }
 
         if (f.pattern && !badPattern && String(raw[f.key] || '').trim()
             && !new RegExp(f.pattern).test(String(raw[f.key]).trim())) {
           badPattern = f.patternMessage || `"${f.label}" is not in the expected format.`;
+          badPatternKey = f.key;
         }
 
         if (f.matchJobRoute && window.Lookups && window.Lookups.batch && stageInPlay(f)) {
@@ -1482,15 +1557,16 @@
             || (el(`${ns}_f_${f.matchJobRoute}`) ? el(`${ns}_f_${f.matchJobRoute}`).value : '');
           if (jobVal && raw[f.key] && !window.Lookups.batch.routeMatches(jobVal, raw[f.key])) {
             routeConflict = window.Lookups.batch.routeError(jobVal);
+            routeConflictKey = f.key;
           }
         }
       });
 
-      if (missingRequired && (finalize || !submitFlow)) { toast(`"${missingRequired}" is required.`); return; }
+      if (missingRequired && (finalize || !submitFlow)) { revealField(el(`${ns}_f_${missingKey}`)); toast(`"${missingRequired}" is required.`); return; }
 
-      if (badPattern) { toast(badPattern); return; }
+      if (badPattern) { revealField(el(`${ns}_f_${badPatternKey}`)); toast(badPattern); return; }
 
-      if (routeConflict && (finalize || !submitFlow)) { toast(routeConflict); return; }
+      if (routeConflict && (finalize || !submitFlow)) { revealField(el(`${ns}_f_${routeConflictKey}`)); toast(routeConflict); return; }
 
       if (finalize) {
         entryFields.forEach(f => {
@@ -1535,6 +1611,7 @@
       } else {
         completedBy = readCompletedBy();
         if ((finalize || !submitFlow) && (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature)) {
+          revealField(['by', 'title', 'date', 'signature'].map(cbInput).find((i) => i && !String(i.value || '').trim()));
           toast('Completed by, title, date and signature are required to submit.');
           return;
         }
@@ -1965,9 +2042,12 @@
       // Same COMPLETED BY block as every form-record page (Completed by / Title / Date / Signature).
       // A customBody page draws its own copy of the block, so the engine skips it there.
       const completedByPanel = config.customBody ? '' : `
-          <div class="ml-muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;">Completed by</div>
-          ${window.SignOffBlock.completedByHtml({ byId: ns + '_cb_by', titleId: ns + '_cb_title', dateId: ns + '_cb_date', signatureId: ns + '_cb_signature', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}`;
+          <details class="ml-section-collapsible ml-signoff-block" open>
+            <summary class="ml-grouphead">Completed by</summary>
+            ${window.SignOffBlock.completedByHtml({ byId: ns + '_cb_by', titleId: ns + '_cb_title', dateId: ns + '_cb_date', signatureId: ns + '_cb_signature', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}
+          </details>`;
       const fieldsAndActions = `
+          <div class="ml-collapse-ctl no-print" id="${ns}_collapseCtl" hidden><button type="button" data-ml-collapse="close">Collapse all</button><span aria-hidden="true">·</span><button type="button" data-ml-collapse="open">Expand all</button></div>
           <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>${completedByPanel}
           <div class="ml-actions">
             <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">${inline ? 'Clear' : 'Cancel'}</button>
