@@ -32,7 +32,7 @@ const fld = (sectionIndex, key, label, type, o = {}) => ({
 });
 const col = (sectionIndex, key, label, type, o = {}) => fld(sectionIndex, key, label, type, { ...o, roster: true });
 
-// order on screen: job info, job so far, movements, steams, then trolleys/cooked weight (low prominence, collapsed)
+// order on screen: job info, progress of product, movements, steams, then trolleys/cooked weight (low prominence, collapsed)
 const S_JOB = 0, S_SO_FAR = 1, S_TROLLEY = 2, S_STEAMS = 3, S_MOVE = 4, S_CHECKS = 5, S_OLD = 6;
 
 const fields = [
@@ -43,7 +43,7 @@ const fields = [
   fld(S_JOB, 'jiProcessingFor', 'Processing for', 'text', { readOnly: true }),
   fld(S_JOB, 'jiIntakeWeight', 'Whole weight (kg)', 'text', { readOnly: true }),
 
-  // Section 1 - Job so far (read-only panel, drawn by the engine from the job's earlier entries): no fields.
+  // Section 1 - Progress of product (read-only panel, drawn by the engine from the job's earlier entries): no fields.
 
   // Section 2 - Entry date, cooked weight and trolleys
   fld(S_TROLLEY, 'entryDate', 'Entry date', 'timestamp', { readOnly: true, extra: { serverStamp: true, hidden: true } }),
@@ -104,7 +104,7 @@ def.engine = 'form-record';
 def.mount = '#frRoot';
 def.sections = [
   { title: 'Job info', kind: 'fields', position: 0, extraJson: { collapsible: true, summaryField: ['jobNo', 'jiProcessingFor'] } },
-  { title: 'Job so far', kind: 'fields', position: 1, extraJson: { jobSoFarPanel: true } },
+  { title: 'Progress of product', kind: 'fields', position: 1, extraJson: { jobSoFarPanel: true } },
   { title: 'Cooked weight (not shown: copied from REC 7.4.0)', kind: 'fields', position: 2, extraJson: {} },
   {
     title: 'Steams', kind: 'roster', position: rosterIdx, extraJson: {
