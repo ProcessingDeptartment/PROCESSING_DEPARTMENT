@@ -91,7 +91,12 @@
   .jp-actions button{ padding:9px 16px; border-radius:6px; font-size:14px; cursor:pointer; border:1px solid #c9ced6; background:#fff; }
   .jp-actions .jp-confirm{ background:var(--palette-ink,#1b2330); color:#fff; border-color:transparent; font-weight:600; }
   .jp-actions .jp-confirm:disabled{ opacity:.5; cursor:default; }
-  `;
+  details.jp-compact:not([open]) > summary{ font-size:0 !important; margin-bottom:4px !important; }
+  details.jp-compact:not([open]) > summary::before{ font-size:12px; }
+  details.jp-compact:not([open]) > summary > *{ display:none !important; }
+  details.jp-compact:not([open]) > summary > .jp-compact-label{ display:inline !important; }
+  .jp-compact-label{ display:none; font-size:12px; font-weight:600; text-transform:none; letter-spacing:0;
+    color:var(--palette-ink,#1b2330); font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; }`;
     document.head.appendChild(st);
   }
 
@@ -192,6 +197,13 @@
     const fixedRoute = sel.getAttribute('data-route') || '';
     let route = fixedRoute || loadRoutePref();
     const details = sel.closest('details');
+    const summary = details && details.querySelector(':scope > summary');
+    let compactLabel = null;
+    if (summary) {
+      compactLabel = document.createElement('span');
+      compactLabel.className = 'jp-compact-label';
+      summary.appendChild(compactLabel);
+    }
     let active = -1;
     let matches = [];
 
@@ -215,47 +227,8 @@
       paintRoute();
       pickedNo.textContent = v;
       wrap.querySelector('.jp-change').hidden = sel.disabled;
-    }
-
-    // After the user confirms a job the Job info block folds away (its header summary keeps the
-    // job visible) and focus moves on to the next empty field in the form.
-    function focusNextField() {
-      if (!details) return;
-      const host = details.closest('#fr_modalSections, [id$="_modalFields"]');
-      if (!host) return;
-      const fields = host.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea');
-      for (const f of fields) {
-        if (details.contains(f) || !(details.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
-        if (f.disabled || f.readOnly || String(f.value || '').trim() !== '' || !f.getClientRects().length) continue;
-        try { f.focus({ preventScroll: true }); } catch (e) { continue; }
-        try { f.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { }
-        return;
-      }
-    }
-
-    // Start a new entry on the job number: focus the search box (which opens its list), or the
-    // Can/Dry toggle when no route is chosen yet. Never when a job is already picked.
-    function tryFocus() {
-      if (sel.value || sel.disabled || !sel.isConnected) return false;
-      const target = !input.hidden && !input.disabled ? input : routeBar.querySelector('button');
-      if (!target) return false;
-      try { target.focus({ preventScroll: true }); } catch (e) { return false; }
-      return true;
-    }
-    function ensureVisible() {
-      const r = wrap.getBoundingClientRect();
-      if (r.top < 0 || r.bottom > (window.innerHeight || 0)) { try { wrap.scrollIntoView({ block: 'center' }); } catch (e) { } }
-    }
-    // The record shell re-parents the form a moment after it opens, which drops focus; if nothing
-    // else has taken focus by then, put it back on the picker. The page is only scrolled once the
-    // layout has settled, and only if the picker is off screen (e.g. after Save & New).
-    function focusPicker() {
-      if (!tryFocus()) return false;
-      [350, 900].forEach((ms) => setTimeout(() => {
-        if (!sel.value && (!document.activeElement || document.activeElement === document.body)) tryFocus();
-      }, ms));
-      setTimeout(() => { if (!sel.value && wrap.contains(document.activeElement)) ensureVisible(); }, 1300);
-      return true;
+      if (compactLabel) compactLabel.textContent = v ? 'Job no. ' + v : '';
+      if (details) details.classList.toggle('jp-compact', !!v);
     }
 
     function drawList() {
@@ -298,7 +271,6 @@
       sel.dispatchEvent(new Event('change', { bubbles: true }));
       paint();
       if (details) details.open = false;
-      setTimeout(focusNextField, 50);
     }
 
     routeBar.addEventListener('click', (ev) => {
@@ -347,7 +319,9 @@
     sel.addEventListener('change', paint);
 
     paint();
-    sel._jobPicker = { refresh: paint, focus: focusPicker, drawList: () => { if (!input.hidden && document.activeElement === input) drawList(); } };
+    // A record reopened with a job already on it starts collapsed.
+    if (details && sel.value) details.open = false;
+    sel._jobPicker = { refresh: paint, drawList: () => { if (!input.hidden && document.activeElement === input) drawList(); } };
     return sel._jobPicker;
   }
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -70,7 +70,7 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body class="rt-tablet">
-<script src="../lib/record-chrome.js?v=25"></script>
+<script src="../lib/record-chrome.js?v=23"></script>
 <div id="mlRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
@@ -86,7 +86,7 @@
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/traceability.js?v=10"></script>
 <script src="../lib/signoff-block.js?v=6"></script>
-<script src="../lib/monitoring-log.js?v=39"></script>
+<script src="../lib/monitoring-log.js?v=36"></script>
 <script>(function () {
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const num = v => { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; };
@@ -418,7 +418,7 @@
         '<a class="ds-btn-flat" href="double-seam-trend.html" style="text-decoration:none;">Trend</a>' +
       '</div>' +
       '<div id="ds_issues">' + issuesHtml() + '</div>' +
-      '<details class="ml-section-collapsible" open data-autofold="1" style="border:1px solid var(--palette-border,#e2e4e3);border-radius:6px;padding:10px 14px;background:#fff;">' +
+      '<details class="ml-section-collapsible" style="border:1px solid var(--palette-border,#e2e4e3);border-radius:6px;padding:10px 14px;background:#fff;">' +
         '<summary class="ml-grouphead">Job &amp; equipment info<span class="ml-section-summary" id="ds_jobNoSummary">' + esc(state.header.jobNo || '(no job no.)') + '</span></summary>' +
         '<div class="ds-grid" style="margin-bottom:10px;">' +
           headerFieldHtml('jobNo', 'Job no.') + headerFieldHtml('agCode', 'AG Code') +
@@ -434,17 +434,17 @@
           headerFieldHtml('gauge300', 'Size 3.00mm - actual reading', 'number', 'tol +/-0.02mm') +
         '</div>' +
       '</details>' +
-      '<details class="ml-section-collapsible ds-panel" open><summary class="ml-grouphead"><span id="ds_stageTitle"></span></summary><div class="ds-panel-body">' +
-        '<div class="ds-stage-tabs" id="ds_stageTabs">' + STAGES.map(s => '<div class="ds-stage-tab' + (s.key === activeStage ? ' active' : '') + '" data-stage="' + s.key + '">' + esc(s.label) + '</div>').join('') + '</div>' +
-        '<div class="ds-can-tabs" id="ds_canTabs" style="display:flex;gap:6px;margin-bottom:10px;">' +
-          CANS.map(c => '<div class="ds-stage-tab' + (c === activeCan ? ' active' : '') + '" data-can="' + c + '" style="flex:0 0 auto;min-width:96px;text-align:center;">' + (c === 'can1' ? 'Can 1' : 'Can 2') + '</div>').join('') +
-        '</div><div id="ds_stageContent"></div></div></details>' +
-      '<details class="ml-section-collapsible ds-panel" open><summary class="ml-grouphead">Comments</summary><div class="ds-panel-body">' +
-        '<textarea id="ds_comments" rows="3" style="width:100%;">' + esc(state.comments) + '</textarea></div></details>' +
-      '<details class="ml-section-collapsible ds-panel" open><summary class="ml-grouphead">Completed by</summary><div class="ds-panel-body">' +
+      '<div class="ds-stage-tabs" id="ds_stageTabs">' + STAGES.map(s => '<div class="ds-stage-tab' + (s.key === activeStage ? ' active' : '') + '" data-stage="' + s.key + '">' + esc(s.label) + '</div>').join('') + '</div>' +
+      '<div class="ds-can-tabs" id="ds_canTabs" style="display:flex;gap:6px;margin-bottom:10px;">' +
+        CANS.map(c => '<div class="ds-stage-tab' + (c === activeCan ? ' active' : '') + '" data-can="' + c + '" style="flex:0 0 auto;min-width:96px;text-align:center;">' + (c === 'can1' ? 'Can 1' : 'Can 2') + '</div>').join('') +
+      '</div>' +
+      '<div class="ds-panel"><div class="ds-panel-head"><h3 id="ds_stageTitle"></h3></div><div class="ds-panel-body" id="ds_stageContent"></div></div>' +
+      '<div class="ds-panel"><div class="ds-panel-head"><h3>Comments</h3></div><div class="ds-panel-body">' +
+        '<textarea id="ds_comments" rows="3" style="width:100%;">' + esc(state.comments) + '</textarea></div></div>' +
+      '<div class="ds-panel"><div class="ds-panel-head"><h3>Completed by</h3></div><div class="ds-panel-body">' +
         // the shared COMPLETED BY block (same markup as every other record); ids keep this page's own wiring
         window.SignOffBlock.completedByHtml({ byId: 'ds_completedBy', titleId: 'ds_completedSig', dateId: 'ds_completedDate', signatureId: 'ds_completedBySignature', gridClass: 'ds-grid', fieldClass: 'ds-field' }) +
-      '</div></details>';
+      '</div></div>';
 
     // stage content
     const paintStage = () => {
@@ -501,10 +501,6 @@
       container.querySelectorAll('input,select,textarea,button').forEach(el => { el.disabled = true; });
     }
     updateSubmitGate();
-    if (!ctx.locked && ctx.mode === 'new' && !state.header.jobNo) {
-      const jobInp = container.querySelector('[data-hkey="jobNo"]');
-      if (jobInp) { try { jobInp.focus({ preventScroll: true }); } catch (e) { /* not focusable */ } }
-    }
   }
 
   function read(container) {
