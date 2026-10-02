@@ -382,9 +382,53 @@
   function rowCond(cond, col, row) {
     if (!cond) return true;
     if (cond.nonEmpty) return String((row || {})[col.key] == null ? '' : row[col.key]).trim() !== '';
+    // orNonEmpty: also shown when the column itself holds a value (old blanching cards keep their kg)
+    if (cond.orNonEmpty && String((row || {})[col.key] == null ? '' : row[col.key]).trim() !== '') return true;
     return (cond.in || []).indexOf(String((row || {})[cond.field] == null ? '' : row[cond.field])) !== -1;
   }
   function rowColVisible(col, row) { return rowCond(col.showWhen, col, row); }
+
+  // ---- roster.slides (REC 7.4.0): one slide per pot -------------------------------------------------------
+  const slideBlank = (v) => String(v == null ? '' : v).trim() === '';
+  const slideAdditions = (roster) => {
+    const out = {};
+    (roster.columns || []).filter(c => c.addition).forEach(c => {
+      const a = out[c.addition] || (out[c.addition] = { key: c.addition });
+      a[c.additionRole === 'kg' ? 'kgCol' : 'batchCol'] = c;
+    });
+    return Object.keys(out).map(k => out[k]);
+  };
+  // A slide nothing was ever chosen or typed on is ignored at submit.
+  function slideIsBlank(roster, row) {
+    return slideBlank(row.process) && !(roster.columns || []).some(c => !c.hidden && !slideBlank(row[c.key]));
+  }
+  // Labels still to fill on a slide (empty list = complete). Required columns that this stage shows, plus a
+  // ticked addition that lacks its weight or its batch code. Legacy / hidden / addition columns never block.
+  function slideMissing(roster, row) {
+    if (slideBlank(row.process)) return ['Blanching or Cooking'];
+    const miss = [];
+    (roster.columns || []).forEach(c => {
+      if (c.hidden || c.legacy || c.addition) return;
+      if ((c.required || (c.requiredWhen && rowCond(c.requiredWhen, c, row))) && rowColVisible(c, row) && slideBlank(row[c.key])) miss.push(c.label);
+    });
+    if (row.process === 'Cooking') {
+      slideAdditions(roster).forEach(a => {
+        const k = a.kgCol && !slideBlank(row[a.kgCol.key]), b = a.batchCol && !slideBlank(row[a.batchCol.key]);
+        if (k && !b) miss.push(a.batchCol.label);
+        if (b && !k) miss.push(a.kgCol.label);
+      });
+    }
+    return miss;
+  }
+  // Batch codes stay filled in on this device until the user types a different one. Wrapped: a blocked
+  // storage must never break the form.
+  const stickyKey = (recordKey, group) => 'fr_sticky:' + recordKey + ':' + group;
+  function stickyGet(recordKey, group) {
+    try { return window.localStorage.getItem(stickyKey(recordKey, group)) || ''; } catch (e) { return ''; }
+  }
+  function stickySet(recordKey, group, val) {
+    try { if (String(val || '').trim() !== '') window.localStorage.setItem(stickyKey(recordKey, group), String(val).trim()); } catch (e) { /* storage blocked */ }
+  }
   function rowMatches(where, row) {
     return !where || Object.keys(where).every(k => where[k].indexOf(String((row || {})[k] == null ? '' : row[k])) !== -1);
   }
@@ -977,7 +1021,7 @@
   function summaryPart(key, value, isJob) {
     const v = String(value || '').trim();
     if (!v) return '';
-    if (isJob) return 'Job ' + v;
+    if (isJob) return v;
     const d = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (/^(jiReceivingDate|intakeDate)$/.test(key) && d) return 'Intake ' + Number(d[3]) + ' ' + SUMMARY_MONTHS[Number(d[2]) - 1];
     return v;
@@ -1094,10 +1138,25 @@
       if (autofocus) focusFreshJobNumber(container);
       return;
     }
-    loadLib('job-picker.js?v=6', 'JobPicker').then((jp) => {
-      if (!jp) return;
-      sels.forEach((sel) => jp.enhance(sel));
-      if (autofocus && sels[0] && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
+    // New entry: the form opens behind the job (record-open gate, see job-picker.js). The panel is kept
+    // invisible only for the moment it takes to load the picker, so the full form never flashes.
+    const gateRoot = autofocus && !sels[0].value && container.parentElement ? container.parentElement : null;
+    let pre = null;
+    if (gateRoot) { gateRoot.style.visibility = 'hidden'; pre = setTimeout(() => { gateRoot.style.visibility = ''; }, 5000); }
+    const unprelock = () => { if (pre) { clearTimeout(pre); pre = null; } if (gateRoot) gateRoot.style.visibility = ''; };
+    loadLib('job-picker.js?v=7', 'JobPicker').then((jp) => {
+      try {
+        if (!jp) return;
+        const jobKey0 = fields[0].key;
+        sels.forEach((sel, i) => jp.enhance(sel, i === 0 ? {
+          gateRoot, recordKey: config.recordKey,
+          autofillTargets: () => (config.autofill || []).filter((r) => r.watch === jobKey0)
+            .reduce((a, r) => a.concat(Object.keys(r.fill || {})), [])
+            .map((k) => container.querySelector('#fr_f_' + k)),
+          requiredFocus: () => allFields(config).filter((f) => f.required).map((f) => container.querySelector('#fr_f_' + f.key))
+        } : {}));
+        if (autofocus && sels[0] && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
+      } finally { unprelock(); }
     });
     loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
       if (!js) throw new Error('job-status.js unavailable');
@@ -1246,16 +1305,19 @@
     const l = (ownData && ownData.__matchRosterGroupLegacy) || {};
     const oosw = capData && capData.__rosterSums && capData.__rosterSums[jw.capSumColumn] != null
       ? parseFloat(capData.__rosterSums[jw.capSumColumn]) : null;
-    return { oosw: isNaN(oosw) ? null : oosw, blanched: num(g[jw.blanch]), cooked: num(g[jw.cook]) - num(l[jw.cook]) };
+    // cookFromOosw (slides): every Cooking kg counts, migrated cooking-only cards included (same as rule R1).
+    return { oosw: isNaN(oosw) ? null : oosw, blanched: num(g[jw.blanch]), cooked: num(g[jw.cook]) - (jw.cookFromOosw ? 0 : num(l[jw.cook])) };
   }
   function jobWeightFigures(base, jw, rows) {
     let b = base ? base.blanched : 0, c = base ? base.cooked : 0;
     (rows || []).forEach(r => {
       const kg = parseFloat(r[jw.column]) || 0;
       if (r[jw.processColumn] === jw.blanch) b += kg;
-      else if (r[jw.processColumn] === jw.cook && !isYes(r[jw.legacyColumn])) c += kg;
+      else if (r[jw.processColumn] === jw.cook && (jw.cookFromOosw || !isYes(r[jw.legacyColumn]))) c += kg;
     });
     const oosw = base ? base.oosw : null;
+    // cookFromOosw: no blanching weight any more -- available to cook = OOSW - cooked (null when no OOSW record).
+    if (jw.cookFromOosw) return { oosw, blanched: b, cooked: c, availBlanch: null, availCook: oosw == null ? null : oosw - c };
     return { oosw, blanched: b, cooked: c,
       availBlanch: oosw == null ? null : oosw - b,
       availCook: b - c };
@@ -1793,19 +1855,49 @@
 
     function rosterRowHtml(ns, idx, row, roster) {
       row = row || {};
-      const cell = c => `<label class="fr-field" data-col="${esc(c.key)}">${esc(c.label)}${c.required || c.requiredWhen ? ' *' : ''}
-          ${fieldInputHtml(`${ns}_roster_${idx}_${c.key}`, c, row[c.key], row)}${roster.jobWeights && c.key === roster.jobWeights.column ? '<span class="fr-pot-avail no-print" data-avail></span>' : ''}
+      const slides = !!roster.slides;
+      const cell = c => {
+        const id = `${ns}_roster_${idx}_${c.key}`;
+        let input = fieldInputHtml(id, c, row[c.key], row);
+        // slides: the unit is a fixed suffix inside the input (visible even when the label wraps); "Now" fills the time
+        if (slides && c.unit) input = `<span class="fr-unit-wrap" data-unit="${esc(c.unit)}">${input}</span>`;
+        if (slides && c.nowButton) input = `<span class="fr-now-wrap">${input}<button type="button" class="fr-btn fr-now-btn no-print" data-now="${id}">Now</button></span>`;
+        return `<label class="fr-field" data-col="${esc(c.key)}">${esc(c.label)}${c.required || c.requiredWhen ? ' *' : ''}
+          ${input}${roster.jobWeights && c.key === roster.jobWeights.column ? '<span class="fr-pot-avail no-print" data-avail></span>' : ''}
         </label>`;
+      };
       if (roster.cardRows) {
         const proc = row.process || '';
         const lines = [];
+        // slides: Salt / Sugar / Vinegar additions have no field cell -- their values sit in hidden inputs and are
+        // edited through the tick + pop-up block under the fields
+        const asHidden = c => c.hidden || (slides && c.addition);
         roster.columns.forEach(c => {
-          if (c.hidden) return;
+          if (asHidden(c)) return;
           const ln = c.layoutRow || 1;
           (lines[ln] = lines[ln] || []).push(c);
         });
-        const hiddenIn = roster.columns.filter(c => c.hidden).map(c =>
-          `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${esc(c.key === roster.autoNumber ? String(idx + 1) : (row[c.key] == null ? '' : row[c.key]))}">`).join('');
+        const hiddenIn = roster.columns.filter(asHidden).map(c =>
+          `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${esc(c.key === roster.autoNumber ? String(slides ? (row[c.key] == null ? '' : row[c.key]) : idx + 1) : (row[c.key] == null ? '' : row[c.key]))}">`).join('');
+        if (slides) {
+          const title = proc === 'Blanching' ? 'Blanching' : proc === 'Cooking' ? `${esc(roster.rowTitle || 'Pot')} ${esc(row.potNo || '')} &mdash; Cooking` : 'New slide';
+          const stage = proc ? '' : `<div class="fr-stage-choose no-print"><p class="fr-stage-q">Which stage is this slide?</p>
+            ${(roster.processChoice.options || []).map(o => `<button type="button" class="fr-btn fr-stage-btn fr-stage-${esc(o)}" data-stage="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+          const adds = slideAdditions(roster);
+          const addBlock = adds.length ? `<div class="fr-additions no-print" data-additions>
+            <div class="fr-additions-h">Optional additions</div>
+            <div class="fr-additions-btns">${adds.map(a => `<span class="fr-add-item" data-add-item="${esc(a.key)}">
+              <button type="button" class="fr-add-tick" data-add="${esc(a.key)}" aria-pressed="false">${esc(a.key.charAt(0).toUpperCase() + a.key.slice(1))}</button>
+              <span class="fr-add-sum" data-add-sum="${esc(a.key)}"></span></span>`).join('')}</div></div>` : '';
+          return `<div class="fr-roster-row fr-pot-card fr-slide fr-pot-${esc(proc)}" data-roster-row="${idx}">
+            <div class="fr-pot-head"><strong class="fr-pot-title">${title}</strong>
+              <span class="fr-pot-warn no-print" data-dup-warn></span>
+              <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove slide</button></div>
+            ${hiddenIn}${stage}
+            ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
+            ${addBlock}
+          </div>`;
+        }
         return `<div class="fr-roster-row fr-pot-card fr-pot-${esc(proc)}" data-roster-row="${idx}">
           <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}${proc ? ' &mdash; ' + esc(proc) : ''}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
@@ -1992,6 +2084,8 @@
       const fgNew = !!fgCol && !rows.length;
       if (fgNew) (fgCol.options || []).forEach(o => rows.push({ [fg.column]: o }));
       if (!rows.length) (roster.defaultRows || ((roster.quickEntry || roster.startEmpty) ? [] : [{}])).forEach(r => rows.push(Object.assign({}, r)));
+      // slides: every entry starts on a blank slide that asks Blanching or Cooking
+      if (roster.slides && !rows.length) rows.push({});
 
       // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
       // from the Abalone Receiving baskets for this job). One fetch per job, cached; a column
@@ -2046,11 +2140,13 @@
         const span = (txt, n) => `<span${n != null && n < -1e-9 ? ' style="color:#b30000;font-weight:bold;"' : ''}>${txt}${n != null ? ' ' + jwKg(n) + ' kg' : ''}</span>`;
         const tally = el(rosterDomId('fr_jobWeights', rosterIndex));
         if (tally) {
-          tally.innerHTML = [
-            known ? `OOSW: ${jwKg(f.oosw)} kg` : 'OOSW not found',
-            known ? span('Available to blanch:', f.availBlanch) : '',
-            span('Available to cook:', f.availCook)
-          ].filter(Boolean).join('  ·  ');
+          tally.innerHTML = jw.cookFromOosw
+            ? (known ? [`OOSW: ${jwKg(f.oosw)} kg`, span('Available to cook:', f.availCook)].join('  ·  ') : 'OOSW not found')
+            : [
+              known ? `OOSW: ${jwKg(f.oosw)} kg` : 'OOSW not found',
+              known ? span('Available to blanch:', f.availBlanch) : '',
+              span('Available to cook:', f.availCook)
+            ].filter(Boolean).join('  ·  ');
         }
         container.querySelectorAll('.fr-pot-card').forEach(card => {
           const i = Number(card.dataset.rosterRow);
@@ -2060,8 +2156,9 @@
           if (inp && inp.disabled) { out.textContent = ''; return; }
           const proc = (rows[i] && readRow(i)[jw.processColumn]) || '';
           let txt = '', n = null;
-          if (proc === jw.blanch) { if (known) { txt = 'Available to blanch:'; n = f.availBlanch; } else txt = 'OOSW not found'; }
-          else if (proc === jw.cook) { txt = 'Available to cook:'; n = f.availCook; }
+          if (proc === jw.blanch && jw.cookFromOosw) { txt = ''; }
+          else if (proc === jw.blanch) { if (known) { txt = 'Available to blanch:'; n = f.availBlanch; } else txt = 'OOSW not found'; }
+          else if (proc === jw.cook) { if (jw.cookFromOosw && !known) txt = 'OOSW not found'; else { txt = 'Available to cook:'; n = f.availCook; } }
           out.innerHTML = txt ? span(txt, n) : '';
         });
       }
@@ -2385,7 +2482,7 @@
         carried.forEach(k => {
           const [i, key] = k.split(':');
           const inp = el(fid(i, key));
-          if (inp) setCarryHint(inp, 'carried from pot above');
+          if (inp) setCarryHint(inp, roster.slides ? 'same as last time' : 'carried from pot above');
         });
       }
       container.addEventListener('input', (e) => {
@@ -2399,6 +2496,13 @@
       container._isCarried = (i, key) => carried.has(i + ':' + key);
 
       function draw() {
+        if (roster.slides) {
+          // pot numbers count Cooking slides only and are automatic; Blanching has none
+          let potN = 0;
+          rows.forEach(r => { r.potNo = r.process === 'Cooking' ? String(++potN) : ''; });
+          if (slideCur > rows.length - 1) slideCur = rows.length - 1;
+          if (slideCur < 0) slideCur = 0;
+        }
         container.innerHTML = (roster.fixedGroups ? `<div class="fr-bin-row fr-bin-thead" aria-hidden="true"><span>Bin</span><span>Start kg</span><span>Confirm kg</span><span>Full boxes</span><span>Final kg</span><span>Graded kg</span></div>` : '')
           + rows.map((r, i) => rosterRowHtml(ns, i, r, roster)).join('');
 
@@ -2423,11 +2527,13 @@
                     if (roster.columns.some(c => !c.hidden && c.key !== 'process' && String(cur[c.key] || '').trim() !== '')
                       && !confirm('Remove ' + (roster.rowTitle || 'row') + ' ' + (i + 1) + '? Everything entered on it will be lost.')) return;
                   }
+                  if (roster.slides) rows = rows.map((_, j) => readRow(j));
                   rows.splice(i, 1);
+                  if (roster.slides && i < slideCur) slideCur--;
                   const nc = new Set();
                   carried.forEach(k => { const [ci, ck] = k.split(':'); const n = Number(ci); if (n < i) nc.add(k); else if (n > i) nc.add((n - 1) + ':' + ck); });
                   carried.clear(); nc.forEach(k => carried.add(k));
-                  if (!rows.length && !roster.quickEntry && !roster.startEmpty) rows.push({});
+                  if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
 
                   const next = new Set();
                   collapsedRows.forEach(x => { if (x < i) next.add(x); else if (x > i) next.add(x - 1); });
@@ -2436,6 +2542,7 @@
                 });
               });
               applyCollapse();
+              if (roster.slides) updateSlideUi();
             }
 
       // Derived cells first so totals read the fresh values (e.g. graded weight -> grade totals).
@@ -2498,6 +2605,218 @@
       if (roster.pctTotal) {
         const ofEl = el('fr_f_' + roster.pctTotal.of);
         if (ofEl) ['input', 'change'].forEach(ev => ofEl.addEventListener(ev, renderRosterTotals));
+      }
+      // ---- roster.slides (REC 7.4.0 Dry Cooking): one pot per slide ------------------------------------------
+      // Every slide stays in the DOM (hidden/shown only, so typed values survive and print is untouched). A numbered
+      // chip bar jumps between slides; Next is disabled until the slide is complete and then adds the next one.
+      // Salt / Sugar / Vinegar are optional additions (tick -> pop-up for weight + batch code). Batch codes are
+      // sticky: remembered per device until the user types a different one.
+      let slideCur = 0;
+      if (roster.slides) {
+        const firstOpen = rows.findIndex(r => slideMissing(roster, r).length);
+        slideCur = firstOpen === -1 ? 0 : firstOpen;
+      }
+      const slideBarId = containerId + '__bar';
+      function slideBarEl() {
+        let b = el(slideBarId);
+        if (!b && container.parentNode) {
+          b = document.createElement('div');
+          b.id = slideBarId;
+          b.className = 'fr-slidebar no-print';
+          b.setAttribute('role', 'tablist');
+          // the page chrome adds a "n rows" strip before every roster; a slide list has no use for it
+          const strip = container.previousElementSibling;
+          if (strip && strip.classList.contains('rt-rowcount')) strip.remove();
+          container.parentNode.insertBefore(b, container);
+          b.addEventListener('click', (e) => {
+            const chip = e.target.closest && e.target.closest('[data-slide]');
+            if (chip) container._goSlide(Number(chip.dataset.slide));
+          });
+        }
+        return b;
+      }
+      const slideTouch = () => (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
+      const slideReduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      // Bring the current slide into view under the sticky header (after the next frame). Touch screens never
+      // auto-focus (no keyboard pop-up); other screens focus the first empty field.
+      function revealSlide(focusIt) {
+        requestAnimationFrame(() => {
+          const card = container.querySelector('.fr-slide[data-roster-row="' + slideCur + '"]');
+          if (!card) return;
+          card.scrollIntoView({ behavior: slideReduced() ? 'auto' : 'smooth', block: 'start' });
+          if (focusIt && !slideTouch()) {
+            const f = Array.from(card.querySelectorAll('input:not([type=hidden]):not([disabled]), select:not([disabled])'))
+              .find(x => x.offsetParent !== null && String(x.value || '').trim() === '');
+            if (f) { try { f.focus({ preventScroll: true }); } catch (err) { /* not focusable */ } }
+          }
+        });
+      }
+      function updateSlideUi() {
+        if (!roster.slides) return;
+        const cur = rows.map((_, i) => readRow(i));
+        const adds = slideAdditions(roster);
+        container.querySelectorAll('.fr-slide').forEach(card => {
+          const i = Number(card.dataset.rosterRow), row = cur[i] || {};
+          card.classList.toggle('fr-slide-hidden', i !== slideCur);
+          const block = card.querySelector('[data-additions]');
+          if (block) block.style.display = row.process === 'Cooking' ? '' : 'none';
+          adds.forEach(a => {
+            const kg = row[a.kgCol.key], batch = row[a.batchCol.key];
+            const used = !slideBlank(kg) || !slideBlank(batch);
+            const btn = card.querySelector('[data-add="' + a.key + '"]');
+            const sum = card.querySelector('[data-add-sum="' + a.key + '"]');
+            if (btn) { btn.classList.toggle('on', used); btn.setAttribute('aria-pressed', used ? 'true' : 'false'); }
+            if (sum) {
+              const html = used ? `<span>${esc(kg || '?')} kg &middot; Batch ${esc(batch || '?')}</span> <button type="button" class="fr-add-edit" data-add-edit="${esc(a.key)}">Edit</button>` : '';
+              if (sum.innerHTML !== html) sum.innerHTML = html;
+            }
+          });
+        });
+        const bar = slideBarEl();
+        if (bar) {
+          bar.innerHTML = cur.map((r, i) => {
+            const miss = slideMissing(roster, r).length;
+            const blank = slideIsBlank(roster, r);
+            const lbl = r.process === 'Blanching' ? 'B' : r.process === 'Cooking' ? 'Pot ' + esc(r.potNo || '') : 'New';
+            const name = r.process === 'Blanching' ? 'Blanching' : r.process === 'Cooking' ? 'Pot ' + esc(r.potNo || '') + ' - Cooking' : 'New slide';
+            const mark = blank ? '' : miss ? '<i class="fr-chip-dot" aria-label="incomplete"></i>' : '<i class="fr-chip-tick" aria-label="complete">&#10003;</i>';
+            return `<button type="button" role="tab" data-keep-enabled class="fr-chip${i === slideCur ? ' on' : ''}${r.process === 'Blanching' ? ' fr-chip-b' : ''}" data-slide="${i}" title="${name}" aria-label="${name}" aria-selected="${i === slideCur ? 'true' : 'false'}">${lbl}${mark}</button>`;
+          }).join('');
+        }
+        const nav = el(rosterDomId('fr_slideNav', rosterIndex));
+        if (nav) {
+          const missing = slideMissing(roster, cur[slideCur] || {});
+          const nextBtn = nav.querySelector('.fr-slide-next');
+          if (nextBtn && !formLocked) nextBtn.disabled = missing.length > 0;
+          const hint = nav.querySelector('.fr-slide-hint');
+          if (hint) hint.textContent = missing.length ? 'Complete all fields to continue' : '';
+        }
+      }
+      container._goSlide = (i) => {
+        if (i < 0 || i >= rows.length) return;
+        slideCur = i;
+        updateSlideUi();
+        revealSlide(false);
+      };
+      container._slideNext = () => {
+        rows = rows.map((_, i) => readRow(i));
+        if (slideMissing(roster, rows[slideCur] || {}).length) return;
+        if (slideCur < rows.length - 1) slideCur++;
+        else { rows.push({}); slideCur = rows.length - 1; }
+        draw();
+        revealSlide(true);
+      };
+      container._slideMissing = (i) => slideMissing(roster, readRow(i));
+      container._updateSlideUi = updateSlideUi;
+      if (roster.slides) {
+        const navEl = el(rosterDomId('fr_slideNav', rosterIndex));
+        if (navEl) navEl.querySelector('.fr-slide-next').addEventListener('click', () => container._slideNext());
+        ['input', 'change', 'click'].forEach(ev => container.addEventListener(ev, () => setTimeout(updateSlideUi, 0)));
+
+        // stage choice: fixed once chosen; pre-fills this stage's batch codes from the sticky store
+        container.addEventListener('click', (e) => {
+          const b = e.target.closest && e.target.closest('[data-stage]');
+          if (!b) return;
+          const i = Number(b.closest('.fr-slide').dataset.rosterRow);
+          rows = rows.map((_, j) => readRow(j));
+          rows[i].process = b.dataset.stage;
+          roster.columns.filter(c => c.carryOnAdd && !c.addition && rowColVisible(c, rows[i])).forEach(c => {
+            const v = stickyGet(config.recordKey, c.carryGroup || c.key);
+            if (v && slideBlank(rows[i][c.key])) { rows[i][c.key] = v; carried.add(i + ':' + c.key); }
+          });
+          slideCur = i;
+          draw();
+        });
+        // typing a batch code makes it the sticky one
+        container.addEventListener('input', (e) => {
+          const t = e.target;
+          if (!t || !t.id || t.type === 'hidden') return;
+          const c = roster.columns.find(x => x.carryOnAdd && t.id.endsWith('_' + x.key));
+          if (c) stickySet(config.recordKey, c.carryGroup || c.key, t.value);
+        });
+        container.addEventListener('click', (e) => {
+          const b = e.target.closest && e.target.closest('[data-now]');
+          if (!b) return;
+          const inp = el(b.dataset.now);
+          if (!inp || inp.disabled) return;
+          const d = new Date();
+          inp.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        // Optional additions: tick opens the pop-up; a ticked addition shows its summary + Edit; unticking confirms.
+        const setHidden = (id, v) => { const x = el(id); if (x) { x.value = v; x.dispatchEvent(new Event('input', { bubbles: true })); } };
+        function openAddition(i, key, opener) {
+          const a = slideAdditions(roster).find(x => x.key === key);
+          if (!a) return;
+          const kgId = fid(i, a.kgCol.key), bId = fid(i, a.batchCol.key);
+          const oldKg = (el(kgId) || {}).value || '', oldB = (el(bId) || {}).value || '';
+          const group = a.batchCol.carryGroup || a.batchCol.key;
+          const sticky = stickyGet(config.recordKey, group);
+          const title = key.charAt(0).toUpperCase() + key.slice(1);
+          const back = document.createElement('div');
+          back.className = 'fr-add-pop no-print';
+          back.innerHTML = `<div class="fr-add-dialog" role="dialog" aria-modal="true" aria-labelledby="fr_addpop_t">
+            <h3 id="fr_addpop_t">${esc(title)}</h3>
+            <label>Weight (kg) *<span class="fr-unit-wrap" data-unit="kg"><input type="number" step="0.01" inputmode="decimal" class="fr-addpop-kg" value="${esc(oldKg)}"></span></label>
+            <label>Batch code *<input type="text" class="fr-addpop-batch" value="${esc(oldB || sticky)}"></label>
+            <small class="fr-addpop-hint">${!oldB && sticky ? 'Same batch code as last time - change it if needed.' : ''}</small>
+            <div class="fr-add-actions"><button type="button" class="fr-btn fr-btn-flat" data-pop-cancel>Cancel</button>
+              <button type="button" class="fr-btn fr-btn-primary" data-pop-save disabled>Save</button></div></div>`;
+          document.body.appendChild(back);
+          const kg = back.querySelector('.fr-addpop-kg'), bt = back.querySelector('.fr-addpop-batch');
+          const save = back.querySelector('[data-pop-save]'), cancel = back.querySelector('[data-pop-cancel]');
+          const valid = () => String(kg.value).trim() !== '' && String(bt.value).trim() !== '';
+          const sync = () => { save.disabled = !valid(); };
+          const close = () => {
+            document.removeEventListener('keydown', onKey, true);
+            back.remove();
+            if (opener && document.body.contains(opener)) { try { opener.focus({ preventScroll: true }); } catch (err) { /* gone */ } }
+          };
+          const doSave = () => {
+            if (!valid()) return;
+            setHidden(kgId, String(kg.value).trim());
+            setHidden(bId, String(bt.value).trim());
+            stickySet(config.recordKey, group, bt.value);
+            carried.delete(i + ':' + a.batchCol.key);
+            close();
+            updateSlideUi();
+          };
+          function onKey(ev) {
+            if (!document.body.contains(back)) return;
+            if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); close(); return; }
+            if (ev.key === 'Enter' && ev.target && ev.target.tagName === 'INPUT') { ev.preventDefault(); doSave(); return; }
+            if (ev.key === 'Tab') {
+              const f = [kg, bt, cancel, save].filter(x => !x.disabled);
+              const at = f.indexOf(document.activeElement);
+              ev.preventDefault();
+              f[(at + (ev.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+            }
+          }
+          document.addEventListener('keydown', onKey, true);
+          kg.addEventListener('input', sync); bt.addEventListener('input', sync);
+          cancel.addEventListener('click', close);
+          save.addEventListener('click', doSave);
+          sync();
+          setTimeout(() => (String(kg.value).trim() === '' ? kg : bt).focus(), 0);
+        }
+        container.addEventListener('click', (e) => {
+          const tick = e.target.closest && e.target.closest('[data-add]');
+          const edit = e.target.closest && e.target.closest('[data-add-edit]');
+          const key = (tick && tick.dataset.add) || (edit && edit.dataset.addEdit);
+          if (!key) return;
+          const card = e.target.closest('.fr-slide');
+          const i = Number(card.dataset.rosterRow);
+          const a = slideAdditions(roster).find(x => x.key === key);
+          const used = a && (String((el(fid(i, a.kgCol.key)) || {}).value || '').trim() !== '' || String((el(fid(i, a.batchCol.key)) || {}).value || '').trim() !== '');
+          if (tick && used) {
+            if (!confirm('Remove the ' + key + ' addition? Its weight and batch code will be cleared.')) return;
+            setHidden(fid(i, a.kgCol.key), ''); setHidden(fid(i, a.batchCol.key), '');
+            updateSlideUi();
+            return;
+          }
+          openAddition(i, key, tick || edit);
+        });
       }
       draw();
       loadGroupSums();
@@ -2788,8 +3107,7 @@
         if (sec.summaryFields) return [].concat(sec.summaryFields).map(x => (x && x.key) || x);
         const jf = (sec.fields || []).find(f => f.type === 'jobsearch');
         if (jf) {
-          const have = new Set(allFields(config).map(f => f.key));
-          return [jf.key].concat(['agCode', 'jiReceivingDate', 'intakeDate'].filter(k => have.has(k)));
+          return [jf.key];
         }
         return sec.summaryField ? [].concat(sec.summaryField) : [];
       };
@@ -2827,7 +3145,9 @@
         html += rosterList.map((roster, i) => wrapSection({ title: roster.title, collapsible: roster.collapsible }, `
         ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
         <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : (roster.fixedRows ? ' class="fr-fixed-rows"' : '')}></div>
-        ${roster.quickEntry ? '' : `${roster.processChoice
+        ${roster.quickEntry ? '' : `${roster.slides
+          ? `<div class="fr-slide-nav no-print" id="${rosterDomId('fr_slideNav', i)}"><span class="fr-slide-hint" aria-live="polite"></span><button type="button" class="fr-btn fr-slide-next" disabled>Next</button></div>`
+          : roster.processChoice
           ? `<div class="fr-pot-add no-print" id="${rosterDomId('fr_potChoose', i)}">${roster.processChoice.options.map(o => `<button type="button" class="fr-btn fr-pot-add-btn fr-pot-add-${esc(o)}" data-choose="${esc(o)}">+ Add ${esc(o.toLowerCase())} pot</button>`).join('')}</div>`
           : `<button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_addRosterRowBtn', i)}"${roster.fixedRows ? ' style="display:none;"' : ''}>${esc(roster.addLabel || '+ Add row')}</button>`}
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" id="${rosterDomId('fr_importCsvBtn', i)}"${roster.cardRows || roster.fixedGroups || roster.fixedRows ?' style="display:none;"' : ''}>Import CSV</button>
@@ -2849,6 +3169,7 @@
               `<label class="fr-field">${esc(k)}<input type="text" value="${esc(v)}" disabled></label>`).join('')}</div>`;
         }
       }
+      formLocked = locked; // slide Next-button state reads this while the roster editor draws
       container.innerHTML = html;
       if (hasRoster) {
         rosterList.forEach((roster, i) => {
@@ -2857,7 +3178,9 @@
           const rowsId = rosterDomId('fr_rosterRows', i);
           if (roster.quickEntry) { wireQuickEntry(roster, i, container.querySelector('#' + rowsId)); return; }
           const rowsEl = container.querySelector('#' + rowsId);
-          if (roster.processChoice) {
+          if (roster.slides) {
+            /* Next is wired inside renderRosterEditor */
+          } else if (roster.processChoice) {
             el(rosterDomId('fr_potChoose', i)).querySelectorAll('[data-choose]').forEach(b =>
               b.addEventListener('click', () => rowsEl._addRow(b.dataset.choose)));
           } else
@@ -2931,6 +3254,9 @@
         submissions: () => submissions, openForm, formHasInput, reload: load });
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = (locked && !i.hasAttribute('data-keep-enabled')) || computedIds.has(i.id); });
+      if (locked) container.querySelectorAll('.fr-slide-nav').forEach(n => { n.style.display = 'none'; });
+      // the blanket disable pass above re-enabled the Next button: restore its complete/incomplete state
+      container.querySelectorAll('[id^="fr_rosterRows"]').forEach(r => { if (r._updateSlideUi) r._updateSlideUi(); });
       if (config.boxInspection && window.BoxInspection) window.BoxInspection.afterRender({ container, locked, el, toast });
       el('fr_saveBtn').style.display = locked ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
@@ -3022,7 +3348,25 @@
           const roster = rosterList[ri];
           if (!roster.cardRows) continue;
           const rows = rosterRowsByIndex[ri];
-          if (finalize) {
+          if (roster.slides) {
+            // a slide nothing was chosen or typed on is ignored; drafts are never blocked
+            for (let n = rows.length - 1; n >= 0; n--) if (slideIsBlank(roster, rows[n])) rows.splice(n, 1);
+            if (finalize) {
+              const rcs = el(rosterDomId('fr_rosterRows', ri));
+              for (let n = 0; n < rows.length; n++) {
+                const miss = slideMissing(roster, rows[n]);
+                if (miss.length) {
+                  if (rcs._goSlide) rcs._goSlide(n);
+                  toast(`Slide ${n + 1}${rows[n].process ? ' (' + (rows[n].process === 'Cooking' ? 'Pot ' + rows[n].potNo + ' - Cooking' : 'Blanching') + ')' : ''}: "${miss[0]}" is required.`);
+                  return;
+                }
+              }
+              const need = roster.minProcess || {};
+              const lack = Object.keys(need).find(k => rows.filter(r => r.process === k).length < need[k]);
+              if (lack) { revealField(rcs); toast(`Add at least ${need[lack]} ${lack} slide to "${roster.title}".`); return; }
+            }
+          }
+          if (finalize && !roster.slides) {
             if (roster.minRows && rows.length < roster.minRows) { revealField(el(rosterDomId('fr_rosterRows', ri))); toast(`Add at least ${roster.minRows} ${(roster.rowTitle || 'row').toLowerCase()} to "${roster.title}".`); return; }
             if (roster.enforceRequired) {
               for (let n = 0; n < rows.length; n++) {
@@ -3263,6 +3607,12 @@
             const shown = empty ? 'Not recorded' : show(c, raw);
             return `<tr><td class="fr-sheet-lbl">${esc(c.label)}</td><td>${esc(shown)}</td></tr>`;
           }).join('');
+          // slides: "Blanching" (no number) and "Pot n - Cooking" (n counts Cooking slides only), in slide order
+          if (roster.slides) {
+            const ord = prow.slice(0, n + 1).filter(x => x.process === 'Cooking').length;
+            const ttl = r.process === 'Blanching' ? 'Blanching' : r.process === 'Cooking' ? `${esc(roster.rowTitle || 'Pot')} ${ord} &mdash; Cooking` : `${esc(roster.rowTitle || 'Pot')} ${n + 1}`;
+            return `<div style="page-break-inside:avoid;"><h4>${ttl}</h4><table><tbody>${trs}</tbody></table></div>`;
+          }
           return `<div style="page-break-inside:avoid;"><h4>${esc(roster.rowTitle || 'Row')} ${roster.titleFrom ? esc(r[roster.titleFrom] || (n + 1)) : (n + 1)}${r.process ? ' &mdash; ' + esc(r.process) : ''}</h4><table><tbody>${trs}</tbody></table></div>`;
         }).join('') || '<p>No pots recorded.</p>';
         return `<h3>${esc(roster.title)}</h3>${cards}`;

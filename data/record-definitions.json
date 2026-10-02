@@ -15250,7 +15250,6 @@
             "collapseRows": false,
             "startEmpty": true,
             "rowTitle": "Pot",
-            "addLabel": "+ Add pot",
             "processChoice": {
               "column": "process",
               "options": [
@@ -15264,14 +15263,10 @@
             "totals": [
               {
                 "label": "Pots",
-                "count": true
-              },
-              {
-                "label": "Blanching kg",
-                "sum": "abaloneKg",
+                "count": true,
                 "where": {
                   "process": [
-                    "Blanching"
+                    "Cooking"
                   ]
                 }
               },
@@ -15293,7 +15288,12 @@
               "capSource": "salting-oosw",
               "capMatchField": "jobNo",
               "capSumColumn": "weight",
-              "legacyColumn": "legacyNoBlanching"
+              "legacyColumn": "legacyNoBlanching",
+              "cookFromOosw": true
+            },
+            "slides": true,
+            "minProcess": {
+              "Cooking": 1
             }
           }
         }
@@ -15464,10 +15464,10 @@
           }
         },
         {
-          "key": "abaloneKg",
-          "label": "Abalone weight (kg)",
-          "type": "number",
-          "required": true,
+          "key": "legacyNoBlanching",
+          "label": "Legacy (no blanching recorded)",
+          "type": "text",
+          "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -15482,11 +15482,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 1,
-            "carryFromPrevProcess": {
-              "process": "Blanching",
-              "into": "Cooking"
-            }
+            "hidden": true
           }
         },
         {
@@ -15519,12 +15515,12 @@
           }
         },
         {
-          "key": "cookSeaWater",
-          "label": "100 Lt sea water used?",
-          "type": "yesno",
+          "key": "blanchTempC",
+          "label": "Temperature (°C)",
+          "type": "number",
           "required": true,
           "readOnly": false,
-          "unit": null,
+          "unit": "°C",
           "options": null,
           "group": null,
           "sectionIndex": 1,
@@ -15541,17 +15537,16 @@
             "showWhen": {
               "field": "process",
               "in": [
-                "Cooking"
+                "Blanching"
               ]
-            },
-            "noNone": true
+            }
           }
         },
         {
-          "key": "blanchSaltKg",
-          "label": "Salt weight (kg)",
-          "type": "number",
-          "required": false,
+          "key": "blanchTime",
+          "label": "Time",
+          "type": "time",
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -15572,109 +15567,22 @@
               "in": [
                 "Blanching"
               ]
-            }
+            },
+            "nowButton": true
           }
         },
         {
-          "key": "saltKg",
+          "key": "blanchSaltKg",
           "label": "Salt weight (kg)",
           "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
-          "unit": null,
+          "unit": "kg",
           "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
           "position": 12,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 1,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Cooking"
-              ]
-            }
-          }
-        },
-        {
-          "key": "blanchBatchNumber",
-          "label": "Salt batch code",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 13,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 1,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Blanching"
-              ]
-            },
-            "carryOnAdd": true,
-            "carryGroup": "salt"
-          }
-        },
-        {
-          "key": "saltBatchNumber",
-          "label": "Salt batch code",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 14,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 1,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Cooking"
-              ]
-            },
-            "carryOnAdd": true,
-            "carryGroup": "salt"
-          }
-        },
-        {
-          "key": "blanchStartTime",
-          "label": "Start time",
-          "type": "time",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 15,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -15692,10 +15600,98 @@
           }
         },
         {
+          "key": "blanchBatchNumber",
+          "label": "Salt batch code",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 13,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 2,
+            "showWhen": {
+              "field": "process",
+              "in": [
+                "Blanching"
+              ]
+            },
+            "carryOnAdd": true,
+            "carryGroup": "salt"
+          }
+        },
+        {
+          "key": "abaloneKg",
+          "label": "Abalone weight (kg)",
+          "type": "number",
+          "required": true,
+          "readOnly": false,
+          "unit": "kg",
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 14,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1,
+            "showWhen": {
+              "field": "process",
+              "in": [
+                "Cooking"
+              ],
+              "orNonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "cookSeaWater",
+          "label": "100 Lt sea water used?",
+          "type": "yesno",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 15,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1,
+            "showWhen": {
+              "field": "process",
+              "in": [
+                "Cooking"
+              ]
+            },
+            "noNone": true
+          }
+        },
+        {
           "key": "startTime",
           "label": "Start time",
           "type": "time",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -15720,12 +15716,12 @@
           }
         },
         {
-          "key": "blanchStartingTemp",
-          "label": "Start temp",
+          "key": "startingTemp",
+          "label": "Start temp (°C)",
           "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
-          "unit": null,
+          "unit": "°C",
           "options": null,
           "group": null,
           "sectionIndex": 1,
@@ -15742,16 +15738,16 @@
             "showWhen": {
               "field": "process",
               "in": [
-                "Blanching"
+                "Cooking"
               ]
             }
           }
         },
         {
-          "key": "startingTemp",
-          "label": "Start temp",
+          "key": "cookPh",
+          "label": "pH",
           "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -15776,12 +15772,12 @@
           }
         },
         {
-          "key": "blanchPh",
-          "label": "pH",
+          "key": "temp20MinAfter",
+          "label": "Temp 20 min after (°C)",
           "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
-          "unit": null,
+          "unit": "°C",
           "options": null,
           "group": null,
           "sectionIndex": 1,
@@ -15794,20 +15790,20 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 2,
+            "layoutRow": 3,
             "showWhen": {
               "field": "process",
               "in": [
-                "Blanching"
+                "Cooking"
               ]
             }
           }
         },
         {
-          "key": "cookPh",
-          "label": "pH",
-          "type": "number",
-          "required": false,
+          "key": "timeOut",
+          "label": "End time",
+          "type": "time",
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -15822,7 +15818,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 2,
+            "layoutRow": 3,
             "showWhen": {
               "field": "process",
               "in": [
@@ -15832,12 +15828,12 @@
           }
         },
         {
-          "key": "temp20MinAfter",
-          "label": "Temp 20 min after",
+          "key": "endOfCookingTemp",
+          "label": "End temp (°C)",
           "type": "number",
-          "required": false,
+          "required": true,
           "readOnly": false,
-          "unit": null,
+          "unit": "°C",
           "options": null,
           "group": null,
           "sectionIndex": 1,
@@ -15851,170 +15847,26 @@
           "validateJson": null,
           "extraJson": {
             "layoutRow": 3,
-            "naWhen": {
+            "showWhen": {
               "field": "process",
               "in": [
-                "Blanching"
+                "Cooking"
               ]
             }
           }
         },
         {
-          "key": "blanchEndTime",
-          "label": "End time",
-          "type": "time",
+          "key": "totalCookingTime",
+          "label": "Total time (hh:mm)",
+          "type": "text",
           "required": false,
-          "readOnly": false,
+          "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
           "position": 22,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 3,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Blanching"
-              ]
-            }
-          }
-        },
-        {
-          "key": "timeOut",
-          "label": "End time",
-          "type": "time",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 23,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 3,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Cooking"
-              ]
-            }
-          }
-        },
-        {
-          "key": "blanchEndTemp",
-          "label": "End temp",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 24,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 3,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Blanching"
-              ]
-            }
-          }
-        },
-        {
-          "key": "endOfCookingTemp",
-          "label": "End temp",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 25,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 3,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Cooking"
-              ]
-            }
-          }
-        },
-        {
-          "key": "cookingTime",
-          "label": "Total time",
-          "type": "text",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 26,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "layoutRow": 4,
-            "showWhen": {
-              "field": "process",
-              "in": [
-                "Blanching"
-              ]
-            },
-            "deriveDuration": {
-              "from": "blanchStartTime",
-              "to": "blanchEndTime"
-            }
-          }
-        },
-        {
-          "key": "totalCookingTime",
-          "label": "Total time",
-          "type": "text",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 27,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16036,17 +15888,17 @@
           }
         },
         {
-          "key": "sugarKg",
-          "label": "Sugar (kg)",
+          "key": "saltKg",
+          "label": "Salt weight (kg)",
           "type": "number",
           "required": false,
           "readOnly": false,
-          "unit": null,
+          "unit": "kg",
           "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
-          "position": 28,
+          "position": 23,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16054,7 +15906,68 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 5,
+            "addition": "salt",
+            "additionRole": "kg",
+            "showWhen": {
+              "field": "process",
+              "in": [
+                "Cooking"
+              ]
+            }
+          }
+        },
+        {
+          "key": "saltBatchNumber",
+          "label": "Salt batch code",
+          "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 24,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "addition": "salt",
+            "additionRole": "batch",
+            "showWhen": {
+              "field": "process",
+              "in": [
+                "Cooking"
+              ]
+            },
+            "carryOnAdd": true,
+            "carryGroup": "salt"
+          }
+        },
+        {
+          "key": "sugarKg",
+          "label": "Sugar weight (kg)",
+          "type": "number",
+          "required": false,
+          "readOnly": false,
+          "unit": "kg",
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 25,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "addition": "sugar",
+            "additionRole": "kg",
             "showWhen": {
               "field": "process",
               "in": [
@@ -16074,7 +15987,7 @@
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
-          "position": 29,
+          "position": 26,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16082,28 +15995,30 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 5,
+            "addition": "sugar",
+            "additionRole": "batch",
             "showWhen": {
               "field": "process",
               "in": [
                 "Cooking"
               ]
             },
-            "carryOnAdd": true
+            "carryOnAdd": true,
+            "carryGroup": "sugar"
           }
         },
         {
           "key": "vinegarKg",
-          "label": "Vinegar (kg)",
+          "label": "Vinegar weight (kg)",
           "type": "number",
           "required": false,
           "readOnly": false,
-          "unit": null,
+          "unit": "kg",
           "options": null,
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
-          "position": 30,
+          "position": 27,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16111,7 +16026,8 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 5,
+            "addition": "vinegar",
+            "additionRole": "kg",
             "showWhen": {
               "field": "process",
               "in": [
@@ -16131,6 +16047,89 @@
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
+          "position": 28,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "addition": "vinegar",
+            "additionRole": "batch",
+            "showWhen": {
+              "field": "process",
+              "in": [
+                "Cooking"
+              ]
+            },
+            "carryOnAdd": true,
+            "carryGroup": "vinegar"
+          }
+        },
+        {
+          "key": "blanchStartTime",
+          "label": "Start time (old)",
+          "type": "time",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 29,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 6,
+            "showWhen": {
+              "nonEmpty": true
+            },
+            "legacy": true
+          }
+        },
+        {
+          "key": "blanchStartingTemp",
+          "label": "Start temp (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 30,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 6,
+            "showWhen": {
+              "nonEmpty": true
+            },
+            "legacy": true
+          }
+        },
+        {
+          "key": "blanchPh",
+          "label": "pH (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
           "position": 31,
           "computeFn": null,
           "computeArgs": null,
@@ -16139,20 +16138,17 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 5,
+            "layoutRow": 6,
             "showWhen": {
-              "field": "process",
-              "in": [
-                "Cooking"
-              ]
+              "nonEmpty": true
             },
-            "carryOnAdd": true
+            "legacy": true
           }
         },
         {
-          "key": "potNumberOld",
-          "label": "Pot number (old)",
-          "type": "text",
+          "key": "blanchEndTime",
+          "label": "End time (old)",
+          "type": "time",
           "required": false,
           "readOnly": true,
           "unit": null,
@@ -16168,7 +16164,111 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 6,
+            "layoutRow": 7,
+            "showWhen": {
+              "nonEmpty": true
+            },
+            "legacy": true
+          }
+        },
+        {
+          "key": "blanchEndTemp",
+          "label": "End temp (old)",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 33,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 7,
+            "showWhen": {
+              "nonEmpty": true
+            },
+            "legacy": true
+          }
+        },
+        {
+          "key": "cookingTime",
+          "label": "Total time (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 34,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 7,
+            "showWhen": {
+              "nonEmpty": true
+            },
+            "legacy": true
+          }
+        },
+        {
+          "key": "potNoOld",
+          "label": "Pot number (previous numbering)",
+          "type": "digits",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 35,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 8,
+            "showWhen": {
+              "nonEmpty": true
+            },
+            "legacy": true
+          }
+        },
+        {
+          "key": "potNumberOld",
+          "label": "Pot number (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": "@roster",
+          "position": 36,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 8,
             "showWhen": {
               "nonEmpty": true
             },
@@ -16186,7 +16286,7 @@
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
-          "position": 33,
+          "position": 37,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16194,7 +16294,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 6,
+            "layoutRow": 8,
             "showWhen": {
               "nonEmpty": true
             },
@@ -16212,7 +16312,7 @@
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
-          "position": 34,
+          "position": 38,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16220,7 +16320,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 6,
+            "layoutRow": 8,
             "showWhen": {
               "nonEmpty": true
             },
@@ -16238,7 +16338,7 @@
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
-          "position": 35,
+          "position": 39,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16246,7 +16346,7 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 6,
+            "layoutRow": 8,
             "showWhen": {
               "nonEmpty": true
             },
@@ -16264,7 +16364,7 @@
           "group": null,
           "sectionIndex": 1,
           "parentFieldKey": "@roster",
-          "position": 36,
+          "position": 40,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -16272,33 +16372,11 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "layoutRow": 6,
+            "layoutRow": 8,
             "showWhen": {
               "nonEmpty": true
             },
             "legacy": true
-          }
-        },
-        {
-          "key": "legacyNoBlanching",
-          "label": "Legacy (no blanching recorded)",
-          "type": "text",
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 1,
-          "parentFieldKey": "@roster",
-          "position": 37,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "hidden": true
           }
         }
       ],

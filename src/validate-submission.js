@@ -43,12 +43,24 @@ function flattenFields(config) {
   return out;
 }
 
+// Roster column showWhen (same rules as the client's rowCond): a column the row's process does not
+// use (e.g. blanching fields on a Cooking slide) is not "required but empty".
+function colVisible(f, values) {
+  const w = f.showWhen;
+  if (!w) return true;
+  const own = values ? values[f.key] : undefined;
+  if (w.nonEmpty) return !isBlank(own);
+  if (w.orNonEmpty && !isBlank(own)) return true;
+  const cur = values && values[w.field] != null ? String(values[w.field]) : '';
+  return (w.in || []).includes(cur);
+}
+
 function checkValueSet(fields, values, rowLabel, violations) {
   for (const f of fields) {
     if (!f || !f.key) continue;
     const v = values ? values[f.key] : undefined;
 
-    if (f.required && isBlank(v)) {
+    if (f.required && isBlank(v) && colVisible(f, values)) {
       violations.push(`${rowLabel}: "${f.label || f.key}" is required but empty`);
       continue;
     }

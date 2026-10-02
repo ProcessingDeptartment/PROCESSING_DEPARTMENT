@@ -1842,9 +1842,13 @@ model Sub_dry_cooking_Row {
   blanchSeaWaterLtOld  Float?
   cookSeaWaterLtOld    Float?
   legacyNoBlanching    String?
+  blanchTempC          Float?
+  blanchTime           DateTime? @db.Time
+  potNoOld             Int?
 
   @@index([parentId])
   @@index([parentId, potNo], map: "sub_dry_cooking_row_parentId_potNo_idx")
+  @@index([parentId, position], map: "sub_dry_cooking_row_parentId_position_idx")
   @@index([process], map: "sub_dry_cooking_row_process_idx")
   @@map("sub_dry_cooking_row")
 }

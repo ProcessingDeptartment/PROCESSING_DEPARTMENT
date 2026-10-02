@@ -1,5 +1,4 @@
-// REC 7.4.0 Dry Cooking: which weight rules (R1 Cooking vs OOSW, R2 Blanching vs OOSW, R3 Cooking vs
-// Blanching) an operator overrode, as queryable rows. The entry's oosWarningNote holds one message per
+// REC 7.4.0 Dry Cooking: which weight rules an operator overrode (R1 Cooking vs OOSW; retired R2 / R3 history kept), as queryable rows. The entry's oosWarningNote holds one message per
 // line; each line is matched to its rule id in public/data/business-rules.json. Rebuilt in full on every
 // dry-cooking sync (like the sub_* tables), submitted entries only. Never throws: the table is an
 // extra, so a missing table or unreadable registry must not break saving.
@@ -12,6 +11,9 @@ function ruleIdsByMessage() {
   for (const r of JSON.parse(fs.readFileSync(file, 'utf8'))) {
     if (r.recordKey === 'dry-cooking' && r.id && r.message) map.set(r.message, r.id);
   }
+  // R2 / R3 were retired with the pot slides; entries that overrode them keep their rule id in the table.
+  map.set('Blanching pot weight exceeding OOSW - possible batch mix', 'R2');
+  map.set('Cooking weight exceeds blanched weight - cooked more than was blanched', 'R3');
   return map;
 }
 

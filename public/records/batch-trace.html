@@ -330,10 +330,15 @@
           ${tags}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
           ${(r.pots || []).map(p => {
-            const proc = p.process || '';
-            const b = p.batches || {};
-            const bt = [['Blanch', b.blanch], ['Salt', b.salt], ['Sugar', b.sugar], ['Vinegar', b.vinegar]].filter(x => x[1]).map(x => x[0] + ' batch ' + x[1]).join(', ');
-            return `<div class="summary">Pot ${esc(p.potNo || p.rowNo)} &mdash; ${esc(proc)}${p.abaloneKg != null ? ' &mdash; ' + esc(p.abaloneKg) + ' kg' : ''}${p.cookingDate ? ' &mdash; ' + esc(p.cookingDate) : ''}${bt ? ' (' + esc(bt) + ')' : ''}</div>`;
+            const b = p.batches || {}, ak = p.additionsKg || {};
+            if (p.process === 'Blanching') {
+              // new Blanching slide: time, temperature, salt batch (old blanching cards keep their kg / old fields)
+              const bits = [p.blanchTime, p.blanchTempC != null ? p.blanchTempC + ' °C' : '', p.abaloneKg != null ? p.abaloneKg + ' kg' : '', b.blanch ? 'salt batch ' + b.blanch : ''].filter(Boolean);
+              return `<div class="summary">Blanching${bits.length ? ' &mdash; ' + esc(bits.join(' — ')) : ''}</div>`;
+            }
+            const adds = [['Salt', 'salt'], ['Sugar', 'sugar'], ['Vinegar', 'vinegar']]
+              .filter(x => b[x[1]] || ak[x[1]] != null).map(x => x[0] + (ak[x[1]] != null ? ' ' + ak[x[1]] + ' kg' : '') + (b[x[1]] ? ' batch ' + b[x[1]] : ''));
+            return `<div class="summary">Pot ${esc(p.potNo || p.rowNo)} &mdash; ${esc(p.process || '')}${p.cookingDate ? ' &mdash; ' + esc(p.cookingDate) : ''}${p.abaloneKg != null ? ' &mdash; ' + esc(p.abaloneKg) + ' kg' : ''}${adds.length ? ' (' + esc(adds.join(', ')) + ')' : ''}</div>`;
           }).join('')}
           ${r.linked_batch && r.linked_batch !== batchNo
             ? `<div class="summary">Linked batch: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}

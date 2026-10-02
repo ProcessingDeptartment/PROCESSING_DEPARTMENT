@@ -662,15 +662,19 @@ async function attachDryCookingPots(records) {
   let rows;
   try {
     rows = await prisma.$queryRawUnsafe(
-      `SELECT "submissionId", "rowNo", "potNo", "process", "recordDate", "abaloneKg", "blanchBatchNumber", "saltBatchNumber", "sugarBatchNumber", "vinegarBatchNumber"
+      `SELECT "submissionId", "rowNo", "potNo", "process", "recordDate", "abaloneKg", "blanchBatchNumber", "saltBatchNumber", "sugarBatchNumber", "vinegarBatchNumber",
+              "blanchTempC", to_char("blanchTime", 'HH24:MI') AS "blanchTime", "saltKg", "sugarKg", "vinegarKg"
        FROM "dry_cooking_pot" WHERE "submissionId" = ANY($1::text[]) ORDER BY "submissionId", "rowNo"`, ids);
   } catch (e) { return; }
   for (const r of records) {
     if (r.record_key !== 'dry-cooking') continue;
     r.pots = rows.filter(x => x.submissionId === r.submission_id).map(x => ({
-      rowNo: x.rowNo, potNo: x.potNo || x.rowNo, process: x.process, abaloneKg: x.abaloneKg,
+      // slides: seqNo is the slide order; potNo counts Cooking slides only (null for Blanching)
+      rowNo: x.rowNo, seqNo: x.rowNo, potNo: x.potNo, process: x.process, abaloneKg: x.abaloneKg,
       cookingDate: x.recordDate ? new Date(x.recordDate).toISOString().slice(0, 10) : null,
+      blanchTempC: x.blanchTempC, blanchTime: x.blanchTime,
       batches: { blanch: x.blanchBatchNumber, salt: x.saltBatchNumber, sugar: x.sugarBatchNumber, vinegar: x.vinegarBatchNumber },
+      additionsKg: { salt: x.saltKg, sugar: x.sugarKg, vinegar: x.vinegarKg },
     }));
   }
 }
