@@ -4,19 +4,17 @@
 
   // Signature = tap-to-enter passkey (admin-issued PIN). Readonly so it can only be filled by PasskeyInput.
   function passkeyFieldHtml(fieldClass, label, id) {
-    return `<label class="${fieldClass}">${label}
-      <input id="${id}" type="text" placeholder="Enter passkey" readonly autocomplete="off"
-             onclick="window.PasskeyInput && PasskeyInput.openForField('${id}')"
-             style="cursor:pointer;">
-      <div class="passkey-verified-display" id="${id}_display"></div>
-    </label>`;
+    // Flat field: label line (text + status) then the input, nothing else, so the input never moves.
+    return `<label class="${fieldClass} pk-field"><span class="pk-label"><span>${label}</span><span class="pk-status" id="${id}_display" aria-live="polite"></span></span>
+      <input id="${id}" type="text" placeholder="Tap to enter passkey" readonly autocomplete="off"
+             onclick="window.PasskeyInput && PasskeyInput.openForField('${id}')"></label>`;
   }
 
   // Load the number-pad library once, so no page needs its own <script> tag.
   (function loadPasskeyInput() {
     if (window.PasskeyInput || document.querySelector('script[data-passkey-input]')) return;
     const sc = document.createElement('script');
-    sc.src = '/lib/passkey-input.js?v=2';
+    sc.src = '/lib/passkey-input.js?v=3';
     sc.setAttribute('data-passkey-input', '1');
     document.head.appendChild(sc);
   })();

@@ -370,7 +370,11 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 .rt-content {
   --rt-form-cols: 4;
   --rt-roster-grid-cols: 8;
+  --rt-input-h: 48px; --rt-input-fs: 16px;
 }
+/* one input height per density mode: touch = 48/16, PC opt-in = 36/14 */
+@media (pointer: coarse) { .rt-content { --rt-input-h: 48px; --rt-input-fs: 16px; } }
+body.rt-pc .rt-content { --rt-input-h: 36px; --rt-input-fs: 14px; }
 @media (max-width: 1099px) {
   .rt-content { --rt-form-cols: 2; --rt-roster-grid-cols: 4; }
 }
@@ -422,6 +426,47 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
   background: none;
   border: 0;
 }
+/* hints after an input take no layout space: a hint appearing later (carry-over note,
+   job-number check) can never push the input off the row baseline (2026-10-02) */
+.rt-content .fr-grid > .fr-field,
+.rt-content .ml-grid > .ml-field { position: relative; }
+.rt-content .fr-grid > .fr-field > .fr-carry-hint {
+  position: absolute; left: 0; right: 0; top: 100%; margin: 2px 0 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rt-content .fr-jobnumber { position: relative; }
+.rt-content .fr-jobnumber .fr-jn-hint {
+  position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* bespoke 7.2.12 field grid: same stack rule (label line, then input on the baseline) */
+.rt-content .ds-grid { align-items: end; }
+.rt-content .ds-field { justify-content: flex-end; min-width: 0; }
+/* record picker (mock-recall / NRCS rosters): "View record" link and status badge sit below the select
+   but take no layout space, so the select stays on the row baseline */
+.rt-content .fr-recordpick { position: relative; }
+.rt-content .fr-recordpick > a.rec { position: absolute; left: 0; top: 100%; margin-top: 2px; white-space: nowrap; }
+.rt-content .fr-recordpick > [id$="__badge"] { position: absolute; right: 0; top: 100%; margin-top: 2px; white-space: nowrap; }
+/* picked job no. + Change link sit on the same row height as an input */
+.rt-content .jp-picked { min-height: var(--rt-input-h); }
+/* label line: label text on the left, optional status/link on the right.
+   Anything extra for a field lives here (or in a hint AFTER the input) so the
+   input itself never moves off the row baseline. */
+.rt-content .pk-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px; min-height: 1.4em;
+}
+.rt-content .pk-status {
+  font-size: 14px; font-weight: 600; text-transform: none; letter-spacing: 0;
+  color: var(--rt-ok, #15803D);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72%;
+}
+/* passkey input is tap-only: same size/border as every input, colour cue only.
+   (read-only grey comes from the shared input[readonly] rule; the tablet-scoped
+   twin below matches that rule's specificity so verified can override it) */
+.rt-content .pk-field input { cursor: pointer; }
+.rt-content .pk-field.is-verified input,
+body.rt-tablet .rt-content .pk-field.is-verified input { background: var(--rt-white); border-color: var(--rt-ok, #15803D); }
 .rt-content .fr-field span.hint,
 .rt-content .ml-field span.hint {
   font-weight: 500;
@@ -439,10 +484,10 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 .rt-content #recBasketPanel input,
 .rt-content #recBasketPanel select {
   font-family: var(--rt-font);
-  font-size: 16px;
+  font-size: var(--rt-input-fs);
   font-weight: 600;
   width: 100%;
-  min-height: 54px;
+  min-height: var(--rt-input-h);
   padding: 15px 16px;
   border: 1.5px solid var(--rt-slate);
   border-radius: var(--rt-radius-sm);
@@ -1446,7 +1491,7 @@ body.rt-tablet .rt-content .rt-bar-panel > .ml-panel-head h2, body.rt-tablet .rt
 body.rt-tablet .rt-content .rt-bar-panel { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 
 /* ---- A: type scale, touch targets, gaps (tablet / touch only) ---- */
-@media (pointer: coarse), (max-width: 1099px) {
+@media (pointer: coarse) {
   body.rt-tablet { --rt-topbar-h: 72px; }
   /* bespoke 7.x pages size themselves from these vars (see 1.5 above) */
   body.rt-tablet {
@@ -1458,7 +1503,7 @@ body.rt-tablet .rt-content .rt-bar-panel { border-top: 1px solid var(--line); bo
   body.rt-tablet .rt-content .hint, body.rt-tablet .rt-content .field-hint, body.rt-tablet .rt-content small { font-size: var(--fs-hint) !important; }
   body.rt-tablet .rt-content label.field input, body.rt-tablet .rt-content label.field select, body.rt-tablet .rt-content label.field textarea,
   body.rt-tablet .rt-content .field input:not([type=checkbox]):not([type=radio]), body.rt-tablet .rt-content .field select, body.rt-tablet .rt-content .field textarea {
-    font-size: var(--fs-value) !important; min-height: var(--tap) !important; padding: 10px 12px !important; border: var(--field-border); border-radius: var(--field-radius);
+    font-size: var(--rt-input-fs) !important; min-height: var(--rt-input-h) !important; padding: 10px 12px !important; border: var(--field-border); border-radius: var(--field-radius);
   }
   body.rt-tablet .rt-content .btn, body.rt-tablet .rt-content .btn-sm { font-size: var(--fs-btn) !important; font-weight: 700; min-height: var(--tap); border-radius: var(--field-radius); }
   body.rt-tablet .rt-content table input:not([type=checkbox]):not([type=radio]), body.rt-tablet .rt-content table select { font-size: var(--fs-table) !important; min-height: var(--tap-row) !important; padding: 6px 8px !important; }
@@ -1509,6 +1554,8 @@ body.rt-tablet .rt-content .rt-bar-panel { border-top: 1px solid var(--line); bo
     font-size: var(--fs-table) !important; font-weight: 500; min-height: var(--tap-row) !important; padding: 6px 8px !important; border: var(--field-border);
   }
 
+  /* roster-row fields: every control in a row shares the one input height (2026-10-02: select was 40 beside 48 inputs) */
+  body.rt-tablet .rt-content .fr-roster-row input:not([type=checkbox]):not([type=radio]):not([type=hidden]), body.rt-tablet .rt-content .fr-roster-row select { min-height: var(--rt-input-h) !important; }
   /* buttons 17 / 700, 48px; "small" buttons keep 48px tap and a 14px floor */
   body.rt-tablet .rt-content .fr-btn, body.rt-tablet .rt-content .ml-btn, body.rt-tablet .rt-content .cr-btn {
     font-size: var(--fs-btn); font-weight: 700; min-height: var(--tap); border-radius: var(--field-radius);
@@ -1548,12 +1595,15 @@ body.rt-tablet .rt-content .rt-bar-panel { border-top: 1px solid var(--line); bo
 /* ---- generic floor for pages that draw their own classes (customBody / bespoke) ----
    Screen + touch only, so print is untouched. .rt-fs-floor is added by record-chrome.js to any
    visible text under 14px; controls get the 48px (40px in tables / roster rows) minimum. */
-@media screen and (pointer: coarse), screen and (max-width: 1099px) {
+@media screen and (pointer: coarse) {
   body.rt-tablet .rt-content .rt-fs-floor { font-size: var(--fs-hint) !important; }
   body.rt-tablet .rt-content input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not(:where(table, .fr-roster-row) *),
   body.rt-tablet .rt-content select:not(:where(table, .fr-roster-row) *),
   body.rt-tablet .rt-content textarea:not(:where(table, .fr-roster-row) *),
   body.rt-tablet .rt-content button:not(:where(table, .fr-roster-row) *) { min-height: var(--tap) !important; }
+  body.rt-tablet .rt-content input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not(:where(table, .fr-roster-row) *),
+  body.rt-tablet .rt-content select:not(:where(table, .fr-roster-row) *),
+  body.rt-tablet .rt-content textarea:not(:where(table, .fr-roster-row) *) { min-height: var(--rt-input-h) !important; }
   body.rt-tablet .rt-content table input:not([type=checkbox]):not([type=radio]):not([type=hidden]), body.rt-tablet .rt-content table select,
   body.rt-tablet .rt-content table button { min-height: var(--tap-row) !important; }
 }

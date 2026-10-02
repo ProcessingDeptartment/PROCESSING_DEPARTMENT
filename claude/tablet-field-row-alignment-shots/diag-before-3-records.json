@@ -1,0 +1,54 @@
+[
+ {
+  "page": "REC-7.2.3-precooking-check-sheet.html",
+  "vp": "1180x820",
+  "offenders": []
+ },
+ {
+  "page": "REC-7.1.2-abalone-receiving.html",
+  "vp": "1180x820",
+  "offenders": []
+ },
+ {
+  "page": "REC-7.2.12-double-seam-inspection-report.html",
+  "vp": "1180x820",
+  "offenders": [
+   {
+    "grid": "ds-grid",
+    "ids": [
+     "",
+     "",
+     "",
+     ""
+    ],
+    "bottoms": [
+     804,
+     804,
+     825,
+     825
+    ],
+    "heights": [
+     48,
+     48,
+     48,
+     48
+    ]
+   }
+  ]
+ },
+ {
+  "page": "REC-7.2.3-precooking-check-sheet.html",
+  "vp": "820x1180",
+  "offenders": []
+ },
+ {
+  "page": "REC-7.1.2-abalone-receiving.html",
+  "vp": "820x1180",
+  "offenders": []
+ },
+ {
+  "page": "REC-7.2.12-double-seam-inspection-report.html",
+  "vp": "820x1180",
+  "offenders": []
+ }
+]

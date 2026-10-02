@@ -145,26 +145,6 @@
         font-size: 14px;
         margin-top: 10px;
       }
-      input[placeholder="Enter passkey"] {
-        cursor: pointer;
-        background: #f5f5f5 !important;
-        border: 2px solid #2196F3 !important;
-      }
-      input[placeholder="Enter passkey"]:hover {
-        background: #e3f2fd !important;
-      }
-      .passkey-verified-display {
-        font-size: 12px;
-        color: green;
-        margin-top: 4px;
-      }
-      .verified-badge {
-        background: #4caf50;
-        color: white;
-        padding: 2px 6px;
-        border-radius: 3px;
-        font-weight: bold;
-      }
     `;
     document.head.appendChild(style);
 
@@ -253,11 +233,14 @@
           if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
 
           // Update display
-          const fieldGroup = fieldEl.parentElement;
-          const display = fieldGroup.querySelector('.passkey-verified-display');
+          const display = document.getElementById(currentFieldId + '_display');
           if (display) {
-            display.innerHTML = `<strong>${result.displayName}</strong> <span class="verified-badge">Confirmed ✓</span>`;
+            const text = `${result.displayName} · Confirmed ✓`;
+            display.textContent = text;
+            display.title = text;
           }
+          const field = fieldEl.closest('.pk-field');
+          if (field) field.classList.add('is-verified');
         }
 
         // Close modal
