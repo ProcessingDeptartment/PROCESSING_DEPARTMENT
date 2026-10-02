@@ -2610,7 +2610,7 @@
         rows.forEach((_, i) => { if (i !== openIdx && rowHasData(i)) collapsedRows.add(i); });
         applyCollapse();
       }
-      // A row opened with Edit stays open until focus goes to a DIFFERENT row (or the row is edited and left). It must
+      // A row opened with Edit stays open until focus goes to a DIFFERENT row; losing focus (keyboard opening, layout shift) never closes it. It must
       // not depend on focus landing inside the row: some tablets/browsers leave focus on <body> after the Edit button
       // is replaced, and the focusout handler below would then close the row again straight away.
       let pinnedOpen = -1;
@@ -2619,7 +2619,7 @@
         const rowEl = e.target.closest && e.target.closest('.fr-roster-row');
         if (!rowEl) return;
         const n = Number(rowEl.dataset.rosterRow);
-        if (n === pinnedOpen) pinnedOpen = -1;
+        if (n !== pinnedOpen) pinnedOpen = -1;   // focus moved to a different row: the pin is released
         collapseAllExcept(n);
       });
 
