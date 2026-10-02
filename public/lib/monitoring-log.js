@@ -457,14 +457,14 @@
   function summaryPart(key, value, isJob) {
     const v = String(value || '').trim();
     if (!v) return '';
-    if (isJob) return 'Job ' + v;
+    if (isJob) return v;
     const d = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (/^(jiReceivingDate|intakeDate)$/.test(key) && d) return 'Intake ' + Number(d[3]) + ' ' + SUMMARY_MONTHS[Number(d[2]) - 1];
     return v;
   }
 
   // Every group on the form (a heading plus the fields under it) becomes a collapsible block that
-  // starts open. The block holding the job search shows "Job … · AG … · Intake …" in its header so
+  // starts open. The block holding the job search shows the job no. alone in its header so
   // the job stays visible when it folds away. Nodes are moved, never re-created, so field ids,
   // listeners and the engine's lookups are untouched. Returns the number of blocks made.
   function wireSectionCollapsibles(container, ns, entryFields) {
@@ -502,9 +502,7 @@
       const jobField = inGroup.find((f) => f.type === 'jobsearch');
       if (!jobField) return;
       det.setAttribute('data-autofold', '1');
-      const have = new Set(inGroup.map((f) => f.key));
-      const keys = [jobField.key].concat(['agCode', 'jiReceivingDate', 'intakeDate'].filter((k) => have.has(k)))
-        .concat(inGroup.filter((f) => /processingfor|processedfor/i.test(f.key)).map((f) => f.key));
+      const keys = [jobField.key];
       const pairs = keys.map((k) => ({ k, src: container.querySelector('#' + ns + '_f_' + k) })).filter((p) => p.src);
       if (!pairs.length) return;
       const paint = () => {
@@ -713,14 +711,37 @@
   }
 
 
-  function wireJobSearch(container, ns, entryFields, autofillRules, autofocus) {
+  function wireJobSearch(container, ns, entryFields, autofillRules, autofocus, recordKey) {
     const fields = (entryFields || []).filter((f) => f.type === 'jobsearch');
     const sels = fields.map((f) => container.querySelector('#' + ns + '_f_' + f.key)).filter(Boolean);
     if (!sels.length) return;
-    loadLib('job-picker.js?v=6', 'JobPicker').then((jp) => {
-      if (!jp) return;
-      sels.forEach((sel) => jp.enhance(sel));
-      if (autofocus && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
+    const jobKey0 = fields[0].key;
+    wireJobSelects(sels, {
+      autofocus, recordKey, root: container.parentElement,
+      autofillTargets: () => (autofillRules || []).filter((r) => r.watch === jobKey0)
+        .reduce((a, r) => a.concat(Object.keys(r.fill || {})), [])
+        .map((k) => container.querySelector('#' + ns + '_f_' + k)),
+      requiredFocus: () => (entryFields || []).filter((f) => f.required).map((f) => container.querySelector('#' + ns + '_f_' + f.key))
+    });
+  }
+
+  // Turn <select data-jobsearch> elements into job pickers and load their job list. On a new entry
+  // (autofocus) the form opens behind the job: see the record-open gate in job-picker.js. The panel is
+  // kept invisible only while the picker loads, so the full form never flashes.
+  function wireJobSelects(sels, o) {
+    const autofocus = o.autofocus;
+    const gateRoot = autofocus && !sels[0].value && o.root ? o.root : null;
+    let pre = null;
+    if (gateRoot) { gateRoot.style.visibility = 'hidden'; pre = setTimeout(() => { gateRoot.style.visibility = ''; }, 5000); }
+    const unprelock = () => { if (pre) { clearTimeout(pre); pre = null; } if (gateRoot) gateRoot.style.visibility = ''; };
+    loadLib('job-picker.js?v=7', 'JobPicker').then((jp) => {
+      try {
+        if (!jp) return;
+        sels.forEach((sel, i) => jp.enhance(sel, i === 0 ? {
+          gateRoot, recordKey: o.recordKey, autofillTargets: o.autofillTargets, requiredFocus: o.requiredFocus
+        } : {}));
+        if (autofocus && !sels[0].value && sels[0]._jobPicker && sels[0]._jobPicker.focus) sels[0]._jobPicker.focus();
+      } finally { unprelock(); }
     });
     loadLib('job-status.js?v=3', 'JobStatus').then((js) => {
       if (!js) throw new Error('job-status.js unavailable');
@@ -1413,6 +1434,8 @@
         container.innerHTML = '';
         const ctx = {
           mode: id ? 'edit' : 'new', locked, recordKey, docCode, toast,
+          // job picker for a custom body's own <select data-jobsearch>; gates the form on a new entry
+          wireJobSearch: (sel, o) => wireJobSelects([sel], Object.assign({ autofocus: !id && !locked, recordKey, root: container.parentElement }, o || {})),
           onChange: () => {},
           setSubmitDisabled: (v) => { const b = el(`${ns}_submitBtn`); if (b) b.disabled = !!v; },
           reopen: () => openForm(editingId),
@@ -1452,7 +1475,7 @@
       const blocks = wireSectionCollapsibles(container, ns, entryFields);
       const ctl = el(`${ns}_collapseCtl`);
       if (ctl) { ctl.hidden = !blocks; wireCollapseAll(ctl, () => container.parentElement || container); }
-      if (!locked) { wireJobSearch(container, ns, entryFields, autofill, !existing); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
+      if (!locked) { wireJobSearch(container, ns, entryFields, autofill, !existing, recordKey); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
       if (!locked) wireFromRecord(container);
       wireCalcAndFlags(container, locked);
 

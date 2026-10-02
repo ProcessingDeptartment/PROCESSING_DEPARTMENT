@@ -86,7 +86,7 @@
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/traceability.js?v=10"></script>
 <script src="../lib/signoff-block.js?v=6"></script>
-<script src="../lib/monitoring-log.js?v=42"></script>
+<script src="../lib/monitoring-log.js?v=43"></script>
 <script>(function () {
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const num = v => { const n = parseFloat(v); return (v === '' || v == null || isNaN(n)) ? null : n; };
@@ -328,10 +328,20 @@
     return html;
   }
 
+  const SECTION_STYLE = 'border:1px solid var(--palette-border,#e2e4e3);border-radius:6px;padding:10px 14px;background:#fff;';
+  const jobSummary = (v) => (v ? '— ' + v : '');
+
   function headerFieldHtml(k, label, type, hint) {
     if (k === 'microVerified') {
       return '<label class="ds-field">' + esc(label) + '<select data-hkey="microVerified">' +
         ['', 'yes', 'no'].map(o => '<option value="' + o + '"' + (state.header.microVerified === o ? ' selected' : '') + '>' + (o || '-') + '</option>').join('') + '</select></label>';
+    }
+    if (k === 'jobNo' && !(mlCtx && mlCtx.locked)) {
+      // the shared job picker (job-picker.js) turns this select into search -> confirm popup; on a new entry
+      // the rest of the form stays hidden until a job is confirmed
+      const jv = state.header.jobNo;
+      return '<label class="ds-field jp-field">' + esc(label) + '<select data-hkey="jobNo" data-jobsearch="1">' +
+        (jv ? '<option value="' + esc(jv) + '" selected>' + esc(jv) + '</option>' : '<option value="">-</option>') + '</select></label>';
     }
     return '<label class="ds-field">' + esc(label) + (hint ? '<span class="hint">' + esc(hint) + '</span>' : '') +
       '<input data-hkey="' + k + '" type="' + (type || 'text') + '"' + (type === 'number' ? ' step="0.001"' : '') + ' value="' + esc(state.header[k]) + '"></label>';
@@ -418,10 +428,14 @@
         '<a class="ds-btn-flat" href="double-seam-trend.html" style="text-decoration:none;">Trend</a>' +
       '</div>' +
       '<div id="ds_issues">' + issuesHtml() + '</div>' +
-      '<details class="ml-section-collapsible" open data-autofold="1" style="border:1px solid var(--palette-border,#e2e4e3);border-radius:6px;padding:10px 14px;background:#fff;">' +
-        '<summary class="ml-grouphead">Job &amp; equipment info<span class="ml-section-summary" id="ds_jobNoSummary">' + esc(state.header.jobNo || '(no job no.)') + '</span></summary>' +
+      '<details class="ml-section-collapsible" open data-autofold="1" style="' + SECTION_STYLE + '">' +
+        '<summary class="ml-grouphead">Job info<span class="ml-section-summary" id="ds_jobNoSummary">' + esc(jobSummary(state.header.jobNo)) + '</span></summary>' +
+        '<div class="ds-grid ds-grid-2" style="margin-bottom:10px;">' + headerFieldHtml('jobNo', 'Job no.') + '</div>' +
+      '</details>' +
+      '<details class="ml-section-collapsible" open style="' + SECTION_STYLE + '">' +
+        '<summary class="ml-grouphead">Equipment &amp; production info</summary>' +
         '<div class="ds-grid" style="margin-bottom:10px;">' +
-          headerFieldHtml('jobNo', 'Job no.') + headerFieldHtml('agCode', 'AG Code') +
+          headerFieldHtml('agCode', 'AG Code') +
           headerFieldHtml('reportDate', 'Date', 'date') + headerFieldHtml('canSize', 'Can size') +
         '</div><div class="ds-grid" style="margin-bottom:10px;">' +
           headerFieldHtml('dateProduced', 'Date produced', 'date') +
@@ -470,13 +484,15 @@
         state.header[inp.dataset.hkey] = inp.value;
         if (inp.dataset.hkey === 'jobNo') {
           const sum = container.querySelector('#ds_jobNoSummary');
-          if (sum) sum.textContent = state.header.jobNo || '(no job no.)';
+          if (sum) sum.textContent = jobSummary(state.header.jobNo);
         }
         repaintDynamic(container);
       };
       inp.addEventListener('input', onEdit);
       inp.addEventListener('change', onEdit);
     });
+    const jobSel = container.querySelector('select[data-jobsearch]');
+    if (jobSel && !ctx.locked && ctx.wireJobSearch) ctx.wireJobSearch(jobSel);
     container.querySelector('#ds_comments').addEventListener('input', e => { state.comments = e.target.value; });
     SIGNOFF_KEYS.forEach(k => {
       const el = container.querySelector('#ds_' + k);
@@ -501,10 +517,7 @@
       container.querySelectorAll('input,select,textarea,button').forEach(el => { el.disabled = true; });
     }
     updateSubmitGate();
-    if (!ctx.locked && ctx.mode === 'new' && !state.header.jobNo) {
-      const jobInp = container.querySelector('[data-hkey="jobNo"]');
-      if (jobInp) { try { jobInp.focus({ preventScroll: true }); } catch (e) { /* not focusable */ } }
-    }
+    // a new entry starts on the job search (ctx.wireJobSearch focuses it and holds the rest of the form back)
   }
 
   function read(container) {

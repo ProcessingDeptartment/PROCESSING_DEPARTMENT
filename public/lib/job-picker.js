@@ -20,6 +20,9 @@
   const ROUTE_PREF_KEY = 'jp_route';
   const ROUTES = [['Can', 'Can'], ['Dried', 'Dry']];
   const PREFIX_ROUTE = { '3CP': 'Can', 'CPR': 'Can', '3DP': 'Dried', 'DPR': 'Dried' };
+  // Records that CREATE the job number (nothing to search for), so the open-gate never applies to them.
+  // (REC 7.1.2 has no jobsearch field at all; the constant is a second guard keyed on recordKey.)
+  const JOB_START_RECORDS = ['abalone-receiving'];
 
   // 'Can' | 'Dried' | null, from the job-number prefix.
   function routeOf(jobNo) {
@@ -78,6 +81,19 @@
   .jp-field .jp-search{ flex:1 1 220px; width:auto; max-width:420px; }
   .jp-picked-no{ font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-weight:700; font-size:15px; }
   .jp-change{ background:none; border:0; padding:4px 6px; color:var(--palette-link,#1f5fa8); text-decoration:underline; cursor:pointer; font-size:13px; }
+  .jp-search{ min-height:48px; font-size:16px; padding:8px 12px; }
+  .jp-opt{ min-height:44px; box-sizing:border-box; align-items:center; }
+  /* record-open gate: everything but the job search stays out of sight (and out of the tab order) until a job is confirmed */
+  .jp-gated{ display:none !important; }
+  /* the open list must not be clipped by a scrolling form panel while the rest of the form is hidden */
+  .jp-gate-root{ overflow:visible !important; max-height:none !important; min-height:360px; }
+  .jp-reveal{ animation:jpReveal .15s ease-out; }
+  @keyframes jpReveal{ from{ opacity:0; } to{ opacity:1; } }
+  @media (prefers-reduced-motion:reduce){ .jp-reveal{ animation:none; } }
+  .jp-gate-back{ flex:1 0 100%; margin-top:6px; }
+  .jp-gate-back button{ background:none; border:0; padding:10px 4px; min-height:44px; color:var(--palette-link,#1f5fa8); text-decoration:underline; cursor:pointer; font-size:14px; }
+  body.jp-gate-on .rt-rail, body.jp-gate-on .rt-actionbar-fixed{ display:none !important; }
+  .jp-actions button{ min-height:44px; }
   .jp-modal{ font-family:"Segoe UI",system-ui,sans-serif; position:fixed; inset:0; z-index:1000; background:rgba(15,20,30,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
   .jp-card{ background:#fff; color:#1b2330; border-radius:10px; width:100%; max-width:440px; box-shadow:0 12px 40px rgba(0,0,0,.3); overflow:hidden; }
   .jp-card h3{ margin:0; padding:14px 18px; font-size:17px; border-bottom:1px solid #e3e6eb; }
@@ -111,7 +127,8 @@
     return s ? (Math.round(parseFloat(s) * 100) / 100).toFixed(2) : '';
   }
 
-  // Resolves true (Confirm) or false (Cancel / Esc / backdrop).
+  // Resolves true (Confirm) or false ("Choose a different job" / Esc). The popup stays until one of
+  // them is pressed: no backdrop-click close, no timer. Enter = Confirm. Focus is trapped inside.
   function confirmJob(jobNo) {
     return new Promise((resolve) => {
       const modal = document.createElement('div');
@@ -122,24 +139,32 @@
         <h3>Confirm job <span>${esc(jobNo)}</span></h3>
         <div class="jp-body"><div class="jp-empty">Loading job details…</div></div>
         <div class="jp-actions">
-          <button type="button" class="jp-cancel">Cancel</button>
-          <button type="button" class="jp-confirm" disabled>Confirm job</button>
+          <button type="button" class="jp-cancel">Choose a different job</button>
+          <button type="button" class="jp-confirm" disabled>Confirm</button>
         </div></div>`;
       document.body.appendChild(modal);
       const okBtn = modal.querySelector('.jp-confirm');
+      const noBtn = modal.querySelector('.jp-cancel');
       const done = (ok) => {
         document.removeEventListener('keydown', onKey, true);
         modal.remove();
         resolve(ok);
       };
       const onKey = (ev) => {
-        if (ev.key === 'Escape') { ev.preventDefault(); done(false); }
-        else if (ev.key === 'Enter' && !okBtn.disabled) { ev.preventDefault(); done(true); }
+        if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); done(false); }
+        else if (ev.key === 'Enter' && !okBtn.disabled && !(ev.target && ev.target === noBtn)) { ev.preventDefault(); ev.stopPropagation(); done(true); }
+        else if (ev.key === 'Tab') {
+          const items = [noBtn, okBtn].filter((b) => !b.disabled);
+          if (!items.length) { ev.preventDefault(); return; }
+          const i = items.indexOf(document.activeElement);
+          ev.preventDefault();
+          items[(i + (ev.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+        }
       };
       document.addEventListener('keydown', onKey, true);
-      modal.addEventListener('click', (ev) => { if (ev.target === modal) done(false); });
-      modal.querySelector('.jp-cancel').addEventListener('click', () => done(false));
+      noBtn.addEventListener('click', () => done(false));
       okBtn.addEventListener('click', () => done(true));
+      try { noBtn.focus(); } catch (e) { }
 
       fetchDetails(jobNo).then(({ rec, status }) => {
         if (!modal.isConnected) return;
@@ -168,8 +193,143 @@
     });
   }
 
-  function enhance(sel) {
+  // ---- Job info block: job data only -----------------------------------------------------------------
+  const JOB_DATA = /^(jobNo|ji[A-Z]\w*|receivingDate|intakeDate|intakeWeight|wholeWeight|agCode|nrcsAgCode|harvestFarm|receivedFrom|processingFor|processedFor|toBeProcessedFor)$/i;
+  function fieldKey(f) {
+    const m = /_f_(.+)$/.exec(f.id || '');
+    const holder = f.closest('[data-field]');
+    return (m && m[1]) || (holder && holder.getAttribute('data-field')) || '';
+  }
+  // Editable fields in `details` that are not the picker and not job data. `needShown`: only those on screen.
+  function strayFields(details, wrap, sel, needShown) {
+    return [...details.querySelectorAll('input:not([type=hidden]), select, textarea')].filter((f) => {
+      if (wrap.contains(f) || f === sel || f.disabled || f.readOnly) return false;
+      if (needShown && !f.getClientRects().length) return false;
+      return !JOB_DATA.test(fieldKey(f));
+    });
+  }
+  // Move the non-job fields of a Job info block, untouched, into a block of their own right after it.
+  function splitStrays(details, wrap, sel) {
+    if (details.getAttribute('data-jp-split')) return;
+    const strays = strayFields(details, wrap, sel, false);
+    if (!strays.length) return;
+    const holders = [];
+    for (const f of strays) {
+      const h = f.closest('.fr-field, .ml-field');
+      if (!h || !details.contains(h) || h.contains(sel)) return;   // cannot move cleanly: leave the block as it is
+      if (holders.indexOf(h) < 0) holders.push(h);
+    }
+    const ml = details.classList.contains('ml-section-collapsible');
+    const nd = document.createElement('details');
+    nd.className = details.className;
+    nd.removeAttribute('data-autofold');
+    nd.open = details.open;
+    const sm = document.createElement('summary');
+    sm.className = ml ? 'ml-grouphead' : 'fr-section-title';
+    sm.textContent = 'Entry details';
+    const body = document.createElement('div');
+    body.className = ml ? 'ml-grid ml-grid-2 ml-section-body' : 'fr-grid fr-grid-2';
+    holders.forEach((h) => body.appendChild(h));
+    nd.appendChild(sm);
+    nd.appendChild(body);
+    details.parentNode.insertBefore(nd, details.nextSibling);
+    details.setAttribute('data-jp-split', '1');
+  }
+
+  // ---- record-open gate ---------------------------------------------------------------------
+  // While no job is confirmed, every element in `root` that is not on the path to the job search is
+  // hidden and inert (kept in the DOM, so rosters / calculations initialise normally once revealed).
+  const gates = new Set();
+  let gateTimer = null;
+  function syncGateFlag() {
+    // a gate whose form was re-rendered away (Save & New, shell re-parenting) is dropped and its elements handed back
+    gates.forEach((g) => { if (!g.root.isConnected || !g.wrap.isConnected) { g.release(); } });
+    if (document.body) document.body.classList.toggle('jp-gate-on', gates.size > 0);
+    if (!gates.size && gateTimer) { clearInterval(gateTimer); gateTimer = null; }
+  }
+
+  function makeGate(wrap, root) {
+    const path = [];
+    for (let n = wrap; n && n !== root; n = n.parentElement) path.push(n);
+    if (!path.length || !root.contains(wrap)) return null;
+    const hidden = [];
+    let observer = null;
+    root.classList.add('jp-gate-root');
+    const keep = (n) => path.indexOf(n) >= 0 || n.tagName === 'SUMMARY' || n.classList.contains('jp-gate-back');
+    // Elements outside the path (e.g. the action row) can be shared with an earlier gate on the same panel:
+    // ownership moves to the newest gate so the right one gives them back.
+    const hide = (n) => {
+      if (n.nodeType !== 1 || keep(n) || n._jpGate === gate) return;
+      n.classList.add('jp-gated');
+      n.setAttribute('inert', '');
+      n._jpGate = gate;
+      hidden.push(n);
+    };
+    const hideAll = () => path.forEach((n) => { if (n.parentElement) Array.prototype.forEach.call(n.parentElement.children, hide); });
+    // the heading of the job section is not a toggle while the form is locked
+    const sums = path.filter((n) => n.tagName === 'DETAILS').map((d) => d.querySelector(':scope > summary')).filter(Boolean);
+    const noToggle = (ev) => ev.preventDefault();
+    sums.forEach((sm) => sm.addEventListener('click', noToggle));
+    const gate = {
+      root, wrap, locked: true,
+      release() {
+        if (observer) observer.disconnect();
+        observer = null;
+        sums.forEach((sm) => sm.removeEventListener('click', noToggle));
+        this.locked = false;
+        gates.delete(gate);
+        if (![...gates].some((g) => g.root === root)) root.classList.remove('jp-gate-root');
+        const motion = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        hidden.forEach((n) => {
+          if (n._jpGate !== gate) return;   // now held by a newer gate
+          n._jpGate = null;
+          n.classList.remove('jp-gated');
+          n.removeAttribute('inert');
+          if (motion && wrap.isConnected) { n.classList.add('jp-reveal'); setTimeout(() => n.classList.remove('jp-reveal'), 220); }
+        });
+        hidden.length = 0;
+        syncGateFlag();
+      }
+    };
+    hideAll();
+    observer = new MutationObserver(hideAll);
+    path.forEach((n) => { if (n.parentElement) observer.observe(n.parentElement, { childList: true }); });
+    gates.add(gate);
+    syncGateFlag();
+    if (!gateTimer) gateTimer = setInterval(syncGateFlag, 700);
+    return gate;
+  }
+
+  // Small cancel / continue dialog (same look as the job popup). Resolves true on Continue.
+  function askContinue(message, okLabel) {
+    return new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.className = 'jp-modal';
+      modal.setAttribute('role', 'alertdialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.innerHTML = `<div class="jp-card"><div class="jp-body"><p style="margin:6px 0">${esc(message)}</p></div>
+        <div class="jp-actions"><button type="button" class="jp-cancel">Cancel</button>
+        <button type="button" class="jp-confirm">${esc(okLabel || 'Continue')}</button></div></div>`;
+      document.body.appendChild(modal);
+      const done = (ok) => { document.removeEventListener('keydown', onKey, true); modal.remove(); resolve(ok); };
+      const onKey = (ev) => {
+        if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); done(false); }
+        else if (ev.key === 'Tab') { ev.preventDefault(); const b = modal.querySelectorAll('button'); b[document.activeElement === b[0] ? 1 : 0].focus(); }
+      };
+      document.addEventListener('keydown', onKey, true);
+      modal.querySelector('.jp-cancel').addEventListener('click', () => done(false));
+      modal.querySelector('.jp-confirm').addEventListener('click', () => done(true));
+      try { modal.querySelector('.jp-confirm').focus(); } catch (e) { }
+    });
+  }
+
+  // opts: { gateRoot: Element   (new entries only; omit for no gate),
+  //         recordKey: string,
+  //         autofillTargets: () => Element[]   fields autofill writes for this job (overwrite warning / refill),
+  //         requiredFocus: () => Element[]     fields to try first when focusing after Confirm }
+  function enhance(sel, opts) {
     if (!sel || sel._jobPicker) return sel && sel._jobPicker;
+    opts = opts || {};
     injectCss();
     const wrap = document.createElement('span');
     wrap.className = 'jp-wrap';
@@ -182,7 +342,7 @@
         <button type="button" class="jp-change">Change</button></span>
       <span class="jp-route" role="group" aria-label="Job type" hidden>${ROUTES.map(([v, label]) =>
         `<button type="button" data-route="${v}" aria-pressed="false">${label}</button>`).join('')}</span>
-      <input type="search" class="jp-search" placeholder="Search job no…" autocomplete="off" hidden>
+      <input type="search" class="jp-search" placeholder="Search job number…" autocomplete="off" hidden>
       <div class="jp-list" role="listbox" hidden></div>`);
     const picked = wrap.querySelector('.jp-picked');
     const pickedNo = wrap.querySelector('.jp-picked-no');
@@ -190,21 +350,40 @@
     const list = wrap.querySelector('.jp-list');
     const routeBar = wrap.querySelector('.jp-route');
     const fixedRoute = sel.getAttribute('data-route') || '';
+    // The Can/Dry buttons are an optional filter: with neither chosen the search covers every job, so the
+    // list can open straight away.
     let route = fixedRoute || loadRoutePref();
     const details = sel.closest('details');
     let active = -1;
     let matches = [];
 
+    // ---- gate (new entries on a record with a job picker only) ----
+    let gate = null;
+    if (opts.gateRoot && !sel.value && !sel.disabled && JOB_START_RECORDS.indexOf(opts.recordKey) < 0) {
+      gate = makeGate(wrap, opts.gateRoot);
+      if (gate) {
+        const back = document.createElement('span');
+        back.className = 'jp-gate-back';
+        back.innerHTML = '<button type="button">← Back to list</button>';
+        back.querySelector('button').addEventListener('click', () => {
+          const shellBack = document.querySelector('.rt-back');
+          if (shellBack) shellBack.click(); else history.back();
+        });
+        wrap.appendChild(back);
+        gate.back = back;
+      }
+    }
+
     const jobs = () => [...sel.options].filter((o) => o.value)
       .map((o) => ({ no: o.value, closed: o.getAttribute('data-status') === 'closed' }));
     // Jobs with no recognised prefix are offered under both routes rather than hidden.
-    const routeJobs = () => jobs().filter((j) => { const r = routeOf(j.no); return fixedRoute ? r === fixedRoute : (!r || r === route); });
+    const routeJobs = () => jobs().filter((j) => { const r = routeOf(j.no); return fixedRoute ? r === fixedRoute : (!route || !r || r === route); });
 
     function paintRoute() {
       routeBar.querySelectorAll('button').forEach((b) =>
         b.setAttribute('aria-pressed', String(b.getAttribute('data-route') === route)));
-      input.disabled = !route;
-      input.placeholder = route ? 'Search ' + (route === 'Can' ? 'Can' : 'Dry') + ' job no…' : 'Select Can or Dry first';
+      input.disabled = false;
+      input.placeholder = route ? 'Search ' + (route === 'Can' ? 'Can' : 'Dry') + ' job number…' : 'Search job number…';
     }
 
     function paint() {
@@ -217,42 +396,36 @@
       wrap.querySelector('.jp-change').hidden = sel.disabled;
     }
 
-    // After the user confirms a job the Job info block folds away (its header summary keeps the
-    // job visible) and focus moves on to the next empty field in the form.
+    // First empty field after the job block: a required one if the engine names any, else any empty field.
     function focusNextField() {
       if (!details) return;
-      const host = details.closest('#fr_modalSections, [id$="_modalFields"]');
+      const host = details.closest('#fr_modalSections, [id$="_modalFields"]') || opts.gateRoot || null;
       if (!host) return;
+      const ok = (f) => !(f.disabled || f.readOnly || String(f.value || '').trim() !== '' || !f.getClientRects().length)
+        && !details.contains(f) && (details.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING);
+      const first = (opts.requiredFocus ? opts.requiredFocus() : []).filter(Boolean).find(ok);
       const fields = host.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea');
-      for (const f of fields) {
-        if (details.contains(f) || !(details.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
-        if (f.disabled || f.readOnly || String(f.value || '').trim() !== '' || !f.getClientRects().length) continue;
-        try { f.focus({ preventScroll: true }); } catch (e) { continue; }
-        try { f.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { }
-        return;
-      }
+      const target = first || [...fields].find(ok);
+      if (!target) return;
+      try { target.focus({ preventScroll: true }); } catch (e) { return; }
+      try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { }
     }
 
-    // Guard: the block may only fold away when it holds the job picker plus job data. If it also holds
-    // fields someone still has to fill in (a mis-grouped record definition), folding would hide them,
-    // so leave it open and say which record needs its grouping fixed.
-    const JOB_DATA = /^(jobNo|jiReceivingDate|jiReceivedFrom|jiProcessingFor|receivingDate|intakeDate|intakeWeight|wholeWeight|agCode|nrcsAgCode|harvestFarm|receivedFrom|processingFor|processedFor|toBeProcessedFor)$/i;
+    // The block may only fold away when it holds the job picker plus job data. Anything else someone still
+    // has to fill in (e.g. a Date on a record whose definition groups it under Job info) is moved, as is, into
+    // a section of its own just below (splitStrays), so folding never hides an input. Should a field be
+    // un-movable the block stays open and the console says which record needs its grouping fixed.
     function foldSafe() {
       if (!details) return false;
-      const stray = [...details.querySelectorAll('input:not([type=hidden]), select, textarea')].filter((f) => {
-        if (wrap.contains(f) || f === sel || f.disabled || f.readOnly || !f.getClientRects().length) return false;
-        const m = /_f_(.+)$/.exec(f.id || '');
-        const holder = f.closest('[data-field]');
-        const key = (m && m[1]) || (holder && holder.getAttribute('data-field')) || '';
-        return !JOB_DATA.test(key);
-      });
+      const stray = strayFields(details, wrap, sel, true);
       if (!stray.length) return true;
       try { console.warn('[job-picker] Job info section not auto-collapsed on "' + (document.title || location.pathname) + '": it also holds ' + stray.length + ' other field(s) (' + stray.slice(0, 5).map((f) => f.id || f.name || f.tagName).join(', ') + '). Move them to their own section in the record definition.'); } catch (e) { }
       return false;
     }
+    if (details) splitStrays(details, wrap, sel);
 
-    // Start a new entry on the job number: focus the search box (which opens its list), or the
-    // Can/Dry toggle when no route is chosen yet. Never when a job is already picked.
+    // Start a new entry on the job number: focus the search box (which opens its list). Never when a job
+    // is already picked.
     function tryFocus() {
       if (sel.value || sel.disabled || !sel.isConnected) return false;
       const target = !input.hidden && !input.disabled ? input : routeBar.querySelector('button');
@@ -270,7 +443,7 @@
     function focusPicker() {
       if (!tryFocus()) return false;
       [350, 900].forEach((ms) => setTimeout(() => {
-        if (!sel.value && (!document.activeElement || document.activeElement === document.body)) tryFocus();
+        if (!sel.value && !document.querySelector('.jp-modal') && (!document.activeElement || document.activeElement === document.body)) tryFocus();
       }, ms));
       setTimeout(() => { if (!sel.value && wrap.contains(document.activeElement)) ensureVisible(); }, 1300);
       return true;
@@ -278,33 +451,48 @@
 
     function drawList() {
       const q = input.value.trim().toUpperCase();
-      if (!route) { list.hidden = true; matches = []; return; }
       const pool = routeJobs();
       const hits = pool.filter((j) => !q || j.no.toUpperCase().includes(q)).slice(0, 60);
       matches = hits.map((j) => j.no);
       active = matches.length ? 0 : -1;
-      const kind = route === 'Can' ? 'Can' : 'Dry';
       list.innerHTML = hits.length
         ? hits.map((j, i) => `<div class="jp-opt${i === active ? ' active' : ''}" role="option" data-v="${esc(j.no)}">` +
             `<span>${esc(j.no)}</span>${j.closed ? '<span class="jp-tag">Closed</span>' : ''}</div>`).join('')
-        : `<div class="jp-empty">${!jobs().length ? 'Loading jobs…' : pool.length ? 'No ' + kind + ' job matches' : 'No ' + kind + ' jobs found'}</div>`;
+        : `<div class="jp-empty">${!jobs().length ? 'Loading jobs…' : 'No jobs found'}</div>`;
       list.hidden = false;
     }
 
     function setActive(i) {
-      const opts = list.querySelectorAll('.jp-opt');
-      if (!opts.length) return;
-      active = (i + opts.length) % opts.length;
-      opts.forEach((o, k) => o.classList.toggle('active', k === active));
-      opts[active].scrollIntoView({ block: 'nearest' });
+      const rows = list.querySelectorAll('.jp-opt');
+      if (!rows.length) return;
+      active = (i + rows.length) % rows.length;
+      rows.forEach((o, k) => o.classList.toggle('active', k === active));
+      rows[active].scrollIntoView({ block: 'nearest' });
+    }
+
+    // Fields the autofill writes for the current job that already hold a value.
+    function overwriteTargets() {
+      return (opts.autofillTargets ? opts.autofillTargets() : []).filter((t) => t && String(t.value || '').trim() !== '');
     }
 
     async function choose(jobNo) {
       list.hidden = true;
       if (fixedRoute && routeOf(jobNo) !== fixedRoute) return;
+      // Same job as the one already confirmed: nothing to confirm again.
+      if (sel.value && jobNo === sel.value) { input.value = ''; paint(); return; }
       input.blur();
       const ok = await confirmJob(jobNo);
-      if (!ok) { try { input.focus(); } catch (e) { } return; }
+      if (!ok) {
+        // Cancel: the search comes back focused with its list open. A change in progress keeps the
+        // original job and the form is not re-locked.
+        input.value = '';
+        if (sel.value) paint();
+        try { input.focus(); } catch (e) { }
+        return;
+      }
+      // 1. set the job and run the existing autofill; changing job first clears what autofill had
+      //    filled so it is replaced by the new job's values
+      if (sel.value) overwriteTargets().forEach((t) => { t.value = ''; });
       if (![...sel.options].some((o) => o.value === jobNo)) {
         const o = document.createElement('option');
         o.value = jobNo; o.textContent = jobNo;
@@ -315,14 +503,18 @@
       sel.dispatchEvent(new Event('input', { bubbles: true }));
       sel.dispatchEvent(new Event('change', { bubbles: true }));
       paint();
+      // 3-5. unlock, fold the Job info block, reveal the rest (the popup is already closed: step 2)
+      if (gate) { if (gate.back) gate.back.remove(); gate.release(); gate = null; }
       if (details && foldSafe()) details.open = false;
+      // 6. focus the first empty required field
       setTimeout(focusNextField, 50);
     }
 
     routeBar.addEventListener('click', (ev) => {
       const b = ev.target.closest('button[data-route]');
       if (!b) return;
-      route = b.getAttribute('data-route');
+      const r = b.getAttribute('data-route');
+      route = route === r ? '' : r;
       saveRoutePref(route);
       input.value = '';
       paintRoute();
@@ -330,6 +522,7 @@
       drawList();
     });
     input.addEventListener('focus', drawList);
+    input.addEventListener('click', () => { if (list.hidden) drawList(); });
     input.addEventListener('input', drawList);
     input.addEventListener('keydown', (ev) => {
       if (ev.key === 'ArrowDown') { ev.preventDefault(); if (list.hidden) drawList(); else setActive(active + 1); }
@@ -340,7 +533,7 @@
     // Keep focus in the search box when switching Can/Dry.
     routeBar.addEventListener('mousedown', (ev) => { if (!input.disabled) ev.preventDefault(); });
     input.addEventListener('blur', () => setTimeout(() => {
-      if (document.activeElement === input) return;
+      if (document.activeElement === input || document.querySelector('.jp-modal')) return;
       list.hidden = true;
       // Leaving the search without picking keeps the previously confirmed job.
       if (sel.value && !input.value.trim()) paint();
@@ -351,8 +544,10 @@
       ev.preventDefault();
       choose(opt.getAttribute('data-v'));
     });
-    wrap.querySelector('.jp-change').addEventListener('click', () => {
+    wrap.querySelector('.jp-change').addEventListener('click', async () => {
       if (sel.disabled) return;
+      if (overwriteTargets().length &&
+          !(await askContinue('Changing the job will replace auto-filled values. Continue?'))) return;
       // Changing a job starts on the current job's route.
       route = fixedRoute || routeOf(sel.value) || route;
       picked.hidden = true;
@@ -361,13 +556,15 @@
       input.value = '';
       paintRoute();
       try { input.focus(); } catch (e) { }
+      drawList();
     });
     sel.addEventListener('change', paint);
 
     paint();
-    sel._jobPicker = { refresh: paint, focus: focusPicker, drawList: () => { if (!input.hidden && document.activeElement === input) drawList(); } };
+    syncGateFlag();
+    sel._jobPicker = { refresh: paint, focus: focusPicker, drawList: () => { if (!input.hidden && document.activeElement === input) drawList(); }, gated: () => !!gate };
     return sel._jobPicker;
   }
 
-  window.JobPicker = { enhance, confirmJob };
+  window.JobPicker = { enhance, confirmJob, JOB_START_RECORDS };
 })();
