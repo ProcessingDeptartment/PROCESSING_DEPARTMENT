@@ -2610,11 +2610,17 @@
         rows.forEach((_, i) => { if (i !== openIdx && rowHasData(i)) collapsedRows.add(i); });
         applyCollapse();
       }
+      // A row opened with Edit stays open until focus goes to a DIFFERENT row (or the row is edited and left). It must
+      // not depend on focus landing inside the row: some tablets/browsers leave focus on <body> after the Edit button
+      // is replaced, and the focusout handler below would then close the row again straight away.
+      let pinnedOpen = -1;
       container.addEventListener('focusin', (e) => {
         if (!canCollapse) return;
         const rowEl = e.target.closest && e.target.closest('.fr-roster-row');
         if (!rowEl) return;
-        collapseAllExcept(Number(rowEl.dataset.rosterRow));
+        const n = Number(rowEl.dataset.rosterRow);
+        if (n === pinnedOpen) pinnedOpen = -1;
+        collapseAllExcept(n);
       });
 
       container.addEventListener('focusout', (e) => {
@@ -2624,6 +2630,7 @@
         const i = Number(rowEl.dataset.rosterRow);
         setTimeout(() => {
           if (container.contains(document.activeElement)) return;
+          if (i === pinnedOpen) return;
           if (rowHasData(i)) { collapsedRows.add(i); applyCollapse(); }
         }, 0);
       });
@@ -2632,8 +2639,8 @@
         const btn = e.target.closest && e.target.closest('[data-roster-edit]');
         if (!btn) return;
         const i = Number(btn.dataset.rosterEdit);
-        collapsedRows.delete(i);
-        applyCollapse();
+        pinnedOpen = i;
+        collapseAllExcept(i);
         // first column that can take focus (a jobNumbered crate number is a hidden input): focus must land inside the
         // row, otherwise the focusout handler above collapses it again straight away
         const first = dataCols.map(c => el(fid(i, c.key))).find(x => x && x.type !== "hidden" && !x.disabled) || el(fid(i, (dataCols[0] || roster.columns[0]).key));
