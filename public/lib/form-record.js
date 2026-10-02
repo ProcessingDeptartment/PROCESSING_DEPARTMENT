@@ -2634,7 +2634,9 @@
         const i = Number(btn.dataset.rosterEdit);
         collapsedRows.delete(i);
         applyCollapse();
-        const first = el(fid(i, (dataCols[0] || roster.columns[0]).key));
+        // first column that can take focus (a jobNumbered crate number is a hidden input): focus must land inside the
+        // row, otherwise the focusout handler above collapses it again straight away
+        const first = dataCols.map(c => el(fid(i, c.key))).find(x => x && x.type !== "hidden" && !x.disabled) || el(fid(i, (dataCols[0] || roster.columns[0]).key));
         if (first) { try { first.focus(); } catch (err) {} }
       });
 
