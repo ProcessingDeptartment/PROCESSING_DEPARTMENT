@@ -1801,7 +1801,8 @@
     }
 
     function exportCsv() {
-      const cols = listFields();
+      // hidden system stamps flagged exportCsv (entry date / time) go in the export only
+      const cols = listFields().concat(entryFields.filter(f => f.hidden && f.exportCsv));
       const rows = [cols.map(f => f.label).concat(submitFlow ? ['Submission', 'Status'] : ['Status'])];
       filteredEntries().forEach(e => {
         const tail = e.inSpec === null || e.inSpec === undefined ? '' : (e.inSpec ? 'OK' : 'DEVIATION');
@@ -1881,7 +1882,7 @@
     function buildEntrySheet(entryRow) {
       const v = entryRow.values || {};
       const dateF = roleField('date'), opF = roleField('operator');
-      const stampDateF = entryFields.find(isStampDate) || null;   // records with a system-stamped Entry date print it in the header
+      const stampDateF = entryFields.find(f => isStampDate(f) && !f.hidden) || null;   // records with a system-stamped Entry date print it in the header
       const m = sheetMeta || {};
       if (customBody && typeof customBody.sheetHtml === 'function') {
         try { return customBody.sheetHtml(entryRow, { docCode, docTitle, meta: m }); }

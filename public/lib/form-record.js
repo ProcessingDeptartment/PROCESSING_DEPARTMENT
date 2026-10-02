@@ -263,7 +263,13 @@
   .fr-qe-list .fr-roster-row > .fr-field input, .rt-content .fr-qe-list .fr-roster-row > .fr-field input{ font-size:15px; min-height:38px; }
   .fr-qe-list .fr-roster-row [data-remove-roster-row], .rt-content .fr-qe-list .fr-roster-row [data-remove-roster-row],
   body.rt-pc .rt-content .fr-qe-list .fr-roster-row [data-remove-roster-row]{
-    grid-column:auto; justify-self:start; width:44px; min-height:38px; padding:0; }`;
+    grid-column:auto; justify-self:start; width:44px; min-height:38px; padding:0; }
+  /* roster.jobNumbered: the crate number is a greyed-out label, never an input (the server assigns it) */
+  .fr-crate-no{ pointer-events:none; user-select:none; }
+  .fr-crate-val{ display:inline-block; min-width:3.2em; padding:.5em .8em; background:#eceff1; color:#555; border:1px solid #d5d9dc;
+    border-radius:6px; font-weight:600; text-align:center; }
+  .fr-crate-old{ font-weight:400; color:#777; font-size:.85em; }
+  .fr-crate-gate{ margin:.4em 0; padding:.5em .8em; background:#fff8e1; border:1px solid #f0d98a; border-radius:6px; color:#6b5200; }`;
 
   function injectStyleOnce() {
     if (document.getElementById('fr-style')) return;
@@ -1947,8 +1953,21 @@
           ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
         </div>`;
       }
+      const jn = roster.jobNumbered;
+      const cellOf = c => {
+        if (!jn) return cell(c);
+        const v = esc(row[c.key] == null ? '' : row[c.key]);
+        if (c.hidden) return `<input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${v}">`;
+        if (c.key === jn.column) {
+          const old = String(row.crateNoOld == null ? '' : row.crateNoOld).trim();
+          return `<div class="fr-field fr-crate-no" data-col="${esc(c.key)}">${esc(c.label)}
+            <span class="fr-crate-val" data-crate-val aria-readonly="true">${v}${old && old !== String(row[c.key]) ? ` <span class="fr-crate-old">(old ${esc(old)})</span>` : ''}</span>
+            <input type="hidden" id="${ns}_roster_${idx}_${c.key}" value="${v}"></div>`;
+        }
+        return cell(c);
+      };
       return `<div class="fr-roster-row" data-roster-row="${idx}">
-        ${roster.columns.map(cell).join('')}
+        ${roster.columns.map(cellOf).join('')}
         <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" data-remove-roster-row="${idx}">✕</button>
       </div>`;
     }
@@ -1957,11 +1976,15 @@
     // roster.quickEntry: one capture line (the roster's own columns + an add button) above the
     // list, instead of a blank row + "+ Add row". quickEntry may be true or
     // { addLabel, autoIncrement: '<numeric column key to prefill with last + 1>' }.
+    // capture-line columns: never batchseq/derived; on a jobNumbered roster never the hidden columns or the
+    // automatic crate number either (the operator types the weight only)
+    const qeColumns = roster => roster.columns.filter(c => c.type !== 'batchseq' && c.type !== 'derived'
+      && !(roster.jobNumbered && (c.hidden || c.key === roster.jobNumbered.column)));
     function quickEntryHtml(roster, rosterIndex) {
       const qe = roster.quickEntry === true ? {} : roster.quickEntry;
       const ns = rosterNs(rosterIndex);
-      return `<div class="fr-grid fr-compact fr-quick-entry no-print">
-        ${roster.columns.filter(c => c.type !== 'batchseq' && c.type !== 'derived').map(c =>
+      return `${roster.jobNumbered ? `<div class="fr-crate-gate no-print" id="${ns}_qeGate" hidden>Pick the job number first: crate numbers run per job.</div>` : ''}<div class="fr-grid fr-compact fr-quick-entry no-print">
+        ${qeColumns(roster).map(c =>
           `<label class="fr-field">${esc(c.label)}${fieldInputHtml(`${ns}_qe_${c.key}`, c, '')}</label>`).join('')}
         <div class="fr-field fr-qe-btn"><button type="button" class="fr-btn" id="${ns}_qeAdd">${esc(qe.addLabel || '+ Add')}</button></div>
       </div>`;
@@ -1969,7 +1992,7 @@
     function wireQuickEntry(roster, rosterIndex, rowsEl) {
       const qe = roster.quickEntry === true ? {} : roster.quickEntry;
       const ns = rosterNs(rosterIndex);
-      const cols = roster.columns.filter(c => c.type !== 'batchseq' && c.type !== 'derived');
+      const cols = qeColumns(roster);
       const inp = key => el(`${ns}_qe_${key}`);
       const addBtn = el(`${ns}_qeAdd`);
       if (!addBtn) return;
@@ -2084,6 +2107,30 @@
       const fgNew = !!fgCol && !rows.length;
       if (fgNew) (fgCol.options || []).forEach(o => rows.push({ [fg.column]: o }));
       if (!rows.length) (roster.defaultRows || ((roster.quickEntry || roster.startEmpty) ? [] : [{}])).forEach(r => rows.push(Object.assign({}, r)));
+
+      // roster.jobNumbered { column, jobField }: the crate number is automatic. It runs 1,2,3 per JOB and continues
+      // across the job's earlier submitted entries; a draft shows provisional numbers, the server assigns the final
+      // ones at Submit (src/crate-number-guard.js). Nothing here is typed by the operator.
+      const jn = roster.jobNumbered;
+      const jobSel = () => (jn ? el('fr_f_' + jn.jobField) : null);
+      const jobNow = () => { const s = jobSel(); return s ? String(s.value || '').trim().toUpperCase() : ''; };
+      const crateEditable = () => !(editingId && isSubmitted(submissions.find(s => s.id === editingId)));
+      function crateStart() {
+        const j = jobNow();
+        if (!j) return 0;
+        let max = 0;
+        submissions.forEach(s => {
+          if (!isSubmitted(s) || s.id === editingId) return;
+          if (String(((s.values || {})[jn.jobField]) || '').trim().toUpperCase() !== j) return;
+          getRosterRows(s, rosterIndex, roster.key).forEach(r => { const n = parseInt(r && r[jn.column], 10); if (n > max) max = n; });
+        });
+        return max + 1;
+      }
+      function numberCrates() {
+        if (!jn || !crateEditable()) return;
+        const start = crateStart();
+        rows.forEach((r, i) => { r[jn.column] = start ? String(start + i) : ''; });
+      }
       // slides: every entry starts on a blank slide that asks Blanching or Cooking
       if (roster.slides && !rows.length) rows.push({});
 
@@ -2496,6 +2543,7 @@
       container._isCarried = (i, key) => carried.has(i + ':' + key);
 
       function draw() {
+        numberCrates();
         if (roster.slides) {
           // pot numbers count Cooking slides only and are automatic; Blanching has none
           let potN = 0;
@@ -2528,6 +2576,7 @@
                       && !confirm('Remove ' + (roster.rowTitle || 'row') + ' ' + (i + 1) + '? Everything entered on it will be lost.')) return;
                   }
                   if (roster.slides) rows = rows.map((_, j) => readRow(j));
+                  if (jn) rows = rows.map((_, k) => readRow(k));
                   rows.splice(i, 1);
                   if (roster.slides && i < slideCur) slideCur--;
                   const nc = new Set();
@@ -3011,6 +3060,30 @@
         rows = rows.map((_, i) => readRow(i));
         return rows;
       };
+      // jobNumbered: called once the form is fully built (after the disable pass) and whenever the job changes
+      container._crateRefresh = (locked, jobChanged) => {
+        if (!jn) return;
+        const has = !!jobNow();
+        const gate = el(ns + '_qeGate');
+        if (gate) gate.hidden = has || !!locked;
+        if (roster.quickEntry && !locked) {
+          qeColumns(roster).forEach(c => { const i = el(ns + '_qe_' + c.key); if (i) i.disabled = !has; });
+          const b = el(ns + '_qeAdd'); if (b) b.disabled = !has;
+        }
+        if (!locked) {
+          const before = rows.map(r => r[jn.column]).join(',');
+          if (rows.length) { rows = rows.map((_, i) => readRow(i)); draw(); }
+          if (jobChanged && rows.length && has && before !== rows.map(r => r[jn.column]).join(',')) toast('Job changed: the crate numbers were recalculated for job ' + jobNow() + '.');
+        }
+      };
+      const js = jobSel();
+      if (js) {
+        js._crateRefresh = (locked, changed) => container._crateRefresh(locked, changed);
+        if (!js.dataset.crateWired) {
+          js.dataset.crateWired = '1';
+          ['change', 'input'].forEach(ev => js.addEventListener(ev, () => { if (js._crateRefresh) js._crateRefresh(false, true); }));
+        }
+      }
 
       container._importRows = (newRows) => {
         rows = rows.map((_, i) => readRow(i))
@@ -3262,6 +3335,7 @@
       el('fr_submitBtn').style.display = locked ? 'none' : '';
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
       formLocked = locked;
+      if (hasRoster) rosterList.forEach((r, i) => { if (r.jobNumbered) { const rc = el(rosterDomId('fr_rosterRows', i)); if (rc && rc._crateRefresh) rc._crateRefresh(locked, false); } });
       disarmClear();
     }
 
@@ -3515,6 +3589,15 @@
         savedSub = sub;
       }
 
+      // jobNumbered roster: remember the provisional range the draft showed; the server assigns the final one at Submit
+      const crateRoster = rosterList.find(r => r.jobNumbered);
+      const crateIdx = crateRoster ? rosterList.indexOf(crateRoster) : -1;
+      const crateRange = (sub) => {
+        if (!crateRoster || !sub) return null;
+        const n = getRosterRows(sub, crateIdx, crateRoster.key).map(r => parseInt(r && r[crateRoster.jobNumbered.column], 10)).filter(x => x > 0);
+        return n.length ? [Math.min.apply(null, n), Math.max.apply(null, n)] : null;
+      };
+
       const provisionalKeys = Array.from(el('fr_modalSections').querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.replace(/^fr_f_/, ''));
       if (provisionalKeys.length) savedSub.provisionalFields = provisionalKeys;
@@ -3534,7 +3617,8 @@
         return;
       }
       // entry-log records: the server stamps dates/steam numbers, so pick up what it actually stored
-      if (config.entryLog) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
+      if (config.entryLog || crateRoster) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
+      const finalRange = finalize ? crateRange(savedSub) : null;
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       if (config.boxInspection && window.BoxInspection) await window.BoxInspection.refresh(); // inspected boxes leave the list
@@ -3546,7 +3630,7 @@
       renderTable();
 
       refreshVerification();
-      toast(finalize ? 'Submitted for verification.' : 'Draft saved.');
+      toast(finalize ? 'Submitted for verification.' + (finalRange ? ' Crates numbered ' + finalRange[0] + (finalRange[1] !== finalRange[0] ? ' to ' + finalRange[1] : '') + '.' : '') : 'Draft saved.');
     }
 
 
@@ -3620,8 +3704,13 @@
       const rows = getRosterRows(sub, i, roster.key).filter(r =>
         cols.some(c => String(r[c.key] || '').trim() !== ''));
 
+      const pcols = roster.jobNumbered ? cols.filter(c => !c.hidden) : cols;
+      const pcell = (c, r) => {
+        const old = roster.jobNumbered && c.key === roster.jobNumbered.column ? String(r.crateNoOld == null ? '' : r.crateNoOld).trim() : '';
+        return esc(displayValue(c, r[c.key])) + (old && old !== String(r[c.key]) ? ' (old ' + esc(old) + ')' : '');
+      };
       const body = (rows.length ? rows : [{}, {}, {}]).map(r =>
-        `<tr>${cols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
+        `<tr>${pcols.map(c => `<td>${pcell(c, r)}</td>`).join('')}</tr>`).join('');
       let totalsRowHtml = '';
       if (roster.totalsRow && rows.length) {
         const totals = {};
@@ -3630,7 +3719,7 @@
           const val = parseFloat(r[k]);
           if (!isNaN(val)) totals[k] += val;
         }));
-        totalsRowHtml = `<tr>${cols.map((c, ci) => {
+        totalsRowHtml = `<tr>${pcols.map((c, ci) => {
           if (roster.totalsRow.includes(c.key)) return `<td><strong>${totals[c.key].toFixed(2)}</strong></td>`;
           return `<td><strong>${ci === 0 ? 'Total' : ''}</strong></td>`;
         }).join('')}</tr>`;
@@ -3644,7 +3733,7 @@
         pctHtml = `<p class="fr-roster-totals"><strong>${esc(p.label || 'OOSW %')}: ${txt}</strong></p>`;
       }
       return `<h3>${esc(roster.title)}</h3>
-        <table><thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
+        <table><thead><tr>${pcols.map(c => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
         <tbody>${body}${totalsRowHtml}</tbody></table>${pctHtml}`;
     }
 

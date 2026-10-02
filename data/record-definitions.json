@@ -37322,7 +37322,7 @@
       "mount": "#mlRoot",
       "pageFile": "REC-7.9.3.1-dry-room-temp-humidity-log.html",
       "docCode": "REC 7.9.3.1",
-      "title": "Dry Room Temp & Humidity Log",
+      "title": "Room Temp/Humidity Log",
       "docRevisionStart": 6,
       "jobInfoGroup": null,
       "clientHook": null,
@@ -37348,7 +37348,9 @@
           "validateJson": null,
           "extraJson": {
             "serverStamp": true,
-            "timeZone": "Africa/Johannesburg"
+            "timeZone": "Africa/Johannesburg",
+            "hidden": true,
+            "exportCsv": true
           }
         },
         {
@@ -37368,7 +37370,11 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true,
+            "exportCsv": true
+          }
         },
         {
           "key": "room",
@@ -37378,9 +37384,8 @@
           "readOnly": false,
           "unit": null,
           "options": [
-            "Main dry room",
-            "Dry container",
-            "Grading room"
+            "Dry Room",
+            "Grading Room"
           ],
           "group": null,
           "sectionIndex": null,
@@ -37722,7 +37727,7 @@
         "instructions": [
           {
             "label": "Check",
-            "text": "Check temperature & relative humidity on the dial inside the dry room. Temperature should be 25–32°C; any deviation must be reported."
+            "text": "Check temperature and relative humidity on the dial inside the room selected. Temperature should be 25 to 32 degrees C; any deviation must be reported."
           }
         ],
         "specFields": [
@@ -37746,9 +37751,11 @@
         "recentEntries": 10,
         "warnOutOfSpec": true,
         "roomAreas": [
-          "Main dry room",
-          "Dry container",
-          "Grading room"
+          "Dry Room",
+          "Grading Room"
+        ],
+        "mergedFrom": [
+          "grading-room-temp-humidity-log"
         ]
       }
     },
@@ -38042,7 +38049,10 @@
           }
         ],
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
+        "deviationPolarity": "deviation",
+        "retired": true,
+        "mergedInto": "dry-room-temp-humidity-log",
+        "mergedNote": "Merged into REC 7.9.3.1"
       }
     },
     {

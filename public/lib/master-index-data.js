@@ -1219,7 +1219,7 @@ window.MasterIndexData = {
     },
     {
         "docNo": "REC 7.9.3",
-        "name": "Dry Room Temperature & Humidity Log",
+        "name": "Room Temperature & Humidity Log",
         "details": "Document review - format",
         "revision": 5,
         "obsoleteRetrieved": "Y",
@@ -1230,7 +1230,7 @@ window.MasterIndexData = {
     },
     {
         "docNo": "REC 7.9.3.1",
-        "name": "Dry Room Temperature & Humidity Log",
+        "name": "Room Temperature & Humidity Log",
         "details": "Document review",
         "revision": 6,
         "obsoleteRetrieved": "Y",
@@ -1241,14 +1241,14 @@ window.MasterIndexData = {
     },
     {
         "docNo": "REC 7.9.3.2",
-        "name": "Grading Room Temperature & Humidity Log",
-        "details": "New document",
+        "name": "Grading Room Temperature & Humidity Log (merged into REC 7.9.3.1)",
+        "details": "Retired: merged into REC 7.9.3.1",
         "revision": 1,
         "obsoleteRetrieved": "Y",
         "distributed": "Y",
         "dateOfIssue": "04/05/2026",
-        "recordKey": "grading-room-temp-humidity-log",
-        "href": "REC-7.9.3.2-grading-room-temp-humidity-log.html"
+        "recordKey": null,
+        "href": null
     },
     {
         "docNo": "REC 7.10.1",

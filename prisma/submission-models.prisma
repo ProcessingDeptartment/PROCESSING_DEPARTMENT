@@ -3678,6 +3678,8 @@ model Sub_dry_room_temp_humidity_log {
   duringProdHumidityOld    Float?
   endShiftTempOld          Float?
   endShiftHumidityOld      Float?
+  sourceRecord       String?
+  sourceRowId        String?
   completedBy String?
 
   @@map("sub_dry_room_temp_humidity_log")
