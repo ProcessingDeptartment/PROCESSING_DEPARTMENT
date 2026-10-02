@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
@@ -9,31 +8,238 @@
 <title>REC 7.4.4 Grading, Boxing & Traceability</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv46">
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line-soft:var(--palette-border);
+    --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #rp-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:14px; line-height:1.4; min-height:100vh; }
+  #rp-root *{ box-sizing:border-box; }
+  #rp-root h1{ margin:0; font-weight:700; font-size:20px; }
+  .rp-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .doc-line{ display:flex; align-items:baseline; gap:10px; }
+  .doc-code{ font-family:var(--mono); opacity:.8; }
+  .btn{ padding:7px 13px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .rp-body{ padding:16px 18px 60px; max-width:1500px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; margin-bottom:14px; padding:14px 16px; }
+  .filters{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; align-items:end; }
+  .filters label{ display:flex; flex-direction:column; gap:3px; font-size:12px; color:#5c6771; }
+  .filters input,.filters select{ padding:6px 8px; font-size:14px; font-family:var(--sans); border:1px solid #c9cdd1; border-radius:3px; background:#fff; }
+  .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+  .grow{ flex:1; }
+  .muted{ color:#6b7680; font-size:12px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ padding:6px 8px; border-bottom:1px solid var(--line-soft); text-align:left; vertical-align:top; }
+  th{ background:#f4f5f6; font-size:12px; position:sticky; top:0; }
+  td.num,th.num{ text-align:right; font-family:var(--mono); }
+  td.code{ font-family:var(--mono); font-weight:700; white-space:nowrap; }
+  .pill{ display:inline-block; font-size:11px; font-weight:700; border-radius:20px; padding:2px 9px; background:#e7eaec; color:#5b6b78; white-space:nowrap; }
+  .pill.instock{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .pill.shipped{ background:#dde8f5; color:#1f4e86; }
+  .pill.boxed{ background:#fbf0dc; color:#8a5a10; }
+  details.blend summary{ cursor:pointer; list-style:none; }
+  details.blend summary::-webkit-details-marker{ display:none; }
+  .badge{ display:inline-block; font-size:11px; font-weight:700; background:#fbf0dc; color:#8a5a10; border-radius:4px; padding:1px 6px; margin-left:4px; }
+  .warns{ background:#fbf0dc; color:#6b4608; border-radius:4px; padding:8px 12px; font-size:13px; margin-bottom:14px; }
+  .warns ul{ margin:4px 0 0 18px; padding:0; }
+  h2.sec{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#5c6771; margin:0 0 8px; border-bottom:1px solid var(--line-soft); padding-bottom:4px; }
+  .print-head{ display:none; }
+  .neg{ color:#a33; }
+  @media print{
+    @page{ size:A4 landscape; margin:10mm; }
+    .no-print,.rp-top,#hdr{ display:none !important; }
+    #rp-root{ background:#fff; min-height:0; font-size:10px; }
+    .rp-body{ padding:0; max-width:none; }
+    .panel{ border:none; padding:0; }
+    .print-head{ display:block; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:8px; font-size:11px; }
+    .print-head h1{ font-size:15px; }
+    th{ position:static; }
+    table{ font-size:9.5px; }
+    th,td{ padding:3px 5px; }
+    tr{ break-inside:avoid; }
+    thead{ display:table-header-group; }
+    details.blend > summary{ display:none; }
+    details.blend .wts{ display:block !important; }
+    .pill{ background:none !important; color:#000 !important; padding:0; }
+  }
+</style>
 </head>
-<body class="rt-tablet">
-<script src="../lib/record-chrome.js?v=25"></script>
-<div id="frRoot"></div>
+<body>
+<div id="rp-root">
+  <div class="rp-top">
+    <div class="doc-line">
+      <span class="doc-code">REC 7.4.4</span>
+      <h1>Grading, Boxing &amp; Traceability</h1>
+    </div>
+    <div class="no-print"><a class="btn btn-ghost" href="record-list.html">&larr; Record list</a></div>
+  </div>
+  <div class="rp-body">
+    <div class="print-head">
+      <h1>REC 7.4.4 Grading, Boxing &amp; Traceability report</h1>
+      <div>Generated <span id="phWhen"></span> by <span id="phUser"></span> &middot; Filter: <span id="phFilter"></span> &middot; <span id="phCount"></span></div>
+    </div>
 
-<script src="../lib/doc-header.js?v=5"></script>
-<script src="../lib/master-index-data.js?v=4"></script>
+    <div class="panel no-print">
+      <div class="muted" style="margin-bottom:10px;">Read-only report generated from REC 7.4.3.1 / 7.4.3.2 (Collection bins), REC 7.4.5 (Closed box inspection) and REC 7.4.8 (Dry labelling list). Nothing is entered or saved here.</div>
+      <div class="filters">
+        <label>Job no.<input id="fJob" type="search" placeholder="e.g. 3CP1234" autocomplete="off"></label>
+        <label>Bin / box code<input id="fBox" type="search" autocomplete="off"></label>
+        <label>Size grade<select id="fGrade"><option value="">All</option></select></label>
+        <label>Status<select id="fStatus"><option value="">All</option><option>Boxed</option><option>In stock</option><option>Labelled (draft)</option><option>Shipped</option></select></label>
+        <label>Graded from<input id="fFrom" type="date"></label>
+        <label>Graded to<input id="fTo" type="date"></label>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-flat" id="clearBtn">Clear filters</button>
+        <button class="btn btn-flat" id="refreshBtn">Refresh</button>
+        <span class="grow"></span>
+        <span class="muted" id="statusLine"></span>
+        <button class="btn btn-flat" id="csvBtn">Export CSV</button>
+        <button class="btn btn-flat" id="printBtn">Print / PDF</button>
+      </div>
+    </div>
+
+    <div id="warns"></div>
+    <div class="panel"><div style="overflow-x:auto;"><table id="tbl"></table></div></div>
+    <div class="panel" id="legacyPanel" hidden></div>
+  </div>
+</div>
+
 <script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/lookups.js?v=4"></script>
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=3"></script>
-<script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/traceability.js?v=10"></script>
-<script src="../lib/signoff-block.js?v=7"></script>
-<script src="../lib/permission-rules.js?v=2"></script>
-<script src="../lib/form-record.js?v=70"></script>
 <script>(function () {
-  // Definition lives in the DB — fetched by the engine from GET /api/record-def/grading-boxing-traceability
-  // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
-  FormRecord.init({ mount: '#frRoot', recordKey: 'grading-boxing-traceability' });
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var kg = function (n) { return n == null ? '—' : Number(n).toFixed(2); };
+  var dash = function (s) { return s == null || s === '' ? '—' : s; };
+  var DATA = null, VIEW = [];
+
+  var COLS = [
+    { h: 'Bin / box code', cls: 'code', v: function (b) { return b.boxCode; } },
+    { h: 'Size grade', v: function (b) { return b.sizeGrade; } },
+    { h: 'Job no(s)', html: jobsHtml, csv: function (b) { return b.jobs.map(function (j) { return j.jobNo + (j.weightKg != null ? ' (' + kg(j.weightKg) + ' kg)' : ''); }).join('; '); } },
+    { h: 'Graded kg', cls: 'num', v: function (b) { return kg(b.gradedKg); } },
+    { h: 'Date graded', v: function (b) { return b.dateGraded; } },
+    { h: 'Nett kg (7.4.5)', cls: 'num', v: function (b) { return kg(b.nettKg); } },
+    { h: 'Balance kg', cls: 'num', html: function (b) { return b.balanceKg == null ? '—' : '<span class="' + (Math.abs(b.balanceKg) > 0.005 ? 'neg' : '') + '">' + (b.balanceKg > 0 ? '+' : '') + kg(b.balanceKg) + '</span>'; }, csv: function (b) { return b.balanceKg == null ? '' : b.balanceKg; } },
+    { h: 'Inspected', v: function (b) { return b.inspection ? (b.inspection.approved ? 'Yes – approved' : 'Yes – not approved') : 'No'; } },
+    { h: 'NRCS AG code', cls: 'code', v: function (b) { return b.agCode; } },
+    { h: 'Shipment (7.4.8)', v: function (b) { var s = b.shipment; return s ? [s.customer, s.flight, s.airwaybillNr, s.etd].filter(Boolean).join(' / ') : ''; } },
+    { h: 'Export invoice no.', v: function (b) { return b.exportInvoiceNo; } },
+    { h: 'Status', html: function (b) { return '<span class="pill ' + b.status.toLowerCase().replace(/[^a-z]/g, '') + '">' + esc(b.status) + '</span>'; }, csv: function (b) { return b.status; } },
+    { h: 'Source draft', v: function (b) { return b.fromDraft ? 'Yes' : 'No'; } }
+  ];
+
+  function jobsHtml(b) {
+    if (!b.blended) { var j = b.jobs[0]; return esc(j ? j.jobNo : '—'); }
+    var rows = b.jobs.map(function (j) { return '<div>' + esc(j.jobNo) + ' &mdash; ' + (j.weightKg != null ? kg(j.weightKg) + ' kg' : 'weight not recorded') + '</div>'; }).join('');
+    return '<details class="blend"><summary>' + b.jobs.map(function (j) { return esc(j.jobNo); }).join(', ') + '<span class="badge">Blended ' + b.jobs.length + '</span></summary><div class="wts">' + rows + '</div></details>';
+  }
+
+  function cellText(c, b) { return c.csv ? c.csv(b) : dash(c.v(b)); }
+
+  function filters() {
+    return { job: $('fJob').value.trim().toUpperCase(), box: $('fBox').value.trim().toUpperCase(), grade: $('fGrade').value, status: $('fStatus').value, from: $('fFrom').value, to: $('fTo').value };
+  }
+  function filterText(f) {
+    var p = [];
+    if (f.job) p.push('job ' + f.job); if (f.box) p.push('box ' + f.box); if (f.grade) p.push('grade ' + f.grade);
+    if (f.status) p.push('status ' + f.status); if (f.from) p.push('from ' + f.from); if (f.to) p.push('to ' + f.to);
+    return p.length ? p.join(', ') : 'none (all boxes)';
+  }
+
+  function render() {
+    var f = filters();
+    VIEW = DATA.boxes.filter(function (b) {
+      if (f.job && !b.jobs.some(function (j) { return j.jobNo.indexOf(f.job) !== -1; })) return false;
+      if (f.box && b.boxCode.indexOf(f.box) === -1) return false;
+      if (f.grade && b.sizeGrade !== f.grade) return false;
+      if (f.status && b.status !== f.status) return false;
+      if (f.from && (!b.dateGraded || b.dateGraded < f.from)) return false;
+      if (f.to && (!b.dateGraded || b.dateGraded > f.to)) return false;
+      return true;
+    });
+    var head = '<thead><tr>' + COLS.map(function (c) { return '<th class="' + (c.cls === 'num' ? 'num' : '') + '">' + esc(c.h) + '</th>'; }).join('') + '</tr></thead>';
+    var body = VIEW.map(function (b) {
+      return '<tr>' + COLS.map(function (c) { return '<td class="' + (c.cls || '') + '">' + (c.html ? c.html(b) : esc(dash(c.v(b)))) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    $('tbl').innerHTML = head + '<tbody>' + (body || '<tr><td colspan="' + COLS.length + '" class="muted">No boxes match.</td></tr>') + '</tbody>';
+    $('statusLine').textContent = VIEW.length + ' of ' + DATA.boxes.length + ' boxes · generated ' + new Date(DATA.generatedAt).toLocaleString();
+  }
+
+  function renderWarnings() {
+    var w = DATA.warnings;
+    $('warns').innerHTML = w.length ? '<div class="warns"><strong>' + w.length + ' item' + (w.length === 1 ? '' : 's') + ' to check</strong><ul>' +
+      w.map(function (x) { return '<li>' + esc(x.message) + (x.jobs.length ? ' (' + esc(x.jobs.join(', ')) + ')' : '') + '</li>'; }).join('') + '</ul></div>' : '';
+  }
+
+  function renderLegacy() {
+    var L = DATA.legacy, p = $('legacyPanel');
+    if (!L.length) { p.hidden = true; return; }
+    p.hidden = false;
+    p.innerHTML = '<h2 class="sec">Legacy REC 7.4.4 (entered on the previous form, read-only)</h2><table><thead><tr><th>Date</th><th>Bin code</th><th>Job numbers in bin (as entered)</th><th>Status</th></tr></thead><tbody>' +
+      L.map(function (r) { return '<tr><td>' + esc(dash(r.dateCreated)) + '</td><td class="code">' + esc(dash(r.binCode)) + '</td><td>' + esc(dash(r.jobNumbersInBin)) + '</td><td>' + esc(r.status) + '</td></tr>'; }).join('') + '</tbody></table>';
+  }
+
+  function fillGrades() {
+    var cur = $('fGrade').value, set = {};
+    DATA.boxes.forEach(function (b) { if (b.sizeGrade) set[b.sizeGrade] = 1; });
+    $('fGrade').innerHTML = '<option value="">All</option>' + Object.keys(set).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); }).map(function (g) { return '<option>' + esc(g) + '</option>'; }).join('');
+    $('fGrade').value = cur;
+  }
+
+  function csv() {
+    var q = function (s) { s = String(s == null ? '' : s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    var lines = [COLS.map(function (c) { return q(c.h); }).join(',')];
+    VIEW.forEach(function (b) { lines.push(COLS.map(function (c) { return q(c.csv ? c.csv(b) : (c.v(b) == null ? '' : c.v(b))); }).join(',')); });
+    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'REC-7.4.4-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function print() {
+    var u = window.Auth && window.Auth.getCurrentUsername && window.Auth.getCurrentUsername();
+    $('phWhen').textContent = new Date().toLocaleString();
+    $('phUser').textContent = u || 'unknown user';
+    $('phFilter').textContent = filterText(filters());
+    $('phCount').textContent = VIEW.length + ' of ' + DATA.boxes.length + ' boxes';
+    window.print();
+  }
+
+  async function load() {
+    $('statusLine').textContent = 'Loading…';
+    try {
+      var res = await window.FacilityApi.fetch('/api/report/boxes');
+      var d = res.ok ? await res.json() : null;
+      if (!d || !d.ok) throw new Error('bad response');
+      DATA = d;
+    } catch (e) {
+      $('statusLine').textContent = 'Could not load the report. Check your connection and press Refresh.';
+      return;
+    }
+    fillGrades(); renderWarnings(); renderLegacy(); render();
+  }
+
+  async function init() {
+    if (window.LoginUI) { await window.LoginUI.ensureAuthenticated(); }
+    ['fJob', 'fBox'].forEach(function (id) { $(id).addEventListener('input', function () { if (DATA) render(); }); });
+    ['fGrade', 'fStatus', 'fFrom', 'fTo'].forEach(function (id) { $(id).addEventListener('change', function () { if (DATA) render(); }); });
+    $('clearBtn').addEventListener('click', function () { ['fJob', 'fBox', 'fGrade', 'fStatus', 'fFrom', 'fTo'].forEach(function (id) { $(id).value = ''; }); if (DATA) render(); });
+    $('refreshBtn').addEventListener('click', load);
+    $('csvBtn').addEventListener('click', function () { if (DATA) csv(); });
+    $('printBtn').addEventListener('click', function () { if (DATA) print(); });
+    await load();
+  }
+  init();
 })();
 </script>
-<script src="../lib/record-shell.js?v=10"></script>
 </body>
 </html>

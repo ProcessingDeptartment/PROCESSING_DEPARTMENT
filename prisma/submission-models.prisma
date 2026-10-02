@@ -1864,7 +1864,28 @@ model Sub_dry_stock_control {
   countOutFactory          Float?
   countOutFinance          Float?
   completedBy String?
+  stage_no                   Int?
+  previous_submission_id     String?
+  completion_status          String?
+  signoff_required           Boolean?
+  submitted_by               String?
+  submitted_at               DateTime? @db.Timestamptz(6)
+  is_latest                  Boolean?
+  fields_filled              Int?
+  financeRep                 String?
+  financeRepDate             DateTime? @db.Date
+  wholeWeightSourceIds       String?
+  wholeWeightTypedManually   Boolean?
+  cookingDateSourceIds       String?
+  cookingDateTypedManually   Boolean?
+  trolleysSourceSubmissionId String?
+  trolleysTypedManually      Boolean?
+  cookedWeightSourceIds      String?
+  weightInTypedManually      Boolean?
+  weightOutSourceIds         String?
+  weightOutTypedManually     Boolean?
 
+  @@unique([jobNo, stage_no], map: "sub_dry_stock_control_jobNo_stage_no_key")
   @@index([jobNo], map: "sub_dry_stock_control_jobNo_idx")
   @@map("sub_dry_stock_control")
 }

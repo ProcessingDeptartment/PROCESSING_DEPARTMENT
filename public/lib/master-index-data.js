@@ -615,7 +615,8 @@ window.MasterIndexData = {
     {
         "docNo": "REC 7.4.4",
         "name": "GRADING AND BOXING TRACEABILITY",
-        "details": "New document",
+        "details": "Withdrawn as entry form; superseded by system-generated traceability report",
+        "reportOnly": true,
         "revision": 1,
         "obsoleteRetrieved": "N/A",
         "distributed": "Y",

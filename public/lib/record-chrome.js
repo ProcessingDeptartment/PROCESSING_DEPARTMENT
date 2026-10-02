@@ -371,7 +371,9 @@
     var done = 0, total = 0;
     sec.nodes.forEach(function (n) {
       Array.prototype.forEach.call(n.querySelectorAll(FIELD_SEL), function (f) {
-        if (f.disabled || f.readOnly || f.closest('[hidden]')) return;
+        // REC 7.4.6 (body.ml-progressive): autofilled and locked-from-an-earlier-stage values count as done
+        if (f.disabled || f.closest('[hidden]')) return;
+        if (f.readOnly && !(document.body.classList.contains('ml-progressive') && String(f.value || '').trim() !== '')) return;
         var shown = f.getClientRects().length || f.closest('details:not([open])') || f.closest('.rt-collapsed');
         if (!shown) return;
         total++;

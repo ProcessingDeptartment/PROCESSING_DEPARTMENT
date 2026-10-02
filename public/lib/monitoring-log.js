@@ -103,6 +103,17 @@
   .ml-bad{ color:var(--palette-fail,#a3352d); background:var(--palette-fail-bg,#fbe8e6); font-weight:800; border:1px solid var(--palette-fail,#a3352d); border-radius:4px; padding:1px 6px; white-space:nowrap; }
   .ml-fromnote{ display:block; margin-top:3px; font-size:11px; color:#6b7680; }
   .ml-fromnote.warn{ color:#8a5a00; background:#fff4d6; border:1px solid #e6c46a; border-radius:4px; padding:3px 6px; }
+  /* REC 7.4.6 progressive stages: status line, sign-off banner, locked-from-an-earlier-stage values, job list with stage expander */
+  .ml-stageline{ grid-column:1/-1; font-weight:700; font-size:13px; color:var(--palette-heading,#2f4356); background:#eef3f7; border:1px solid #d5dfe7; border-radius:6px; padding:8px 10px; }
+  .ml-stageline.complete{ background:#e6f4ea; border-color:#b9dcc3; }
+  .ml-so-banner{ margin:0 0 10px; padding:8px 10px; border-radius:6px; font-size:12.5px; font-weight:600; background:#fff4d6; color:#8a5a00; border:1px solid #e6c46a; }
+  .ml-so-banner.info{ background:#eef3f7; color:#3a444d; border-color:#d5dfe7; font-weight:500; }
+  .ml-signoff-block.ml-so-needed > summary::after{ content:' — required to submit'; color:#8a5a00; text-transform:none; letter-spacing:0; font-weight:700; }
+  .ml-so-split{ border-top:1px solid var(--palette-border,#e2e4e3); margin:14px 0 10px; }
+  .ml-field input.ml-stage-locked{ background:#f2f4f6; }
+  .ml-stages-row > td{ background:#f7f9fb; padding:0 0 0 24px; }
+  .ml-stages-row table{ width:100%; font-size:12px; }
+  .ml-stages-row.ml-hide{ display:none; }
   .ml-commentprompt{ outline:2px solid var(--palette-fail,#a3352d); }
   .ml-field.ml-readonly-calc input:disabled, .ml-field input[readonly]{ background:#f2f4f6; color:#3a444d; }
   .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
@@ -358,7 +369,7 @@
     }
 
     if (field.type === 'jobsearch') {
-      return `<select id="${id}" data-jobsearch="1"${field.route ? ` data-route="${esc(field.route)}"` : ''}>` +
+      return `<select id="${id}" data-jobsearch="1"${field.jobEntry ? ` data-job-entry="${esc(field.jobEntry)}"` : ''}${field.route ? ` data-route="${esc(field.route)}"` : ''}>` +
         (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
         `</select>`;
     }
@@ -734,7 +745,7 @@
     let pre = null;
     if (gateRoot) { gateRoot.style.visibility = 'hidden'; pre = setTimeout(() => { gateRoot.style.visibility = ''; }, 5000); }
     const unprelock = () => { if (pre) { clearTimeout(pre); pre = null; } if (gateRoot) gateRoot.style.visibility = ''; };
-    loadLib('job-picker.js?v=7', 'JobPicker').then((jp) => {
+    loadLib('job-picker.js?v=8', 'JobPicker').then((jp) => {
       try {
         if (!jp) return;
         sels.forEach((sel, i) => jp.enhance(sel, i === 0 ? {
@@ -861,6 +872,9 @@
 
   function makeLogController(opts) {
     const { ns, title, entryFields, storageKey, specGetter, toast, tableWrap, modalIds, deviationLabel, deviationPolarity, submitFlow, sheetMeta, docCode, docTitle, onEntriesChanged, afterSave, inline, recordKey, autofill, jobInfoGroup, customBody, traceConfig } = opts
+    // The controller reads page-level options (recentEntries, warnOutOfSpec) from the record config. It used to rely on a
+    // `config` that only exists inside init(), which threw a ReferenceError on every save (introduced with REC 7.9.3.1).
+    const config = traceConfig || {};
 
     // A page can hand the engine its own entry-form body (render/read/validate/
     // summary/listColumns/sheetHtml) via config.customBody. The engine still owns
@@ -900,6 +914,55 @@
     }
     let entries = [];
     let editingId = null;
+
+    // ---- REC 7.4.6 progressive stages (config.progressive) -------------------------------------------------
+    // One stock record per job grows over several submissions. Each submit is its own immutable stage (the server
+    // numbers it and enforces the sign-off rule: src/dry-stock-guard.js). Picking the job again loads the latest
+    // submitted stage's DATA (earlier values locked); sign-offs are never carried over. The sign-off trigger and
+    // the completion fields come from the record definition (signOffTrigger / completionFields), not from code.
+    const prog = !!(traceConfig && traceConfig.progressive);
+    const finOn = !!(traceConfig && traceConfig.financeSignOff);
+    let progPrev = null;        // the submitted stage the entry being filled in continues
+    let progViewNote = '';      // text for the sign-off banner when a submitted stage is on screen
+    let progLocked = false;     // a submitted stage is on screen: the banner must not be changed by the live trigger
+    let progLockedKeys = [];    // inputs locked because an earlier stage holds their value
+    const hasVal = (v) => v != null && String(v).trim() !== '';
+    const jobKeyOf = () => (traceConfig && traceConfig.batchField) || 'jobNo';
+    const entryJob = (e) => String(((e && e.values) || {})[jobKeyOf()] || '').trim().toUpperCase();
+    const stageSort = (a, b) => (((a.stage && a.stage.no) || 0) - ((b.stage && b.stage.no) || 0))
+      || ((a.submittedAt || a.createdAt || 0) - (b.submittedAt || b.createdAt || 0));
+    const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayMon = (ts) => { const d = new Date(ts); return isNaN(d) ? '' : d.getDate() + ' ' + SHORT_MONTHS[d.getMonth()]; };
+    function jobStages(job) { return entries.filter((e) => isSubmitted(e) && entryJob(e) === String(job).trim().toUpperCase()).sort(stageSort); }
+    function stageNoOf(e, list) { return (e.stage && e.stage.no) || ((list || jobStages(entryJob(e))).indexOf(e) + 1); }
+    function stageStatusOf(e) {
+      if (e.stage && e.stage.status) return e.stage.status;
+      const c = (traceConfig && traceConfig.completionFields) || [];
+      return c.length && c.every((k) => hasVal((e.values || {})[k])) ? 'complete' : 'in_progress';
+    }
+    const statusLabel = (s) => (s === 'complete' ? 'Complete' : 'In progress');
+    function stageSignedBy(e) { return (e.stage && e.stage.submittedBy) || (e.completedBy && e.completedBy.by) || ''; }
+    function triggerMet() {
+      return ((traceConfig && traceConfig.signOffTrigger) || []).some((k) => { const i = el(`${ns}_f_${k}`); return !!i && hasVal(i.value); });
+    }
+    // value an earlier stage holds for a field (empty string when none): used for "changed since last submission" and carry-forward
+    function progPrevValue(key) { const v = progPrev && progPrev.values ? progPrev.values[key] : ''; return hasVal(v) ? v : ''; }
+    function progStageNote() { return progPrev ? `Entered in stage ${stageNoOf(progPrev)}, ${dayMon(progPrev.submittedAt || progPrev.createdAt)}` : ''; }
+    function updateSignOffUi() {
+      if (!prog) return;
+      const need = !progLocked && triggerMet();
+      const b = el(`${ns}_soBanner`);
+      if (b) {
+        if (progLocked) {
+          b.style.display = progViewNote ? '' : 'none'; b.className = 'ml-so-banner info'; b.textContent = progViewNote;
+        } else {
+          b.style.display = need ? '' : 'none'; b.className = 'ml-so-banner';
+          b.textContent = need ? 'A weight or count is filled in: Completed by and Finance representative must sign before you submit.' : '';
+        }
+      }
+      const blk = el(`${ns}_cb_by`) && el(`${ns}_cb_by`).closest('details');
+      if (blk) blk.classList.toggle('ml-so-needed', need);
+    }
 
 
     function isSubmitted(entryRow) {
@@ -1104,7 +1167,69 @@
       openForm(null);
     }
 
+    // REC 7.4.6: one line per job (latest stage, status, last submitted, finance rep, weights) with an expander
+    // showing every stage oldest first, each with its own sign-offs.
+    function signoffCell(e) {
+      const st = e.stage || null;
+      const fin = e.financeRep && e.financeRep.by ? e.financeRep.by : '';
+      const cb = entryCompletedBy(e);
+      if (st && st.signoffRequired === false) return 'No sign-off (no weights or counts in this stage)';
+      if (!fin) return cb ? `${esc(cb)} · finance: not recorded (before finance sign-off was added)` : 'Not recorded (before finance sign-off was added)';
+      return `${esc(cb || '—')} · finance: ${esc(fin)}`;
+    }
+    function renderStockTable() {
+      const list = filteredEntries();
+      if (!list.length) { tableWrap.innerHTML = `<div class="ml-empty">No entries yet${entries.length ? ' matching these filters' : ''}.</div>`; return; }
+      const byJob = new Map();
+      list.forEach((e) => { const j = entryJob(e) || '—'; if (!byJob.has(j)) byJob.set(j, []); byJob.get(j).push(e); });
+      const num = (v) => (hasVal(v) ? esc(v) : '—');
+      let html = `<table class="ml-table"><thead><tr><th>Job</th><th>Stage</th><th>Status</th><th>Last submitted</th><th>Finance rep.</th><th>Weight in (kg)</th><th>Weight out (kg)</th><th></th></tr></thead><tbody>`;
+      byJob.forEach((rows, job) => {
+        const subs = rows.filter(isSubmitted).sort(stageSort);
+        const drafts = rows.filter((e) => !isSubmitted(e));
+        const last = subs[subs.length - 1] || null;
+        const jid = esc(job).replace(/[^A-Za-z0-9_-]/g, '_');
+        if (last) {
+          const lv = last.values || {};
+          html += `<tr><td><strong>${esc(job)}</strong></td><td>${stageNoOf(last, subs)}${drafts.length ? ' <span class="ml-badge ml-badge-muted">+ draft</span>' : ''}</td>
+            <td><span class="ml-badge ${stageStatusOf(last) === 'complete' ? 'ml-badge-ok' : 'ml-badge-muted'}">${statusLabel(stageStatusOf(last))}</span></td>
+            <td style="white-space:nowrap;">${esc(dayMon(last.submittedAt))} · ${esc(stageSignedBy(last) || '—')}</td>
+            <td>${esc((last.financeRep && last.financeRep.by) || '—')}</td><td class="ml-num">${num(lv.weightIn)}</td><td class="ml-num">${num(lv.weightOut)}</td>
+            <td style="white-space:nowrap;"><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${last.id}">View</button>
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${last.id}" title="Print the whole job: every stage, oldest first">PDF</button>
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-expand="${jid}">Stages (${subs.length + drafts.length})</button></td></tr>`;
+        } else {
+          html += `<tr><td><strong>${esc(job)}</strong></td><td>—</td><td><span class="ml-badge ml-badge-muted">Draft</span></td><td>—</td><td>—</td><td>—</td><td>—</td>
+            <td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${drafts[0].id}">Edit</button>
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-expand="${jid}">Stages (${drafts.length})</button></td></tr>`;
+        }
+        html += `<tr class="ml-stages-row ml-hide" data-stages="${jid}"><td colspan="8"><table><thead><tr><th>Stage</th><th>Submitted</th><th>Sign-off</th><th>Status</th><th>Weight in</th><th>Weight out</th><th></th></tr></thead><tbody>`;
+        subs.forEach((e) => {
+          const v = e.values || {};
+          html += `<tr><td>${stageNoOf(e, subs)}</td><td style="white-space:nowrap;">${esc(fmtSubmittedAt(e.submittedAt))}</td><td>${signoffCell(e)}</td>
+            <td>${statusLabel(stageStatusOf(e))}</td><td class="ml-num">${num(v.weightIn)}</td><td class="ml-num">${num(v.weightOut)}</td>
+            <td style="white-space:nowrap;"><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${e.id}">View</button>
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${e.id}" title="Export this stage as JSON">JSON</button></td></tr>`;
+        });
+        drafts.forEach((e) => {
+          html += `<tr><td colspan="6"><span class="ml-badge ml-badge-muted">Draft</span> started ${esc(dayMon(e.createdAt))}${e.completedBy && e.completedBy.by ? ' by ' + esc(e.completedBy.by) : ''}</td>
+            <td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${e.id}">Edit</button></td></tr>`;
+        });
+        html += `</tbody></table></td></tr>`;
+      });
+      html += `</tbody></table>`;
+      tableWrap.innerHTML = html;
+      tableWrap.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openForm(b.dataset.edit)));
+      tableWrap.querySelectorAll('[data-pdf]').forEach((b) => b.addEventListener('click', () => printEntry(b.dataset.pdf)));
+      tableWrap.querySelectorAll('[data-json]').forEach((b) => b.addEventListener('click', () => exportEntryJson(b.dataset.json)));
+      tableWrap.querySelectorAll('[data-expand]').forEach((b) => b.addEventListener('click', () => {
+        const r = tableWrap.querySelector(`tr[data-stages="${b.dataset.expand}"]`);
+        if (r) r.classList.toggle('ml-hide');
+      }));
+    }
+
     function renderTable() {
+      if (prog) return renderStockTable();
       renderContinuePicker();
       let list = filteredEntries();
       // recentEntries: show only the latest N logs (the previous readings) unless the person filters
@@ -1359,7 +1484,12 @@
             inp.value = hit.value;
             if (ids) ids.value = (hit.ids || []).join(',');
             if (flag) flag.value = 'No';
-            setFieldNote(f.key, r.note || '', false);
+            setFieldNote(f.key, hit.note || r.note || '', false);
+            // a stage continuing an earlier one: the source moved on since that stage was submitted
+            const was = progPrevValue ? progPrevValue(f.key) : '';
+            if (was !== '' && String(was) !== String(hit.value) && !(Number.isFinite(Number(was)) && Number(was) === Number(hit.value))) {
+              setFieldNote(f.key, `Changed since last submission: was ${was}, now ${hit.value}`, true);
+            }
             inp.dispatchEvent(new Event('input', { bubbles: true }));
             inp.dispatchEvent(new Event('change', { bubbles: true }));
           } else {
@@ -1373,6 +1503,15 @@
             }
             if (flag) flag.value = String(inp.value || '').trim() ? 'Yes' : '';
             setFieldNote(f.key, failed ? 'Could not check the source record just now. You can type this in.' : (r.missing || ''), true);
+            // a value typed in an earlier stage (its source is still missing) carries forward, locked
+            const kept = progPrevValue ? progPrevValue(f.key) : '';
+            if (kept !== '' && !String(inp.value || '').trim()) {
+              inp.value = kept;
+              inp.readOnly = true;
+              if (flag) flag.value = 'Yes';
+              setFieldNote(f.key, progStageNote(), false);
+              inp.dispatchEvent(new Event('input', { bubbles: true }));
+            }
           }
         });
       };
@@ -1538,6 +1677,9 @@
 
       applyStageLocks(container, existing);
       fillCompletedBy(existing, locked);
+      fillFinance(existing, locked);
+      wireProgressive(container, existing, locked);
+      updateSignOffUi();
       if (!inline) el(modalIds.overlay).style.display = 'flex';
     }
 
@@ -1569,6 +1711,123 @@
       const v = (k) => { const i = cbInput(k); return i ? (i.value || '').trim() : ''; };
       return { by: v('by'), title: v('title'), date: v('date'), signature: v('signature') };
     }
+    // FINANCE REPRESENTATIVE block (REC 7.4.6): entry.financeRep = { by, title, date, signature }, per stage. It always opens
+    // blank on a new stage (nothing carried from an earlier stage, no name suggested); a reopened draft keeps what was typed in it.
+    const finInput = (k) => el(`${ns}_fin_${k}`);
+    function fillFinance(existing, locked) {
+      if (!finOn) return;
+      const fr = (existing && existing.financeRep) || null;
+      ['by', 'title', 'date', 'signature'].forEach((k) => {
+        const i = finInput(k);
+        if (!i) return;
+        i.value = fr && fr[k] ? fr[k] : '';
+        i.disabled = !!locked;
+      });
+    }
+    function readFinance() {
+      const v = (k) => { const i = finInput(k); return i ? (i.value || '').trim() : ''; };
+      return { by: v('by'), title: v('title'), date: v('date'), signature: v('signature') };
+    }
+    const blockOk = (b) => !!(b && b.by && b.title && b.date && b.signature);
+
+    // Status line + loading of the job's earlier stage. Runs after every openForm.
+    function paintStageLine(container, text, complete) {
+      let line = container.querySelector(':scope > .ml-stageline');
+      if (!text) { if (line) line.remove(); return; }
+      if (!line) { line = document.createElement('div'); container.insertBefore(line, container.firstChild); }
+      line.className = 'ml-stageline' + (complete ? ' complete' : '');
+      line.textContent = text;
+    }
+    function stageSummaryLine(last, list, next) {
+      const n = stageNoOf(last, list);
+      if (stageStatusOf(last) === 'complete') return `Complete, stage ${n} · submitted ${dayMon(last.submittedAt)} by ${stageSignedBy(last) || '—'}`;
+      const fin = last.financeRep && last.financeRep.by ? `, finance: ${last.financeRep.by}` : '';
+      return `In progress, ${next ? 'stage ' + (n + 1) : 'stage ' + n} · last submitted ${dayMon(last.submittedAt)} by ${stageSignedBy(last) || '—'}${fin}`;
+    }
+    function clearStageLocks() {
+      progLockedKeys.forEach((k) => {
+        const i = el(`${ns}_f_${k}`);
+        if (!i) return;
+        i.value = ''; i.readOnly = false; i.classList.remove('ml-stage-locked');
+        setFieldNote(k, '', false);
+      });
+      progLockedKeys = [];
+    }
+    // Earlier-stage values: shown read-only with "Entered in stage n, dd Mon". Empty fields stay open. Fields that
+    // autofill from another record are not locked here: they refresh from their source (wireFromRecord), with a chip.
+    function lockFromStage(prev) {
+      entryFields.forEach((f) => {
+        if (f.type === 'jobsearch' || f.type === 'computed' || f.fromRecord || f.hidden || f.hideInForm || f.role) return;
+        const i = el(`${ns}_f_${f.key}`);
+        const v = prev.values ? prev.values[f.key] : '';
+        if (!i || !hasVal(v)) return;
+        if (!(i.matches && i.matches('input, textarea'))) return;
+        i.value = v; i.readOnly = true; i.classList.add('ml-stage-locked');
+        progLockedKeys.push(f.key);
+        setFieldNote(f.key, progStageNote(), false);
+        i.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    }
+    function wireProgressive(container, existing, locked) {
+      if (!prog) return;
+      progPrev = null; progLockedKeys = []; progLocked = !!locked; progViewNote = '';
+      document.body.classList.add('ml-progressive');
+      const jobEl = el(`${ns}_f_${jobKeyOf()}`);
+      if (!container._soWired) {
+        container._soWired = true;
+        ['input', 'change'].forEach((ev) => container.addEventListener(ev, updateSignOffUi));
+      }
+      if (locked && existing) {
+        const list = jobStages(entryJob(existing));
+        paintStageLine(container, `Stage ${stageNoOf(existing, list)} · ${statusLabel(stageStatusOf(existing))} · submitted ${dayMon(existing.submittedAt)} by ${stageSignedBy(existing) || '—'}`, stageStatusOf(existing) === 'complete');
+        const st = existing.stage || null;
+        if (st && st.signoffRequired === false) progViewNote = 'No sign-off (no weights or counts in this stage).';
+        else if (!existing.financeRep && !(existing.completedBy && existing.completedBy.signature)) progViewNote = 'Not recorded (before finance sign-off was added).';
+        else if (!existing.financeRep) progViewNote = 'Finance representative: not recorded (before finance sign-off was added).';
+        updateSignOffUi();
+        return;
+      }
+      if (existing) {          // a reopened draft: its earlier stage is still locked, its own sign-offs are exactly what was typed
+        const prev = existing.previousSubmissionId ? entries.find((x) => x.id === existing.previousSubmissionId) : null;
+        if (prev) { progPrev = prev; lockFromStage(prev); paintStageLine(container, `Draft for stage ${stageNoOf(prev) + 1} · continues stage ${stageNoOf(prev)}`, false); }
+        else paintStageLine(container, 'Draft · first entry for this job', false);
+        updateSignOffUi();
+        return;
+      }
+      if (!jobEl) return;
+      let lastJob = '';
+      const onJob = () => {
+        const job = String(jobEl.value || '').trim();
+        if (job === lastJob) return;
+        lastJob = job;
+        clearStageLocks(); progPrev = null;
+        if (!job) { paintStageLine(container, '', false); updateSignOffUi(); return; }
+        const stages = jobStages(job);
+        const last = stages[stages.length - 1] || null;
+        // two people must not enter the same stage at once: say so when a draft for this job is already open
+        const drafts = entries.filter((e) => !isSubmitted(e) && entryJob(e) === job.toUpperCase())
+          .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+        if (drafts.length) {
+          const d = drafts[0], who = (d.completedBy && d.completedBy.by) || '';
+          const ok = window.confirm(`A draft for this job was started${who ? ' by ' + who : ''} on ${dayMon(d.createdAt || d.updatedAt)}.\n\nOK = open that draft.\nCancel = start a new entry for this job.`);
+          if (ok) { setTimeout(() => openForm(d.id), 0); return; }
+        }
+        if (!last) { paintStageLine(container, 'First entry for this job', false); updateSignOffUi(); return; }
+        if (stageStatusOf(last) === 'complete') {
+          toast(`Job ${job} is Complete. Showing it read-only.`);
+          setTimeout(() => openForm(last.id), 0);
+          return;
+        }
+        progPrev = last;
+        lockFromStage(last);
+        paintStageLine(container, stageSummaryLine(last, stages, true), false);
+        updateSignOffUi();
+      };
+      ['input', 'change'].forEach((ev) => jobEl.addEventListener(ev, onJob));
+      paintStageLine(container, '', false);
+      onJob();
+    }
+
     document.addEventListener('authSuccess', () => {
       const byField = cbInput('by');
       if (byField && !byField.disabled && !byField.value.trim()) {
@@ -1697,7 +1956,7 @@
 
       // COMPLETED BY block. A customBody page that draws its own block (ownsCompletedBy) hands
       // the engine its values; everything else reads the engine's block.
-      let completedBy = null;
+      let completedBy = null, finance = null;
       if (customBody) {
         if (customBody.ownsCompletedBy) {
           const cb = { by: String(values.completedBy || '').trim(), title: String(values.completedSig || '').trim(),
@@ -1706,14 +1965,26 @@
         }
       } else {
         completedBy = readCompletedBy();
-        if ((finalize || !submitFlow) && (!completedBy.by || !completedBy.title || !completedBy.date || !completedBy.signature)) {
-          revealField(['by', 'title', 'date', 'signature'].map(cbInput).find((i) => i && !String(i.value || '').trim()));
-          toast('Completed by, title, date and signature are required to submit.');
-          return;
+        if (finOn) finance = readFinance();
+        // REC 7.4.6: the sign-offs are required only once a weight or count has a value (the trigger); every other record always
+        const signRequired = prog ? (finalize && triggerMet()) : (finalize || !submitFlow);
+        if (signRequired) {
+          const missingBlocks = [];
+          if (!blockOk(completedBy)) missingBlocks.push('Completed by');
+          if (finOn && !blockOk(finance)) missingBlocks.push('Finance representative');
+          if (missingBlocks.length) {
+            const bad = !blockOk(completedBy) ? ['by', 'title', 'date', 'signature'].map(cbInput) : ['by', 'title', 'date', 'signature'].map(finInput);
+            revealField(bad.find((i) => i && !String(i.value || '').trim()));
+            toast(prog
+              ? `A weight or count is filled in: ${missingBlocks.join(' and ')} (name, title, date and signature) ${missingBlocks.length > 1 ? 'are' : 'is'} required to submit.`
+              : 'Completed by, title, date and signature are required to submit.');
+            return;
+          }
         }
         // a draft keeps whatever was typed so it comes back when the draft is reopened
         // (Title is pre-filled from the login, so a draft keeps the block only if the person typed a name, date or signature)
         if (!(completedBy.by || completedBy.date || completedBy.signature)) completedBy = null;
+        if (finance && !(finance.by || finance.title || finance.date || finance.signature)) finance = null;
       }
 
 
@@ -1744,6 +2015,7 @@
         }
         if (submitFlow) { existing.status = status; if (finalize) existing.submittedAt = Date.now(); }
         if (completedBy) existing.completedBy = completedBy;
+        if (prog) { if (finance) existing.financeRep = finance; else delete existing.financeRep; if (!completedBy) delete existing.completedBy; }
         savedEntry = existing;
       } else {
         savedEntry = {
@@ -1754,6 +2026,8 @@
           stages: stageMap || undefined,
           submittedAt: finalize ? Date.now() : undefined,
           completedBy: completedBy || undefined,
+          financeRep: finance || undefined,
+          previousSubmissionId: (prog && progPrev) ? progPrev.id : undefined,
           source: 'manual',
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -1767,7 +2041,18 @@
       if (provisionalKeys.length) savedEntry.provisionalFields = provisionalKeys;
       else delete savedEntry.provisionalFields;
       const ok = await persist();
-      if (!ok) { toast('Save failed — please retry.'); return; }
+      if (!ok) {
+        // a server refusal (sign-off rule, Complete job) says why; the stored record is re-read so the failed attempt is not left half-applied
+        const why = prog && window.FacilityApi && window.FacilityApi.lastReject;
+        if (prog) { await load(); if (editingId && !entries.some((e) => e.id === editingId)) editingId = null; }
+        toast(why || 'Save failed — please retry.');
+        return;
+      }
+      // the server stamps the stage (number, status, who/when): take the stored copy back
+      if (prog && finalize) {
+        await load();
+        savedEntry = entries.find((e) => e.id === savedEntry.id) || savedEntry;
+      }
 
       if (window.Traceability && traceConfig && traceConfig.batchField) {
         try { window.Traceability.indexSubmission(traceConfig, savedEntry); }
@@ -1787,6 +2072,8 @@
           toast(allStagesDone
             ? 'Final section submitted — this entry is now complete and locked.'
             : `${st ? st.label : 'Section'} submitted. Come back by job no. for the next section.`);
+        } else if (prog && finalize) {
+          toast(`Stage ${stageNoOf(savedEntry)} submitted${stageStatusOf(savedEntry) === 'complete' ? ' — this job is now Complete and locked.' : '. Pick the job again to continue it.'}`);
         } else toast(finalize ? 'Entry submitted.' + softNote : 'Draft saved.');
       }
       else toast(editingId ? 'Entry updated.' : 'Entry added.');
@@ -1803,11 +2090,19 @@
     function exportCsv() {
       // hidden system stamps flagged exportCsv (entry date / time) go in the export only
       const cols = listFields().concat(entryFields.filter(f => f.hidden && f.exportCsv));
-      const rows = [cols.map(f => f.label).concat(submitFlow ? ['Submission', 'Status'] : ['Status'])];
+      // REC 7.4.6: one row per stage; stage_no / status / signoff_required after the usual columns, the Finance
+      // representative (name, date) as the last two
+      const stageHead = prog ? ['stage_no', 'completion_status', 'signoff_required'] : [];
+      const finHead = finOn ? ['Finance representative', 'Finance representative date'] : [];
+      const rows = [cols.map(f => f.label).concat(submitFlow ? ['Submission', 'Status'] : ['Status'], stageHead, finHead)];
       filteredEntries().forEach(e => {
         const tail = e.inSpec === null || e.inSpec === undefined ? '' : (e.inSpec ? 'OK' : 'DEVIATION');
+        const stageCols = !prog ? [] : (isSubmitted(e)
+          ? [stageNoOf(e), stageStatusOf(e), e.stage && typeof e.stage.signoffRequired === 'boolean' ? String(e.stage.signoffRequired) : '']
+          : ['', '', '']);
+        const finCols = !finOn ? [] : [(e.financeRep && e.financeRep.by) || '', (e.financeRep && e.financeRep.date) || ''];
         rows.push(cols.map(f => { const val = valueFor(e, f); return val == null ? '' : String(val); })
-          .concat(submitFlow ? [isSubmitted(e) ? 'Submitted' : 'Draft', tail] : [tail]));
+          .concat(submitFlow ? [isSubmitted(e) ? 'Submitted' : 'Draft', tail] : [tail], stageCols, finCols));
       });
       const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
       download(new Blob([csv], { type: 'text/csv' }), safeKey(title) + '.csv');
@@ -1879,6 +2174,28 @@
       return entryFields.filter(f => !f.role && !f.isComment && !f.hidden);
     }
 
+    // REC 7.4.6 print: the Finance representative row under Completed by, per stage. A stage with no sign-off says so.
+    function finRowHtml(entryRow) {
+      const fr = entryRow.financeRep || null;
+      const st = entryRow.stage || null;
+      const row = window.SignOffBlock.printRow({ label: 'Finance representative', by: fr && fr.by, title: fr && fr.title, date: fr && fr.date, signature: fr && fr.signature });
+      if (fr) return row;
+      const note = st && st.signoffRequired === false ? 'No sign-off (no weights or counts in this stage)' : 'Not recorded (before finance sign-off was added)';
+      return row + `<tr style="font-size:12px;"><td colspan="8" class="sheet-lbl">${esc(note)}</td></tr>`;
+    }
+    // REC 7.4.6 print of a job: "Job so far" summary, then every stage oldest first, each with its own sign-off rows.
+    function buildJobSheet(entryRow) {
+      const stages = jobStages(entryJob(entryRow));
+      const list = stages.includes(entryRow) || isSubmitted(entryRow) ? stages : stages.concat([entryRow]);
+      if (list.length < 1) return buildEntrySheet(entryRow);
+      const sum = list.map((e) => { const v = e.values || {};
+        return `<tr><td>${isSubmitted(e) ? stageNoOf(e, stages) : 'Draft'}</td><td>${esc(isSubmitted(e) ? statusLabel(stageStatusOf(e)) : '—')}</td><td>${esc(dayMon(e.submittedAt) || '')}</td>
+          <td>${esc(stageSignedBy(e) || '')}</td><td>${esc((e.financeRep && e.financeRep.by) || '')}</td><td>${esc(v.weightIn || '')}</td><td>${esc(v.weightOut || '')}</td></tr>`; }).join('');
+      const head = `<div class="sheet-jobsofar"><h3 style="margin:0 0 6px;">Job so far: ${esc(entryJob(entryRow))}</h3>
+        <table class="sheet-body"><tr><th>Stage</th><th>Status</th><th>Submitted</th><th>By</th><th>Finance rep.</th><th>Weight in (kg)</th><th>Weight out (kg)</th></tr>${sum}</table></div>`;
+      return head + list.map((e) => `<div style="page-break-before:always;">${buildEntrySheet(e)}</div>`).join('');
+    }
+
     function buildEntrySheet(entryRow) {
       const v = entryRow.values || {};
       const dateF = roleField('date'), opF = roleField('operator');
@@ -1921,6 +2238,7 @@
             <td class="sheet-lbl">Title:</td><td>${esc(cb.title || '')}</td>
             <td class="sheet-lbl">Date:</td><td>${esc(cb.date || (entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : ''))}</td>
             <td class="sheet-lbl">Signature:</td><td>${esc(cb.signature || '')}</td></tr>
+        ${finOn ? finRowHtml(entryRow) : ''}
         <tr><td class="sheet-lbl">Verified by:</td><td>${esc(verified ? verified.verifiedBy : '')}</td>
             <td class="sheet-lbl">Title:</td><td>${esc(verified ? verified.verifiedSig : '')}</td>
             <td class="sheet-lbl">Date:</td><td>${esc(verified ? verified.verifiedDate : '')}</td>
@@ -1933,7 +2251,7 @@
       if (!entryRow) return;
       const dateF = roleField('date');
       const sheet = el('ml_printSheet');
-      sheet.innerHTML = buildEntrySheet(entryRow);
+      sheet.innerHTML = prog ? buildJobSheet(entryRow) : buildEntrySheet(entryRow);
       setPageOrientation('portrait');
       document.body.classList.add('ml-printing-entry');
       const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);
@@ -2141,7 +2459,10 @@
       const completedByPanel = config.customBody ? '' : `
           <details class="ml-section-collapsible ml-signoff-block" open>
             <summary class="ml-grouphead">Completed by</summary>
+            ${config.progressive ? `<div class="ml-so-banner" id="${ns}_soBanner" style="display:none;"></div>` : ''}
             ${window.SignOffBlock.completedByHtml({ byId: ns + '_cb_by', titleId: ns + '_cb_title', dateId: ns + '_cb_date', signatureId: ns + '_cb_signature', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}
+            ${config.financeSignOff ? `<div class="ml-so-split"></div>
+            ${window.SignOffBlock.completedByHtml({ byLabel: 'Finance representative', byId: ns + '_fin_by', titleId: ns + '_fin_title', dateId: ns + '_fin_date', signatureId: ns + '_fin_signature', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}` : ''}
           </details>`;
       const fieldsAndActions = `
           <div class="ml-collapse-ctl no-print" id="${ns}_collapseCtl" hidden><button type="button" data-ml-collapse="close">Collapse all</button><span aria-hidden="true">·</span><button type="button" data-ml-collapse="open">Expand all</button></div>

@@ -219,7 +219,7 @@
         // Success! Fill the form fields
         const fieldEl = document.getElementById(currentFieldId);
         if (fieldEl) {
-          fieldEl.value = result.displayName;
+          fieldEl.value = 'Confirmed'; // signature shows only 'Confirmed'; the name goes in Completed/Verified by
           fieldEl.dataset.displayName = result.displayName;
           fieldEl.dataset.verified = 'true';
 
@@ -235,7 +235,7 @@
           // Update display
           const display = document.getElementById(currentFieldId + '_display');
           if (display) {
-            const text = `${result.displayName} · Confirmed ✓`;
+            const text = 'Confirmed ✓';
             display.textContent = text;
             display.title = text;
           }

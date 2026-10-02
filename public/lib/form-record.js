@@ -3105,6 +3105,13 @@
           applyCollapse();
         }
       };
+      // Replace every row (used by lib/entry-flow.js, which owns the on-screen entry panel for REC 7.1.2 / 7.1.5
+      // while this roster stays the single store). Same storage shape as typed rows -- nothing else changes.
+      container._setRows = (newRows) => {
+        rows = (newRows || []).map(r => Object.assign({}, r));
+        if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
+        draw();
+      };
       container._addRow = (process) => {
 
         rows = rows.map((_, i) => readRow(i));

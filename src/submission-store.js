@@ -8,6 +8,7 @@
 
 const { jobSnapshotKeys } = require('./job-snapshot');
 const { syncDryWeightOverrides } = require('./dry-weight-override');
+const { fillLegacyStages } = require('./dry-stock-guard');
 
 const PREFIXES = { 'formrecord:': 'form-record', 'monitoring_log:': 'monitoring-log' };
 
@@ -152,6 +153,32 @@ function completedByText(entry, values) {
   return name == null || String(name).trim() === '' ? null : String(name).trim();
 }
 
+// REC 7.4.6 per-stage columns, read from the entry's server-set `stage` block (src/dry-stock-guard.js).
+// is_latest: true on the newest SUBMITTED stage of the job, worked out over the whole array being written.
+function stockExtraColumns() {
+  const jobOf = (e) => String(((e && e.values) || {}).jobNo || '').trim().toUpperCase();
+  const st = (e) => (e && e.stage) || null;
+  const submitted = (e) => e && e.status !== 'draft';
+  const blockDate = (b) => (b && b.date && !Number.isNaN(new Date(b.date).getTime()) ? new Date(b.date) : null);
+  return [
+    { col: 'stage_no', get: (e) => (st(e) && Number.isInteger(st(e).no) ? st(e).no : null) },
+    { col: 'previous_submission_id', get: (e) => (st(e) && st(e).previousId) || null },
+    { col: 'completion_status', get: (e) => (st(e) && st(e).status) || null },
+    { col: 'signoff_required', get: (e) => (st(e) && typeof st(e).signoffRequired === 'boolean' ? st(e).signoffRequired : null) },
+    { col: 'submitted_by', get: (e) => (st(e) && st(e).submittedBy) || null },
+    { col: 'submitted_at', get: (e) => (st(e) && st(e).submittedAt ? new Date(st(e).submittedAt) : null) },
+    { col: 'fields_filled', get: (e) => (st(e) && Number.isInteger(st(e).fieldsFilled) ? st(e).fieldsFilled : null) },
+    { col: 'is_latest', get: (e, all) => {
+      if (!st(e) || !submitted(e)) return false;
+      const j = jobOf(e);
+      const mine = (x) => submitted(x) && st(x) && jobOf(x) === j;
+      return !(all || []).some((o) => o !== e && mine(o) && o.stage.no > e.stage.no);
+    } },
+    { col: 'financeRep', get: (e) => (e.financeRep && e.financeRep.by && String(e.financeRep.by).trim()) || null },
+    { col: 'financeRepDate', get: (e) => blockDate(e.financeRep) },
+  ];
+}
+
 // Discover which columns belong to the parent and which to the child (roster) table, using the
 // RecordFieldDef rows in Neon. Cached per record key for the lifetime of the process.
 // Entries expire after a minute so a re-seeded definition (seed-definitions.mjs) takes effect without restarting the API.
@@ -206,6 +233,19 @@ async function getSchema(prisma, recordKey) {
       schema.blockCompletedBy = Array.isArray(rows) && rows.length > 0;
     } catch { schema.blockCompletedBy = false; }
   }
+  // REC 7.4.6 progressive stages: stage_no, previous_submission_id, completion_status, signoff_required,
+  // submitted_by/at, is_latest, fields_filled, financeRep/financeRepDate. Server-set (src/dry-stock-guard.js),
+  // so they are not RecordFieldDef fields. Each is written only if the column exists (checked once), so
+  // deploying before the migration can never break saving.
+  schema.extraCols = [];
+  if (recordKey === 'dry-stock-control') {
+    try {
+      const rows = await prisma.$queryRawUnsafe(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = $1`, schema.table);
+      const have = new Set(rows.map((r) => r.column_name));
+      schema.extraCols = stockExtraColumns().filter((c) => have.has(c.col));
+    } catch { schema.extraCols = []; }
+  }
   schemaCache.set(recordKey, { at: Date.now(), schema });
   return schema;
 }
@@ -221,6 +261,7 @@ async function syncSubmissionRows(prisma, key, value) {
   let entries;
   try { entries = JSON.parse(value); } catch { return; }
   if (!Array.isArray(entries)) return;
+  if (recordKey === 'dry-stock-control') fillLegacyStages(entries);   // projection only: old submissions become stage 1..n
 
   // Atomic: delete all existing rows for this record, then re-insert.
   // This handles edits, deletions, and reordering without diffing.
@@ -261,6 +302,11 @@ async function syncSubmissionRows(prisma, key, value) {
     if (schema.blockCompletedBy) {
       cols.push('"completedBy"');
       params.push(completedByText(entry, values));
+    }
+
+    for (const { col, get } of (schema.extraCols || [])) {
+      cols.push(`"${col}"`);
+      params.push(get(entry, entries));
     }
 
     const placeholders = params.map((_, i) => `$${i + 1}`).join(', ');

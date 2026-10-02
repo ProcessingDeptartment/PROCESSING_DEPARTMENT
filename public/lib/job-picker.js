@@ -353,7 +353,9 @@
     // The Can/Dry buttons are an optional filter: with neither chosen the search covers every job, so the
     // list can open straight away.
     let route = fixedRoute || loadRoutePref();
-    const details = sel.closest('details');
+    // jobEntry:'merged' = the job picker sits in the same section as the rest of the form (REC 7.4.6): that section never folds or splits
+    const focusBlock = sel.closest('details');
+    const details = sel.getAttribute('data-job-entry') === 'merged' ? null : focusBlock;
     let active = -1;
     let matches = [];
 
@@ -398,11 +400,11 @@
 
     // First empty field after the job block: a required one if the engine names any, else any empty field.
     function focusNextField() {
-      if (!details) return;
-      const host = details.closest('#fr_modalSections, [id$="_modalFields"]') || opts.gateRoot || null;
+      if (!focusBlock) return;
+      const host = focusBlock.closest('#fr_modalSections, [id$="_modalFields"]') || opts.gateRoot || null;
       if (!host) return;
       const ok = (f) => !(f.disabled || f.readOnly || String(f.value || '').trim() !== '' || !f.getClientRects().length)
-        && !details.contains(f) && (details.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING);
+        && (details ? !details.contains(f) : true) && (focusBlock.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING || (!details && focusBlock.contains(f)));
       const first = (opts.requiredFocus ? opts.requiredFocus() : []).filter(Boolean).find(ok);
       const fields = host.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea');
       const target = first || [...fields].find(ok);

@@ -21,11 +21,13 @@ const { syncSubmissionRows } = require('./submission-store');
 const { syncStockLinks } = require('./stock-link');
 const { syncClosedBoxes } = require('./closed-box');
 const { boxesForJob } = require('./recall-boxes');
+const { boxReport } = require('./box-report');
 const { awaitingBoxes, syncBoxInspections } = require('./box-inspection');
 const { syncSubmissionDates } = require('./submission-dates');
 const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
 const dryGuard = require('./drying-process-guard');
 const crateGuard = require('./crate-number-guard');
+const stockGuard = require('./dry-stock-guard');
 
 // Query events feed the status page's query counter (src/status-page.js); emit:'event' logs nothing.
 const prisma = new PrismaClient({ log: [{ emit: 'event', level: 'query' }] });
@@ -124,6 +126,25 @@ app.put('/api/storage/key/:key', async (req, res) => {
       value = g.value;
     }
 
+    // REC 7.4.6 Dry Stock Control: immutable stages, server-set stage numbers, server-computed sign-off rule.
+    // Like the crate guard: an early pass to refuse and to validate the stamped value; the authoritative pass
+    // re-runs inside the locked transaction below so two tablets cannot take the same stage number.
+    const isStockKey = req.params.key === stockGuard.KEY;
+    let stockCfg = {};
+    if (isStockKey) {
+      try {
+        const d = await prisma.recordDefinition.findUnique({ where: { recordKey: 'dry-stock-control' }, select: { extraJson: true } });
+        stockCfg = (d && d.extraJson) || {};
+      } catch (e) { console.error('dry-stock-control definition read failed (defaults used)', e.message); }
+      const prevRow = await prisma.keyValue.findUnique({ where: { key: req.params.key } });
+      const g = stockGuard.guardWrite(prevRow ? prevRow.value : null, value, { user: req.get('x-user'), cfg: stockCfg });
+      if (!g.ok) {
+        console.warn('PUT', req.params.key, 'REFUSED by dry-stock guard:', g.error);
+        return res.status(g.status).json({ ok: false, guard: true, error: g.error });
+      }
+      value = g.value;
+    }
+
     // Layer 2: validate the submission against its record definition. Report-only unless
     // VALIDATE_WRITES=enforce, in which case a submitted-and-invalid entry is rejected 422.
     let violations = [];
@@ -143,12 +164,17 @@ app.put('/api/storage/key/:key', async (req, res) => {
 
     await prisma.$transaction(async (tx) => {
       // Two tablets submitting for the same job queue on this lock, so they cannot get the same crate numbers.
-      if (isCrateKey) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${req.params.key}))`;
+      if (isCrateKey || isStockKey) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${req.params.key}))`;
       const prev = await tx.keyValue.findUnique({ where: { key: req.params.key } });
       if (isCrateKey) {
         const g = crateGuard.guardWrite(prev ? prev.value : null, incomingValue);
         if (!g.ok) throw Object.assign(new Error('crate guard'), { guard: g });
         value = g.value; crateRanges = g.ranges;
+      }
+      if (isStockKey) {
+        const g = stockGuard.guardWrite(prev ? prev.value : null, incomingValue, { user: req.get('x-user'), cfg: stockCfg });
+        if (!g.ok) throw Object.assign(new Error('dry-stock guard'), { guard: g });
+        value = g.value;
       }
       await tx.keyValue.upsert({
         where: { key: req.params.key },
@@ -546,7 +572,8 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
 //   'drying-process' -> current trolley count = the latest submitted REC 7.4.1 entry that has one
 app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
   const jobNo = String(req.params.jobNo || '').trim();
-  const out = { 'dry-cooking': null, 'drying-process': null, 'drying-entry-date': null, 'drying-location': null };
+  const out = { 'dry-cooking': null, 'drying-process': null, 'drying-entry-date': null, 'drying-location': null,
+    'dry-cooked-weight': null, 'dried-transfer-weight': null, 'receiving-weight': null };
   if (!jobNo) return res.json(out);
   try {
     const cook = await prisma.$queryRawUnsafe(
@@ -556,7 +583,8 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
     if (cook.length) {
       const dates = [...new Set(cook.map((r) => r.d))].sort();
       const latest = dates[dates.length - 1];
-      out['dry-cooking'] = { value: latest, ids: cook.filter((r) => r.d === latest).map((r) => r.submissionId), dates };
+      out['dry-cooking'] = { value: latest, ids: cook.filter((r) => r.d === latest).map((r) => r.submissionId), dates,
+        ...(dates.length > 1 ? { note: `Cooked on ${dates.length} dates, latest used` } : {}) };
     }
   } catch (e) { console.error('job-facts cooking failed', e.message); }
   try {
@@ -564,7 +592,13 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
       `SELECT "id", "noOfTrolleys" FROM "sub_drying_process"
        WHERE UPPER("jobNo") = UPPER($1) AND "noOfTrolleys" IS NOT NULL AND COALESCE("status", 'submitted') <> 'draft'
        ORDER BY "entryDate" DESC NULLS LAST LIMIT 1`, jobNo);
-    if (dry.length) out['drying-process'] = { value: String(dry[0].noOfTrolleys), ids: [dry[0].id] };
+    if (dry.length) {
+      const counts = await prisma.$queryRawUnsafe(
+        `SELECT DISTINCT "noOfTrolleys" FROM "sub_drying_process"
+         WHERE UPPER("jobNo") = UPPER($1) AND "noOfTrolleys" IS NOT NULL AND COALESCE("status", 'submitted') <> 'draft'`, jobNo);
+      out['drying-process'] = { value: String(dry[0].noOfTrolleys), ids: [dry[0].id],
+        ...(counts.length > 1 ? { note: 'Trolleys changed during the job, latest used' } : {}) };
+    }
   } catch (e) { console.error('job-facts trolleys failed', e.message); }
   // REC 7.4.2 Entry date + Dry room area come from REC 7.4.1 (submitted entries only):
   //   'drying-entry-date' -> the day the job's first REC 7.4.1 entry was made (facility time zone)
@@ -588,6 +622,36 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
     }
     if (best) out['drying-location'] = { value: best.area, ids: [best.id] };
   } catch (e) { console.error('job-facts drying entry failed', e.message); }
+  // REC 7.4.6 Dry Stock Control autofill (submitted entries only, drafts ignored):
+  //   'dry-cooked-weight'      -> total cooked weight = v_dry_job_weights.cooked_kg (Cooking cards only; the one existing
+  //                               calculation, not a second copy) + the REC 7.4.0 entries it came from
+  //   'dried-transfer-weight'  -> sum of totalDriedWeight over the job's submitted REC 7.4.10 transfers
+  //   'receiving-weight'       -> whole weight from REC 7.1.2 (job_info view)
+  try {
+    const w = await prisma.$queryRawUnsafe(`SELECT cooked_kg FROM "v_dry_job_weights" WHERE UPPER(job_no) = UPPER($1)`, jobNo);
+    if (w.length && w[0].cooked_kg != null) {
+      const pots = await prisma.$queryRawUnsafe(
+        `SELECT "submissionId", COUNT(*)::int AS n FROM "dry_cooking_pot"
+         WHERE UPPER("jobNo") = UPPER($1) AND "process" = 'Cooking' AND "status" = 'submitted' GROUP BY "submissionId"`, jobNo);
+      const n = pots.reduce((a, r) => a + r.n, 0);
+      out['dry-cooked-weight'] = { value: String(Math.round(Number(w[0].cooked_kg) * 1000) / 1000), ids: pots.map((r) => r.submissionId),
+        note: `From REC 7.4.0, ${n} cooking pot${n === 1 ? '' : 's'}` };
+    }
+  } catch (e) { console.error('job-facts cooked weight failed', e.message); }
+  try {
+    const tr = await prisma.$queryRawUnsafe(
+      `SELECT "id", "totalDriedWeight" FROM "sub_dried_abalone_transfer"
+       WHERE UPPER("jobNo") = UPPER($1) AND "totalDriedWeight" IS NOT NULL AND COALESCE("status", 'submitted') <> 'draft'`, jobNo);
+    if (tr.length) {
+      const sum = tr.reduce((a, r) => a + Number(r.totalDriedWeight), 0);
+      out['dried-transfer-weight'] = { value: String(Math.round(sum * 1000) / 1000), ids: tr.map((r) => r.id),
+        note: `From REC 7.4.10, ${tr.length} transfer${tr.length === 1 ? '' : 's'}` };
+    }
+  } catch (e) { console.error('job-facts dried transfer failed', e.message); }
+  try {
+    const rc = await prisma.$queryRawUnsafe(`SELECT "intakeWeight", "receivingId" FROM "job_info" WHERE UPPER("jobNo") = UPPER($1)`, jobNo);
+    if (rc.length && rc[0].intakeWeight != null) out['receiving-weight'] = { value: String(rc[0].intakeWeight), ids: [rc[0].receivingId], note: 'From REC 7.1.2 receiving' };
+  } catch (e) { console.error('job-facts receiving weight failed', e.message); }
   res.json(out);
 });
 
@@ -695,6 +759,12 @@ app.get('/api/recall/job/:job/boxes', async (req, res) => {
     console.error('GET recall boxes failed', e);
     res.status(500).json({ ok: false });
   }
+});
+
+// REC 7.4.4: the whole grading / boxing traceability report in one read-only call (src/box-report.js).
+app.get('/api/report/boxes', async (req, res) => {
+  try { res.json({ ok: true, generatedAt: new Date().toISOString(), ...(await boxReport(prisma)) }); }
+  catch (e) { console.error('GET box report failed', e); res.status(500).json({ ok: false }); }
 });
 
 app.get('/api/trace/:batch', async (req, res) => {

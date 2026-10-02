@@ -14,7 +14,7 @@
   (function loadPasskeyInput() {
     if (window.PasskeyInput || document.querySelector('script[data-passkey-input]')) return;
     const sc = document.createElement('script');
-    sc.src = '/lib/passkey-input.js?v=3';
+    sc.src = '/lib/passkey-input.js?v=4';
     sc.setAttribute('data-passkey-input', '1');
     document.head.appendChild(sc);
   })();
