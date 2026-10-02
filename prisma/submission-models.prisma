@@ -3664,6 +3664,20 @@ model Sub_dry_room_temp_humidity_log {
   endShiftHumidity         Float?
   checkedBy                String?
   correctiveAction         String?
+  entryDate                DateTime? @db.Date
+  entryTime                DateTime?
+  temperature              Float?
+  humidity                 Float?
+  weekOld                  String?
+  shiftOld                 String?
+  dateOld                  DateTime? @db.Date
+  checkedByOld             String?
+  startShiftTempOld        Float?
+  startShiftHumidityOld    Float?
+  duringProdTempOld        Float?
+  duringProdHumidityOld    Float?
+  endShiftTempOld          Float?
+  endShiftHumidityOld      Float?
   completedBy String?
 
   @@map("sub_dry_room_temp_humidity_log")

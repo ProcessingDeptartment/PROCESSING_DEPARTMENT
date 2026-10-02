@@ -1106,7 +1106,11 @@
 
     function renderTable() {
       renderContinuePicker();
-      const list = filteredEntries();
+      let list = filteredEntries();
+      // recentEntries: show only the latest N logs (the previous readings) unless the person filters
+      const recentN = Number(config.recentEntries) || 0;
+      const filtering = ['filterFrom', 'filterTo', 'filterSearch'].some(k => el(`${ns}_${k}`) && el(`${ns}_${k}`).value) || (el(`${ns}_filterDevOnly`) && el(`${ns}_filterDevOnly`).checked);
+      if (recentN && !filtering) list = list.slice(0, recentN);
       const table = tableWrap;
       if (!list.length) {
         table.innerHTML = `<div class="ml-empty">No entries yet${entries.length ? ' matching these filters' : ''}.</div>`;
@@ -1681,6 +1685,14 @@
       }
       values = computeAll(raw);
       inSpec = evaluateEntry(values);
+      // Out-of-range reading: pop up the warning before it is saved. The deviation is still recorded if the person continues.
+      if (config.warnOutOfSpec && inSpec === false) {
+        const bad = entryFields.filter(f => checkField(f, values[f.key]) === 'fail').map(f => {
+          const r = specFor(f.specKey) || {};
+          return `${f.label}: ${values[f.key]}${f.unit ? ' ' + f.unit : ''} (allowed ${r.min != null ? r.min : 'no minimum'} to ${r.max != null ? r.max : 'no maximum'})`;
+        });
+        if (!window.confirm(['WARNING: OUT OF RANGE', ''].concat(bad, ['', 'This deviation must be reported. Enter the corrective action taken.', '', 'OK = save this reading as a deviation.  Cancel = go back and check the reading.']).join('\n'))) return;
+      }
       } // end non-customBody field gathering
 
       // COMPLETED BY block. A customBody page that draws its own block (ownsCompletedBy) hands
@@ -2141,13 +2153,13 @@
       const entriesPanel = `
       <div class="ml-panel no-print">
         <div class="ml-panel-head">
-          <h2>${esc(blockTitle)}</h2>
+          <h2>${config.recentEntries ? 'Previous ' + Number(config.recentEntries) + ' logs' : esc(blockTitle)}</h2>
           <span>
-            <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="${ns}_entriesBody" data-label="entries">View entries</button>
+            <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="${ns}_entriesBody" data-label="entries">${config.recentEntries ? 'Hide' : 'View'} entries</button>
             ${inline ? '' : `<button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>`}
           </span>
         </div>
-        <div class="ml-panel-body ml-collapsible" id="${ns}_entriesBody">
+        <div class="ml-panel-body ml-collapsible${config.recentEntries ? ' ml-open' : ''}" id="${ns}_entriesBody">
           <div class="ml-filters">
             <label>From <input type="date" id="${ns}_filterFrom"></label>
             <label>To <input type="date" id="${ns}_filterTo"></label>

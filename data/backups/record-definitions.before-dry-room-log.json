@@ -37329,11 +37329,11 @@
       "sections": [],
       "fields": [
         {
-          "key": "entryDate",
-          "label": "Entry date",
-          "type": "date",
+          "key": "week",
+          "label": "Week",
+          "type": "text",
           "required": false,
-          "readOnly": true,
+          "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
@@ -37345,20 +37345,19 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "serverStamp": true,
-            "timeZone": "Africa/Johannesburg"
-          }
+          "validateJson": null
         },
         {
-          "key": "entryTime",
-          "label": "Entry time",
-          "type": "timestamp",
+          "key": "shift",
+          "label": "Shift",
+          "type": "select",
           "required": false,
-          "readOnly": true,
+          "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "Day",
+            "Night"
+          ],
           "group": null,
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -37371,17 +37370,13 @@
           "validateJson": null
         },
         {
-          "key": "room",
-          "label": "Room",
-          "type": "select",
+          "key": "date",
+          "label": "Date",
+          "type": "date",
           "required": true,
           "readOnly": false,
           "unit": null,
-          "options": [
-            "Main dry room",
-            "Dry container",
-            "Grading room"
-          ],
+          "options": null,
           "group": null,
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -37394,12 +37389,12 @@
           "validateJson": null
         },
         {
-          "key": "temperature",
-          "label": "Temperature",
-          "type": "number",
-          "required": true,
+          "key": "room",
+          "label": "Room",
+          "type": "text",
+          "required": false,
           "readOnly": false,
-          "unit": "°C",
+          "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37412,16 +37407,16 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "specKey": "roomTemp"
+            "default": "Dry Room"
           }
         },
         {
-          "key": "humidity",
-          "label": "Humidity",
+          "key": "startShiftTemp",
+          "label": "Start shift — temp",
           "type": "number",
-          "required": true,
+          "required": false,
           "readOnly": false,
-          "unit": "% rH",
+          "unit": "°C",
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37434,16 +37429,16 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "specKey": "roomHumidity"
+            "specKey": "roomTemp"
           }
         },
         {
-          "key": "correctiveAction",
-          "label": "Corrective action",
-          "type": "textarea",
+          "key": "startShiftHumidity",
+          "label": "Start shift — humidity",
+          "type": "number",
           "required": false,
           "readOnly": false,
-          "unit": null,
+          "unit": "% rH",
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37454,15 +37449,18 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": {
+            "specKey": "roomHumidity"
+          }
         },
         {
-          "key": "weekOld",
-          "label": "Week (old)",
-          "type": "text",
+          "key": "duringProdTemp",
+          "label": "During production — temp",
+          "type": "number",
           "required": false,
-          "readOnly": true,
-          "unit": null,
+          "readOnly": false,
+          "unit": "°C",
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37475,20 +37473,16 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "legacy": true,
-            "legacyFrom": "week",
-            "showWhen": {
-              "nonEmpty": true
-            }
+            "specKey": "roomTemp"
           }
         },
         {
-          "key": "shiftOld",
-          "label": "Shift (old)",
-          "type": "text",
+          "key": "duringProdHumidity",
+          "label": "During production — humidity",
+          "type": "number",
           "required": false,
-          "readOnly": true,
-          "unit": null,
+          "readOnly": false,
+          "unit": "% rH",
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37501,20 +37495,16 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "legacy": true,
-            "legacyFrom": "shift",
-            "showWhen": {
-              "nonEmpty": true
-            }
+            "specKey": "roomHumidity"
           }
         },
         {
-          "key": "dateOld",
-          "label": "Date (old)",
-          "type": "date",
+          "key": "endShiftTemp",
+          "label": "End shift — temp",
+          "type": "number",
           "required": false,
-          "readOnly": true,
-          "unit": null,
+          "readOnly": false,
+          "unit": "°C",
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37527,20 +37517,16 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "legacy": true,
-            "legacyFrom": "date",
-            "showWhen": {
-              "nonEmpty": true
-            }
+            "specKey": "roomTemp"
           }
         },
         {
-          "key": "checkedByOld",
-          "label": "Checked by (old)",
-          "type": "text",
+          "key": "endShiftHumidity",
+          "label": "End shift — humidity",
+          "type": "number",
           "required": false,
-          "readOnly": true,
-          "unit": null,
+          "readOnly": false,
+          "unit": "% rH",
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37553,20 +37539,16 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "legacy": true,
-            "legacyFrom": "checkedBy",
-            "showWhen": {
-              "nonEmpty": true
-            }
+            "specKey": "roomHumidity"
           }
         },
         {
-          "key": "startShiftTempOld",
-          "label": "Start shift, temp (old)",
-          "type": "number",
-          "required": false,
-          "readOnly": true,
-          "unit": "°C",
+          "key": "checkedBy",
+          "label": "Checked by",
+          "type": "text",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37577,22 +37559,15 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "legacy": true,
-            "legacyFrom": "startShiftTemp",
-            "showWhen": {
-              "nonEmpty": true
-            }
-          }
+          "validateJson": null
         },
         {
-          "key": "startShiftHumidityOld",
-          "label": "Start shift, humidity (old)",
-          "type": "number",
+          "key": "correctiveAction",
+          "label": "Corrective action",
+          "type": "textarea",
           "required": false,
-          "readOnly": true,
-          "unit": "% rH",
+          "readOnly": false,
+          "unit": null,
           "options": null,
           "group": null,
           "sectionIndex": null,
@@ -37603,118 +37578,7 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "legacy": true,
-            "legacyFrom": "startShiftHumidity",
-            "showWhen": {
-              "nonEmpty": true
-            }
-          }
-        },
-        {
-          "key": "duringProdTempOld",
-          "label": "During production, temp (old)",
-          "type": "number",
-          "required": false,
-          "readOnly": true,
-          "unit": "°C",
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 12,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "legacy": true,
-            "legacyFrom": "duringProdTemp",
-            "showWhen": {
-              "nonEmpty": true
-            }
-          }
-        },
-        {
-          "key": "duringProdHumidityOld",
-          "label": "During production, humidity (old)",
-          "type": "number",
-          "required": false,
-          "readOnly": true,
-          "unit": "% rH",
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 13,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "legacy": true,
-            "legacyFrom": "duringProdHumidity",
-            "showWhen": {
-              "nonEmpty": true
-            }
-          }
-        },
-        {
-          "key": "endShiftTempOld",
-          "label": "End shift, temp (old)",
-          "type": "number",
-          "required": false,
-          "readOnly": true,
-          "unit": "°C",
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 14,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "legacy": true,
-            "legacyFrom": "endShiftTemp",
-            "showWhen": {
-              "nonEmpty": true
-            }
-          }
-        },
-        {
-          "key": "endShiftHumidityOld",
-          "label": "End shift, humidity (old)",
-          "type": "number",
-          "required": false,
-          "readOnly": true,
-          "unit": "% rH",
-          "options": null,
-          "group": null,
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 15,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "legacy": true,
-            "legacyFrom": "endShiftHumidity",
-            "showWhen": {
-              "nonEmpty": true
-            }
-          }
+          "validateJson": null
         }
       ],
       "autofills": [],
@@ -37742,14 +37606,7 @@
           }
         ],
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation",
-        "recentEntries": 10,
-        "warnOutOfSpec": true,
-        "roomAreas": [
-          "Main dry room",
-          "Dry container",
-          "Grading room"
-        ]
+        "deviationPolarity": "deviation"
       }
     },
     {
