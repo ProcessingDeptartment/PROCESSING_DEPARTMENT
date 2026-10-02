@@ -2,6 +2,25 @@
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
+  // Signature = tap-to-enter passkey (admin-issued PIN). Readonly so it can only be filled by PasskeyInput.
+  function passkeyFieldHtml(fieldClass, label, id) {
+    return `<label class="${fieldClass}">${label}
+      <input id="${id}" type="text" placeholder="Enter passkey" readonly autocomplete="off"
+             onclick="window.PasskeyInput && PasskeyInput.openForField('${id}')"
+             style="cursor:pointer;">
+      <div class="passkey-verified-display" id="${id}_display"></div>
+    </label>`;
+  }
+
+  // Load the number-pad library once, so no page needs its own <script> tag.
+  (function loadPasskeyInput() {
+    if (window.PasskeyInput || document.querySelector('script[data-passkey-input]')) return;
+    const sc = document.createElement('script');
+    sc.src = '/lib/passkey-input.js?v=2';
+    sc.setAttribute('data-passkey-input', '1');
+    document.head.appendChild(sc);
+  })();
+
   function completedByHtml(opts) {
     const byId = opts.byId, titleId = opts.titleId, dateId = opts.dateId, signatureId = opts.signatureId;
     const byLabel = opts.byLabel || 'Completed by';
@@ -11,7 +30,7 @@
       <label class="${fieldClass}">${esc(byLabel)}<input id="${byId}"></label>
       <label class="${fieldClass}">Title<input id="${titleId}"></label>
       <label class="${fieldClass}">Date<input id="${dateId}" type="date"></label>
-      <label class="${fieldClass}">Signature<input id="${signatureId}"></label>
+      ${passkeyFieldHtml(fieldClass, 'Signature', signatureId)}
     </div>`;
   }
 
@@ -37,18 +56,7 @@
     const fields = opts.fields || ['by', 'title', 'date', 'signature'];
     return `<div class="${gridClass}" style="margin-bottom:8px;">
       ${fields.map(f => {
-        if (f === 'signature') {
-          return `<label class="${fieldClass}">
-            Signature
-            <div style="position: relative;">
-              <input id="${ids[f]}" type="text"
-                     placeholder="Enter passkey" readonly
-                     onclick="PasskeyInput.openForField('${ids[f]}')"
-                     style="cursor: pointer; background: #f9f9f9;">
-              <div class="passkey-verified-display" id="${ids[f]}_display"></div>
-            </div>
-          </label>`;
-        }
+        if (f === 'signature') return passkeyFieldHtml(fieldClass, VERIFY_FIELD_LABELS[f], ids[f]);
         return `<label class="${fieldClass}">${VERIFY_FIELD_LABELS[f]}<input id="${ids[f]}"${f === 'date' ? ' type="date"' : ''}></label>`;
       }).join('\n      ')}
     </div>`;

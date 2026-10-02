@@ -99,6 +99,11 @@
     </table>
   </div>
 
+  <script src="../lib/palette-map.js"></script>
+  <script src="../lib/api-backend.js?v=18"></script>
+  <script src="../lib/permission-rules.js?v=6"></script>
+  <script src="../lib/auth.js?v=2"></script>
+  <script src="../lib/login-ui.js?v=3"></script>
   <script>
     async function createPasskey() {
       const username = document.getElementById('username').value.trim();
@@ -117,13 +122,9 @@
       }
 
       try {
-        const response = await fetch('/api/admin/passkeys/create', {
+        const response = await FacilityApi.fetch('/api/admin/passkeys/create', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-User-Role': 'ADMINISTRATOR',
-            'X-User-Id': 'admin'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, displayName, title, passkey })
         });
 
@@ -146,12 +147,9 @@
 
     async function loadUsers() {
       try {
-        const response = await fetch('/api/admin/passkeys/list', {
+        const response = await FacilityApi.fetch('/api/admin/passkeys/list', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-User-Role': 'ADMINISTRATOR'
-          }
+          headers: { 'Content-Type': 'application/json' },
         });
 
         const result = await response.json();
@@ -196,12 +194,9 @@
       if (!confirm(`Disable passkey for ${username}?`)) return;
 
       try {
-        const response = await fetch('/api/admin/passkeys/disable', {
+        const response = await FacilityApi.fetch('/api/admin/passkeys/disable', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-User-Role': 'ADMINISTRATOR'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username })
         });
 

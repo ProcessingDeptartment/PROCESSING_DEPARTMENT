@@ -804,6 +804,8 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+require('./passkeys')(app, prisma); // admin-managed signature passkeys
+
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
     + ` — write validation ${VALIDATE_ENFORCE ? 'ENFORCED (422 on invalid)' : 'report-only'}`);

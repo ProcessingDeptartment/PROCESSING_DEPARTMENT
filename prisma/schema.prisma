@@ -4767,5 +4767,6 @@ model PasskeyLog {
   recordId    String?
   verifiedAt  DateTime @default(now())
 
+  @@index([username, verifiedAt])
   @@map("passkey_logs")
 }

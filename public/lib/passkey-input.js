@@ -226,11 +226,8 @@
       }
 
       try {
-        const response = await fetch('/api/passkey/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ passkey: currentPasskey })
-        });
+        const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: currentPasskey }) };
+        const response = window.FacilityApi ? await window.FacilityApi.fetch('/api/passkey/verify', opts) : await fetch('/api/passkey/verify', opts);
 
         const result = await response.json();
 
@@ -243,12 +240,20 @@
         const fieldEl = document.getElementById(currentFieldId);
         if (fieldEl) {
           fieldEl.value = result.displayName;
-          fieldEl.dataset.passkey = currentPasskey;
           fieldEl.dataset.displayName = result.displayName;
           fieldEl.dataset.verified = 'true';
 
+          // Auto-fill sibling Completed/Verified-by, Title and Date fields (ids share a prefix)
+          const base = currentFieldId.replace(/_signature$/, '');
+          const nameEl = document.getElementById(base + '_by');
+          if (nameEl) nameEl.value = result.displayName;
+          const titleEl = document.getElementById(base + '_title');
+          if (titleEl && result.title) titleEl.value = result.title;
+          const dateEl = document.getElementById(base + '_date');
+          if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
+
           // Update display
-          const fieldGroup = fieldEl.closest('.field') || fieldEl.parentElement;
+          const fieldGroup = fieldEl.parentElement;
           const display = fieldGroup.querySelector('.passkey-verified-display');
           if (display) {
             display.innerHTML = `<strong>${result.displayName}</strong> <span class="verified-badge">Confirmed ✓</span>`;

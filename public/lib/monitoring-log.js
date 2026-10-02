@@ -1535,7 +1535,7 @@
       const title = cbInput('title');
       if (title && !locked && !title.value.trim()) {
         const role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;
-        if (role) title.value = role;
+        if (role) title.value = (window.SignOffBlock && window.SignOffBlock.roleLabel) ? window.SignOffBlock.roleLabel(role) : role;
       }
     }
     function readCompletedBy() {
@@ -1551,7 +1551,7 @@
       const title = cbInput('title');
       if (title && !title.disabled && !title.value.trim()) {
         const role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;
-        if (role) title.value = role;
+        if (role) title.value = (window.SignOffBlock && window.SignOffBlock.roleLabel) ? window.SignOffBlock.roleLabel(role) : role;
       }
     });
 
