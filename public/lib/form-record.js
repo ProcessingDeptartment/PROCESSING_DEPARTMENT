@@ -231,8 +231,10 @@
   .fr-sheet .fr-dc .dc-pots th.dc-cook{ font-size:10pt; text-align:left; }
   .fr-sheet .fr-dc .dc-batch{ page-break-inside:avoid; break-inside:avoid; }
   .fr-sheet .fr-dc .dc-oos{ border:1pt solid #000; padding:1.5mm 2mm; margin:0 0 2mm; font-weight:700; color:#b30000; page-break-inside:avoid; }
-  .fr-sheet .fr-dc .dc-sign{ page-break-inside:avoid; break-inside:avoid; margin-top:4mm; }
-  .fr-sheet .fr-dc .dc-sign td{ font-size:8pt; height:20mm; vertical-align:top; width:33.3%; }
+  /* sign-off: same block as before, smaller type only */
+  .fr-sheet .fr-dc table.fr-sheet-sign{ table-layout:auto; margin-top:4mm; }
+  .fr-sheet .fr-dc .fr-sheet-sign td{ font-size:9pt; height:9mm; }
+  .fr-sheet .fr-dc .fr-sheet-sign td.fr-sheet-lbl{ font-size:8pt; width:13%; background:none; }
   @media print{
     @page{ size:A4; margin:12mm;
       @bottom-right{ content:"Page " counter(page) " of " counter(pages); font-family:'Segoe UI',system-ui,sans-serif; font-size:10px; color:#4a4a4a; }
@@ -3868,18 +3870,19 @@
         ['Abalone (kg)', r => e(r.abaloneKg)],
         ['Sea Water (100 Lt)', sea],
         ['pH', r => e(r.cookPh)],
-        ['Salt – kg (if applicable)', r => e(r.saltKg)], ['Record batch number', r => e(r.saltBatchNumber)],
-        ['Sugar – kg (if applicable)', r => e(r.sugarKg)], ['Record batch number', r => e(r.sugarBatchNumber)],
-        ['Vinegar – kg (if applicable)', r => e(r.vinegarKg)], ['Record batch number', r => e(r.vinegarBatchNumber)],
+        ['Salt – kg', r => e(r.saltKg), 'salt'], ['Salt batch no.', r => e(r.saltBatchNumber), 'salt'],
+        ['Sugar – kg', r => e(r.sugarKg), 'sugar'], ['Sugar batch no.', r => e(r.sugarBatchNumber), 'sugar'],
+        ['Vinegar – kg', r => e(r.vinegarKg), 'vinegar'], ['Vinegar batch no.', r => e(r.vinegarBatchNumber), 'vinegar'],
         ['Start time', r => e(r.startTime)],
         ['Starting temperature (°C)', r => e(r.startingTemp)],
         ['20 min after reaching temp (°C)', r => e(r.temp20MinAfter)],
         ['End of cooking cycle (°C)', r => e(r.endOfCookingTemp)],
         ['Time out', r => e(r.timeOut)],
         ['Total cooking time', r => e(r.totalCookingTime)],
-        ['Comments', () => ''],
-        ['Cooker', () => e(who)]
+        ['Comments', () => '']
       ];
+      // an addition (salt / sugar / vinegar) prints only when it was selected on at least one pot of the table
+      const addUsed = (slice, key) => slice.some(r => r && [key + 'Kg', key + 'BatchNumber'].some(k => String(r[k] == null ? '' : r[k]).trim() !== ''));
       // pots numbered within their batch; always whole blocks of 4 columns, blank columns kept for handwriting
       const potsTables = (pots, prefix) => {
         const blocks = Math.max(1, Math.ceil(pots.length / 4));
@@ -3887,7 +3890,7 @@
         for (let b = 0; b < blocks; b++) {
           const slice = [0, 1, 2, 3].map(n => pots[b * 4 + n] || null);
           const head = slice.map((r, n) => `<th>${r ? e(prefix) + 'Pot ' + (b * 4 + n + 1) : ''}</th>`).join('');
-          const body = fields.map(f => `<tr><td class="dc-l">${f[0]}</td>${slice.map(r => `<td>${r ? f[1](r) : ''}</td>`).join('')}</tr>`).join('');
+          const body = fields.filter(f => !f[2] || addUsed(slice, f[2])).map(f => `<tr><td class="dc-l">${f[0]}</td>${slice.map(r => `<td>${r ? f[1](r) : ''}</td>`).join('')}</tr>`).join('');
           out += `<table class="dc-pots"><colgroup><col style="width:30%"><col style="width:17.5%"><col style="width:17.5%"><col style="width:17.5%"><col style="width:17.5%"></colgroup>
             <thead><tr><th class="dc-colhead"></th>${head}</tr><tr><th colspan="5" class="dc-cook">Cooking</th></tr></thead><tbody>${body}</tbody></table>`;
         }
@@ -3905,11 +3908,7 @@
       const oos = v.oosWarningAck ? String(v.oosWarningNote || 'Cooking pot weight exceeding OOSW - possible batch mix').split('\n').filter(Boolean)
         .map(l => `<div class="dc-oos">⚠ OOSW Override — ${e(l)}<br>Acknowledged by: ${e(who)}</div>`).join('') : '';
 
-      const ver = sub.verification || {};
-      const sg = (t, name, date) => `<td><strong>${t}</strong><br>Name: ${e(name) || '______________'}<br>Signature: ______________<br>Date: ${e(date) || '______________'}</td>`;
-      const sign = `<table class="dc-sign"><tbody><tr>${sg('Completed by', who, when)}${sg('Checked by', ver.verifiedBy, ver.verifiedDate)}${sg('Authorised by', '', '')}</tr></tbody></table>`;
-
-      return `<div class="fr-sheet-page fr-dc">${job}${body}${oos}${sign}</div>`;
+      return `<div class="fr-sheet-page fr-dc">${job}${body}${oos}${sheetSignHtml(sub)}</div>`;
     }
 
     // Footer of every page of this sheet: REC | Rev | Printed date | Page X of Y (margin box, right aligned, 7 pt)
