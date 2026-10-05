@@ -195,7 +195,7 @@
     function render(force) {
       var host = rosterHost();
       if (!host) return;
-      if (!$('ef_oosw')) build(host);
+      if (!$('ef_oosw')) { build(host); S.sel = ''; S.pref = false; S.sig = ''; }   // fresh form render: nothing selected
       var opts = sizeOpts(), rows = stored(), lock = isLocked();
       var sig = JSON.stringify([opts, S.sel, S.pref, lock, rows.map(function (r) { return [r.sizeRange, r.weight]; }), intakeKg()]);
       if (!force && sig === S.sig) { updateAdd(); return; }

@@ -6,7 +6,7 @@
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REC 7.4.0 Dry Cooking</title>
+<title>REC 7.1.5 Salting (OOSW)</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv46">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
@@ -27,11 +27,11 @@
 <script src="../lib/traceability.js?v=10"></script>
 <script src="../lib/signoff-block.js?v=7"></script>
 <script src="../lib/permission-rules.js?v=2"></script>
-<script src="../lib/form-record.js?v=74"></script>
+<script src="../lib/form-record.js?v=70"></script>
 <script>(function () {
-  // Definition lives in the DB — fetched by the engine from GET /api/record-def/dry-cooking
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/salting-oosw
   // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
-  FormRecord.init({ mount: '#frRoot', recordKey: 'dry-cooking' });
+  FormRecord.init({ mount: '#frRoot', recordKey: 'salting-oosw' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=10"></script>

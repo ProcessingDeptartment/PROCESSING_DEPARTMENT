@@ -9,7 +9,7 @@
 <title>REC 7.1.5 Salting (OOSW)</title>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv46">
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+  <link rel="stylesheet" href="../styles/responsive.css?v=5">
 </head>
 <body class="rt-tablet">
 <script src="../lib/record-chrome.js?v=25"></script>
@@ -27,13 +27,15 @@
 <script src="../lib/traceability.js?v=10"></script>
 <script src="../lib/signoff-block.js?v=7"></script>
 <script src="../lib/permission-rules.js?v=2"></script>
-<script src="../lib/form-record.js?v=70"></script>
+<script src="../lib/form-record.js?v=71"></script>
 <script>(function () {
   // Definition lives in the DB — fetched by the engine from GET /api/record-def/salting-oosw
   // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
   FormRecord.init({ mount: '#frRoot', recordKey: 'salting-oosw' });
 })();
 </script>
+<script src="../lib/entry-flow.js?v=2"></script>
+<script>EntryFlow.oosw();</script>
 <script src="../lib/record-shell.js?v=10"></script>
 </body>
 </html>

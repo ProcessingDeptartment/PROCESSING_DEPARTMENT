@@ -216,6 +216,23 @@
   .fr-sheet .fr-sheet-sign td{ height:26px; font-size:14px; }
   .fr-sheet .fr-sheet-sign td.fr-sheet-lbl{ width:13%; }
   .fr-sheet .fr-sheet-sign{ page-break-inside:avoid; break-inside:avoid; }
+  /* REC 7.4.0 print layout (roster.slides): A4 portrait, 9 pt body, 8 pt labels, black and white */
+  .fr-sheet .fr-dc{ font-size:9pt; }
+  .fr-sheet .fr-dc table{ width:100%; border-collapse:collapse; margin:0 0 3mm; table-layout:fixed; }
+  .fr-sheet .fr-dc td,.fr-sheet .fr-dc th{ border:0.5pt solid #000; padding:1mm 1.5mm; font-size:9pt; text-align:left; vertical-align:middle; height:5.2mm; overflow-wrap:anywhere; }
+  .fr-sheet .fr-dc td.dc-l,.fr-sheet .fr-dc th.dc-colhead{ font-size:8pt; font-weight:700; background:#eee; }
+  .fr-sheet .fr-dc .dc-job td.dc-l{ background:#eee; }
+  .fr-sheet .fr-dc .dc-bhead{ font-size:10pt; font-weight:700; background:#eee; border:1pt solid #000; padding:1mm 2mm; margin:3mm 0 0; }
+  .fr-sheet .fr-dc table.dc-strip{ table-layout:auto; }
+  .fr-sheet .fr-dc .dc-strip td.dc-l{ white-space:nowrap; }
+  .fr-sheet .fr-dc .dc-strip td:not(.dc-l):not(.dc-sec){ min-width:12mm; }
+  .fr-sheet .fr-dc .dc-sec{ font-size:9pt; font-weight:700; background:#eee; width:12%; }
+  .fr-sheet .fr-dc .dc-pots th{ font-size:8pt; font-weight:700; background:#eee; text-align:center; }
+  .fr-sheet .fr-dc .dc-pots th.dc-cook{ font-size:10pt; text-align:left; }
+  .fr-sheet .fr-dc .dc-batch{ page-break-inside:avoid; break-inside:avoid; }
+  .fr-sheet .fr-dc .dc-oos{ border:1pt solid #000; padding:1.5mm 2mm; margin:0 0 2mm; font-weight:700; color:#b30000; page-break-inside:avoid; }
+  .fr-sheet .fr-dc .dc-sign{ page-break-inside:avoid; break-inside:avoid; margin-top:4mm; }
+  .fr-sheet .fr-dc .dc-sign td{ font-size:8pt; height:20mm; vertical-align:top; width:33.3%; }
   @media print{
     @page{ size:A4; margin:12mm;
       @bottom-right{ content:"Page " counter(page) " of " counter(pages); font-family:'Segoe UI',system-ui,sans-serif; font-size:10px; color:#4a4a4a; }
@@ -3788,7 +3805,126 @@
         ${warningLinesHtml(sub.values.oosWarningNote, 'Batch weight exceeding OOSW - possible batch mix')}</p>`;
     }
 
+    // ---- REC 7.4.0 print layout (roster.slides) ------------------------------------------------------------------
+    // Spec: MD/rec-7.4.0-print-layout-instructions.md. Job info grid, then one block per BATCH (a Blanching slide plus
+    // the Cooking slides after it): batch heading, blanching strip, transposed pots table (field names down the left,
+    // one column per pot, 4 pot columns minimum, blank ones left for handwriting), sign-off and the footer.
+    function buildSlideSheet(sub, roster, ri) {
+      const v = sub.values || {};
+      const e = x => esc(x == null ? '' : String(x));
+      const signOff = (sub.signOffs || []).filter(s => s.action === 'submitted').slice(-1)[0];
+      const done = isSubmitted(sub);
+      const who = done && signOff ? (signOff.by || '') : '';
+      const when = done && sub.submittedAt ? window.DocHeader.fmtDate(new Date(sub.submittedAt)) : '';
+      const fdate = x => (x ? e(window.DocHeader.fmtDate(x)) : '');
+
+      const jr = (l1, v1, l2, v2) => `<tr><td class="dc-l">${l1}</td><td>${v1}</td><td class="dc-l">${l2}</td><td>${v2}</td></tr>`;
+      const job = `<table class="dc-job"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
+        ${jr('Job Number', e(v.jobNo), 'Harvest Farm', e(v.harvestFarm))}
+        ${jr('Processing For', e(v.jiProcessingFor), 'Intake Date', fdate(v.intakeDate))}
+        ${jr('Whole Weight (kg)', e(v.jiIntakeWeight), 'Cooking Date', fdate(v.cookingDate))}
+      </tbody></table>`;
+
+      const rows = getRosterRows(sub, ri, roster.key).filter(r => r && ((r.process === 'Blanching' || r.process === 'Cooking')
+        || (roster.columns || []).some(c => !c.hidden && !c.legacy && String(r[c.key] == null ? '' : r[c.key]).trim() !== '')));
+      // batch = one Blanching slide + the Cooking slides that follow it; Cooking before any Blanching has no batch
+      const lead = [], batches = [];
+      let cur = null;
+      rows.forEach(r => {
+        if (r.process === 'Blanching') { cur = { blanch: r, pots: [] }; batches.push(cur); }
+        else if (cur) cur.pots.push(r);
+        else lead.push(r);
+      });
+
+      const yn = x => (x === 'Yes' || x === 'No' ? x : e(x));
+      const pair = (l, val) => `<td class="dc-l">${l}</td><td>${val}</td>`;
+      const blanchStrip = (b) => {
+        if (!String(b.blanchTempC == null ? '' : b.blanchTempC).trim()) {
+          // old (pre slide) blanching card: the original 6 fields, plus any old value that has no paper slot
+          const sea = String(b.blanchSeaWater || '').trim() ? yn(b.blanchSeaWater) : e(b.blanchSeaWaterLtOld);
+          const temp = e(b.blanchTempOld);
+          const extra = [
+            ['Abalone (kg)', e(b.abaloneKg)],
+            ['Start / end temp (°C)', [b.blanchStartingTemp, b.blanchEndTemp].filter(x => String(x == null ? '' : x).trim() !== '').map(e).join(' / ')],
+            ['Start / end time', [b.blanchStartTime, b.blanchEndTime].filter(x => String(x == null ? '' : x).trim() !== '').map(e).join(' / ')]
+          ].map(x => (x[1] ? x : ['', '']));
+          return `<table class="dc-strip dc-legacy"><tbody>
+            <tr><td class="dc-sec" rowspan="3">Blanching</td>${pair('Sea Water (Lt)', sea)}${pair('pH', e(b.blanchPh))}${pair(extra[0][0], extra[0][1])}</tr>
+            <tr>${pair('Salt – Kg', e(b.blanchSaltKg))}${pair('Temperature', temp)}${pair(extra[1][0], extra[1][1])}</tr>
+            <tr>${pair('Record batch no.', e(b.blanchBatchNumber))}${pair('Cooking time', e(b.cookingTime))}${pair(extra[2][0], extra[2][1])}</tr>
+          </tbody></table>`;
+        }
+        return `<table class="dc-strip"><tbody><tr><td class="dc-sec">Blanching</td>
+          ${pair('Sea water (100 Lt)', yn(b.blanchSeaWater))}${pair('Temperature (°C)', e(b.blanchTempC))}${pair('Time', e(b.blanchTime))}
+          ${pair('Salt (kg)', e(b.blanchSaltKg))}${pair('Salt batch no.', e(b.blanchBatchNumber))}</tr></tbody></table>`;
+      };
+
+      const sea = r => {
+        const a = String(r.cookSeaWater || '').trim() ? yn(r.cookSeaWater) : '';
+        const old = String(r.cookSeaWaterLtOld == null ? '' : r.cookSeaWaterLtOld).trim();
+        return a + (old ? (a ? ' ' : '') + '(' + e(old) + ' Lt)' : '');
+      };
+      const fields = [
+        ['Abalone (kg)', r => e(r.abaloneKg)],
+        ['Sea Water (100 Lt)', sea],
+        ['pH', r => e(r.cookPh)],
+        ['Salt – kg (if applicable)', r => e(r.saltKg)], ['Record batch number', r => e(r.saltBatchNumber)],
+        ['Sugar – kg (if applicable)', r => e(r.sugarKg)], ['Record batch number', r => e(r.sugarBatchNumber)],
+        ['Vinegar – kg (if applicable)', r => e(r.vinegarKg)], ['Record batch number', r => e(r.vinegarBatchNumber)],
+        ['Start time', r => e(r.startTime)],
+        ['Starting temperature (°C)', r => e(r.startingTemp)],
+        ['20 min after reaching temp (°C)', r => e(r.temp20MinAfter)],
+        ['End of cooking cycle (°C)', r => e(r.endOfCookingTemp)],
+        ['Time out', r => e(r.timeOut)],
+        ['Total cooking time', r => e(r.totalCookingTime)],
+        ['Comments', () => ''],
+        ['Cooker', () => e(who)]
+      ];
+      // pots numbered within their batch; always whole blocks of 4 columns, blank columns kept for handwriting
+      const potsTables = (pots, prefix) => {
+        const blocks = Math.max(1, Math.ceil(pots.length / 4));
+        let out = '';
+        for (let b = 0; b < blocks; b++) {
+          const slice = [0, 1, 2, 3].map(n => pots[b * 4 + n] || null);
+          const head = slice.map((r, n) => `<th>${r ? e(prefix) + 'Pot ' + (b * 4 + n + 1) : ''}</th>`).join('');
+          const body = fields.map(f => `<tr><td class="dc-l">${f[0]}</td>${slice.map(r => `<td>${r ? f[1](r) : ''}</td>`).join('')}</tr>`).join('');
+          out += `<table class="dc-pots"><colgroup><col style="width:30%"><col style="width:17.5%"><col style="width:17.5%"><col style="width:17.5%"><col style="width:17.5%"></colgroup>
+            <thead><tr><th class="dc-colhead"></th>${head}</tr><tr><th colspan="5" class="dc-cook">Cooking</th></tr></thead><tbody>${body}</tbody></table>`;
+        }
+        return out;
+      };
+
+      let body = '';
+      if (lead.length) body += `<div class="dc-batch">${potsTables(lead, '')}</div>`;
+      batches.forEach((b, n) => {
+        body += `<div class="dc-batch"><div class="dc-bhead">Batch ${n + 1}</div>${blanchStrip(b.blanch)}${potsTables(b.pots, 'Batch ' + (n + 1) + ' — ')}</div>`;
+      });
+      if (!rows.length) body = `<div class="dc-batch">${potsTables([], '')}</div>`;
+
+      // OOSW override: one bordered line per overridden rule
+      const oos = v.oosWarningAck ? String(v.oosWarningNote || 'Cooking pot weight exceeding OOSW - possible batch mix').split('\n').filter(Boolean)
+        .map(l => `<div class="dc-oos">⚠ OOSW Override — ${e(l)}<br>Acknowledged by: ${e(who)}</div>`).join('') : '';
+
+      const ver = sub.verification || {};
+      const sg = (t, name, date) => `<td><strong>${t}</strong><br>Name: ${e(name) || '______________'}<br>Signature: ______________<br>Date: ${e(date) || '______________'}</td>`;
+      const sign = `<table class="dc-sign"><tbody><tr>${sg('Completed by', who, when)}${sg('Checked by', ver.verifiedBy, ver.verifiedDate)}${sg('Authorised by', '', '')}</tr></tbody></table>`;
+
+      return `<div class="fr-sheet-page fr-dc">${job}${body}${oos}${sign}</div>`;
+    }
+
+    // Footer of every page of this sheet: REC | Rev | Printed date | Page X of Y (margin box, right aligned, 7 pt)
+    function slideFooterCss() {
+      const h = window.DocHeader && window.DocHeader.current ? window.DocHeader.current(config.recordKey) : null;
+      const rev = h && h.revision !== '' && h.revision != null ? h.revision : (config.docRevisionStart || 1);
+      const printed = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/,/g, '');
+      const txt = (config.docCode + ' — ' + config.title + '  |  Rev. ' + rev + '  |  Printed: ' + printed + '  |  Page ').replace(/[\\"]/g, '');
+      return '@media print{ @page{ size:A4 portrait; margin:10mm; @bottom-right{ content:"' + txt + '" counter(page) " of " counter(pages);'
+        + " font-family:'Segoe UI',system-ui,sans-serif; font-size:7pt; color:#000; border-top:0.5pt solid #000; padding-top:1mm; } } }";
+    }
+
     function buildSheet(sub) {
+      const slideRi = hasRoster ? rosterList.findIndex(r => r.slides) : -1;
+      if (slideRi >= 0) return buildSlideSheet(sub, rosterList[slideRi], slideRi);
       return `<div class="fr-sheet-page">
         ${sheetSectionsHtml(sub, 'pre')}${sheetRosterHtml(sub)}${sheetSectionsHtml(sub, 'post')}${oosWarningHtml(sub)}${config.entryLog && window.EntryLog ? window.EntryLog.warningHtml(sub) : ''}${sheetSignHtml(sub)}
       </div>`;
@@ -3804,8 +3940,11 @@
       if (!list.length) { toast('Nothing to print — no submissions match these filters.'); return; }
       el('fr_printSheet').innerHTML = list.map(buildSheet).join('');
       document.body.classList.add('fr-printing');
+      // slide records bring their own page margin + footer, only while printing
+      let pageStyle = null;
+      if (hasRoster && rosterList.some(r => r.slides)) { pageStyle = document.createElement('style'); pageStyle.textContent = slideFooterCss(); document.head.appendChild(pageStyle); }
       try { withPrintTitle(filename, () => window.print()); }
-      finally { document.body.classList.remove('fr-printing'); }
+      finally { document.body.classList.remove('fr-printing'); if (pageStyle) pageStyle.remove(); }
     }
 
 
