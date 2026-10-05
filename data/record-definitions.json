@@ -16423,7 +16423,8 @@
             "summaryField": [
               "jobNo",
               "jiProcessingFor"
-            ]
+            ],
+            "cols": 4
           }
         },
         {
@@ -16457,7 +16458,8 @@
               "matchField": "jobNo",
               "showSummary": true,
               "summaryLabel": "Last steam"
-            }
+            },
+            "titleDate": "steamDate"
           }
         },
         {

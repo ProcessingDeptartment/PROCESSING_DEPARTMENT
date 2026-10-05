@@ -1923,13 +1923,18 @@
             ${addBlock}
           </div>`;
         }
-        return `<div class="fr-roster-row fr-pot-card fr-pot-${esc(proc)}" data-roster-row="${idx}">
-          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${idx + 1}${proc ? ' &mdash; ' + esc(proc) : ''}</strong>
+        {
+          const _rNum = roster.titleFrom ? (row[roster.titleFrom] || (idx + 1)) : (idx + 1);
+          const _rDateRaw = roster.titleDate && row[roster.titleDate] ? String(row[roster.titleDate]).slice(0, 10) : '';
+          const _rDateLbl = _rDateRaw ? (() => { const [,m,d] = _rDateRaw.split('-'); return ' · ' + parseInt(d) + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]; })() : '';
+          return `<div class="fr-roster-row fr-pot-card fr-pot-${esc(proc)}" data-roster-row="${idx}">
+          <div class="fr-pot-head"><strong class="fr-pot-title">${esc(roster.rowTitle || 'Row')} ${esc(String(_rNum))}${esc(_rDateLbl)}${proc ? ' &mdash; ' + esc(proc) : ''}</strong>
             <span class="fr-pot-warn no-print" data-dup-warn></span>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove</button></div>
           ${hiddenIn}
           ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
         </div>`;
+        }
       }
       // cardLayout: on-screen entry only -- each row is a card with the columns grouped into lines
       // (column.layoutRow). Validation, save and the printed table are the normal roster ones.
@@ -3240,7 +3245,8 @@
           sec = Object.assign({}, sec, { fields: shown, __hiddenHtml: elHiddenInputs(sec.fields) });
         }
         const compact = sec.fields.length && sec.fields.every(f => f.type === 'computed' || f.readOnly);
-        const fieldsHtml = `<div class="fr-grid fr-grid-2${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
+        const _gridCols = sec.cols || 2;
+        const fieldsHtml = `<div class="fr-grid fr-grid-${_gridCols}${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
             ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}
           </label>`).join('')}${sec.__hiddenHtml || ''}
@@ -3371,6 +3377,22 @@
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
       formLocked = locked;
       if (hasRoster) rosterList.forEach((r, i) => { if (r.jobNumbered) { const rc = el(rosterDomId('fr_rosterRows', i)); if (rc && rc._crateRefresh) rc._crateRefresh(locked, false); } });
+      // Sign-off block: populate from stored completedBy when viewing a submitted entry,
+      // disable fields so they can't be edited, and re-enable for a new or draft entry.
+      const _signOffIds = ['fr_cb_by', 'fr_cb_title', 'fr_cb_date', 'fr_cb_signature'];
+      if (existing && locked) {
+        const _cb = existing.completedBy;
+        if (_cb && typeof _cb === 'object') {
+          const _fld = (id, val) => { const i = el(id); if (i) i.value = val || ''; };
+          _fld('fr_cb_by', _cb.by); _fld('fr_cb_title', _cb.title);
+          _fld('fr_cb_date', _cb.date); _fld('fr_cb_signature', _cb.signature);
+        }
+        _signOffIds.forEach(id => { const i = el(id); if (i) i.disabled = true; });
+        const _sob = el('fr_cb_by') && el('fr_cb_by').closest('details');
+        if (_sob) _sob.setAttribute('open', '');
+      } else {
+        _signOffIds.forEach(id => { const i = el(id); if (i) i.disabled = false; });
+      }
       disarmClear();
     }
 
