@@ -16424,7 +16424,8 @@
               "jobNo",
               "jiProcessingFor"
             ],
-            "cols": 4
+            "cols": 4,
+            "printCols": 4
           }
         },
         {

@@ -3739,9 +3739,15 @@
           return `<table><tbody><tr><td class="fr-sheet-lbl" style="width:50%;">${esc(sec.bannerLabel || 'No. of trolleys')}</td><td style="font-weight:700;">${esc(String(_tbRaw))}</td></tr></tbody></table>`;
         }
         if (config.entryLog && (sec.jobSoFarPanel || sec.movementBlock)) return window.EntryLog ? window.EntryLog.sheetSection(sec, sub, submissions, config) : '';
-        const rows = (sec.fields || []).filter(f => !(config.entryLog && (f.hidden || f.movement || (f.legacy && String(sub.values[f.key] == null ? '' : sub.values[f.key]).trim() === '')))).map(f =>
-          `<tr><td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td>
-             <td>${esc(displayValue(f, sub.values[f.key]))}</td></tr>`).join('');
+        const visFields = (sec.fields || []).filter(f => !(config.entryLog && (f.hidden || f.movement || (f.legacy && String(sub.values[f.key] == null ? '' : sub.values[f.key]).trim() === ''))));
+        const cell = f => `<td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td><td>${esc(displayValue(f, sub.values[f.key]))}</td>`;
+        // printCols: N label/value columns → N/2 pairs per row (e.g. printCols 4 = 2 pairs per row)
+        const perRow = Math.max(1, Math.floor((sec.printCols || 2) / 2));
+        let rows = '';
+        for (let k = 0; k < visFields.length; k += perRow) {
+          const chunk = visFields.slice(k, k + perRow);
+          rows += `<tr>${chunk.map(cell).join('')}${'<td></td><td></td>'.repeat(perRow - chunk.length)}</tr>`;
+        }
         if (!rows) return '';
 
         const pageBreak = sec.newPage ? ' style="page-break-before:always;"' : '';
