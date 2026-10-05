@@ -16459,7 +16459,8 @@
               "showSummary": true,
               "summaryLabel": "Last steam"
             },
-            "titleDate": "steamDate"
+            "titleDate": "steamDate",
+            "printTable": true
           }
         },
         {
@@ -17444,7 +17445,8 @@
         "checkRanges": {},
         "submitChecks": "drying-process",
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
+        "deviationPolarity": "deviation",
+        "printCompact": true
       },
       "primaryBatchField": "jobNo"
     },

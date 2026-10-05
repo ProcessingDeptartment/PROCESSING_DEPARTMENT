@@ -216,6 +216,12 @@
   .fr-sheet .fr-sheet-sign td{ height:26px; font-size:14px; }
   .fr-sheet .fr-sheet-sign td.fr-sheet-lbl{ width:13%; }
   .fr-sheet .fr-sheet-sign{ page-break-inside:avoid; break-inside:avoid; }
+  /* printCompact: single-page compact layout (e.g. REC 7.4.1 drying process) */
+  .fr-sheet.fr-sheet-compact{ font-size:9.5px; }
+  .fr-sheet.fr-sheet-compact h3{ font-size:9.5px; margin:5px 0 2px; }
+  .fr-sheet.fr-sheet-compact table{ margin-bottom:4px; }
+  .fr-sheet.fr-sheet-compact td,.fr-sheet.fr-sheet-compact th{ padding:2px 4px; font-size:9.5px; }
+  .fr-sheet.fr-sheet-compact .fr-sheet-sign td{ height:20px; font-size:11px; }
   /* REC 7.4.0 print layout (roster.slides): A4 portrait, 9 pt body, 8 pt labels, black and white */
   .fr-sheet .fr-dc{ font-size:9pt; }
   .fr-sheet .fr-dc table{ width:100%; border-collapse:collapse; margin:0 0 3mm; table-layout:fixed; }
@@ -3736,6 +3742,17 @@
 
     function sheetOneRosterHtml(sub, roster, i) {
       const cols = roster.columns || [];
+      // printTable: render a cardRows roster as a flat table on the PDF (all steams in one grid)
+      if (roster.cardRows && roster.printTable) {
+        const ptCols = cols.filter(c => !c.legacy && !c.printHidden);
+        const ptRows = getRosterRows(sub, i, roster.key).filter(r =>
+          ptCols.some(c => String(r[c.key] || '').trim() !== ''));
+        const ptBody = (ptRows.length ? ptRows : [{}]).map(r =>
+          `<tr>${ptCols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
+        return `<h3>${esc(roster.title)}</h3>
+          <table><thead><tr>${ptCols.map(c => `<th>${esc(c.label)}${c.unit ? ' (' + esc(c.unit) + ')' : ''}</th>`).join('')}</tr></thead>
+          <tbody>${ptBody}</tbody></table>`;
+      }
       if (roster.cardRows) {
         const prow = getRosterRows(sub, i, roster.key).filter(r => cols.some(c => !c.legacy && String(r[c.key] || '').trim() !== ''));
         const show = (c, v) => c.type === 'segmented' ? ((c.optionLabels || {})[v] || v) : c.type === 'yesno' ? v : displayValue(c, v);
@@ -3954,6 +3971,10 @@
       </div>`;
     }
 
+    function compactPageCss() {
+      return '@media print{ @page{ size:A4 portrait; margin:8mm; } }';
+    }
+
     function withPrintTitle(name, fn) {
       const previousTitle = document.title;
       document.title = name;
@@ -3967,8 +3988,13 @@
       // slide records bring their own page margin + footer, only while printing
       let pageStyle = null;
       if (hasRoster && rosterList.some(r => r.slides)) { pageStyle = document.createElement('style'); pageStyle.textContent = slideFooterCss(); document.head.appendChild(pageStyle); }
+      // compact records: tighter font + margins to fit on one A4 page
+      const sheetEl = el('fr_printSheet');
+      if (config.printCompact) sheetEl.classList.add('fr-sheet-compact');
+      let compactStyle = null;
+      if (config.printCompact) { compactStyle = document.createElement('style'); compactStyle.textContent = compactPageCss(); document.head.appendChild(compactStyle); }
       try { withPrintTitle(filename, () => window.print()); }
-      finally { document.body.classList.remove('fr-printing'); if (pageStyle) pageStyle.remove(); }
+      finally { document.body.classList.remove('fr-printing'); if (pageStyle) pageStyle.remove(); if (compactStyle) compactStyle.remove(); if (config.printCompact) sheetEl.classList.remove('fr-sheet-compact'); }
     }
 
 
