@@ -3796,11 +3796,11 @@
         <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(cb && cb.by ? cb.by : who)}</td>
             <td class="fr-sheet-lbl">Title:</td><td>${esc(cb ? cb.title : '')}</td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(cbWhen)}</td>
-            <td class="fr-sheet-lbl">Signature:</td><td>${esc(cb ? cb.signature : '')}</td></tr>
+            <td class="fr-sheet-lbl">Signature:</td><td>${cb && String(cb.signature || '').trim() ? 'Confirmed' : ''}</td></tr>
         <tr><td class="fr-sheet-lbl">Verified by:</td><td>${esc(sub.verification ? sub.verification.verifiedBy : '')}</td>
             <td class="fr-sheet-lbl">Title:</td><td>${esc(sub.verification ? sub.verification.verifiedSig : '')}</td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification ? sub.verification.verifiedDate : '')}</td>
-            <td class="fr-sheet-lbl">Signature:</td><td>${esc(sub.verification ? sub.verification.verifiedSignature : '')}</td></tr>
+            <td class="fr-sheet-lbl">Signature:</td><td>${sub.verification && String(sub.verification.verifiedSignature || '').trim() ? 'Confirmed' : ''}</td></tr>
       </tbody></table>`;
     }
 
