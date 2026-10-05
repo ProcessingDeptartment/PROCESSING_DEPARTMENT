@@ -3789,18 +3789,18 @@
       const when = done && sub.submittedAt
         ? (config.submitStamp ? fmtDateTime(sub.submittedAt)
                               : window.DocHeader.fmtDate(new Date(sub.submittedAt))) : '';
-      // slide records (REC 7.4.0): pull the whole Completed by block the operator filled in at submit
-      const cb = hasRoster && rosterList.some(r => r.slides) && sub.completedBy && typeof sub.completedBy === 'object' ? sub.completedBy : null;
+      // pull the whole Completed by block the operator filled in at submit (name, title, date, signature)
+      const cb = sub.completedBy && typeof sub.completedBy === 'object' ? sub.completedBy : null;
       const cbWhen = cb && cb.date ? window.DocHeader.fmtDate(cb.date) : when;
       return `<table class="fr-sheet-sign"><tbody>
         <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(cb && cb.by ? cb.by : who)}</td>
             <td class="fr-sheet-lbl">Title:</td><td>${esc(cb ? cb.title : '')}</td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(cbWhen)}</td>
-            <td class="fr-sheet-lbl">Signature:</td><td>${esc(cb ? cb.signature : '')}</td></tr>
+            <td class="fr-sheet-lbl">Signature:</td><td>${esc(cb && cb.signature ? (cb.by || who) : '')}</td></tr>
         <tr><td class="fr-sheet-lbl">Verified by:</td><td>${esc(sub.verification ? sub.verification.verifiedBy : '')}</td>
             <td class="fr-sheet-lbl">Title:</td><td>${esc(sub.verification ? sub.verification.verifiedSig : '')}</td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification ? sub.verification.verifiedDate : '')}</td>
-            <td class="fr-sheet-lbl">Signature:</td><td>${esc(sub.verification ? sub.verification.verifiedSignature : '')}</td></tr>
+            <td class="fr-sheet-lbl">Signature:</td><td>${esc(sub.verification && sub.verification.verifiedSignature ? (sub.verification.verifiedBy || sub.verification.verifiedSignature) : '')}</td></tr>
       </tbody></table>`;
     }
 
