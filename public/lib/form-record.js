@@ -222,6 +222,14 @@
   .fr-sheet.fr-sheet-compact table{ margin-bottom:4px; }
   .fr-sheet.fr-sheet-compact td,.fr-sheet.fr-sheet-compact th{ padding:2px 4px; font-size:9.5px; }
   .fr-sheet.fr-sheet-compact .fr-sheet-sign td{ height:20px; font-size:11px; }
+  .fr-sheet.fr-sheet-compact h3{ font-weight:700; letter-spacing:.06em; margin:8px 0 3px; }
+  .fr-sheet.fr-sheet-compact table{ table-layout:fixed; }
+  .fr-sheet.fr-sheet-compact td,.fr-sheet.fr-sheet-compact th{ vertical-align:middle; overflow-wrap:anywhere; }
+  .fr-sheet.fr-sheet-compact td.fr-sheet-lbl{ background:#eee; font-size:8.5px; }
+  .fr-sheet.fr-sheet-compact table.fr-sheet-grid td.fr-sheet-lbl{ width:auto; }
+  .fr-sheet.fr-sheet-compact table.fr-sheet-grid td{ height:16px; }
+  .fr-sheet.fr-sheet-compact table.fr-sheet-flat th{ text-align:center; font-size:8.5px; }
+  .fr-sheet.fr-sheet-compact table.fr-sheet-flat td{ text-align:center; height:15px; }
   /* REC 7.4.0 print layout (roster.slides): A4 portrait, 9 pt body, 8 pt labels, black and white */
   .fr-sheet .fr-dc{ font-size:9pt; }
   .fr-sheet .fr-dc table{ width:100%; border-collapse:collapse; margin:0 0 3mm; table-layout:fixed; }
@@ -3733,6 +3741,7 @@
       const { pre, post } = sectionsAroundRoster(config);
       const secs = which === 'post' ? post : which === 'pre' ? pre : (config.sections || []);
       return secs.map(sec => {
+        if (sec.printHidden) return '';
         if (sec.trolleyBanner) {
           // already printed inside another section's table (e.g. Job info printFields)
           if ((config.sections || []).some(s => (s.printFields || []).includes(sec.bannerField))) return '';
@@ -3758,7 +3767,7 @@
         if (!rows) return '';
 
         const pageBreak = sec.newPage ? ' style="page-break-before:always;"' : '';
-        return `<div${pageBreak}><h3>${esc(sec.title)}</h3><table><tbody>${rows}</tbody></table></div>`;
+        return `<div${pageBreak}><h3>${esc(sec.title)}</h3><table${perRow > 1 ? ' class="fr-sheet-grid"' : ''}><tbody>${rows}</tbody></table></div>`;
       }).join('');
     }
 
@@ -3784,7 +3793,7 @@
         const ptBody = (ptRows.length ? ptRows : [{}]).map(r =>
           `<tr>${ptCols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
         return `<h3>${esc(roster.title)}</h3>
-          <table><thead><tr>${ptCols.map(c => `<th>${esc(c.label)}${c.unit ? ' (' + esc(c.unit) + ')' : ''}</th>`).join('')}</tr></thead>
+          <table class="fr-sheet-flat"><thead><tr>${ptCols.map(c => `<th>${esc(c.label)}${c.unit ? ' (' + esc(c.unit) + ')' : ''}</th>`).join('')}</tr></thead>
           <tbody>${ptBody}</tbody></table>`;
       }
       if (roster.cardRows) {

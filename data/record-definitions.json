@@ -16438,7 +16438,8 @@
           "kind": "fields",
           "position": 1,
           "extraJson": {
-            "jobSoFarPanel": true
+            "jobSoFarPanel": true,
+            "printHidden": true
           }
         },
         {
