@@ -3734,12 +3734,19 @@
       const secs = which === 'post' ? post : which === 'pre' ? pre : (config.sections || []);
       return secs.map(sec => {
         if (sec.trolleyBanner) {
+          // already printed inside another section's table (e.g. Job info printFields)
+          if ((config.sections || []).some(s => (s.printFields || []).includes(sec.bannerField))) return '';
           const _tbRaw = sub.values[sec.bannerField];
           if (!_tbRaw && _tbRaw !== 0) return '';
           return `<table><tbody><tr><td class="fr-sheet-lbl" style="width:50%;">${esc(sec.bannerLabel || 'No. of trolleys')}</td><td style="font-weight:700;">${esc(String(_tbRaw))}</td></tr></tbody></table>`;
         }
         if (config.entryLog && (sec.jobSoFarPanel || sec.movementBlock)) return window.EntryLog ? window.EntryLog.sheetSection(sec, sub, submissions, config) : '';
         const visFields = (sec.fields || []).filter(f => !(config.entryLog && (f.hidden || f.movement || (f.legacy && String(sub.values[f.key] == null ? '' : sub.values[f.key]).trim() === ''))));
+        // printFields: extra fields (hidden on screen or from other sections) printed in this section's table
+        (sec.printFields || []).forEach(k => {
+          const f = (config.sections || []).flatMap(s => s.fields || []).find(x => x.key === k);
+          if (f && !visFields.includes(f)) visFields.push(f);
+        });
         const cell = f => `<td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td><td>${esc(displayValue(f, sub.values[f.key]))}</td>`;
         // printCols: N label/value columns → N/2 pairs per row (e.g. printCols 4 = 2 pairs per row)
         const perRow = Math.max(1, Math.floor((sec.printCols || 2) / 2));

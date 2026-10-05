@@ -16425,7 +16425,12 @@
               "jiProcessingFor"
             ],
             "cols": 4,
-            "printCols": 4
+            "printCols": 6,
+            "printFields": [
+              "entryDate",
+              "cookedWeight",
+              "noOfTrolleys"
+            ]
           }
         },
         {
