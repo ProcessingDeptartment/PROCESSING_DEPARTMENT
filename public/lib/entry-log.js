@@ -531,5 +531,5 @@
     return `<p style="color:#b30000;font-weight:bold;">${esc(sub.values.warningNote || 'Submitted with a warning.')}</p>`;
   }
 
-  window.EntryLog = { attach, beforeSave, sheetSection, warningHtml, jobState, fmtDT, fmtD };
+  window.EntryLog = { attach, beforeSave, sheetSection, warningHtml, jobState, entryAt, fmtDT, fmtD };
 })();

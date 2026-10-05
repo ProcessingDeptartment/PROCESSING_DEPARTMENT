@@ -3765,8 +3765,15 @@
       // printTable: render a cardRows roster as a flat table on the PDF (all steams in one grid)
       if (roster.cardRows && roster.printTable) {
         const ptCols = cols.filter(c => !c.legacy && !c.printHidden);
-        const ptRows = getRosterRows(sub, i, roster.key).filter(r =>
-          ptCols.some(c => String(r[c.key] || '').trim() !== ''));
+        let ptRows = getRosterRows(sub, i, roster.key);
+        // entry-log records (REC 7.4.1): list every steam for the job up to this entry, not just this entry's
+        if (config.entryLog && i === 0 && window.EntryLog) {
+          const job = String(sub.values[config.batchField || 'jobNo'] || '').trim();
+          const at = window.EntryLog.entryAt(sub);
+          const prior = job ? window.EntryLog.jobState(config, submissions, job, sub.id, at).steams : [];
+          ptRows = prior.concat(ptRows).sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
+        }
+        ptRows = ptRows.filter(r => ptCols.some(c => String(r[c.key] || '').trim() !== ''));
         const ptBody = (ptRows.length ? ptRows : [{}]).map(r =>
           `<tr>${ptCols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
         return `<h3>${esc(roster.title)}</h3>
