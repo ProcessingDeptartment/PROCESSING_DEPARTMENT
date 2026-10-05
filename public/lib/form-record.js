@@ -269,6 +269,11 @@
   .fr-jobnumber input.fr-jn-digits{ width:auto; flex:1; min-width:80px; }
   .fr-jn-hint{ font-size:10.5px; font-weight:500; color:#8a939b; font-family:'IBM Plex Mono',monospace; }
   .fr-jn-hint.bad{ color:var(--palette-fail,#a3352d); }
+  .fr-trolley-banner{ display:flex; gap:16px; align-items:baseline; padding:10px 14px;
+    border-top:1px solid #d0d3d6; border-bottom:1px solid #d0d3d6; margin:12px 0;
+    background:var(--surface-raised,#f7f8f8); border-radius:4px; }
+  .fr-trolley-lbl{ font-size:13px; color:#54606b; }
+  .fr-trolley-val{ font-size:22px; font-weight:700; color:#1a2026; }
   .fr-roster-totals{ font-size:11px; color:#54606b; margin-top:6px; font-weight:600; }
   /* fr-compact: one fixed field size (a quarter of the form) for everything that isn't free
      data entry -- a roster's quick-capture line, all-computed sections (totals), Completed by. */
@@ -3243,6 +3248,10 @@
           </details>`;
       };
       const renderSection = sec => {
+        if (sec.trolleyBanner) {
+          const _tbVal = existing && existing.values[sec.bannerField] ? esc(existing.values[sec.bannerField]) : '—';
+          return `<div class="fr-trolley-banner no-print"><span class="fr-trolley-lbl">${esc(sec.bannerLabel || 'No. of trolleys')}</span><span class="fr-trolley-val">${_tbVal}</span></div>`;
+        }
         if (config.entryLog && sec.jobSoFarPanel) return wrapSection(sec, `<div id="fr_jobSoFar"></div>`);
         if (config.entryLog && sec.movementBlock) return wrapSection(sec, `<div id="fr_movements"></div>${elHiddenInputs(sec.fields)}`);
         if (config.entryLog) {
@@ -3724,6 +3733,11 @@
       const { pre, post } = sectionsAroundRoster(config);
       const secs = which === 'post' ? post : which === 'pre' ? pre : (config.sections || []);
       return secs.map(sec => {
+        if (sec.trolleyBanner) {
+          const _tbRaw = sub.values[sec.bannerField];
+          if (!_tbRaw && _tbRaw !== 0) return '';
+          return `<table><tbody><tr><td class="fr-sheet-lbl" style="width:50%;">${esc(sec.bannerLabel || 'No. of trolleys')}</td><td style="font-weight:700;">${esc(String(_tbRaw))}</td></tr></tbody></table>`;
+        }
         if (config.entryLog && (sec.jobSoFarPanel || sec.movementBlock)) return window.EntryLog ? window.EntryLog.sheetSection(sec, sub, submissions, config) : '';
         const rows = (sec.fields || []).filter(f => !(config.entryLog && (f.hidden || f.movement || (f.legacy && String(sub.values[f.key] == null ? '' : sub.values[f.key]).trim() === '')))).map(f =>
           `<tr><td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td>
