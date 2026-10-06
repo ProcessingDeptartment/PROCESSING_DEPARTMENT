@@ -253,6 +253,12 @@
   .ml-sheet .sheet-body td.sheet-item{ width:46%; }
   .ml-sheet .sheet-body td.sheet-rec{ width:14%; text-align:center; font-weight:700; }
   .ml-sheet .sheet-sign td{ height:30px; font-size:14px; }
+  .ml-sheet table.sheet-4col{ table-layout:fixed; }
+  .ml-sheet .sheet-4col col{ width:25%; }
+  .ml-sheet .sheet-4col th{ background:#eee; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:11px; }
+  .ml-sheet .sheet-4col .s4-lbl{ font-weight:600; font-size:10.5px; }
+  .ml-sheet .sheet-4col .s4-val{ font-weight:400; min-height:14px; white-space:pre-wrap; }
+  .ml-sheet .sheet-4col .s4-old{ font-style:italic; color:#444; }
   .ml-sheet .sheet-title{ font-weight:700; font-size:14px; text-align:center; padding:4px; }
   @media print{
     body{ background:#fff; }
@@ -2216,6 +2222,13 @@
       }).join('');
       const verified = entryRow.verification || null;
       const cb = entryRow.completedBy || {};
+      // printLayout "4col" (REC 7.4.2): Job info as one full-width row, then every group as a
+      // heading bar over a 4-column grid of label-over-value cells; free text spans the row.
+      const body = config.printLayout === '4col' ? sheet4colBody(entryRow) : `
+      <table class="sheet-body">
+        <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : (stampDateF ? stampText(valueFor(entryRow, stampDateF)) : ''))}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
+        ${rows}
+      </table>`;
       return `
       <table class="sheet-head">
         <tr><td class="sheet-logo" rowspan="4">${esc(m.logoText || 'ABAGOLD')}</td>
@@ -2229,10 +2242,7 @@
             <td class="sheet-lbl">Revision Date:</td><td>${esc(m.revisionDate || '')}</td></tr>
         <tr><td colspan="5">Distribution approved as controlled copy:</td></tr>
       </table>
-      <table class="sheet-body">
-        <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : (stampDateF ? stampText(valueFor(entryRow, stampDateF)) : ''))}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
-        ${rows}
-      </table>
+      ${body}
       <table class="sheet-sign">
         <tr><td class="sheet-lbl">Completed by:</td><td>${esc(cb.by || (opF ? (v[opF.key] || '') : ''))}</td>
             <td class="sheet-lbl">Title:</td><td>${esc(cb.title || '')}</td>
@@ -2244,6 +2254,34 @@
             <td class="sheet-lbl">Date:</td><td>${esc(verified ? verified.verifiedDate : '')}</td>
             <td class="sheet-lbl">Signature:</td><td>${esc(verified ? verified.verifiedSignature : '')}</td></tr>
       </table>`;
+    }
+
+    function sheet4colBody(entryRow) {
+      const cellText = (f) => {
+        const raw = valueFor(entryRow, f);
+        const shown = (raw === '' || raw == null) ? '' : (isStamp(f) ? stampText(raw) : String(raw));
+        return isBadValue(f, shown) ? `<span class="ml-bad">${esc(shown)} &#9888;</span>` : esc(shown);
+      };
+      const groups = [];
+      sheetRowFields().forEach(f => {
+        if (f.legacy) { const raw = valueFor(entryRow, f); if (raw === '' || raw == null) return; }
+        let g = groups.find(x => x.name === (f.group || ''));
+        if (!g) { g = { name: f.group || '', fields: [] }; groups.push(g); }
+        g.fields.push(f);
+      });
+      const wideF = (f) => f.type === 'textarea' || f.wide || f.legacy;
+      const cell = (f) => `<td class="s4-cell${f.legacy ? ' s4-old' : ''}"${wideF(f) ? ' colspan="4"' : ''}><div class="s4-lbl">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}${f.legacy && !/\(old\)/i.test(f.label) ? ' (old)' : ''}</div><div class="s4-val">${cellText(f)}</div></td>`;
+      return groups.map(g => {
+        const trs = [];
+        let row = [];
+        const flush = () => { if (row.length) { while (row.length < 4) row.push('<td class="s4-cell"></td>'); trs.push('<tr>' + row.join('') + '</tr>'); row = []; } };
+        g.fields.forEach(f => {
+          if (wideF(f)) { flush(); trs.push('<tr>' + cell(f) + '</tr>'); return; }
+          row.push(cell(f)); if (row.length === 4) flush();
+        });
+        flush();
+        return `<table class="sheet-4col"><colgroup><col><col><col><col></colgroup>${g.name ? `<tr><th colspan="4">${esc(g.name)}</th></tr>` : ''}${trs.join('')}</table>`;
+      }).join('');
     }
 
     function printEntry(id) {
