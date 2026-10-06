@@ -2009,8 +2009,16 @@
       } // end non-customBody field gathering
 
       // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
-      if (window.NcRaise && (finalize || !submitFlow) && (config.ncThresholds || config.ncAlways)) {
+      if (window.NcRaise && (finalize || !submitFlow) && (config.ncThresholds || config.ncAlways || config.redPrompt)) {
         const breaches = window.NcRaise.findBreaches(config.ncThresholds, values).filter(b => !ncHandled.has(b.key));
+        // a red (problem) answer on a check is a non-conformance: one NC listing every failed check
+        const redBad = config.redPrompt ? entryFields.filter(f => isBadValue(f, values[f.key])) : [];
+        const redKey = 'red:' + redBad.map(f => f.key + '=' + values[f.key]).join(',');
+        if (redBad.length && !ncHandled.has(redKey)) {
+          const note = String(values[config.redPrompt.field] || '').trim();
+          breaches.push({ key: redKey, category: config.ncRedCategory || 'Process deviation', severity: config.ncRedSeverity || 'minor',
+            description: 'Check failed: ' + redBad.map(f => f.label + ' = ' + values[f.key]).join('; ') + '.' + (note ? ' ' + note : '') });
+        }
         if (config.ncAlways && !ncHandled.size && !pendingNc.length && !(existingForStage && existingForStage.nc_refs)) {
           breaches.push({ key: '__always', category: 'Other', severity: 'minor', description: '' });
         }

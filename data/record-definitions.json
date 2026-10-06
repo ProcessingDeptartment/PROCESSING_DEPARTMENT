@@ -18635,7 +18635,8 @@
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation",
         "imageUploadFields": true,
-        "dryingDaysEstimate": 22
+        "dryingDaysEstimate": 22,
+        "ncRedCategory": "Product quality"
       },
       "primaryBatchField": "jobNo"
     },
@@ -27277,7 +27278,35 @@
             "label": "Instruction",
             "text": "Weekly inspections are done to determine the presence of pests and signs of activity. If any presence/activity is noted, complete the Pest Sightings Log and inform the pest control company. Bird droppings or pests present inside the facility must be recorded on a CAR."
           }
-        ]
+        ],
+        "ncBadAnswers": [
+          {
+            "field": "ratsMice",
+            "bad": "Yes"
+          },
+          {
+            "field": "flies",
+            "bad": "Yes"
+          },
+          {
+            "field": "cockroaches",
+            "bad": "Yes"
+          },
+          {
+            "field": "birds",
+            "bad": "Yes"
+          },
+          {
+            "field": "ants",
+            "bad": "Yes"
+          },
+          {
+            "field": "moths",
+            "bad": "Yes"
+          }
+        ],
+        "ncBadCategory": "Pest activity",
+        "ncBadSeverity": "major"
       }
     },
     {
@@ -27884,7 +27913,39 @@
             "label": "Work instruction",
             "text": "Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Key: âÅ““ = Compliance, x = Non-compliance, A = Absent."
           }
-        ]
+        ],
+        "ncBadAnswers": [
+          {
+            "field": "protectiveClothing",
+            "bad": "No"
+          },
+          {
+            "field": "hairBootsClean",
+            "bad": "No"
+          },
+          {
+            "field": "fingernails",
+            "bad": "No"
+          },
+          {
+            "field": "noJewelleryMakeup",
+            "bad": "No"
+          },
+          {
+            "field": "handWash",
+            "bad": "No"
+          },
+          {
+            "field": "noFoodDrink",
+            "bad": "No"
+          },
+          {
+            "field": "injuryIllness",
+            "bad": "Yes"
+          }
+        ],
+        "ncBadCategory": "Hygiene / sanitation",
+        "ncBadSeverity": "minor"
       }
     },
     {
@@ -28466,7 +28527,15 @@
             "label": "Inspection",
             "text": "Inspect all equipment and devices daily. âÅ““ = Good condition/working, X = Faulty/damaged."
           }
-        ]
+        ],
+        "ncBadAnswers": [
+          {
+            "field": "condition",
+            "bad": "X"
+          }
+        ],
+        "ncBadCategory": "Equipment failure",
+        "ncBadSeverity": "minor"
       }
     },
     {
@@ -28677,7 +28746,19 @@
             "label": "What to check",
             "text": "Every morning before starting up, check light fittings, windows, temperature dial displays, extractor fan grids, wall clocks, computer screens and plastic crates. Check equipment/machinery (rollers, conveyers, racking, trolleys, tanks) is in good repair. Detail any non-conformance in Comments."
           }
-        ]
+        ],
+        "ncBadAnswers": [
+          {
+            "field": "glassPlastics",
+            "bad": "N"
+          },
+          {
+            "field": "equipment",
+            "bad": "N"
+          }
+        ],
+        "ncBadCategory": "Equipment failure",
+        "ncBadSeverity": "minor"
       }
     },
     {
@@ -29594,7 +29675,19 @@
             "label": "Work instruction",
             "text": "Knives remove gut & beak; scrapers remove flesh from shell (shucking); scrubbing brushes scrub abalone; needles for stringing dry, scissors for destringing dry. Record quantity issued. Condition: âÅ““ = good condition, X = faulty/damaged. Faulty/damaged utensils returned to supervisor and discarded, with type & number recorded. Utensils go into Dynacide solution when not in use."
           }
-        ]
+        ],
+        "ncBadAnswers": [
+          {
+            "field": "conditionBefore",
+            "bad": "X"
+          },
+          {
+            "field": "conditionAfter",
+            "bad": "X"
+          }
+        ],
+        "ncBadCategory": "Equipment failure",
+        "ncBadSeverity": "minor"
       }
     },
     {
@@ -32416,7 +32509,15 @@
             "label": "Work instruction",
             "text": "Conduct inspections at start of shift, checking that all listed areas are clean and in good, functioning condition, and that equipment/machinery is in a good state of repair and intact. Detail any non-conformance in the Comments column. Key: Y = Inspected and in order, N = Inspected but not conforming."
           }
-        ]
+        ],
+        "ncBadAnswers": [
+          {
+            "field": "inspected",
+            "bad": "N"
+          }
+        ],
+        "ncBadCategory": "Equipment failure",
+        "ncBadSeverity": "minor"
       }
     },
     {

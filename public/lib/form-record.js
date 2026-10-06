@@ -3567,8 +3567,30 @@
         const ok = await runBusinessRules(config, values, editingId, rosterRowsByIndex);
         if (!ok) return;
         // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
-        if (window.NcRaise && (config.ncThresholds || config.ncAlways)) {
+        if (window.NcRaise && (config.ncThresholds || config.ncAlways || config.ncBadAnswers)) {
           const breaches = window.NcRaise.findBreaches(config.ncThresholds, values, rosterRowsByIndex).filter(b => !ncHandled.has(b.key));
+          // checklist records: config.ncBadAnswers = [{ field, bad }] -- a roster/top-level answer equal to `bad` is a failed check; one NC lists them all
+          if (config.ncBadAnswers) {
+            const failed = [];
+            config.ncBadAnswers.forEach(rule => {
+              const lab = (allFields(config).find(f => f.key === rule.field) || {}).label;
+              if (lab && String(values[rule.field] || '').trim() === rule.bad) failed.push(lab + ' = ' + rule.bad);
+              rosterList.forEach((roster, ri) => {
+                const col = (roster.columns || []).find(c => c.key === rule.field);
+                if (!col) return;
+                (rosterRowsByIndex[ri] || []).forEach((r, n) => {
+                  if (String(r[rule.field] || '').trim() !== rule.bad) return;
+                  const first = (roster.columns || []).find(c => c.type === 'text' && String(r[c.key] || '').trim());
+                  failed.push((first ? String(r[first.key]).trim() : (roster.rowTitle || 'Row') + ' ' + (n + 1)) + ' — ' + col.label.replace(/\s*\(.*\)\s*$/, '') + ' = ' + rule.bad);
+                });
+              });
+            });
+            const badKey = 'bad:' + failed.join('|');
+            if (failed.length && !ncHandled.has(badKey)) {
+              breaches.push({ key: badKey, category: config.ncBadCategory || 'Equipment failure', severity: config.ncBadSeverity || 'minor',
+                description: 'Failed check' + (failed.length > 1 ? 's' : '') + ': ' + failed.slice(0, 15).join('; ') + (failed.length > 15 ? '; … (+' + (failed.length - 15) + ' more)' : '') + '.' });
+            }
+          }
           if (config.ncAlways && !ncHandled.size && !pendingNc.length && !(editingId && (submissions.find(s => s.id === editingId) || {}).nc_refs)) {
             breaches.push({ key: '__always', category: 'Other', severity: 'minor', description: '' });
           }
