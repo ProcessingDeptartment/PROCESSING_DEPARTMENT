@@ -2266,7 +2266,7 @@
         // job report: Job info + Dry room details as the job stands now, every check as a line, photos at the bottom
         const list = printJobChecks(entryRow);
         const latest = list[list.length - 1];
-        return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${checkHistoryPdfHtml(list)}${dcSignHtml(latest)}<div id="ml_dc_photos"></div></div>`;
+        return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${checkHistoryPdfHtml(list)}${checkCommentsPdfHtml(list)}<div id="ml_dc_photos"></div>${dcSignHtml(latest)}</div>`;
       }
       const body = `
       <table class="sheet-body">
@@ -2314,18 +2314,27 @@
         .sort((a, b) => (a.submittedAt || a.createdAt || 0) - (b.submittedAt || b.createdAt || 0));
     }
     const failedChecks = (e) => entryFields.filter(f => isBadValue(f, (e.values || {})[f.key])).map(f => f.label);
+    // date and time of the check, South African time: "07 Oct 2026 09:00"
+    const histStamp = (e) => {
+      try {
+        const ms = e.submittedAt || e.createdAt;
+        const o = { timeZone: 'Africa/Johannesburg' };
+        const d = new Date(ms).toLocaleDateString('en-GB', Object.assign({ day: '2-digit', month: 'short', year: 'numeric' }, o)).replace(/,/g, '');
+        const t = new Date(ms).toLocaleTimeString('en-GB', Object.assign({ hour: '2-digit', minute: '2-digit', hour12: false }, o));
+        return d + ' ' + t;
+      } catch (err) { return histFmt(histWhen(e)); }
+    };
     function checkLineHtml(e) {
       const v = e.values || {};
       const bad = failedChecks(e);
       const note = String(v.correctiveActions || '').trim();
-      const what = bad.length ? `<span class="ml-hist-bad">Failed: ${esc(bad.join(', '))}</span>${note ? ' — ' + esc(note) : ''}` : 'All checks OK';
-      const spec = e.inSpec === false ? 'No' : (e.inSpec === true ? 'Yes' : '—');
-      return { date: esc(histFmt(histWhen(e))), what, where: esc(v.dryRoomArea || ''), spec, by: esc((e.completedBy && e.completedBy.by) || '') };
+      const what = bad.length ? `<span class="ml-hist-bad">NC: ${esc(bad.join(', '))}</span>${note ? ' — ' + esc(note) : ''}` : 'Conforms';
+      return { when: esc(histStamp(e)), what, where: esc(v.dryRoomArea || ''), by: esc((e.completedBy && e.completedBy.by) || ''), nc: bad.length > 0 };
     }
     function checkTableHtml(list, cls) {
-      const rows = list.map(e => { const l = checkLineHtml(e); return `<tr${l.spec === 'No' ? ' class="ml-hist-fail"' : ''}><td>${l.date}</td><td>${l.what}</td><td>${l.where}</td><td>${l.spec}</td><td>${l.by}</td></tr>`; }).join('');
-      return `<table class="${cls}"><colgroup><col style="width:13%"><col style="width:39%"><col style="width:18%"><col style="width:10%"><col style="width:20%"></colgroup>`
-        + `<thead><tr><th>Date</th><th>Check</th><th>Location</th><th>In spec</th><th>Checked by</th></tr></thead><tbody>${rows}</tbody></table>`;
+      const rows = list.map(e => { const l = checkLineHtml(e); return `<tr${l.nc ? ' class="ml-hist-fail"' : ''}><td>${l.when}</td><td>${l.where}</td><td>${l.what}</td><td>${l.by}</td></tr>`; }).join('');
+      return `<table class="${cls}"><colgroup><col style="width:17%"><col style="width:18%"><col style="width:45%"><col style="width:20%"></colgroup>`
+        + `<thead><tr><th>Date / time</th><th>Location</th><th>Checks</th><th>Checked by</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
     function wireCheckHistory(container) {
       const jobEl = container.querySelector('#' + ns + '_f_' + histJobKey());
@@ -2352,6 +2361,13 @@
     }
     function checkHistoryPdfHtml(list) {
       return `<div class="dc-block"><div class="dc-bhead">Checks</div>${checkTableHtml(list, 'dc-checks')}</div>`;
+    }
+    // every comment left on a check, with when it was made; '' when there are none
+    function checkCommentsPdfHtml(list) {
+      const rows = list.filter(e => String((e.values || {}).comments || '').trim())
+        .map(e => `<tr><td>${esc(histStamp(e))}</td><td>${esc(String(e.values.comments).trim())}</td><td>${esc((e.completedBy && e.completedBy.by) || '')}</td></tr>`).join('');
+      return rows ? `<div class="dc-block"><div class="dc-bhead">Comments</div><table class="dc-checks"><colgroup><col style="width:17%"><col style="width:63%"><col style="width:20%"></colgroup>`
+        + `<thead><tr><th>Date / time</th><th>Comment</th><th>By</th></tr></thead><tbody>${rows}</tbody></table></div>` : '';
     }
     // grid of every photo on the job's checks, each labelled with the image date and the check that failed
     async function addCheckPhotoGrid(sheet, list) {
