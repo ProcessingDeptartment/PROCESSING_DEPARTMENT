@@ -21,7 +21,7 @@ const ID_RE = /^[A-Za-z0-9_\-]{1,80}$/;
 // X-Archive-Key header; with the key unset they are closed (503), never open.
 const ARCHIVE_API_KEY = process.env.ARCHIVE_API_KEY || '';
 const MAX_ARCHIVE_ATTEMPTS = 5;
-const ARCHIVE_PATHS = /^\/dry-monitoring\/images\/(pending-archive|\d+\/mark-archived|\d+\/archive-error)$/;
+const ARCHIVE_PATHS = /^\/dry-monitoring\/images\/(pending-archive|archive-request|\d+\/mark-archived|\d+\/archive-error)$/;
 function archiveKeyOk(req) {
   const k = req.get('x-archive-key') || '';
   if (!ARCHIVE_API_KEY || k.length !== ARCHIVE_API_KEY.length) return false;
@@ -108,6 +108,22 @@ function mount(app, prisma) {
     }
   });
 
+  // "Archive now" (Home banner, administrator only). The flag lives in memory: if the API restarts
+  // before the agent picks it up the click is simply lost, and the banner still shows the backlog.
+  // The agent in --on-request mode polls GET (no DB hit) and archives when it sees a request.
+  let archiveRequest = null;   // { at, by }
+  let agentSeenAt = null;
+  app.post('/api/dry-monitoring/images/archive-request', (req, res) => {
+    if (!/ADMIN/i.test(req.get('x-role') || '')) return res.status(403).json({ ok: false, error: 'Administrator only.' });
+    archiveRequest = { at: new Date(), by: String(req.get('x-user') || '').slice(0, 120) || null };
+    res.json({ ok: true, requestedAt: archiveRequest.at, agentSeenAt });
+  });
+  app.get('/api/dry-monitoring/images/archive-request', requireArchiveKey, (req, res) => {
+    agentSeenAt = new Date();
+    const r = archiveRequest; archiveRequest = null;   // consumed: one click, one pass
+    res.json({ requested: !!r, requestedAt: r ? r.at : null, by: r ? r.by : null });
+  });
+
   // for the Home banner: is the agent keeping up?
   app.get('/api/dry-monitoring/images/archive-status', async (req, res) => {
     try {
@@ -116,7 +132,8 @@ function mount(app, prisma) {
         T.count({ where: { archiveFailed: true } }),
         T.findFirst({ where: { archivedLocally: true }, orderBy: { archivedAt: 'desc' }, select: { archivedAt: true } }),
       ]);
-      res.json({ pending, failed, lastArchivedAt: last ? last.archivedAt : null });
+      res.json({ pending, failed, lastArchivedAt: last ? last.archivedAt : null,
+        requestedAt: archiveRequest ? archiveRequest.at : null, agentSeenAt });
     } catch (e) { console.error('archive-status failed', e); res.status(500).json({ ok: false }); }
   });
 

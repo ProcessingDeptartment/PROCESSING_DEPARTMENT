@@ -11,6 +11,8 @@
 //
 // Run:      node scripts/image-archive-agent.mjs
 // One pass: node scripts/image-archive-agent.mjs --once
+// On click: node scripts/image-archive-agent.mjs --on-request   (archives only when an administrator
+//           presses "Archive now" on the Home page; checks for a click every REQUEST_POLL_SECONDS, default 20)
 // Service:  pm2 start scripts/image-archive-agent.mjs --name image-archive && pm2 save
 //           (or a Task Scheduler task "At startup" running the Run line above)
 import fs from 'node:fs';
@@ -34,6 +36,8 @@ const KEY = process.env.ARCHIVE_API_KEY || '';
 const ROOT = process.env.ARCHIVE_ROOT || '';
 const POLL_MS = Math.max(10, Number(process.env.POLL_INTERVAL_SECONDS) || 60) * 1000;
 const ONCE = process.argv.includes('--once');
+const ON_REQUEST = process.argv.includes('--on-request');
+const REQUEST_POLL_MS = Math.max(5, Number(process.env.REQUEST_POLL_SECONDS) || 20) * 1000;
 const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic' };
 
 function log(msg) {
@@ -100,6 +104,19 @@ async function pass() {
 
 async function main() {
   if (!KEY || !ROOT) { console.error('ARCHIVE_API_KEY and ARCHIVE_ROOT must be set (scripts/.env).'); process.exit(1); }
+  if (ON_REQUEST) {
+    log(`Image archive agent started: ${API_BASE} → ${ROOT}, archiving when "Archive now" is pressed (checks every ${REQUEST_POLL_MS / 1000}s)`);
+    for (;;) {
+      try {
+        const r = await api('GET', '/api/dry-monitoring/images/archive-request');
+        if (r.requested) {
+          log(`Archive requested${r.by ? ' by ' + r.by : ''}`);
+          const n = await pass(); log(`Pass done: ${n} archived`);
+        }
+      } catch (e) { log(`Check failed: ${e.message}`); }
+      await new Promise((res) => setTimeout(res, REQUEST_POLL_MS));
+    }
+  }
   log(`Image archive agent started: ${API_BASE} → ${ROOT}, every ${POLL_MS / 1000}s`);
   for (;;) {
     try { const n = await pass(); if (n) log(`Pass done: ${n} archived`); }

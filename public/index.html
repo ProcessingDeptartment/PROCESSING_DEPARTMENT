@@ -219,18 +219,47 @@
 </script>
 
 <script>  // ---- photo archive banner: the local agent copies REC 7.4.2 photos to the file server ----
-  (async function () {
+  // Administrators also get "Archive now": it flags a request the file-server agent
+  // (scripts/image-archive-agent.mjs --on-request) picks up within ~20 s.
+  (function () {
     var el = document.getElementById('photoArchiveBanner');
-    try {
-      var res = await window.FacilityApi.fetch('/api/dry-monitoring/images/archive-status', { cache: 'no-store' });
-      if (!res.ok) return;
-      var s = await res.json(), parts = [];
-      if (s.pending > 0) parts.push('📷 ' + s.pending + ' photo' + (s.pending === 1 ? '' : 's') + ' not yet archived to local server. Archive agent running?');
-      if (s.failed > 0) parts.push('⚠ ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped — check the agent log.');
-      if (!parts.length) return;
-      el.innerHTML = parts.join('<br>');
-      el.hidden = false;
-    } catch (e) {}
+    var isAdmin = function () { var u = window.Auth.getCurrentUser(); return !!u && /ADMIN/i.test(u.role); };
+    var ago = function (d) { var m = Math.round((Date.now() - new Date(d)) / 60000); return m < 1 ? 'just now' : m + ' min ago'; };
+    var timer = null;
+    async function load() {
+      try {
+        var res = await window.FacilityApi.fetch('/api/dry-monitoring/images/archive-status', { cache: 'no-store' });
+        if (!res.ok) return;
+        var s = await res.json(), parts = [];
+        if (s.pending > 0) parts.push('📷 ' + s.pending + ' photo' + (s.pending === 1 ? '' : 's') + ' not yet archived to local server.');
+        if (s.failed > 0) parts.push('⚠ ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped — check the agent log.');
+        if (!parts.length) { el.hidden = true; clearInterval(timer); timer = null; return; }
+        var html = parts.join('<br>');
+        if (s.pending > 0 && isAdmin()) {
+          var online = s.agentSeenAt && (Date.now() - new Date(s.agentSeenAt)) < 2 * 60000;
+          html += '<div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:400;font-size:13px;">'
+            + (s.requestedAt
+                ? '<span>⏳ Archive requested — waiting for the file server…</span>'
+                : '<button type="button" id="archiveNowBtn" style="padding:6px 14px;border-radius:6px;border:1px solid #b7791f;background:#b7791f;color:#fff;font-weight:600;cursor:pointer;">Archive now</button>')
+            + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' — is it running?') + '</span></div>';
+        }
+        el.innerHTML = html; el.hidden = false;
+        var btn = document.getElementById('archiveNowBtn');
+        if (btn) btn.addEventListener('click', requestArchive);
+        if (s.requestedAt && !timer) timer = setInterval(load, 10000);   // watch the request get picked up
+      } catch (e) {}
+    }
+    async function requestArchive() {
+      var btn = document.getElementById('archiveNowBtn'); if (btn) { btn.disabled = true; btn.textContent = 'Requesting…'; }
+      try {
+        var res = await window.FacilityApi.fetch('/api/dry-monitoring/images/archive-request', { method: 'POST' });
+        if (!res.ok) throw new Error((await res.json().catch(function () { return {}; })).error || ('HTTP ' + res.status));
+      } catch (e) { alert('Could not request archiving: ' + e.message); }
+      load();
+    }
+    document.addEventListener('authSuccess', load);
+    document.getElementById('logoutBtn').addEventListener('click', function () { setTimeout(load, 0); });
+    load();
   })();
 </script>
 <script>  // ---- 24-hr dashboard placeholder ----
