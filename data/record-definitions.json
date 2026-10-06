@@ -18527,7 +18527,8 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": null
         },
         {
           "key": "comments",
@@ -18546,7 +18547,8 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null
+          "validateJson": null,
+          "extraJson": null
         }
       ],
       "autofills": [
@@ -18564,6 +18566,7 @@
       ],
       "extraJson": {
         "batchField": "jobNo",
+        "printLayout": "4col",
         "specFields": [],
         "deviationLabel": "Deviation",
         "deviationPolarity": "deviation",
