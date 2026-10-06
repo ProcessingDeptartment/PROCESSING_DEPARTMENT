@@ -1791,15 +1791,10 @@
     `;
 
     function suggestCompletedBy() {
-      // Pre-fill from auth: completed by username, title from role
-      const username = window.Auth?.getCurrentUsername?.() || '';
+      // Pre-fill title from the logged-in role
       const role = window.Auth?.getCurrentRole?.() || '';
 
-      const byEl = el('fr_cb_by');
-      if (byEl && !byEl.value.trim() && username) {
-        byEl.value = username;
-      }
-
+      // Completed by is NOT suggested: it stays empty until the passkey is submitted (passkey-input.js fills it)
       const titleEl = el('fr_cb_title');
       if (titleEl && !titleEl.value.trim() && role) {
         titleEl.value = (window.SignOffBlock && window.SignOffBlock.roleLabel) ? window.SignOffBlock.roleLabel(role) : role;

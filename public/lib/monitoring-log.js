@@ -1701,12 +1701,7 @@
         i.value = cb && cb[k] ? cb[k] : '';
         i.disabled = !!locked;
       });
-      // the login name is a role/account name, so it goes in Title; the person types their own name
-      const byField = cbInput('by');
-      if (byField && !locked && !byField.value.trim()) {
-        const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
-        if (name) byField.value = name;
-      }
+      // Completed by is not suggested: it stays empty until the passkey is submitted (the login role goes in Title)
       const title = cbInput('title');
       if (title && !locked && !title.value.trim()) {
         const role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;
@@ -1835,11 +1830,6 @@
     }
 
     document.addEventListener('authSuccess', () => {
-      const byField = cbInput('by');
-      if (byField && !byField.disabled && !byField.value.trim()) {
-        const name = window.Auth && window.Auth.getCurrentUsername ? window.Auth.getCurrentUsername() : null;
-        if (name) byField.value = name;
-      }
       const title = cbInput('title');
       if (title && !title.disabled && !title.value.trim()) {
         const role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;

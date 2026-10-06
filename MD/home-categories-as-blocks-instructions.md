@@ -60,7 +60,7 @@ Michaela will say where these go. **Until she does, do not remove them:** keep t
 
 ### 2.1 Block grid
 
-- Replace the `<table class="nav-table">` for the non-admin items with a grid of blocks. **One block = one `<a>`** wrapping the whole tile (the entire block is the tap target). No nested links. No JS click handler on the row any more.
+- Replace the `<table class="nav-table">` for the six blocks with a grid of blocks. **One block = one `<a>`** wrapping the whole tile (the entire block is the tap target). No nested links. No JS click handler on the row any more.
 - Each block (the six in §1.1) contains: **title** (18px, bold, ink `#1B2330`) and **description** (14px, regular, secondary text `#54606B`, max 3 lines then ellipsis — full text stays in the `title` attribute).
 - Block size: min-height **120px**, padding 16px, white surface, 1.5px border `#8A949C`-style field line is **not** needed here; use the existing hairline `#E2E4E3` plus a **4px left accent bar** (this already exists: green for Production, gold for Index). 8px radius. Soft shadow is allowed but keep it subtle (the tablet is low-powered; no animations beyond a 100ms background change).
 - **Pressed state** visible without hover (tablet): background `#F4F1E8`, accent bar thickens. Focus ring: 3px gold `#96652B`. No hover-only effects.
@@ -98,7 +98,7 @@ Use `grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))` **only if** it
 
 ### 3.1 `public/index.html`
 
-1. In the `<style>` block: remove the table-specific `nav-table` rules for the non-admin items (keep them, scoped, for the Admin table). Add the block-grid rules from §2 under new class names, e.g. `.block-grid`, `.block`, `.block-title`, `.block-desc`.
+1. In the `<style>` block: remove the table-specific `nav-table` rules for the six blocks (keep them, scoped, for the More table). Add the block-grid rules from §2 under new class names, e.g. `.block-grid`, `.block`, `.block-title`, `.block-desc`.
 2. Move the accent colour from `td.document` borders to the block's left border (`.block.production`, `.block.index`). Keep green `#15803D` and gold `#A9763A`. **Purple** (`tr.quality`) is not used by any row; leave it out.
 3. `tr.auth-only` / `body.authenticated tr.auth-only` currently show/hide **table rows**. Add the same rule for blocks: `.block.auth-only{display:none}` and `body.authenticated .block.auth-only{display:flex}`. Keep the old rule for the admin rows.
 4. Keep the section title ("Categories"); set it to 18px sentence case.
@@ -124,7 +124,7 @@ No link, order, wording of descriptions, visibility rule, login/logout behaviour
 
 On a real TB300XU, landscape and portrait, signed in and signed out:
 
-- [ ] Every non-admin selection is a block; the whole block is tappable; no tiny links.
+- [ ] Every one of the six selections is a block; the whole block is tappable; no tiny links.
 - [ ] Landscape = 3 columns, portrait = 2 columns (or whatever the measured width gives per §2.2); blocks in a row are equal height; 16px gaps.
 - [ ] Block titles 18px, descriptions 14px; nothing on the page under 14px.
 - [ ] Pressed state visible on touch; no hover-only behaviour.
