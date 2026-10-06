@@ -6,7 +6,7 @@
   function passkeyFieldHtml(fieldClass, label, id) {
     // Flat field: label line (text + status) then the input, nothing else, so the input never moves.
     return `<label class="${fieldClass} pk-field"><span class="pk-label"><span>${label}</span><span class="pk-status" id="${id}_display" aria-live="polite"></span></span>
-      <input id="${id}" type="text" placeholder="Tap to enter passkey" readonly autocomplete="off"
+      <input id="${id}" type="text" placeholder="Tap to enter passkey" readonly inputmode="none" autocomplete="off"
              onclick="window.PasskeyInput && PasskeyInput.openForField('${id}')"></label>`;
   }
 

@@ -21,6 +21,23 @@
 
 ---
 
+## 1A. Target device — Lenovo Tab M8 (4th Gen), model TB300XU
+
+All floor users are on this one model. Public listings show it as an **8" IPS, 1280×800, Android, MediaTek Helio A22, 3 GB RAM, Wi-Fi + 4G**. Browser is assumed to be Chrome on Android (confirm).
+
+What this means for the fix:
+
+1. **Measure, don't assume the viewport.** An 8" 1280×800 panel does not necessarily report 1280 CSS px. Before step 1, open the site on the tablet and read `innerWidth × innerHeight` and `devicePixelRatio` in both orientations (e.g. via `chrome://inspect` from a PC, or a tiny temporary on-screen readout). Write the four numbers in the work log. The column rule (§4.3) is tuned from these:
+   - If landscape reports **≥1100 CSS px**, the tablet would get the PC 4-column grid. Floor rule: **a touch device never gets the 4-column / PC density.** Cap touch devices at **2 columns** (roster 4), whatever the width.
+   - If landscape reports **~1024 or less**, 2 columns is already correct.
+   - Portrait will be narrow (roughly 640–800 CSS px). If it falls below 700px it drops to 1 column. That is acceptable, but check the sign-off block still looks tidy.
+2. **Make the test matrix this one tablet.** Replace the generic viewport list in §6 step 5 with: the measured landscape and portrait sizes of the TB300XU, plus 1280×800 and 800×1280 as emulator fallbacks (Chrome DevTools, touch emulation on). Keep 1024×768 and 390×844 only as extra safety nets.
+3. **Hardware is modest (Helio A22, 3 GB RAM).** Keep the fix light: no new JS layout code, no JS resize listeners, no heavy shadows or animations on the form. CSS only, as specified. Mention in the work log if the sign-off block or any record feels slow to scroll.
+4. **Android soft keyboard.** The passkey field is `readonly` and opens the number-pad modal, so the system keyboard should not appear. Confirm this on the tablet. If Chrome still shows a keyboard, add `inputmode="none"` to the passkey input. Also check the modal fits in landscape with no keyboard overlap (800px tall screen, so the keypad must not scroll out of view).
+5. **Do a real-device check, not only the emulator.** Final acceptance (§7) is signed off on an actual TB300XU in both orientations.
+
+---
+
 ## 2. Step 1 — Confirm (5 min, do before changing code)
 
 Open any record with a Sign-off / Verification block on the tablet (or Chrome DevTools at 1180×820 and 820×1180, touch emulation on). In the console run:
@@ -114,7 +131,7 @@ body.rt-pc .rt-content   { --rt-input-h: 36px; --rt-input-fs: 14px; }
 ```
 
 - All field inputs/selects use `min-height: var(--rt-input-h); font-size: var(--rt-input-fs);` — header fields, roster fields, sign-off and the passkey field alike.
-- Keep a **single** width breakpoint for columns: ≥1100px = 4, 700–1099px = 2, <700px = 1 (2026-09-25 §2). Do not add new breakpoints.
+- Keep a **single** width breakpoint for columns: ≥1100px = 4, 700–1099px = 2, <700px = 1 (2026-09-25 §2). Do not add new breakpoints. **Exception for the TB300XU:** under `(pointer: coarse)` cap columns at 2 (roster 4) even when the width is ≥1100px (see §1A).
 - Do not use `body.rt-pc` on a touch device. If `rt-pc` is being applied by width, change it to apply only when `(pointer: fine)` and width ≥1100px. Report where it is set.
 
 ### 4.4 Same fix for the other offenders (cause #5)
@@ -145,11 +162,11 @@ Apply the §3 rule to each:
 
 ## 6. Build order
 
-1. Run the §2 script on the tablet / emulator on 3 records (one `fr`, one `ml`, REC 7.2.12). Save output to the work log. Take before screenshots at 1180×820 and 820×1180.
+1. Read the TB300XU viewport numbers (§1A), then run the §2 script on the tablet / emulator on 3 records (one `fr`, one `ml`, REC 7.2.12). Save output to the work log. Take before screenshots at 1180×820 and 820×1180.
 2. Do 4.1 + 4.2. **Stop and show Michaela** one sign-off block, before and after verifying a passkey.
 3. Do 4.3 (touch query). Re-check landscape and portrait.
 4. Do 4.4 and 4.5 across the engines.
-5. Loop the §2 script (Playwright, Chromium is pre-installed, with `hasTouch:true`) over every Record List page at 1180×820, 820×1180, 1024×768, 768×1024, 390×844. Target `[]` everywhere. Put the pass/fail table in the work log.
+5. Loop the §2 script (Playwright, Chromium is pre-installed, with `hasTouch:true`) over every Record List page at the measured TB300XU landscape and portrait sizes (§1A), plus 1280×800, 800×1280, 1024×768 and 390×844. Target `[]` everywhere. Put the pass/fail table in the work log.
 6. Regression screenshots of the out-of-scope pages (unchanged) and a print preview of 3 records (unchanged).
 7. Bump `?v=` on `record-theme.css`, `signoff-block.js` and `passkey-input.js` on all pages that load them.
 8. Write `claude/tablet-field-row-alignment-worklog.md`.
@@ -158,11 +175,11 @@ Apply the §3 rule to each:
 
 ## 7. Acceptance checks
 
-- [ ] On tablet landscape and portrait, the passkey input sits on the same baseline and is the same height as Verified by, Title and Date in its row.
+- [ ] On a real TB300XU, in landscape and portrait, the passkey input sits on the same baseline and is the same height as Verified by, Title and Date in its row.
 - [ ] Verifying a passkey does **not** move or resize anything in the row. The "Confirmed ✓" status appears on the label line.
 - [ ] All inputs in any row, on every record, are the same height (48px touch / 36px PC), including Job no.
 - [ ] Nothing sits between a label and its input anywhere.
-- [ ] §2 script returns `[]` on every Record List page at all five viewport sizes.
+- [ ] §2 script returns `[]` on every Record List page at all the test viewport sizes.
 - [ ] No `!important` on the passkey input, and no rule left targeting `placeholder="Enter passkey"`.
 - [ ] Passkey sign-off still works end-to-end (wrong passkey rejected, correct one accepted, same stored values as before).
 - [ ] Print output and out-of-scope pages unchanged.
@@ -171,7 +188,7 @@ Apply the §3 rule to each:
 
 ## 8. Paste-ready prompt for Claude Code
 
-> Read `claude/tablet-field-row-alignment-passkey-fix-instructions.md` and follow it exactly. First run the §2 diagnostic script on the tablet or emulator and save the output. Then fix the passkey field in `signoff-block.js` (flat markup, "Confirmed ✓" on the label line, no wrapper div, no inline style, no `!important`), update `passkey-input.js` to write the status by id, and add the shared field-stack, label-line and one-input-height rules under `.rt-content` in `record-theme.css`. Switch tablet sizing to `(pointer: coarse)` rather than width. Apply the same "nothing between label and input" rule to the Job no. Change link and hint lines. Do not change passkey logic, any field, validation, calculation, export or print output, and do not touch out-of-scope pages. Stop after §6 step 2 to show me the sign-off block before and after verifying, then continue and finish with the Playwright run across all Record List pages and a work log at `claude/tablet-field-row-alignment-worklog.md`.
+> Read `claude/tablet-field-row-alignment-passkey-fix-instructions.md` and follow it exactly. Note that all users are on a Lenovo Tab M8 4th Gen (TB300XU, 8" 1280×800): follow §1A and record the measured viewport sizes first. Then run the §2 diagnostic script on the tablet or emulator and save the output. Then fix the passkey field in `signoff-block.js` (flat markup, "Confirmed ✓" on the label line, no wrapper div, no inline style, no `!important`), update `passkey-input.js` to write the status by id, and add the shared field-stack, label-line and one-input-height rules under `.rt-content` in `record-theme.css`. Switch tablet sizing to `(pointer: coarse)` rather than width. Apply the same "nothing between label and input" rule to the Job no. Change link and hint lines. Do not change passkey logic, any field, validation, calculation, export or print output, and do not touch out-of-scope pages. Stop after §6 step 2 to show me the sign-off block before and after verifying, then continue and finish with the Playwright run across all Record List pages and a work log at `claude/tablet-field-row-alignment-worklog.md`.
 
 ---
 

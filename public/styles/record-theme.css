@@ -375,7 +375,9 @@ body.rt-has-shell { margin: 0; background: var(--rt-bg); }
 /* one input height per density mode: touch = 48/16, PC opt-in = 36/14 */
 @media (pointer: coarse) { .rt-content { --rt-input-h: 48px; --rt-input-fs: 16px; } }
 body.rt-pc .rt-content { --rt-input-h: 36px; --rt-input-fs: 14px; }
-@media (max-width: 1099px) {
+/* touch devices (Lenovo Tab M8 TB300XU, 1280 wide in landscape) never get the
+   PC 4-column grid: same 2 / roster 4 as the 700-1099px band */
+@media (max-width: 1099px), (pointer: coarse) and (min-width: 700px) {
   .rt-content { --rt-form-cols: 2; --rt-roster-grid-cols: 4; }
 }
 @media (max-width: 699px) {

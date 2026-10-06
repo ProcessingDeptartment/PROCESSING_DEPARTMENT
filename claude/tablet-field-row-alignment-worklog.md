@@ -53,3 +53,11 @@ Caveat: forms were tested empty (no job data offline), so rows with a populated 
 - **Out-of-scope pages** (home, dashboard, record list, job status): screenshots taken after the change and look normal; no before screenshots to diff.
 - **Passkey end-to-end** tested with the verify endpoint mocked (accept path, status text, verified styling, no row movement). Wrong-passkey rejection and the real endpoint were not exercised; that code was not edited.
 - Real devices not used — desktop Chrome with touch emulation only.
+
+## 6. Follow-up 2026-10-06 — §1A (Lenovo Tab M8 TB300XU)
+
+- `record-theme.css`: the 2-column band is now `(max-width:1099px), (pointer:coarse) and (min-width:700px)`, so a touch device never gets the 4-column PC grid even if landscape reports ≥1100 CSS px (roster 4). Under 700px still 1 column. Mouse/PC unchanged (4 / 2 / 1 by width).
+- `signoff-block.js`: passkey input gets `inputmode="none"` so Android Chrome never raises the soft keyboard over the number pad.
+- Versions: `record-theme.css?v=tv47`, `signoff-block.js?v=8` on all pages.
+- Checked in the local preview: rule parses, `inputmode` present. The touch case cannot be emulated in that pane.
+- **Still to do on the real TB300XU:** read `innerWidth × innerHeight` and `devicePixelRatio` in both orientations, confirm no keyboard appears and the number pad fits in landscape (800 px tall), and do the §7 sign-off on the device.
