@@ -637,7 +637,7 @@
     var primary = true;
     Array.prototype.forEach.call(panels, function (panel) {
       var kind = panelKind(panel);
-      if (!kind) return;
+      if (!kind || kind === 'submissions') return;   // Submissions stays in the page, at the bottom
       panel.classList.add('rt-panel-hidden');
       if (kind !== 'submissions' || !actions) return;
       var reveal = panel.querySelector('[data-reveal]');

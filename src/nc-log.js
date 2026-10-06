@@ -3,12 +3,11 @@
 // raisedBy / closedBy are client-asserted names (see the auth note in index.js), so they record
 // who said they did it, not a verified identity.
 //
-// Email alert: an NC raised against a TRIGGER_RECORDS record is mailed to NC_EMAIL_RECIPIENTS.
+// Email alert: every NC, from any record, is mailed to NC_EMAIL_RECIPIENTS.
 // Needs SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / NC_EMAIL_FROM on the API service; when
 // SMTP_HOST is unset the alert is skipped with a log line and the NC still saves.
 const nodemailer = require('nodemailer');
 
-const TRIGGER_RECORDS = ['REC-7.4.2'];
 const SEVERITIES = ['minor', 'major', 'critical'];
 const STATUSES = ['open', 'in_progress', 'closed'];
 const SITE_URL = (process.env.SITE_URL || 'https://processing-department.onrender.com').replace(/\/$/, '');
@@ -46,7 +45,7 @@ async function sendNCAlert(nc) {
   const sev = nc.severity.charAt(0).toUpperCase() + nc.severity.slice(1);
   const link = `${SITE_URL}/pages/nc-log.html`;
   const rows = [
-    ['NC Reference', nc.ncRef], ['Job number', nc.jobNumber || '—'], ['Date/Time', fmtDate(nc.raisedAt)],
+    ['NC Reference', nc.ncRef], ['Record', nc.recordRef || '—'], ['Job number', nc.jobNumber || '—'], ['Date/Time', fmtDate(nc.raisedAt)],
     ['Raised by', nc.raisedBy], ['Category', nc.category], ['Severity', sev],
   ];
   const ca = nc.correctiveAction || '(none yet — update the NC log when resolved)';
@@ -55,14 +54,14 @@ async function sendNCAlert(nc) {
     + `\nDescription:\n  ${nc.description}\n\nCorrective action logged:\n  ${ca}\n\n`
     + `View the NC log: ${link}\n\n---\nAbagold Processing Facility — Automated Alert\n`;
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const html = '<p>Non-Conformance raised on Dry Monitoring record.</p><table cellpadding="3">'
+  const html = '<p>Non-Conformance raised.</p><table cellpadding="3">'
     + rows.map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>`).join('')
     + `</table><p><b>Description:</b><br>${esc(nc.description)}</p>`
     + `<p><b>Corrective action logged:</b><br>${esc(ca)}</p>`
     + `<p><a href="${link}">View the NC log</a></p><hr><p style="color:#666">Abagold Processing Facility — Automated Alert</p>`;
   await t.sendMail({
     from: process.env.NC_EMAIL_FROM || process.env.SMTP_USER, to,
-    subject: `⚠ NC Raised — Dry Monitoring [Job: ${nc.jobNumber || '—'}] — ${nc.ncRef}`,
+    subject: `⚠ NC Raised — ${nc.recordRef || 'record'} [Job: ${nc.jobNumber || '—'}] — ${nc.ncRef}`,
     text, html,
   });
 }
@@ -115,9 +114,7 @@ function mount(app, prisma) {
       const [{ n }] = await prisma.$queryRaw`SELECT nextval('nc_ref_seq')::int AS n`;
       data.ncRef = `NC-${new Date().getFullYear()}-${String(n).padStart(4, '0')}`;
       const nc = await T.create({ data });
-      if (TRIGGER_RECORDS.includes(nc.recordRef)) {
-        sendNCAlert(nc).catch((e) => console.error(`NC alert for ${nc.ncRef} failed`, e)); // never block the save on mail
-      }
+      sendNCAlert(nc).catch((e) => console.error(`NC alert for ${nc.ncRef} failed`, e)); // never block the save on mail
       res.status(201).json(nc);
     } catch (e) { console.error('POST nc failed', e); res.status(500).json({ ok: false }); }
   });
