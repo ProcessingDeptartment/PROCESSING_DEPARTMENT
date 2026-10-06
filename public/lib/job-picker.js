@@ -406,8 +406,16 @@
       const ok = (f) => !(f.disabled || f.readOnly || String(f.value || '').trim() !== '' || !f.getClientRects().length)
         && (details ? !details.contains(f) : true) && (focusBlock.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING || (!details && focusBlock.contains(f)));
       const first = (opts.requiredFocus ? opts.requiredFocus() : []).filter(Boolean).find(ok);
-      const fields = host.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea');
-      const target = first || [...fields].find(ok);
+      // An unanswered Yes/No group counts as the next field (its Yes button takes focus), so a form
+      // whose next questions are Yes/No checks stops there instead of jumping on to a comments box below.
+      const yesNoTarget = (f) => {
+        const g = f.closest && f.closest('.ml-yesno');
+        if (!g) return f;
+        const h = document.getElementById(g.getAttribute('data-yesno-for'));
+        return h && String(h.value || '').trim() === '' ? f : null;
+      };
+      const fields = host.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea, .ml-yesno button[data-v=Yes]');
+      const target = first || [...fields].find((f) => { const t = yesNoTarget(f); return t && ok(t); });
       if (!target) return;
       try { target.focus({ preventScroll: true }); } catch (e) { return; }
       try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { }
