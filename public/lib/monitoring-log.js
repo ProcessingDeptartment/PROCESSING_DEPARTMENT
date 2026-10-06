@@ -253,12 +253,19 @@
   .ml-sheet .sheet-body td.sheet-item{ width:46%; }
   .ml-sheet .sheet-body td.sheet-rec{ width:14%; text-align:center; font-weight:700; }
   .ml-sheet .sheet-sign td{ height:30px; font-size:14px; }
-  .ml-sheet table.sheet-4col{ table-layout:fixed; }
-  .ml-sheet .sheet-4col col{ width:25%; }
-  .ml-sheet .sheet-4col th{ background:#eee; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:11px; }
-  .ml-sheet .sheet-4col .s4-lbl{ font-weight:600; font-size:10.5px; }
-  .ml-sheet .sheet-4col .s4-val{ font-weight:400; min-height:14px; white-space:pre-wrap; }
-  .ml-sheet .sheet-4col .s4-old{ font-style:italic; color:#444; }
+  /* printLayout "4col" (REC 7.4.2) -- same print look as REC 7.4.0 (form-record .fr-dc): shared title block,
+     label | value pairs two to a row (8 pt grey labels, 9 pt values), grey section bars, 9 pt sign-off. */
+  .ml-sheet .ml-dc{ font-size:9pt; }
+  .ml-sheet .ml-dc table{ width:100%; border-collapse:collapse; margin:0 0 3mm; table-layout:fixed; }
+  .ml-sheet .ml-dc td,.ml-sheet .ml-dc th{ border:0.5pt solid #000; padding:1mm 1.5mm; font-size:9pt; text-align:left; vertical-align:middle; height:5.2mm; overflow-wrap:anywhere; }
+  .ml-sheet .ml-dc td.dc-l{ font-size:8pt; font-weight:700; background:#eee; }
+  .ml-sheet .ml-dc td.dc-v{ white-space:pre-wrap; }
+  .ml-sheet .ml-dc .dc-old{ font-style:italic; }
+  .ml-sheet .ml-dc .dc-bhead{ font-size:10pt; font-weight:700; background:#eee; border:1pt solid #000; border-bottom:0; padding:1mm 2mm; margin:3mm 0 0; }
+  .ml-sheet .ml-dc .dc-block{ page-break-inside:avoid; break-inside:avoid; }
+  .ml-sheet .ml-dc table.dc-sign{ table-layout:auto; margin-top:4mm; page-break-inside:avoid; break-inside:avoid; }
+  .ml-sheet .ml-dc .dc-sign td{ font-size:9pt; height:9mm; }
+  .ml-sheet .ml-dc .dc-sign td.dc-l{ font-size:8pt; width:13%; background:none; }
   .ml-sheet .sheet-title{ font-weight:700; font-size:14px; text-align:center; padding:4px; }
   @media print{
     body{ background:#fff; }
@@ -277,6 +284,7 @@
     body.ml-printing-entry .ml-body{ display:none !important; }
     body.ml-printing-entry .ml-sheet{ display:block; }
     body.ml-printing-entry #dh-print-header{ display:none !important; }
+    body.ml-printing-entry.ml-printing-dc #dh-print-header{ display:block !important; }
     /* Printing the whole log: the controlled-copy header is injected into
      * table.ml-table's own thead instead (see injectListPrintHeader) so it repeats
      * using that table's native pagination -- the usual #dh-print-header block is
@@ -2234,9 +2242,9 @@
       }).join('');
       const verified = entryRow.verification || null;
       const cb = entryRow.completedBy || {};
-      // printLayout "4col" (REC 7.4.2): Job info as one full-width row, then every group as a
-      // heading bar over a 4-column grid of label-over-value cells; free text spans the row.
-      const body = config.printLayout === '4col' ? sheet4colBody(entryRow) : `
+      // printLayout "4col" (REC 7.4.2): laid out like REC 7.4.0's PDF -- see sheet4colBody
+      if (config.printLayout === '4col') return `<div class="ml-dc">${sheet4colBody(entryRow)}${dcSignHtml(entryRow)}</div>`;
+      const body = `
       <table class="sheet-body">
         <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : (stampDateF ? stampText(valueFor(entryRow, stampDateF)) : ''))}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
         ${rows}
@@ -2289,11 +2297,16 @@
       await Promise.all(Array.from(sheet.querySelectorAll('img')).map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
     }
 
+    // Job info first (no heading, like REC 7.4.0), then each group under a grey bar. Every table is
+    // label | value | label | value; free text and "(old)" values take a whole row (label + 3 cells).
+    // Tables keep class sheet-4col and the label cell data-sheet-field: addPrintPhotos hangs photos off them.
     function sheet4colBody(entryRow) {
+      const fmtD = (x) => (window.DocHeader && window.DocHeader.fmtDate ? window.DocHeader.fmtDate(x) : x);
       const cellText = (f) => {
         const raw = valueFor(entryRow, f);
-        const shown = (raw === '' || raw == null) ? '' : (isStamp(f) ? stampText(raw) : String(raw));
-        return isBadValue(f, shown) ? `<span class="ml-bad">${esc(shown)} &#9888;</span>` : esc(shown);
+        let shown = (raw === '' || raw == null) ? '' : (isStamp(f) ? stampText(raw) : String(raw));
+        if (shown && f.type === 'date' && !isStamp(f)) shown = fmtD(shown);
+        return isBadValue(f, String(raw == null ? '' : raw)) ? `<span class="ml-bad">${esc(shown)} &#9888;</span>` : esc(shown);
       };
       const groups = [];
       sheetRowFields().forEach(f => {
@@ -2303,18 +2316,55 @@
         g.fields.push(f);
       });
       const wideF = (f) => f.type === 'textarea' || f.wide || f.legacy;
-      const cell = (f) => `<td data-sheet-field="${esc(f.key)}" class="s4-cell${f.legacy ? ' s4-old' : ''}"${wideF(f) ? ' colspan="4"' : ''}><div class="s4-lbl">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}${f.legacy && !/\(old\)/i.test(f.label) ? ' (old)' : ''}</div><div class="s4-val">${cellText(f)}</div></td>`;
-      return groups.map(g => {
+      const label = (f) => esc(f.label) + (f.unit ? ` (${esc(f.unit)})` : '') + (f.legacy && !/\(old\)/i.test(f.label) ? ' (old)' : '');
+      const pair = (f) => `<td class="dc-l${f.legacy ? ' dc-old' : ''}" data-sheet-field="${esc(f.key)}">${label(f)}</td>`
+        + `<td class="dc-v${f.legacy ? ' dc-old' : ''}"${wideF(f) ? ' colspan="3"' : ''}>${cellText(f)}</td>`;
+      const cols = '<colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup>';
+      return groups.map((g, gi) => {
         const trs = [];
         let row = [];
-        const flush = () => { if (row.length) { while (row.length < 4) row.push('<td class="s4-cell"></td>'); trs.push('<tr>' + row.join('') + '</tr>'); row = []; } };
+        const flush = () => {
+          if (!row.length) return;
+          if (row.length === 1) row.push('<td class="dc-l"></td><td></td>');
+          trs.push('<tr>' + row.join('') + '</tr>');
+          row = [];
+        };
         g.fields.forEach(f => {
-          if (wideF(f)) { flush(); trs.push('<tr>' + cell(f) + '</tr>'); return; }
-          row.push(cell(f)); if (row.length === 4) flush();
+          if (wideF(f)) { flush(); trs.push('<tr>' + pair(f) + '</tr>'); return; }
+          row.push(pair(f));
+          if (row.length === 2) flush();
         });
         flush();
-        return `<table class="sheet-4col"><colgroup><col><col><col><col></colgroup>${g.name ? `<tr><th colspan="4">${esc(g.name)}</th></tr>` : ''}${trs.join('')}</table>`;
+        const table = `<table class="sheet-4col">${cols}<tbody>${trs.join('')}</tbody></table>`;
+        const isJob = gi === 0 && g.name && g.name === jobInfoGroup;
+        return isJob || !g.name ? table : `<div class="dc-block"><div class="dc-bhead">${esc(g.name)}</div>${table}</div>`;
       }).join('');
+    }
+
+    // Completed by / Verified by -- the same two rows REC 7.4.0 prints (signature shows "Confirmed")
+    function dcSignHtml(entryRow) {
+      const cb = entryRow.completedBy || {};
+      const vf = entryRow.verification || null;
+      const d = (x) => (x && window.DocHeader && window.DocHeader.fmtDate ? window.DocHeader.fmtDate(x) : (x || ''));
+      const when = cb.date || (entryRow.submittedAt ? new Date(entryRow.submittedAt).toISOString().slice(0, 10) : '');
+      return `<table class="dc-sign"><tbody>
+        <tr><td class="dc-l">Completed by:</td><td>${esc(cb.by || '')}</td><td class="dc-l">Title:</td><td>${esc(cb.title || '')}</td>
+            <td class="dc-l">Date:</td><td>${esc(d(when))}</td><td class="dc-l">Signature:</td><td>${String(cb.signature || '').trim() ? 'Confirmed' : ''}</td></tr>
+        <tr><td class="dc-l">Verified by:</td><td>${esc(vf ? vf.verifiedBy : '')}</td><td class="dc-l">Title:</td><td>${esc(vf ? vf.verifiedSig : '')}</td>
+            <td class="dc-l">Date:</td><td>${esc(vf ? d(vf.verifiedDate) : '')}</td><td class="dc-l">Signature:</td><td>${vf && String(vf.verifiedSignature || '').trim() ? 'Confirmed' : ''}</td></tr>
+      </tbody></table>`;
+    }
+
+    // REC 7.4.0's page: A4 portrait, 10 mm margins, footer "REC — Title | Rev. N | Printed: date | Page X of Y" (7 pt)
+    function dcPageStyle() {
+      let st = document.getElementById('ml-page-style');
+      if (!st) { st = document.createElement('style'); st.id = 'ml-page-style'; document.head.appendChild(st); }
+      const h = window.DocHeader && window.DocHeader.current ? window.DocHeader.current(recordKey) : null;
+      const rev = h && h.revision !== '' && h.revision != null ? h.revision : (config.docRevisionStart || 1);
+      const printed = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/,/g, '');
+      const txt = (docCode + ' — ' + docTitle + '  |  Rev. ' + rev + '  |  Printed: ' + printed + '  |  Page ').replace(/[\\"]/g, '');
+      st.textContent = '@page{ size:A4 portrait; margin:10mm; @bottom-right{ content:"' + txt + '" counter(page) " of " counter(pages);'
+        + " font-family:'Segoe UI',system-ui,sans-serif; font-size:7pt; color:#000; border-top:0.5pt solid #000; padding-top:1mm; } }";
     }
 
     async function printEntry(id) {
@@ -2324,11 +2374,13 @@
       const sheet = el('ml_printSheet');
       sheet.innerHTML = prog ? buildJobSheet(entryRow) : buildEntrySheet(entryRow);
       if (photosOn) await addPrintPhotos(sheet, entryRow);
-      setPageOrientation('portrait');
+      const dc = !prog && config.printLayout === '4col';
+      if (dc) dcPageStyle(); else setPageOrientation('portrait');
       document.body.classList.add('ml-printing-entry');
+      document.body.classList.toggle('ml-printing-dc', dc);
       const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);
       withPrintTitle(safeKey(docCode) + '_' + safeKey(title) + '_' + stamp, () => window.print());
-      document.body.classList.remove('ml-printing-entry');
+      document.body.classList.remove('ml-printing-entry', 'ml-printing-dc');
     }
 
     function exportEntryJson(id) {
