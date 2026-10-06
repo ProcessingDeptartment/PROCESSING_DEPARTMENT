@@ -12,6 +12,11 @@
   .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
   .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
   .back-link:hover{ color:#fff; }
+  .av-link{ display:flex; flex-direction:column; gap:4px; min-height:48px; box-sizing:border-box; padding:12px 16px; margin:0 0 16px; background:#fff; border:1px solid #e2e4e3; border-left:4px solid #a9763a; border-radius:8px; text-decoration:none; color:#1b2330; }
+  .av-link:active{ background:#f4f1e8; }
+  .av-link:focus-visible{ outline:3px solid #96652b; outline-offset:2px; }
+  .av-link-title{ font-size:16px; font-weight:700; }
+  .av-link-desc{ font-size:14px; color:#54606b; }
   .container{ max-width:1400px; margin:0 auto; padding:20px; }
 
   .summary-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
@@ -70,6 +75,8 @@
 </div>
 
 <div class="container">
+
+  <a class="av-link" href="awaiting-verification.html"><span class="av-link-title">Awaiting Verification &rarr;</span><span class="av-link-desc">Every submitted entry waiting for your verification, grouped by record &mdash; review and sign off in bulk</span></a>
 
   <div class="summary-row">
     <div class="summary-card" data-quick="all"><div class="num" id="sumAll">0</div><div class="lbl">Events in view</div></div>

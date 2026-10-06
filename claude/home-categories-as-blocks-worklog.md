@@ -18,3 +18,7 @@
 - Signed out: only Handovers shows — confirmed by Michaela 2026-10-06.
 - Login modal (login-ui.js) not touched; check whether it has a user picker.
 - Screenshots / TB300XU viewport measurement not done: the in-app browser couldn't open the local file. Need a check on the real tablet after deploy.
+
+## Update 2026-10-06 (Michaela's placement decisions)
+- Awaiting Verification: removed from home; now a link card at the top of `pages/submissions-log.html` (the Logs block's page).
+- Passkeys: stays in the table below the blocks, now headed **Other**.
