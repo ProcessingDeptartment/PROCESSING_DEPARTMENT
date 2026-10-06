@@ -217,18 +217,18 @@
   .fr-sheet .fr-sheet-sign td.fr-sheet-lbl{ width:13%; }
   .fr-sheet .fr-sheet-sign{ page-break-inside:avoid; break-inside:avoid; }
   /* printCompact: single-page compact layout (e.g. REC 7.4.1 drying process) */
-  .fr-sheet.fr-sheet-compact{ font-size:9.5px; }
-  .fr-sheet.fr-sheet-compact h3{ font-size:9.5px; margin:5px 0 2px; }
+  .fr-sheet.fr-sheet-compact{ font-size:11.5px; }
+  .fr-sheet.fr-sheet-compact h3{ font-size:11.5px; margin:5px 0 2px; }
   .fr-sheet.fr-sheet-compact table{ margin-bottom:4px; }
-  .fr-sheet.fr-sheet-compact td,.fr-sheet.fr-sheet-compact th{ padding:2px 4px; font-size:9.5px; }
-  .fr-sheet.fr-sheet-compact .fr-sheet-sign td{ height:20px; font-size:11px; }
+  .fr-sheet.fr-sheet-compact td,.fr-sheet.fr-sheet-compact th{ padding:2px 4px; font-size:11.5px; }
+  .fr-sheet.fr-sheet-compact .fr-sheet-sign td{ height:20px; font-size:13px; }
   .fr-sheet.fr-sheet-compact h3{ font-weight:700; letter-spacing:.06em; margin:8px 0 3px; }
   .fr-sheet.fr-sheet-compact table{ table-layout:fixed; }
   .fr-sheet.fr-sheet-compact td,.fr-sheet.fr-sheet-compact th{ vertical-align:middle; overflow-wrap:anywhere; }
-  .fr-sheet.fr-sheet-compact td.fr-sheet-lbl{ background:#eee; font-size:8.5px; }
+  .fr-sheet.fr-sheet-compact td.fr-sheet-lbl{ background:#eee; font-size:10.5px; }
   .fr-sheet.fr-sheet-compact table.fr-sheet-grid td.fr-sheet-lbl{ width:auto; }
   .fr-sheet.fr-sheet-compact table.fr-sheet-grid td{ height:16px; }
-  .fr-sheet.fr-sheet-compact table.fr-sheet-flat th{ text-align:center; font-size:8.5px; }
+  .fr-sheet.fr-sheet-compact table.fr-sheet-flat th{ text-align:center; font-size:10.5px; }
   .fr-sheet.fr-sheet-compact table.fr-sheet-flat td{ text-align:center; height:15px; }
   /* REC 7.4.0 print layout (roster.slides): A4 portrait, 9 pt body, 8 pt labels, black and white */
   .fr-sheet .fr-dc{ font-size:9pt; }

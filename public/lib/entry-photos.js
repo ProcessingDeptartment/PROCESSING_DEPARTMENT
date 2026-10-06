@@ -285,5 +285,17 @@
     return out;
   }
 
-  window.EntryPhotos = { attach, counts, printBlocks };
+  // PDF grid of every photo on a job's checks. items: [{ id, label(fieldKey) }], oldest check first; each cell is
+  // captioned with the date of the image and the check that failed. '' when there are no photos.
+  async function printGrid(items, fmtDate) {
+    const lists = await Promise.all(items.map((it) => call('GET', `${PATH}/${encodeURIComponent(it.id)}/images`).catch(() => ({}))));
+    const day = (ts) => { const d = new Date(ts); if (isNaN(d)) return ''; const iso = d.toISOString().slice(0, 10); return fmtDate ? fmtDate(iso) : iso; };
+    const cells = [];
+    lists.forEach((byField, i) => Object.keys(byField || {}).forEach((k) => (byField[k] || []).forEach((img) => cells.push(
+      `<div class="ph-cell"><img src="${esc(img.imageData)}" alt=""><div class="ph-cap">${esc(day(img.uploadedAt))} · ${esc(items[i].label(k))}</div>`
+      + `${img.caption ? `<div class="ph-cap" style="font-weight:400;">${esc(img.caption)}</div>` : ''}</div>`))));
+    return cells.length ? `<div class="dc-block"><div class="dc-bhead">Photos</div><div class="ph-grid">${cells.join('')}</div></div>` : '';
+  }
+
+  window.EntryPhotos = { attach, counts, printBlocks, printGrid };
 })();

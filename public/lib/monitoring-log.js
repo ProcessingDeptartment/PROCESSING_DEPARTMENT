@@ -266,6 +266,23 @@
   .ml-sheet .ml-dc table.dc-sign{ table-layout:auto; margin-top:4mm; page-break-inside:avoid; break-inside:avoid; }
   .ml-sheet .ml-dc .dc-sign td{ font-size:9pt; height:9mm; }
   .ml-sheet .ml-dc .dc-sign td.dc-l{ font-size:8pt; width:13%; background:none; }
+  .ml-sheet .ml-dc table.dc-checks th{ font-size:8pt; font-weight:700; background:#eee; text-align:left; }
+  .ml-sheet .ml-dc table.dc-checks{ margin-top:0; }
+  .ml-sheet .ml-dc table.dc-checks tr{ page-break-inside:avoid; break-inside:avoid; }
+  .ml-sheet .ml-dc .ml-hist-bad{ font-weight:700; }
+  .ml-sheet .ml-dc .ph-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2mm; }
+  .ml-sheet .ml-dc .ph-cell{ border:0.5pt solid #000; padding:1mm; page-break-inside:avoid; break-inside:avoid; }
+  .ml-sheet .ml-dc .ph-cell img{ display:block; width:100%; height:34mm; object-fit:contain; }
+  .ml-sheet .ml-dc .ph-cap{ font-size:7.5pt; font-weight:700; line-height:1.25; margin-top:1mm; }
+  /* previous checks on screen, shown once a job is picked */
+  .ml-checkhist{ margin:0 0 14px; background:#fff; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; padding:10px 14px; }
+  .ml-hist-title{ font-weight:700; font-size:13px; margin-bottom:6px; }
+  .ml-hist-note{ color:var(--palette-label,#54606b); font-size:13px; }
+  table.ml-hist-table{ width:100%; border-collapse:collapse; }
+  table.ml-hist-table th,table.ml-hist-table td{ border-bottom:1px solid var(--palette-border,#e2e4e3); padding:5px 7px; text-align:left; font-size:13px; vertical-align:top; }
+  table.ml-hist-table th{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--palette-label,#54606b); }
+  table.ml-hist-table tr.ml-hist-fail td{ background:#fbe8e6; }
+  .ml-hist-bad{ color:var(--palette-fail,#a3352d); font-weight:700; }
   .ml-sheet .sheet-title{ font-weight:700; font-size:14px; text-align:center; padding:4px; }
   @media print{
     body{ background:#fff; }
@@ -1304,7 +1321,7 @@
       html += `</tbody></table>`;
       table.innerHTML = html;
       if (photosOn) {
-        loadLib('entry-photos.js?v=1', 'EntryPhotos').then((P) => P && P.counts(true)).then((counts) => {
+        loadLib('entry-photos.js?v=2', 'EntryPhotos').then((P) => P && P.counts(true)).then((counts) => {
           if (!counts) return;
           table.querySelectorAll('[data-photos-for]').forEach((td) => {
             const n = counts[td.dataset.photosFor] || 0;
@@ -1651,9 +1668,10 @@
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill, !existing, recordKey); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
       if (!locked) wireFromRecord(container);
       wireCalcAndFlags(container, locked);
+      if (config.checkHistory) wireCheckHistory(container);
       if (photosOn) {
         const sid = formEntryId;
-        loadLib('entry-photos.js?v=1', 'EntryPhotos').then((P) => {
+        loadLib('entry-photos.js?v=2', 'EntryPhotos').then((P) => {
           if (P && formEntryId === sid) P.attach(container, { submissionId: sid, ns, locked, fields: photoFields(), toast });
         });
       }
@@ -2243,7 +2261,13 @@
       const verified = entryRow.verification || null;
       const cb = entryRow.completedBy || {};
       // printLayout "4col" (REC 7.4.2): laid out like REC 7.4.0's PDF -- see sheet4colBody
-      if (config.printLayout === '4col') return `<div class="ml-dc">${sheet4colBody(entryRow)}${dcSignHtml(entryRow)}</div>`;
+      if (config.printLayout === '4col') {
+        if (!config.checkHistory) return `<div class="ml-dc">${sheet4colBody(entryRow)}${dcSignHtml(entryRow)}</div>`;
+        // job report: Job info + Dry room details as the job stands now, every check as a line, photos at the bottom
+        const list = printJobChecks(entryRow);
+        const latest = list[list.length - 1];
+        return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${checkHistoryPdfHtml(list)}${dcSignHtml(latest)}<div id="ml_dc_photos"></div></div>`;
+      }
       const body = `
       <table class="sheet-body">
         <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : (stampDateF ? stampText(valueFor(entryRow, stampDateF)) : ''))}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
@@ -2276,9 +2300,74 @@
       </table>`;
     }
 
+    // ---- per-job check history (config.checkHistory, REC 7.4.2) ------------------------------------------------
+    // Checks on one job run over weeks and are done by different people. Every submitted entry for the job is one
+    // line: date, what failed, where the job was, in spec or not, who checked. Shown on screen once a job is picked
+    // (like the drying record's "job so far") and on the PDF as the Checks table plus a grid of the photos.
+    const histJobKey = () => (entryFields.find(f => f.type === 'jobsearch') || {}).key || 'jobNo';
+    const histWhen = (e) => facilityDateOf(e.submittedAt || e.createdAt);
+    const histFmt = (iso) => (iso && window.DocHeader && window.DocHeader.fmtDate ? window.DocHeader.fmtDate(iso) : (iso || ''));
+    function jobChecks(job, exceptId) {
+      if (!job) return [];
+      const k = histJobKey();
+      return entries.filter(e => e.id !== exceptId && isSubmitted(e) && String((e.values || {})[k] || '').trim() === job)
+        .sort((a, b) => (a.submittedAt || a.createdAt || 0) - (b.submittedAt || b.createdAt || 0));
+    }
+    const failedChecks = (e) => entryFields.filter(f => isBadValue(f, (e.values || {})[f.key])).map(f => f.label);
+    function checkLineHtml(e) {
+      const v = e.values || {};
+      const bad = failedChecks(e);
+      const note = String(v.correctiveActions || '').trim();
+      const what = bad.length ? `<span class="ml-hist-bad">Failed: ${esc(bad.join(', '))}</span>${note ? ' — ' + esc(note) : ''}` : 'All checks OK';
+      const spec = e.inSpec === false ? 'No' : (e.inSpec === true ? 'Yes' : '—');
+      return { date: esc(histFmt(histWhen(e))), what, where: esc(v.dryRoomArea || ''), spec, by: esc((e.completedBy && e.completedBy.by) || '') };
+    }
+    function checkTableHtml(list, cls) {
+      const rows = list.map(e => { const l = checkLineHtml(e); return `<tr${l.spec === 'No' ? ' class="ml-hist-fail"' : ''}><td>${l.date}</td><td>${l.what}</td><td>${l.where}</td><td>${l.spec}</td><td>${l.by}</td></tr>`; }).join('');
+      return `<table class="${cls}"><colgroup><col style="width:13%"><col style="width:39%"><col style="width:18%"><col style="width:10%"><col style="width:20%"></colgroup>`
+        + `<thead><tr><th>Date</th><th>Check</th><th>Location</th><th>In spec</th><th>Checked by</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+    function wireCheckHistory(container) {
+      const jobEl = container.querySelector('#' + ns + '_f_' + histJobKey());
+      const first = container.querySelector('details.ml-section-collapsible');
+      if (!jobEl || !first || container.querySelector('.ml-checkhist')) return;
+      const box = document.createElement('div');
+      box.className = 'ml-checkhist';
+      first.after(box);
+      const paint = () => {
+        const job = String(jobEl.value || '').trim();
+        if (!job) { box.innerHTML = '<div class="ml-hist-note">Pick a job number to see its previous checks.</div>'; return; }
+        const list = jobChecks(job, editingId || formEntryId).reverse();
+        box.innerHTML = list.length
+          ? `<div class="ml-hist-title">Previous checks (${list.length})</div>${checkTableHtml(list, 'ml-hist-table')}`
+          : '<div class="ml-hist-note"><b>First check for this job.</b></div>';
+      };
+      ['input', 'change'].forEach(ev => jobEl.addEventListener(ev, paint));
+      paint();
+    }
+    // PDF: the entries to print for the job of entryRow (all of them, oldest first); the printed entry if it has no job
+    function printJobChecks(entryRow) {
+      const list = jobChecks(String((entryRow.values || {})[histJobKey()] || '').trim());
+      return list.length ? list : [entryRow];
+    }
+    function checkHistoryPdfHtml(list) {
+      return `<div class="dc-block"><div class="dc-bhead">Checks</div>${checkTableHtml(list, 'dc-checks')}</div>`;
+    }
+    // grid of every photo on the job's checks, each labelled with the image date and the check that failed
+    async function addCheckPhotoGrid(sheet, list) {
+      const slot = sheet.querySelector('#ml_dc_photos');
+      if (!slot) return;
+      const P = await loadLib('entry-photos.js?v=2', 'EntryPhotos');
+      if (!P || !P.printGrid) return;
+      const html = await P.printGrid(list.map(e => ({ id: e.id, label: (k) => (entryFields.find(f => f.key === k) || {}).label || k })), histFmt);
+      if (!html) return;
+      slot.innerHTML = html;
+      await Promise.all(Array.from(slot.querySelectorAll('img')).map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
+    }
+
     // photos print under their field's cell (4col) or row (classic sheet); waits for the images to decode
     async function addPrintPhotos(sheet, entryRow) {
-      const P = await loadLib('entry-photos.js?v=1', 'EntryPhotos');
+      const P = await loadLib('entry-photos.js?v=2', 'EntryPhotos');
       if (!P) return;
       const blocks = await P.printBlocks(entryRow.id);
       Object.keys(blocks).forEach((k) => {
@@ -2300,7 +2389,7 @@
     // Job info first (no heading, like REC 7.4.0), then each group under a grey bar. Every table is
     // label | value | label | value; free text and "(old)" values take a whole row (label + 3 cells).
     // Tables keep class sheet-4col and the label cell data-sheet-field: addPrintPhotos hangs photos off them.
-    function sheet4colBody(entryRow) {
+    function sheet4colBody(entryRow, skipGroups) {
       const fmtD = (x) => (window.DocHeader && window.DocHeader.fmtDate ? window.DocHeader.fmtDate(x) : x);
       const cellText = (f) => {
         const raw = valueFor(entryRow, f);
@@ -2320,7 +2409,7 @@
       const pair = (f) => `<td class="dc-l${f.legacy ? ' dc-old' : ''}" data-sheet-field="${esc(f.key)}">${label(f)}</td>`
         + `<td class="dc-v${f.legacy ? ' dc-old' : ''}"${wideF(f) ? ' colspan="3"' : ''}>${cellText(f)}</td>`;
       const cols = '<colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup>';
-      return groups.map((g, gi) => {
+      return groups.filter(g => !(skipGroups || []).includes(g.name)).map((g, gi) => {
         const trs = [];
         let row = [];
         const flush = () => {
@@ -2373,7 +2462,8 @@
       const dateF = roleField('date');
       const sheet = el('ml_printSheet');
       sheet.innerHTML = prog ? buildJobSheet(entryRow) : buildEntrySheet(entryRow);
-      if (photosOn) await addPrintPhotos(sheet, entryRow);
+      if (config.printLayout === '4col' && config.checkHistory) { if (photosOn) await addCheckPhotoGrid(sheet, printJobChecks(entryRow)); }
+      else if (photosOn) await addPrintPhotos(sheet, entryRow);
       const dc = !prog && config.printLayout === '4col';
       if (dc) dcPageStyle(); else setPageOrientation('portrait');
       document.body.classList.add('ml-printing-entry');
