@@ -1188,7 +1188,7 @@
     let pre = null;
     if (gateRoot) { gateRoot.style.visibility = 'hidden'; pre = setTimeout(() => { gateRoot.style.visibility = ''; }, 5000); }
     const unprelock = () => { if (pre) { clearTimeout(pre); pre = null; } if (gateRoot) gateRoot.style.visibility = ''; };
-    loadLib('job-picker.js?v=10', 'JobPicker').then((jp) => {
+    loadLib('job-picker.js?v=11', 'JobPicker').then((jp) => {
       try {
         if (!jp) return;
         const jobKey0 = fields[0].key;

@@ -105,7 +105,7 @@
 <div class="verifybar hidden" id="verifybar">
   <span class="sel" id="selCount">0 selected</span>
   <label>Verified by<input id="vfy_by" readonly></label>
-  <label>Title<input id="vfy_title" placeholder="e.g. QA Manager" readonly></label>
+  <label>Title<input id="vfy_jobtitle" readonly></label>
   <label>Date<input id="vfy_date" type="date" readonly></label>
   <label class="pk-field">
     <span class="pk-label"><span>Signature</span><span class="pk-status" id="vfy_signature_display" aria-live="polite"></span></span>
@@ -184,6 +184,11 @@
     });
     return k ? String(values[k]) : '';
   }
+  function nameOf(v) {
+    if (!v) return '';
+    if (typeof v === 'object') return String(v.by || v.name || v.displayName || '').trim();
+    return String(v).trim();
+  }
   function personOf(values) {
     if (!values) return '';
     var k = Object.keys(values).find(function (key) {
@@ -225,7 +230,7 @@
             id: entry.id || '', name: meta.name || recordKey, docNo: meta.docNo || '',
             href: meta.href ? '../records/' + meta.href : null,
             values: entry.values || {},
-            entryDate: entryDate(entry.values), ref: entryRef(entry.values), who: entry.submittedBy || entry.submittedByName || entry.completedBy || personOf(entry.values),
+            entryDate: entryDate(entry.values), ref: entryRef(entry.values), who: nameOf(entry.completedBy) || nameOf(entry.stage && entry.stage.submittedBy) || nameOf(entry.submittedBy) || nameOf(entry.submittedByName) || personOf(entry.values),
             submittedAt: whenOf(entry), allowedRoles: allowed,
             mine: allowed.indexOf(STATE.role) !== -1
           });
@@ -417,12 +422,12 @@
     }
     var v = {
       verifiedBy: ($('vfy_by').value || '').trim(),
-      verifiedSig: ($('vfy_title').value || '').trim(),
+      verifiedSig: (STATE.user || '').trim(),
       verifiedDate: $('vfy_date').value,
       verifiedSignature: ($('vfy_signature').value || '').trim()
     };
     if (!v.verifiedBy || !v.verifiedDate) { toast('Passkey sign-in and date are required.'); return; }
-    if (!v.verifiedSig) { toast('Your passkey has no title set. Ask an administrator to add one before you verify.'); return; }
+    if (!v.verifiedSig) { toast('You must be logged in (with a title) to verify.'); return; }
 
     $('btnVerify').disabled = true;
     try {
@@ -463,7 +468,6 @@
       if (dispEl) dispEl.textContent = '';
       var pkField = sigEl2 && sigEl2.closest('.pk-field');
       if (pkField) pkField.classList.remove('is-verified');
-      $('vfy_title').value = '';
       $('vfy_by').value = '';
       $('vfy_date').value = today();
       await scan();
@@ -502,6 +506,7 @@
   async function start() {
     STATE.user = window.Auth.getCurrentUsername();
     STATE.role = window.Auth.getCurrentRole();
+    $('vfy_jobtitle').value = STATE.user || '';   // title = logged-in user's title
     $('vfy_by').value = '';   // passkey auto-fills name from the verified identity
     $('vfy_date').value = today();
     try { await window.storage.whenReady(); } catch (e) {  }
