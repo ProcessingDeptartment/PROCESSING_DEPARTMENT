@@ -320,8 +320,8 @@
           '<td class="' + ageCls + '">' + waitDays + '</td>' +
           '<td><button type="button" class="rev" data-rid="' + esc(rid) + '">' + (open ? 'Hide' : 'Preview') + '</button></td>' +
         '</tr>';
-        var formLink = r.href
-          ? '<div style="margin-top:10px;"><a href="' + esc(r.href) + '" target="_blank" style="font-size:11.5px;color:#1d4ed8;">View submission form &rarr;</a></div>'
+        var formLink = r.href && r.id
+          ? '<div style="margin-top:10px;"><a href="' + esc(r.href) + '#' + encodeURIComponent(r.id) + '" target="_blank" style="font-size:11.5px;color:#1d4ed8;">View submission form &rarr;</a></div>'
           : '';
         var detail = open ? '<tr class="detail"><td></td><td colspan="6">' + valuesDl(r.values) + formLink + '</td></tr>' : '';
         return main + detail;
