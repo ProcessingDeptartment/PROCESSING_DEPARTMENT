@@ -318,7 +318,9 @@ body.rt-has-shell { overflow-x: hidden; }
 
 /* ---- responsive (phone gutters; no sidebar / tab bar at any width) ---- */
 @media (max-width: 800px) {
-  .rt-body { flex-direction: column; overflow: visible; }
+  /* stretch, not flex-start: in a column the record area must fill the width,
+     not shrink to its content (left-stuck panels on portrait tablets) */
+  .rt-body { flex-direction: column; overflow: visible; align-items: stretch; }
   .rt-content { padding: 16px; }
   .rt-tally .rt-stat-value { font-size: 24px; }
 }
