@@ -2366,8 +2366,6 @@
 
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
     mount.classList.add('ml-app');
-    // per-record styling hook (e.g. .ml-rec-dry-monitoring: REC 7.4.2 4-column layout in record-theme.css)
-    if (config.recordKey) mount.classList.add('ml-rec-' + String(config.recordKey).replace(/[^a-z0-9-]/gi, ''));
 
     function toast(msg) {
       const t = el('ml_toast');

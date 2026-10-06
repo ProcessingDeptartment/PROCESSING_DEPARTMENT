@@ -1920,28 +1920,3 @@ body.rt-tablet .rt-content .fr-badge-ok, body.rt-tablet .rt-content .fr-badge-fa
 .rt-content .fr-slide .fr-pot-line .fr-field { font-size: var(--fs-label, 14px); font-weight: 600; }
 .rt-content .fr-slide .fr-pot-line input:not([type=checkbox]):not([type=hidden]), .rt-content .fr-slide .fr-pot-line select { min-height: 48px; font-size: var(--fs-value, 16px); }
 .rt-content .fr-slide .fr-pot-line .ml-yesno button { min-height: 48px; font-size: 16px; }
-
-/* ---- REC 7.4.2 Dry Monitoring: 4-column field grid (2026-10-05) -----------
-   Scoped to this record only (.ml-rec-dry-monitoring is added by monitoring-log.js).
-   4 cols desktop, 2 cols 600-899px, 1 col under 600px. Section headers keep
-   the shared style untouched. Labels 600, answers 400. */
-.rt-content .ml-rec-dry-monitoring { --rt-form-cols: 4; }
-@media (max-width: 899px) { .rt-content .ml-rec-dry-monitoring { --rt-form-cols: 2; } }
-@media (max-width: 599px) { .rt-content .ml-rec-dry-monitoring { --rt-form-cols: 1; } }
-.rt-content .ml-rec-dry-monitoring .ml-section-body { gap: 16px 12px; }
-.rt-content .ml-rec-dry-monitoring .ml-grid { gap: 16px 12px; }
-/* Yes/No cells: question above, two buttons side by side, never clipped */
-.rt-content .ml-rec-dry-monitoring .ml-yesno { min-width: 0; }
-.rt-content .ml-rec-dry-monitoring .ml-yesno button { min-width: 0; white-space: nowrap; }
-/* typography: bold question, normal-weight answer */
-body .rt-content .ml-rec-dry-monitoring .ml-field { font-weight: 600; }
-body .rt-content .ml-rec-dry-monitoring .ml-field input,
-body .rt-content .ml-rec-dry-monitoring .ml-field select,
-body .rt-content .ml-rec-dry-monitoring .ml-field textarea,
-body.rt-tablet .rt-content .ml-rec-dry-monitoring .ml-yesno button { font-weight: 400; }
-/* read-only cells: grey fill, same cell size as editable ones */
-.rt-content .ml-rec-dry-monitoring .ml-field input[readonly] { background: #f1f3f4; color: #54606b; cursor: default; }
-/* old-entry values (date / QC check / supervisor): full-width muted row */
-.rt-content .ml-rec-dry-monitoring .ml-field[data-field="dateOld"],
-.rt-content .ml-rec-dry-monitoring .ml-field[data-field="qcCheckOld"],
-.rt-content .ml-rec-dry-monitoring .ml-field[data-field="supervisorOld"] { grid-column: 1 / -1; font-style: italic; opacity: .75; }
