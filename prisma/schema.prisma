@@ -4831,3 +4831,30 @@ model SubDryMonitoringImage {
   @@index([submissionId, fieldKey], map: "idx_sdmi_field")
   @@map("sub_dry_monitoring_images")
 }
+
+// Non-Conformance Log (migration 20261006120000_nc_log, routes in src/nc-log.js).
+model NcLog {
+  id               Int       @id @default(autoincrement())
+  ncRef            String    @unique @map("nc_ref")
+  raisedAt         DateTime  @default(now()) @map("raised_at") @db.Timestamptz(6)
+  jobNumber        String?   @map("job_number")
+  recordRef        String?   @map("record_ref")
+  submissionId     String?   @map("submission_id")
+  raisedBy         String    @map("raised_by")
+  category         String
+  description      String
+  severity         String    @default("minor")
+  status           String    @default("open")
+  correctiveAction String?   @map("corrective_action")
+  closedBy         String?   @map("closed_by")
+  closedAt         DateTime? @map("closed_at") @db.Timestamptz(6)
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status], map: "idx_nc_status")
+  @@index([jobNumber], map: "idx_nc_job")
+  @@index([raisedAt(sort: Desc)], map: "idx_nc_raised_at")
+  @@index([recordRef], map: "idx_nc_record")
+  @@map("nc_log")
+}

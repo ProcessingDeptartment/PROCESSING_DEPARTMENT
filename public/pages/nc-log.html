@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Non-Conformance Log</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .head-btns{ display:flex; gap:8px; }
+  .container{ max-width:1400px; margin:0 auto; padding:20px 20px 80px; }
+  .btn{ padding:7px 12px; border:1px solid #d0d5db; background:#fff; border-radius:6px; font-size:12px; cursor:pointer; color:#1b2330; }
+  .btn:hover{ background:#f2f4f6; }
+  .btn.primary{ background:#a9763a; border-color:#a9763a; color:#fff; font-weight:600; }
+  .btn.primary:hover{ background:#96652b; }
+  .filters{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; background:#fff; border:1px solid #e2e4e3; border-radius:8px; padding:10px 12px; }
+  .filters label{ display:flex; flex-direction:column; gap:3px; font-size:11px; color:#5c6771; }
+  .filters input,.filters select{ padding:6px 8px; border:1px solid #d0d5db; border-radius:5px; font-size:12px; }
+  .banner{ padding:10px 12px; border-radius:6px; font-size:12.5px; font-weight:600; margin-bottom:14px; }
+  .banner.ok{ background:#e8f3ec; color:#2f7a52; }
+  .banner.bad{ background:#fbe8e6; color:#a3352d; }
+  .table-wrap{ overflow-x:auto; background:#fff; border:1px solid #e2e4e3; border-radius:8px; }
+  table{ width:100%; border-collapse:collapse; min-width:1100px; }
+  th,td{ padding:8px 10px; border-bottom:1px solid #eceeed; text-align:left; vertical-align:top; }
+  th{ background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; cursor:pointer; user-select:none; white-space:nowrap; }
+  th.nosort{ cursor:default; }
+  th .arr{ color:#a9763a; }
+  tr.hl-critical td{ background:#fef2f2; }
+  tr.hl-major td{ background:#fffbeb; }
+  tr.closed td{ color:#7a848d; }
+  .ref{ font-weight:700; color:#1d4ed8; cursor:pointer; background:none; border:none; padding:0; font-size:13px; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .b-minor{ background:#eceeed; color:#4b5560; }
+  .b-major{ background:#fef3c7; color:#92400e; }
+  .b-critical{ background:#fee2e2; color:#991b1b; }
+  .b-open{ background:#fee2e2; color:#991b1b; }
+  .b-in_progress{ background:#fef3c7; color:#92400e; }
+  .b-closed{ background:#dcfce7; color:#166534; }
+  .empty{ padding:30px; text-align:center; color:#5c6771; }
+  .modal-bg{ position:fixed; inset:0; background:rgba(15,23,32,.5); display:none; align-items:flex-start; justify-content:center; padding:30px 12px; overflow-y:auto; z-index:50; }
+  .modal-bg.show{ display:flex; }
+  .modal{ background:#fff; border-radius:10px; width:100%; max-width:620px; padding:18px 20px; box-sizing:border-box; }
+  .modal h2{ margin:0 0 12px; font-size:16px; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+  .form-grid .full{ grid-column:1 / -1; }
+  .form-grid label{ display:flex; flex-direction:column; gap:3px; font-size:12px; color:#5c6771; }
+  .form-grid input,.form-grid select,.form-grid textarea{ padding:7px 8px; border:1px solid #d0d5db; border-radius:5px; font-size:13px; font-family:inherit; color:#1b2330; }
+  .form-grid textarea{ min-height:70px; resize:vertical; }
+  .ro{ padding:7px 0; color:#1b2330; font-size:13px; white-space:pre-wrap; }
+  .req{ color:#a3352d; }
+  .modal-btns{ display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+  .err{ color:#a3352d; font-size:12px; margin-top:8px; min-height:1em; }
+  @media (max-width:600px){
+    .form-grid{ grid-template-columns:1fr; }
+    .modal-bg{ padding:0; }
+    .modal{ min-height:100vh; border-radius:0; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>Non-Conformance Log</h1>
+    <p>All raised NCs and issues — open and closed</p>
+    <a class="back-link" href="../index.html">&larr; Home</a>
+  </div>
+  <div class="head-btns">
+    <button class="btn primary" id="raiseBtn" type="button">＋ Raise NC</button>
+    <button class="btn" id="csvBtn" type="button">Export CSV</button>
+  </div>
+</div>
+
+<div class="container">
+  <div id="banner"></div>
+  <form class="filters" id="filters">
+    <label>Status
+      <select id="fStatus">
+        <option value="all">All</option><option value="open">Open</option>
+        <option value="in_progress">In progress</option><option value="closed">Closed</option>
+      </select>
+    </label>
+    <label>Job <input id="fJob" type="text" placeholder="e.g. DPR01167"></label>
+    <label>Record <input id="fRecord" type="text" placeholder="e.g. REC-7.4.2"></label>
+    <label>From <input id="fFrom" type="date"></label>
+    <label>To <input id="fTo" type="date"></label>
+    <button class="btn" type="submit">Search</button>
+  </form>
+  <div class="table-wrap">
+    <table>
+      <thead><tr id="headRow"></tr></thead>
+      <tbody id="rows"><tr><td class="empty" colspan="11">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Raise NC -->
+<div class="modal-bg" id="raiseModal">
+  <form class="modal" id="raiseForm">
+    <h2>Raise NC</h2>
+    <div class="form-grid">
+      <label>Job number <input name="job_number" type="text"></label>
+      <label>Record ref <input name="record_ref" type="text" placeholder="e.g. REC-7.4.2"></label>
+      <label>Category <span class="req">*</span><select name="category" required></select></label>
+      <label>Severity <span class="req">*</span>
+        <select name="severity" required><option value="minor">Minor</option><option value="major">Major</option><option value="critical">Critical</option></select>
+      </label>
+      <label class="full">Raised by <span class="req">*</span><input name="raised_by" type="text" required></label>
+      <label class="full">Description <span class="req">*</span><textarea name="description" required placeholder="What went wrong"></textarea></label>
+      <label class="full">Corrective action <textarea name="corrective_action" placeholder="Optional — can be added later"></textarea></label>
+    </div>
+    <div class="err" id="raiseErr"></div>
+    <div class="modal-btns">
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit">Raise NC</button>
+    </div>
+  </form>
+</div>
+
+<!-- View / Edit -->
+<div class="modal-bg" id="viewModal">
+  <form class="modal" id="viewForm">
+    <h2 id="viewTitle"></h2>
+    <div class="form-grid" id="viewBody"></div>
+    <div class="err" id="viewErr"></div>
+    <div class="modal-btns" id="viewBtns"></div>
+  </form>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script>
+(function () {
+  var CATEGORIES = ['Weight deviation', 'Temperature out of spec', 'Labelling error', 'Equipment failure',
+    'Process deviation', 'Product quality', 'Dry room issue', 'Documentation error', 'Hygiene / sanitation', 'Other'];
+  var SEV = { minor: 'Minor', major: 'Major', critical: 'Critical' };
+  var STAT = { open: 'Open', in_progress: 'In progress', closed: 'Closed' };
+  var COLS = [
+    { k: 'ncRef', t: 'NC Ref' }, { k: 'raisedAt', t: 'Date/Time raised' }, { k: 'jobNumber', t: 'Job number' },
+    { k: 'recordRef', t: 'Record' }, { k: 'category', t: 'Category' }, { k: 'description', t: 'Description' },
+    { k: 'severity', t: 'Severity' }, { k: 'status', t: 'Status' }, { k: 'correctiveAction', t: 'Corrective action' },
+    { k: 'closedAt', t: 'Closed by / date' }, { k: '', t: 'Action' }
+  ];
+  var SEV_ORDER = { minor: 0, major: 1, critical: 2 }, STAT_ORDER = { open: 0, in_progress: 1, closed: 2 };
+  var rows = [], sortKey = 'raisedAt', sortDir = -1;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var trunc = function (s, n) { s = s || ''; return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+  function fmt(d) {
+    if (!d) return '';
+    var x = new Date(d), p = function (n) { return String(n).padStart(2, '0'); };
+    return p(x.getDate()) + '/' + p(x.getMonth() + 1) + '/' + x.getFullYear() + ' ' + p(x.getHours()) + ':' + p(x.getMinutes());
+  }
+  function userName() { var u = window.Auth && window.Auth.getCurrentUser(); return u ? u.displayName : ''; }
+  function api(path, opts) { return window.FacilityApi.fetch(path, opts); }
+  function json(method, body) { return { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }; }
+  function banner(cls, msg) { $('banner').innerHTML = msg ? '<div class="banner ' + cls + '">' + esc(msg) + '</div>' : ''; }
+
+  // ---------- table ----------
+  function renderHead() {
+    $('headRow').innerHTML = COLS.map(function (c) {
+      if (!c.k) return '<th class="nosort">' + c.t + '</th>';
+      return '<th data-k="' + c.k + '">' + c.t + (c.k === sortKey ? ' <span class="arr">' + (sortDir > 0 ? '▲' : '▼') + '</span>' : '') + '</th>';
+    }).join('');
+  }
+  function sortVal(r, k) {
+    if (k === 'severity') return SEV_ORDER[r.severity];
+    if (k === 'status') return STAT_ORDER[r.status];
+    var v = r[k]; return v == null ? '' : String(v).toLowerCase();
+  }
+  function sorted() {
+    return rows.slice().sort(function (a, b) {
+      var x = sortVal(a, sortKey), y = sortVal(b, sortKey);
+      return (x < y ? -1 : x > y ? 1 : 0) * sortDir;
+    });
+  }
+  function render() {
+    renderHead();
+    if (!rows.length) { $('rows').innerHTML = '<tr><td class="empty" colspan="11">No NCs raised yet.</td></tr>'; return; }
+    $('rows').innerHTML = sorted().map(function (r) {
+      var cls = r.status === 'closed' ? 'closed' : (r.severity === 'critical' ? 'hl-critical' : r.severity === 'major' ? 'hl-major' : '');
+      var job = r.jobNumber ? '<a href="../records/batch-trace.html?batch=' + encodeURIComponent(r.jobNumber) + '">' + esc(r.jobNumber) + '</a>' : '';
+      return '<tr class="' + cls + '">'
+        + '<td><button type="button" class="ref" data-id="' + r.id + '">' + esc(r.ncRef) + '</button></td>'
+        + '<td>' + fmt(r.raisedAt) + '</td><td>' + job + '</td><td>' + esc(r.recordRef) + '</td><td>' + esc(r.category) + '</td>'
+        + '<td title="' + esc(r.description) + '">' + esc(trunc(r.description, 80)) + '</td>'
+        + '<td><span class="badge b-' + r.severity + '">' + (SEV[r.severity] || esc(r.severity)) + '</span></td>'
+        + '<td><span class="badge b-' + r.status + '">' + (STAT[r.status] || esc(r.status)) + '</span></td>'
+        + '<td title="' + esc(r.correctiveAction) + '">' + esc(trunc(r.correctiveAction, 60)) + '</td>'
+        + '<td>' + (r.status === 'closed' ? esc(r.closedBy || '') + (r.closedAt ? '<br>' + fmt(r.closedAt) : '') : '') + '</td>'
+        + '<td><button type="button" class="btn" data-id="' + r.id + '">View / Edit</button></td></tr>';
+    }).join('');
+  }
+  $('headRow').addEventListener('click', function (e) {
+    var th = e.target.closest('th[data-k]'); if (!th) return;
+    var k = th.getAttribute('data-k');
+    sortDir = k === sortKey ? -sortDir : 1; sortKey = k; render();
+  });
+  $('rows').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-id]'); if (b) openView(+b.getAttribute('data-id'));
+  });
+
+  async function load() {
+    renderHead();
+    var p = new URLSearchParams({ status: $('fStatus').value, limit: '1000' });
+    if ($('fJob').value.trim()) p.set('job', $('fJob').value.trim());
+    if ($('fRecord').value.trim()) p.set('record', $('fRecord').value.trim());
+    if ($('fFrom').value) p.set('from', $('fFrom').value);
+    if ($('fTo').value) p.set('to', $('fTo').value);
+    try {
+      var res = await api('/api/nc?' + p);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      rows = await res.json(); render();
+    } catch (e) {
+      $('rows').innerHTML = '<tr><td class="empty" colspan="11">Could not load the NC log (' + esc(e.message) + ').</td></tr>';
+    }
+  }
+  $('filters').addEventListener('submit', function (e) { e.preventDefault(); load(); });
+
+  // ---------- CSV ----------
+  $('csvBtn').addEventListener('click', function () {
+    var head = ['NC Ref', 'Raised', 'Job number', 'Record', 'Category', 'Description', 'Severity', 'Status',
+      'Corrective action', 'Raised by', 'Closed by', 'Closed at', 'Notes'];
+    var q = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [head.join(',')].concat(sorted().map(function (r) {
+      return [r.ncRef, fmt(r.raisedAt), r.jobNumber, r.recordRef, r.category, r.description, SEV[r.severity], STAT[r.status],
+        r.correctiveAction, r.raisedBy, r.closedBy, fmt(r.closedAt), r.notes].map(q).join(',');
+    }));
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' }));
+    a.download = 'nc-log-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  // ---------- modals ----------
+  function show(id, on) { $(id).classList.toggle('show', on); }
+  document.querySelectorAll('.modal-bg').forEach(function (m) {
+    m.addEventListener('click', function (e) { if (e.target === m || e.target.hasAttribute('data-close')) show(m.id, false); });
+  });
+  $('raiseForm').category.innerHTML = '<option value="">— choose —</option>' + CATEGORIES.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+
+  function openRaise(prefill) {
+    var f = $('raiseForm'); f.reset(); $('raiseErr').textContent = '';
+    f.raised_by.value = userName();
+    Object.keys(prefill || {}).forEach(function (k) { if (f[k]) f[k].value = prefill[k]; });
+    show('raiseModal', true);
+  }
+  $('raiseBtn').addEventListener('click', function () { openRaise(); });
+  $('raiseForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var f = e.target, body = {};
+    ['job_number', 'record_ref', 'category', 'severity', 'raised_by', 'description', 'corrective_action'].forEach(function (k) { body[k] = f[k].value.trim(); });
+    try {
+      var res = await api('/api/nc', json('POST', body));
+      var out = await res.json();
+      if (!res.ok) throw new Error(out.error || ('HTTP ' + res.status));
+      show('raiseModal', false); banner('ok', 'Raised ' + out.ncRef + '.'); load();
+    } catch (err) { $('raiseErr').textContent = 'Could not raise NC: ' + err.message; }
+  });
+
+  var viewing = null;
+  function openView(id) {
+    var r = rows.filter(function (x) { return x.id === id; })[0]; if (!r) return;
+    viewing = r; $('viewErr').textContent = '';
+    var closed = r.status === 'closed';
+    var ro = function (label, v, full) { return '<label' + (full ? ' class="full"' : '') + '>' + label + '<div class="ro">' + (esc(v) || '—') + '</div></label>'; };
+    $('viewTitle').textContent = r.ncRef;
+    var h = ro('Raised', fmt(r.raisedAt)) + ro('Raised by', r.raisedBy) + ro('Job number', r.jobNumber) + ro('Record', r.recordRef)
+      + ro('Category', r.category) + ro('Severity', SEV[r.severity]) + ro('Description', r.description, true);
+    if (closed) {
+      h += ro('Status', 'Closed') + ro('Closed by / date', (r.closedBy || '') + ' ' + fmt(r.closedAt))
+        + ro('Corrective action', r.correctiveAction, true) + ro('Notes', r.notes, true);
+    } else {
+      h += '<label>Status <select name="status">' + Object.keys(STAT).map(function (k) {
+          return '<option value="' + k + '"' + (k === r.status ? ' selected' : '') + '>' + STAT[k] + '</option>'; }).join('') + '</select></label>'
+        + '<label>Closed by <input name="closed_by" type="text" value="' + esc(r.closedBy || userName()) + '"></label>'
+        + '<label class="full">Corrective action <textarea name="corrective_action">' + esc(r.correctiveAction) + '</textarea></label>'
+        + '<label class="full">Notes <textarea name="notes">' + esc(r.notes) + '</textarea></label>';
+    }
+    $('viewBody').innerHTML = h;
+    $('viewBtns').innerHTML = '<button class="btn" type="button" data-close>' + (closed ? 'Close' : 'Cancel') + '</button>'
+      + (closed ? '' : '<button class="btn primary" type="submit">Save</button>');
+    show('viewModal', true);
+  }
+  $('viewForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var f = e.target;
+    var body = { status: f.status.value, corrective_action: f.corrective_action.value.trim(), notes: f.notes.value.trim() };
+    if (body.status === 'closed') {
+      if (!f.closed_by.value.trim()) { $('viewErr').textContent = 'Enter who is closing this NC.'; return; }
+      if (!confirm('Mark this NC as resolved?')) return;
+      body.closed_by = f.closed_by.value.trim();
+    }
+    try {
+      var res = await api('/api/nc/' + viewing.id, json('PATCH', body));
+      var out = await res.json();
+      if (!res.ok) throw new Error(out.error || ('HTTP ' + res.status));
+      show('viewModal', false); banner('ok', out.ncRef + ' updated.'); load();
+    } catch (err) { $('viewErr').textContent = 'Could not save: ' + err.message; }
+  });
+
+  // ?raise=1&job=...&record=... opens the Raise NC form pre-filled (for links from a record)
+  var qs = new URLSearchParams(location.search);
+  if (qs.get('status')) $('fStatus').value = qs.get('status');
+  load();
+  if (qs.get('raise')) openRaise({ job_number: qs.get('job') || '', record_ref: qs.get('record') || '' });
+})();
+</script>
+</body>
+</html>

@@ -878,6 +878,7 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
 
 // REC 7.4.2 photos on problem answers (src/dry-monitoring-images.js)
 require('./dry-monitoring-images').mount(app, prisma);
+require('./nc-log').mount(app, prisma); // Non-Conformance Log
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
