@@ -26,260 +26,257 @@
       ],
       "fields": [
         {
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": null,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
           "key": "exportInvoiceNo",
           "label": "Export / Invoice no.",
           "type": "text",
-          "sectionIndex": 0,
-          "position": 0
-        },
-        {
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
+          "position": 0,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
+          "validateJson": null
+        },
+        {
           "key": "packingDate",
           "label": "Packing date",
           "type": "date",
-          "sectionIndex": 0,
-          "position": 1
-        },
-        {
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
+          "position": 1,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
+          "validateJson": null
+        },
+        {
           "key": "noOfBoxesExported",
           "label": "No. of boxes exported",
           "type": "number",
-          "sectionIndex": 0,
-          "position": 2
-        },
-        {
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 0,
           "parentFieldKey": null,
+          "position": 2,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "key": "labellingListAttached",
-          "label": "REC 7.4.6 Dry Labelling List attached?",
-          "type": "recordpick",
-          "sectionIndex": 1,
-          "position": 3,
-          "extraJson": {
-            "sourceRecordKey": "dry-labelling-list"
-          }
+          "validateJson": null
         },
         {
+          "key": "labellingListAttached",
+          "label": "REC 7.4.6 Dry Labelling List attached?",
+          "type": "upload",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 3,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "cmtLabellingList",
+          "label": "Comments — REC 7.4.6 Dry Labelling List",
+          "type": "text",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 4,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "key": "cmtLabellingList",
-          "label": "Comments — REC 7.4.6 Dry Labelling List",
-          "type": "text",
-          "sectionIndex": 1,
-          "position": 4
+          "validateJson": null
         },
         {
+          "key": "rec747Attached",
+          "label": "REC 7.4.7 Labelling of Dry Boxes attached?",
+          "type": "recordpick",
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 5,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "rec747Attached",
-          "label": "REC 7.4.7 Labelling of Dry Boxes attached?",
-          "type": "recordpick",
-          "sectionIndex": 1,
-          "position": 5,
           "extraJson": {
             "sourceRecordKey": "labelling-of-dry-boxes"
           }
         },
         {
+          "key": "cmt747",
+          "label": "Comments — REC 7.4.7 Labelling of Dry Boxes",
+          "type": "text",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 6,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "key": "cmt747",
-          "label": "Comments — REC 7.4.7 Labelling of Dry Boxes",
-          "type": "text",
-          "sectionIndex": 1,
-          "position": 6
+          "validateJson": null
         },
         {
+          "key": "rec749Attached",
+          "label": "REC 7.4.9 Dry Stock Transfers attached?",
+          "type": "recordpick",
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 7,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "rec749Attached",
-          "label": "REC 7.4.9 Dry Stock Transfers attached?",
-          "type": "recordpick",
-          "sectionIndex": 1,
-          "position": 7,
           "extraJson": {
             "sourceRecordKey": "dry-stock-transfers"
           }
         },
         {
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": null,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
           "key": "cmt749",
           "label": "Comments — REC 7.4.9 Dry Stock Transfers",
           "type": "text",
-          "sectionIndex": 1,
-          "position": 8
-        },
-        {
-          "required": true,
+          "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 8,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
+          "validateJson": null
+        },
+        {
           "key": "signedPackingListsAttached",
           "label": "Signed packing lists attached?",
           "type": "upload",
-          "sectionIndex": 1,
-          "position": 9
-        },
-        {
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": null,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "cmtPackingLists",
-          "label": "Comments — Signed packing lists",
-          "type": "text",
-          "sectionIndex": 1,
-          "position": 10
-        },
-        {
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 9,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "key": "healthCertificatesAttached",
-          "label": "Health certificates attached?",
-          "type": "upload",
-          "sectionIndex": 1,
-          "position": 11
+          "validateJson": null
         },
         {
+          "key": "cmtPackingLists",
+          "label": "Comments — Signed packing lists",
+          "type": "text",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 1,
           "parentFieldKey": null,
+          "position": 10,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
+          "validateJson": null
+        },
+        {
+          "key": "healthCertificatesAttached",
+          "label": "Health certificates attached?",
+          "type": "upload",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 1,
+          "parentFieldKey": null,
+          "position": 11,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
           "key": "cmtHealthCerts",
           "label": "Comments — Health certificates",
           "type": "text",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
           "sectionIndex": 1,
-          "position": 12
+          "parentFieldKey": null,
+          "position": 12,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
         }
       ],
       "autofills": [],
@@ -288,8 +285,7 @@
           "exportInvoiceNo",
           "packingDate"
         ]
-      },
-      "primaryBatchField": null
+      }
     },
     {
       "recordKey": "live-leftovers-log",
@@ -18632,9 +18628,30 @@
           }
         },
         {
+          "title": "Totals",
+          "kind": "fields",
+          "position": 3,
+          "extraJson": {
+            "afterRoster": true,
+            "collapsedByDefault": true,
+            "summaryFields": [
+              {
+                "key": "actualGradedWeight",
+                "label": "graded",
+                "suffix": " kg"
+              },
+              {
+                "key": "yield",
+                "label": "yield",
+                "suffix": "%"
+              }
+            ]
+          }
+        },
+        {
           "title": "Collection bins",
           "kind": "roster",
-          "position": 3,
+          "position": 4,
           "extraJson": {
             "binIdColumn": "binCode",
             "totalsRow": [
@@ -18652,26 +18669,6 @@
               ],
               "boxList": "fullBoxWeight"
             }
-          }
-        },
-        {
-          "title": "Totals",
-          "kind": "fields",
-          "position": 4,
-          "extraJson": {
-            "collapsedByDefault": true,
-            "summaryFields": [
-              {
-                "key": "actualGradedWeight",
-                "label": "graded",
-                "suffix": " kg"
-              },
-              {
-                "key": "yield",
-                "label": "yield",
-                "suffix": "%"
-              }
-            ]
           }
         }
       ],
@@ -19298,6 +19295,54 @@
           }
         },
         {
+          "key": "actualGradedWeight",
+          "label": "Actual graded weight (kg)",
+          "type": "computed",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 3,
+          "parentFieldKey": null,
+          "position": 27,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "sumRosterColumn": "gradedWeight"
+          }
+        },
+        {
+          "key": "yield",
+          "label": "Yield (%)",
+          "type": "computed",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 3,
+          "parentFieldKey": null,
+          "position": 28,
+          "computeFn": "ratioPct",
+          "computeArgs": {
+            "x": "actualGradedWeight",
+            "y": "actualDriedWeight",
+            "dp": 2
+          },
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
+        },
+        {
+          "key": "sizeGrade",
+          "label": "Size grade",
+          "type": "select",
           "required": true,
           "readOnly": false,
           "unit": null,
@@ -19321,63 +19366,62 @@
             "B-grade"
           ],
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 29,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "sizeGrade",
-          "label": "Size grade",
-          "type": "select",
-          "sectionIndex": 3,
-          "position": 32,
           "extraJson": {
             "layoutRow": 1,
             "hidden": true
           }
         },
         {
+          "key": "binNo",
+          "label": "Bin no.",
+          "type": "number",
           "required": false,
           "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 30,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "binNo",
-          "label": "Bin no.",
-          "type": "number",
           "extraJson": {
             "layoutRow": 1,
             "seqWithin": "sizeGrade",
             "hidden": true
-          },
-          "sectionIndex": 3,
-          "position": 33
+          }
         },
         {
+          "key": "binCode",
+          "label": "Bin code",
+          "type": "text",
           "required": false,
           "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 31,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "binCode",
-          "label": "Bin code",
-          "type": "text",
           "extraJson": {
             "deriveJoin": {
               "parts": [
@@ -19387,26 +19431,26 @@
               "sep": "-"
             },
             "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 35
+          }
         },
         {
+          "key": "binWeightStart",
+          "label": "Bin weight start (kg)",
+          "type": "number",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 32,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "binWeightStart",
-          "label": "Bin weight start (kg)",
-          "type": "number",
           "extraJson": {
             "carryPrev": {
               "match": "sizeGrade",
@@ -19418,97 +19462,97 @@
               "dateField": "gradingDate"
             },
             "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 36
+          }
         },
         {
+          "key": "startConfirmed",
+          "label": "Start weight checked",
+          "type": "confirm",
           "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 33,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "startConfirmed",
-          "label": "Start weight checked",
-          "type": "confirm",
           "extraJson": {
             "confirms": "binWeightStart",
             "confirmText": "Checked on scale",
             "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 37
+          }
         },
         {
+          "key": "fullBoxWeight",
+          "label": "Full box weights (kg)",
+          "type": "numlist",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 34,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "fullBoxWeight",
-          "label": "Full box weights (kg)",
-          "type": "numlist",
           "extraJson": {
             "lockUntil": "startConfirmed",
             "layoutRow": 2,
             "boxEntry": true
-          },
-          "sectionIndex": 3,
-          "position": 38
+          }
         },
         {
+          "key": "finalBinWeight",
+          "label": "Final bin weight (kg)",
+          "type": "number",
           "required": false,
           "readOnly": false,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 35,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "finalBinWeight",
-          "label": "Final bin weight (kg)",
-          "type": "number",
           "extraJson": {
             "lockUntil": "startConfirmed",
             "layoutRow": 2
-          },
-          "sectionIndex": 3,
-          "position": 39
+          }
         },
         {
+          "key": "gradedWeight",
+          "label": "Graded weight (kg)",
+          "type": "derived",
           "required": false,
           "readOnly": true,
           "unit": null,
           "options": null,
           "group": null,
+          "sectionIndex": 4,
           "parentFieldKey": "@roster",
+          "position": 36,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null,
-          "key": "gradedWeight",
-          "label": "Graded weight (kg)",
-          "type": "derived",
           "extraJson": {
             "deriveSum": {
               "add": [
@@ -19525,54 +19569,7 @@
               "dp": 2
             },
             "layoutRow": 2
-          },
-          "sectionIndex": 3,
-          "position": 40
-        },
-        {
-          "key": "actualGradedWeight",
-          "label": "Actual graded weight (kg)",
-          "type": "computed",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 4,
-          "parentFieldKey": null,
-          "position": 41,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "sumRosterColumn": "gradedWeight"
           }
-        },
-        {
-          "key": "yield",
-          "label": "Yield (%)",
-          "type": "computed",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "sectionIndex": 4,
-          "parentFieldKey": null,
-          "position": 42,
-          "computeFn": "ratioPct",
-          "computeArgs": {
-            "x": "actualGradedWeight",
-            "y": "actualDriedWeight",
-            "dp": 2
-          },
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
         }
       ],
       "autofills": [
@@ -19637,9 +19634,30 @@
           }
         },
         {
+          "title": "Totals",
+          "kind": "fields",
+          "position": 3,
+          "extraJson": {
+            "afterRoster": true,
+            "collapsedByDefault": true,
+            "summaryFields": [
+              {
+                "key": "actualGradedWeight",
+                "label": "graded",
+                "suffix": " kg"
+              },
+              {
+                "key": "yield",
+                "label": "yield",
+                "suffix": "%"
+              }
+            ]
+          }
+        },
+        {
           "title": "Collection bins",
           "kind": "roster",
-          "position": 3,
+          "position": 4,
           "extraJson": {
             "binIdColumn": "binCode",
             "totalsRow": [
@@ -19657,26 +19675,6 @@
               ],
               "boxList": "fullBoxWeight"
             }
-          }
-        },
-        {
-          "title": "Totals",
-          "kind": "fields",
-          "position": 4,
-          "extraJson": {
-            "collapsedByDefault": true,
-            "summaryFields": [
-              {
-                "key": "actualGradedWeight",
-                "label": "graded",
-                "suffix": " kg"
-              },
-              {
-                "key": "yield",
-                "label": "yield",
-                "suffix": "%"
-              }
-            ]
           }
         }
       ],
@@ -20103,230 +20101,6 @@
           }
         },
         {
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": [
-            "Under 50g",
-            "51-80g",
-            "81-100g",
-            "101-150g",
-            "151-200g",
-            "200g+",
-            "Dark — under 100g",
-            "Dark — 100g+",
-            "B-grade"
-          ],
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "sizeGrade",
-          "label": "Size grade",
-          "type": "select",
-          "sectionIndex": 3,
-          "position": 24,
-          "extraJson": {
-            "layoutRow": 1,
-            "hidden": true
-          }
-        },
-        {
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "binNo",
-          "label": "Bin no.",
-          "type": "number",
-          "extraJson": {
-            "layoutRow": 1,
-            "seqWithin": "sizeGrade",
-            "hidden": true
-          },
-          "sectionIndex": 3,
-          "position": 25
-        },
-        {
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "binCode",
-          "label": "Bin code",
-          "type": "text",
-          "extraJson": {
-            "deriveJoin": {
-              "parts": [
-                "sizeGrade",
-                "binNo"
-              ],
-              "sep": "-"
-            },
-            "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 27
-        },
-        {
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "binWeightStart",
-          "label": "Bin weight start (kg)",
-          "type": "number",
-          "extraJson": {
-            "carryPrev": {
-              "match": "sizeGrade",
-              "column": "finalBinWeight",
-              "sources": [
-                "grading-production-log-cultivated",
-                "grading-production-log-ranched"
-              ],
-              "dateField": "gradingDate"
-            },
-            "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 28
-        },
-        {
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "startConfirmed",
-          "label": "Start weight checked",
-          "type": "confirm",
-          "extraJson": {
-            "confirms": "binWeightStart",
-            "confirmText": "Checked on scale",
-            "layoutRow": 1
-          },
-          "sectionIndex": 3,
-          "position": 29
-        },
-        {
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "fullBoxWeight",
-          "label": "Full box weights (kg)",
-          "type": "numlist",
-          "extraJson": {
-            "lockUntil": "startConfirmed",
-            "layoutRow": 2,
-            "boxEntry": true
-          },
-          "sectionIndex": 3,
-          "position": 30
-        },
-        {
-          "required": false,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "finalBinWeight",
-          "label": "Final bin weight (kg)",
-          "type": "number",
-          "extraJson": {
-            "lockUntil": "startConfirmed",
-            "layoutRow": 2
-          },
-          "sectionIndex": 3,
-          "position": 31
-        },
-        {
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": null,
-          "parentFieldKey": "@roster",
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "key": "gradedWeight",
-          "label": "Graded weight (kg)",
-          "type": "derived",
-          "extraJson": {
-            "deriveSum": {
-              "add": [
-                "fullBoxWeight",
-                "finalBinWeight"
-              ],
-              "subtract": [
-                "binWeightStart"
-              ],
-              "require": [
-                "binWeightStart",
-                "finalBinWeight"
-              ],
-              "dp": 2
-            },
-            "layoutRow": 2
-          },
-          "sectionIndex": 3,
-          "position": 32
-        },
-        {
           "key": "actualGradedWeight",
           "label": "Actual graded weight (kg)",
           "type": "computed",
@@ -20335,9 +20109,9 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 4,
+          "sectionIndex": 3,
           "parentFieldKey": null,
-          "position": 33,
+          "position": 19,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -20357,9 +20131,9 @@
           "unit": null,
           "options": null,
           "group": null,
-          "sectionIndex": 4,
+          "sectionIndex": 3,
           "parentFieldKey": null,
-          "position": 34,
+          "position": 20,
           "computeFn": "ratioPct",
           "computeArgs": {
             "x": "actualGradedWeight",
@@ -20370,6 +20144,230 @@
           "linkField": null,
           "linkRelation": null,
           "validateJson": null
+        },
+        {
+          "key": "sizeGrade",
+          "label": "Size grade",
+          "type": "select",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": [
+            "Under 50g",
+            "51-80g",
+            "81-100g",
+            "101-150g",
+            "151-200g",
+            "200g+",
+            "Dark — under 100g",
+            "Dark — 100g+",
+            "B-grade"
+          ],
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 21,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1,
+            "hidden": true
+          }
+        },
+        {
+          "key": "binNo",
+          "label": "Bin no.",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 22,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "layoutRow": 1,
+            "seqWithin": "sizeGrade",
+            "hidden": true
+          }
+        },
+        {
+          "key": "binCode",
+          "label": "Bin code",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 23,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "deriveJoin": {
+              "parts": [
+                "sizeGrade",
+                "binNo"
+              ],
+              "sep": "-"
+            },
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "binWeightStart",
+          "label": "Bin weight start (kg)",
+          "type": "number",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 24,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "carryPrev": {
+              "match": "sizeGrade",
+              "column": "finalBinWeight",
+              "sources": [
+                "grading-production-log-cultivated",
+                "grading-production-log-ranched"
+              ],
+              "dateField": "gradingDate"
+            },
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "startConfirmed",
+          "label": "Start weight checked",
+          "type": "confirm",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 25,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "confirms": "binWeightStart",
+            "confirmText": "Checked on scale",
+            "layoutRow": 1
+          }
+        },
+        {
+          "key": "fullBoxWeight",
+          "label": "Full box weights (kg)",
+          "type": "numlist",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 26,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "lockUntil": "startConfirmed",
+            "layoutRow": 2,
+            "boxEntry": true
+          }
+        },
+        {
+          "key": "finalBinWeight",
+          "label": "Final bin weight (kg)",
+          "type": "number",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 27,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "lockUntil": "startConfirmed",
+            "layoutRow": 2
+          }
+        },
+        {
+          "key": "gradedWeight",
+          "label": "Graded weight (kg)",
+          "type": "derived",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": null,
+          "sectionIndex": 4,
+          "parentFieldKey": "@roster",
+          "position": 28,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "deriveSum": {
+              "add": [
+                "fullBoxWeight",
+                "finalBinWeight"
+              ],
+              "subtract": [
+                "binWeightStart"
+              ],
+              "require": [
+                "binWeightStart",
+                "finalBinWeight"
+              ],
+              "dp": 2
+            },
+            "layoutRow": 2
+          }
         }
       ],
       "autofills": [

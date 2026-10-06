@@ -206,6 +206,30 @@ function build(file, src) {
   return { file, flags, def };
 }
 
+// ---- --from-snapshot key1,key2: rebuild those definitions from public/data/record-defs/<key>.json ----
+// For when a static snapshot was edited by hand and the DB has to catch up. Writes only the named
+// records into data/record-definitions.json (engine, page file and client hook kept from the prior entry);
+// then run seed-one-definition.mjs for each.
+const snapIdx = process.argv.indexOf('--from-snapshot');
+if (snapIdx !== -1) {
+  const keys = String(process.argv[snapIdx + 1] || '').split(',').filter(Boolean);
+  const doc = JSON.parse(fs.readFileSync(OUT, 'utf8'));
+  for (const key of keys) {
+    const i = doc.definitions.findIndex((d) => d.recordKey === key);
+    if (i === -1) { console.error('not in ' + path.relative(ROOT, OUT) + ': ' + key); process.exit(1); }
+    const had = doc.definitions[i];
+    const snap = fs.readFileSync(path.join(ROOT, 'public', 'data', 'record-defs', encodeURIComponent(key) + '.json'), 'utf8');
+    const call = (had.engine === 'form-record' ? 'FormRecord' : 'MonitoringLog') + '.init(' + snap + ')';
+    const r = build(had.pageFile, call);
+    if (!r.def) { console.error(key + ': ' + r.flags.join('; ')); process.exit(1); }
+    for (const f of r.def.fields) f.linkField = canonicalLink(f.linkField);
+    doc.definitions[i] = { ...r.def, pageFile: had.pageFile, clientHook: had.clientHook ?? r.def.clientHook };
+    console.log(key + ': ' + r.def.fields.length + ' fields, ' + r.def.sections.length + ' sections' + (r.flags.length ? '  [' + r.flags.join('; ') + ']' : ''));
+  }
+  fs.writeFileSync(OUT, JSON.stringify(doc, null, 2) + '\n');
+  process.exit(0);
+}
+
 // ---- run ---------------------------------------------------------------------------
 const files = fs.readdirSync(RECDIR).filter((f) => f.endsWith('.html') && !NON_RECORD.has(f)).sort();
 const results = files.map((f) => build(f, fs.readFileSync(path.join(RECDIR, f), 'utf8')));
