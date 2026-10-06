@@ -398,29 +398,6 @@
       wrap.querySelector('.jp-change').hidden = sel.disabled;
     }
 
-    // First empty field after the job block: a required one if the engine names any, else any empty field.
-    function focusNextField() {
-      if (!focusBlock) return;
-      const host = focusBlock.closest('#fr_modalSections, [id$="_modalFields"]') || opts.gateRoot || null;
-      if (!host) return;
-      const ok = (f) => !(f.disabled || f.readOnly || String(f.value || '').trim() !== '' || !f.getClientRects().length)
-        && (details ? !details.contains(f) : true) && (focusBlock.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING || (!details && focusBlock.contains(f)));
-      const first = (opts.requiredFocus ? opts.requiredFocus() : []).filter(Boolean).find(ok);
-      // An unanswered Yes/No group counts as the next field (its Yes button takes focus), so a form
-      // whose next questions are Yes/No checks stops there instead of jumping on to a comments box below.
-      const yesNoTarget = (f) => {
-        const g = f.closest && f.closest('.ml-yesno');
-        if (!g) return f;
-        const h = document.getElementById(g.getAttribute('data-yesno-for'));
-        return h && String(h.value || '').trim() === '' ? f : null;
-      };
-      const fields = host.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea, .ml-yesno button[data-v=Yes]');
-      const target = first || [...fields].find((f) => { const t = yesNoTarget(f); return t && ok(t); });
-      if (!target) return;
-      try { target.focus({ preventScroll: true }); } catch (e) { return; }
-      try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { }
-    }
-
     // The block may only fold away when it holds the job picker plus job data. Anything else someone still
     // has to fill in (e.g. a Date on a record whose definition groups it under Job info) is moved, as is, into
     // a section of its own just below (splitStrays), so folding never hides an input. Should a field be
@@ -516,8 +493,7 @@
       // 3-5. unlock, fold the Job info block, reveal the rest (the popup is already closed: step 2)
       if (gate) { if (gate.back) gate.back.remove(); gate.release(); gate = null; }
       if (details && foldSafe()) details.open = false;
-      // 6. focus the first empty required field
-      setTimeout(focusNextField, 50);
+      // no auto-jump to a field afterwards: the page stays where it is (2026-10-06)
     }
 
     routeBar.addEventListener('click', (ev) => {
