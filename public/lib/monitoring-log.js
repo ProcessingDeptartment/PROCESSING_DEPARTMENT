@@ -2703,7 +2703,7 @@
             ${submitFlow ? `<button class="ml-btn ml-btn-primary" id="${ns}_submitBtn">Submit</button>` : ''}
           </div>`;
       const entriesPanel = `
-      <div class="ml-panel no-print">
+      <div class="ml-panel no-print jp-gate-exempt">
         <div class="ml-panel-head">
           <h2>${config.recentEntries ? 'Previous ' + Number(config.recentEntries) + ' logs' : esc(blockTitle)}</h2>
           <span>
