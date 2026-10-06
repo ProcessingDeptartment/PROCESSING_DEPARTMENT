@@ -4811,3 +4811,23 @@ model PasskeyLog {
   @@index([username, verifiedAt])
   @@map("passkey_logs")
 }
+
+// REC 7.4.2 photos on problem answers. No relation to Sub_dry_monitoring on purpose: that table
+// is rebuilt on every save, so a cascade would wipe the photos (see the migration).
+model SubDryMonitoringImage {
+  id            Int      @id @default(autoincrement())
+  submissionId  String   @map("submission_id")
+  fieldKey      String   @map("field_key")
+  imageData     String   @map("image_data")
+  fileName      String?  @map("file_name")
+  fileSizeBytes Int?     @map("file_size_bytes")
+  mimeType      String?  @map("mime_type")
+  caption       String?
+  uploadedBy    String?  @map("uploaded_by")
+  uploadedAt    DateTime @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+  sortOrder     Int      @default(0) @map("sort_order")
+
+  @@index([submissionId], map: "idx_sdmi_submission")
+  @@index([submissionId, fieldKey], map: "idx_sdmi_field")
+  @@map("sub_dry_monitoring_images")
+}

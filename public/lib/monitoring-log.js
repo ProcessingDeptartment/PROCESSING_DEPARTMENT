@@ -920,6 +920,11 @@
     }
     let entries = [];
     let editingId = null;
+    // the id a new entry will be saved under, allocated when the form opens so photos
+    // (config.imageUploadFields, lib/entry-photos.js) can be uploaded before the first save
+    let formEntryId = null;
+    const photosOn = !!config.imageUploadFields && !customBody;
+    const photoFields = () => entryFields.filter(f => badAnswerOf(f)).map(f => ({ key: f.key, label: f.label, bad: badAnswerOf(f) }));
 
     // ---- REC 7.4.6 progressive stages (config.progressive) -------------------------------------------------
     // One stock record per job grows over several submissions. Each submit is its own immutable stage (the server
@@ -1251,7 +1256,7 @@
         ? customBody.listColumns.map(c => ({ label: c.label, custom: true, get: c.get }))
         : listFields();
 
-      let html = `<table class="ml-table"><thead><tr>${submitFlow ? '<th>Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th>' : ''}${!submitFlow ? cols.map(f => `<th>${esc(f.label)}</th>`).join('') : ''}<th>In spec</th><th></th></tr></thead><tbody>`;
+      let html = `<table class="ml-table"><thead><tr>${submitFlow ? '<th>Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th>' : ''}${!submitFlow ? cols.map(f => `<th>${esc(f.label)}</th>`).join('') : ''}${photosOn ? '<th title="Photos">📷</th>' : ''}<th>In spec</th><th></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
         const ref = entryJobRef(entryRow);
         const refCell = ref.val
@@ -1279,6 +1284,7 @@
             html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${bad ? `<span class="ml-bad">${esc(v)} &#9888;</span>` : esc(v)}</td>`;
           });
         }
+        if (photosOn) html += `<td class="ml-photo-count" data-photos-for="${esc(entryRow.id)}"></td>`;
         html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
         html += `<td style="white-space:nowrap;">
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">${isSubmitted(entryRow) ? 'View' : 'Edit'}</button>
@@ -1289,6 +1295,15 @@
       });
       html += `</tbody></table>`;
       table.innerHTML = html;
+      if (photosOn) {
+        loadLib('entry-photos.js?v=1', 'EntryPhotos').then((P) => P && P.counts(true)).then((counts) => {
+          if (!counts) return;
+          table.querySelectorAll('[data-photos-for]').forEach((td) => {
+            const n = counts[td.dataset.photosFor] || 0;
+            td.textContent = n ? '📷 ' + n : '';
+          });
+        });
+      }
       table.querySelectorAll('[data-edit]').forEach(btn => {
         btn.addEventListener('click', () => openForm(btn.dataset.edit));
       });
@@ -1557,6 +1572,7 @@
 
       if (keepUnlocked) keepUnlocked = false; else unlockedStages = new Set();
       editingId = id || null;
+      formEntryId = id || uid('entry');
 
       if (continueChain && !chainDriving && !id) {
         continueChain.forEach((lv, i) => { const sel = el(`${ns}_continue${i}`); if (sel) sel.value = ''; });
@@ -1627,6 +1643,12 @@
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill, !existing, recordKey); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
       if (!locked) wireFromRecord(container);
       wireCalcAndFlags(container, locked);
+      if (photosOn) {
+        const sid = formEntryId;
+        loadLib('entry-photos.js?v=1', 'EntryPhotos').then((P) => {
+          if (P && formEntryId === sid) P.attach(container, { submissionId: sid, ns, locked, fields: photoFields(), toast });
+        });
+      }
 
       // resumeByJob: this record is completed over more than one sitting. On a fresh entry,
       // picking a job that already has an unsubmitted draft reopens that draft so the earlier
@@ -2015,7 +2037,7 @@
         savedEntry = existing;
       } else {
         savedEntry = {
-          id: uid('entry'),
+          id: (formEntryId && !entries.some(e => e.id === formEntryId)) ? formEntryId : uid('entry'),
           values,
           inSpec,
           status,
@@ -2207,7 +2229,7 @@
         const shown = (raw === '' || raw == null) ? '' : (isStamp(f) ? stampText(raw) : String(raw));
         const comment = v[f.key + '__comment'] || '';
         const cell = isBadValue(f, shown) ? `<span class="ml-bad">${esc(shown)} &#9888;</span>` : esc(shown);
-        return `<tr><td class="sheet-item">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</td>
+        return `<tr><td class="sheet-item" data-sheet-field="${esc(f.key)}">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</td>
           <td class="sheet-rec">${cell}</td><td>${esc(comment)}</td></tr>`;
       }).join('');
       const verified = entryRow.verification || null;
@@ -2246,6 +2268,27 @@
       </table>`;
     }
 
+    // photos print under their field's cell (4col) or row (classic sheet); waits for the images to decode
+    async function addPrintPhotos(sheet, entryRow) {
+      const P = await loadLib('entry-photos.js?v=1', 'EntryPhotos');
+      if (!P) return;
+      const blocks = await P.printBlocks(entryRow.id);
+      Object.keys(blocks).forEach((k) => {
+        const cellEl = sheet.querySelector(`[data-sheet-field="${k}"]`);
+        if (!cellEl) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="${cellEl.closest('table.sheet-4col') ? 4 : 3}"></td>`;
+        tr.firstChild.innerHTML = '<strong>' + esc((entryFields.find(f => f.key === k) || {}).label || k) + '</strong>' + blocks[k];
+        const row = cellEl.closest('tr');
+        // after the last row of this field's group block, so the 4-column grid stays intact
+        let after = row;
+        while (after.nextElementSibling && !after.nextElementSibling.querySelector('th') && after.nextElementSibling.dataset.photoRow) after = after.nextElementSibling;
+        tr.dataset.photoRow = '1';
+        after.after(tr);
+      });
+      await Promise.all(Array.from(sheet.querySelectorAll('img')).map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
+    }
+
     function sheet4colBody(entryRow) {
       const cellText = (f) => {
         const raw = valueFor(entryRow, f);
@@ -2260,7 +2303,7 @@
         g.fields.push(f);
       });
       const wideF = (f) => f.type === 'textarea' || f.wide || f.legacy;
-      const cell = (f) => `<td class="s4-cell${f.legacy ? ' s4-old' : ''}"${wideF(f) ? ' colspan="4"' : ''}><div class="s4-lbl">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}${f.legacy && !/\(old\)/i.test(f.label) ? ' (old)' : ''}</div><div class="s4-val">${cellText(f)}</div></td>`;
+      const cell = (f) => `<td data-sheet-field="${esc(f.key)}" class="s4-cell${f.legacy ? ' s4-old' : ''}"${wideF(f) ? ' colspan="4"' : ''}><div class="s4-lbl">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}${f.legacy && !/\(old\)/i.test(f.label) ? ' (old)' : ''}</div><div class="s4-val">${cellText(f)}</div></td>`;
       return groups.map(g => {
         const trs = [];
         let row = [];
@@ -2274,12 +2317,13 @@
       }).join('');
     }
 
-    function printEntry(id) {
+    async function printEntry(id) {
       const entryRow = entries.find(e => e.id === id);
       if (!entryRow) return;
       const dateF = roleField('date');
       const sheet = el('ml_printSheet');
       sheet.innerHTML = prog ? buildJobSheet(entryRow) : buildEntrySheet(entryRow);
+      if (photosOn) await addPrintPhotos(sheet, entryRow);
       setPageOrientation('portrait');
       document.body.classList.add('ml-printing-entry');
       const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);

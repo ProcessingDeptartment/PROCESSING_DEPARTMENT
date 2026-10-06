@@ -876,6 +876,9 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
   }
 });
 
+// REC 7.4.2 photos on problem answers (src/dry-monitoring-images.js)
+require('./dry-monitoring-images').mount(app, prisma);
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
