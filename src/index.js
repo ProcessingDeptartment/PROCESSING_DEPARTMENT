@@ -67,6 +67,8 @@ app.use('/api', (req, res, next) => {
   if (!API_KEY) return next();                    // not configured yet
   if (req.method === 'OPTIONS') return next();    // CORS preflight carries no Authorization header
   if (req.path === '/health') return next();      // uptime probes must stay reachable
+  // the local photo archive agent carries its own key instead (src/dry-monitoring-images.js)
+  if (require('./dry-monitoring-images').isArchiveRequest(req)) return next();
   const header = req.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (tokenMatches(token)) return next();

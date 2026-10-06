@@ -322,11 +322,11 @@
       const tags = (relTag || stageTag || statusTag) ? `<div class="tags">${stageTag}${statusTag}${relTag}</div>` : '';
       const docCode = docCodeByKey[r.record_key];
       return `
-      <li class="tp${rel ? ' rel-' + rel : ''}">
+      <li class="tp${rel ? ' rel-' + rel : ''}"${r.record_key === 'dry-monitoring' && r.submission_id ? ` data-photo-sid="${esc(r.submission_id)}"` : ''}>
         <div class="card">
           <div class="top">
             <span class="title">${docCode ? `<span class="doc-code">${esc(docCode)}</span>` : ''}${esc(r.record_title || r.record_key)}</span>
-            <span class="date">${esc(r.occurred_on || '—')}</span>
+            <span class="date"><span class="photo-count"></span>${esc(r.occurred_on || '—')}</span>
           </div>
           ${tags}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
@@ -347,6 +347,22 @@
         </div>
       </li>`;
     }).join('');
+    addPhotoCounts();
+  }
+
+  // REC 7.4.2 entries with photos on problem answers get a 📷 count (src/dry-monitoring-images.js)
+  async function addPhotoCounts() {
+    const cards = document.querySelectorAll('[data-photo-sid]');
+    if (!cards.length) return;
+    try {
+      const res = await window.FacilityApi.fetch('/api/dry-monitoring/images/counts', { cache: 'no-store' });
+      if (!res.ok) return;
+      const counts = await res.json();
+      cards.forEach((li) => {
+        const n = counts[li.dataset.photoSid] || 0;
+        if (n) li.querySelector('.photo-count').textContent = '📷 ' + n + ' photo' + (n === 1 ? '' : 's') + ' · ';
+      });
+    } catch (e) {}
   }
 
   // A bin code (collection bin = box code, e.g. 8g-10g-3): which jobs were graded into it and when.

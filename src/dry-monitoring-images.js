@@ -6,6 +6,7 @@
 //
 // Who may delete: the X-User/X-Role headers are client-asserted (see the auth note in index.js),
 // so this is a guard against slips, not a security boundary.
+const crypto = require('crypto');
 const { assembleRecordConfig } = require('./record-def');
 
 const RECORD_KEY = 'dry-monitoring';
@@ -16,10 +17,29 @@ const MIME_OK = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
 const SUPERVISOR_ROLE = /SUPERVISOR|MANAGER|ADMIN/i;
 const ID_RE = /^[A-Za-z0-9_\-]{1,80}$/;
 
+// Local archive agent (scripts/image-archive-agent.mjs). Its routes need ARCHIVE_API_KEY in the
+// X-Archive-Key header; with the key unset they are closed (503), never open.
+const ARCHIVE_API_KEY = process.env.ARCHIVE_API_KEY || '';
+const MAX_ARCHIVE_ATTEMPTS = 5;
+const ARCHIVE_PATHS = /^\/dry-monitoring\/images\/(pending-archive|\d+\/mark-archived|\d+\/archive-error)$/;
+function archiveKeyOk(req) {
+  const k = req.get('x-archive-key') || '';
+  if (!ARCHIVE_API_KEY || k.length !== ARCHIVE_API_KEY.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(k), Buffer.from(ARCHIVE_API_KEY));
+}
+// used by the /api auth middleware (req.path there is relative to /api)
+function isArchiveRequest(req) { return ARCHIVE_PATHS.test(req.path) && archiveKeyOk(req); }
+function requireArchiveKey(req, res, next) {
+  if (!ARCHIVE_API_KEY) return res.status(503).json({ ok: false, error: 'archive key not configured' });
+  if (!archiveKeyOk(req)) return res.status(401).json({ ok: false, error: 'unauthorised' });
+  next();
+}
+
 let fieldCache = { at: 0, keys: null };
 async function yesNoKeys(prisma) {
   if (fieldCache.keys && Date.now() - fieldCache.at < 5 * 60 * 1000) return fieldCache.keys;
-  const cfg = await assembleRecordConfig(prisma, RECORD_KEY);
+  const out = await assembleRecordConfig(prisma, RECORD_KEY);
+  const cfg = out && (out.config || out);   // { engine, version, config }
   const keys = new Set(((cfg && cfg.entryFields) || []).filter((f) => f.type === 'yesno' && f.redPrompt).map((f) => f.key));
   fieldCache = { at: Date.now(), keys };
   return keys;
@@ -43,6 +63,70 @@ function mount(app, prisma) {
       rows.forEach((r) => { out[r.submissionId] = r._count._all; });
       res.json(out);
     } catch (e) { console.error('image counts failed', e); res.status(500).json({ ok: false }); }
+  });
+
+  /* ---- local archive ---- */
+  // oldest first, max 50; everything not yet archived (not "since last run"), so an agent that was
+  // offline catches up on its next poll
+  app.get('/api/dry-monitoring/images/pending-archive', requireArchiveKey, async (req, res) => {
+    try {
+      const since = req.query.since ? new Date(String(req.query.since)) : null;
+      const rows = await T.findMany({
+        where: { archivedLocally: false, archiveFailed: false, ...(since && !isNaN(since) ? { uploadedAt: { gte: since } } : {}) },
+        orderBy: [{ uploadedAt: 'asc' }, { id: 'asc' }], take: 50,
+      });
+      res.json(rows.map((r) => ({ id: r.id, submissionId: r.submissionId, fieldKey: r.fieldKey, imageData: r.imageData,
+        fileName: r.fileName, mimeType: r.mimeType, uploadedAt: r.uploadedAt, archiveAttempts: r.archiveAttempts })));
+    } catch (e) { console.error('pending-archive failed', e); res.status(500).json({ ok: false }); }
+  });
+
+  app.post('/api/dry-monitoring/images/:imageId/mark-archived', requireArchiveKey, async (req, res) => {
+    const id = Number(req.params.imageId);
+    const path = String((req.body || {}).archivedPath || '').slice(0, 1000);
+    if (!Number.isInteger(id) || !path) return res.status(400).json({ ok: false, error: 'imageId and archivedPath required' });
+    try {
+      await T.update({ where: { id }, data: { archivedLocally: true, archivedAt: new Date(), archivedPath: path } });
+      res.json({ ok: true });
+    } catch (e) {
+      if (e.code === 'P2025') return res.status(404).json({ ok: false });
+      console.error('mark-archived failed', e); res.status(500).json({ ok: false });
+    }
+  });
+
+  app.post('/api/dry-monitoring/images/:imageId/archive-error', requireArchiveKey, async (req, res) => {
+    const id = Number(req.params.imageId);
+    if (!Number.isInteger(id)) return res.status(400).json({ ok: false });
+    try {
+      const row = await T.update({ where: { id }, data: { archiveAttempts: { increment: 1 } }, select: { archiveAttempts: true } });
+      const failed = row.archiveAttempts >= MAX_ARCHIVE_ATTEMPTS;
+      if (failed) await T.update({ where: { id }, data: { archiveFailed: true } });
+      console.warn(`photo ${id} archive attempt ${row.archiveAttempts} failed: ${String((req.body || {}).error || '').slice(0, 300)}`);
+      res.json({ ok: true, attempts: row.archiveAttempts, failed });
+    } catch (e) {
+      if (e.code === 'P2025') return res.status(404).json({ ok: false });
+      console.error('archive-error failed', e); res.status(500).json({ ok: false });
+    }
+  });
+
+  // for the Home banner: is the agent keeping up?
+  app.get('/api/dry-monitoring/images/archive-status', async (req, res) => {
+    try {
+      const [pending, failed, last] = await Promise.all([
+        T.count({ where: { archivedLocally: false, archiveFailed: false } }),
+        T.count({ where: { archiveFailed: true } }),
+        T.findFirst({ where: { archivedLocally: true }, orderBy: { archivedAt: 'desc' }, select: { archivedAt: true } }),
+      ]);
+      res.json({ pending, failed, lastArchivedAt: last ? last.archivedAt : null });
+    } catch (e) { console.error('archive-status failed', e); res.status(500).json({ ok: false }); }
+  });
+
+  // admin: put failed photos back in the queue
+  app.post('/api/dry-monitoring/images/archive-reset', async (req, res) => {
+    if (!SUPERVISOR_ROLE.test(req.get('x-role') || '')) return res.status(403).json({ ok: false, error: 'Supervisor or manager only.' });
+    try {
+      const r = await T.updateMany({ where: { archiveFailed: true }, data: { archiveFailed: false, archiveAttempts: 0 } });
+      res.json({ ok: true, reset: r.count });
+    } catch (e) { console.error('archive-reset failed', e); res.status(500).json({ ok: false }); }
   });
 
   app.get('/api/dry-monitoring/:submissionId/images', async (req, res) => {
@@ -116,4 +200,4 @@ function mount(app, prisma) {
   });
 }
 
-module.exports = { mount };
+module.exports = { mount, isArchiveRequest };

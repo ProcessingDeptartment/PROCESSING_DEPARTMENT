@@ -118,6 +118,10 @@
 
 <div class="container">
 
+  <!-- REC 7.4.2 photos not yet copied to the local file server (scripts/image-archive-agent.mjs) -->
+  <div id="photoArchiveBanner" role="status" hidden
+       style="margin:0 0 14px;padding:10px 14px;border-radius:8px;border:1px solid #e3b341;border-left:5px solid #b7791f;background:#fff8e6;color:#5c3d00;font:600 14px system-ui,sans-serif;"></div>
+
   <!-- ===== 24-HOUR DASHBOARD PLACEHOLDER ===== -->
   <section id="dashboard-24hr" class="dashboard-24hr">
     <div class="dash-header">
@@ -214,6 +218,21 @@
   refreshSessionBar();
 </script>
 
+<script>  // ---- photo archive banner: the local agent copies REC 7.4.2 photos to the file server ----
+  (async function () {
+    var el = document.getElementById('photoArchiveBanner');
+    try {
+      var res = await window.FacilityApi.fetch('/api/dry-monitoring/images/archive-status', { cache: 'no-store' });
+      if (!res.ok) return;
+      var s = await res.json(), parts = [];
+      if (s.pending > 0) parts.push('📷 ' + s.pending + ' photo' + (s.pending === 1 ? '' : 's') + ' not yet archived to local server. Archive agent running?');
+      if (s.failed > 0) parts.push('⚠ ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped — check the agent log.');
+      if (!parts.length) return;
+      el.innerHTML = parts.join('<br>');
+      el.hidden = false;
+    } catch (e) {}
+  })();
+</script>
 <script>  // ---- 24-hr dashboard placeholder ----
   // Only Open NCs is live (GET /api/nc/count-open). The other tiles stay "—" until
   // /api/dashboard/24hr exists (spec: Claude outputs/index-24hr-dashboard-placeholder-instructions.md).

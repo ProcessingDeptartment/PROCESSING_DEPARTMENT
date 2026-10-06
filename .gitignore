@@ -31,3 +31,4 @@ yarn-error.log*
 # directly into public/records/.
 public/records/.*
 junk/
+Images/

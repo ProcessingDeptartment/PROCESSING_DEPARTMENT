@@ -4826,6 +4826,12 @@ model SubDryMonitoringImage {
   uploadedBy    String?  @map("uploaded_by")
   uploadedAt    DateTime @default(now()) @map("uploaded_at") @db.Timestamptz(6)
   sortOrder     Int      @default(0) @map("sort_order")
+  // local archive (scripts/image-archive-agent.mjs)
+  archivedLocally Boolean   @default(false) @map("archived_locally")
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(6)
+  archivedPath    String?   @map("archived_path")
+  archiveAttempts Int       @default(0) @map("archive_attempts")
+  archiveFailed   Boolean   @default(false) @map("archive_failed")
 
   @@index([submissionId], map: "idx_sdmi_submission")
   @@index([submissionId, fieldKey], map: "idx_sdmi_field")
