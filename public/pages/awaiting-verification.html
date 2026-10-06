@@ -65,6 +65,11 @@
   .verifybar .go{ background:#2f7a52; color:#fff; border:none; border-radius:6px; padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; }
   .verifybar .go:disabled{ background:#5c6771; cursor:default; }
 
+  .pk-field { display:flex; flex-direction:column; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#b9c3cc; gap:3px; }
+  .pk-field input{ padding:7px 9px; border:1px solid #55636e; border-radius:5px; font-size:12px; background:#fff; color:#1b2330; min-width:150px; cursor:pointer; }
+  .pk-field .pk-label{ display:flex; gap:6px; align-items:baseline; }
+  .pk-field .pk-status{ font-size:11px; font-weight:600; color:#2f7a52; }
+  .pk-field.is-verified input{ background:#e8f3ec; border-color:#2f7a52; }
   .note{ margin-top:18px; background:#fbf0dc; color:#8a5a10; border-radius:6px; padding:11px 13px; font-size:11.5px; }
   #toast{ position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:#1b2330; color:#fff; padding:10px 16px; border-radius:6px; font-size:12.5px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:60; }
   #toast.show{ opacity:1; }
@@ -99,10 +104,14 @@
 
 <div class="verifybar hidden" id="verifybar">
   <span class="sel" id="selCount">0 selected</span>
-  <label>Verified by<input id="vBy" readonly></label>
-  <label>Title<input id="vTitle" placeholder="e.g. QA Manager"></label>
-  <label>Date<input id="vDate" type="date"></label>
-  <label>Signature<input id="vSig" placeholder="Type your name"></label>
+  <label>Verified by<input id="vfy_by" readonly></label>
+  <label>Title<input id="vfy_title" placeholder="e.g. QA Manager" readonly></label>
+  <label>Date<input id="vfy_date" type="date" readonly></label>
+  <label class="pk-field">
+    <span class="pk-label"><span>Signature</span><span class="pk-status" id="vfy_signature_display" aria-live="polite"></span></span>
+    <input id="vfy_signature" type="text" placeholder="Tap to enter passkey" readonly inputmode="none" autocomplete="off"
+           onclick="window.PasskeyInput && PasskeyInput.openForField('vfy_signature')">
+  </label>
   <button class="go" id="btnVerify">Verify selected</button>
 </div>
 
@@ -122,6 +131,7 @@
 <script src="../lib/auth.js?v=2"></script>
 <script src="../lib/login-ui.js?v=3"></script>
 <script src="../lib/signoff-block.js?v=8"></script>
+<script src="../lib/passkey-input.js?v=4"></script>
 <script src="../lib/verification-queue.js?v=3"></script>
 <script>(function () {
   'use strict';
@@ -177,7 +187,7 @@
   function personOf(values) {
     if (!values) return '';
     var k = Object.keys(values).find(function (key) {
-      return /(completed|recorded|checked|done|performed).*by|^operator$|^name$/i.test(key) && values[key];
+      return /(completed|recorded|checked|done|performed|submitted|filled|signed).*by|^operator$|^name$|by.*(name|who)/i.test(key) && values[key];
     });
     return k ? String(values[k]) : '';
   }
@@ -215,7 +225,7 @@
             id: entry.id || '', name: meta.name || recordKey, docNo: meta.docNo || '',
             href: meta.href ? '../records/' + meta.href : null,
             values: entry.values || {},
-            entryDate: entryDate(entry.values), ref: entryRef(entry.values), who: personOf(entry.values),
+            entryDate: entryDate(entry.values), ref: entryRef(entry.values), who: entry.submittedBy || entry.submittedByName || entry.completedBy || personOf(entry.values),
             submittedAt: whenOf(entry), allowedRoles: allowed,
             mine: allowed.indexOf(STATE.role) !== -1
           });
@@ -290,12 +300,13 @@
         '<span class="roles">Verifier: ' + esc(labelRoles(g.allowedRoles)) + (selectable ? '' : ' — not you') + '</span>' +
       '</div>' +
       '<table><thead><tr>' +
-        '<th class="chk"></th><th>Entry date</th><th>Ref</th><th>Submitted by</th><th>Waiting</th><th></th>' +
+        '<th class="chk"></th><th>Entry date</th><th>Ref</th><th>Submitted by</th><th>Submitted</th><th>Waiting</th><th></th>' +
       '</tr></thead><tbody>' +
       g.rows.map(function (r) {
         var d = daysAgo(r.submittedAt);
         var ageCls = (d != null && d >= 7) ? 'age old' : 'age';
-        var age = d == null ? '—' : fmtDate(r.submittedAt) + ' (' + d + 'd)';
+        var submittedDate = r.submittedAt ? fmtDate(r.submittedAt) : '—';
+        var waitDays = d == null ? '—' : d + 'd';
         var rid = rowId(r);
         var open = !!STATE.open[rid];
         var main = '<tr class="' + (r.mine ? '' : 'foreign') + '">' +
@@ -305,13 +316,24 @@
           '<td class="when">' + esc(r.entryDate || '—') + '</td>' +
           '<td>' + esc(r.ref || '—') + '</td>' +
           '<td>' + esc(r.who || '—') + '</td>' +
-          '<td class="' + ageCls + '">' + age + '</td>' +
+          '<td class="when">' + submittedDate + '</td>' +
+          '<td class="' + ageCls + '">' + waitDays + '</td>' +
           '<td><button type="button" class="rev" data-rid="' + esc(rid) + '">' + (open ? 'Hide' : 'Preview') + '</button></td>' +
         '</tr>';
-        var detail = open ? '<tr class="detail"><td></td><td colspan="5">' + valuesDl(r.values) + '</td></tr>' : '';
+        var formLink = r.href
+          ? '<div style="margin-top:10px;"><a href="' + esc(r.href) + '" target="_blank" style="font-size:11.5px;color:#1d4ed8;">View submission form &rarr;</a></div>'
+          : '';
+        var detail = open ? '<tr class="detail"><td></td><td colspan="6">' + valuesDl(r.values) + formLink + '</td></tr>' : '';
         return main + detail;
       }).join('') +
       '</tbody></table></div>';
+  }
+
+  function humanLabel(k) {
+    return k
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
 
   function valuesDl(values) {
@@ -319,9 +341,9 @@
       var v = values[k];
       return v != null && v !== '' && typeof v !== 'object';
     });
-    if (!keys.length) return '<span class="muted">No field values captured on this entry.</span>';
+    if (!keys.length) return '<span style="color:#8a939b;">No field values captured on this entry.</span>';
     return '<dl class="vals">' + keys.map(function (k) {
-      return '<dt>' + esc(k) + '</dt><dd>' + esc(values[k]) + '</dd>';
+      return '<dt>' + esc(humanLabel(k)) + '</dt><dd>' + esc(values[k]) + '</dd>';
     }).join('') + '</dl>';
   }
 
@@ -387,13 +409,20 @@
     var foreign = picked.filter(function (r) { return !r.mine; });
     if (foreign.length) { toast('Some selected entries are not assigned to your role. Refresh and retry.'); return; }
 
+    var sigEl = $('vfy_signature');
+    if (!sigEl || sigEl.dataset.verified !== 'true') {
+      toast('Please enter your passkey to verify.');
+      if (window.PasskeyInput) window.PasskeyInput.openForField('vfy_signature');
+      return;
+    }
     var v = {
-      verifiedBy: ($('vBy').value || '').trim(),
-      verifiedSig: ($('vTitle').value || '').trim(),
-      verifiedDate: $('vDate').value,
-      verifiedSignature: ($('vSig').value || '').trim()
+      verifiedBy: ($('vfy_by').value || '').trim(),
+      verifiedSig: ($('vfy_title').value || '').trim(),
+      verifiedDate: $('vfy_date').value,
+      verifiedSignature: ($('vfy_signature').value || '').trim()
     };
-    if (!window.SignOffBlock.validateVerifyInputs(v)) { toast('Verified by, title, date and signature are all required.'); return; }
+    if (!v.verifiedBy || !v.verifiedDate) { toast('Passkey sign-in and date are required.'); return; }
+    if (!v.verifiedSig) { toast('Your passkey has no title set. Ask an administrator to add one before you verify.'); return; }
 
     $('btnVerify').disabled = true;
     try {
@@ -428,7 +457,15 @@
 
       var n = picked.length;
       STATE.picked = {};
-      $('vTitle').value = ''; $('vSig').value = '';
+      var sigEl2 = $('vfy_signature');
+      if (sigEl2) { sigEl2.value = ''; sigEl2.dataset.verified = ''; }
+      var dispEl = $('vfy_signature_display');
+      if (dispEl) dispEl.textContent = '';
+      var pkField = sigEl2 && sigEl2.closest('.pk-field');
+      if (pkField) pkField.classList.remove('is-verified');
+      $('vfy_title').value = '';
+      $('vfy_by').value = '';
+      $('vfy_date').value = today();
       await scan();
       render();
       toast('Verified ' + n + ' ' + (n === 1 ? 'entry' : 'entries') + '.');
@@ -465,8 +502,8 @@
   async function start() {
     STATE.user = window.Auth.getCurrentUsername();
     STATE.role = window.Auth.getCurrentRole();
-    $('vBy').value = STATE.user || '';
-    $('vDate').value = today();
+    $('vfy_by').value = '';   // passkey auto-fills name from the verified identity
+    $('vfy_date').value = today();
     try { await window.storage.whenReady(); } catch (e) {  }
     try { await window.VerificationQueue.loadAssignments(); } catch (e) {  }
     try {
