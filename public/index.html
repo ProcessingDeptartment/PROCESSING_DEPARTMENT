@@ -48,7 +48,8 @@
   .session-bar #loginBtnTop{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
   .session-bar #loginBtnTop:hover{ background:#1d3a9e; }
 
-  tr.auth-only{ display:none; }
+  tr.auth-only,tr.admin-only{ display:none; }
+  body.authenticated.is-admin tr.admin-only{ display:table-row; }
   body.authenticated tr.auth-only{ display:table-row; }
   .section-title{ font-size:18px; font-weight:600; color:#1b2330; margin:0 0 12px; }
   .more-title{ margin-top:28px; }
@@ -144,9 +145,17 @@
 
   <h2 class="section-title">Categories</h2>
   <div class="block-grid">
-    <a class="block production" href="pages/handovers.html" title="Shift handover reporting &mdash; Production and Quality">
-      <span class="block-title">Handovers</span>
-      <span class="block-desc">Shift handover reporting &mdash; Production and Quality</span>
+    <a class="block index auth-only" href="records/record-list.html" title="Find and open a record to fill in">
+      <span class="block-title">Records</span>
+      <span class="block-desc">Find and open a record to fill in</span>
+    </a>
+    <a class="block index auth-only" href="pages/fsms.html" title="SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index">
+      <span class="block-title">FSMS</span>
+      <span class="block-desc">SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index</span>
+    </a>
+    <a class="block production auth-only" href="pages/awaiting-verification.html" title="Review and sign off submitted entries waiting for your verification">
+      <span class="block-title">Verifications</span>
+      <span class="block-desc">Review and sign off submitted entries waiting for your verification</span>
     </a>
     <div class="block production auth-only">
       <span class="block-title">Job Progress report</span>
@@ -156,30 +165,22 @@
         <a class="block-btn" href="pages/dashboard.html">Dashboard</a>
       </div>
     </div>
-    <a class="block index auth-only" href="records/record-list.html" title="Find and open a record to fill in">
-      <span class="block-title">Records</span>
-      <span class="block-desc">Find and open a record to fill in</span>
-    </a>
-    <a class="block index auth-only" href="pages/fsms.html" title="SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability and the REC 01 Master Record Index">
-      <span class="block-title">FSMS</span>
-      <span class="block-desc">SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability and the REC 01 Master Record Index</span>
-    </a>
-    <a class="block index auth-only" href="pages/verifier-assignments.html" title="Set which role signs off each record &mdash; drives the Awaiting Verification queue and the record verification panels">
-      <span class="block-title">Verification Assignments</span>
-      <span class="block-desc">Set which role signs off each record &mdash; drives the Awaiting Verification queue and the record verification panels</span>
-    </a>
     <a class="block index auth-only" href="pages/submissions-log.html" title="Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time">
       <span class="block-title">Logs</span>
       <span class="block-desc">Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time</span>
     </a>
+    <a class="block production" href="pages/handovers.html" title="Shift handover reporting &mdash; Production and Quality">
+      <span class="block-title">Handovers</span>
+      <span class="block-desc">Shift handover reporting &mdash; Production and Quality</span>
+    </a>
   </div>
 
-  <h2 class="section-title more-title auth-only">Other</h2>
+  <h2 class="section-title more-title auth-only">More</h2>
   <table class="nav-table auth-only">
     <tbody>
-      <tr class="index auth-only">
+      <tr class="index admin-only">
         <td class="document"><a href="pages/admin-passkeys.html">Passkeys</a></td>
-        <td class="description">Administrator only &mdash; add people and set the numeric passkey each uses to sign records (replaces typing a signature); disable a passkey when someone leaves</td>
+        <td class="description">Administrator only &mdash; add people and set the numeric passkey each uses to sign records; disable a passkey when someone leaves</td>
       </tr>
     </tbody>
   </table>
@@ -202,6 +203,7 @@
     document.getElementById('loginBtnTop').style.display = user ? 'none' : '';
     document.getElementById('logoutBtn').style.display = user ? '' : 'none';
     document.body.classList.toggle('authenticated', !!user);
+    document.body.classList.toggle('is-admin', !!user && /ADMIN/i.test(user.role || ''));
   }
 
   document.getElementById('loginBtnTop').addEventListener('click', function () {

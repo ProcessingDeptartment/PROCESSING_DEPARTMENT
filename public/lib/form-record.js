@@ -1768,7 +1768,7 @@
             </div>
           </div>
         </div>
-        <div class="fr-panel no-print">
+        <div class="fr-panel no-print jp-gate-exempt">
           <div class="fr-panel-head">
             <h2>Submissions</h2>
             <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_submissionsBody" data-label="entries">View entries</button>

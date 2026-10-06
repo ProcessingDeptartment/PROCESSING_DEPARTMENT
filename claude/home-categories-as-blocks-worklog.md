@@ -22,3 +22,13 @@
 ## Update 2026-10-06 (Michaela's placement decisions)
 - Awaiting Verification: removed from home; now a link card at the top of `pages/submissions-log.html` (the Logs block's page).
 - Passkeys: stays in the table below the blocks, now headed **Other**.
+
+## Update 2026-10-06 (revised instructions: six blocks, new order)
+- `public/index.html`: blocks reordered **Records, FSMS, Verifications, Job Progress report, Logs, Handovers** (Handovers still the only block visible signed out). Verification Assignments block removed.
+- **Verifications target = `pages/awaiting-verification.html`** — confirmed by Michaela 2026-10-06.
+- "More" table (heading **More**): now only Passkeys (admin-only). The duplicate Awaiting Verification row was removed 2026-10-06 at Michaela's request; the Verifications block covers it.
+- **Passkeys is admin-only**: new class `admin-only` on the row; shown only when `body.authenticated.is-admin`. One line added to `refreshSessionBar()` sets `is-admin` when role matches /ADMIN/i (the only JS change; needed for the flag).
+- `pages/fsms.html`: added **Verifier Assignments** row (Specifications + Batch Traceability were already there). Nothing else changed.
+- Quick Abalone Receiving: already removed earlier (see above).
+- Awaiting Verification link card on submissions-log.html (from earlier pass) left in place.
+- Not done: TB300XU viewport measurement, screenshots, non-admin sign-in test. Login modal not touched.

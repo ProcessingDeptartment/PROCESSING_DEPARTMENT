@@ -255,7 +255,7 @@
     const hidden = [];
     let observer = null;
     root.classList.add('jp-gate-root');
-    const keep = (n) => path.indexOf(n) >= 0 || n.tagName === 'SUMMARY' || n.classList.contains('jp-gate-back');
+    const keep = (n) => path.indexOf(n) >= 0 || n.tagName === 'SUMMARY' || n.classList.contains('jp-gate-back') || n.classList.contains('jp-gate-exempt');
     // Elements outside the path (e.g. the action row) can be shared with an earlier gate on the same panel:
     // ownership moves to the newest gate so the right one gives them back.
     const hide = (n) => {
