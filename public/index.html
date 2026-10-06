@@ -22,7 +22,6 @@
   .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
 
   .container{ max-width:1100px; margin:0 auto; padding:20px; }
-  .section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#5c6771; font-weight:700; margin:0 0 10px; }
 
   table.nav-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e2e4e3; border-radius:6px; overflow:hidden; }
   table.nav-table th,table.nav-table td{ border-bottom:1px solid #e2e4e3; padding:14px 16px; text-align:left; font-size:12px; vertical-align:middle; }
@@ -51,6 +50,30 @@
 
   tr.auth-only{ display:none; }
   body.authenticated tr.auth-only{ display:table-row; }
+  .section-title{ font-size:18px; font-weight:600; color:#1b2330; margin:0 0 12px; }
+  .more-title{ margin-top:28px; }
+  .block-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+  @media (max-width:899px){ .block-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:559px){ .block-grid{ grid-template-columns:minmax(0,1fr); } }
+  .block{ display:flex; flex-direction:column; gap:6px; min-height:120px; box-sizing:border-box; padding:16px; background:#fff; border:1px solid #e2e4e3; border-left:4px solid #e2e4e3; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,.05); text-decoration:none; color:#1b2330; transition:background .1s; -webkit-tap-highlight-color:transparent; }
+  .block.production{ border-left-color:#15803d; }
+  .block.index{ border-left-color:#a9763a; }
+  a.block:active{ background:#f4f1e8; border-left-width:8px; padding-left:12px; }
+  .block:focus-visible,.block-btn:focus-visible{ outline:3px solid #96652b; outline-offset:2px; }
+  .block-title{ font-size:18px; font-weight:700; color:#1b2330; }
+  .block-desc{ font-size:14px; color:#54606b; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .block-btns{ display:flex; gap:16px; margin-top:auto; padding-top:8px; }
+  .block-btn{ flex:1; min-height:48px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:#1d2b38; background:#fbfbfa; border:1px solid #e2e4e3; border-radius:6px; text-decoration:none; transition:background .1s; }
+  .block-btn:active{ background:#f4f1e8; }
+  @media (orientation:portrait) and (max-width:899px){ .block-btns{ flex-direction:column; } }
+  @media (orientation:landscape){ .container{ padding:24px; } }
+  @media (orientation:portrait){ .container{ padding:16px; } }
+  table.nav-table td{ min-height:48px; font-size:14px !important; }
+  table.nav-table tbody tr{ height:48px; }
+  .block.auth-only, .more-title.auth-only, table.auth-only{ display:none; }
+  body.authenticated .block.auth-only{ display:flex; }
+  body.authenticated .more-title.auth-only{ display:block; }
+  body.authenticated table.auth-only{ display:table; }
 </style>
 </head>
 <body>
@@ -78,61 +101,47 @@
 <div class="container">
 
   <h2 class="section-title">Categories</h2>
-  <table class="nav-table">
-    <thead>
-      <tr>
-        <th>Document</th>
-        <th>Contents</th>
-      </tr>
-    </thead>
+  <div class="block-grid">
+    <a class="block production" href="pages/handovers.html" title="Shift handover reporting &mdash; Production and Quality">
+      <span class="block-title">Handovers</span>
+      <span class="block-desc">Shift handover reporting &mdash; Production and Quality</span>
+    </a>
+    <div class="block production auth-only">
+      <span class="block-title">Job Progress report</span>
+      <span class="block-desc">Every job and whether it is still open, plus production view and trends</span>
+      <div class="block-btns">
+        <a class="block-btn" href="pages/job-status.html">Job Status</a>
+        <a class="block-btn" href="pages/dashboard.html">Dashboard</a>
+      </div>
+    </div>
+    <a class="block index auth-only" href="records/record-list.html" title="Find and open a record to fill in">
+      <span class="block-title">Records</span>
+      <span class="block-desc">Find and open a record to fill in</span>
+    </a>
+    <a class="block index auth-only" href="pages/fsms.html" title="SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability and the REC 01 Master Record Index">
+      <span class="block-title">FSMS</span>
+      <span class="block-desc">SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability and the REC 01 Master Record Index</span>
+    </a>
+    <a class="block index auth-only" href="pages/verifier-assignments.html" title="Set which role signs off each record &mdash; drives the Awaiting Verification queue and the record verification panels">
+      <span class="block-title">Verification Assignments</span>
+      <span class="block-desc">Set which role signs off each record &mdash; drives the Awaiting Verification queue and the record verification panels</span>
+    </a>
+    <a class="block index auth-only" href="pages/submissions-log.html" title="Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time">
+      <span class="block-title">Logs</span>
+      <span class="block-desc">Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time</span>
+    </a>
+  </div>
+
+  <h2 class="section-title more-title auth-only">More</h2>
+  <table class="nav-table auth-only">
     <tbody>
-      <tr class="production">
-        <td class="document"><a href="pages/handovers.html">Handovers</a></td>
-        <td class="description">Shift handover reporting &mdash; Production and Quality</td>
-      </tr>
-      <tr class="production">
-        <td class="document"><a href="records/quick-abalone-receiving.html">Quick Abalone Receiving</a></td>
-        <td class="description">Fast basket-by-basket weight logging for receiving &mdash; job no., intake date, running tally, CSV export</td>
-      </tr>
-      <tr class="production auth-only">
-        <td class="document"><a href="pages/job-status.html">Job Status Updates</a></td>
-        <td class="description">Every job number and whether it is still open &mdash; canning report per job, close/reopen a job, CSV and print</td>
-      </tr>
-      <tr class="production auth-only">
-        <td class="document"><a href="pages/dashboard.html">Dashboard</a></td>
-        <td class="description">Production view and trends &mdash; floor dashboard and quality trending in one place</td>
-      </tr>
-      <tr class="index auth-only">
-        <td class="document"><a href="records/record-list.html">Record List</a></td>
-        <td class="description">Find and open a record to fill in</td>
-      </tr>
-      <tr class="index auth-only">
-        <td class="document"><a href="pages/fsms.html">FSMS</a></td>
-        <td class="description">SOPs, Policies, Procedures, PRPs, Specifications and the REC 01 Master Record Index &mdash; read-only reference</td>
-      </tr>
-      <tr class="index auth-only">
-        <td class="document"><a href="records/batch-trace.html">Batch Traceability</a></td>
-        <td class="description">Enter a product batch / lot number to see every record that touched it, front to back</td>
-      </tr>
       <tr class="index auth-only">
         <td class="document"><a href="pages/awaiting-verification.html">Awaiting Verification</a></td>
         <td class="description">Every submitted entry waiting for your verification, grouped by record &mdash; review and sign off in bulk without opening each one; only the role assigned to a record can verify it</td>
       </tr>
       <tr class="index auth-only">
-        <td class="document"><a href="pages/verifier-assignments.html">Verifier Assignments</a></td>
-        <td class="description">Set which role signs off each record &mdash; drives the Awaiting Verification queue and the record verification panels</td>
-      </tr>
-      <tr class="index auth-only">
         <td class="document"><a href="pages/admin-passkeys.html">Passkeys</a></td>
         <td class="description">Administrator only &mdash; add people and set the numeric passkey each uses to sign records (replaces typing a signature); disable a passkey when someone leaves</td>
-      </tr>
-      <tr class="index auth-only">
-        <td class="document"><a href="pages/specifications.html">Specifications</a></td>
-        <td class="description">Limits and tolerances the records check against &mdash; view them all here; the QA Manager or an Administrator can update a spec (each change is a new, dated version)</td>
-      </tr>
-      <tr class="index auth-only">
-        <td class="document"><a href="pages/submissions-log.html">Submissions &amp; Verifications Log</a></td>
-        <td class="description">Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time</td>
       </tr>
     </tbody>
   </table>

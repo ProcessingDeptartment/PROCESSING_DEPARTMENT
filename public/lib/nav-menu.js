@@ -23,8 +23,7 @@
     { label: 'Traceability', href: '../records/batch-trace.html' },
     { label: 'Submissions', href: '../pages/submissions-log.html' },
     { label: 'FSMS', href: '../pages/fsms.html' },
-    { label: 'Handovers', href: '../pages/handovers.html' },
-    { label: 'Quick Receiving', href: '../records/quick-abalone-receiving.html' }
+    { label: 'Handovers', href: '../pages/handovers.html' }
   ];
 
   // load the stylesheet that sits beside this script's lib/ folder
