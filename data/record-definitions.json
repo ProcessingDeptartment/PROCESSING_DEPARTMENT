@@ -18000,14 +18000,14 @@
           }
         },
         {
-          "key": "entryDate",
-          "label": "Entry date",
+          "key": "cookingDate",
+          "label": "Cooking date",
           "type": "date",
           "required": false,
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Dry room details",
+          "group": "Job info",
           "sectionIndex": null,
           "parentFieldKey": null,
           "position": 5,
@@ -18018,165 +18018,21 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "serverStamp": true,
-            "timeZone": "Africa/Johannesburg",
             "fromRecord": {
-              "source": "drying-entry-date",
-              "note": "From REC 7.4.1",
-              "missing": "No submitted REC 7.4.1 entry for this job yet. Today's date is used when you submit."
-            }
-          }
-        },
-        {
-          "key": "cookingDate",
-          "label": "Cooking date",
-          "type": "date",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": "Dry room details",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 6,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "fromRecord": {
-              "source": "dry-cooking",
-              "matchField": "jobNo",
+              "note": "From REC 7.4.0",
               "pick": "latest",
               "field": "recordDate",
-              "filterCol": "process",
+              "source": "dry-cooking",
+              "missing": "No REC 7.4.0 cooking date for this job. Fill in REC 7.4.0 first",
               "filterIn": [
                 "Cooking"
               ],
-              "submittedOnly": true,
               "idsField": "cookingDateSourceIds",
+              "filterCol": "process",
               "manualFlag": "cookingDateTypedManually",
-              "note": "From REC 7.4.0",
-              "missing": "No REC 7.4.0 cooking date for this job. Fill in REC 7.4.0 first",
-              "unlockWhenMissing": true
-            }
-          }
-        },
-        {
-          "key": "dryRoomArea",
-          "label": "Dry room area",
-          "type": "select",
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": [
-            "Main dry room",
-            "Dry container",
-            "Grading room"
-          ],
-          "group": "Dry room details",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 7,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "fromRecord": {
-              "source": "drying-location",
-              "prefill": true,
-              "confirmField": "dryRoomAreaConfirmed",
-              "idsField": "dryRoomAreaSourceId",
-              "note": "From REC 7.4.1. Tick Confirm location below.",
-              "missing": "REC 7.4.1 has no room movement for this job yet. Choose the area, then tick Confirm location."
-            }
-          }
-        },
-        {
-          "key": "dryRoomAreaConfirmed",
-          "label": "Confirm location",
-          "type": "yesno",
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": null,
-          "group": "Dry room details",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 8,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "tick": true,
-            "tickText": "The dry room area above is correct"
-          }
-        },
-        {
-          "key": "noOfTrolleys",
-          "label": "No. of trolleys",
-          "type": "number",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": "Dry room details",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 9,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "fromRecord": {
-              "source": "drying-process",
               "matchField": "jobNo",
-              "pick": "latest",
-              "field": "noOfTrolleys",
-              "nonEmpty": true,
               "submittedOnly": true,
-              "idsField": "trolleysSourceSubmissionId",
-              "manualFlag": "trolleysTypedManually",
-              "note": "From REC 7.4.1",
-              "missing": "No REC 7.4.1 trolley count for this job. Fill in REC 7.4.1 first",
               "unlockWhenMissing": true
-            }
-          }
-        },
-        {
-          "key": "estimatedDryDate",
-          "label": "Estimated drying date",
-          "type": "date",
-          "required": false,
-          "readOnly": true,
-          "unit": null,
-          "options": null,
-          "group": "Dry room details",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 10,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "addDays": {
-              "from": "cookingDate",
-              "days": 22,
-              "configKey": "dryingDaysEstimate"
             }
           }
         },
@@ -18188,10 +18044,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Dry room details",
+          "group": "Job info",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 11,
+          "position": 6,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18210,10 +18066,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Dry room details",
+          "group": "Job info",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 12,
+          "position": 7,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18225,6 +18081,40 @@
           }
         },
         {
+          "key": "noOfTrolleys",
+          "label": "No. of trolleys",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Job info",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 8,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "fromRecord": {
+              "note": "From REC 7.4.1",
+              "pick": "latest",
+              "field": "noOfTrolleys",
+              "source": "drying-process",
+              "missing": "No REC 7.4.1 trolley count for this job. Fill in REC 7.4.1 first",
+              "idsField": "trolleysSourceSubmissionId",
+              "nonEmpty": true,
+              "manualFlag": "trolleysTypedManually",
+              "matchField": "jobNo",
+              "submittedOnly": true,
+              "unlockWhenMissing": true
+            }
+          }
+        },
+        {
           "key": "trolleysSourceSubmissionId",
           "label": "Trolley count source entry",
           "type": "text",
@@ -18232,10 +18122,10 @@
           "readOnly": true,
           "unit": null,
           "options": null,
-          "group": "Dry room details",
+          "group": "Job info",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 13,
+          "position": 9,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18254,6 +18144,115 @@
           "readOnly": true,
           "unit": null,
           "options": null,
+          "group": "Job info",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 10,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
+        },
+        {
+          "key": "entryDate",
+          "label": "Entry date",
+          "type": "date",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Dry room details",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 11,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "timeZone": "Africa/Johannesburg",
+            "fromRecord": {
+              "note": "From REC 7.4.1",
+              "source": "drying-entry-date",
+              "missing": "No submitted REC 7.4.1 entry for this job yet. Today's date is used when you submit."
+            },
+            "serverStamp": true
+          }
+        },
+        {
+          "key": "estimatedDryDate",
+          "label": "Estimated drying date",
+          "type": "date",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Dry room details",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 12,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "addDays": {
+              "days": 22,
+              "from": "cookingDate",
+              "configKey": "dryingDaysEstimate"
+            }
+          }
+        },
+        {
+          "key": "dryRoomArea",
+          "label": "Current location",
+          "type": "select",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": [
+            "Main dry room",
+            "Dry container",
+            "Grading room"
+          ],
+          "group": "Dry room details",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 13,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "fromRecord": {
+              "note": "From REC 7.4.1. Tick Confirm location below.",
+              "source": "drying-location",
+              "missing": "REC 7.4.1 has no room movement for this job yet. Choose the area, then tick Confirm location.",
+              "prefill": true,
+              "idsField": "dryRoomAreaSourceId",
+              "confirmField": "dryRoomAreaConfirmed"
+            }
+          }
+        },
+        {
+          "key": "dryRoomAreaConfirmed",
+          "label": "Confirm location",
+          "type": "yesno",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
           "group": "Dry room details",
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -18265,7 +18264,8 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "hidden": true
+            "tick": true,
+            "tickText": "The dry room area above is correct"
           }
         },
         {
@@ -18310,10 +18310,10 @@
           "validateJson": null,
           "extraJson": {
             "legacy": true,
-            "legacyFrom": "date",
             "showWhen": {
               "nonEmpty": true
-            }
+            },
+            "legacyFrom": "date"
           }
         },
         {
@@ -18336,10 +18336,10 @@
           "validateJson": null,
           "extraJson": {
             "legacy": true,
-            "legacyFrom": "qcCheck",
             "showWhen": {
               "nonEmpty": true
-            }
+            },
+            "legacyFrom": "qcCheck"
           }
         },
         {
@@ -18362,10 +18362,10 @@
           "validateJson": null,
           "extraJson": {
             "legacy": true,
-            "legacyFrom": "supervisor",
             "showWhen": {
               "nonEmpty": true
-            }
+            },
+            "legacyFrom": "supervisor"
           }
         },
         {
@@ -18523,8 +18523,7 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "extraJson": null
+          "validateJson": null
         },
         {
           "key": "comments",
@@ -18543,8 +18542,7 @@
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
-          "validateJson": null,
-          "extraJson": null
+          "validateJson": null
         }
       ],
       "autofills": [
@@ -18561,32 +18559,34 @@
         }
       ],
       "extraJson": {
+        "redPrompt": {
+          "field": "correctiveActions",
+          "blocksSubmit": false
+        },
         "batchField": "jobNo",
-        "printLayout": "4col",
         "specFields": [],
-        "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation",
-        "dryingDaysEstimate": 22,
+        "printLayout": "4col",
+        "checkHistory": true,
         "dryRoomAreas": [
           "Main dry room",
           "Dry container",
           "Grading room"
         ],
-        "redPrompt": {
-          "field": "correctiveActions",
-          "blocksSubmit": false
-        },
         "submitChecks": {
-          "hardBlock": [
-            "jobNo",
-            "dryRoomArea"
-          ],
           "softWarn": [
             "cookingDate",
             "noOfTrolleys",
             "estimatedDryDate"
+          ],
+          "hardBlock": [
+            "jobNo",
+            "dryRoomArea"
           ]
-        }
+        },
+        "deviationLabel": "Deviation",
+        "deviationPolarity": "deviation",
+        "imageUploadFields": true,
+        "dryingDaysEstimate": 22
       },
       "primaryBatchField": "jobNo"
     },
