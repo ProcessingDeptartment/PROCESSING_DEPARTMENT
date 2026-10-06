@@ -78,6 +78,7 @@ function mount(app, prisma) {
     const q = req.query;
     const where = {};
     if (q.status && q.status !== 'all') where.status = String(q.status);
+    if (q.ref) where.ncRef = { in: String(q.ref).split(',').map((x) => x.trim()).filter(Boolean) };
     if (q.job) where.jobNumber = { contains: String(q.job).trim(), mode: 'insensitive' };
     if (q.record) where.recordRef = { contains: String(q.record).trim(), mode: 'insensitive' };
     const from = q.from ? new Date(q.from) : null;

@@ -6033,7 +6033,36 @@
               "required": true
             }
           ]
-        }
+        },
+        "ncThresholds": [
+          {
+            "field": "buffer4Reading",
+            "label": "pH buffer 4.01 reading",
+            "min": 3.9,
+            "max": 4.1,
+            "category": "Process deviation",
+            "severity": "minor",
+            "description": "pH buffer 4.01 reading {value} — outside accepted range 3.9–4.1."
+          },
+          {
+            "field": "buffer7Reading",
+            "label": "pH buffer 7.01 reading",
+            "min": 6.9,
+            "max": 7.1,
+            "category": "Process deviation",
+            "severity": "minor",
+            "description": "pH buffer 7.01 reading {value} — outside accepted range 6.9–7.1."
+          },
+          {
+            "field": "buffer10Reading",
+            "label": "pH buffer 10.01 reading",
+            "min": 9.9,
+            "max": 10.1,
+            "category": "Process deviation",
+            "severity": "minor",
+            "description": "pH buffer 10.01 reading {value} — outside accepted range 9.9–10.1."
+          }
+        ]
       }
     },
     {
@@ -6352,7 +6381,27 @@
           }
         ],
         "deviationLabel": "Equipment accurate",
-        "deviationPolarity": "accurate"
+        "deviationPolarity": "accurate",
+        "ncThresholds": [
+          {
+            "field": "coldDeviation",
+            "label": "Cold reference vs test deviation",
+            "min": -0.5,
+            "max": 0.5,
+            "category": "Equipment failure",
+            "severity": "minor",
+            "description": "Cold reference vs test deviation {value}°C — outside accepted range -0.5–0.5°C."
+          },
+          {
+            "field": "hotDeviation",
+            "label": "Hot reference vs test deviation",
+            "min": -0.5,
+            "max": 0.5,
+            "category": "Equipment failure",
+            "severity": "minor",
+            "description": "Hot reference vs test deviation {value}°C — outside accepted range -0.5–0.5°C."
+          }
+        ]
       }
     },
     {
@@ -26875,7 +26924,8 @@
         ],
         "specFields": [],
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
+        "deviationPolarity": "deviation",
+        "ncAlways": true
       }
     },
     {
@@ -37116,7 +37166,18 @@
           }
         ],
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
+        "deviationPolarity": "deviation",
+        "ncThresholds": [
+          {
+            "field": "temperature",
+            "label": "LHA chiller temperature",
+            "min": 12,
+            "max": 18,
+            "category": "Temperature out of spec",
+            "severity": "major",
+            "description": "LHA chiller temperature {value}°C — outside accepted range 12–18°C."
+          }
+        ]
       }
     },
     {
@@ -37505,7 +37566,27 @@
           }
         ],
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
+        "deviationPolarity": "deviation",
+        "ncThresholds": [
+          {
+            "field": "chiller1ProductTemp",
+            "label": "Chiller 1 product temperature",
+            "min": 0,
+            "max": 10,
+            "category": "Temperature out of spec",
+            "severity": "major",
+            "description": "Chiller 1 product temperature {value}°C — outside accepted range 0–10°C."
+          },
+          {
+            "field": "chiller2ProductTemp",
+            "label": "Chiller 2 product temperature",
+            "min": 0,
+            "max": 10,
+            "category": "Temperature out of spec",
+            "severity": "major",
+            "description": "Chiller 2 product temperature {value}°C — outside accepted range 0–10°C."
+          }
+        ]
       },
       "primaryBatchField": "jobNo"
     },
@@ -37666,7 +37747,36 @@
           }
         ],
         "deviationLabel": "Deviation",
-        "deviationPolarity": "deviation"
+        "deviationPolarity": "deviation",
+        "ncThresholds": [
+          {
+            "field": "startShiftTemp",
+            "label": "Incubator start-of-shift temperature",
+            "min": 36.1,
+            "max": 37.8,
+            "category": "Temperature out of spec",
+            "severity": "major",
+            "description": "Incubator start-of-shift temperature {value}°C — outside accepted range 36.1–37.8°C."
+          },
+          {
+            "field": "lunchTemp",
+            "label": "Incubator lunch temperature",
+            "min": 36.1,
+            "max": 37.8,
+            "category": "Temperature out of spec",
+            "severity": "major",
+            "description": "Incubator lunch temperature {value}°C — outside accepted range 36.1–37.8°C."
+          },
+          {
+            "field": "endShiftTemp",
+            "label": "Incubator end-of-shift temperature",
+            "min": 36.1,
+            "max": 37.8,
+            "category": "Temperature out of spec",
+            "severity": "major",
+            "description": "Incubator end-of-shift temperature {value}°C — outside accepted range 36.1–37.8°C."
+          }
+        ]
       }
     },
     {
@@ -38109,6 +38219,17 @@
         ],
         "mergedFrom": [
           "grading-room-temp-humidity-log"
+        ],
+        "ncThresholds": [
+          {
+            "field": "temperature",
+            "label": "Room temperature",
+            "min": 25,
+            "max": 32,
+            "category": "Dry room issue",
+            "severity": "major",
+            "description": "Room temperature {value}°C — outside accepted range 25–32°C."
+          }
         ]
       }
     },

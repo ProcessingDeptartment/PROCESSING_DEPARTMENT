@@ -1655,6 +1655,8 @@
     const storageKey = 'formrecord:' + config.recordKey;
     let submissions = [];
     let editingId = null;
+    // NC from records (nc-raise.js): NCs raised before the submission is saved, thresholds already dealt with, skip flag
+    let pendingNc = [], ncHandled = new Set(), ncSkipped = false;
 
     let formLocked = false;
     let clearArmed = false;
@@ -1761,6 +1763,7 @@
               <summary class="fr-section-title">Completed by</summary>
               ${window.SignOffBlock.completedByHtml({ byId: 'fr_cb_by', titleId: 'fr_cb_title', dateId: 'fr_cb_date', signatureId: 'fr_cb_signature', gridClass: 'fr-grid fr-grid-4 fr-compact', fieldClass: 'fr-field' })}
             </details>
+            ${window.NcRaise ? window.NcRaise.buttonHtml('fr_ncBtn') : ''}
             <div class="fr-actions">
               <button class="fr-btn fr-btn-flat" id="fr_cancelBtn">Clear</button>
               <button class="fr-btn fr-btn-flat" id="fr_saveBtn">Save draft</button>
@@ -3212,13 +3215,14 @@
 
     function openForm(id) {
       editingId = id || null;
+      pendingNc = []; ncHandled = new Set(); ncSkipped = false;
       const existing = id ? submissions.find(s => s.id === id) : null;
       const locked = isSubmitted(existing);
       const container = el('fr_modalSections');
-      let html = locked
+      let html = (window.NcRaise && existing ? window.NcRaise.bannerHtml(existing.nc_refs) : '') + (locked
         ? `<div class="fr-locked">Submitted${existing.submittedAt
             ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.</div>`
-        : '';
+        : '');
       if (existing && existing.values && existing.values.oosWarningAck) {
         html += `<div class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
           ${warningLinesHtml(existing.values.oosWarningNote, 'Batch weight exceeding OOSW - possible batch mix')}</div>`;
@@ -3303,6 +3307,7 @@
       }
       formLocked = locked; // slide Next-button state reads this while the roster editor draws
       container.innerHTML = html;
+      if (window.NcRaise) window.NcRaise.hydrateBanners(container);
       if (hasRoster) {
         rosterList.forEach((roster, i) => {
           const savedRows = existing ? getRosterRows(existing, i, roster.key) : null;
@@ -3561,6 +3566,23 @@
       if (finalize) {
         const ok = await runBusinessRules(config, values, editingId, rosterRowsByIndex);
         if (!ok) return;
+        // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
+        if (window.NcRaise && (config.ncThresholds || config.ncAlways)) {
+          const breaches = window.NcRaise.findBreaches(config.ncThresholds, values, rosterRowsByIndex).filter(b => !ncHandled.has(b.key));
+          if (config.ncAlways && !ncHandled.size && !pendingNc.length && !(editingId && (submissions.find(s => s.id === editingId) || {}).nc_refs)) {
+            breaches.push({ key: '__always', category: 'Other', severity: 'minor', description: '' });
+          }
+          for (const b of breaches) {
+            const r = await window.NcRaise.open({
+              recordRef: config.docCode, jobNumber: String(values[config.batchField || 'jobNo'] || '').trim(),
+              submissionId: editingId || '', category: b.category, severity: b.severity, description: b.description,
+              allowSkip: !config.ncAlways, heading: config.ncAlways ? '⚠ Raise NC — every entry on this record is an NC' : '⚠ Out of spec — raise an NC'
+            });
+            if (!r) return;                       // cancelled: back to the form (ncAlways cannot be skipped)
+            ncHandled.add(b.key);
+            if (r.skipped) ncSkipped = true; else pendingNc.push(r.nc.ncRef);
+          }
+        }
       }
 
       // Finalize-only gate: every row in a roster column marked `required: true` (type
@@ -3673,6 +3695,8 @@
         return n.length ? [Math.min.apply(null, n), Math.max.apply(null, n)] : null;
       };
 
+      if (pendingNc.length) savedSub.nc_refs = (savedSub.nc_refs || []).concat(pendingNc.filter(r => !(savedSub.nc_refs || []).includes(r)));
+      if (ncSkipped) savedSub.nc_skipped = true;
       const provisionalKeys = Array.from(el('fr_modalSections').querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.replace(/^fr_f_/, ''));
       if (provisionalKeys.length) savedSub.provisionalFields = provisionalKeys;
@@ -4154,6 +4178,27 @@
 
     el('fr_cancelBtn').addEventListener('click', onClearClick);
     el('fr_saveBtn').addEventListener('click', () => saveForm(false));
+    if (el('fr_ncBtn')) {
+      const ncNote = () => { const n = el('fr_ncBtn_note'); if (n) n.textContent = pendingNc.length ? 'NC raised: ' + pendingNc.join(', ') + ' — linked when this record is saved.' : ''; };
+      el('fr_ncBtn').addEventListener('click', async () => {
+        const jobEl = el('fr_f_' + (config.batchField || 'jobNo'));
+        const existing = editingId ? submissions.find(s => s.id === editingId) : null;
+        const r = await window.NcRaise.open({ recordRef: config.docCode, jobNumber: jobEl ? jobEl.value.trim() : '', submissionId: existing ? existing.id : '' });
+        if (!r || !r.nc) return;
+        if (existing) {
+          // already saved: stamp it now (also for a submitted record -- the link is not a change to its data)
+          existing.nc_refs = (existing.nc_refs || []).concat(r.nc.ncRef);
+          const ok = await persist();
+          toast(ok ? r.nc.ncRef + ' raised and linked to this record.' : r.nc.ncRef + ' raised, but it could not be linked to the record — note it on the form.');
+          if (ok && isSubmitted(existing)) openForm(existing.id);
+          else if (ok) { pendingNc.push(r.nc.ncRef); ncNote(); }
+        } else {
+          pendingNc.push(r.nc.ncRef); ncHandled.add('__manual'); ncNote();
+          toast(r.nc.ncRef + ' raised — it will be linked when you save.');
+        }
+      });
+    }
+    if (window.NcRaise && config.ncThresholds) window.NcRaise.wireInline(el('fr_modalSections'), config.ncThresholds, f => 'fr_f_' + f);
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
     el('fr_exportJsonBtn').addEventListener('click', exportJson);
     el('fr_printBtn').addEventListener('click', printPdf);

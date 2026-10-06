@@ -209,6 +209,8 @@
   async function load() {
     renderHead();
     var p = new URLSearchParams({ status: $('fStatus').value, limit: '1000' });
+    var refQ = new URLSearchParams(location.search).get('ref'); // deep link from a record's NC banner
+    if (refQ) { p.set('ref', refQ); p.set('status', 'all'); }
     if ($('fJob').value.trim()) p.set('job', $('fJob').value.trim());
     if ($('fRecord').value.trim()) p.set('record', $('fRecord').value.trim());
     if ($('fFrom').value) p.set('from', $('fFrom').value);

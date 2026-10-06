@@ -945,6 +945,8 @@
     }
     let entries = [];
     let editingId = null;
+    // NC from records (nc-raise.js): NCs raised before the entry is saved, thresholds already dealt with, skip flag
+    let pendingNc = [], ncHandled = new Set(), ncSkipped = false;
     // the id a new entry will be saved under, allocated when the form opens so photos
     // (config.imageUploadFields, lib/entry-photos.js) can be uploaded before the first save
     let formEntryId = null;
@@ -1598,6 +1600,7 @@
       if (keepUnlocked) keepUnlocked = false; else unlockedStages = new Set();
       editingId = id || null;
       formEntryId = id || uid('entry');
+      pendingNc = []; ncHandled = new Set(); ncSkipped = false;
 
       if (continueChain && !chainDriving && !id) {
         continueChain.forEach((lv, i) => { const sel = el(`${ns}_continue${i}`); if (sel) sel.value = ''; });
@@ -1616,6 +1619,13 @@
       lockedNote.textContent = locked
         ? `Submitted${existing.submittedAt ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.`
         : '';
+      if (window.NcRaise) {
+        let ncSlot = lockedNote.nextElementSibling;
+        if (!ncSlot || !ncSlot.classList.contains('ml-nc-slot')) { ncSlot = document.createElement('div'); ncSlot.className = 'ml-nc-slot'; lockedNote.after(ncSlot); }
+        ncSlot.innerHTML = window.NcRaise.bannerHtml(existing && existing.nc_refs);
+        window.NcRaise.hydrateBanners(ncSlot);
+        const ncNoteEl = el(`${ns}_ncBtn_note`); if (ncNoteEl) ncNoteEl.textContent = '';
+      }
       const container = el(modalIds.fields);
 
       // the fields container is reused; a custom body draws full-width blocks, so it must not be a field grid
@@ -1998,6 +2008,24 @@
       }
       } // end non-customBody field gathering
 
+      // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
+      if (window.NcRaise && (finalize || !submitFlow) && (config.ncThresholds || config.ncAlways)) {
+        const breaches = window.NcRaise.findBreaches(config.ncThresholds, values).filter(b => !ncHandled.has(b.key));
+        if (config.ncAlways && !ncHandled.size && !pendingNc.length && !(existingForStage && existingForStage.nc_refs)) {
+          breaches.push({ key: '__always', category: 'Other', severity: 'minor', description: '' });
+        }
+        for (const b of breaches) {
+          const r = await window.NcRaise.open({
+            recordRef: docCode, jobNumber: String(values[jobKeyOf()] || '').trim(),
+            submissionId: editingId || '', category: b.category, severity: b.severity, description: b.description,
+            allowSkip: !config.ncAlways, heading: config.ncAlways ? '⚠ Raise NC — every entry on this record is an NC' : '⚠ Out of spec — raise an NC'
+          });
+          if (!r) return;                       // cancelled: back to the form (ncAlways cannot be skipped)
+          ncHandled.add(b.key);
+          if (r.skipped) ncSkipped = true; else pendingNc.push(r.nc.ncRef);
+        }
+      }
+
       // COMPLETED BY block. A customBody page that draws its own block (ownsCompletedBy) hands
       // the engine its values; everything else reads the engine's block.
       let completedBy = null, finance = null;
@@ -2080,6 +2108,8 @@
         entries.push(savedEntry);
       }
 
+      if (pendingNc.length) savedEntry.nc_refs = (savedEntry.nc_refs || []).concat(pendingNc.filter(r => !(savedEntry.nc_refs || []).includes(r)));
+      if (ncSkipped) savedEntry.nc_skipped = true;
       const provisionalKeys = Array.from(el(modalIds.fields).querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.slice((ns + '_f_').length));
       if (provisionalKeys.length) savedEntry.provisionalFields = provisionalKeys;
@@ -2503,7 +2533,28 @@
         safeKey(docCode) + '_' + stamp + '.json');
     }
 
-    return { load, renderTable, openForm, closeForm, saveForm, exportCsv, exportJson, printPdf, continueChainChanged, resetContinueChain,
+    // "Raise NC on this record" button
+    async function raiseNc() {
+      const jobEl = el(`${ns}_f_${jobKeyOf()}`);
+      const existing = editingId ? entries.find(e => e.id === editingId) : null;
+      const r = await window.NcRaise.open({ recordRef: docCode, jobNumber: jobEl ? String(jobEl.value || '').trim() : '', submissionId: existing ? existing.id : '' });
+      if (!r || !r.nc) return;
+      const note = el(`${ns}_ncBtn_note`);
+      if (existing) {
+        // already saved: stamp it now (also for a submitted record -- the link is not a change to its data)
+        existing.nc_refs = (existing.nc_refs || []).concat(r.nc.ncRef);
+        const ok = await persist();
+        toast(ok ? r.nc.ncRef + ' raised and linked to this record.' : r.nc.ncRef + ' raised, but it could not be linked to the record — note it on the form.');
+        if (ok && isSubmitted(existing)) openForm(existing.id);
+        else if (ok) { pendingNc.push(r.nc.ncRef); if (note) note.textContent = 'NC raised: ' + pendingNc.join(', '); }
+      } else {
+        pendingNc.push(r.nc.ncRef); ncHandled.add('__manual');
+        if (note) note.textContent = 'NC raised: ' + pendingNc.join(', ') + ' — linked when this entry is saved.';
+        toast(r.nc.ncRef + ' raised — it will be linked when you save.');
+      }
+    }
+
+    return { load, renderTable, openForm, closeForm, saveForm, raiseNc, exportCsv, exportJson, printPdf, continueChainChanged, resetContinueChain,
       printEntry, exportEntryJson,
       // Find-or-create a row in this log keyed by matchKeys, merging in `row`.
       // Used by a primary log's `deriveInto` to keep a summary/secondary log in
@@ -2697,6 +2748,7 @@
       const fieldsAndActions = `
           <div class="ml-collapse-ctl no-print" id="${ns}_collapseCtl" hidden><button type="button" data-ml-collapse="close">Collapse all</button><span aria-hidden="true">·</span><button type="button" data-ml-collapse="open">Expand all</button></div>
           <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>${completedByPanel}
+          ${window.NcRaise ? window.NcRaise.buttonHtml(ns + '_ncBtn') : ''}
           <div class="ml-actions">
             <button class="ml-btn ml-btn-flat" id="${ns}_cancelBtn">${inline ? 'Clear' : 'Cancel'}</button>
             <button class="ml-btn ${submitFlow ? 'ml-btn-flat' : 'ml-btn-primary'}" id="${ns}_saveBtn">${submitFlow ? 'Save draft' : 'Save entry'}</button>
@@ -2910,6 +2962,8 @@
         if (resetBtn) resetBtn.addEventListener('click', () => ctrl.resetContinueChain());
       }
       el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm(!submitFlow));
+      if (el(`${ns}_ncBtn`)) el(`${ns}_ncBtn`).addEventListener('click', () => ctrl.raiseNc());
+      if (window.NcRaise && ns === 'ml_p' && config.ncThresholds) window.NcRaise.wireInline(el(`${ns}_modalFields`), config.ncThresholds, f => `${ns}_f_${f}`);
       if (submitFlow) el(`${ns}_submitBtn`).addEventListener('click', () => ctrl.saveForm(true));
       el(`${ns}_exportCsvBtn`).addEventListener('click', () => ctrl.exportCsv());
       el(`${ns}_exportJsonBtn`).addEventListener('click', () => ctrl.exportJson());
