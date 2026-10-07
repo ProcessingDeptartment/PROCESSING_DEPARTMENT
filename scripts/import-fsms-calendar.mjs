@@ -43,6 +43,18 @@ const CATEGORY_RULES = [
   [/training/i, 'Training'],
   [/meeting|review/i, 'Meetings'],
 ];
+// 2020-2024 sheets have no category column, so those events are classified by their title instead.
+const TITLE_RULES = [
+  [/GMP|facility.*inspect/i, 'GMP'],
+  [/recall|traceability exercise/i, 'Mock Recalls'],
+  [/medical/i, 'Medicals'],
+  [/calibrat/i, 'Calibration'],
+  [/training/i, 'Training'],
+  [/meeting|review|new qcs/i, 'Meetings'],
+  [/audit|nrcs|risk assessment/i, 'Audits'],
+  [/micro|airplate|swab/i, 'Monthly Testing'],
+  [/annual|validation|heat dr?istubution|F0|oprp|sterility|heavy metal|water test/i, 'Annual Testing/Verification'],
+];
 const categoryOf = (label) => { const r = CATEGORY_RULES.find(([re]) => re.test(label)); return r ? r[1] : null; };
 
 const files = fs.readdirSync(dir).filter((f) => /\.xlsx?$/i.test(f) && !f.startsWith('~$'))
@@ -64,7 +76,7 @@ for (const { f, year } of files) {
     if (first) label = first;
     for (const [i, month] of cols) {
       for (const line of String(row[i] || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)) {
-        const category = categoryOf(label);
+        const category = categoryOf(label) || (TITLE_RULES.find(([re]) => re.test(line)) || [])[1] || null;
         (category ? events : unmatched).push({ year, month, category, title: line.slice(0, 300), label });
       }
     }
