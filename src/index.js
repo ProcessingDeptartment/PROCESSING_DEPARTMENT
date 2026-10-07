@@ -881,6 +881,7 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
 // REC 7.4.2 photos on problem answers (src/dry-monitoring-images.js)
 require('./dry-monitoring-images').mount(app, prisma);
 require('./nc-log').mount(app, prisma); // Non-Conformance Log
+require('./fsms-calendar').mount(app, prisma); // FSMS annual calendar
 
 // ---- Seam Test Runs -----------------------------------------------------------------------
 // POST /api/seam-test-runs   — save one calculator submission

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSMS Calendar</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .container{ max-width:1500px; margin:0 auto; padding:16px 16px 80px; }
+  .controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .btn{ padding:8px 13px; border:1px solid #d0d5db; background:#fff; border-radius:6px; font-size:13px; cursor:pointer; color:#1b2330; }
+  .btn:hover{ background:#f2f4f6; }
+  .btn.primary{ background:#a9763a; border-color:#a9763a; color:#fff; font-weight:600; }
+  .btn.primary:hover{ background:#96652b; }
+  .btn.danger{ color:#a3352d; border-color:#e6b9b5; }
+  select,input,textarea{ padding:7px 8px; border:1px solid #d0d5db; border-radius:5px; font-size:13px; font-family:inherit; color:#1b2330; box-sizing:border-box; }
+  .tabs{ display:flex; gap:4px; margin-left:auto; }
+  .tab{ padding:7px 14px; border:1px solid #d0d5db; background:#fff; border-radius:6px; cursor:pointer; font-size:13px; }
+  .tab.on{ background:#1d2b38; color:#fff; border-color:#1d2b38; }
+  .banner{ padding:10px 12px; border-radius:6px; font-size:12.5px; font-weight:600; margin-bottom:12px; }
+  .banner.ok{ background:#e8f3ec; color:#2f7a52; }
+  .banner.bad{ background:#fbe8e6; color:#a3352d; }
+  .banner.info{ background:#eef2f7; color:#33475b; }
+  .grid-wrap{ overflow-x:auto; background:#fff; border:1px solid #e2e4e3; border-radius:8px; }
+  table.cal{ border-collapse:collapse; width:100%; min-width:1250px; table-layout:fixed; }
+  table.cal th, table.cal td{ border:1px solid #eceeed; padding:5px; vertical-align:top; }
+  table.cal th{ background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; text-align:center; }
+  table.cal th.cat, table.cal td.cat{ width:140px; text-align:left; position:sticky; left:0; background:#fbfbfa; z-index:1; font-weight:600; font-size:12px; }
+  table.cal td.cat{ border-left:4px solid var(--c); }
+  table.cal .now{ background:#fff7e6; }
+  table.cal th.now{ background:#f6e3b8; color:#5c3d00; }
+  td.cell{ min-height:56px; height:56px; }
+  .chip{ display:block; width:100%; text-align:left; border:none; border-left:4px solid var(--c); background:color-mix(in srgb, var(--c) 12%, #fff); color:#1b2330; padding:4px 6px; margin-bottom:4px; border-radius:4px; font-size:11.5px; line-height:1.3; cursor:pointer; font-family:inherit; }
+  .chip:hover{ background:color-mix(in srgb, var(--c) 24%, #fff); }
+  .chip.done{ opacity:.6; text-decoration:line-through; }
+  .chip.skipped{ opacity:.55; font-style:italic; }
+  .chip .tick{ font-weight:700; color:#166534; text-decoration:none; display:inline-block; }
+  .add{ border:1px dashed #cbd2d9; background:none; color:#8a949d; border-radius:4px; width:100%; font-size:12px; cursor:pointer; padding:1px 0; opacity:0; }
+  td.cell:hover .add, .add:focus{ opacity:1; }
+  .upcoming{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; }
+  .up-row{ display:flex; gap:12px; padding:9px 12px; border-bottom:1px solid #eceeed; align-items:baseline; cursor:pointer; }
+  .up-row:hover{ background:#fbfbfa; }
+  .up-month{ width:90px; font-weight:700; color:#5c6771; flex:none; }
+  .dot{ display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--c); margin-right:6px; }
+  .empty{ padding:30px; text-align:center; color:#5c6771; }
+  .panel-bg{ position:fixed; inset:0; background:rgba(15,23,32,.35); display:none; z-index:50; }
+  .panel-bg.show{ display:block; }
+  .panel{ position:absolute; top:0; right:0; bottom:0; width:100%; max-width:400px; background:#fff; padding:18px 20px; overflow-y:auto; box-sizing:border-box; box-shadow:-4px 0 18px rgba(0,0,0,.18); }
+  .panel h2{ margin:0 0 4px; font-size:16px; }
+  .panel .meta{ color:#5c6771; font-size:12px; margin-bottom:12px; }
+  .panel label{ display:flex; flex-direction:column; gap:3px; font-size:12px; color:#5c6771; margin-bottom:10px; }
+  .panel .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .status-pill{ display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+  .s-pending{ background:#fef3c7; color:#92400e; } .s-done{ background:#dcfce7; color:#166534; } .s-skipped{ background:#eceeed; color:#4b5560; }
+  .modal-bg{ position:fixed; inset:0; background:rgba(15,23,32,.5); display:none; align-items:flex-start; justify-content:center; padding:40px 12px; z-index:60; }
+  .modal-bg.show{ display:flex; }
+  .modal{ background:#fff; border-radius:10px; width:100%; max-width:460px; padding:18px 20px; box-sizing:border-box; }
+  .modal h2{ margin:0 0 12px; font-size:16px; }
+  .opt{ display:flex; gap:10px; padding:10px; border:1px solid #d0d5db; border-radius:8px; margin-bottom:8px; cursor:pointer; }
+  .opt input{ margin-top:3px; }
+  .err{ color:#a3352d; font-size:12px; min-height:1em; margin-top:8px; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>FSMS Calendar</h1>
+    <p>Annual QAM schedule &amp; compliance tracker</p>
+    <a class="back-link" href="../index.html">&larr; Home</a>
+  </div>
+</div>
+
+<div class="container">
+  <div id="banner"></div>
+  <div class="controls">
+    <label>Year <select id="yearSel"></select></label>
+    <button class="btn primary" id="newYearBtn" type="button">＋ New year</button>
+    <div class="tabs">
+      <button class="tab on" id="tabGrid" type="button">Calendar</button>
+      <button class="tab" id="tabUp" type="button">Upcoming (60 days)</button>
+    </div>
+  </div>
+
+  <div id="gridView"><div class="grid-wrap"><table class="cal" id="cal"></table></div></div>
+  <div id="upView" class="hidden"><div class="upcoming" id="upList"></div></div>
+</div>
+
+<!-- event detail / edit panel -->
+<div class="panel-bg" id="panelBg">
+  <aside class="panel" id="panel"></aside>
+</div>
+
+<!-- new year wizard -->
+<div class="modal-bg" id="yearBg">
+  <div class="modal">
+    <h2 id="yearTitle">Set up year</h2>
+    <label class="opt"><input type="radio" name="yearMode" value="clone" checked>
+      <span><b>Clone from <span id="cloneFrom"></span></b><br><span style="color:#5c6771">Copies every event, reset to pending. Review and adjust dates afterwards. Recommended.</span></span></label>
+    <label class="opt"><input type="radio" name="yearMode" value="blank">
+      <span><b>Start blank</b><br><span style="color:#5c6771">Empty grid; add events yourself.</span></span></label>
+    <div style="margin-top:10px">Year to create: <input type="number" id="newYearNum" style="width:90px"> Clone from: <select id="srcSel"></select></div>
+    <div class="err" id="yearErr"></div>
+    <div class="row" style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button class="btn" id="yearCancel" type="button">Cancel</button>
+      <button class="btn primary" id="yearGo" type="button">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script>
+(function () {
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var NOW = new Date(), THIS_YEAR = NOW.getFullYear(), THIS_MONTH = NOW.getMonth() + 1;
+  var years = [], data = null, cur = null, catById = {};
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  function userName() { var u = window.Auth && window.Auth.getCurrentUser(); return u ? u.displayName : ''; }
+  function api(path, opts) { return window.FacilityApi.fetch(path, opts); }
+  function json(method, body) { return { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }; }
+  function banner(cls, msg) { $('banner').innerHTML = msg ? '<div class="banner ' + cls + '">' + esc(msg) + '</div>' : ''; }
+  async function call(path, opts) {
+    var r = await api(path, opts), body = null;
+    try { body = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error((body && body.error) || ('Request failed (' + r.status + ')'));
+    return body;
+  }
+
+  // ---------- loading ----------
+  async function loadYears(select) {
+    years = await call('/api/fsms/years');
+    var pick = select || (years.some(function (y) { return y.year === THIS_YEAR; }) ? THIS_YEAR : (years[0] && years[0].year));
+    $('yearSel').innerHTML = years.map(function (y) { return '<option value="' + y.year + '">' + y.year + ' (' + y.events + ')</option>'; }).join('');
+    if (pick) { $('yearSel').value = pick; await loadYear(pick); } else { data = null; $('cal').innerHTML = ''; banner('info', 'No years set up yet. Click “New year”.'); }
+  }
+  async function loadYear(y) {
+    data = await call('/api/fsms/years/' + y);
+    catById = {}; data.categories.forEach(function (c) { catById[c.id] = c; });
+    banner(data.readOnly ? 'info' : '', data.readOnly ? y + ' is a past year: events are read-only, but status can still be marked.' : '');
+    renderGrid();
+  }
+
+  // ---------- grid ----------
+  function renderGrid() {
+    var showNow = data.year === THIS_YEAR;
+    var h = '<thead><tr><th class="cat">Category</th>' + MONTHS.map(function (m, i) {
+      return '<th class="' + (showNow && i + 1 === THIS_MONTH ? 'now' : '') + '">' + m + '</th>'; }).join('') + '</tr></thead><tbody>';
+    data.categories.forEach(function (c) {
+      h += '<tr><td class="cat" style="--c:' + esc(c.color) + '">' + esc(c.name) + '</td>';
+      for (var m = 1; m <= 12; m++) {
+        var evs = data.events.filter(function (e) { return e.categoryId === c.id && e.month === m; });
+        h += '<td class="cell ' + (showNow && m === THIS_MONTH ? 'now' : '') + '">'
+          + evs.map(function (e) {
+              return '<button type="button" class="chip ' + e.status + '" style="--c:' + esc(c.color) + '" data-id="' + e.id + '" title="' + esc(e.title) + '">'
+                + (e.status === 'done' ? '<span class="tick">✓ </span>' : '') + esc(e.title) + '</button>'; }).join('')
+          + (data.readOnly ? '' : '<button type="button" class="add" data-cat="' + c.id + '" data-m="' + m + '" title="Add event">＋</button>')
+          + '</td>';
+      }
+      h += '</tr>';
+    });
+    $('cal').innerHTML = h + '</tbody>';
+  }
+
+  // ---------- panel ----------
+  function closePanel() { $('panelBg').classList.remove('show'); }
+  function openEvent(id) {
+    var e = data.events.filter(function (x) { return x.id === id; })[0]; if (!e) return;
+    var c = catById[e.categoryId], ro = data.readOnly;
+    var who = e.completedBy ? ' by ' + esc(e.completedBy) + ' on ' + new Date(e.completedAt).toLocaleDateString('en-GB') : '';
+    $('panel').innerHTML = '<h2>' + esc(e.title) + '</h2>'
+      + '<div class="meta"><span class="dot" style="--c:' + esc(c.color) + '"></span>' + esc(c.name) + ' · ' + FULL[e.month - 1] + ' ' + data.year
+      + ' · <span class="status-pill s-' + e.status + '">' + e.status + '</span>' + who + '</div>'
+      + '<label>Title<input id="pTitle" value="' + esc(e.title) + '"' + (ro ? ' disabled' : '') + '></label>'
+      + '<label>Month<select id="pMonth"' + (ro ? ' disabled' : '') + '>' + FULL.map(function (m, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === e.month ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></label>'
+      + '<label>Notes (specific dates, details)<textarea id="pNotes" rows="4"' + (ro ? ' disabled' : '') + '>' + esc(e.notes || '') + '</textarea></label>'
+      + '<label>Your name (to sign off)<input id="pWho" value="' + esc(userName()) + '"></label>'
+      + '<div class="err" id="pErr"></div>'
+      + '<div class="row">'
+      + (e.status === 'done' ? '' : '<button class="btn primary" data-act="done" type="button">Mark done</button>')
+      + (e.status === 'skipped' ? '' : '<button class="btn" data-act="skipped" type="button">Skip</button>')
+      + (e.status === 'pending' ? '' : '<button class="btn" data-act="pending" type="button">Reopen</button>')
+      + '</div><div class="row">'
+      + (ro ? '' : '<button class="btn" data-act="save" type="button">Save changes</button><button class="btn danger" data-act="delete" type="button">Delete</button>')
+      + '<button class="btn" data-act="close" type="button">Close</button></div>';
+    $('panel').dataset.id = id;
+    $('panelBg').classList.add('show');
+  }
+  async function panelAct(act) {
+    var id = parseInt($('panel').dataset.id, 10), err = $('pErr');
+    err.textContent = '';
+    try {
+      if (act === 'close') return closePanel();
+      if (act === 'delete') { if (!confirm('Delete this event?')) return; await call('/api/fsms/events/' + id, { method: 'DELETE' }); }
+      else if (act === 'save') await call('/api/fsms/events/' + id, json('PATCH', { title: $('pTitle').value, month: $('pMonth').value, notes: $('pNotes').value }));
+      else await call('/api/fsms/events/' + id, json('PATCH', { status: act, completedBy: $('pWho').value }));
+      closePanel(); await refresh();
+    } catch (e) { err.textContent = e.message; }
+  }
+  async function refresh() { await loadYear(data.year); await loadYears(data.year); }
+
+  async function addEvent(catId, month) {
+    var title = prompt('New event in ' + catById[catId].name + ', ' + FULL[month - 1] + ' ' + data.year + ':');
+    if (!title || !title.trim()) return;
+    try { await call('/api/fsms/events', json('POST', { year: data.year, categoryId: catId, month: month, title: title })); await refresh(); }
+    catch (e) { banner('bad', e.message); }
+  }
+
+  // ---------- upcoming ----------
+  async function loadUpcoming() {
+    $('upList').innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      var rows = await call('/api/fsms/upcoming?days=60');
+      $('upList').innerHTML = rows.length ? rows.map(function (r) {
+        return '<div class="up-row" data-year="' + r.year + '" data-id="' + r.id + '"><span class="up-month">' + MONTHS[r.month - 1] + ' ' + r.year + '</span>'
+          + '<span style="--c:' + esc(r.color) + '"><span class="dot"></span><b>' + esc(r.title) + '</b> <span style="color:#5c6771">· ' + esc(r.category) + '</span>'
+          + (r.notes ? '<br><span style="color:#5c6771">' + esc(r.notes) + '</span>' : '') + '</span></div>'; }).join('')
+        : '<div class="empty">Nothing pending in the next 60 days.</div>';
+    } catch (e) { $('upList').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; }
+  }
+  function showTab(up) {
+    $('tabGrid').classList.toggle('on', !up); $('tabUp').classList.toggle('on', up);
+    $('gridView').classList.toggle('hidden', up); $('upView').classList.toggle('hidden', !up);
+    if (up) loadUpcoming();
+  }
+
+  // ---------- new year wizard ----------
+  function openYearModal() {
+    var latest = years.length ? years[0].year : THIS_YEAR - 1;
+    $('newYearNum').value = latest + 1;
+    $('srcSel').innerHTML = years.map(function (y) { return '<option value="' + y.year + '">' + y.year + '</option>'; }).join('');
+    $('cloneFrom').textContent = latest;
+    $('yearTitle').textContent = 'Set up ' + (latest + 1);
+    $('yearErr').textContent = '';
+    $('yearBg').classList.add('show');
+  }
+  async function createYear() {
+    var year = parseInt($('newYearNum').value, 10), mode = document.querySelector('input[name=yearMode]:checked').value;
+    $('yearErr').textContent = '';
+    try {
+      if (mode === 'clone') {
+        if (!$('srcSel').value) throw new Error('No year to clone from yet.');
+        var r = await call('/api/fsms/years/' + year + '/clone', json('POST', { sourceYear: parseInt($('srcSel').value, 10) }));
+        banner('ok', r.copied + ' events carried over from ' + $('srcSel').value + ' — review the dates and adjust where needed.');
+      } else { await call('/api/fsms/years', json('POST', { year: year })); banner('ok', year + ' created (blank).'); }
+      $('yearBg').classList.remove('show');
+      await loadYears(year);
+    } catch (e) { $('yearErr').textContent = e.message; }
+  }
+
+  // ---------- wiring ----------
+  $('cal').addEventListener('click', function (ev) {
+    var chip = ev.target.closest('.chip'), add = ev.target.closest('.add');
+    if (chip) openEvent(parseInt(chip.dataset.id, 10));
+    else if (add) addEvent(parseInt(add.dataset.cat, 10), parseInt(add.dataset.m, 10));
+  });
+  $('panel').addEventListener('click', function (ev) { var b = ev.target.closest('[data-act]'); if (b) panelAct(b.dataset.act); });
+  $('panelBg').addEventListener('click', function (ev) { if (ev.target === $('panelBg')) closePanel(); });
+  $('yearSel').addEventListener('change', function () { loadYear(parseInt($('yearSel').value, 10)).catch(function (e) { banner('bad', e.message); }); });
+  $('newYearBtn').addEventListener('click', openYearModal);
+  $('yearCancel').addEventListener('click', function () { $('yearBg').classList.remove('show'); });
+  $('yearGo').addEventListener('click', createYear);
+  $('tabGrid').addEventListener('click', function () { showTab(false); });
+  $('tabUp').addEventListener('click', function () { showTab(true); });
+  $('upList').addEventListener('click', function (ev) {
+    var r = ev.target.closest('.up-row'); if (!r) return;
+    var y = parseInt(r.dataset.year, 10), id = parseInt(r.dataset.id, 10);
+    showTab(false);
+    (data && data.year === y ? Promise.resolve() : (function () { $('yearSel').value = y; return loadYear(y); })()).then(function () { openEvent(id); });
+  });
+
+  loadYears().catch(function (e) { banner('bad', 'Could not load the calendar: ' + e.message); });
+})();
+</script>
+</body>
+</html>

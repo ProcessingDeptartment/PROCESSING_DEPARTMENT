@@ -4906,3 +4906,45 @@ model SeamTestRun {
   @@index([jobNo], map: "idx_seam_test_run_job_no")
   @@map("seam_test_run")
 }
+
+// FSMS annual calendar (migration 20261007150000_fsms_calendar, routes in src/fsms-calendar.js).
+model FsmsYear {
+  id        Int         @id @default(autoincrement())
+  year      Int         @unique
+  notes     String?
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  events    FsmsEvent[]
+
+  @@map("fsms_year")
+}
+
+model FsmsCategory {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  color     String      @default("#64748b")
+  sortOrder Int         @default(0) @map("sort_order")
+  events    FsmsEvent[]
+
+  @@map("fsms_category")
+}
+
+model FsmsEvent {
+  id          Int          @id @default(autoincrement())
+  yearId      Int          @map("year_id")
+  categoryId  Int          @map("category_id")
+  month       Int
+  title       String
+  notes       String?
+  status      String       @default("pending")
+  completedAt DateTime?    @map("completed_at") @db.Timestamptz(6)
+  completedBy String?      @map("completed_by")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  year        FsmsYear     @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  category    FsmsCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([yearId, month], map: "idx_fsms_event_year_month")
+  @@index([yearId, categoryId], map: "idx_fsms_event_year_cat")
+  @@map("fsms_event")
+}
