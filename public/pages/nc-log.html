@@ -107,8 +107,8 @@
       <label>Job number <input name="job_number" type="text"></label>
       <label>Record ref <input name="record_ref" type="text" placeholder="e.g. REC-7.4.2"></label>
       <label>Category <span class="req">*</span><select name="category" required></select></label>
-      <label>Severity <span class="req">*</span>
-        <select name="severity" required><option value="minor">Minor</option><option value="major">Major</option><option value="critical">Critical</option></select>
+      <label>Raise a CAR? <span class="req">*</span>
+        <select name="car_required" required><option value="">— choose —</option><option value="yes">Yes — CAR required</option><option value="no">No</option></select>
       </label>
       <label class="full">Raised by <span class="req">*</span><input name="raised_by" type="text" required></label>
       <label class="full">Description <span class="req">*</span><textarea name="description" required placeholder="What went wrong"></textarea></label>
@@ -144,7 +144,7 @@
   var COLS = [
     { k: 'ncRef', t: 'NC Ref' }, { k: 'raisedAt', t: 'Date/Time raised' }, { k: 'jobNumber', t: 'Job number' },
     { k: 'recordRef', t: 'Record' }, { k: 'category', t: 'Category' }, { k: 'description', t: 'Description' },
-    { k: 'severity', t: 'Severity' }, { k: 'status', t: 'Status' }, { k: 'correctiveAction', t: 'Corrective action' },
+    { k: 'carRequired', t: 'CAR' }, { k: 'status', t: 'Status' }, { k: 'correctiveAction', t: 'Corrective action' },
     { k: 'closedAt', t: 'Closed by / date' }, { k: '', t: 'Action' }
   ];
   var SEV_ORDER = { minor: 0, major: 1, critical: 2 }, STAT_ORDER = { open: 0, in_progress: 1, closed: 2 };
@@ -169,8 +169,15 @@
       return '<th data-k="' + c.k + '">' + c.t + (c.k === sortKey ? ' <span class="arr">' + (sortDir > 0 ? '▲' : '▼') + '</span>' : '') + '</th>';
     }).join('');
   }
+  // "Raise a CAR?": Yes = the more severe process (cannot close until the CAR is referenced)
+  function carBadge(r) {
+    if (r.carRequired === true) return '<span class="badge b-critical">CAR' + (r.carRef ? ' ' + esc(r.carRef) : ' required') + '</span>';
+    if (r.carRequired === false) return '<span class="badge b-minor">No CAR</span>';
+    return '<span class="badge b-minor">—</span>';
+  }
+  function carText(r) { return r.carRequired === true ? 'Yes' + (r.carRef ? ' (' + r.carRef + ')' : ' — not yet referenced') : r.carRequired === false ? 'No' : ''; }
   function sortVal(r, k) {
-    if (k === 'severity') return SEV_ORDER[r.severity];
+    if (k === 'carRequired') return r.carRequired === true ? 2 : r.carRequired === false ? 0 : 1;
     if (k === 'status') return STAT_ORDER[r.status];
     var v = r[k]; return v == null ? '' : String(v).toLowerCase();
   }
@@ -184,13 +191,13 @@
     renderHead();
     if (!rows.length) { $('rows').innerHTML = '<tr><td class="empty" colspan="11">No NCs raised yet.</td></tr>'; return; }
     $('rows').innerHTML = sorted().map(function (r) {
-      var cls = r.status === 'closed' ? 'closed' : (r.severity === 'critical' ? 'hl-critical' : r.severity === 'major' ? 'hl-major' : '');
+      var cls = r.status === 'closed' ? 'closed' : (r.carRequired === true ? 'hl-critical' : '');
       var job = r.jobNumber ? '<a href="../records/batch-trace.html?batch=' + encodeURIComponent(r.jobNumber) + '">' + esc(r.jobNumber) + '</a>' : '';
       return '<tr class="' + cls + '">'
         + '<td><button type="button" class="ref" data-id="' + r.id + '">' + esc(r.ncRef) + '</button></td>'
         + '<td>' + fmt(r.raisedAt) + '</td><td>' + job + '</td><td>' + esc(r.recordRef) + '</td><td>' + esc(r.category) + '</td>'
         + '<td title="' + esc(r.description) + '">' + esc(trunc(r.description, 80)) + '</td>'
-        + '<td><span class="badge b-' + r.severity + '">' + (SEV[r.severity] || esc(r.severity)) + '</span></td>'
+        + '<td>' + carBadge(r) + '</td>'
         + '<td><span class="badge b-' + r.status + '">' + (STAT[r.status] || esc(r.status)) + '</span></td>'
         + '<td title="' + esc(r.correctiveAction) + '">' + esc(trunc(r.correctiveAction, 60)) + '</td>'
         + '<td>' + (r.status === 'closed' ? esc(r.closedBy || '') + (r.closedAt ? '<br>' + fmt(r.closedAt) : '') : '') + '</td>'
@@ -227,11 +234,11 @@
 
   // ---------- CSV ----------
   $('csvBtn').addEventListener('click', function () {
-    var head = ['NC Ref', 'Raised', 'Job number', 'Record', 'Category', 'Description', 'Severity', 'Status',
+    var head = ['NC Ref', 'Raised', 'Job number', 'Record', 'Category', 'Description', 'CAR required', 'CAR ref', 'Status',
       'Corrective action', 'Raised by', 'Closed by', 'Closed at', 'Notes'];
     var q = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
     var lines = [head.join(',')].concat(sorted().map(function (r) {
-      return [r.ncRef, fmt(r.raisedAt), r.jobNumber, r.recordRef, r.category, r.description, SEV[r.severity], STAT[r.status],
+      return [r.ncRef, fmt(r.raisedAt), r.jobNumber, r.recordRef, r.category, r.description, r.carRequired === true ? 'Yes' : r.carRequired === false ? 'No' : '', r.carRef, STAT[r.status],
         r.correctiveAction, r.raisedBy, r.closedBy, fmt(r.closedAt), r.notes].map(q).join(',');
     }));
     var a = document.createElement('a');
@@ -257,7 +264,7 @@
   $('raiseForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var f = e.target, body = {};
-    ['job_number', 'record_ref', 'category', 'severity', 'raised_by', 'description', 'corrective_action'].forEach(function (k) { body[k] = f[k].value.trim(); });
+    ['job_number', 'record_ref', 'category', 'car_required', 'raised_by', 'description', 'corrective_action'].forEach(function (k) { body[k] = f[k].value.trim(); });
     try {
       var res = await api('/api/nc', json('POST', body));
       var out = await res.json();
@@ -274,12 +281,17 @@
     var ro = function (label, v, full) { return '<label' + (full ? ' class="full"' : '') + '>' + label + '<div class="ro">' + (esc(v) || '—') + '</div></label>'; };
     $('viewTitle').textContent = r.ncRef;
     var h = ro('Raised', fmt(r.raisedAt)) + ro('Raised by', r.raisedBy) + ro('Job number', r.jobNumber) + ro('Record', r.recordRef)
-      + ro('Category', r.category) + ro('Severity', SEV[r.severity]) + ro('Description', r.description, true);
+      + ro('Category', r.category) + ro('Description', r.description, true);
     if (closed) {
-      h += ro('Status', 'Closed') + ro('Closed by / date', (r.closedBy || '') + ' ' + fmt(r.closedAt))
+      h += ro('Raise a CAR?', carText(r)) + ro('Status', 'Closed') + ro('Closed by / date', (r.closedBy || '') + ' ' + fmt(r.closedAt))
         + ro('Corrective action', r.correctiveAction, true) + ro('Notes', r.notes, true);
     } else {
-      h += '<label>Status <select name="status">' + Object.keys(STAT).map(function (k) {
+      h += '<label>Raise a CAR? <select name="car_required"><option value="">— not answered —</option>'
+          + '<option value="yes"' + (r.carRequired === true ? ' selected' : '') + '>Yes — CAR required</option>'
+          + '<option value="no"' + (r.carRequired === false ? ' selected' : '') + '>No</option></select></label>'
+        + '<label>CAR reference <input name="car_ref" type="text" value="' + esc(r.carRef || '') + '" placeholder="e.g. CAR number from REC 8.1.1.a"></label>'
+        + '<div class="full" style="font-size:12px;color:#92400e">A CAR is the more severe process: raise it on <a href="../records/REC-8.1.1.a-internal-car.html" target="_blank" rel="noopener">REC 8.1.1.a Internal CAR</a>, then enter its reference here. This NC cannot be closed until the CAR reference is entered.</div>'
+        + '<label>Status <select name="status">' + Object.keys(STAT).map(function (k) {
           return '<option value="' + k + '"' + (k === r.status ? ' selected' : '') + '>' + STAT[k] + '</option>'; }).join('') + '</select></label>'
         + '<label>Closed by <input name="closed_by" type="text" value="' + esc(r.closedBy || userName()) + '"></label>'
         + '<label class="full">Corrective action <textarea name="corrective_action">' + esc(r.correctiveAction) + '</textarea></label>'
@@ -293,8 +305,11 @@
   $('viewForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var f = e.target;
-    var body = { status: f.status.value, corrective_action: f.corrective_action.value.trim(), notes: f.notes.value.trim() };
+    var body = { status: f.status.value, corrective_action: f.corrective_action.value.trim(), notes: f.notes.value.trim(),
+      car_required: f.car_required.value, car_ref: f.car_ref.value.trim() };
+    if (!body.car_required) delete body.car_required;
     if (body.status === 'closed') {
+      if (body.car_required === 'yes' && !body.car_ref) { $('viewErr').textContent = 'A CAR is required: enter the CAR reference before closing.'; return; }
       if (!f.closed_by.value.trim()) { $('viewErr').textContent = 'Enter who is closing this NC.'; return; }
       if (!confirm('Mark this NC as resolved?')) return;
       body.closed_by = f.closed_by.value.trim();

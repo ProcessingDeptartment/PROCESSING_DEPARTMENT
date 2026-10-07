@@ -946,7 +946,7 @@
     let entries = [];
     let editingId = null;
     // NC from records (nc-raise.js): NCs raised before the entry is saved, thresholds already dealt with, skip flag
-    let pendingNc = [], ncHandled = new Set(), ncSkipped = false;
+    let pendingNc = [], ncHandled = new Set(), ncSkipped = [];
     // the id a new entry will be saved under, allocated when the form opens so photos
     // (config.imageUploadFields, lib/entry-photos.js) can be uploaded before the first save
     let formEntryId = null;
@@ -1600,7 +1600,7 @@
       if (keepUnlocked) keepUnlocked = false; else unlockedStages = new Set();
       editingId = id || null;
       formEntryId = id || uid('entry');
-      pendingNc = []; ncHandled = new Set(); ncSkipped = false;
+      pendingNc = []; ncHandled = new Set(); ncSkipped = [];
 
       if (continueChain && !chainDriving && !id) {
         continueChain.forEach((lv, i) => { const sel = el(`${ns}_continue${i}`); if (sel) sel.value = ''; });
@@ -2030,7 +2030,7 @@
           });
           if (!r) return;                       // cancelled: back to the form (ncAlways cannot be skipped)
           ncHandled.add(b.key);
-          if (r.skipped) ncSkipped = true; else pendingNc.push(r.nc.ncRef);
+          if (r.skipped) ncSkipped.push({ check: b.description || b.key, reason: r.reason, by: r.by, at: r.at }); else pendingNc.push(r.nc.ncRef);
         }
       }
 
@@ -2117,7 +2117,7 @@
       }
 
       if (pendingNc.length) savedEntry.nc_refs = (savedEntry.nc_refs || []).concat(pendingNc.filter(r => !(savedEntry.nc_refs || []).includes(r)));
-      if (ncSkipped) savedEntry.nc_skipped = true;
+      if (ncSkipped.length) { savedEntry.nc_skipped = true; savedEntry.nc_skips = (savedEntry.nc_skips || []).concat(ncSkipped); }
       const provisionalKeys = Array.from(el(modalIds.fields).querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.slice((ns + '_f_').length));
       if (provisionalKeys.length) savedEntry.provisionalFields = provisionalKeys;

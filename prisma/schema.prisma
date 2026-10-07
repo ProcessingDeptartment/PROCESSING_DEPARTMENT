@@ -4849,7 +4849,9 @@ model NcLog {
   raisedBy         String    @map("raised_by")
   category         String
   description      String
-  severity         String    @default("minor")
+  severity         String    @default("minor") // retired: no longer read or written (old rows only)
+  carRequired      Boolean?  @map("car_required") // "Raise a CAR?" null = not answered (old rows)
+  carRef           String?   @map("car_ref") // the CAR reference (REC 8.1.1.a) once raised
   status           String    @default("open")
   correctiveAction String?   @map("corrective_action")
   closedBy         String?   @map("closed_by")

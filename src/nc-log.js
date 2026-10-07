@@ -8,7 +8,6 @@
 // SMTP_HOST is unset the alert is skipped with a log line and the NC still saves.
 const nodemailer = require('nodemailer');
 
-const SEVERITIES = ['minor', 'major', 'critical'];
 const STATUSES = ['open', 'in_progress', 'closed'];
 const SITE_URL = (process.env.SITE_URL || 'https://processing-department.onrender.com').replace(/\/$/, '');
 
@@ -17,6 +16,8 @@ const str = (v, max) => {
   return s ? s.slice(0, max || 2000) : null;
 };
 // "REC 7.4.2", "rec-7.4.2" -> "REC-7.4.2" so the trigger list matches however it was typed
+// "Raise a CAR?" answer: true/false/'yes'/'no'; anything else -> null (not answered)
+const yesNo = (v) => (v === true || /^(yes|true|y)$/i.test(String(v)) ? true : v === false || /^(no|false|n)$/i.test(String(v)) ? false : null);
 const normRecord = (v) => { const s = str(v, 40); return s ? s.toUpperCase().replace(/^REC[\s_-]*/, 'REC-') : null; };
 
 function fmtDate(d) {
@@ -42,11 +43,10 @@ async function sendNCAlert(nc) {
   const to = (process.env.NC_EMAIL_RECIPIENTS || '').split(',').map((s) => s.trim()).filter(Boolean);
   const t = mailer();
   if (!t || !to.length) { console.warn(`NC alert for ${nc.ncRef} skipped: SMTP_HOST or NC_EMAIL_RECIPIENTS not set`); return; }
-  const sev = nc.severity.charAt(0).toUpperCase() + nc.severity.slice(1);
   const link = `${SITE_URL}/pages/nc-log.html`;
   const rows = [
     ['NC Reference', nc.ncRef], ['Record', nc.recordRef || '—'], ['Job number', nc.jobNumber || '—'], ['Date/Time', fmtDate(nc.raisedAt)],
-    ['Raised by', nc.raisedBy], ['Category', nc.category], ['Severity', sev],
+    ['Raised by', nc.raisedBy], ['Category', nc.category], ['CAR required', nc.carRequired ? 'YES — a CAR must be raised' : 'No'],
   ];
   const ca = nc.correctiveAction || '(none yet — update the NC log when resolved)';
   const text = 'Non-Conformance raised on Dry Monitoring record.\n\n'
@@ -61,7 +61,7 @@ async function sendNCAlert(nc) {
     + `<p><a href="${link}">View the NC log</a></p><hr><p style="color:#666">Abagold Processing Facility — Automated Alert</p>`;
   await t.sendMail({
     from: process.env.NC_EMAIL_FROM || process.env.SMTP_USER, to,
-    subject: `⚠ NC Raised — ${nc.recordRef || 'record'} [Job: ${nc.jobNumber || '—'}] — ${nc.ncRef}`,
+    subject: `⚠ NC Raised${nc.carRequired ? ' (CAR REQUIRED)' : ''} — ${nc.recordRef || 'record'} [Job: ${nc.jobNumber || '—'}] — ${nc.ncRef}`,
     text, html,
   });
 }
@@ -104,13 +104,13 @@ function mount(app, prisma) {
       raisedBy: str(b.raised_by, 120),
       category: str(b.category, 80),
       description: str(b.description, 4000),
-      severity: String(b.severity || 'minor').toLowerCase(),
+      carRequired: yesNo(b.car_required),
       correctiveAction: str(b.corrective_action, 4000),
     };
     if (!data.raisedBy || !data.category || !data.description) {
       return res.status(400).json({ ok: false, error: 'raised_by, category and description are required' });
     }
-    if (!SEVERITIES.includes(data.severity)) return res.status(400).json({ ok: false, error: 'invalid severity' });
+    if (data.carRequired === null) return res.status(400).json({ ok: false, error: 'car_required is required (yes or no)' });
     try {
       const [{ n }] = await prisma.$queryRaw`SELECT nextval('nc_ref_seq')::int AS n`;
       data.ncRef = `NC-${new Date().getFullYear()}-${String(n).padStart(4, '0')}`;
@@ -127,6 +127,8 @@ function mount(app, prisma) {
     const data = {};
     if ('corrective_action' in b) data.correctiveAction = str(b.corrective_action, 4000);
     if ('notes' in b) data.notes = str(b.notes, 4000);
+    if ('car_required' in b) { data.carRequired = yesNo(b.car_required); if (data.carRequired === null) return res.status(400).json({ ok: false, error: 'invalid car_required' }); }
+    if ('car_ref' in b) data.carRef = str(b.car_ref, 80);
     if ('closed_by' in b) data.closedBy = str(b.closed_by, 120);
     if ('status' in b) {
       if (!STATUSES.includes(b.status)) return res.status(400).json({ ok: false, error: 'invalid status' });
@@ -135,6 +137,10 @@ function mount(app, prisma) {
     try {
       const cur = await T.findUnique({ where: { id } });
       if (!cur) return res.status(404).json({ ok: false, error: 'not found' });
+      // the more severe process: an NC that needs a CAR cannot be closed until the CAR is referenced
+      const carNeeded = 'carRequired' in data ? data.carRequired : cur.carRequired;
+      const carRef = 'carRef' in data ? data.carRef : cur.carRef;
+      if (data.status === 'closed' && carNeeded && !carRef) return res.status(400).json({ ok: false, error: 'a CAR is required: enter the CAR reference before closing this NC' });
       if (data.status === 'closed' && cur.status !== 'closed') data.closedAt = new Date();
       if (data.status && data.status !== 'closed') { data.closedAt = null; data.closedBy = null; }
       res.json(await T.update({ where: { id }, data }));

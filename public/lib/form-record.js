@@ -1656,7 +1656,7 @@
     let submissions = [];
     let editingId = null;
     // NC from records (nc-raise.js): NCs raised before the submission is saved, thresholds already dealt with, skip flag
-    let pendingNc = [], ncHandled = new Set(), ncSkipped = false;
+    let pendingNc = [], ncHandled = new Set(), ncSkipped = [];
 
     let formLocked = false;
     let clearArmed = false;
@@ -3215,7 +3215,7 @@
 
     function openForm(id) {
       editingId = id || null;
-      pendingNc = []; ncHandled = new Set(); ncSkipped = false;
+      pendingNc = []; ncHandled = new Set(); ncSkipped = [];
       const existing = id ? submissions.find(s => s.id === id) : null;
       const locked = isSubmitted(existing);
       const container = el('fr_modalSections');
@@ -3602,7 +3602,7 @@
             });
             if (!r) return;                       // cancelled: back to the form (ncAlways cannot be skipped)
             ncHandled.add(b.key);
-            if (r.skipped) ncSkipped = true; else pendingNc.push(r.nc.ncRef);
+            if (r.skipped) ncSkipped.push({ check: b.description || b.key, reason: r.reason, by: r.by, at: r.at }); else pendingNc.push(r.nc.ncRef);
           }
         }
       }
@@ -3718,7 +3718,7 @@
       };
 
       if (pendingNc.length) savedSub.nc_refs = (savedSub.nc_refs || []).concat(pendingNc.filter(r => !(savedSub.nc_refs || []).includes(r)));
-      if (ncSkipped) savedSub.nc_skipped = true;
+      if (ncSkipped.length) { savedSub.nc_skipped = true; savedSub.nc_skips = (savedSub.nc_skips || []).concat(ncSkipped); }
       const provisionalKeys = Array.from(el('fr_modalSections').querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.replace(/^fr_f_/, ''));
       if (provisionalKeys.length) savedSub.provisionalFields = provisionalKeys;
