@@ -4866,3 +4866,43 @@ model NcLog {
   @@index([recordRef], map: "idx_nc_record")
   @@map("nc_log")
 }
+
+// Seam test calculator runs -- logged when a user clicks "Submit" on the quick calculator.
+// Stores the raw measurements plus all four computed results and their pass/fail status,
+// so quality trends can be queried without re-computing.
+model SeamTestRun {
+  id           Int      @id @default(autoincrement())
+  recordedAt   DateTime @default(now()) @map("recorded_at") @db.Timestamptz(6)
+  operator     String?  // display name from the session, if logged in
+  jobNo        String?  @map("job_no")
+  canSize      String?  @map("can_size")
+  seamerNo     String?  @map("seamer_no")
+  notes        String?
+
+  // raw measurements (mm)
+  seamLength    Float   @map("seam_length")
+  seamThickness Float   @map("seam_thickness")
+  bodyHook      Float   @map("body_hook")
+  coverHook     Float   @map("cover_hook")
+  plateEnd      Float   @map("plate_end")
+  plateBody     Float   @map("plate_body")
+
+  // computed results
+  overlap       Float?
+  overlapPct    Float?  @map("overlap_pct")
+  bhButting     Float?  @map("bh_butting")
+  freeSpace     Float?  @map("free_space")
+
+  // pass / fail per result (true = pass)
+  passOverlap    Boolean? @map("pass_overlap")
+  passOverlapPct Boolean? @map("pass_overlap_pct")
+  passBhButting  Boolean? @map("pass_bh_butting")
+  passFreeSpace  Boolean? @map("pass_free_space")
+
+  // overall: true only if all four pass
+  allPass Boolean? @map("all_pass")
+
+  @@index([recordedAt(sort: Desc)], map: "idx_seam_test_run_recorded_at")
+  @@index([jobNo], map: "idx_seam_test_run_job_no")
+  @@map("seam_test_run")
+}

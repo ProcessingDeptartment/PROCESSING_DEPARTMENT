@@ -882,6 +882,75 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
 require('./dry-monitoring-images').mount(app, prisma);
 require('./nc-log').mount(app, prisma); // Non-Conformance Log
 
+// ---- Seam Test Runs -----------------------------------------------------------------------
+// POST /api/seam-test-runs   — save one calculator submission
+// GET  /api/seam-test-runs   — list recent runs (query: ?limit=100&jobNo=xxx)
+// ----------------------------------------------------------------------------------------------------
+app.post('/api/seam-test-runs', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const required = ['seamLength','seamThickness','bodyHook','coverHook','plateEnd','plateBody'];
+    for (const f of required) {
+      if (b[f] == null || b[f] === '') return res.status(400).json({ ok: false, error: `Missing field: ${f}` });
+    }
+    const SL = parseFloat(b.seamLength), ST = parseFloat(b.seamThickness),
+          BH = parseFloat(b.bodyHook),   CH = parseFloat(b.coverHook),
+          Te = parseFloat(b.plateEnd),   Tb = parseFloat(b.plateBody);
+    if ([SL, ST, BH, CH, Te, Tb].some(Number.isNaN))
+      return res.status(400).json({ ok: false, error: 'All measurements must be numbers.' });
+
+    const denom = SL - (2.2 * Te) - (1.1 * Tb);
+    const overlap    = Math.round((BH + CH + 1.1 * Te - SL) * 1000) / 1000;
+    const overlapPct = denom !== 0 ? Math.round((100 * overlap / denom) * 10) / 10 : null;
+    const bhButting  = denom !== 0 ? Math.round((100 * (BH - 1.1 * Tb) / denom) * 10) / 10 : null;
+    const freeSpace  = Math.round((ST - 3 * Te - 2 * Tb) * 1000) / 1000;
+
+    const passOverlap    = overlap >= 1;
+    const passOverlapPct = overlapPct != null && overlapPct >= 45;
+    const passBhButting  = bhButting  != null && bhButting  >= 70;
+    const passFreeSpace  = freeSpace >= 0.03 && freeSpace <= 0.19;
+    const allPass        = passOverlap && passOverlapPct && passBhButting && passFreeSpace;
+
+    const run = await prisma.$queryRawUnsafe(
+      `INSERT INTO seam_test_run
+        (operator,job_no,can_size,seamer_no,end_type,notes,
+         seam_length,seam_thickness,body_hook,cover_hook,plate_end,plate_body,
+         overlap,overlap_pct,bh_butting,free_space,
+         pass_overlap,pass_overlap_pct,pass_bh_butting,pass_free_space,all_pass)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+       RETURNING id, recorded_at`,
+      b.operator || null, b.jobNo || null, b.canSize || null, b.seamerNo || null,
+      b.endType || null, b.notes || null,
+      SL, ST, BH, CH, Te, Tb,
+      overlap, overlapPct, bhButting, freeSpace,
+      passOverlap, passOverlapPct, passBhButting, passFreeSpace, allPass
+    );
+    res.json({ ok: true, id: run[0].id, allPass, overlap, overlapPct, bhButting, freeSpace });
+  } catch (e) {
+    console.error('POST seam-test-runs failed', e);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.get('/api/seam-test-runs', async (req, res) => {
+  try {
+    const limit  = Math.min(parseInt(req.query.limit  || '100', 10), 500);
+    const jobNo  = req.query.jobNo  || null;
+    const where  = jobNo ? `WHERE job_no = $2` : '';
+    const params = jobNo ? [limit, jobNo] : [limit];
+    const rows   = await prisma.$queryRawUnsafe(
+      `SELECT id,recorded_at,operator,job_no,can_size,seamer_no,end_type,notes,
+              seam_length,seam_thickness,body_hook,cover_hook,plate_end,plate_body,
+              overlap,overlap_pct,bh_butting,free_space,
+              pass_overlap,pass_overlap_pct,pass_bh_butting,pass_free_space,all_pass
+       FROM seam_test_run ${where} ORDER BY recorded_at DESC LIMIT $1`, ...params);
+    res.json({ ok: true, rows });
+  } catch (e) {
+    console.error('GET seam-test-runs failed', e);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
