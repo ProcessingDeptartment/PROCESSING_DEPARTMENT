@@ -15280,9 +15280,18 @@
           "position": 0,
           "extraJson": {
             "collapsible": true,
-            "summaryField": [
+            "summaryFields": [
               "jobNo",
-              "jiProcessingFor"
+              "harvestFarm",
+              {
+                "key": "jiIntakeWeight",
+                "suffix": " kg"
+              },
+              {
+                "key": "ooswKg",
+                "label": "OOSW:",
+                "suffix": " kg"
+              }
             ]
           }
         },
@@ -15334,7 +15343,8 @@
               "capMatchField": "jobNo",
               "capSumColumn": "weight",
               "legacyColumn": "legacyNoBlanching",
-              "cookFromOosw": true
+              "cookFromOosw": true,
+              "manualField": "ooswKg"
             },
             "slides": true,
             "minProcess": {
@@ -15348,7 +15358,7 @@
           "key": "jobNo",
           "label": "Job number",
           "type": "jobsearch",
-          "required": false,
+          "required": true,
           "readOnly": false,
           "unit": null,
           "options": null,
@@ -16423,6 +16433,25 @@
             },
             "legacy": true
           }
+        },
+        {
+          "key": "ooswKg",
+          "label": "OOSW weight (kg)",
+          "type": "number",
+          "required": false,
+          "readOnly": false,
+          "unit": "kg",
+          "options": null,
+          "group": null,
+          "sectionIndex": 0,
+          "parentFieldKey": null,
+          "position": 6,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null
         }
       ],
       "autofills": [
@@ -16444,7 +16473,8 @@
           "intakeDate",
           "jobNo",
           "roster:count"
-        ]
+        ],
+        "autofillUnlockOnMiss": true
       },
       "primaryBatchField": "jobNo"
     },

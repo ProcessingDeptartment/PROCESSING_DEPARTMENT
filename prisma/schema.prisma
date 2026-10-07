@@ -1796,6 +1796,7 @@ model Sub_dry_cooking {
   harvestFarm              String?
   intakeDate               DateTime? @db.Date
   cookingDate              DateTime? @db.Date
+  ooswKg                   Float?
   completedBy              String?
 
   rows Sub_dry_cooking_Row[]

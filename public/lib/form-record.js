@@ -1089,6 +1089,7 @@
           if (!isFinite(n) || n === 0) return '';
           return (fmt[p.k].label ? fmt[p.k].label + ' ' : '') + p.src.value + (fmt[p.k].suffix || '');
         }).filter(Boolean);
+        if (span.dataset.frExtra) parts.push(span.dataset.frExtra);
         span.textContent = parts.length ? '— ' + parts.join('  ·  ') : '';
       };
       pairs.forEach((p) => { p.src.addEventListener('input', paint); p.src.addEventListener('change', paint); });
@@ -1268,6 +1269,8 @@
       if (capData && capData.__rosterSums && capData.__rosterSums[rule.sumColumn] != null) {
         capTotal = parseFloat(capData.__rosterSums[rule.sumColumn]);
       }
+      // a typed OOSW kg on this form (rule.manualCapField) wins over the REC 7.1.5 figure
+      if (rule.manualCapField && parseFloat(values[rule.manualCapField]) > 0) capTotal = parseFloat(values[rule.manualCapField]);
       let priorOwn, thisOwn;
       if (rosterIdx !== -1) {
         priorOwn = (ownData && ownData.__matchRosterSum != null) ? parseFloat(ownData.__matchRosterSum) : 0;
@@ -1352,14 +1355,15 @@
     // cookFromOosw (slides): every Cooking kg counts, migrated cooking-only cards included (same as rule R1).
     return { oosw: isNaN(oosw) ? null : oosw, blanched: num(g[jw.blanch]), cooked: num(g[jw.cook]) - (jw.cookFromOosw ? 0 : num(l[jw.cook])) };
   }
-  function jobWeightFigures(base, jw, rows) {
+  function jobWeightFigures(base, jw, rows, manualOosw) {
     let b = base ? base.blanched : 0, c = base ? base.cooked : 0;
     (rows || []).forEach(r => {
       const kg = parseFloat(r[jw.column]) || 0;
       if (r[jw.processColumn] === jw.blanch) b += kg;
       else if (r[jw.processColumn] === jw.cook && (jw.cookFromOosw || !isYes(r[jw.legacyColumn]))) c += kg;
     });
-    const oosw = base ? base.oosw : null;
+    // jw.manualField (REC 7.4.0 temporary OOSW kg typed on the form) is the source of truth when entered
+    const oosw = manualOosw > 0 ? manualOosw : (base ? base.oosw : null);
     // cookFromOosw: no blanching weight any more -- available to cook = OOSW - cooked (null when no OOSW record).
     if (jw.cookFromOosw) return { oosw, blanched: b, cooked: c, availBlanch: null, availCook: oosw == null ? null : oosw - c };
     return { oosw, blanched: b, cooked: c,
@@ -1476,6 +1480,30 @@
     });
   }
 
+  // config.autofillUnlockOnMiss (REC 7.4.0): when the source record (REC 7.1.2) has nothing for the job, the
+  // read-only autofill targets unlock for manual entry and an amber note says so; the form is never blocked.
+  function autofillMiss(container, config, rule, missing) {
+    if (!config.autofillUnlockOnMiss) return;
+    Object.keys(rule.fill || {}).forEach((k) => {
+      const t = container.querySelector('#fr_f_' + k);
+      if (!t) return;
+      if (t._frWasReadOnly === undefined) t._frWasReadOnly = !!t.readOnly;
+      if (t._frWasReadOnly) t.readOnly = !missing;
+    });
+    let note = container.querySelector('#fr_autofillMissNote');
+    if (!note) {
+      const w = container.querySelector('#fr_f_' + rule.watch);
+      const grid = w && w.closest('.fr-grid');
+      if (!grid) return;
+      note = document.createElement('div');
+      note.id = 'fr_autofillMissNote'; note.className = 'no-print';
+      note.style.cssText = 'font-size:13px;margin:6px 0;color:#8a5a00;background:#fff4d6;border:1px solid #f0c36d;border-radius:6px;padding:6px 10px;';
+      note.textContent = 'No receiving record found for this job. Fields must be filled manually.';
+      grid.parentNode.insertBefore(note, grid);
+    }
+    note.style.display = missing ? '' : 'none';
+  }
+
   function wireAutofill(container, config) {
     if (!Array.isArray(config.autofill) || !config.autofill.length) return;
     config.autofill.forEach((rule) => {
@@ -1486,12 +1514,13 @@
         const value = watchEl.value;
         if (value === lastValue) return;
         lastValue = value;
-        if (!value) { rule.__lastFound = null; applyRestrict(container, rule, null); return; }
+        if (!value) { rule.__lastFound = null; applyRestrict(container, rule, null); autofillMiss(container, config, rule, false); return; }
         try {
           const found = await autofillLookup(rule, value);
 
           rule.__lastFound = found;
           applyRestrict(container, rule, found);
+          autofillMiss(container, config, rule, !found);
           if (!found) return;
           const provisional = found.__status && found.__status !== 'submitted';
           Object.entries(rule.fill || {}).forEach(([targetKey, sourceKey]) => {
@@ -2219,13 +2248,39 @@
       const jwState = { job: null, base: null, timer: null };
       const jwKg = n => String(Math.round(n * 100) / 100);
       function jwFigures() {
-        return jwState.job ? jobWeightFigures(jwState.base, jw, rows.map((_, i) => readRow(i))) : jobWeightFigures(null, jw, rows.map((_, i) => readRow(i)));
+        const mEl = jw.manualField ? el('fr_f_' + jw.manualField) : null;
+        const manual = mEl ? parseFloat(mEl.value) : NaN;
+        return jobWeightFigures(jwState.job ? jwState.base : null, jw, rows.map((_, i) => readRow(i)), manual);
       }
       function renderJobWeights() {
         if (!jw) return;
         const f = jwFigures();
         const known = f.oosw != null && !!jwState.job;
         const span = (txt, n) => `<span${n != null && n < -1e-9 ? ' style="color:#b30000;font-weight:bold;"' : ''}>${txt}${n != null ? ' ' + jwKg(n) + ' kg' : ''}</span>`;
+        if (jw.manualField) {
+          const mEl = el('fr_f_' + jw.manualField);
+          const manual = mEl ? parseFloat(mEl.value) : NaN;
+          const typed = manual > 0;
+          const lab = mEl && mEl.closest('label');
+          if (lab) {
+            let line = el('fr_manualOoswLine'), warn = el('fr_manualOoswWarn');
+            if (!line) {
+              line = document.createElement('div'); line.id = 'fr_manualOoswLine'; line.className = 'fr-muted no-print'; line.style.cssText = 'font-size:13px;margin-top:4px;';
+              warn = document.createElement('div'); warn.id = 'fr_manualOoswWarn'; warn.className = 'no-print'; warn.style.cssText = 'font-size:12.5px;margin-top:4px;color:#8a5a00;background:#fff4d6;border:1px solid #f0c36d;border-radius:6px;padding:3px 8px;';
+              warn.textContent = 'OOSW weight not entered — cooking weight cap cannot be checked.';
+              lab.appendChild(line); lab.appendChild(warn);
+            }
+            line.style.display = typed ? '' : 'none';
+            if (typed) line.innerHTML = f.availCook < -1e-9
+              ? `<span style="color:#b30000;font-weight:bold;">OVER by ${jwKg(-f.availCook)} kg</span>`
+              : `Available to cook: <b>${jwKg(f.availCook)} kg</b>`;
+            warn.style.display = (typed || known) ? 'none' : '';
+          }
+          document.querySelectorAll('.fr-section-summary').forEach(sp => {
+            if ((sp.getAttribute('data-summary-for') || '').split(',').indexOf(jw.manualField) === -1) return;
+            sp.dataset.frExtra = typed ? `Available: ${jwKg(f.availCook)} kg` : '';
+          });
+        }
         const tally = el(rosterDomId('fr_jobWeights', rosterIndex));
         if (tally) {
           tally.innerHTML = jw.cookFromOosw
@@ -2267,6 +2322,10 @@
         }, 400);
       }
       container._jobWeightFigures = jw ? jwFigures : null;
+      if (jw && jw.manualField) {
+        const mEl = el('fr_f_' + jw.manualField);
+        if (mEl) { mEl.addEventListener('input', renderJobWeights); mEl.addEventListener('change', renderJobWeights); }
+      }
 
       function renderRosterTotals() {
         renderComputedFields();
@@ -3342,6 +3401,10 @@
       if (typeof wireUpload === 'function') wireUpload(container);
       if (typeof wireBinJobsAutofill === 'function') wireBinJobsAutofill(container, config);
       if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
+      if (!existing) allFields(config).filter(f => f.recordDate).forEach(f => {
+        const inp = el('fr_f_' + f.key);
+        if (inp && !inp.value) { const d = new Date(); inp.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+      });
       wireSectionSummaries(container);
       wireCollapseAll(container);
       if (!locked) { wireJobSearch(container, config, !existing); wireAutofill(container, config); wireJobRouteCheck(container, config); }
