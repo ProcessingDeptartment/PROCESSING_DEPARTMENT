@@ -1,0 +1,44 @@
+﻿﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<link rel="stylesheet" href="../styles/responsive.css">
+<title>SOP 58 Dry Product FG02 Stock Take</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+</head>
+<body>
+<div id="sop-root"></div>
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=4"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/sop-doc.js?v=2"></script>
+<script>SopDoc.mount({
+  recordKey: 'sop-58-dry-product-fg02-stock-take',
+  sopNo: 'SOP 58',
+  name: 'Dry Product FG02 Stock Take',
+  area: 'Dry',
+  startRev: 1,
+  baselineDate: '05/08/2026',
+  sections: {
+    objective: 'The procedure outlines the process to maintain accurate control of dry stock.',
+    roles: '<ul><li>The Processing Department is responsible for implementing this procedure and maintaining the required stock-control records.</li><li>The Dry Supervisor is responsible for completing the physical stock take in FG02.</li><li>Processing administrator is responsible for checking graded product and reconciling the physical stock take to Syspro and the supporting records.</li><li>When needed, The Shift Manager or Production &amp; export Manager is responsible for investigating variances and providing documented reasons and corrective actions.</li><li>Finance is responsible for accepting stock-take variances within the approved tolerance. Variances above the approved value must be escalated to Finance and the Production Manager.</li><li>Dumi and Franciline provide initial training and support. They may complete the FG01 stock take on the same day.</li></ul>',
+    process: '<ol><li>Conduct stock takes biweekly in FG02.</li><li>Weigh all dry product (bins &amp; half bags), record on REC 7.4.11</li><li>Provide data to processing administrator.</li><li>Processing administrator to conduct stock take.<ol><li>Note the variance<ol><li>1% moisture loss variance is acceptable</li></ol></li></ol></li><li>Send stock take report to Finance</li><li>If required, investigate variance and document cause + CAR (Shift manager)</li><li>Repeat process every two weeks.</li><li>*** Special note:</li><li>If product is removed from warehouse REC 7.4.11 must be completed and signed before releasing product.</li></ol>',
+    review: 'This procedure must be reviewed to ensure that stock-control requirements, finance controls and operational needs remain effective.'
+  },
+  relatedDocs: [{"code": "REC 7.4.11", "name": ""}],
+  baselineHistory: [{"rev": 1, "reason": "New document", "date": "05/08/2026"}]
+});
+</script>
+</body>
+</html>
