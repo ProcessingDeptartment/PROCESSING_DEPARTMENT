@@ -41,3 +41,5 @@ r1.manualCapField = 'ooswKg';
 fs.writeFileSync(FILE, JSON.stringify(doc, null, 2) + '\n');
 fs.writeFileSync(RULES, JSON.stringify(rules, null, 2) + '\n');
 console.log('done');
+// (2026-10-08) REC 7.4.0 is where a DPR/3DP job begins, so Job number is typed (prefix + digits), not picked from existing jobs.
+// Applied directly to data/record-definitions.json: jobNo type 'jobnumber', extraJson { prefixes: ['DPR','3DP'] }.

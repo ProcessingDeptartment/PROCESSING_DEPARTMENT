@@ -530,7 +530,7 @@
       }
       if (field.type === 'jobnumber') {
         const parts = splitJobNo(v);
-        const prefixes = ['', ...(window.Lookups ? window.Lookups.get('jobPrefixes') : [])];
+        const prefixes = ['', ...(field.prefixes || (window.Lookups ? window.Lookups.get('jobPrefixes') : []))];
         const validate = field.validate !== false;
         return `<span class="fr-jobnumber" data-jobnumber-for="${id}" data-validate="${validate}">
             <select class="fr-jn-prefix">${prefixes.map(p => `<option value="${esc(p)}" ${p === parts.prefix ? 'selected' : ''}>${p || '—'}</option>`).join('')}</select>
