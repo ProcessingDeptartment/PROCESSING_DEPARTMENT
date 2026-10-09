@@ -1239,6 +1239,7 @@
         } else {
           html += `<tr><td><strong>${esc(job)}</strong></td><td>—</td><td><span class="ml-badge ml-badge-muted">Draft</span></td><td>—</td><td>—</td><td>—</td><td>—</td>
             <td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${drafts[0].id}">Edit</button>
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${drafts[0].id}" title="Print this job as the paper form">PDF</button>
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-expand="${jid}">Stages (${drafts.length})</button></td></tr>`;
         }
         html += `<tr class="ml-stages-row ml-hide" data-stages="${jid}"><td colspan="8"><table><thead><tr><th>Stage</th><th>Submitted</th><th>Sign-off</th><th>Status</th><th>Weight in</th><th>Weight out</th><th></th></tr></thead><tbody>`;
@@ -1247,11 +1248,13 @@
           html += `<tr><td>${stageNoOf(e, subs)}</td><td style="white-space:nowrap;">${esc(fmtSubmittedAt(e.submittedAt))}</td><td>${signoffCell(e)}</td>
             <td>${statusLabel(stageStatusOf(e))}</td><td class="ml-num">${num(v.weightIn)}</td><td class="ml-num">${num(v.weightOut)}</td>
             <td style="white-space:nowrap;"><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${e.id}">View</button>
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${e.id}" title="Print this stage as the paper form">PDF</button>
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${e.id}" title="Export this stage as JSON">JSON</button></td></tr>`;
         });
         drafts.forEach((e) => {
           html += `<tr><td colspan="6"><span class="ml-badge ml-badge-muted">Draft</span> started ${esc(dayMon(e.createdAt))}${e.completedBy && e.completedBy.by ? ' by ' + esc(e.completedBy.by) : ''}</td>
-            <td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${e.id}">Edit</button></td></tr>`;
+            <td style="white-space:nowrap;"><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${e.id}">Edit</button>
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${e.id}" title="Print this draft as the paper form">PDF</button></td></tr>`;
         });
         html += `</tbody></table></td></tr>`;
       });

@@ -7,7 +7,7 @@
 //
 // The search is split by route: the operator first picks Can or Dry, and the list only
 // offers jobs whose prefix belongs to that route (3CP/CPR = Can, 3DP/DPR = Dry). Closed
-// jobs stay in the list, tagged "Closed", so a job can still be found after close-out.
+// jobs are excluded from the search list so operators only see active open jobs.
 // A jobsearch field with `route: 'Dried'` (or 'Can') -> <select data-route> locks the picker to that
 // route: no Can/Dry toggle, and only jobs whose prefix is that route can be picked (dry records).
 //
@@ -379,7 +379,12 @@
     const jobs = () => [...sel.options].filter((o) => o.value)
       .map((o) => ({ no: o.value, closed: o.getAttribute('data-status') === 'closed' }));
     // Jobs with no recognised prefix are offered under both routes rather than hidden.
-    const routeJobs = () => jobs().filter((j) => { const r = routeOf(j.no); return fixedRoute ? r === fixedRoute : (!route || !r || r === route); });
+    // Closed jobs are excluded: operators should only search active open jobs.
+    const routeJobs = () => jobs().filter((j) => {
+      if (j.closed) return false;
+      const r = routeOf(j.no);
+      return fixedRoute ? r === fixedRoute : (!route || !r || r === route);
+    });
 
     function paintRoute() {
       routeBar.querySelectorAll('button').forEach((b) =>
@@ -444,8 +449,8 @@
       active = matches.length ? 0 : -1;
       list.innerHTML = hits.length
         ? hits.map((j, i) => `<div class="jp-opt${i === active ? ' active' : ''}" role="option" data-v="${esc(j.no)}">` +
-            `<span>${esc(j.no)}</span>${j.closed ? '<span class="jp-tag">Closed</span>' : ''}</div>`).join('')
-        : `<div class="jp-empty">${!jobs().length ? 'Loading jobs…' : 'No jobs found'}</div>`;
+            `<span>${esc(j.no)}</span></div>`).join('')
+        : `<div class="jp-empty">${!jobs().length ? 'Loading jobs…' : 'No open jobs found'}</div>`;
       list.hidden = false;
     }
 

@@ -220,14 +220,19 @@
     entries.forEach((e) => (e.roster || []).forEach((r) => { if (r) steams.push(r); }));
     steams.sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
 
-    // cooking date: the latest submitted REC 7.4.0 entry that has a Cooking card
-    const cookEntry = cooking.filter((e) => (e.roster || []).some((r) => r && r.process === 'Cooking'))
-      .sort((a, b) => String((b.values || {}).cookingDate || '').localeCompare(String((a.values || {}).cookingDate || '')))[0];
-    const cookingDate = cookEntry ? (cookEntry.values || {}).cookingDate : null;
-
+    // REC 7.4.0 is the primary source for cooking data; REC 7.4.1 is the fallback only.
+    const cookRows = [];
+    cooking.forEach((e) => (e.roster || []).forEach((r) => { if (r && r.process === 'Cooking') cookRows.push({ r, e }); }));
+    const cookDates = [...new Set(cooking.filter((e) => (e.roster || []).some((r) => r && r.process === 'Cooking'))
+      .map((e) => (e.values || {}).cookingDate).filter(Boolean))].sort();
+    const cookingDate = cookDates[0] || pick(entries, 'cookingDate');
+    const cookingDateNote = cookDates.length > 1 ? 'Cooked over ' + cookDates.length + ' dates' : '';
+    const cookKg = cookRows.map((x) => num(x.r.abaloneKg)).filter((n) => n != null);
     const latestNum = (key) => { for (let i = entries.length - 1; i >= 0; i--) { const n = num((entries[i].values || {})[key]); if (n != null) return n; } return null; };
-    const cookedWeight = latestNum('cookedWeight');
+    const cookedWeight = cookKg.length ? cookKg.reduce((a, n) => a + n, 0) : latestNum('cookedWeight');
     const trolleys = latestNum('noOfTrolleys');
+    // TODO: replace oosw_kg_manual with lookup from REC 7.1.5 when available
+    const ooswKg = sumNum(cooking, 'ooswKg');
 
     const gradedDried = gradingAll.reduce((a, s) => a + (num((s.values || {}).actualDriedWeight) || 0), 0) || null;
     const oldDried = pickNum(entries, 'dryWeightOld');
@@ -244,7 +249,7 @@
     const dryingDays = (intoDry && dateIntoGrading) ? daysBetween(dayOf(intoDry.at), dateIntoGrading) : pickNum(entries, 'totalDryingDaysOld');
 
     const timeline = [];
-    if (cookingDate) timeline.push({ label: 'Cooking date (REC 7.4.0)', when: fmtWhen(cookingDate) });
+    if (cookingDate) timeline.push({ label: 'Cooking date (REC 7.4.0)', when: fmtWhen(cookingDate), detail: cookingDateNote });
     if (intoDry) timeline.push({ label: 'Moved into drying rooms', when: fmtWhen(intoDry.at, !intoDry.typed) });
     steams.forEach((r) => {
       const bits = [];
@@ -270,7 +275,7 @@
 
     return {
       jobNo, harvest, totalMass, totalAnimals,
-      wholeWeight, cookedWeight, trolleys, driedWeight, driedSource, actualYield, dryingLoss,
+      wholeWeight, cookedWeight, ooswKg, trolleys, driedWeight, driedSource, actualYield, dryingLoss,
       timeline, dryingDays, gradeSets,
       header: (receiving[0] && receiving[0].values) || {},
       counts: { receiving: receiving.length, drying: entries.length, grading: gradingAll.length, cooking: cooking.length }
@@ -306,7 +311,8 @@
         <thead><tr><th>Measure</th><th class="num">Value</th></tr></thead>
         <tbody>
           <tr><td>Whole weight (in)</td><td class="num">${fmt(rep.wholeWeight)} kg</td></tr>
-          <tr><td>Cooked weight (REC 7.4.0)</td><td class="num">${fmt(rep.cookedWeight)} kg</td></tr>
+          <tr><td>Cooked weight (REC 7.4.0)</td><td class="num">${rep.cookedWeight == null ? '— <span class="muted">No cooking weight found — enter REC 7.4.0</span>' : fmt(rep.cookedWeight) + ' kg'}</td></tr>
+          <tr><td>OOSW weight (REC 7.4.0)</td><td class="num">${rep.ooswKg == null ? '— <span class="muted">Not recorded on REC 7.4.0</span>' : fmt(rep.ooswKg) + ' kg'}</td></tr>
           <tr><td>No. of trolleys</td><td class="num">${rep.trolleys == null ? '—' : rep.trolleys}</td></tr>
           <tr><td>Actual dried weight${esc(rep.driedSource)}</td><td class="num">${fmt(rep.driedWeight)} kg</td></tr>
           <tr><td>Drying loss (cooked to dried)</td><td class="num">${fmt(rep.dryingLoss)} %</td></tr>
