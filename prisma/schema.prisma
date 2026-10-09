@@ -2014,9 +2014,12 @@ model Sub_dry_monitoring {
   stickyScore                Int?
   mouldScore                 Int?
   odourScore                 Int?
-  steamTimingScore           Int?
   worstScore                 Float?
   totalScore                 Float?
+  overdryingWorst            Float?
+  overdryingTotal            Float?
+  underdryingWorst           Float?
+  underdryingTotal           Float?
   batchStatus                String?
   ncEntryId                  String?
   mouldVisibleOld            String?

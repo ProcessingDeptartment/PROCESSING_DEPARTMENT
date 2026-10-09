@@ -18477,19 +18477,22 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Ideal",
+                "label": "Ideal",
+                "button": "Ideal",
                 "detail": "Dry skin that still flexes, drying at the same speed as the meat",
                 "photoUrl": ""
               },
               {
                 "value": 1,
-                "label": "1 — Warning",
+                "label": "Warning",
+                "button": "Warning",
                 "detail": "Skin turning smooth and firming ahead of the meat",
                 "photoUrl": ""
               },
               {
                 "value": 3,
-                "label": "3 — Failed",
+                "label": "Failed",
+                "button": "Failed",
                 "detail": "Dry, smooth, hard crust",
                 "photoUrl": ""
               }
@@ -18527,19 +18530,22 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Ideal",
+                "label": "Ideal",
+                "button": "Ideal",
                 "detail": "Core firming at the same rate as the skin",
                 "photoUrl": ""
               },
               {
                 "value": 1,
-                "label": "1 — Warning",
+                "label": "Warning",
+                "button": "Warning",
                 "detail": "Core noticeably softer than the skin",
                 "photoUrl": ""
               },
               {
                 "value": 3,
-                "label": "3 — Failed",
+                "label": "Failed",
+                "button": "Failed",
                 "detail": "Core soft or wet when cut",
                 "photoUrl": ""
               }
@@ -18577,19 +18583,22 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Ideal",
+                "label": "Ideal",
+                "button": "Ideal",
                 "detail": "Edges dry and firm but not sharp. Frills dry and elastic",
                 "photoUrl": ""
               },
               {
                 "value": 1,
-                "label": "1 — Warning",
+                "label": "Warning",
+                "button": "Warning",
                 "detail": "Frill tips stiffening, foot edge starting to sharpen",
                 "photoUrl": ""
               },
               {
                 "value": 3,
-                "label": "3 — Failed",
+                "label": "Failed",
+                "button": "Failed",
                 "detail": "Frills and beard spiky and crusty, foot edge sharp and hard",
                 "photoUrl": ""
               }
@@ -18627,19 +18636,22 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Ideal",
+                "label": "Ideal",
+                "button": "Ideal",
                 "detail": "Tight, closed shape. Small to no gap between frill and adductor",
                 "photoUrl": ""
               },
               {
                 "value": 1,
-                "label": "1 — Warning",
+                "label": "Warning",
+                "button": "Warning",
                 "detail": "Gap widening, edges starting to curl",
                 "photoUrl": ""
               },
               {
                 "value": 3,
-                "label": "3 — Failed",
+                "label": "Failed",
+                "button": "Failed",
                 "detail": "Big gap where the frill has pulled away from the adductor; dents and distortion",
                 "photoUrl": ""
               }
@@ -18677,19 +18689,22 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Ideal",
+                "label": "Ideal",
+                "button": "Ideal",
                 "detail": "Colour matches the reference for this day",
                 "photoUrl": ""
               },
               {
                 "value": 1,
-                "label": "1 — Warning",
+                "label": "Warning",
+                "button": "Warning",
                 "detail": "Slightly darker than the reference",
                 "photoUrl": ""
               },
               {
                 "value": 3,
-                "label": "3 — Failed",
+                "label": "Failed",
+                "button": "Failed",
                 "detail": "Clearly darker, well ahead of schedule",
                 "photoUrl": ""
               }
@@ -18709,7 +18724,7 @@
           "unit": null,
           "options": [
             "0",
-            "2"
+            "1"
           ],
           "group": "Checks",
           "sectionIndex": null,
@@ -18726,13 +18741,15 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Pass",
+                "label": "Pass",
+                "button": "Pass",
                 "detail": "Smooth",
                 "photoUrl": ""
               },
               {
-                "value": 2,
-                "label": "2 — Fail",
+                "value": 1,
+                "label": "Fail",
+                "button": "Fail",
                 "detail": "Wrinkled",
                 "photoUrl": ""
               }
@@ -18752,7 +18769,7 @@
           "unit": null,
           "options": [
             "0",
-            "2"
+            "1"
           ],
           "group": "Checks",
           "sectionIndex": null,
@@ -18769,13 +18786,15 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Pass",
+                "label": "Pass",
+                "button": "Pass",
                 "detail": "Smooth and dry, finger slides freely",
                 "photoUrl": ""
               },
               {
-                "value": 2,
-                "label": "2 — Fail",
+                "value": 1,
+                "label": "Fail",
+                "button": "Fail",
                 "detail": "Sticky, finger cannot slide over the skin",
                 "photoUrl": ""
               }
@@ -18809,23 +18828,26 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "howToCheck": "Zero tolerance. Turn pieces over. Check the underside and every point where pieces touch each other or the trolley. Mould vs bloom: fully dried product can grow an even dry white bloom of protein, which is quality, not mould. Mould is raised or fuzzy spots, usually where pieces touch. If in doubt, score 2 and call supervision. Score 2 or 3: remove and isolate the affected pieces immediately and check the remaining pieces one by one.",
+            "howToCheck": "Zero tolerance. Turn pieces over. Check the underside and every point where pieces touch each other or the trolley. Mould vs bloom: fully dried product can grow an even dry white bloom of protein, which is quality, not mould. Mould is raised or fuzzy spots, usually where pieces touch. If in doubt, score Isolated and call supervision. Score Isolated or Critical: remove and isolate the affected pieces immediately and check the remaining pieces one by one.",
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — None",
+                "label": "None",
+                "button": "None",
                 "detail": "No spots",
                 "photoUrl": ""
               },
               {
                 "value": 2,
-                "label": "2 — Isolated",
+                "label": "Isolated",
+                "button": "Isolated",
                 "detail": "One or two small spots (white, grey, green or black) on a single piece",
                 "photoUrl": ""
               },
               {
                 "value": 3,
-                "label": "3 — Spread",
+                "label": "Spread",
+                "button": "Spread",
                 "detail": "Spots on more than one piece, fuzzy growth, or any spread",
                 "photoUrl": ""
               }
@@ -18863,70 +18885,23 @@
             "scoreOptions": [
               {
                 "value": 0,
-                "label": "0 — Clean",
+                "label": "Clean",
+                "button": "Clean",
                 "detail": "Clean, normal dried smell",
                 "photoUrl": ""
               },
               {
                 "value": 1,
-                "label": "1 — Warning",
+                "label": "Warning",
+                "button": "Warning",
                 "detail": "Slightly sour",
                 "photoUrl": ""
               },
               {
                 "value": 3,
-                "label": "3 — Failed",
+                "label": "Failed",
+                "button": "Failed",
                 "detail": "Clearly sour, ammonia or off odour",
-                "photoUrl": ""
-              }
-            ],
-            "contributesToScore": true,
-            "showPhotoWhenAbove": 0,
-            "redPrompt": "correctiveActions",
-            "showInTable": false
-          }
-        },
-        {
-          "key": "steamTimingScore",
-          "label": "Steam timing",
-          "type": "scored-select",
-          "required": true,
-          "readOnly": false,
-          "unit": null,
-          "options": [
-            "0",
-            "1",
-            "3"
-          ],
-          "group": "Checks",
-          "sectionIndex": null,
-          "parentFieldKey": null,
-          "position": 28,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null,
-          "extraJson": {
-            "howToCheck": "Read the trolley card and compare the recorded steam times with the schedule. The Day 1 morning steam (straight out of Windhoek) is the most critical steam: missing it scores 3 immediately.",
-            "scoreOptions": [
-              {
-                "value": 0,
-                "label": "0 — On schedule",
-                "detail": "All steams done in their round",
-                "photoUrl": ""
-              },
-              {
-                "value": 1,
-                "label": "1 — Late",
-                "detail": "A steam done late, after its round",
-                "photoUrl": ""
-              },
-              {
-                "value": 3,
-                "label": "3 — Missed",
-                "detail": "A steam missed, or the Day 1 morning steam not done",
                 "photoUrl": ""
               }
             ],
@@ -18947,7 +18922,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 29,
+          "position": 28,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18969,7 +18944,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 30,
+          "position": 29,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18978,6 +18953,94 @@
           "validateJson": null,
           "extraJson": {
             "scoreOutput": "total"
+          }
+        },
+        {
+          "key": "overdryingWorst",
+          "label": "Overdrying worst score",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 30,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "scoreOutput": "overWorst"
+          }
+        },
+        {
+          "key": "overdryingTotal",
+          "label": "Overdrying total score",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 31,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "scoreOutput": "overTotal"
+          }
+        },
+        {
+          "key": "underdryingWorst",
+          "label": "Underdrying worst score",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 32,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "scoreOutput": "underWorst"
+          }
+        },
+        {
+          "key": "underdryingTotal",
+          "label": "Underdrying total score",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 33,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "scoreOutput": "underTotal"
           }
         },
         {
@@ -18991,7 +19054,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 31,
+          "position": 34,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19013,7 +19076,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 32,
+          "position": 35,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19036,7 +19099,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 33,
+          "position": 36,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19055,7 +19118,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 34,
+          "position": 37,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19077,7 +19140,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 35,
+          "position": 38,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19104,7 +19167,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 36,
+          "position": 39,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19131,7 +19194,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 37,
+          "position": 40,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19158,7 +19221,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 38,
+          "position": 41,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19185,7 +19248,7 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 39,
+          "position": 42,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19212,7 +19275,7 @@
           "group": "Comments",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 40,
+          "position": 43,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -19274,14 +19337,13 @@
             "wrinklesScore",
             "stickyScore",
             "mouldScore",
-            "odourScore",
-            "steamTimingScore"
+            "odourScore"
           ],
           "worst": "worstScore",
           "total": "totalScore",
           "status": "batchStatus",
           "ncRef": "ncEntryId",
-          "maxTotal": 28,
+          "maxTotal": 23,
           "over": [
             "skinScore",
             "coreScore",
@@ -19292,7 +19354,7 @@
           "under": [
             {
               "key": "stickyScore",
-              "min": 2
+              "min": 1
             },
             {
               "key": "mouldScore",
@@ -19303,12 +19365,10 @@
               "min": 1
             }
           ],
-          "steam": "steamTimingScore",
           "interpretation": {
             "over": "Possible overdrying (case hardening)",
             "under": "Possible underdrying",
-            "both": "Possible overdrying and underdrying signs present — check trolley carefully",
-            "steam": "Steam timing issue — no product defect signs yet"
+            "both": "Possible overdrying and underdrying signs present — check trolley carefully"
           },
           "statuses": [
             "Green",
@@ -19320,18 +19380,18 @@
             "Amber": [
               "Find the cause (steam timing, airflow, orientation, loading).",
               "Start an intervention plan.",
-              "Notify the dried supervisor this shift.",
+              "Notify the dry supervisor this shift.",
               "Recheck within 4 hours."
             ],
             "Red": [
               "Start the intervention plan immediately.",
-              "Notify the dried manager and QC manager now.",
-              "Recheck every 2 hours until Amber."
+              "Notify the dry supervisor, QC supervisor and shift manager now.",
+              "Recheck every 2 hours."
             ],
             "Critical": [
               "Ring fence the trolley and tag it.",
-              "Do not move it to packing.",
-              "Notify Rowan and Phila immediately, with photos."
+              "Do not move it to the grading room before management inspection.",
+              "Notify the production & export manager, QA manager and shift manager immediately, with photos."
             ]
           },
           "steps": {
@@ -19339,10 +19399,7 @@
               "Overdrying signs: add an extra steam, reduce wind, rotate the trolley."
             ],
             "under": [
-              "Underdrying signs: steam now, move to Windhoek with maximum airflow, remove and isolate mould pieces."
-            ],
-            "steam": [
-              "Steam deviation: record the deviation and complete the steam immediately."
+              "Underdrying signs: steam now, move to the Pre-drying room with maximum airflow, remove and isolate mould pieces."
             ]
           },
           "autoNc": true,

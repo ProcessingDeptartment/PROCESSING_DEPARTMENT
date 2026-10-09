@@ -15,9 +15,12 @@ ALTER TABLE "sub_dry_monitoring"
   ADD COLUMN IF NOT EXISTS "stickyScore"       INTEGER,
   ADD COLUMN IF NOT EXISTS "mouldScore"        INTEGER,
   ADD COLUMN IF NOT EXISTS "odourScore"        INTEGER,
-  ADD COLUMN IF NOT EXISTS "steamTimingScore"  INTEGER,
   ADD COLUMN IF NOT EXISTS "worstScore"        DOUBLE PRECISION,
   ADD COLUMN IF NOT EXISTS "totalScore"        DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "overdryingWorst"  DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "overdryingTotal"  DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "underdryingWorst" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "underdryingTotal" DOUBLE PRECISION,
   ADD COLUMN IF NOT EXISTS "batchStatus"       TEXT,
   ADD COLUMN IF NOT EXISTS "ncEntryId"         TEXT,
   ADD COLUMN IF NOT EXISTS "mouldVisibleOld"         TEXT,
@@ -45,14 +48,15 @@ SELECT m."id", m."jobNo" AS job_no, m."dryRoomArea" AS dry_room_area,
        (COALESCE(m."submittedAt", m."createdAt") AT TIME ZONE 'UTC' AT TIME ZONE 'Africa/Johannesburg')::date AS entry_date,
        m."skinScore" AS skin_score, m."coreScore" AS core_score, m."frillsScore" AS frills_score, m."shapeScore" AS shape_score,
        m."colourScore" AS colour_score, m."wrinklesScore" AS wrinkles_score, m."stickyScore" AS sticky_score,
-       m."mouldScore" AS mould_score, m."odourScore" AS odour_score, m."steamTimingScore" AS steam_timing_score,
-       m."worstScore" AS worst_score, m."totalScore" AS total_score, m."batchStatus" AS batch_status, m."ncEntryId" AS nc_entry_id,
+       m."mouldScore" AS mould_score, m."odourScore" AS odour_score,
+       m."worstScore" AS worst_score, m."totalScore" AS total_score,
+       m."overdryingWorst" AS overdrying_worst, m."overdryingTotal" AS overdrying_total,
+       m."underdryingWorst" AS underdrying_worst, m."underdryingTotal" AS underdrying_total, m."batchStatus" AS batch_status, m."ncEntryId" AS nc_entry_id,
        COALESCE(m."mouldScore", 0) >= 2        AS mould_flag,
-       COALESCE(m."steamTimingScore", 0) = 3   AS missed_steam_flag,
        COALESCE(m."worstScore", 0) = 3         AS critical_flag,
        (COALESCE(m."skinScore",0) + COALESCE(m."coreScore",0) + COALESCE(m."frillsScore",0)
           + COALESCE(m."shapeScore",0) + COALESCE(m."colourScore",0)) > 0                         AS overdrying_signs,
-       (COALESCE(m."stickyScore",0) >= 2 OR COALESCE(m."mouldScore",0) >= 2 OR COALESCE(m."odourScore",0) >= 1) AS underdrying_signs
+       (COALESCE(m."stickyScore",0) >= 1 OR COALESCE(m."mouldScore",0) >= 2 OR COALESCE(m."odourScore",0) >= 1) AS underdrying_signs
 FROM "sub_dry_monitoring" m
 WHERE COALESCE(m."status", 'submitted') <> 'draft'
   AND m."batchStatus" IS NOT NULL;

@@ -99,11 +99,13 @@
   .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
   /* Scored signs (REC 7.4.2): numeric buttons only; 0 neutral/green, 1 amber, 2-3 red. Colour is never the only signal (bold + mark). */
   .ml-score{ display:flex; gap:8px; flex-wrap:wrap; }
-  .ml-score button{ min-width:52px; flex:1 1 52px; max-width:110px; padding:7px 10px; font-size:14px; font-weight:700; min-height:36px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
+  .ml-score button{ min-width:84px; flex:1 1 84px; max-width:150px; padding:7px 10px; font-size:14px; font-weight:700; min-height:36px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
   .ml-score button:hover:not(:disabled){ border-color:#8a939b !important; }
   .ml-score button.on.s0{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
   .ml-score button.on.s1{ background:#fff3dc; border-color:#d98200 !important; color:#8a5200; font-weight:800; }
   .ml-score button.on.s1::after{ content:' \\26A0'; }
+  .ml-score button.on.s3{ background:#a3352d; border-color:#6e1d17 !important; color:#fff; font-weight:800; }
+  .ml-score button.on.s3::after{ content:' \\26A0'; }
   .ml-score button.on.s2{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); font-weight:800; }
   .ml-score button.on.s2::after{ content:' \\26A0'; }
   .ml-score button:disabled{ opacity:.55; cursor:not-allowed; }
@@ -402,9 +404,10 @@
     }
     // scored-select (REC 7.4.2 QC signs): a row of numeric buttons, nothing else; the labels live in the (i) guide
     if (field.type === 'scored-select') {
-      const vals = (field.scoreOptions || []).map(o => String(o.value));
+      const os = field.scoreOptions || [];
       return `<span class="ml-score" data-score-for="${id}" role="radiogroup" aria-label="${esc(field.label)}">` +
-        vals.map(sv => `<button type="button" role="radio" data-v="${esc(sv)}" class="s${Number(sv) >= 2 ? 2 : Number(sv)}${String(v) === sv ? ' on' : ''}" aria-checked="${String(v) === sv ? 'true' : 'false'}">${esc(sv)}</button>`).join('') +
+        os.map(o => { const sv = String(o.value);
+          return `<button type="button" role="radio" data-v="${esc(sv)}" class="s${Math.min(Number(sv), 3)}${String(v) === sv ? ' on' : ''}" aria-checked="${String(v) === sv ? 'true' : 'false'}">${esc(o.button != null ? o.button : o.label || sv)}</button>`; }).join('') +
         `<input type="hidden" id="${id}" value="${esc(v)}"></span>`;
     }
     // computed batch status (config.scoring): a big colour-coded badge plus the interpretation line, filled by wireScores
@@ -1152,11 +1155,16 @@
       const complete = scored.length === sc.signs.length;
       const over = (sc.over || []).some(k => n(k) >= 1);
       const under = (sc.under || []).some(u => n(u.key) >= u.min);
-      const productSigns = sc.signs.filter(k => k !== sc.steam);
-      const steamOnly = !over && !under && n(sc.steam) >= 1 && productSigns.every(k => n(k) === 0);
+      const steamOnly = false;
       const ip = sc.interpretation || {};
       const interp = over && under ? ip.both : over ? ip.over : under ? ip.under : steamOnly ? ip.steam : '';
-      return { entered: scored.length, complete, worst, total, over, under, steamBad: n(sc.steam) >= 1,
+      // each side's own worst / total: overdrying signs and underdrying signs (wrinkles sits on neither side)
+      const overKeys = sc.over || [], underKeys = (sc.under || []).map(u => u.key);
+      const side = keys => ({ worst: keys.length ? Math.max.apply(null, keys.map(n)) : 0, total: keys.reduce((a2, k) => a2 + n(k), 0),
+        any: keys.some(k => { const x = get(k); return x !== '' && x != null; }) });
+      const so = side(overKeys), su = side(underKeys);
+      return { entered: scored.length, sides: { overWorst: so.any ? so.worst : '', overTotal: so.any ? so.total : '', underWorst: su.any ? su.worst : '', underTotal: su.any ? su.total : '' },
+        complete, worst, total, over, under, steamBad: false,
         status: complete ? (sc.statuses[Math.min(worst, sc.statuses.length - 1)] || '') : '', interp: interp || '' };
     }
     // lines for the pop-up, the pre-filled corrective action and the NC: the action for the status, then the steps for the signs found
@@ -1177,6 +1185,7 @@
         values[sc.worst] = s.entered ? s.worst : '';
         values[sc.total] = s.entered ? s.total : '';
         values[sc.status] = s.status;
+        entryFields.forEach(f => { if (f.scoreOutput && s.sides && f.scoreOutput in s.sides) values[f.key] = s.sides[f.scoreOutput]; });
       }
       entryFields.forEach(f => {
         if (f.type !== 'computed') return;
@@ -1720,7 +1729,7 @@
       const steps = [].concat(s.over ? st.over || [] : [], s.under ? st.under || [] : [], s.steamBad ? st.steam || [] : []);
       const bg = scoreModal(cls, `<h2><span class="ml-statusbadge ${cls}">${esc(s.status)}</span></h2>
         <p><b>Immediate action</b></p><ul>${acts.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
-        ${steps.length ? `<p><b>Corrective steps for the signs found</b></p><ul>${steps.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
+        ${steps.length ? `<p><b>Suggested corrective actions</b></p><ul>${steps.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
         <div class="ml-sc-btns"><button type="button" class="primary" data-ok>Got it — continue</button></div>`);
       const done = () => {
         bg.remove();
@@ -1760,6 +1769,7 @@
         const s = scoreSummary(read);
         const set = (k, v) => { const i = el(`${ns}_f_${k}`); if (i) i.value = v; };
         set(sc.worst, s.entered ? s.worst : ''); set(sc.total, s.entered ? s.total : ''); set(sc.status, s.status);
+        entryFields.forEach(f => { if (f.scoreOutput && f.scoreOutput in s.sides) set(f.key, s.sides[f.scoreOutput]); });
         const panel = container.querySelector('[data-score-panel]');
         if (panel) {
           const cls = s.status ? 'st-' + s.status.toLowerCase() : '';
@@ -2227,7 +2237,7 @@
               const nc = await window.NcRaise.create({
                 recordRef: docCode, jobNumber: String(values[jobKeyOf()] || '').trim(), submissionId: editingId || formEntryId || '',
                 category: sc.ncCategory || config.ncRedCategory || 'Product quality', description,
-                correctiveAction: ['Recommended:', ...recommendedLines(s).map(l => '- ' + l)].join('\n') + (note && note !== recommendedLines(s).join('\n') ? '\n\nChecker: ' + note : '')
+                correctiveAction: ['Suggested corrective actions:', ...recommendedLines(s).map(l => '- ' + l)].join('\n') + (note && note !== recommendedLines(s).join('\n') ? '\n\nChecker: ' + note : '')
               });
               ncHandled.add(autoKey); pendingNc.push(nc.ncRef); values[sc.ncRef] = nc.ncRef;
               const refEl = el(`${ns}_f_${sc.ncRef}`); if (refEl) refEl.value = nc.ncRef;
