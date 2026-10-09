@@ -1,7 +1,9 @@
 // Admin-managed numeric passkeys (PINs) used in place of typed signatures.
 //   POST /api/admin/passkeys/create   (admin)  create or reset a user's passkey
 //   POST /api/admin/passkeys/list     (admin)  list users (never returns the PIN or hash)
+//   POST /api/admin/passkeys/update   (admin)  edit name/title and optionally reset passkey
 //   POST /api/admin/passkeys/disable  (admin)  deactivate a user's passkey
+//   POST /api/admin/passkeys/enable   (admin)  re-activate a disabled user
 //   POST /api/passkey/verify          (any)    PIN -> { username, displayName, title }; logged to passkey_logs
 // PINs are stored as scrypt hashes (node:crypto, no extra dependency). Because verify identifies the person
 // from the PIN alone, two active users cannot share the same PIN -- create rejects a duplicate.
@@ -57,6 +59,38 @@ module.exports = function registerPasskeys(app, prisma) {
       });
       res.json({ success: true, count: passkeys.length, passkeys });
     } catch (e) { console.error('passkey list failed', e); res.status(500).json({ error: 'Could not load passkeys' }); }
+  });
+
+  // Update name, title, and optionally reset passkey — called by the Edit modal
+  app.post('/api/admin/passkeys/update', async (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: 'Admin access required' });
+    const { username, displayName, title, passkey } = req.body || {};
+    if (!username || !displayName) return res.status(400).json({ error: 'username and displayName are required' });
+    try {
+      const data = { displayName, title: title || null };
+      if (passkey) {
+        if (!PIN_RE.test(String(passkey))) return res.status(400).json({ error: 'Passkey must be 4-8 digits' });
+        // Ensure no other active user shares this PIN
+        const others = await prisma.userPasskey.findMany({ where: { isActive: true, NOT: { username } } });
+        if (others.some(o => checkPin(String(passkey), o.passkey))) {
+          return res.status(409).json({ error: 'That passkey is already in use by another person - choose a different one' });
+        }
+        data.passkey = hashPin(String(passkey));
+        data.lastResetAt = new Date();
+      }
+      await prisma.userPasskey.update({ where: { username }, data });
+      res.json({ success: true, username, displayName });
+    } catch (e) { console.error('passkey update failed', e); res.status(500).json({ error: 'Could not update passkey' }); }
+  });
+
+  app.post('/api/admin/passkeys/enable', async (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: 'Admin access required' });
+    const { username } = req.body || {};
+    if (!username) return res.status(400).json({ error: 'username required' });
+    try {
+      await prisma.userPasskey.update({ where: { username }, data: { isActive: true } });
+      res.json({ success: true });
+    } catch (e) { console.error('passkey enable failed', e); res.status(500).json({ error: 'Could not enable passkey' }); }
   });
 
   app.post('/api/admin/passkeys/disable', async (req, res) => {
