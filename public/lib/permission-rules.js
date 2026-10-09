@@ -29,6 +29,10 @@
     manageProcedures: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
     managePRPs: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
     manageTemplates: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
+
+    // Delete a submitted/draft entry from a record. Requires double passkey sign-off on the API.
+    // This rule controls whether the UI shows the delete button at all.
+    deleteSubmission: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
   };
 
   const ROLE_KEY = 'acting_as_role';

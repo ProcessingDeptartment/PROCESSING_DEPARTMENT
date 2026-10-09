@@ -51,6 +51,8 @@
   .fr-btn-flat:hover{ background:#d5d8d6; }
   .fr-btn:disabled{ opacity:.45; cursor:not-allowed; }
   .fr-btn-sm{ padding:4px 10px; font-size:10.5px; }
+  .fr-btn-delete{ background:#fbe8e6; color:#a3352d; border:1px solid #e8b8b3; }
+  .fr-btn-delete:hover{ background:#f5c6c3; color:#7f0000; }
   .fr-body{ padding:16px 18px 60px; max-width:1400px; margin:0 auto; }
   .fr-panel{ background:#fff; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; margin-bottom:14px; }
   .fr-panel-head{ padding:9px 14px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; background:var(--palette-head-bg,#fbfbfa); border-radius:6px 6px 0 0; gap:10px; flex-wrap:wrap; }
@@ -1912,9 +1914,11 @@
           : isSubmitted(sub)
             ? '<span class="fr-badge fr-badge-ok">✓ Submitted</span>'
             : '<span class="fr-badge">Draft</span>'}</td>`;
+        const canDelete = window.PermissionRules ? window.PermissionRules.can('deleteSubmission') : false;
         html += `<td style="white-space:nowrap;">
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">${isSubmitted(sub) ? 'View' : 'Open'}</button>
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-pdf="${sub.id}" title="Print this submission as the paper form">PDF</button>
+          ${canDelete ? `<button class="fr-btn fr-btn-sm fr-btn-delete" data-delete="${sub.id}" title="Delete this submission (requires double sign-off)">Delete</button>` : ''}
         </td>`;
         html += `</tr>`;
       });
@@ -1922,6 +1926,32 @@
       wrap.innerHTML = html;
       wrap.querySelectorAll('[data-open]').forEach(btn => btn.addEventListener('click', () => openForm(btn.dataset.open)));
       wrap.querySelectorAll('[data-pdf]').forEach(btn => btn.addEventListener('click', () => printSubmission(btn.dataset.pdf)));
+      wrap.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => {
+        const sub = submissions.find(s => s.id === btn.dataset.delete);
+        if (!sub) return;
+        const ref = subJobRef(sub);
+        const dateStr = fmtSubmittedAt(sub.submittedAt) || '(no date)';
+        const summary = [dateStr, ref.val ? `Job ${ref.val}` : '', subCompletedBy(sub) || ''].filter(Boolean).join(' · ');
+        const prefix = storageKey.startsWith('monitoring_log:') ? 'monitoring_log:' : 'formrecord:';
+        if (window.DeleteSubmissionModal) {
+          window.DeleteSubmissionModal.open({
+            recordKey: config.recordKey,
+            prefix,
+            entryId: sub.id,
+            summary,
+            onDeleted: async () => {
+              // Reload submissions from the server.
+              try {
+                const raw = await storeGet(storageKey, true);
+                submissions = (Array.isArray(raw) ? raw : (raw && Array.isArray(raw.entries) ? raw.entries : []));
+              } catch (_) {}
+              renderTable();
+            }
+          });
+        } else {
+          toast('Delete submission feature is not loaded on this page.');
+        }
+      }));
     }
 
     function rosterRowHtml(ns, idx, row, roster) {

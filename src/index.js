@@ -955,6 +955,7 @@ app.get('/api/seam-test-runs', async (req, res) => {
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
+require('./delete-submission')(app, prisma); // double-signoff submission deletion
 
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
