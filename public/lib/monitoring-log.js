@@ -109,15 +109,16 @@
   .ml-score button:disabled{ opacity:.55; cursor:not-allowed; }
   .ml-info{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; margin-left:6px; padding:0; border-radius:50%; border:1px solid #8a939b; background:#fff; color:#3a4651; font:700 13px/1 serif; cursor:pointer; vertical-align:middle; }
   .ml-info:hover{ background:#eef1f3; }
+  .ml-lblrow{ display:block; }
   .ml-scorepanel{ display:block; margin:2px 0 0; }
   .ml-statusbadge{ display:inline-block; padding:8px 22px; border-radius:8px; font-size:22px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:2px solid #c9cdd1; color:#54606b; background:#f4f5f6; }
   .ml-statusbadge.st-green{ background:#e8f3ec; border-color:#2f7a52; color:#1f5a3a; }
   .ml-statusbadge.st-amber{ background:#fff3dc; border-color:#d98200; color:#8a5200; }
   .ml-statusbadge.st-red{ background:#fbe8e6; border-color:#a3352d; color:#a3352d; }
   .ml-statusbadge.st-critical{ background:#a3352d; border-color:#6e1d17; color:#fff; }
-  .ml-interp{ margin-top:6px; font-size:13px; font-weight:700; color:#8a5200; text-transform:none; letter-spacing:0; }
+  .ml-interp{ display:block; margin-top:6px; font-size:13px; font-weight:700; color:#8a5200; text-transform:none; letter-spacing:0; }
   .ml-sc-bg{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100000; display:flex; align-items:center; justify-content:center; padding:14px; }
-  .ml-sc-modal{ background:#fff; color:#1d2125; border-radius:10px; max-width:600px; width:100%; max-height:92vh; overflow:auto; padding:16px 18px; border-top:6px solid #8a939b; font-family:inherit; text-transform:none; letter-spacing:0; }
+  .ml-sc-modal{ background:#fff; color:#1d2125; border-radius:10px; max-width:600px; width:100%; max-height:92vh; overflow:auto; padding:16px 18px; border-top:6px solid #8a939b; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; text-transform:none; letter-spacing:0; }
   .ml-sc-modal.st-amber{ border-top-color:#d98200; } .ml-sc-modal.st-red{ border-top-color:#a3352d; } .ml-sc-modal.st-critical{ border-top-color:#6e1d17; }
   .ml-sc-modal h2{ margin:0 0 6px; font-size:18px; }
   .ml-sc-modal p{ margin:6px 0; font-size:14px; }
@@ -126,7 +127,7 @@
   .ml-sc-modal th, .ml-sc-modal td{ border:1px solid #d5d9dd; padding:6px 8px; text-align:left; vertical-align:top; }
   .ml-sc-modal img{ max-width:120px; max-height:90px; display:block; margin-top:4px; border-radius:4px; }
   .ml-sc-btns{ display:flex; justify-content:flex-end; margin-top:10px; }
-  .ml-sc-btns button{ padding:10px 18px; min-height:44px; border-radius:6px; border:1px solid #b9bfc6; background:#fff; font:700 14px inherit; font-family:inherit; cursor:pointer; }
+  .ml-sc-btns button{ padding:10px 18px; min-height:44px; border-radius:6px; border:1px solid #b9bfc6; background:#fff; font:700 14px 'Segoe UI',system-ui,sans-serif; cursor:pointer; }
   .ml-sc-btns button.primary{ background:#2f5d8a; border-color:#2f5d8a; color:#fff; }
   /* Problem answer (the non-good one) is not colour-only: bold text plus a warning mark, and a border on paper. */
   .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"]{ font-weight:800; }
@@ -512,7 +513,8 @@
     // a scored sign carries an (i) button that opens its how-to-check / score guide
     const info = field.type === 'scored-select'
       ? ` <button type="button" class="ml-info" data-info="${esc(field.key)}" aria-label="How to check ${esc(field.label)}" title="How to check">&#9432;</button>` : '';
-    return field.label + (field.unit ? ` <span class="hint">(${esc(field.unit)})</span>` : '') + info;
+    const text = field.label + (field.unit ? ` <span class="hint">(${esc(field.unit)})</span>` : '');
+    return info ? `<span class="ml-lblrow">${text}${info}</span>` : text;
   }
   function isScored(f) { return f.type === 'scored-select'; }
 
@@ -2201,7 +2203,8 @@
         // a red (problem) answer on a check is a non-conformance: one NC listing every failed check
         const auto = !!(sc && sc.autoNc);
         // scored signs raise their NC automatically (below); Yes/No checks still go through the NC form
-        const redBad = config.redPrompt ? entryFields.filter(f => isBadValue(f, values[f.key]) && !(auto && isScored(f))) : [];
+        const autoFires = auto && !!values[sc.status] && Number(values[sc.worst]) >= 1;   // the automatic NC also lists a failed Yes/No check
+        const redBad = config.redPrompt && !autoFires ? entryFields.filter(f => isBadValue(f, values[f.key]) && !(auto && isScored(f))) : [];
         const redKey = 'red:' + redBad.map(f => f.key + '=' + values[f.key]).join(',');
         if (redBad.length && !ncHandled.has(redKey)) {
           const note = String(values[config.redPrompt.field] || '').trim();
@@ -2210,7 +2213,7 @@
         }
         // REC 7.4.2: an Amber, Red or Critical batch raises an NC by itself -- job, area, date, status, the signs found and the
         // recommended actions go onto it; the checker's own corrective-action text is added. Failing to raise it stops the submit.
-        if (auto && values[sc.status] && Number(values[sc.worst]) >= 1) {
+        if (autoFires) {
           const s = scoreSummary(k => values[k]);
           const autoKey = 'auto:' + s.status + ':' + sc.signs.map(k => values[k]).join('');
           if (!ncHandled.has(autoKey)) {
