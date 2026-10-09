@@ -4798,6 +4798,7 @@ model UserPasskey {
   createdBy     String
   lastResetAt   DateTime @default(now())
   lastUsedAt    DateTime?
+  passkeyPlain  String?  @map("passkey_plain")
 
   @@map("user_passkeys")
 }
