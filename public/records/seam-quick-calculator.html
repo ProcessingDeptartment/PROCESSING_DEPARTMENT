@@ -265,14 +265,12 @@ Free space     = ST − 3·Te − 2·Tb</div>
   let endType = 'manufacturer';
 
   /* ── end-selection gate ── */
+  // Always ask on opening the page (also when restored from back/forward cache).
+  // The saved value only pre-highlights the header toggle; the gate stays visible until the user picks.
   (function initGate(){
     const saved = sessionStorage.getItem(SESSION_KEY);
-    if(saved){
-      // already chosen this session — skip gate and apply saved value
-      setEndType(saved);
-      $('gateOverlay').classList.add('hidden');
-    }
-    // else gate stays visible until user picks
+    if(saved) setEndType(saved);
+    window.addEventListener('pageshow', e => { if(e.persisted) $('gateOverlay').classList.remove('hidden'); });
   })();
 
   function setEndType(type){
