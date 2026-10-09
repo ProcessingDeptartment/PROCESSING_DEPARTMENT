@@ -1721,23 +1721,37 @@
       bg.querySelector('[data-close]').addEventListener('click', close);
       bg.addEventListener('mousedown', ev => { if (ev.target === bg) close(); });
     }
-    function openActionPopup(s) {
-      const lines = recommendedLines(s);
-      const cls = 'st-' + s.status.toLowerCase();
-      const acts = (sc.actions && sc.actions[s.status]) || [];
+    // Pops up the moment a sign is set to anything above its first level (Warning, Failed, Isolated, Spread, Fail ...):
+    // the level and what it means, the action for that level, and suggested corrective actions for that sign.
+    function openActionPopup(s, key) {
+      const f = entryFields.find(x => x.key === key);
+      const val = Number(((el(`${ns}_f_${key}`) || {}).value));
+      const level = sc.statuses[Math.min(val, sc.statuses.length - 1)] || '';
+      const cls = 'st-' + level.toLowerCase();
+      const opt = f ? (f.scoreOptions || []).find(o => Number(o.value) === val) : null;
+      const acts = (sc.actions && sc.actions[level]) || [];
       const st = sc.steps || {};
-      const steps = [].concat(s.over ? st.over || [] : [], s.under ? st.under || [] : [], s.steamBad ? st.steam || [] : []);
-      const bg = scoreModal(cls, `<h2><span class="ml-statusbadge ${cls}">${esc(s.status)}</span></h2>
+      const isOver = (sc.over || []).indexOf(key) !== -1, isUnder = (sc.under || []).some(u => u.key === key);
+      const steps = [].concat(isOver ? st.over || [] : [], isUnder ? st.under || [] : []);
+      const bg = scoreModal(cls, `<h2><span class="ml-statusbadge ${cls}">${esc(level)}</span></h2>
+        ${f ? `<p><b>${esc(f.label)}: ${esc(opt ? opt.label : val)}</b>${opt && opt.detail ? ' — ' + esc(opt.detail) : ''}</p>` : ''}
         <p><b>Immediate action</b></p><ul>${acts.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
         ${steps.length ? `<p><b>Suggested corrective actions</b></p><ul>${steps.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
         <div class="ml-sc-btns"><button type="button" class="primary" data-ok>Got it — continue</button></div>`);
       const done = () => {
         bg.remove();
         const ta = el(`${ns}_f_correctiveActions`);
-        if (ta && (!String(ta.value || '').trim() || ta.value === scoreAutoText)) {
-          scoreAutoText = lines.join('\n');
-          ta.value = scoreAutoText;
-          ta.dispatchEvent(new Event('input', { bubbles: true }));
+        // the box carries the suggested text for the worst level so far; text the checker typed is never overwritten
+        const worstStatus = sc.statuses[Math.min(s.worst, sc.statuses.length - 1)];
+        const lines = recommendedLines(Object.assign({}, s, { status: worstStatus }));
+        // add the suggestions the box does not hold yet; whatever the checker typed stays
+        if (ta) {
+          const have = String(ta.value || '');
+          const add = lines.filter(l => have.indexOf(l) === -1);
+          if (add.length) {
+            ta.value = (have.trim() ? have.replace(/\s+$/, '') + '\n' : '') + add.join('\n');
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+          }
         }
       };
       bg.querySelector('[data-ok]').addEventListener('click', done);
@@ -1765,7 +1779,7 @@
         }));
       });
       const read = k => { const i = el(`${ns}_f_${k}`); return i ? String(i.value) : ''; };
-      const paint = (user) => {
+      const paint = (user, key) => {
         const s = scoreSummary(read);
         const set = (k, v) => { const i = el(`${ns}_f_${k}`); if (i) i.value = v; };
         set(sc.worst, s.entered ? s.worst : ''); set(sc.total, s.entered ? s.total : ''); set(sc.status, s.status);
@@ -1783,12 +1797,9 @@
           const trol = entryFields.some(f => badAnswerOf(f) && isBadValue(f, read(f.key)));
           wrap.style.display = (s.worst >= 1 || trol || String(ta.value || '').trim()) ? '' : 'none';
         }
-        const needs = s.complete && s.worst >= 1;
-        if (user && !locked && needs && s.status !== scoreShown) { scoreShown = s.status; openActionPopup(s); }
-        else if (!needs) scoreShown = '';
-        else if (!user) scoreShown = s.status;     // reopening an entry never re-fires the pop-up
+        if (user && !locked && key && Number((el(`${ns}_f_${key}`) || {}).value) > 0 && read(key) !== '') openActionPopup(s, key);
       };
-      sc.signs.forEach(k => { const i = el(`${ns}_f_${k}`); if (i) i.addEventListener('input', () => paint(true)); });
+      sc.signs.forEach(k => { const i = el(`${ns}_f_${k}`); if (i) i.addEventListener('input', () => paint(true, k)); });
       entryFields.filter(f => badAnswerOf(f)).forEach(f => { const i = el(`${ns}_f_${f.key}`); if (i) i.addEventListener('input', () => paint(false)); });
       paint(false);
     }
