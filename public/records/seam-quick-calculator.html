@@ -407,12 +407,6 @@ Free space     = ST − 3·Te − 2·Tb</div>
     const pass = renderResults(r);
     saveToDb(r, pass);
     $('resultsWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
-
-    // show results briefly then clear for next reading — end-type is kept
-    setTimeout(() => {
-      clearMeasurements();
-      $('in_seamLength').focus();
-    }, 2000);
   });
 
   /* ── manual clear ── */
