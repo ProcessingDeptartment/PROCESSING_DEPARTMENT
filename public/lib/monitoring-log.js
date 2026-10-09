@@ -2540,7 +2540,7 @@
         // job report: Job info + Dry room details as the job stands now, every check as a line, photos at the bottom
         const list = printJobChecks(entryRow);
         const latest = list[list.length - 1];
-        return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${checkHistoryPdfHtml(list)}${scorePdfHtml(latest)}${checkCommentsPdfHtml(list)}<div id="ml_dc_photos"></div>${dcSignHtml(latest)}</div>`;
+        return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${sc ? scoreMatrixPdfHtml(list) : checkHistoryPdfHtml(list)}${checkCommentsPdfHtml(list)}<div id="ml_dc_photos"></div>${dcSignHtml(latest)}</div>`;
       }
       const body = `
       <table class="sheet-body">
@@ -2657,6 +2657,47 @@
       const ncs = (e.nc_refs && e.nc_refs.length) ? `<div style="font-size:11px;">NC raised: ${esc(e.nc_refs.join(', '))}</div>` : '';
       return `<div class="dc-block"><div class="dc-bhead">QC signs (latest check)</div>${st}<table class="dc-checks"><colgroup><col style="width:30%"><col style="width:70%"></colgroup>`
         + `<thead><tr><th>Sign</th><th>Score</th></tr></thead><tbody>${rows}${trol}</tbody></table>${ncs}</div>`;
+    }
+    // REC 7.4.2 PDF: every check on the job in one table, a column per submission (oldest first, 7 to a table so it
+    // stays readable on A4), a row per sign, then the computed scores and the batch status
+    function scoreMatrixPdfHtml(list) {
+      const PER = 7;
+      const signF = sc.signs.map(k => entryFields.find(x => x.key === k)).filter(Boolean);
+      const tf = entryFields.find(x => x.key === 'trolleysClearlyMarked');
+      const hasScores = e => sc.signs.some(k => { const x = (e.values || {})[k]; return x != null && x !== ''; });
+      const cell = (e, fn) => { try { return fn(e.values || {}, e); } catch (err) { return ''; } };
+      const tables = [];
+      for (let i = 0; i < list.length; i += PER) {
+        const part = list.slice(i, i + PER);
+        const w = Math.floor(80 / PER);   // same column width on every table, so a short last table lines up with the others
+        const row = (label, fn, o) => `<tr${o && o.cls ? ` class="${o.cls}"` : ''}><td class="dc-l"${o && o.bold ? ' style="font-weight:700"' : ''}>${esc(label)}</td>`
+          + part.map(e => `<td${o && o.bold ? ' style="font-weight:700"' : ''}>${cell(e, fn)}</td>`).join('') + '</tr>';
+        const signRows = signF.map(f => row(f.label, v => {
+          const x = v[f.key];
+          if (x == null || x === '') return '—';
+          return isBadValue(f, x) ? `<span class="ml-bad">${esc(optionLabel(f, x))}</span>` : esc(optionLabel(f, x));
+        })).join('');
+        const num = x => (x == null || x === '' ? '—' : esc(x));
+        const sides = (a, b) => v => (v[a] == null || v[a] === '' ? '—' : `${esc(v[a])} / ${esc(v[b])}`);
+        const old = part.some(e => !hasScores(e));
+        tables.push(`<table class="dc-checks" style="table-layout:fixed;margin-bottom:6px;width:${20 + w * part.length}%;"><colgroup><col style="width:20%">${part.map(() => `<col style="width:${w}%">`).join('')}</colgroup>`
+          + `<thead><tr><th>${list.length > PER ? `Checks ${i + 1}–${i + part.length} of ${list.length}` : 'Check'}</th>${part.map((e, j) => `<th>${i + j + 1}</th>`).join('')}</tr></thead><tbody>`
+          + row('Date / time', (v, e) => esc(histStamp(e)))
+          + row('Location', v => esc(v.dryRoomArea || '—'))
+          + row('Checked by', (v, e) => esc((e.completedBy && e.completedBy.by) || '—'))
+          + signRows
+          + row('Worst score', v => num(v[sc.worst]))
+          + row('Total score (/ ' + sc.maxTotal + ')', v => num(v[sc.total]))
+          + row('Overdrying worst / total', sides('overdryingWorst', 'overdryingTotal'))
+          + row('Underdrying worst / total', sides('underdryingWorst', 'underdryingTotal'))
+          + row('Batch status', v => (v[sc.status] ? esc(v[sc.status]) : '—'), { bold: true })
+          + (tf ? row(tf.label, v => esc(v.trolleysClearlyMarked || '—')) : '')
+          + (old ? row('Old checks failed', (v, e) => (hasScores(e) ? '' : esc(failedChecks(e).join(', ') || '—'))) : '')
+          + row('NC raised', (v, e) => esc((e.nc_refs || []).join(', ') || '—'))
+          + row('Corrective action', v => esc(String(v.correctiveActions || '').trim() || '—'))
+          + '</tbody></table>');
+      }
+      return `<div class="dc-block"><div class="dc-bhead">Checks on this job (${list.length})</div>${tables.join('')}</div>`;
     }
     function checkHistoryPdfHtml(list) {
       return `<div class="dc-block"><div class="dc-bhead">Checks</div>${checkTableHtml(list, 'dc-checks')}</div>`;

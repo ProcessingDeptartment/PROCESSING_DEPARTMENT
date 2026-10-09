@@ -36,8 +36,8 @@ function requireArchiveKey(req, res, next) {
 }
 
 let fieldCache = { at: 0, keys: null };
-async function yesNoKeys(prisma) {
-  if (fieldCache.keys && Date.now() - fieldCache.at < 5 * 60 * 1000) return fieldCache.keys;
+async function yesNoKeys(prisma, fresh) {
+  if (!fresh && fieldCache.keys && Date.now() - fieldCache.at < 5 * 60 * 1000) return fieldCache.keys;
   const out = await assembleRecordConfig(prisma, RECORD_KEY);
   const cfg = out && (out.config || out);   // { engine, version, config }
   const keys = new Set(((cfg && cfg.entryFields) || []).filter((f) => (f.type === 'yesno' && f.redPrompt) || (f.type === 'scored-select' && f.showPhotoWhenAbove != null)).map((f) => f.key));
@@ -162,7 +162,9 @@ function mount(app, prisma) {
     const b = req.body || {};
     if (!ID_RE.test(sid)) return res.status(400).json({ ok: false, error: 'bad submission id' });
     try {
-      const keys = await yesNoKeys(prisma);
+      let keys = await yesNoKeys(prisma);
+      // a field missing from the cached list may be new (definition re-seeded): re-read it once before refusing
+      if (!keys.has(String(b.fieldKey))) keys = await yesNoKeys(prisma, true);
       if (!keys.has(String(b.fieldKey))) return res.status(400).json({ ok: false, error: 'unknown field' });
       const data = String(b.imageData || '');
       if (!data.startsWith('data:image/')) return res.status(400).json({ ok: false, error: 'imageData must be a data:image/ URI' });
