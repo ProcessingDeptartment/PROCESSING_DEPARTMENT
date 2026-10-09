@@ -93,6 +93,17 @@ module.exports = function registerPasskeys(app, prisma) {
     } catch (e) { console.error('passkey enable failed', e); res.status(500).json({ error: 'Could not enable passkey' }); }
   });
 
+  // Permanently removes the user record (passkey_logs rows are kept for audit trail)
+  app.post('/api/admin/passkeys/delete', async (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: 'Admin access required' });
+    const { username } = req.body || {};
+    if (!username) return res.status(400).json({ error: 'username required' });
+    try {
+      await prisma.userPasskey.delete({ where: { username } });
+      res.json({ success: true });
+    } catch (e) { console.error('passkey delete failed', e); res.status(500).json({ error: 'Could not delete passkey' }); }
+  });
+
   app.post('/api/admin/passkeys/disable', async (req, res) => {
     if (!isAdmin(req)) return res.status(403).json({ error: 'Admin access required' });
     const { username } = req.body || {};

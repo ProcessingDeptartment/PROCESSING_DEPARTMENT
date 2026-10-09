@@ -61,6 +61,16 @@
       padding: 6px 10px;
     }
     button.enable-btn:hover { background: #1b5e20; }
+    button.delete-btn {
+      background: #7b1fa2;
+      color: white;
+      cursor: pointer;
+      border: none;
+      border-radius: 3px;
+      padding: 6px 10px;
+      margin-left: 4px;
+    }
+    button.delete-btn:hover { background: #4a148c; }
     .alert {
       padding: 12px;
       border-radius: 4px;
@@ -282,6 +292,7 @@
               ? `<button class="danger" onclick="disableUser('${user.username}')">Disable</button>`
               : `<button class="enable-btn" onclick="enableUser('${user.username}')">Enable</button>`
             }
+            <button class="delete-btn" onclick="deleteUser('${user.username}', '${user.displayName.replace(/'/g,"\\'")}')">Delete</button>
           </td>
         `;
       });
@@ -386,6 +397,24 @@
         const result = await response.json();
         if (!response.ok) { showMessage(result.error || 'Error', 'error'); return; }
         showMessage('✓ Passkey re-enabled', 'success');
+        loadUsers();
+      } catch (error) {
+        showMessage('Error: ' + error.message, 'error');
+      }
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    async function deleteUser(username, displayName) {
+      if (!confirm(`Permanently delete passkey record for ${displayName}?\n\nThis cannot be undone. Their passkey log history will remain.`)) return;
+      try {
+        const response = await FacilityApi.fetch('/api/admin/passkeys/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const result = await response.json();
+        if (!response.ok) { showMessage(result.error || 'Error', 'error'); return; }
+        showMessage(`✓ Deleted ${displayName}`, 'success');
         loadUsers();
       } catch (error) {
         showMessage('Error: ' + error.message, 'error');
