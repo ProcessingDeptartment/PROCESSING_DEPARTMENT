@@ -19380,12 +19380,12 @@
             "Amber": [
               "Find the cause (steam timing, airflow, orientation, loading).",
               "Start an intervention plan.",
-              "Notify the dry supervisor this shift.",
+              "Notify the dry supervisor and shift manager.",
               "Recheck within 4 hours."
             ],
             "Red": [
               "Start the intervention plan immediately.",
-              "Notify the dry supervisor, QC supervisor and shift manager now.",
+              "Notify the production & export manager and QA manager now.",
               "Recheck every 2 hours."
             ],
             "Critical": [

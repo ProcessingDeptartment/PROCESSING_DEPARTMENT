@@ -128,8 +128,8 @@ def.extraJson = {
     },
     statuses: ['Green', 'Amber', 'Red', 'Critical'],   // index = worst score
     actions: {
-      Amber: ['Find the cause (steam timing, airflow, orientation, loading).', 'Start an intervention plan.', 'Notify the dry supervisor this shift.', 'Recheck within 4 hours.'],
-      Red: ['Start the intervention plan immediately.', 'Notify the dry supervisor, QC supervisor and shift manager now.', 'Recheck every 2 hours.'],
+      Amber: ['Find the cause (steam timing, airflow, orientation, loading).', 'Start an intervention plan.', 'Notify the dry supervisor and shift manager.', 'Recheck within 4 hours.'],
+      Red: ['Start the intervention plan immediately.', 'Notify the production & export manager and QA manager now.', 'Recheck every 2 hours.'],
       Critical: ['Ring fence the trolley and tag it.', 'Do not move it to the grading room before management inspection.', 'Notify the production & export manager, QA manager and shift manager immediately, with photos.'],
     },
     steps: {
