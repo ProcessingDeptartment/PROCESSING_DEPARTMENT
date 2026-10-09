@@ -303,6 +303,10 @@
   .ml-sheet .ml-dc table.dc-checks th{ font-size:8pt; font-weight:700; background:#eee; text-align:left; }
   .ml-sheet .ml-dc table.dc-checks{ margin-top:0; }
   .ml-sheet .ml-dc table.dc-checks tr{ page-break-inside:avoid; break-inside:avoid; }
+  .ml-sheet .ml-dc table.dc-matrix{ table-layout:fixed; margin-bottom:3mm; }
+  .ml-sheet .ml-dc table.dc-matrix th, .ml-sheet .ml-dc table.dc-matrix td{ font-size:7.5pt; padding:0.6mm 1mm; overflow-wrap:anywhere; text-align:center; }
+  .ml-sheet .ml-dc table.dc-matrix th:first-child, .ml-sheet .ml-dc table.dc-matrix td.dc-l{ text-align:left; background:#f4f4f4; font-weight:600; }
+  .ml-sheet .ml-dc table.dc-matrix tr:nth-child(odd) td:not(.dc-l){ background:#fafafa; }
   .ml-sheet .ml-dc .ml-hist-bad{ font-weight:700; }
   .ml-sheet .ml-dc .ph-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2mm; }
   .ml-sheet .ml-dc .ph-cell{ border:0.5pt solid #000; padding:1mm; page-break-inside:avoid; break-inside:avoid; }
@@ -2680,7 +2684,7 @@
         const num = x => (x == null || x === '' ? '—' : esc(x));
         const sides = (a, b) => v => (v[a] == null || v[a] === '' ? '—' : `${esc(v[a])} / ${esc(v[b])}`);
         const old = part.some(e => !hasScores(e));
-        tables.push(`<table class="dc-checks" style="table-layout:fixed;margin-bottom:6px;width:${20 + w * part.length}%;"><colgroup><col style="width:20%">${part.map(() => `<col style="width:${w}%">`).join('')}</colgroup>`
+        tables.push(`<table class="dc-checks dc-matrix" style="width:${20 + w * part.length}%;"><colgroup><col style="width:20%">${part.map(() => `<col style="width:${w}%">`).join('')}</colgroup>`
           + `<thead><tr><th>${list.length > PER ? `Checks ${i + 1}–${i + part.length} of ${list.length}` : 'Check'}</th>${part.map((e, j) => `<th>${i + j + 1}</th>`).join('')}</tr></thead><tbody>`
           + row('Date / time', (v, e) => esc(histStamp(e)))
           + row('Location', v => esc(v.dryRoomArea || '—'))
@@ -2694,10 +2698,14 @@
           + (tf ? row(tf.label, v => esc(v.trolleysClearlyMarked || '—')) : '')
           + (old ? row('Old checks failed', (v, e) => (hasScores(e) ? '' : esc(failedChecks(e).join(', ') || '—'))) : '')
           + row('NC raised', (v, e) => esc((e.nc_refs || []).join(', ') || '—'))
-          + row('Corrective action', v => esc(String(v.correctiveActions || '').trim() || '—'))
           + '</tbody></table>');
       }
-      return `<div class="dc-block"><div class="dc-bhead">Checks on this job (${list.length})</div>${tables.join('')}</div>`;
+      // corrective action text is long (the suggested actions), so it is listed under the table, matched by check number
+      const acts = list.map((e, i) => ({ n: i + 1, e, t: String((e.values || {}).correctiveActions || '').trim() })).filter(x => x.t);
+      const actHtml = acts.length ? `<div class="dc-block"><div class="dc-bhead">Corrective actions</div><table class="dc-checks"><colgroup><col style="width:6%"><col style="width:18%"><col style="width:76%"></colgroup>`
+        + `<thead><tr><th>Check</th><th>Date / time</th><th>Corrective action</th></tr></thead><tbody>`
+        + acts.map(x => `<tr><td>${x.n}</td><td>${esc(histStamp(x.e))}</td><td style="white-space:pre-wrap;">${esc(x.t)}</td></tr>`).join('') + '</tbody></table></div>' : '';
+      return tables.map((t, i) => `<div class="dc-block">${i === 0 ? `<div class="dc-bhead">Checks on this job (${list.length})</div>` : ''}${t}</div>`).join('') + actHtml;
     }
     function checkHistoryPdfHtml(list) {
       return `<div class="dc-block"><div class="dc-bhead">Checks</div>${checkTableHtml(list, 'dc-checks')}</div>`;
