@@ -1,6 +1,6 @@
 // Admin-managed numeric passkeys (PINs) used in place of typed signatures.
 //   POST /api/admin/passkeys/create   (admin)  create or reset a user's passkey
-//   POST /api/admin/passkeys/list     (admin)  list users (never returns the PIN or hash)
+//   POST /api/admin/passkeys/list     (admin)  list users (returns passkeyPlain for admin visibility)
 //   POST /api/admin/passkeys/update   (admin)  edit name/title and optionally reset passkey
 //   POST /api/admin/passkeys/disable  (admin)  deactivate a user's passkey
 //   POST /api/admin/passkeys/enable   (admin)  re-activate a disabled user
@@ -40,7 +40,7 @@ module.exports = function registerPasskeys(app, prisma) {
       if (others.some(o => checkPin(String(passkey), o.passkey))) {
         return res.status(409).json({ error: 'That passkey is already in use by another person - choose a different one' });
       }
-      const data = { displayName, title: title || null, passkey: hashPin(String(passkey)), isActive: true, lastResetAt: new Date() };
+      const data = { displayName, title: title || null, passkey: hashPin(String(passkey)), passkeyPlain: String(passkey), isActive: true, lastResetAt: new Date() };
       await prisma.userPasskey.upsert({
         where: { username },
         update: data,
@@ -54,7 +54,7 @@ module.exports = function registerPasskeys(app, prisma) {
     if (!isAdmin(req)) return res.status(403).json({ error: 'Admin access required' });
     try {
       const passkeys = await prisma.userPasskey.findMany({
-        select: { id: true, username: true, displayName: true, title: true, isActive: true, createdAt: true, lastResetAt: true, lastUsedAt: true },
+        select: { id: true, username: true, displayName: true, title: true, isActive: true, createdAt: true, lastResetAt: true, lastUsedAt: true, passkeyPlain: true },
         orderBy: { displayName: 'asc' }
       });
       res.json({ success: true, count: passkeys.length, passkeys });
@@ -76,6 +76,7 @@ module.exports = function registerPasskeys(app, prisma) {
           return res.status(409).json({ error: 'That passkey is already in use by another person - choose a different one' });
         }
         data.passkey = hashPin(String(passkey));
+        data.passkeyPlain = String(passkey);
         data.lastResetAt = new Date();
       }
       await prisma.userPasskey.update({ where: { username }, data });

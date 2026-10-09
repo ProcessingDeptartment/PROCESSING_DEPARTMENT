@@ -71,6 +71,12 @@
       margin-left: 4px;
     }
     button.delete-btn:hover { background: #4a148c; }
+    .pin-cell { display: flex; align-items: center; gap: 6px; }
+    .pin-value { font-family: monospace; font-size: 15px; font-weight: 700; letter-spacing: 2px; color: #1a237e; }
+    .pin-masked { color: #bbb; letter-spacing: 3px; font-size: 18px; }
+    .pin-toggle { background: none; border: 1px solid #ccc; border-radius: 3px; padding: 2px 7px; font-size: 11px; cursor: pointer; color: #555; }
+    .pin-toggle:hover { background: #f5f5f5; }
+    .pin-none { color: #bbb; font-style: italic; font-size: 12px; }
     .alert {
       padding: 12px;
       border-radius: 4px;
@@ -163,6 +169,7 @@
           <th>Name</th>
           <th>Email / Username</th>
           <th>Title</th>
+          <th>Passkey</th>
           <th>Status</th>
           <th>Last Used</th>
           <th>Created</th>
@@ -170,7 +177,7 @@
         </tr>
       </thead>
       <tbody id="usersList">
-        <tr><td colspan="7" style="text-align: center; color: #999;">Loading…</td></tr>
+        <tr><td colspan="8" style="text-align: center; color: #999;">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -258,7 +265,7 @@
         renderUsers(allUsers);
       } catch (error) {
         const tbody = document.getElementById('usersList');
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Error: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;">Error: ${error.message}</td></tr>`;
       }
     }
 
@@ -268,7 +275,7 @@
       document.getElementById('userCount').textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
 
       if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">No users found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;">No users found</td></tr>';
         return;
       }
 
@@ -281,6 +288,10 @@
           <td><strong>${user.displayName}</strong></td>
           <td><code style="font-size:12px;">${user.username}</code></td>
           <td>${user.title || '<span style="color:#bbb;">—</span>'}</td>
+          <td>${user.passkeyPlain
+            ? `<div class="pin-cell"><span class="pin-masked" id="pin-val-${user.id}">••••</span><button class="pin-toggle" onclick="togglePin('${user.id}','${user.passkeyPlain}')" id="pin-btn-${user.id}">Show</button></div>`
+            : `<span class="pin-none">not set</span>`
+          }</td>
           <td class="status-${user.isActive ? 'active' : 'inactive'}">
             ${user.isActive ? '✓ Active' : '✗ Disabled'}
           </td>
@@ -400,6 +411,22 @@
         loadUsers();
       } catch (error) {
         showMessage('Error: ' + error.message, 'error');
+      }
+    }
+
+    // ── Show / Hide PIN ───────────────────────────────────────────────────────
+    function togglePin(id, pin) {
+      const val = document.getElementById('pin-val-' + id);
+      const btn = document.getElementById('pin-btn-' + id);
+      if (!val || !btn) return;
+      if (btn.textContent === 'Show') {
+        val.textContent = pin;
+        val.className = 'pin-value';
+        btn.textContent = 'Hide';
+      } else {
+        val.textContent = '••••';
+        val.className = 'pin-masked';
+        btn.textContent = 'Show';
       }
     }
 
