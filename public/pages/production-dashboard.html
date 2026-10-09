@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Dashboard</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .container{ max-width:1280px; margin:0 auto; padding:20px; }
+
+  .mockup-banner{ background:#fdf3e0; border:1px solid #e9c987; color:#7a5b12; border-radius:8px; padding:10px 14px; font-size:12px; margin-bottom:18px; }
+
+  .summary-row{ display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px; }
+  .summary-card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; padding:14px 16px; }
+  .summary-card .num{ font-size:22px; font-weight:700; color:#1d2b38; }
+  .summary-card .num.warn{ color:#a3352d; }
+  .summary-card .num.ok{ color:#2f7a52; }
+  .summary-card .num.mid{ color:#b08900; }
+  .summary-card .lbl{ font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; margin-top:2px; }
+  .summary-card .sub{ font-size:11px; color:#8a939b; margin-top:2px; }
+  .summary-card.clickable{ cursor:pointer; transition:box-shadow .15s ease,border-color .15s ease; }
+  .summary-card.clickable:hover{ border-color:#c7ccd1; box-shadow:0 2px 8px rgba(15,23,42,0.08); }
+  .summary-card.clickable .lbl{ display:flex; align-items:center; gap:5px; }
+  .summary-card.clickable .lbl::after{ content:"View trend \2192"; text-transform:none; letter-spacing:0; font-weight:600; color:#1d4ed8; font-size:10.5px; margin-left:auto; opacity:0; transition:opacity .15s ease; }
+  .summary-card.clickable:hover .lbl::after{ opacity:1; }
+
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); align-items:center; justify-content:center; padding:20px; z-index:50; }
+  .modal-overlay.open{ display:flex; }
+  .modal{ background:#fff; border-radius:10px; max-width:640px; width:100%; max-height:90vh; overflow:auto; box-shadow:0 20px 50px rgba(15,23,42,0.25); }
+  .modal-head{ padding:14px 18px; border-bottom:1px solid #e2e4e3; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .modal-head h3{ margin:0; font-size:14px; color:#1d2b38; }
+  .modal-head p{ margin:3px 0 0; font-size:11.5px; color:#5c6771; }
+  .modal-close{ border:none; background:#f4f5f3; color:#5c6771; width:26px; height:26px; border-radius:50%; font-size:14px; line-height:1; cursor:pointer; flex-shrink:0; }
+  .modal-close:hover{ background:#eceeef; color:#1b2330; }
+  .modal-body{ padding:16px 18px; }
+  .chart-legend{ display:flex; gap:16px; font-size:11px; color:#5c6771; margin-top:6px; }
+  .chart-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .chart-legend .sw{ width:10px; height:3px; border-radius:2px; display:inline-block; }
+  .modal-table-note{ margin:14px 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; font-weight:700; }
+
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; margin-bottom:18px; overflow:hidden; }
+  .panel-head{ padding:11px 16px; border-bottom:1px solid #e2e4e3; background:#fbfbfa; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; }
+  .panel-head .panel-note{ font-size:11px; color:#8a939b; }
+  .panel-body{ padding:0; }
+  .panel-body.pad{ padding:14px 16px; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+
+  
+  .lines{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:14px 16px; }
+  .line-card{ border:1px solid #e2e4e3; border-radius:8px; padding:12px 14px; }
+  .line-card .line-name{ font-size:12.5px; font-weight:700; color:#1d2b38; }
+  .line-card .line-job{ font-size:11.5px; color:#5c6771; margin-top:2px; }
+  .line-status{ display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot-run{ background:#2f7a52; }
+  .dot-down{ background:#a3352d; }
+  .dot-idle{ background:#b08900; }
+  .status-run{ color:#2f7a52; }
+  .status-down{ color:#a3352d; }
+  .status-idle{ color:#b08900; }
+  .line-meta{ margin-top:8px; font-size:11px; color:#5c6771; display:flex; justify-content:space-between; }
+
+  table.dash-table{ width:100%; border-collapse:collapse; }
+  table.dash-table th,table.dash-table td{ border-bottom:1px solid #eceeef; padding:9px 12px; text-align:left; font-size:12px; vertical-align:middle; }
+  table.dash-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; }
+  table.dash-table tbody tr:last-child td{ border-bottom:none; }
+  table.dash-table tbody tr:hover{ background:#f9fafb; }
+  td.doc a{ color:#1d4ed8; text-decoration:none; font-weight:600; }
+  td.doc a:hover{ text-decoration:underline; }
+  td.num-cell{ font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+  .badge-warn{ background:#fbe8e6; color:#a3352d; }
+  .badge-ok{ background:#e8f3ec; color:#2f7a52; }
+  .badge-muted{ background:#eee; color:#777; }
+  .badge-info{ background:#e5edfb; color:#1d4ed8; }
+
+  .progress-wrap{ background:#eceeef; border-radius:20px; height:8px; width:120px; overflow:hidden; }
+  .progress-bar{ background:#2f7a52; height:100%; }
+  .progress-bar.mid{ background:#b08900; }
+  .progress-bar.low{ background:#a3352d; }
+
+  
+  .grade-row{ display:flex; align-items:center; gap:10px; padding:8px 16px; }
+  .grade-row .grade-lbl{ width:70px; font-size:11.5px; font-weight:700; color:#1d2b38; flex-shrink:0; }
+  .grade-row .grade-bar-wrap{ flex:1; background:#eceeef; border-radius:6px; height:14px; overflow:hidden; }
+  .grade-row .grade-bar{ background:#2f4356; height:100%; }
+  .grade-row .grade-kg{ width:80px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5c6771; flex-shrink:0; }
+
+  @media (max-width:1100px){
+    .summary-row{ grid-template-columns:repeat(3,1fr); }
+    .two-col{ grid-template-columns:1fr; }
+  }
+  @media (max-width:900px){
+    .lines{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:640px){
+    .summary-row{ grid-template-columns:1fr 1fr; }
+    .lines{ grid-template-columns:1fr; }
+    .container{ padding:12px; }
+    table.dash-table th,table.dash-table td{ padding:7px 8px; font-size:11.5px; }
+  }
+
+  /* seam filter pill group */
+  .seam-filter-group{ display:flex; border:1px solid #d1d5db; border-radius:4px; overflow:hidden; }
+  .seam-filter-btn{ border:none; border-right:1px solid #d1d5db; background:transparent; color:#5c6771; font-size:11px; font-weight:600; padding:4px 10px; cursor:pointer; transition:background .12s,color .12s; font-family:inherit; }
+  .seam-filter-btn:last-child{ border-right:none; }
+  .seam-filter-btn.active{ background:#2f4356; color:#fff; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <h1>Production View</h1>
+  <p>Production floor snapshot &mdash; seam data live &middot; other sections coming soon</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
+    <button id="dashRefreshBtn" style="background:transparent;border:1px solid #55636e;color:#b9c3cc;padding:5px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="summary-row">
+    <div class="summary-card">
+      <div class="num ok">1&thinsp;284</div>
+      <div class="lbl">Harvested weight (kg)</div>
+      <div class="sub">Today, live intake</div>
+    </div>
+    <div class="summary-card clickable" id="seamCard" tabindex="0" role="button" aria-haspopup="dialog">
+      <div class="num ok" id="seamSpecPct">—</div>
+      <div class="lbl">Seams in spec</div>
+      <div class="sub" id="seamSpecSub">Loading…</div>
+    </div>
+    <div class="summary-card">
+      <div class="num warn">4.2%</div>
+      <div class="lbl">OOSW</div>
+      <div class="sub">Out-of-spec weight, today</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">3&thinsp;050</div>
+      <div class="lbl">Kg in drying room</div>
+      <div class="sub">Across 3 active racks</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">6&thinsp;410</div>
+      <div class="lbl">Graded this week (kg)</div>
+      <div class="sub">Mon&ndash;today</div>
+    </div>
+    <div class="summary-card">
+      <div class="num warn">3</div>
+      <div class="lbl">Open quality NCs</div>
+      <div class="sub">1 major, 2 minor</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Line status</h2></div>
+    <div class="lines">
+      <div class="line-card">
+        <div class="line-name">Live Intake &amp; Handling</div>
+        <div class="line-job">Job 26-0811 &mdash; Abalone receiving</div>
+        <div class="line-status status-run"><span class="dot dot-run"></span>Running</div>
+        <div class="line-meta"><span>Shift 1</span><span>Started 06:10</span></div>
+      </div>
+      <div class="line-card">
+        <div class="line-name">Canning</div>
+        <div class="line-job">Job 26-0809 &mdash; Retort batch 4</div>
+        <div class="line-status status-run"><span class="dot dot-run"></span>Running</div>
+        <div class="line-meta"><span>Shift 1</span><span>Started 05:40</span></div>
+      </div>
+      <div class="line-card">
+        <div class="line-name">Dry Processing</div>
+        <div class="line-job">Job 26-0805 &mdash; Grading</div>
+        <div class="line-status status-idle"><span class="dot dot-idle"></span>Idle</div>
+        <div class="line-meta"><span>Shift 1</span><span>Paused 09:15</span></div>
+      </div>
+      <div class="line-card">
+        <div class="line-name">Live Product</div>
+        <div class="line-job">Job 26-0812 &mdash; Bag &amp; weigh</div>
+        <div class="line-status status-down"><span class="dot dot-down"></span>Down</div>
+        <div class="line-meta"><span>Shift 1</span><span>Since 08:02</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <div class="panel" id="seamLivePanel">
+      <div class="panel-head">
+        <h2>Double seam &mdash; live log</h2>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="seam-filter-group" id="seamEndFilter">
+            <button class="seam-filter-btn active" data-filter="all">All</button>
+            <button class="seam-filter-btn" data-filter="manufacturer">Mfr</button>
+            <button class="seam-filter-btn" data-filter="production">Prod</button>
+          </div>
+          <span class="panel-note">REC 7.2.4</span>
+        </div>
+      </div>
+      <div class="panel-body pad" style="padding-bottom:0;">
+        <div style="position:relative;height:120px;margin-bottom:10px;"><canvas id="seamTrendChart"></canvas></div>
+      </div>
+      <div class="panel-body" style="padding-top:0;overflow-x:auto;">
+        <table class="dash-table" id="seamLiveTable">
+          <thead><tr><th>Time</th><th>End type</th><th>Operator</th><th>Overlap</th><th>% Overlap</th><th>Free space</th><th>Result</th></tr></thead>
+          <tbody id="seamLiveBody"><tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Quality non-conformances</h2>
+        <span class="panel-note">Open + this week</span>
+      </div>
+      <div class="panel-body">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>NC #</th>
+              <th>Area</th>
+              <th>Description</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="doc"><a href="#">NC-0142</a></td><td>Canning</td><td>Seam tightness below spec, can 0809-A</td><td><span class="badge badge-warn">Major</span></td></tr>
+            <tr><td class="doc"><a href="#">NC-0141</a></td><td>Live Product</td><td>Bag seal weight variance</td><td><span class="badge badge-muted">Minor</span></td></tr>
+            <tr><td class="doc"><a href="#">NC-0139</a></td><td>Dry Processing</td><td>Drying room temp excursion</td><td><span class="badge badge-muted">Minor</span></td></tr>
+            <tr><td class="doc"><a href="#">NC-0136</a></td><td>Live Intake</td><td>OOSW above 5% threshold</td><td><span class="badge badge-ok">Closed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="two-col">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Drying room monitoring log</h2>
+        <span class="panel-note">REC 7.4.1</span>
+      </div>
+      <div class="panel-body">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Rack</th>
+              <th>Temp &deg;C</th>
+              <th>Humidity %</th>
+              <th>Kg loaded</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="num-cell">06:00</td><td>Rack 1</td><td class="num-cell">42</td><td class="num-cell">38</td><td class="num-cell">1&thinsp;100</td></tr>
+            <tr><td class="num-cell">08:00</td><td>Rack 2</td><td class="num-cell">43</td><td class="num-cell">36</td><td class="num-cell">980</td></tr>
+            <tr><td class="num-cell">08:00</td><td>Rack 3</td><td class="num-cell">47</td><td class="num-cell">33</td><td class="num-cell">970</td></tr>
+            <tr><td class="num-cell">10:00</td><td>Rack 1</td><td class="num-cell">42</td><td class="num-cell">37</td><td class="num-cell">1&thinsp;100</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Graded abalone this week</h2>
+        <span class="panel-note">By grade, kg</span>
+      </div>
+      <div class="panel-body pad">
+        <div class="grade-row"><div class="grade-lbl">Grade A</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:70%"></div></div><div class="grade-kg">2&thinsp;180 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">Grade B</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:55%"></div></div><div class="grade-kg">1&thinsp;710 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">Grade C</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:40%"></div></div><div class="grade-kg">1&thinsp;260 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">OOSW</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:26%" ></div></div><div class="grade-kg">820 kg</div></div>
+        <div class="grade-row"><div class="grade-lbl">Reject</div><div class="grade-bar-wrap"><div class="grade-bar" style="width:14%"></div></div><div class="grade-kg">440 kg</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Records due this shift</h2>
+    </div>
+    <div class="panel-body">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Record</th>
+            <th>Job</th>
+            <th>Owner</th>
+            <th>Due</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="doc"><a href="#">REC 7.2.4 Retort Test Run</a></td>
+            <td>26-0809</td>
+            <td>Production</td>
+            <td class="num-cell">11:00</td>
+            <td><span class="badge badge-warn">Due soon</span></td>
+          </tr>
+          <tr>
+            <td class="doc"><a href="#">REC 7.1.2 Chiller Temp Check</a></td>
+            <td>26-0811</td>
+            <td>Production</td>
+            <td class="num-cell">12:00</td>
+            <td><span class="badge badge-info">Scheduled</span></td>
+          </tr>
+          <tr>
+            <td class="doc"><a href="#">REC 7.5.3 Bag Quality Check</a></td>
+            <td>26-0812</td>
+            <td>Production</td>
+            <td class="num-cell">09:30</td>
+            <td><span class="badge badge-warn">Overdue</span></td>
+          </tr>
+          <tr>
+            <td class="doc"><a href="#">REC 7.4.1 Drying Log</a></td>
+            <td>26-0805</td>
+            <td>Production</td>
+            <td class="num-cell">14:00</td>
+            <td><span class="badge badge-info">Scheduled</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Recent activity</h2>
+    </div>
+    <div class="panel-body">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Job</th>
+            <th>User</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num-cell">09:41</td>
+            <td>Line down &mdash; Live Product</td>
+            <td>26-0812</td>
+            <td>Line Supervisor</td>
+          </tr>
+          <tr>
+            <td class="num-cell">09:15</td>
+            <td>Dry Processing paused</td>
+            <td>26-0805</td>
+            <td>Line Supervisor</td>
+          </tr>
+          <tr>
+            <td class="num-cell">08:50</td>
+            <td>REC 7.1.1 Hygiene Check submitted</td>
+            <td>26-0811</td>
+            <td>N. Adams</td>
+          </tr>
+          <tr>
+            <td class="num-cell">08:30</td>
+            <td>Seam NC-0142 raised &mdash; can 0809-A out of spec</td>
+            <td>26-0809</td>
+            <td>QC</td>
+          </tr>
+          <tr>
+            <td class="num-cell">07:30</td>
+            <td>Job 26-0812 started</td>
+            <td>26-0812</td>
+            <td>Line Supervisor</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script>
+(function () {
+  const API = '/api/seam-test-runs?limit=200';
+  let allRows = [];
+  let chart = null;
+  let activeFilter = 'all';
+  const $ = id => document.getElementById(id);
+
+  function fmt(v, dec, unit) { return v == null ? '—' : Number(v).toFixed(dec) + (unit || ''); }
+  function fmtTime(iso) { return new Date(iso).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }); }
+  // local calendar day (not UTC) so late-evening runs land on the right bar
+  function dayKey(iso) {
+    const d = new Date(iso);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  function filtered() { return activeFilter === 'all' ? allRows : allRows.filter(r => r.end_type === activeFilter); }
+
+  function updateSeamCard(rows) {
+    const pctEl = $('seamSpecPct'), subEl = $('seamSpecSub');
+    if (!pctEl) return;
+    const total = rows.length;
+    if (!total) { pctEl.textContent = '—'; pctEl.className = 'num'; subEl.textContent = 'No data'; return; }
+    const passes = rows.filter(r => r.all_pass).length;
+    const pct = 100 * passes / total;
+    pctEl.textContent = pct.toFixed(1) + '%';
+    pctEl.className = 'num ' + (pct >= 97 ? 'ok' : 'warn');
+    subEl.textContent = passes + ' / ' + total + ' checked';
+  }
+
+  function buildChart(rows) {
+    const ctx = $('seamTrendChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+    const byDay = {};
+    rows.forEach(r => {
+      const d = dayKey(r.recorded_at);
+      if (!byDay[d]) byDay[d] = { pass: 0, fail: 0 };
+      r.all_pass ? byDay[d].pass++ : byDay[d].fail++;
+    });
+    const days = Object.keys(byDay).sort();
+    const labels = days.map(d => { const p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }); });
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [
+        { label: 'Pass', data: days.map(d => byDay[d].pass), backgroundColor: '#86efac', borderColor: '#22c55e', borderWidth: 1 },
+        { label: 'Fail', data: days.map(d => byDay[d].fail), backgroundColor: '#fca5a5', borderColor: '#ef4444', borderWidth: 1 }
+      ] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } } },
+        scales: {
+          x: { stacked: true, ticks: { font: { size: 10 } } },
+          y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } }
+        }
+      }
+    });
+  }
+
+  function buildTable(rows) {
+    const tbody = $('seamLiveBody');
+    if (!tbody) return;
+    const slice = rows.slice(0, 25);
+    if (!slice.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">No records</td></tr>';
+      return;
+    }
+    tbody.innerHTML = slice.map(r => {
+      const endLabel = r.end_type === 'manufacturer' ? 'Mfr' : r.end_type === 'production' ? 'Prod' : '—';
+      return '<tr>'
+        + '<td class="num-cell">' + fmtTime(r.recorded_at) + '</td>'
+        + '<td>' + endLabel + '</td>'
+        + '<td>' + (r.operator ? esc(r.operator) : '—') + '</td>'
+        + '<td class="num-cell">' + fmt(r.overlap, 3, ' mm') + '</td>'
+        + '<td class="num-cell">' + fmt(r.overlap_pct, 1, '%') + '</td>'
+        + '<td class="num-cell">' + fmt(r.free_space, 3, ' mm') + '</td>'
+        + '<td><span class="badge ' + (r.all_pass ? 'badge-ok' : 'badge-warn') + '">' + (r.all_pass ? 'Pass' : 'Fail') + '</span></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function render() {
+    const rows = filtered();
+    updateSeamCard(rows);
+    buildChart(rows);
+    buildTable(rows);
+  }
+
+  async function loadData() {
+    try {
+      const resp = await window.FacilityApi.fetch(API, { cache: 'no-store' });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok || !Array.isArray(data.rows)) throw new Error(data.error || ('HTTP ' + resp.status));
+      allRows = data.rows;
+      render();
+    } catch (e) {
+      console.warn('Dashboard seam data load failed', e);
+      $('seamSpecSub').textContent = 'Could not load';
+      const tbody = $('seamLiveBody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a3352d;padding:14px;">Could not load seam data</td></tr>';
+    }
+  }
+
+  document.querySelectorAll('.seam-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.seam-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  // KPI card jumps to the live seam panel
+  const card = $('seamCard');
+  const jump = () => $('seamLivePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  card.addEventListener('click', jump);
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jump(); } });
+
+  $('dashRefreshBtn').addEventListener('click', loadData);
+  loadData();
+})();
+</script>
+
+</body>
+</html>
