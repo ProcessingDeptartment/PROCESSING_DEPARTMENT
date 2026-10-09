@@ -18451,13 +18451,17 @@
           }
         },
         {
-          "key": "trolleysClearlyMarked",
-          "label": "Trolleys clearly marked",
-          "type": "yesno",
-          "required": false,
+          "key": "skinScore",
+          "label": "Skin",
+          "type": "scored-select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "0",
+            "1",
+            "3"
+          ],
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -18469,18 +18473,45 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "good": "Yes",
-            "redPrompt": "correctiveActions"
+            "howToCheck": "Look at the skin and run a finger over it.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Ideal",
+                "detail": "Dry skin that still flexes, drying at the same speed as the meat",
+                "photoUrl": ""
+              },
+              {
+                "value": 1,
+                "label": "1 — Warning",
+                "detail": "Skin turning smooth and firming ahead of the meat",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Failed",
+                "detail": "Dry, smooth, hard crust",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
           }
         },
         {
-          "key": "mouldVisible",
-          "label": "Mould visible",
-          "type": "yesno",
-          "required": false,
+          "key": "coreScore",
+          "label": "Core",
+          "type": "scored-select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "0",
+            "1",
+            "3"
+          ],
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -18492,18 +18523,45 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
+            "howToCheck": "Press the centre of the foot firmly with a thumb. Read skin and core together: hard skin + soft core = case hardening (overdrying); soft skin + soft core = underdrying (check sticky and mould).",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Ideal",
+                "detail": "Core firming at the same rate as the skin",
+                "photoUrl": ""
+              },
+              {
+                "value": 1,
+                "label": "1 — Warning",
+                "detail": "Core noticeably softer than the skin",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Failed",
+                "detail": "Core soft or wet when cut",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
           }
         },
         {
-          "key": "whiteSaltOnSurface",
-          "label": "White salt on surface",
-          "type": "yesno",
-          "required": false,
+          "key": "frillsScore",
+          "label": "Frills",
+          "type": "scored-select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "0",
+            "1",
+            "3"
+          ],
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -18515,18 +18573,45 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
+            "howToCheck": "Feel test: run fingers along the beard, frills and foot edge.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Ideal",
+                "detail": "Edges dry and firm but not sharp. Frills dry and elastic",
+                "photoUrl": ""
+              },
+              {
+                "value": 1,
+                "label": "1 — Warning",
+                "detail": "Frill tips stiffening, foot edge starting to sharpen",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Failed",
+                "detail": "Frills and beard spiky and crusty, foot edge sharp and hard",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
           }
         },
         {
-          "key": "caseHardening",
-          "label": "Case hardening",
-          "type": "yesno",
-          "required": false,
+          "key": "shapeScore",
+          "label": "Shape",
+          "type": "scored-select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "0",
+            "1",
+            "3"
+          ],
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -18538,18 +18623,45 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
+            "howToCheck": "Look at the gap where the frill meets the adductor muscle. Look for curl and dents.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Ideal",
+                "detail": "Tight, closed shape. Small to no gap between frill and adductor",
+                "photoUrl": ""
+              },
+              {
+                "value": 1,
+                "label": "1 — Warning",
+                "detail": "Gap widening, edges starting to curl",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Failed",
+                "detail": "Big gap where the frill has pulled away from the adductor; dents and distortion",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
           }
         },
         {
-          "key": "surfaceShine",
-          "label": "Surface shine",
-          "type": "yesno",
-          "required": false,
+          "key": "colourScore",
+          "label": "Colour",
+          "type": "scored-select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "0",
+            "1",
+            "3"
+          ],
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -18561,18 +18673,44 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "good": "No",
-            "redPrompt": "correctiveActions"
+            "howToCheck": "Compare against the Score 0 reference photo for the same day. Darkening is only a defect when ahead of schedule.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Ideal",
+                "detail": "Colour matches the reference for this day",
+                "photoUrl": ""
+              },
+              {
+                "value": 1,
+                "label": "1 — Warning",
+                "detail": "Slightly darker than the reference",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Failed",
+                "detail": "Clearly darker, well ahead of schedule",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
           }
         },
         {
-          "key": "footDamage",
-          "label": "Foot damage",
-          "type": "yesno",
-          "required": false,
+          "key": "wrinklesScore",
+          "label": "Wrinkles",
+          "type": "scored-select",
+          "required": true,
           "readOnly": false,
           "unit": null,
-          "options": null,
+          "options": [
+            "0",
+            "2"
+          ],
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
@@ -18584,7 +18722,306 @@
           "linkRelation": null,
           "validateJson": null,
           "extraJson": {
-            "good": "No",
+            "howToCheck": "Look at the side of the foot. Pass or fail only.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Pass",
+                "detail": "Smooth",
+                "photoUrl": ""
+              },
+              {
+                "value": 2,
+                "label": "2 — Fail",
+                "detail": "Wrinkled",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
+          }
+        },
+        {
+          "key": "stickyScore",
+          "label": "Sticky",
+          "type": "scored-select",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": [
+            "0",
+            "2"
+          ],
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 25,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "howToCheck": "Slide a clean, dry finger across the skin. Pass or fail only.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Pass",
+                "detail": "Smooth and dry, finger slides freely",
+                "photoUrl": ""
+              },
+              {
+                "value": 2,
+                "label": "2 — Fail",
+                "detail": "Sticky, finger cannot slide over the skin",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
+          }
+        },
+        {
+          "key": "mouldScore",
+          "label": "Mould",
+          "type": "scored-select",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": [
+            "0",
+            "2",
+            "3"
+          ],
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 26,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "howToCheck": "Zero tolerance. Turn pieces over. Check the underside and every point where pieces touch each other or the trolley. Mould vs bloom: fully dried product can grow an even dry white bloom of protein, which is quality, not mould. Mould is raised or fuzzy spots, usually where pieces touch. If in doubt, score 2 and call supervision. Score 2 or 3: remove and isolate the affected pieces immediately and check the remaining pieces one by one.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — None",
+                "detail": "No spots",
+                "photoUrl": ""
+              },
+              {
+                "value": 2,
+                "label": "2 — Isolated",
+                "detail": "One or two small spots (white, grey, green or black) on a single piece",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Spread",
+                "detail": "Spots on more than one piece, fuzzy growth, or any spread",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
+          }
+        },
+        {
+          "key": "odourScore",
+          "label": "Odour",
+          "type": "scored-select",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": [
+            "0",
+            "1",
+            "3"
+          ],
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 27,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "howToCheck": "Smell the trolley.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — Clean",
+                "detail": "Clean, normal dried smell",
+                "photoUrl": ""
+              },
+              {
+                "value": 1,
+                "label": "1 — Warning",
+                "detail": "Slightly sour",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Failed",
+                "detail": "Clearly sour, ammonia or off odour",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
+          }
+        },
+        {
+          "key": "steamTimingScore",
+          "label": "Steam timing",
+          "type": "scored-select",
+          "required": true,
+          "readOnly": false,
+          "unit": null,
+          "options": [
+            "0",
+            "1",
+            "3"
+          ],
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 28,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "howToCheck": "Read the trolley card and compare the recorded steam times with the schedule. The Day 1 morning steam (straight out of Windhoek) is the most critical steam: missing it scores 3 immediately.",
+            "scoreOptions": [
+              {
+                "value": 0,
+                "label": "0 — On schedule",
+                "detail": "All steams done in their round",
+                "photoUrl": ""
+              },
+              {
+                "value": 1,
+                "label": "1 — Late",
+                "detail": "A steam done late, after its round",
+                "photoUrl": ""
+              },
+              {
+                "value": 3,
+                "label": "3 — Missed",
+                "detail": "A steam missed, or the Day 1 morning steam not done",
+                "photoUrl": ""
+              }
+            ],
+            "contributesToScore": true,
+            "showPhotoWhenAbove": 0,
+            "redPrompt": "correctiveActions",
+            "showInTable": false
+          }
+        },
+        {
+          "key": "worstScore",
+          "label": "Worst score",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 29,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "scoreOutput": "worst"
+          }
+        },
+        {
+          "key": "totalScore",
+          "label": "Total score",
+          "type": "number",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 30,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "scoreOutput": "total"
+          }
+        },
+        {
+          "key": "batchStatus",
+          "label": "Batch status",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 31,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "scoreOutput": "status"
+          }
+        },
+        {
+          "key": "trolleysClearlyMarked",
+          "label": "Trolleys clearly marked",
+          "type": "yesno",
+          "required": false,
+          "readOnly": false,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 32,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "good": "Yes",
             "redPrompt": "correctiveActions"
           }
         },
@@ -18599,13 +19036,170 @@
           "group": "Checks",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 25,
+          "position": 33,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
           "linkField": null,
           "linkRelation": null,
           "validateJson": null
+        },
+        {
+          "key": "ncEntryId",
+          "label": "NC reference",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 34,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "hidden": true
+          }
+        },
+        {
+          "key": "mouldVisibleOld",
+          "label": "Mould visible (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 35,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "mouldVisible",
+            "legacyBad": "Yes",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "whiteSaltOnSurfaceOld",
+          "label": "White salt on surface (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 36,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "whiteSaltOnSurface",
+            "legacyBad": "Yes",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "caseHardeningOld",
+          "label": "Case hardening (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 37,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "caseHardening",
+            "legacyBad": "Yes",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "surfaceShineOld",
+          "label": "Surface shine (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 38,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "surfaceShine",
+            "legacyBad": "Yes",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
+        },
+        {
+          "key": "footDamageOld",
+          "label": "Foot damage (old)",
+          "type": "text",
+          "required": false,
+          "readOnly": true,
+          "unit": null,
+          "options": null,
+          "group": "Checks",
+          "sectionIndex": null,
+          "parentFieldKey": null,
+          "position": 39,
+          "computeFn": null,
+          "computeArgs": null,
+          "recordPickSource": null,
+          "linkField": null,
+          "linkRelation": null,
+          "validateJson": null,
+          "extraJson": {
+            "legacy": true,
+            "legacyFrom": "footDamage",
+            "legacyBad": "Yes",
+            "showWhen": {
+              "nonEmpty": true
+            }
+          }
         },
         {
           "key": "comments",
@@ -18618,7 +19212,7 @@
           "group": "Comments",
           "sectionIndex": null,
           "parentFieldKey": null,
-          "position": 26,
+          "position": 40,
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
@@ -18669,7 +19263,91 @@
         "deviationPolarity": "deviation",
         "imageUploadFields": true,
         "dryingDaysEstimate": 22,
-        "ncRedCategory": "Product quality"
+        "ncRedCategory": "Product quality",
+        "scoring": {
+          "signs": [
+            "skinScore",
+            "coreScore",
+            "frillsScore",
+            "shapeScore",
+            "colourScore",
+            "wrinklesScore",
+            "stickyScore",
+            "mouldScore",
+            "odourScore",
+            "steamTimingScore"
+          ],
+          "worst": "worstScore",
+          "total": "totalScore",
+          "status": "batchStatus",
+          "ncRef": "ncEntryId",
+          "maxTotal": 28,
+          "over": [
+            "skinScore",
+            "coreScore",
+            "frillsScore",
+            "shapeScore",
+            "colourScore"
+          ],
+          "under": [
+            {
+              "key": "stickyScore",
+              "min": 2
+            },
+            {
+              "key": "mouldScore",
+              "min": 2
+            },
+            {
+              "key": "odourScore",
+              "min": 1
+            }
+          ],
+          "steam": "steamTimingScore",
+          "interpretation": {
+            "over": "Possible overdrying (case hardening)",
+            "under": "Possible underdrying",
+            "both": "Possible overdrying and underdrying signs present — check trolley carefully",
+            "steam": "Steam timing issue — no product defect signs yet"
+          },
+          "statuses": [
+            "Green",
+            "Amber",
+            "Red",
+            "Critical"
+          ],
+          "actions": {
+            "Amber": [
+              "Find the cause (steam timing, airflow, orientation, loading).",
+              "Start an intervention plan.",
+              "Notify the dried supervisor this shift.",
+              "Recheck within 4 hours."
+            ],
+            "Red": [
+              "Start the intervention plan immediately.",
+              "Notify the dried manager and QC manager now.",
+              "Recheck every 2 hours until Amber."
+            ],
+            "Critical": [
+              "Ring fence the trolley and tag it.",
+              "Do not move it to packing.",
+              "Notify Rowan and Phila immediately, with photos."
+            ]
+          },
+          "steps": {
+            "over": [
+              "Overdrying signs: add an extra steam, reduce wind, rotate the trolley."
+            ],
+            "under": [
+              "Underdrying signs: steam now, move to Windhoek with maximum airflow, remove and isolate mould pieces."
+            ],
+            "steam": [
+              "Steam deviation: record the deviation and complete the steam immediately."
+            ]
+          },
+          "autoNc": true,
+          "ncCategory": "Product quality"
+        }
       },
       "primaryBatchField": "jobNo"
     },

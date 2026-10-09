@@ -30,6 +30,7 @@ function columnKind(fieldType) {
     case 'derived':
       return 'float';
     case 'digits':
+    case 'scored-select':   // REC 7.4.2 QC sign scores: whole numbers
       return 'int';
     case 'yesno':
       return 'boolean';
@@ -210,7 +211,7 @@ async function getSchema(prisma, recordKey) {
     if (sec && sec.kind === 'roster') {
       rosterCols.push({ key: f.key, col, kind });
     } else {
-      topCols.push({ key: f.key, col, kind });
+      topCols.push({ key: f.key, col, kind, legacyFrom: (f.extraJson && f.extraJson.legacyFrom) || null });
     }
   }
 
@@ -293,8 +294,9 @@ async function syncSubmissionRows(prisma, key, value) {
       entry.inSpec != null ? entry.inSpec : null,
     ];
 
-    for (const { key: fk, col, kind } of schema.topCols) {
-      const v = values[fk];
+    for (const { key: fk, col, kind, legacyFrom } of schema.topCols) {
+      // an "(old)" field (extraJson.legacyFrom) archives the value its removed field held on older entries
+      const v = (values[fk] == null || values[fk] === '') && legacyFrom ? values[legacyFrom] : values[fk];
       cols.push(`"${col}"`);
       params.push(coerce(v, kind, recordKey, fk));
     }

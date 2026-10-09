@@ -53,6 +53,7 @@ const FIELD_TYPE_TO_PRISMA = {
   recordpick: 'String?',
   timestamp: 'DateTime?',
   digits: 'Int?',
+  'scored-select': 'Int?',   // REC 7.4.2 QC sign scores
   time: 'DateTime? @db.Time', // "HH:MM" stored as a time-of-day column (no date component)
   jobnumber: 'String?',
   batchseq: 'String?',

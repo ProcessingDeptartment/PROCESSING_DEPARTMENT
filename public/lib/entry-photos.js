@@ -102,8 +102,8 @@
     const wrap = document.createElement('div');
     wrap.className = 'fr-image-block'; wrap.dataset.fieldKey = f.key;
     wrap.innerHTML = `<div class="fr-image-block-header">
-        <span class="fr-image-label">📷 Photos — attach evidence or corrective action</span>
-        <button class="fr-image-add-btn" type="button">+ Add photo</button></div>
+        <span class="fr-image-label">${f.badAbove != null ? '📷 Photos — ' + esc(f.label) : '📷 Photos — attach evidence or corrective action'}</span>
+        <button class="fr-image-add-btn" type="button">${f.badAbove != null ? '📷 Add photo for ' + esc(f.label) : '+ Add photo'}</button></div>
       <div class="fr-image-stale-note" hidden></div>
       <div class="fr-image-thumbs"></div>
       <input type="file" class="fr-image-file-input" accept="image/*" capture="environment" multiple style="display:none">`;
@@ -114,12 +114,13 @@
 
     function refresh() {
       const v = hidden ? String(hidden.value || '') : '';
-      const bad = v === f.bad;
+      // a Yes/No check shows the block on its problem answer; a scored sign when its score is above badAbove
+      const bad = f.badAbove != null ? (v !== '' && Number(v) > f.badAbove) : v === f.bad;
       count = thumbs.children.length;
       wrap.hidden = !bad && !count;
       wrap.classList.toggle('fr-image-stale', !bad && count > 0);
       staleNote.hidden = bad || !count;
-      staleNote.textContent = `Saved while answer was ${f.bad} — answer changed.`;
+      staleNote.textContent = f.badAbove != null ? 'Saved while the score was above 0 — score changed.' : `Saved while answer was ${f.bad} — answer changed.`;
       addBtn.hidden = locked || !bad;
     }
 

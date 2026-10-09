@@ -188,6 +188,16 @@
     });
   }
 
-  window.NcRaise = { open: open, findBreaches: findBreaches, wireInline: wireInline, buttonHtml: buttonHtml,
+  // Raise an NC without the modal (REC 7.4.2 scored checks, config.scoring.autoNc). opts: { recordRef, jobNumber,
+  // submissionId, category, description, correctiveAction, carRequired('yes'|'no') }. Resolves the saved NC, rejects on failure.
+  function create(opts) {
+    var body = { record_ref: opts.recordRef, job_number: opts.jobNumber || '', submission_id: opts.submissionId || '',
+      raised_by: userName() || 'System', category: opts.category || 'Other', car_required: opts.carRequired || 'no',
+      description: opts.description, corrective_action: opts.correctiveAction || '' };
+    return api('/api/nc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); });
+  }
+
+  window.NcRaise = { open: open, create: create, findBreaches: findBreaches, wireInline: wireInline, buttonHtml: buttonHtml,
     bannerHtml: bannerHtml, hydrateBanners: hydrateBanners };
 })();

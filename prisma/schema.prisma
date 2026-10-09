@@ -2004,6 +2004,26 @@ model Sub_dry_monitoring {
   trolleysTypedManually      Boolean?
   dryRoomAreaConfirmed       Boolean?
   dryRoomAreaSourceId        String?
+  // REC 7.4.2 QC manual alignment (2026-10-09)
+  skinScore                  Int?
+  coreScore                  Int?
+  frillsScore                Int?
+  shapeScore                 Int?
+  colourScore                Int?
+  wrinklesScore              Int?
+  stickyScore                Int?
+  mouldScore                 Int?
+  odourScore                 Int?
+  steamTimingScore           Int?
+  worstScore                 Float?
+  totalScore                 Float?
+  batchStatus                String?
+  ncEntryId                  String?
+  mouldVisibleOld            String?
+  whiteSaltOnSurfaceOld      String?
+  caseHardeningOld           String?
+  surfaceShineOld            String?
+  footDamageOld              String?
 
   @@index([jobNo], map: "sub_dry_monitoring_jobNo_idx")
   @@map("sub_dry_monitoring")
@@ -4859,6 +4879,8 @@ model NcLog {
   closedBy         String?   @map("closed_by")
   closedAt         DateTime? @map("closed_at") @db.Timestamptz(6)
   notes            String?
+  notifySent       Boolean   @default(false) @map("notify_sent") // reserved: Red/Critical email via the email API (not built yet)
+  notifyAt         DateTime? @map("notify_at") @db.Timestamptz(6)
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 

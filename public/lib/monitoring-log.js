@@ -97,6 +97,37 @@
   .ml-tick input[type=checkbox]{ width:26px !important; height:26px !important; min-width:26px; padding:0 !important; margin:0; flex:none; }
   .ml-tick > span{ flex:1; min-width:0; white-space:normal; text-transform:none; letter-spacing:0; font-weight:600; }
   .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
+  /* Scored signs (REC 7.4.2): numeric buttons only; 0 neutral/green, 1 amber, 2-3 red. Colour is never the only signal (bold + mark). */
+  .ml-score{ display:flex; gap:8px; flex-wrap:wrap; }
+  .ml-score button{ min-width:52px; flex:1 1 52px; max-width:110px; padding:7px 10px; font-size:14px; font-weight:700; min-height:36px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
+  .ml-score button:hover:not(:disabled){ border-color:#8a939b !important; }
+  .ml-score button.on.s0{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
+  .ml-score button.on.s1{ background:#fff3dc; border-color:#d98200 !important; color:#8a5200; font-weight:800; }
+  .ml-score button.on.s1::after{ content:' \\26A0'; }
+  .ml-score button.on.s2{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); font-weight:800; }
+  .ml-score button.on.s2::after{ content:' \\26A0'; }
+  .ml-score button:disabled{ opacity:.55; cursor:not-allowed; }
+  .ml-info{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; margin-left:6px; padding:0; border-radius:50%; border:1px solid #8a939b; background:#fff; color:#3a4651; font:700 13px/1 serif; cursor:pointer; vertical-align:middle; }
+  .ml-info:hover{ background:#eef1f3; }
+  .ml-scorepanel{ display:block; margin:2px 0 0; }
+  .ml-statusbadge{ display:inline-block; padding:8px 22px; border-radius:8px; font-size:22px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:2px solid #c9cdd1; color:#54606b; background:#f4f5f6; }
+  .ml-statusbadge.st-green{ background:#e8f3ec; border-color:#2f7a52; color:#1f5a3a; }
+  .ml-statusbadge.st-amber{ background:#fff3dc; border-color:#d98200; color:#8a5200; }
+  .ml-statusbadge.st-red{ background:#fbe8e6; border-color:#a3352d; color:#a3352d; }
+  .ml-statusbadge.st-critical{ background:#a3352d; border-color:#6e1d17; color:#fff; }
+  .ml-interp{ margin-top:6px; font-size:13px; font-weight:700; color:#8a5200; text-transform:none; letter-spacing:0; }
+  .ml-sc-bg{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100000; display:flex; align-items:center; justify-content:center; padding:14px; }
+  .ml-sc-modal{ background:#fff; color:#1d2125; border-radius:10px; max-width:600px; width:100%; max-height:92vh; overflow:auto; padding:16px 18px; border-top:6px solid #8a939b; font-family:inherit; text-transform:none; letter-spacing:0; }
+  .ml-sc-modal.st-amber{ border-top-color:#d98200; } .ml-sc-modal.st-red{ border-top-color:#a3352d; } .ml-sc-modal.st-critical{ border-top-color:#6e1d17; }
+  .ml-sc-modal h2{ margin:0 0 6px; font-size:18px; }
+  .ml-sc-modal p{ margin:6px 0; font-size:14px; }
+  .ml-sc-modal ul{ margin:4px 0 8px 18px; padding:0; font-size:14px; }
+  .ml-sc-modal table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+  .ml-sc-modal th, .ml-sc-modal td{ border:1px solid #d5d9dd; padding:6px 8px; text-align:left; vertical-align:top; }
+  .ml-sc-modal img{ max-width:120px; max-height:90px; display:block; margin-top:4px; border-radius:4px; }
+  .ml-sc-btns{ display:flex; justify-content:flex-end; margin-top:10px; }
+  .ml-sc-btns button{ padding:10px 18px; min-height:44px; border-radius:6px; border:1px solid #b9bfc6; background:#fff; font:700 14px inherit; font-family:inherit; cursor:pointer; }
+  .ml-sc-btns button.primary{ background:#2f5d8a; border-color:#2f5d8a; color:#fff; }
   /* Problem answer (the non-good one) is not colour-only: bold text plus a warning mark, and a border on paper. */
   .ml-yesno[data-good="Yes"] button.on[data-v="No"], .ml-yesno[data-good="No"] button.on[data-v="Yes"]{ font-weight:800; }
   .ml-yesno[data-good="Yes"] button.on[data-v="No"]::after, .ml-yesno[data-good="No"] button.on[data-v="Yes"]::after{ content:' \\26A0'; }
@@ -368,6 +399,18 @@
         <input type="hidden" id="${id}" value="${esc(v)}">
       </span>`;
     }
+    // scored-select (REC 7.4.2 QC signs): a row of numeric buttons, nothing else; the labels live in the (i) guide
+    if (field.type === 'scored-select') {
+      const vals = (field.scoreOptions || []).map(o => String(o.value));
+      return `<span class="ml-score" data-score-for="${id}" role="radiogroup" aria-label="${esc(field.label)}">` +
+        vals.map(sv => `<button type="button" role="radio" data-v="${esc(sv)}" class="s${Number(sv) >= 2 ? 2 : Number(sv)}${String(v) === sv ? ' on' : ''}" aria-checked="${String(v) === sv ? 'true' : 'false'}">${esc(sv)}</button>`).join('') +
+        `<input type="hidden" id="${id}" value="${esc(v)}"></span>`;
+    }
+    // computed batch status (config.scoring): a big colour-coded badge plus the interpretation line, filled by wireScores
+    if (field.scoreOutput === 'status') {
+      return `<span class="ml-scorepanel" data-score-panel><input type="hidden" id="${id}" value="${esc(v)}"><span data-score-badge></span><span class="ml-interp" data-score-interp></span></span>`;
+    }
+    if (field.scoreOutput) return `<input type="text" id="${id}" value="${esc(v)}" readonly disabled>`;
     if (field.type === 'select') {
       const opts = ['', ...(field.options || [])];
 
@@ -466,8 +509,12 @@
   }
 
   function fieldLabel(field) {
-    return field.label + (field.unit ? ` <span class="hint">(${esc(field.unit)})</span>` : '');
+    // a scored sign carries an (i) button that opens its how-to-check / score guide
+    const info = field.type === 'scored-select'
+      ? ` <button type="button" class="ml-info" data-info="${esc(field.key)}" aria-label="How to check ${esc(field.label)}" title="How to check">&#9432;</button>` : '';
+    return field.label + (field.unit ? ` <span class="hint">(${esc(field.unit)})</span>` : '') + info;
   }
+  function isScored(f) { return f.type === 'scored-select'; }
 
 
   function wireJobRouteCheck(container, ns, entryFields) {
@@ -951,7 +998,10 @@
     // (config.imageUploadFields, lib/entry-photos.js) can be uploaded before the first save
     let formEntryId = null;
     const photosOn = !!config.imageUploadFields && !customBody;
-    const photoFields = () => entryFields.filter(f => badAnswerOf(f)).map(f => ({ key: f.key, label: f.label, bad: badAnswerOf(f) }));
+    // fields that take photos: a Yes/No check answered with its problem answer, a scored sign above showPhotoWhenAbove
+    const photoFields = () => entryFields.filter(f => badAnswerOf(f) || (isScored(f) && f.showPhotoWhenAbove != null))
+      .map(f => isScored(f) ? { key: f.key, label: f.label, badAbove: Number(f.showPhotoWhenAbove) } : { key: f.key, label: f.label, bad: badAnswerOf(f) });
+    const sc = config.scoring || null;   // REC 7.4.2 QC scoring (signs, status rules, pop-up text): see wireScores
 
     // ---- REC 7.4.6 progressive stages (config.progressive) -------------------------------------------------
     // One stock record per job grows over several submissions. Each submit is its own immutable stage (the server
@@ -1061,6 +1111,8 @@
 
     function evaluateEntry(values) {
       let anyChecked = false, anyFail = false;
+      // an Amber, Red or Critical batch is a deviation
+      if (sc && values[sc.status]) { anyChecked = true; if (Number(values[sc.worst]) >= 1) anyFail = true; }
       entryFields.forEach(f => {
         const r = checkField(f, values[f.key]);
         if (r) { anyChecked = true; if (r === 'fail') anyFail = true; }
@@ -1087,8 +1139,43 @@
       return storeSet(storageKey, JSON.stringify(entries), true);
     }
 
+    // ---- REC 7.4.2 QC scoring (config.scoring) -------------------------------------------------------------------
+    // get(key) -> the sign's score as a string ('' = not scored yet). Worst = highest single score, total = sum, status
+    // from the worst score (0 Green, 1 Amber, 2 Red, 3 Critical) once every sign has a score. Never typed.
+    function scoreSummary(get) {
+      const scored = sc.signs.filter(k => { const s = get(k); return s !== '' && s != null && isFinite(Number(s)); });
+      const n = k => { const s = get(k); return s === '' || s == null || !isFinite(Number(s)) ? 0 : Number(s); };
+      const worst = scored.length ? Math.max.apply(null, scored.map(n)) : 0;
+      const total = scored.reduce((a, k) => a + n(k), 0);
+      const complete = scored.length === sc.signs.length;
+      const over = (sc.over || []).some(k => n(k) >= 1);
+      const under = (sc.under || []).some(u => n(u.key) >= u.min);
+      const productSigns = sc.signs.filter(k => k !== sc.steam);
+      const steamOnly = !over && !under && n(sc.steam) >= 1 && productSigns.every(k => n(k) === 0);
+      const ip = sc.interpretation || {};
+      const interp = over && under ? ip.both : over ? ip.over : under ? ip.under : steamOnly ? ip.steam : '';
+      return { entered: scored.length, complete, worst, total, over, under, steamBad: n(sc.steam) >= 1,
+        status: complete ? (sc.statuses[Math.min(worst, sc.statuses.length - 1)] || '') : '', interp: interp || '' };
+    }
+    // lines for the pop-up, the pre-filled corrective action and the NC: the action for the status, then the steps for the signs found
+    function recommendedLines(s) {
+      const out = (sc.actions && sc.actions[s.status]) ? sc.actions[s.status].slice() : [];
+      const st = sc.steps || {};
+      if (s.over) out.push.apply(out, st.over || []);
+      if (s.under) out.push.apply(out, st.under || []);
+      if (s.steamBad) out.push.apply(out, st.steam || []);
+      return out;
+    }
+    const optionLabel = (f, v) => { const o = (f.scoreOptions || []).find(x => String(x.value) === String(v)); return o ? o.label : String(v); };
+
     function computeAll(rawValues) {
       const values = Object.assign({}, rawValues);
+      if (sc) {
+        const s = scoreSummary(k => values[k]);
+        values[sc.worst] = s.entered ? s.worst : '';
+        values[sc.total] = s.entered ? s.total : '';
+        values[sc.status] = s.status;
+      }
       entryFields.forEach(f => {
         if (f.type !== 'computed') return;
         try {
@@ -1140,7 +1227,10 @@
       if (isStampDate(f) && isSubmitted(entryRow)) return facilityDateOf(entryRow.submittedAt || entryRow.createdAt);
       return v[f.key];
     }
-    function isBadValue(f, val) { const bad = badAnswerOf(f); return !!bad && val === bad; }
+    function isBadValue(f, val) {
+      if (isScored(f)) return val !== '' && val != null && Number(val) > Number(f.showPhotoWhenAbove || 0);
+      const bad = badAnswerOf(f); return !!bad && val === bad;
+    }
 
 
     function openBatches() {
@@ -1326,7 +1416,7 @@
       html += `</tbody></table>`;
       table.innerHTML = html;
       if (photosOn) {
-        loadLib('entry-photos.js?v=2', 'EntryPhotos').then((P) => P && P.counts(true)).then((counts) => {
+        loadLib('entry-photos.js?v=3', 'EntryPhotos').then((P) => P && P.counts(true)).then((counts) => {
           if (!counts) return;
           table.querySelectorAll('[data-photos-for]').forEach((td) => {
             const n = counts[td.dataset.photosFor] || 0;
@@ -1584,7 +1674,7 @@
         src.addEventListener('change', calc);
         calc();
       });
-      const flagged = entryFields.filter(f => badAnswerOf(f));
+      const flagged = entryFields.filter(f => badAnswerOf(f) || isScored(f));
       if (!flagged.length) return;
       const target = flagged[0].redPrompt;
       const box = el(`${ns}_f_${target}`);
@@ -1596,6 +1686,99 @@
       flagged.forEach((f) => { const i = el(`${ns}_f_${f.key}`); if (i) i.addEventListener('input', refresh); });
       if (box) box.addEventListener('input', refresh);
       refresh();
+    }
+
+    // ---- REC 7.4.2 scored signs: buttons, computed status panel, guide and action pop-ups --------------------------
+    let scoreShown = '';        // the status the action pop-up last fired for (so it fires once per change, not on every tap)
+    let scoreAutoText = '';     // the corrective-action text the pop-up pre-filled (replaced if the status changes and it is untouched)
+    function scoreModal(cls, html) {
+      const bg = document.createElement('div');
+      bg.className = 'ml-sc-bg';
+      bg.innerHTML = `<div class="ml-sc-modal ${cls || ''}" role="dialog" aria-modal="true">${html}</div>`;
+      document.body.appendChild(bg);
+      return bg;
+    }
+    function openScoreGuide(key) {
+      const f = entryFields.find(x => x.key === key);
+      if (!f) return;
+      const how = f.howToCheck || ((f.scoreOptions || [])[0] || {}).howToCheck || '';
+      const rows = (f.scoreOptions || []).map(o => `<tr><td><b>${esc(o.label || o.value)}</b></td><td>${esc(o.detail || '')}${o.photoUrl ? `<img src="${esc(o.photoUrl)}" alt="">` : ''}</td></tr>`).join('');
+      const bg = scoreModal('', `<h2>${esc(f.label)}</h2><p><b>How to check:</b> ${esc(how)}</p>
+        <table><thead><tr><th>Score</th><th>What you see and feel</th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="ml-sc-btns"><button type="button" class="primary" data-close>Close</button></div>`);
+      const close = () => bg.remove();
+      bg.querySelector('[data-close]').addEventListener('click', close);
+      bg.addEventListener('mousedown', ev => { if (ev.target === bg) close(); });
+    }
+    function openActionPopup(s) {
+      const lines = recommendedLines(s);
+      const cls = 'st-' + s.status.toLowerCase();
+      const acts = (sc.actions && sc.actions[s.status]) || [];
+      const st = sc.steps || {};
+      const steps = [].concat(s.over ? st.over || [] : [], s.under ? st.under || [] : [], s.steamBad ? st.steam || [] : []);
+      const bg = scoreModal(cls, `<h2><span class="ml-statusbadge ${cls}">${esc(s.status)}</span></h2>
+        <p><b>Immediate action</b></p><ul>${acts.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
+        ${steps.length ? `<p><b>Corrective steps for the signs found</b></p><ul>${steps.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
+        <div class="ml-sc-btns"><button type="button" class="primary" data-ok>Got it — continue</button></div>`);
+      const done = () => {
+        bg.remove();
+        const ta = el(`${ns}_f_correctiveActions`);
+        if (ta && (!String(ta.value || '').trim() || ta.value === scoreAutoText)) {
+          scoreAutoText = lines.join('\n');
+          ta.value = scoreAutoText;
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      };
+      bg.querySelector('[data-ok]').addEventListener('click', done);
+    }
+    function wireScores(container, locked) {
+      if (!sc) return;
+      scoreShown = ''; scoreAutoText = '';
+      container.querySelectorAll('[data-info]').forEach(b => b.addEventListener('click', ev => {
+        ev.preventDefault(); ev.stopPropagation(); openScoreGuide(b.getAttribute('data-info'));
+      }));
+      // tapping a sign's name must not click the first button in its label (the (i) button)
+      container.querySelectorAll('label.ml-field').forEach(lab => {
+        if (!lab.querySelector('.ml-score')) return;
+        lab.addEventListener('click', ev => { if (!ev.target.closest('button')) ev.preventDefault(); });
+      });
+      container.querySelectorAll('.ml-score').forEach(group => {
+        const hidden = group.querySelector('input[type=hidden]');
+        const buttons = Array.from(group.querySelectorAll('button'));
+        buttons.forEach(btn => btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          const next = hidden.value === btn.dataset.v ? '' : btn.dataset.v;   // tapping the chosen score again clears it
+          hidden.value = next;
+          buttons.forEach(b => { const on = b.dataset.v === next; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
+          hidden.dispatchEvent(new Event('input', { bubbles: true }));
+        }));
+      });
+      const read = k => { const i = el(`${ns}_f_${k}`); return i ? String(i.value) : ''; };
+      const paint = (user) => {
+        const s = scoreSummary(read);
+        const set = (k, v) => { const i = el(`${ns}_f_${k}`); if (i) i.value = v; };
+        set(sc.worst, s.entered ? s.worst : ''); set(sc.total, s.entered ? s.total : ''); set(sc.status, s.status);
+        const panel = container.querySelector('[data-score-panel]');
+        if (panel) {
+          const cls = s.status ? 'st-' + s.status.toLowerCase() : '';
+          panel.querySelector('[data-score-badge]').innerHTML = `<span class="ml-statusbadge ${cls}">${esc(s.status || (s.entered ? `${s.entered} of ${sc.signs.length} signs scored` : 'Not scored'))}</span>`
+            + (s.entered ? ` <span class="hint">worst ${s.worst} · total ${s.total} / ${sc.maxTotal}</span>` : '');
+          panel.querySelector('[data-score-interp]').textContent = s.interp;
+        }
+        // the corrective action box shows once a sign is above 0 (or a Yes/No check failed), and stays if it already has text
+        const ta = el(`${ns}_f_correctiveActions`), wrap = container.querySelector('label.ml-field[data-field="correctiveActions"]');
+        if (wrap && ta) {
+          const trol = entryFields.some(f => badAnswerOf(f) && isBadValue(f, read(f.key)));
+          wrap.style.display = (s.worst >= 1 || trol || String(ta.value || '').trim()) ? '' : 'none';
+        }
+        const needs = s.complete && s.worst >= 1;
+        if (user && !locked && needs && s.status !== scoreShown) { scoreShown = s.status; openActionPopup(s); }
+        else if (!needs) scoreShown = '';
+        else if (!user) scoreShown = s.status;     // reopening an entry never re-fires the pop-up
+      };
+      sc.signs.forEach(k => { const i = el(`${ns}_f_${k}`); if (i) i.addEventListener('input', () => paint(true)); });
+      entryFields.filter(f => badAnswerOf(f)).forEach(f => { const i = el(`${ns}_f_${f.key}`); if (i) i.addEventListener('input', () => paint(false)); });
+      paint(false);
     }
 
     function openForm(id) {
@@ -1672,6 +1855,7 @@
         </label>`;
       }).join('');
       wireYesNo(container);
+      wireScores(container, locked, !existing);
       wireTicks(container);
       wirePrefixed(container);
       wireDigits(container);
@@ -1684,7 +1868,7 @@
       if (config.checkHistory) wireCheckHistory(container);
       if (photosOn) {
         const sid = formEntryId;
-        loadLib('entry-photos.js?v=2', 'EntryPhotos').then((P) => {
+        loadLib('entry-photos.js?v=3', 'EntryPhotos').then((P) => {
           if (P && formEntryId === sid) P.attach(container, { submissionId: sid, ns, locked, fields: photoFields(), toast });
         });
       }
@@ -1736,7 +1920,7 @@
           : (fixing ? `Save correction — ${st.label}` : `Submit — ${st.label}`);
       }
       if (submitFlow) {
-        container.querySelectorAll('input,select,textarea,.ml-yesno button').forEach(inp => { inp.disabled = locked; });
+        container.querySelectorAll('input,select,textarea,.ml-yesno button,.ml-score button').forEach(inp => { inp.disabled = locked; });
         const saveBtn = el(`${ns}_saveBtn`), submitBtn = el(`${ns}_submitBtn`);
         if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
         if (submitBtn) submitBtn.style.display = locked ? 'none' : '';
@@ -2012,15 +2196,40 @@
       } // end non-customBody field gathering
 
       // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
-      if (window.NcRaise && (finalize || !submitFlow) && (config.ncThresholds || config.ncAlways || config.redPrompt)) {
+      if (window.NcRaise && (finalize || !submitFlow) && (config.ncThresholds || config.ncAlways || config.redPrompt || (sc && sc.autoNc))) {
         const breaches = window.NcRaise.findBreaches(config.ncThresholds, values).filter(b => !ncHandled.has(b.key));
         // a red (problem) answer on a check is a non-conformance: one NC listing every failed check
-        const redBad = config.redPrompt ? entryFields.filter(f => isBadValue(f, values[f.key])) : [];
+        const auto = !!(sc && sc.autoNc);
+        // scored signs raise their NC automatically (below); Yes/No checks still go through the NC form
+        const redBad = config.redPrompt ? entryFields.filter(f => isBadValue(f, values[f.key]) && !(auto && isScored(f))) : [];
         const redKey = 'red:' + redBad.map(f => f.key + '=' + values[f.key]).join(',');
         if (redBad.length && !ncHandled.has(redKey)) {
           const note = String(values[config.redPrompt.field] || '').trim();
           breaches.push({ key: redKey, category: config.ncRedCategory || 'Process deviation', severity: config.ncRedSeverity || 'minor',
             description: 'Check failed: ' + redBad.map(f => f.label + ' = ' + values[f.key]).join('; ') + '.' + (note ? ' ' + note : '') });
+        }
+        // REC 7.4.2: an Amber, Red or Critical batch raises an NC by itself -- job, area, date, status, the signs found and the
+        // recommended actions go onto it; the checker's own corrective-action text is added. Failing to raise it stops the submit.
+        if (auto && values[sc.status] && Number(values[sc.worst]) >= 1) {
+          const s = scoreSummary(k => values[k]);
+          const autoKey = 'auto:' + s.status + ':' + sc.signs.map(k => values[k]).join('');
+          if (!ncHandled.has(autoKey)) {
+            const signs = entryFields.filter(f => isScored(f) && isBadValue(f, values[f.key])).map(f => `${f.label}: ${optionLabel(f, values[f.key])}`);
+            const others = entryFields.filter(f => badAnswerOf(f) && isBadValue(f, values[f.key])).map(f => `${f.label}: ${values[f.key]}`);
+            const note = String(values[config.redPrompt && config.redPrompt.field || 'correctiveActions'] || '').trim();
+            const description = `Dry monitoring batch status ${s.status} (worst score ${s.worst}, total ${s.total}/${sc.maxTotal}). Job ${String(values[jobKeyOf()] || '').trim()}`
+              + `, ${values.dryRoomArea || 'area not set'}, entry date ${values.entryDate || '—'}. Signs found: ${signs.join('; ')}.` + (others.length ? ` Also: ${others.join('; ')}.` : '')
+              + (s.interp ? ` ${s.interp}.` : '');
+            try {
+              const nc = await window.NcRaise.create({
+                recordRef: docCode, jobNumber: String(values[jobKeyOf()] || '').trim(), submissionId: editingId || formEntryId || '',
+                category: sc.ncCategory || config.ncRedCategory || 'Product quality', description,
+                correctiveAction: ['Recommended:', ...recommendedLines(s).map(l => '- ' + l)].join('\n') + (note && note !== recommendedLines(s).join('\n') ? '\n\nChecker: ' + note : '')
+              });
+              ncHandled.add(autoKey); pendingNc.push(nc.ncRef); values[sc.ncRef] = nc.ncRef;
+              const refEl = el(`${ns}_f_${sc.ncRef}`); if (refEl) refEl.value = nc.ncRef;
+            } catch (e) { console.error('auto NC failed', e); toast('The non-conformance could not be raised (' + e.message + '). Please try submitting again.'); return; }
+          }
         }
         if (config.ncAlways && !ncHandled.size && !pendingNc.length && !(existingForStage && existingForStage.nc_refs)) {
           breaches.push({ key: '__always', category: 'Other', severity: 'minor', description: '' });
@@ -2307,7 +2516,7 @@
         // job report: Job info + Dry room details as the job stands now, every check as a line, photos at the bottom
         const list = printJobChecks(entryRow);
         const latest = list[list.length - 1];
-        return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${checkHistoryPdfHtml(list)}${checkCommentsPdfHtml(list)}<div id="ml_dc_photos"></div>${dcSignHtml(latest)}</div>`;
+        return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${checkHistoryPdfHtml(list)}${scorePdfHtml(latest)}${checkCommentsPdfHtml(list)}<div id="ml_dc_photos"></div>${dcSignHtml(latest)}</div>`;
       }
       const body = `
       <table class="sheet-body">
@@ -2354,7 +2563,13 @@
       return entries.filter(e => e.id !== exceptId && isSubmitted(e) && String((e.values || {})[k] || '').trim() === job)
         .sort((a, b) => (a.submittedAt || a.createdAt || 0) - (b.submittedAt || b.createdAt || 0));
     }
-    const failedChecks = (e) => entryFields.filter(f => isBadValue(f, (e.values || {})[f.key])).map(f => f.label);
+    // what failed on a check: Yes/No problems, scored signs above 0 ("Mould 3"), and a removed Yes/No check answered Yes on an old entry
+    const failedChecks = (e) => entryFields.map(f => {
+      const val = (e.values || {})[f.key];
+      if (isScored(f)) return isBadValue(f, val) ? `${f.label} ${val}` : null;
+      if (f.legacy && f.legacyBad) { const old = valueFor(e, f); return old === f.legacyBad ? f.label : null; }
+      return isBadValue(f, val) ? f.label : null;
+    }).filter(Boolean);
     // date and time of the check, South African time: "07 Oct 2026 09:00"
     const histStamp = (e) => {
       try {
@@ -2369,7 +2584,8 @@
       const v = e.values || {};
       const bad = failedChecks(e);
       const note = String(v.correctiveActions || '').trim();
-      const what = bad.length ? `<span class="ml-hist-bad">NC: ${esc(bad.join(', '))}</span>${note ? ' — ' + esc(note) : ''}` : 'Conforms';
+      const st = sc && v[sc.status] ? `<b>${esc(v[sc.status])}</b> (worst ${esc(v[sc.worst])}, total ${esc(v[sc.total])}/${sc.maxTotal}) ` : '';
+      const what = bad.length ? `${st}<span class="ml-hist-bad">NC: ${esc(bad.join(', '))}</span>${note ? ' — ' + esc(note) : ''}` : st + 'Conforms';
       return { when: esc(histStamp(e)), what, where: esc(v.dryRoomArea || ''), by: esc((e.completedBy && e.completedBy.by) || ''), nc: bad.length > 0 };
     }
     function checkTableHtml(list, cls) {
@@ -2400,6 +2616,24 @@
       const list = jobChecks(String((entryRow.values || {})[histJobKey()] || '').trim());
       return list.length ? list : [entryRow];
     }
+    // REC 7.4.2 QC signs of the entry being printed: every sign with its score and label, then the batch status
+    function scorePdfHtml(e) {
+      if (!sc) return '';
+      const v = (e && e.values) || {};
+      if (!sc.signs.some(k => v[k] != null && v[k] !== '')) return '';
+      const rows = sc.signs.map(k => {
+        const f = entryFields.find(x => x.key === k);
+        const sv = v[k];
+        const has = sv != null && sv !== '';
+        return `<tr><td>${esc(f ? f.label : k)}</td><td>${has ? (isBadValue(f, sv) ? `<span class="ml-bad">${esc(optionLabel(f, sv))} &#9888;</span>` : esc(optionLabel(f, sv))) : '—'}</td></tr>`;
+      }).join('');
+      const tf = entryFields.find(x => x.key === 'trolleysClearlyMarked');
+      const trol = tf ? `<tr><td>${esc(tf.label)}</td><td>${esc(v.trolleysClearlyMarked || '—')}</td></tr>` : '';
+      const st = v[sc.status] ? `<div style="margin:6px 0;font-size:15px;"><b>Batch status: ${esc(v[sc.status])}</b> &nbsp; Worst score ${esc(v[sc.worst])} · Total ${esc(v[sc.total])} / ${sc.maxTotal}</div>` : '';
+      const ncs = (e.nc_refs && e.nc_refs.length) ? `<div style="font-size:11px;">NC raised: ${esc(e.nc_refs.join(', '))}</div>` : '';
+      return `<div class="dc-block"><div class="dc-bhead">QC signs (latest check)</div>${st}<table class="dc-checks"><colgroup><col style="width:30%"><col style="width:70%"></colgroup>`
+        + `<thead><tr><th>Sign</th><th>Score</th></tr></thead><tbody>${rows}${trol}</tbody></table>${ncs}</div>`;
+    }
     function checkHistoryPdfHtml(list) {
       return `<div class="dc-block"><div class="dc-bhead">Checks</div>${checkTableHtml(list, 'dc-checks')}</div>`;
     }
@@ -2414,7 +2648,7 @@
     async function addCheckPhotoGrid(sheet, list) {
       const slot = sheet.querySelector('#ml_dc_photos');
       if (!slot) return;
-      const P = await loadLib('entry-photos.js?v=2', 'EntryPhotos');
+      const P = await loadLib('entry-photos.js?v=3', 'EntryPhotos');
       if (!P || !P.printGrid) return;
       const html = await P.printGrid(list.map(e => ({ id: e.id, label: (k) => (entryFields.find(f => f.key === k) || {}).label || k })), histFmt);
       if (!html) return;
@@ -2424,7 +2658,7 @@
 
     // photos print under their field's cell (4col) or row (classic sheet); waits for the images to decode
     async function addPrintPhotos(sheet, entryRow) {
-      const P = await loadLib('entry-photos.js?v=2', 'EntryPhotos');
+      const P = await loadLib('entry-photos.js?v=3', 'EntryPhotos');
       if (!P) return;
       const blocks = await P.printBlocks(entryRow.id);
       Object.keys(blocks).forEach((k) => {
@@ -2452,6 +2686,7 @@
         const raw = valueFor(entryRow, f);
         let shown = (raw === '' || raw == null) ? '' : (isStamp(f) ? stampText(raw) : String(raw));
         if (shown && f.type === 'date' && !isStamp(f)) shown = fmtD(shown);
+        if (shown && isScored(f)) shown = optionLabel(f, shown);
         return isBadValue(f, String(raw == null ? '' : raw)) ? `<span class="ml-bad">${esc(shown)} &#9888;</span>` : esc(shown);
       };
       const groups = [];

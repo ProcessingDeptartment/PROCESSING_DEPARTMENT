@@ -1,0 +1,472 @@
+{
+  "_meta": {
+    "description": "All certification standards and legislation applicable to Abagold Processing Facility",
+    "maintainer": "michaela@abagold.co.za",
+    "lastReviewed": "2026-10-09",
+    "sourceFolder": "1. Food Safety Management System/FSSC 22000/14. Legislation and Guidelines",
+    "agentInstructions": "Read this file to understand all active certification obligations. Each entry has a 'status' field (active/monitoring/expired), 'nextAction' date, and 'affectedRecords' linking to the REC codes in the processing system. Use 'category' to group compliance tasks."
+  },
+  "certifications": [
+    {
+      "id": "FSSC-22000",
+      "name": "FSSC 22000 Food Safety System Certification",
+      "version": "Version 7",
+      "category": "Food Safety Management System",
+      "scope": "Food manufacturing — abalone processing (dried, canned, live)",
+      "status": "active",
+      "certBody": "FSSC / Bureau Veritas",
+      "frequency": "Annual surveillance + 3-year re-certification",
+      "nextAction": null,
+      "sourceFiles": [
+        "FSSC 22000/FSSC-22000-Scheme-Version-7.pdf",
+        "FSSC 22000/Annex-1-5_FSSC-22000-Version-7_Main-changes-EN.pdf",
+        "FSSC 22000/Assessment-Requirements-for-Food-Manufacturing-V2.0-May-2025.pdf",
+        "FSSC 22000/Self-Assessment-Food-and-Feed-Manufacturing-V2.0-May-2025-1.pdf"
+      ],
+      "affectedRecords": "ALL",
+      "notes": "Version 7 is current scheme. Key new requirements include food safety culture, food loss & waste. Development Program V2.0 May 2025 applies."
+    },
+    {
+      "id": "ISO-22000",
+      "name": "ISO 22000:2018 — Food Safety Management Systems",
+      "version": "Ed 2 (2018)",
+      "category": "Food Safety Management System",
+      "scope": "FSMS standard — underpins FSSC 22000 certification",
+      "status": "active",
+      "certBody": "FSSC (via FSSC 22000 scheme)",
+      "frequency": "Embedded in FSSC 22000 audit cycle",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/ISO 22000_2018_Ed2.pdf"
+      ],
+      "affectedRecords": "ALL",
+      "notes": "Core FSMS standard. All procedures and records must satisfy clause requirements (context, leadership, planning, support, operation, evaluation, improvement)."
+    },
+    {
+      "id": "ISO-TS-22002-1",
+      "name": "ISO/TS 22002-1:2009 — Prerequisite Programmes (PRPs) for Food Manufacturing",
+      "version": "2009",
+      "category": "Food Safety Management System",
+      "scope": "PRP technical specification for food manufacturing",
+      "status": "active",
+      "certBody": "FSSC (via FSSC 22000 scheme)",
+      "frequency": "Embedded in FSSC 22000 audit cycle",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/ISO_TS 22002-1_2009.pdf"
+      ],
+      "affectedRecords": ["REC 7.6.1", "REC 7.6.1.1", "REC 7.7.1", "REC 7.7.2", "REC 7.8.12"],
+      "notes": "Covers infrastructure, cleaning, pest control, personal hygiene, allergen management, etc."
+    },
+    {
+      "id": "HACCP-SANS10330",
+      "name": "SANS 10330 — HACCP System Requirements",
+      "version": "Current",
+      "category": "HACCP",
+      "scope": "Hazard Analysis Critical Control Points — all processing lines",
+      "status": "active",
+      "certBody": "Internal / FSSC 22000 audit",
+      "frequency": "Annual HACCP review + CCP validation",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/SANS 10330_HACCP.pdf"
+      ],
+      "affectedRecords": ["REC 7.9.1", "REC 7.9.2", "REC 7.9.3.1", "REC 7.9.3.2", "REC 7.10.2"],
+      "notes": "FSMS Calendar includes annual HACCP audit. CCPs include temperature control (chiller, incubator, dry room)."
+    },
+    {
+      "id": "SANS-10049",
+      "name": "SANS 10049 — Prerequisite Programmes for Food Safety",
+      "version": "Current",
+      "category": "Food Safety Management System",
+      "scope": "PRPs — food safety pre-conditions for the facility",
+      "status": "active",
+      "certBody": "Internal / FSSC audit",
+      "frequency": "Embedded in FSSC 22000 audit",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/SANS 10049_PRPs.pdf"
+      ],
+      "affectedRecords": ["REC 7.6.1", "REC 7.6.7", "REC 7.7.1", "REC 7.8.12"],
+      "notes": "South African PRP standard; used alongside ISO/TS 22002-1."
+    },
+    {
+      "id": "SANS-241",
+      "name": "SANS 241 — Drinking Water Quality",
+      "version": "Ed 7 (2024 draft reviewed)",
+      "category": "Water & Environment",
+      "scope": "Potable water used in processing",
+      "status": "active",
+      "certBody": "Internal monitoring + external lab",
+      "frequency": "Monthly micro testing; annual chemical SANS 241 compliance",
+      "nextAction": null,
+      "sourceFiles": [
+        "South African National StandardDrinking Water Quality SANS 241  2024).pdf",
+        "SANS241ED7_TC147_DSS_1 - draft May 2022.pdf"
+      ],
+      "affectedRecords": ["REC 7.8.9", "REC 7.8.9.1"],
+      "notes": "FSMS Calendar tracks monthly water micro testing and annual SANS 241 verification."
+    },
+    {
+      "id": "SANS-2329",
+      "name": "SANS 2329:2019 — Dried Abalone",
+      "version": "Ed 1 (2019)",
+      "category": "Product Standard",
+      "scope": "Dried abalone product specification",
+      "status": "active",
+      "certBody": "NRCS / Internal QC",
+      "frequency": "Per batch / ongoing",
+      "nextAction": null,
+      "sourceFiles": [
+        "Dried Abalone SANS2329_2019_Ed1.pdf",
+        "STANDARDS_Scheme Requirements/Dried Abalone SANS2329_2019_Ed1.pdf"
+      ],
+      "affectedRecords": ["REC 7.4.1", "REC 7.4.3", "REC 7.4.4", "REC 7.4.5", "REC 7.4.6", "REC 7.4.10"],
+      "notes": "Defines grade criteria, moisture limits, labelling requirements for dried abalone."
+    },
+    {
+      "id": "SANS-587",
+      "name": "SANS 587:2017 — Canned Aquatic Products",
+      "version": "Ed 3 Amendment 2 (2017)",
+      "category": "Product Standard",
+      "scope": "Canned abalone (braised, minced, natural)",
+      "status": "active",
+      "certBody": "NRCS / Internal QC",
+      "frequency": "Per batch / ongoing",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/SANS 587_2017_Ed3_Canned.pdf",
+        "SABS-TC0234_N0150_SANS587ED3Am2_TC234_DSS_1.pdf"
+      ],
+      "affectedRecords": ["REC 7.1", "REC 01"],
+      "notes": "Covers can integrity, fill weights, micro limits for canned abalone products."
+    },
+    {
+      "id": "SANS-729",
+      "name": "SANS 729:2018 — Live Aquaculture Products",
+      "version": "Ed 1 Amendment 2 (2018)",
+      "category": "Product Standard",
+      "scope": "Live abalone — holding, packing, transport",
+      "status": "active",
+      "certBody": "NRCS / DFFE",
+      "frequency": "Per batch / ongoing",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/SANS 729_2018_Ed1Am2_Live Aquaculture.pdf"
+      ],
+      "affectedRecords": ["REC 7.5.3"],
+      "notes": "Quality and safety requirements for live abalone packing and export."
+    },
+    {
+      "id": "SANS-585",
+      "name": "SANS 585 — Frozen Aquatic Products",
+      "version": "Current",
+      "category": "Product Standard",
+      "scope": "Frozen abalone products",
+      "status": "active",
+      "certBody": "NRCS",
+      "frequency": "Per batch",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/SANS 585_Frozen.pdf"
+      ],
+      "affectedRecords": [],
+      "notes": "May apply to frozen product lines. Verify if frozen product is currently active."
+    },
+    {
+      "id": "R638",
+      "name": "Regulation R638 — Regulations Governing General Hygiene Requirements for Food Premises",
+      "version": "Current (2018 reviewed 2024)",
+      "category": "South African Legislation",
+      "scope": "All food processing premises and staff hygiene",
+      "status": "active",
+      "certBody": "Department of Health / NRCS inspection",
+      "frequency": "Ongoing — regulatory compliance",
+      "nextAction": null,
+      "sourceFiles": [
+        "R638 regulation.pdf",
+        "Regulation 638.pdf"
+      ],
+      "affectedRecords": ["REC 7.6.1", "REC 7.6.7", "REC 7.7.4", "REC 7.8.12"],
+      "notes": "Core hygiene regulation for food premises under the Foodstuffs Act. Covers staff, equipment, structure."
+    },
+    {
+      "id": "FOODSTUFFS-ACT",
+      "name": "Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972",
+      "version": "Reviewed 02.2026",
+      "category": "South African Legislation",
+      "scope": "All food products — manufacture, labelling, sale",
+      "status": "active",
+      "certBody": "Department of Health",
+      "frequency": "Ongoing — regulatory compliance",
+      "nextAction": null,
+      "sourceFiles": [
+        "Foodstuffs, Cosmetics and Disinfectants Act, 1972_reviewed 02.2026.pdf"
+      ],
+      "affectedRecords": "ALL",
+      "notes": "Umbrella food law in South Africa. Reviewed Feb 2026 — check for any new R-notices or amendments."
+    },
+    {
+      "id": "AGRI-PRODUCTS-ACT",
+      "name": "Agricultural Product Standards Act 119 of 1990",
+      "version": "Reviewed 02.2026",
+      "category": "South African Legislation",
+      "scope": "Grading, packing and marking of abalone products for sale",
+      "status": "active",
+      "certBody": "DALRRD / NRCS",
+      "frequency": "Ongoing — applies per product batch",
+      "nextAction": null,
+      "sourceFiles": [
+        "Agricultural Product Standards Act, 1990_reviewed 02.2026.pdf"
+      ],
+      "affectedRecords": ["REC 7.4.5", "REC 7.4.4"],
+      "notes": "Governs compulsory specs (VC notices) for agricultural products. Reviewed Feb 2026."
+    },
+    {
+      "id": "NATIONAL-HEALTH-ACT",
+      "name": "National Health Act 61 of 2003",
+      "version": "Current",
+      "category": "South African Legislation",
+      "scope": "Environmental health, occupational health, medicals",
+      "status": "active",
+      "certBody": "Department of Health",
+      "frequency": "Ongoing",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/National health-act. 61 of 2003.pdf"
+      ],
+      "affectedRecords": ["REC 8.2.8.1"],
+      "notes": "Covers employee health screening and environmental health obligations."
+    },
+    {
+      "id": "VC-9108",
+      "name": "VC 9108:2025 — Compulsory Specification for Canned Abalone",
+      "version": "2025",
+      "category": "Compulsory Specification (NRCS)",
+      "scope": "Canned abalone products",
+      "status": "active",
+      "certBody": "NRCS",
+      "frequency": "Per batch / NRCS letter of authority",
+      "nextAction": null,
+      "sourceFiles": [
+        "VC 9108-2025.pdf"
+      ],
+      "affectedRecords": ["REC 7.1", "REC 01"],
+      "notes": "NRCS compulsory spec — Letter of Authority required before canned product can be sold. Updated 2025."
+    },
+    {
+      "id": "VC-9001",
+      "name": "VC 9001 — Compulsory Specification (General / Abalone)",
+      "version": "Current",
+      "category": "Compulsory Specification (NRCS)",
+      "scope": "Verify exact product scope from document",
+      "status": "active",
+      "certBody": "NRCS",
+      "frequency": "Per batch / Letter of Authority",
+      "nextAction": null,
+      "sourceFiles": [
+        "VC 9001.pdf"
+      ],
+      "affectedRecords": [],
+      "notes": "Review document to confirm product scope. May overlap with VC 9108."
+    },
+    {
+      "id": "VC-8014",
+      "name": "VC 8014 — Compulsory Specification for Canned Fish, Canned Marine Molluscs and Canned Crustaceans",
+      "version": "Current",
+      "category": "Compulsory Specification (NRCS)",
+      "scope": "Canned marine products",
+      "status": "active",
+      "certBody": "NRCS",
+      "frequency": "Per batch / Letter of Authority",
+      "nextAction": null,
+      "sourceFiles": [
+        "VC8014.pdf"
+      ],
+      "affectedRecords": ["REC 7.1", "REC 01"],
+      "notes": "Compulsory spec covering canned marine products; may apply alongside VC 9108."
+    },
+    {
+      "id": "DFFE-PERMIT",
+      "name": "DFFE — Aquaculture Permit & PST Control",
+      "version": "June 2024",
+      "category": "Fisheries & Aquaculture",
+      "scope": "Aquaculture operation, harvest, PST monitoring",
+      "status": "active",
+      "certBody": "Department of Forestry, Fisheries and the Environment (DFFE)",
+      "frequency": "Annual permit renewal; PST testing per season",
+      "nextAction": null,
+      "sourceFiles": [
+        "DFFE PST Control_June 2024.pdf"
+      ],
+      "affectedRecords": [],
+      "notes": "PST (Paralytic Shellfish Toxin) testing required before and during harvest season. DFFE sets control periods."
+    },
+    {
+      "id": "AMFFSP",
+      "name": "Aquaculture Management Food Safety Programme (AMFFSP)",
+      "version": "2025 (signed Nov 2025)",
+      "category": "Fisheries & Aquaculture",
+      "scope": "Food safety programme for aquaculture — mandatory for export",
+      "status": "active",
+      "certBody": "DFFE",
+      "frequency": "Annual programme compliance; inspection by DFFE",
+      "nextAction": null,
+      "sourceFiles": [
+        "Final AMFFSP 2025 20251128 Signed.pdf",
+        "Aquaculture Food Safety Programme.pdf",
+        "Food Safety Programme_March 2024.pdf"
+      ],
+      "affectedRecords": "ALL",
+      "notes": "Required for EU and other export markets. Signed Nov 2025 — confirm current programme year validity."
+    },
+    {
+      "id": "ISO-19011",
+      "name": "ISO 19011:2018 — Guidelines for Auditing Management Systems",
+      "version": "2018",
+      "category": "Auditing",
+      "scope": "Internal audit programme",
+      "status": "active",
+      "certBody": "Internal",
+      "frequency": "Annual internal audit cycle (FSMS Calendar)",
+      "nextAction": null,
+      "sourceFiles": [
+        "STANDARDS_Scheme Requirements/ISO-19011-2018 Guidelines for Auditing Management.pdf"
+      ],
+      "affectedRecords": [],
+      "notes": "Guides how internal audits are planned and conducted. FSMS Calendar tracks internal audit schedule."
+    },
+    {
+      "id": "CODEX-CXS-192",
+      "name": "Codex Alimentarius — General Standard for Food Additives (CXS 192)",
+      "version": "2024 update",
+      "category": "Codex / International",
+      "scope": "Food additives used in processing",
+      "status": "monitoring",
+      "certBody": "Codex Alimentarius Commission",
+      "frequency": "Monitor annual Codex updates",
+      "nextAction": null,
+      "sourceFiles": [
+        "CXS_192e _2024.pdf",
+        "CXS_192e.pdf"
+      ],
+      "affectedRecords": [],
+      "notes": "Reference standard for permissible food additives and maximum levels. 2024 edition now available."
+    },
+    {
+      "id": "CODEX-CXS-312",
+      "name": "Codex Standard for Dried Abalone (CXS 312)",
+      "version": "Current",
+      "category": "Codex / International",
+      "scope": "Dried abalone product — international trade standard",
+      "status": "active",
+      "certBody": "Codex / importing country",
+      "frequency": "Monitor Codex sessions for updates",
+      "nextAction": null,
+      "sourceFiles": [
+        "CXS_312e.pdf"
+      ],
+      "affectedRecords": ["REC 7.4.1", "REC 7.4.5", "REC 7.4.10"],
+      "notes": "Key standard for export markets. Aligns with SANS 2329 but check for differences in grade limits."
+    },
+    {
+      "id": "R638-LABELLING",
+      "name": "Draft Labelling Regulations R3337 (2023) + R146",
+      "version": "Draft 2023; R146 current",
+      "category": "Labelling",
+      "scope": "All pre-packaged food products sold in South Africa",
+      "status": "monitoring",
+      "certBody": "Department of Health",
+      "frequency": "Monitor gazette for promulgation date",
+      "nextAction": null,
+      "sourceFiles": [
+        "R3337-Draft-Labelling-Regulations-21-April-2023-sc-compressed-1.pdf",
+        "R146.pdf",
+        "Draft regulations on food labelling.pdf"
+      ],
+      "affectedRecords": ["REC 7.4.5"],
+      "notes": "R3337 is the new draft labelling regulation — not yet promulgated. R146 remains in force. Watch for implementation date — will affect all labels."
+    },
+    {
+      "id": "GACC-CHINA",
+      "name": "GACC — China Registration for Overseas Manufacture",
+      "version": "Current registration",
+      "category": "Export Market",
+      "scope": "Export of abalone products to China",
+      "status": "active",
+      "certBody": "GACC (General Administration of Customs China) / DFFE",
+      "frequency": "Registration renewal as required by GACC",
+      "nextAction": null,
+      "sourceFiles": [
+        "China/GACC Registration for Overseas Manufacture - Chinese and English Abagold Ltd.doc",
+        "China/China Measures on the Administration of Inspection and Quarantine of Inward Aquatic Animals.doc",
+        "China Releases the Standard for Maximum Levels of Contaminants in Foods_GB 2762.pdf"
+      ],
+      "affectedRecords": "ALL",
+      "notes": "Abagold must maintain GACC registration to export to China. DFFE is the competent authority. China contaminant limits (GB 2762) apply to product."
+    },
+    {
+      "id": "HONG-KONG-CAP132",
+      "name": "Hong Kong Food Safety Ordinance — CAP 132",
+      "version": "Current",
+      "category": "Export Market",
+      "scope": "Export of abalone products to Hong Kong",
+      "status": "monitoring",
+      "certBody": "Centre for Food Safety (CFS), Hong Kong",
+      "frequency": "Monitor for regulatory updates",
+      "nextAction": null,
+      "sourceFiles": [
+        "CAP 132 (Hong Kong).pdf"
+      ],
+      "affectedRecords": [],
+      "notes": "Hong Kong food safety law. Verify import requirements for dried/canned abalone."
+    },
+    {
+      "id": "CANADA-LABELLING",
+      "name": "Canada — CFIA Labelling Regulations",
+      "version": "Current",
+      "category": "Export Market",
+      "scope": "Export of abalone products to Canada",
+      "status": "monitoring",
+      "certBody": "Canadian Food Inspection Agency (CFIA)",
+      "frequency": "Monitor for updates",
+      "nextAction": null,
+      "sourceFiles": [
+        "Canada Labelling Regulation.docx",
+        "CFIA_ACIA-Labelling-Presentation-for-Industry.pdf",
+        "GuideFoodLabellingAdvertising_CFIA_dec2011.pdf"
+      ],
+      "affectedRecords": ["REC 7.4.5"],
+      "notes": "Canadian bilingual labelling and import requirements apply for Canada market."
+    },
+    {
+      "id": "MICRO-GUIDELINES",
+      "name": "Microbiological Guidelines for Food (SANS / Codex)",
+      "version": "Current",
+      "category": "Food Safety Management System",
+      "scope": "Micro testing limits for finished products and environmental swabs",
+      "status": "active",
+      "certBody": "Internal / external lab",
+      "frequency": "Monthly micro testing (FSMS Calendar)",
+      "nextAction": null,
+      "sourceFiles": [
+        "food_leg_Microbiological_Guidelines_for_Food_e.pdf"
+      ],
+      "affectedRecords": ["REC 7.9.1", "REC 7.9.2"],
+      "notes": "Reference for setting micro limits in FSMS. Used for water swabs, abalone, drain swabs as per FSMS Calendar."
+    }
+  ],
+  "categories": [
+    "Food Safety Management System",
+    "HACCP",
+    "Product Standard",
+    "Compulsory Specification (NRCS)",
+    "South African Legislation",
+    "Fisheries & Aquaculture",
+    "Auditing",
+    "Codex / International",
+    "Labelling",
+    "Export Market",
+    "Water & Environment"
+  ]
+}

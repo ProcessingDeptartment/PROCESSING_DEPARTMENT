@@ -40,7 +40,7 @@ async function yesNoKeys(prisma) {
   if (fieldCache.keys && Date.now() - fieldCache.at < 5 * 60 * 1000) return fieldCache.keys;
   const out = await assembleRecordConfig(prisma, RECORD_KEY);
   const cfg = out && (out.config || out);   // { engine, version, config }
-  const keys = new Set(((cfg && cfg.entryFields) || []).filter((f) => f.type === 'yesno' && f.redPrompt).map((f) => f.key));
+  const keys = new Set(((cfg && cfg.entryFields) || []).filter((f) => (f.type === 'yesno' && f.redPrompt) || (f.type === 'scored-select' && f.showPhotoWhenAbove != null)).map((f) => f.key));
   fieldCache = { at: Date.now(), keys };
   return keys;
 }
