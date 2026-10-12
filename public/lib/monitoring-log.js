@@ -444,7 +444,7 @@
       return `<input type="datetime-local" id="${id}" value="${esc(v)}">`;
     }
     if (field.type === 'time') {
-      return `<input type="time" id="${id}" value="${esc(v)}">`;
+      return window.FRTimePicker ? window.FRTimePicker.html(id, v, field.readOnly) : `<input type="time" id="${id}" value="${esc(v)}">`;
     }
     if (field.type === 'month') {
       return `<input type="month" id="${id}" value="${esc(v)}">`;

@@ -1924,3 +1924,31 @@ body.rt-tablet .rt-content .fr-badge-ok, body.rt-tablet .rt-content .fr-badge-fa
 .rt-content .fr-slide .fr-pot-line .fr-field { font-size: var(--fs-label, 14px); font-weight: 600; }
 .rt-content .fr-slide .fr-pot-line input:not([type=checkbox]):not([type=hidden]), .rt-content .fr-slide .fr-pot-line select { min-height: 48px; font-size: var(--fs-value, 16px); }
 .rt-content .fr-slide .fr-pot-line .ml-yesno button { min-height: 48px; font-size: 16px; }
+
+/* ── Digital time picker (time-picker.js) ── */
+.fr-time-picker { display: inline-flex; align-items: center; gap: 4px; }
+.fr-time-hidden { display: none !important; }
+.fr-time-unit { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.rt-content .fr-time-picker input.fr-time-h, .rt-content .fr-time-picker input.fr-time-m,
+.fr-time-h, .fr-time-m {
+  width: 3.6rem; min-width: 0; text-align: center; font-size: 1.3rem; font-weight: 600; padding: 6px 4px;
+  border: 1px solid var(--border, #ccc); border-radius: 4px; -moz-appearance: textfield; appearance: textfield;
+}
+.fr-time-h::-webkit-outer-spin-button, .fr-time-h::-webkit-inner-spin-button,
+.fr-time-m::-webkit-outer-spin-button, .fr-time-m::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.fr-time-btn {
+  width: 100%; min-width: 2.2rem; height: 1.8rem; padding: 0; font-size: 0.75rem; line-height: 1; cursor: pointer;
+  border: 1px solid var(--border, #ccc); border-radius: 3px; background: var(--surface2, #f4f4f4); color: var(--text, #333);
+  touch-action: manipulation;
+}
+.fr-time-btn:active { background: var(--accent, #0077cc); color: #fff; }
+.fr-time-sep { font-size: 1.4rem; font-weight: 700; line-height: 1; align-self: center; }
+@media (pointer: coarse) {
+  .fr-time-h, .fr-time-m { width: 4rem; font-size: 1.5rem; padding: 8px 4px; }
+  .fr-time-btn { height: 2.4rem; font-size: 0.95rem; }
+}
+.fr-now-wrap .fr-time-picker { flex: 1 1 auto; }
+@media print {
+  .fr-time-picker .fr-time-unit, .fr-time-picker .fr-time-sep { display: none; }
+  .fr-time-hidden { display: inline !important; border: none; background: none; font-size: inherit; padding: 0; width: auto; }
+}

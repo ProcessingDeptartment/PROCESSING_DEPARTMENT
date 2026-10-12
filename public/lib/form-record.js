@@ -488,13 +488,27 @@
     }).join('  ·  ');
   }
 
-  function fmtDDMMYYYY(iso) {
+  const MONTHS_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // "D Mon YYYY", e.g. "5 Oct 2026".
+  function fmtDateAbbr(iso) {
     if (!iso) return '';
     const d = new Date(iso);
     if (isNaN(d.getTime())) return String(iso);
-    const pad = n => String(n).padStart(2, '0');
-    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+    return d.getDate() + ' ' + MONTHS_ABBR[d.getMonth()] + ' ' + d.getFullYear();
   }
+
+  // "D Mon YYYY HH:MM", e.g. "5 Oct 2026 14:30".
+  function fmtDateTimeAbbr(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return '—';
+    const p = n => String(n).padStart(2, '0');
+    return fmtDateAbbr(ts) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  // Old name kept so call sites don't change.
+  function fmtDDMMYYYY(iso) { return fmtDateAbbr(iso); }
 
   // A picked record's status comes from two possible sources that disagree on vocabulary:
   // the older per-row index snapshot (status: 'draft'|'submitted', plus a separate verified/
@@ -608,7 +622,7 @@
       if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
       if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
 
-      if (field.type === 'time') return `<input type="time" id="${id}" value="${esc(v)}">`;
+      if (field.type === 'time') return window.FRTimePicker ? window.FRTimePicker.html(id, v, field.readOnly) : `<input type="time" id="${id}" value="${esc(v)}">`;
       if (field.type === 'datetime') return `<input type="datetime-local" id="${id}" value="${esc(v)}"${ro}>`;
 
       if (field.type === 'batchseq' || field.type === 'derived') {
@@ -1841,11 +1855,7 @@
     function isSubmitted(sub) { return !!sub && (sub.status == null || sub.status === 'submitted'); }
 
     function fmtSubmittedAt(ts) {
-      if (!ts) return '—';
-      const d = new Date(ts);
-      if (isNaN(d)) return '—';
-      const p = n => String(n).padStart(2, '0');
-      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+      return fmtDateTimeAbbr(ts);
     }
 
     function subCompletedBy(sub) {
@@ -3287,15 +3297,18 @@
           const touch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
           const card = () => container.querySelector('.fr-pot-card[data-roster-row="' + newIdx + '"]');
           const reveal = () => { const c = card(); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-          setTimeout(() => {
-            reveal();
-            if (!touch && first) { try { first.focus({ preventScroll: true }); } catch (err) {} }
-            // If smooth scrolling did not land (some browsers throttle the animation), jump there.
+          // addScrollsToSection: the Add button already scrolled to the roster heading; do not jump to the new card.
+          if (!roster.addScrollsToSection) {
             setTimeout(() => {
-              const c = card();
-              if (c && Math.abs(c.getBoundingClientRect().top - 84) > 40) c.scrollIntoView({ behavior: 'auto', block: 'start' });
-            }, 600);
-          }, 30);
+              reveal();
+              if (!touch && first) { try { first.focus({ preventScroll: true }); } catch (err) {} }
+              // If smooth scrolling did not land (some browsers throttle the animation), jump there.
+              setTimeout(() => {
+                const c = card();
+                if (c && Math.abs(c.getBoundingClientRect().top - 84) > 40) c.scrollIntoView({ behavior: 'auto', block: 'start' });
+              }, 600);
+            }, 30);
+          }
           return;
         }
         if (first) { try { first.focus(); } catch (err) {} }
@@ -3310,7 +3323,7 @@
       const container = el('fr_modalSections');
       let html = (window.NcRaise && existing ? window.NcRaise.bannerHtml(existing.nc_refs) : '') + (locked
         ? `<div class="fr-locked">Submitted${existing.submittedAt
-            ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.</div>`
+            ? ' on ' + fmtDateTimeAbbr(existing.submittedAt) : ''} — this submission can no longer be changed.</div>`
         : '');
       if (existing && existing.values && existing.values.oosWarningAck) {
         html += `<div class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
@@ -3410,8 +3423,16 @@
             el(rosterDomId('fr_potChoose', i)).querySelectorAll('[data-choose]').forEach(b =>
               b.addEventListener('click', () => rowsEl._addRow(b.dataset.choose)));
           } else
-          el(rosterDomId('fr_addRosterRowBtn', i)).addEventListener('click',
-            () => container.querySelector('#' + rowsId)._addRow());
+          el(rosterDomId('fr_addRosterRowBtn', i)).addEventListener('click', () => {
+            const rows = container.querySelector('#' + rowsId);
+            if (!roster.addScrollsToSection) { rows._addRow(); return; }
+            // Scroll to the roster section heading, then add the row once the scroll has landed.
+            const sec = rows.closest('details.fr-section-collapsible');
+            if (sec) sec.open = true;
+            const target = sec || rows;
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => rows._addRow(), 420);
+          });
           if (el(rosterDomId('fr_importCsvBtn', i))) el(rosterDomId('fr_importCsvBtn', i)).addEventListener('click',
             () => el(rosterDomId('fr_csvFile', i)).click());
           el(rosterDomId('fr_csvFile', i)).addEventListener('change', function () {
