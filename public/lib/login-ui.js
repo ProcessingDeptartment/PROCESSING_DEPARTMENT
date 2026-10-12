@@ -64,13 +64,13 @@
         <div class="user-list">
           ${users.map((u, i) => `
             <label>
-              <input type="radio" name="user" value="${u.username}" ${i === 0 ? 'checked' : ''}>
+              <input type="radio" name="user" value="${u.username}" data-no-password="${u.noPassword ? '1' : ''}" ${i === 0 ? 'checked' : ''}>
               <span>${u.displayName}</span>
             </label>
           `).join('')}
         </div>
-        <label>
-          <span class="label-text">User Password</span>
+        <label id="passwordLabel">
+          <span class="label-text">Password</span>
           <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
         </label>
         <button id="loginBtn">Sign In</button>
@@ -82,20 +82,42 @@
 
     const loginBtn = modal.querySelector('#loginBtn');
     const passwordInput = modal.querySelector('#loginPassword');
+    const passwordLabel = modal.querySelector('#passwordLabel');
     const errorDiv = modal.querySelector('#loginError');
     const userRadios = modal.querySelectorAll('input[name=user]');
 
-    function attemptLogin() {
+    function updatePasswordVisibility() {
+      const checked = modal.querySelector('input[name=user]:checked');
+      const needsPassword = checked && checked.dataset.noPassword !== '1';
+      passwordLabel.style.display = needsPassword ? '' : 'none';
+      if (!needsPassword) passwordInput.value = '';
+    }
+
+    userRadios.forEach(r => r.addEventListener('change', updatePasswordVisibility));
+    updatePasswordVisibility();
+
+    async function attemptLogin() {
       errorDiv.style.display = 'none';
-      const selectedUser = modal.querySelector('input[name=user]:checked')?.value;
+      const checkedRadio = modal.querySelector('input[name=user]:checked');
+      const selectedUser = checkedRadio ? checkedRadio.value : null;
+      const needsPassword = checkedRadio && checkedRadio.dataset.noPassword !== '1';
       const password = passwordInput.value;
-      if (!selectedUser || !password) {
-        errorDiv.textContent = 'Please select a user and enter password';
+      if (!selectedUser) {
+        errorDiv.textContent = 'Please select a user';
+        errorDiv.style.display = 'block';
+        return;
+      }
+      if (needsPassword && !password) {
+        errorDiv.textContent = 'Please enter your password';
         errorDiv.style.display = 'block';
         return;
       }
       if (window.Auth) {
-        const result = window.Auth.login(selectedUser, password);
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Signing in…';
+        const result = await window.Auth.login(selectedUser, password);
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign In';
         if (result.ok) {
           hideLoginModal();
           document.dispatchEvent(new CustomEvent('authSuccess', { detail: result.user }));
@@ -103,7 +125,7 @@
           errorDiv.textContent = result.error || 'Login failed';
           errorDiv.style.display = 'block';
           passwordInput.value = '';
-          passwordInput.focus();
+          if (needsPassword) passwordInput.focus();
         }
       }
     }

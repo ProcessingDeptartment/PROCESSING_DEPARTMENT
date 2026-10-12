@@ -2,19 +2,24 @@
 
 
   const USERS = [
-    { username: 'production_supervisor', role: 'PRODUCTION_SUPERVISOR', displayName: 'Production Supervisor' },
-    { username: 'shift_manager', role: 'SHIFT_MANAGER', displayName: 'Shift Manager' },
-    { username: 'quality_supervisor', role: 'QUALITY_SUPERVISOR', displayName: 'Quality Supervisor' },
-    { username: 'quality_controller', role: 'QUALITY_CONTROLLER', displayName: 'Quality Controller' },
-    { username: 'qa_manager', role: 'QA_MANAGER', displayName: 'QA Manager' },
-    { username: 'production_manager', role: 'PRODUCTION_MANAGER', displayName: 'Production Manager' },
-    { username: 'operator', role: 'OPERATOR', displayName: 'Operator' },
-    { username: 'administrator', role: 'ADMINISTRATOR', displayName: 'Administrator' }
+    { username: 'supervisor',          role: 'PRODUCTION_SUPERVISOR', displayName: 'Supervisor',          noPassword: true },
+    { username: 'shift manager',       role: 'SHIFT_MANAGER',         displayName: 'Shift Manager',       noPassword: true },
+    { username: 'quality supervisor',  role: 'QUALITY_SUPERVISOR',    displayName: 'Quality Supervisor',  noPassword: true },
+    { username: 'quality controller',  role: 'QUALITY_CONTROLLER',    displayName: 'Quality Controller',  noPassword: true },
+    { username: 'qa manager',          role: 'QA_MANAGER',            displayName: 'QA Manager',          noPassword: true },
+    { username: 'production manager',  role: 'PRODUCTION_MANAGER',    displayName: 'Production Manager',  noPassword: true },
+    { username: 'operator',            role: 'OPERATOR',              displayName: 'Operator',            noPassword: true },
+    { username: 'administrator',       role: 'ADMINISTRATOR',         displayName: 'Administrator' }
   ];
 
   let currentUser = null;
 
   const SESSION_KEY = 'processing.auth.username';
+
+  // API base — dev server injects window.FACILITY_API_BASE; production falls back to Render URL.
+  function apiBase() {
+    return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
+  }
 
   function safeSession(fn, fallback) {
     try { return fn(); } catch (e) { return fallback; }
@@ -35,17 +40,36 @@
     applyRole(user);
   }
 
+  // login() returns a Promise<{ok, user?, error?}>.
+  // No-password users resolve immediately; admin password is checked server-side.
   function login(username, password) {
+    const user = USERS.find(u => u.username === username.toLowerCase().trim());
+    if (!user) return Promise.resolve({ ok: false, error: 'Invalid username' });
 
-    const user = USERS.find(u => u.username === username);
-    if (!user || password !== 'test') {
-      return { ok: false, error: 'Invalid username or password' };
+    if (user.noPassword) {
+      currentUser = user;
+      safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+      applyRole(user);
+      return Promise.resolve({ ok: true, user });
     }
-    currentUser = user;
-    safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
-    applyRole(user);
 
-    return { ok: true, user };
+    // Admin: verify password server-side.
+    return fetch(apiBase() + '/api/auth/admin-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: password || '' })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data.ok) return { ok: false, error: data.error || 'Incorrect password' };
+        currentUser = user;
+        safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+        applyRole(user);
+        return { ok: true, user };
+      })
+      .catch(function () {
+        return { ok: false, error: 'Could not reach the server. Please try again.' };
+      });
   }
 
   function logout() {
@@ -70,7 +94,7 @@
   }
 
   function getAvailableUsers() {
-    return USERS.map(u => ({ username: u.username, displayName: u.displayName, role: u.role }));
+    return USERS.map(u => ({ username: u.username, displayName: u.displayName, role: u.role, noPassword: !!u.noPassword }));
   }
 
 

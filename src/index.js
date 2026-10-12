@@ -58,21 +58,45 @@ if (!API_KEY) {
   console.warn('*** API_KEY is not set — the API is running UNPROTECTED. Set API_KEY in the Render dashboard to require a key. ***');
 }
 
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+if (!ADMIN_PASSWORD) {
+  console.warn('*** ADMIN_PASSWORD is not set — admin login will always fail. Set ADMIN_PASSWORD in the Render dashboard. ***');
+}
+
 function tokenMatches(token) {
   if (!token || token.length !== API_KEY.length) return false; // length check first: timingSafeEqual throws on a mismatch
   return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(API_KEY));
+}
+
+function passwordMatches(input, stored) {
+  if (!input || !stored) return false;
+  const a = Buffer.from(input);
+  const b = Buffer.from(stored);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
 }
 
 app.use('/api', (req, res, next) => {
   if (!API_KEY) return next();                    // not configured yet
   if (req.method === 'OPTIONS') return next();    // CORS preflight carries no Authorization header
   if (req.path === '/health') return next();      // uptime probes must stay reachable
+  if (req.path === '/auth/admin-login') return next(); // public endpoint — password checked inside
   // the local photo archive agent carries its own key instead (src/dry-monitoring-images.js)
   if (require('./dry-monitoring-images').isArchiveRequest(req)) return next();
   const header = req.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (tokenMatches(token)) return next();
   return res.status(401).json({ ok: false, error: 'unauthorised' });
+});
+
+// Admin UI login — checks ADMIN_PASSWORD env var server-side so the password never ships in JS.
+app.post('/api/auth/admin-login', (req, res) => {
+  const { password } = req.body || {};
+  if (!ADMIN_PASSWORD) return res.status(503).json({ ok: false, error: 'Admin login not configured on the server' });
+  if (!passwordMatches(password, ADMIN_PASSWORD)) {
+    return res.status(401).json({ ok: false, error: 'Incorrect password' });
+  }
+  res.json({ ok: true });
 });
 
 // Status dashboard at GET / plus request/query timing for it. Mounted before the routes so the
