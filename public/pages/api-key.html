@@ -45,6 +45,13 @@
   <div class="ak-body">
     <div class="panel">
       <div class="state" id="state">Checking…</div>
+      <label for="passInput">Sign in with your passkey</label>
+      <input type="password" id="passInput" inputmode="numeric" placeholder="Your passkey" autocomplete="off">
+      <div class="row">
+        <button class="btn btn-primary" id="enrolBtn">Sign in &amp; allow this device to save</button>
+      </div>
+      <p class="muted" id="enrolMsg" style="margin:8px 0 18px;">Your passkey fetches the access key and stores it on this device. Do this once per device.</p>
+
       <label for="keyInput">Access key</label>
       <input type="password" id="keyInput" placeholder="Paste the key" autocomplete="off" spellcheck="false">
       <div class="row">
@@ -114,6 +121,31 @@
     $('keyInput').value = '';
     await test();
   });
+
+  // Passkey sign-in: the server checks the user's passkey and returns the access key, which is
+  // saved on this device and tested.
+  async function enrol() {
+    const pin = $('passInput').value.trim();
+    const msg = $('enrolMsg');
+    if (!pin) { msg.textContent = 'Enter your passkey first.'; return; }
+    msg.textContent = 'Checking…';
+    try {
+      const res = await window.FacilityApi.fetch('/api/auth/device-enroll', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin })
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) { msg.textContent = j.error || ('Failed (' + res.status + ')'); return; }
+      window.FacilityApi.setKey(j.key);
+      $('passInput').value = '';
+      $('keyInput').value = j.key;
+      msg.textContent = 'Signed in as ' + j.displayName + '. This device can now save records.';
+      await test();
+    } catch (e) {
+      msg.textContent = 'Could not reach the records database. Check the connection and retry.';
+    }
+  }
+  $('enrolBtn').addEventListener('click', enrol);
+  $('passInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') enrol(); });
 
   $('keyInput').value = window.FacilityApi.getKey();
   test();

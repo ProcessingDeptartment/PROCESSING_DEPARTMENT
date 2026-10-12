@@ -81,6 +81,7 @@ app.use('/api', (req, res, next) => {
   if (req.method === 'OPTIONS') return next();    // CORS preflight carries no Authorization header
   if (req.path === '/health') return next();      // uptime probes must stay reachable
   if (req.path === '/auth/admin-login') return next(); // public endpoint — password checked inside
+  if (req.path === '/auth/device-enroll') return next(); // public — passkey checked inside
   // the local photo archive agent carries its own key instead (src/dry-monitoring-images.js)
   if (require('./dry-monitoring-images').isArchiveRequest(req)) return next();
   const header = req.get('authorization') || '';
@@ -979,6 +980,7 @@ app.get('/api/seam-test-runs', async (req, res) => {
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
+require('./device-enroll')(app, prisma, API_KEY); // passkey -> access key for a new device
 require('./delete-submission')(app, prisma); // double-signoff submission deletion
 
 app.listen(PORT, () => {
