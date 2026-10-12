@@ -92,6 +92,15 @@
   });
 
   // Passkey sign-in: the server checks the passkey and the device stores the returned key (never displayed).
+  // Stable id for this browser, so the admin device list shows one row per device.
+  function deviceId() {
+    try {
+      let id = localStorage.getItem('facility_device_id');
+      if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(16).slice(2)); localStorage.setItem('facility_device_id', id); }
+      return id;
+    } catch (e) { return ''; }
+  }
+
   async function enrol() {
     const pin = $('passInput').value.trim();
     const msg = $('enrolMsg');
@@ -99,7 +108,7 @@
     msg.textContent = 'Checking…';
     try {
       const res = await window.FacilityApi.fetch('/api/auth/device-enroll', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin, deviceId: deviceId(), label: navigator.userAgent })
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) { msg.textContent = j.error || ('Failed (' + res.status + ')'); return; }

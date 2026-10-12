@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authorised Devices</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+<style>
+  body{ margin:0; font-family:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:14px; }
+  .top{ background:#2b3640; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .top h1{ margin:0; font-size:20px; }
+  .top a{ color:#fff; border:1px solid #55636e; border-radius:3px; padding:7px 14px; text-decoration:none; font-weight:600; }
+  .body{ max-width:1100px; margin:0 auto; padding:20px 18px 60px; }
+  .msg{ padding:10px 12px; border-radius:4px; font-weight:600; margin-bottom:12px; }
+  .msg.bad{ background:#fbe4e1; color:#a3352d; }
+  .msg.info{ background:#fbf0dc; color:#8a5a10; }
+  table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #d0d5db; }
+  th,td{ text-align:left; padding:9px 11px; border-bottom:1px solid #e6e9ec; vertical-align:top; }
+  th{ background:#eef0ee; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:#54606b; }
+  .ua{ color:#6b7680; font-size:12px; max-width:340px; word-break:break-word; }
+  button{ padding:5px 11px; border:1px solid #c9cdd1; background:#fff; border-radius:3px; cursor:pointer; }
+  .count{ color:#6b7680; margin:0 0 10px; }
+</style>
+</head>
+<body>
+<div class="top"><h1>Authorised Devices</h1><a href="../index.html">← Home</a></div>
+<div class="body">
+  <div id="msg"></div>
+  <p class="count" id="count"></p>
+  <table>
+    <thead><tr><th>Device</th><th>Signed in as</th><th>First enrolled</th><th>Last enrolled</th><th>Times</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="muted" style="color:#6b7680;font-size:13px;margin-top:14px;">
+    Lists devices that signed in on the Device Sign-in page. Devices that had the key entered by hand are not listed.
+    All devices share one access key, so removing a row only drops it from this list. To cut every device off, change
+    <code>API_KEY</code> in Render.
+  </p>
+</div>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/auth.js?v=4"></script>
+<script>(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = (d) => d ? new Date(d).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+
+  function deviceName(ua) {
+    ua = String(ua || '');
+    const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Unknown';
+    const br = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : '';
+    return os + (br ? ' · ' + br : '');
+  }
+
+  async function load() {
+    $('msg').innerHTML = '';
+    try {
+      const res = await window.FacilityApi.fetch('/api/admin/devices/list', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      if (res.status === 403) { $('msg').innerHTML = '<div class="msg info">Administrator only. Log in as an administrator on the home page, then reopen this page.</div>'; return; }
+      const j = await res.json();
+      if (!res.ok) { $('msg').innerHTML = '<div class="msg bad">' + esc(j.error || 'Could not load devices') + '</div>'; return; }
+      const list = j.devices || [];
+      $('count').textContent = list.length + ' device' + (list.length === 1 ? '' : 's');
+      $('rows').innerHTML = list.length ? list.map((d) =>
+        '<tr><td><strong>' + esc(deviceName(d.label)) + '</strong><div class="ua">' + esc(d.label) + '</div></td>'
+        + '<td>' + esc(d.displayName) + '<div class="ua">' + esc(d.username) + '</div></td>'
+        + '<td>' + esc(fmt(d.firstEnrolled)) + '</td><td>' + esc(fmt(d.lastEnrolled)) + '</td><td>' + esc(d.count) + '</td>'
+        + '<td><button data-id="' + esc(d.deviceId) + '">Remove</button></td></tr>').join('')
+        : '<tr><td colspan="6" style="color:#6b7680;text-align:center;">No devices have signed in yet.</td></tr>';
+    } catch (e) {
+      $('msg').innerHTML = '<div class="msg bad">Could not reach the records database. Retry in a moment.</div>';
+    }
+  }
+
+  $('rows').addEventListener('click', async (e) => {
+    const id = e.target && e.target.getAttribute && e.target.getAttribute('data-id');
+    if (!id || !window.confirm('Remove this device from the list? (It keeps working until the access key is changed.)')) return;
+    await window.FacilityApi.fetch('/api/admin/devices/remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId: id }) });
+    load();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
