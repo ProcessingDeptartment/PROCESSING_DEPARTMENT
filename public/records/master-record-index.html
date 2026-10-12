@@ -64,6 +64,10 @@
             top:0; z-index:2; border-bottom:2px solid var(--palette-border); }
   table.mi tbody tr:hover{ background:var(--palette-head-bg); }
   table.mi tbody tr.hidden{ display:none; }
+  table.mi tbody tr.sec-row td{ background:var(--palette-head-bg); font-weight:700; font-size:11px;
+            text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading);
+            border-bottom:2px solid var(--palette-border); }
+  table.mi tbody tr.sec-row:hover td{ background:var(--palette-head-bg); }
 
   td.c-code{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--palette-heading);
              white-space:nowrap; }
@@ -188,7 +192,8 @@
 
 <div class="container">
   <div class="notice">
-    This is the controlled document-control register (REC 01). The <b>Current revision</b>
+    This is the controlled document-control register (REC 01), covering records, policies and
+    procedures, HACCP documents, specifications, SOPs and work instructions. The <b>Current revision</b>
     column is live: when a record's revision is changed inside the record itself, it updates
     here automatically. To fill in a record, use the <a href="record-list.html">Record List</a>.
   </div>
@@ -197,6 +202,10 @@
     <div class="grow">
       <label for="searchInput">Search</label>
       <input type="text" id="searchInput" placeholder="Document number, name, or reason for change..." autocomplete="off">
+    </div>
+    <div>
+      <label for="sectionFilter">Section</label>
+      <select id="sectionFilter"><option value="all">All documents</option></select>
     </div>
     <div>
       <label for="statusFilter">Status</label>
@@ -347,7 +356,7 @@
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/doc-header.js?v=5"></script>
-<script src="../lib/master-index-data.js?v=7"></script>
+<script src="../lib/master-index-data.js?v=8"></script>
 <script src="../lib/sop-index-data.js?v=1"></script>
 <script>(function () {
   const DATA = window.MasterIndexData;
@@ -374,7 +383,26 @@
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-  function rowId(r) { return r.addedId || r.recordKey || ('doc:' + r.docNo); }
+  function rowId(r) { return r.addedId || r.recordKey || r.rowKey || ('doc:' + r.docNo); }
+
+  const RECORDS_SECTION = 'Records';
+  function sectionOf(r) { return r.section || RECORDS_SECTION; }
+
+  // SOP rows link to their online SOP page when the SOP number matches exactly one SOP.
+  const sopByNo = (function () {
+    const map = {};
+    ((window.SopIndexData && window.SopIndexData.rows) || []).forEach(s => {
+      if (!s.href || !s.sopNo || s.recordKey === 'sop-new-create-new-sop') return;
+      const k = String(s.sopNo).replace(/\s+/g, ' ').trim().toUpperCase();
+      map[k] = map[k] ? null : s;
+    });
+    return map;
+  })();
+  function sopHrefFor(r) {
+    if (r.section !== 'Standard Operating Procedures' && r.section !== "Red Tide SOP's") return '';
+    const s = sopByNo[String(r.docNo || '').replace(/\s+/g, ' ').trim().toUpperCase()];
+    return s ? '../sops/' + s.href : '';
+  }
   function fmtDate(ms) {
     const d = new Date(ms);
     return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
@@ -536,13 +564,27 @@
   function render() {
     let html = '';
 
-    const sortedRows = ROWS.slice().sort((a, b) =>
-      displayDocNo(a).localeCompare(displayDocNo(b), undefined, { numeric: true, sensitivity: 'base' }));
+    const sections = [RECORDS_SECTION];
+    ROWS.forEach(r => { if (sections.indexOf(sectionOf(r)) < 0) sections.push(sectionOf(r)); });
+    const sortedRows = [];
+    sections.forEach(sec => {
+      const inSec = ROWS.filter(r => sectionOf(r) === sec);
+      // Records are kept in document-number order; the other sections follow the issued index order.
+      if (sec === RECORDS_SECTION) inSec.sort((a, b) =>
+        displayDocNo(a).localeCompare(displayDocNo(b), undefined, { numeric: true, sensitivity: 'base' }));
+      inSec.forEach((r, i) => { r._first = i === 0; });
+      sortedRows.push.apply(sortedRows, inSec);
+    });
     for (const r of sortedRows) {
       const id = rowId(r);
+      const isDoc = !!r.section;
+      const linkHref = r.href || sopHrefFor(r);
+      if (isDoc && r._first) {
+        html += `<tr class="sec-row"><td colspan="9">${esc(sectionOf(r))}</td></tr>`;
+      }
       const l = live[id] || {};
       const c = control[id] || {};
-      const online = !!r.href;
+      const online = !!linkHref;
 
       const rev = l.revision != null ? l.revision : r.revision;
 
@@ -553,11 +595,11 @@
       const issued = l.bumped ? l.dateOfIssue : r.dateOfIssue;
 
       const nameCell = online
-        ? `<a href="${esc(r.href)}">${esc(r.name)}</a>`
+        ? `<a href="${esc(linkHref)}">${esc(r.name)}</a>`
         : esc(r.name);
       let tag = '';
       if (r.notOnIndexList) tag = '<span class="tag tag-unlisted">not on index list</span>';
-      else if (!online) tag = '<span class="tag tag-paper">not digitised</span>';
+      else if (!online && !isDoc) tag = '<span class="tag tag-paper">not digitised</span>';
       if (l.bumped) tag += ' <span class="tag tag-bumped">revised online</span>';
       if (r.addedId) tag += ' <span class="tag tag-added">added online</span>';
 
@@ -571,12 +613,12 @@
       const obs = c.obsoleteRetrieved != null ? c.obsoleteRetrieved : r.obsoleteRetrieved;
       const dist = c.distributed != null ? c.distributed : r.distributed;
 
-      const file = online ? String(r.href).toLowerCase() : '';
-      const catCell = online
+      const file = r.href ? String(r.href).toLowerCase() : '';
+      const catCell = r.href
         ? categorySelect(file, currentCategory(file))
         : '<span class="cat-none">—</span>';
 
-      html += `<tr class="${online ? '' : 'not-digitised'}" data-id="${esc(id)}"`
+      html += `<tr class="${online || isDoc ? '' : 'not-digitised'}" data-section="${esc(sectionOf(r))}" data-id="${esc(id)}"`
         + ` data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}"`
         + ` data-added="${!!r.addedId}">`
         + `<td class="c-code">${esc(displayDocNo(r))}</td>`
@@ -592,30 +634,44 @@
     }
     tableBody.innerHTML = html;
     $('totalCount').textContent = ROWS.length;
+    fillSectionFilter(sections);
     filter();
+  }
+
+  function fillSectionFilter(sections) {
+    const sel = $('sectionFilter');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="all">All documents</option>'
+      + sections.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    sel.value = sections.indexOf(cur) >= 0 ? cur : 'all';
   }
 
   function filter() {
     const q = searchInput.value.toLowerCase().trim();
     const status = statusFilter.value;
+    const secSel = $('sectionFilter').value;
     let shown = 0;
+    let lastHead = null, headShown = false;
+    const flushHead = () => { if (lastHead) lastHead.classList.toggle('hidden', !headShown); };
     tableBody.querySelectorAll('tr').forEach(row => {
+      if (row.classList.contains('sec-row')) { flushHead(); lastHead = row; headShown = false; return; }
       const online = row.dataset.online === 'true';
       const bumped = row.dataset.bumped === 'true';
       const unlisted = row.dataset.unlisted === 'true';
       const added = row.dataset.added === 'true';
-      let ok = true;
-      if (status === 'online') ok = online;
-      else if (status === 'paper') ok = !online;
-      else if (status === 'bumped') ok = bumped;
-      else if (status === 'unlisted') ok = unlisted;
-      else if (status === 'added') ok = added;
+      let ok = secSel === 'all' || row.dataset.section === secSel;
+      if (status === 'online') ok = ok && online;
+      else if (status === 'paper') ok = ok && !online;
+      else if (status === 'bumped') ok = ok && bumped;
+      else if (status === 'unlisted') ok = ok && unlisted;
+      else if (status === 'added') ok = ok && added;
       if (ok && q) {
         ok = row.textContent.toLowerCase().includes(q);
       }
       row.classList.toggle('hidden', !ok);
-      if (ok) shown++;
+      if (ok) { shown++; headShown = true; }
     });
+    flushHead();
     $('resultCount').textContent = shown;
     noResults.style.display = shown === 0 ? 'block' : 'none';
   }
@@ -641,6 +697,7 @@
 
   searchInput.addEventListener('input', filter);
   statusFilter.addEventListener('change', filter);
+  $('sectionFilter').addEventListener('change', filter);
   $('printBtn').addEventListener('click', () => window.print());
 
   $('csvBtn').addEventListener('click', () => {
@@ -648,7 +705,7 @@
                   'Obsolete revision retrieved? Y/N', 'New revision distributed? Y/N', 'New date of issue'];
     const q = row => '"' + String(row == null ? '' : row).replace(/"/g, '""') + '"';
     const lines = [head.map(q).join(',')];
-    tableBody.querySelectorAll('tr:not(.hidden)').forEach(row => {
+    tableBody.querySelectorAll('tr:not(.hidden):not(.sec-row)').forEach(row => {
       const cells = [...row.cells].map((td, i) => {
         const sel = td.querySelector('select');
         if (sel) {
