@@ -100,6 +100,7 @@
 <div class="session-bar">
   <a class="nc-link" href="pages/nc-log.html">&#9888; NC Log<span class="nc-badge" id="ncBadge" hidden></span></a>
   <span id="sessionUser"></span>
+  <a id="deviceLink" href="pages/device-signin.html" style="display:none;color:#1d4ed8;font-weight:600;text-decoration:none;">Set up this device</a>
   <button id="loginBtnTop" type="button" style="display:none;">Log in</button>
   <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
 </div>
@@ -179,6 +180,7 @@
     var user = window.Auth.getCurrentUser();
     document.getElementById('sessionUser').textContent = user ? (user.displayName + ' (' + user.role + ')') : '';
     document.getElementById('loginBtnTop').style.display = user ? 'none' : '';
+    document.getElementById('deviceLink').style.display = user ? 'none' : '';
     document.getElementById('logoutBtn').style.display = user ? '' : 'none';
     document.body.classList.toggle('authenticated', !!user);
     document.body.classList.toggle('is-admin', !!user && /ADMIN/i.test(user.role || ''));

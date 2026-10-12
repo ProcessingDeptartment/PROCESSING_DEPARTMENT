@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Sign-in</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css">
+<style>
+  :root{
+    --ink:var(--palette-ink); --steel-dk:var(--palette-dark); --paper:var(--palette-paper);
+    --line:#c9cdd1; --line-soft:var(--palette-border); --accent:var(--palette-primary);
+    --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  #ak-root{ font-family:var(--sans); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.45; min-height:100vh; }
+  #ak-root *{ box-sizing:border-box; }
+  h1{ margin:0; font-weight:700; }
+  .ak-top{ background:var(--steel-dk); color:var(--palette-dark-text); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .btn{ padding:8px 15px; font-size:14px; font-family:var(--sans); cursor:pointer; border:none; border-radius:3px; font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--palette-dark-text); border:1px solid #55636e !important; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-primary{ background:var(--accent); color:var(--palette-primary-text); }
+  .btn-flat{ background:var(--line-soft); color:var(--ink); }
+  .ak-body{ padding:22px 18px 60px; max-width:640px; margin:0 auto; }
+  .panel{ background:#fff; border:1px solid var(--line-soft); border-radius:6px; padding:18px; margin-bottom:14px; }
+  label{ display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#54606b; margin-bottom:5px; }
+  input[type=password],input[type=text]{ width:100%; font-family:var(--mono); font-size:15px; padding:9px 11px; border:1px solid var(--line); border-radius:4px; }
+  .row{ display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .muted{ color:#6b7680; font-size:13px; }
+  .state{ padding:9px 12px; border-radius:4px; font-size:13px; font-weight:600; margin-bottom:14px; }
+  .state.ok{ background:var(--palette-ok-bg); color:var(--palette-ok); }
+  .state.bad{ background:var(--palette-fail-bg); color:var(--palette-fail); }
+  .note{ background:#fbf0dc; color:#8a5a10; border-radius:4px; padding:10px 12px; font-size:12.5px; }
+</style>
+</head>
+<body>
+<div id="ak-root">
+  <div class="ak-top">
+    <h1>Device Sign-in</h1>
+    <a class="btn btn-ghost" href="../index.html">← Home</a>
+  </div>
+  <div class="ak-body">
+    <div class="panel">
+      <div class="state" id="state">Checking…</div>
+      <label for="passInput">Sign in with your passkey</label>
+      <input type="password" id="passInput" inputmode="numeric" placeholder="Your passkey" autocomplete="off">
+      <div class="row">
+        <button class="btn btn-primary" id="enrolBtn">Sign in &amp; allow this device to save</button>
+      </div>
+      <p class="muted" id="enrolMsg" style="margin:8px 0 18px;">Sign in with your passkey to allow this device to save records. Do this once per device.</p>
+
+      <div class="row">
+        <button class="btn btn-flat" id="clearBtn">Remove access from this device</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script>(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function setState(msg, cls) {
+    const el = $('state');
+    el.textContent = msg;
+    el.className = 'state' + (cls ? ' ' + cls : '');
+  }
+
+
+  async function test() {
+    try {
+      const res = await window.FacilityApi.fetch('/api/storage/prefix/' + encodeURIComponent('__keycheck__'));
+      if (res.status === 401) { setState('Not authorised — this device is not signed in. Nothing will save.', 'bad'); return false; }
+      if (!res.ok) { setState('Database reachable but returned ' + res.status + '.', 'bad'); return false; }
+      setState('Authorised — this device can read and write records.', 'ok');
+      return true;
+    } catch (e) {
+      setState('Could not reach the records database. Check the connection and retry.', 'bad');
+      return false;
+    }
+  }
+
+  $('clearBtn').addEventListener('click', async () => {
+    if (!window.confirm('Remove access from this device? Records will stop saving until you sign in again.')) return;
+    window.FacilityApi.clearKey();
+    await test();
+  });
+
+  // Passkey sign-in: the server checks the passkey and the device stores the returned key (never displayed).
+  async function enrol() {
+    const pin = $('passInput').value.trim();
+    const msg = $('enrolMsg');
+    if (!pin) { msg.textContent = 'Enter your passkey first.'; return; }
+    msg.textContent = 'Checking…';
+    try {
+      const res = await window.FacilityApi.fetch('/api/auth/device-enroll', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin })
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) { msg.textContent = j.error || ('Failed (' + res.status + ')'); return; }
+      window.FacilityApi.setKey(j.key);
+      $('passInput').value = '';
+      msg.textContent = 'Signed in as ' + j.displayName + '. This device can now save records.';
+      await test();
+    } catch (e) {
+      msg.textContent = 'Could not reach the records database. Check the connection and retry.';
+    }
+  }
+  $('enrolBtn').addEventListener('click', enrol);
+  $('passInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') enrol(); });
+
+  test();
+})();
+</script>
+</body>
+</html>
