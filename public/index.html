@@ -51,6 +51,8 @@
   tr.auth-only,tr.admin-only{ display:none; }
   body.authenticated.is-admin tr.admin-only{ display:table-row; }
   body.authenticated tr.auth-only{ display:table-row; }
+  .block.admin-only{ display:none; }
+  body.authenticated.is-admin .block.admin-only{ display:flex; }
   .section-title{ font-size:18px; font-weight:600; color:#1b2330; margin:0 0 12px; }
   .more-title{ margin-top:28px; }
   .block-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
@@ -125,7 +127,7 @@
       <span class="block-title">Verifications</span>
       <span class="block-desc">Review and sign off submitted entries waiting for your verification</span>
     </a>
-    <a class="block production auth-only" href="pages/production-dashboard.html" title="Live production floor snapshot">
+    <a class="block production admin-only" href="pages/production-dashboard.html" title="Live production floor snapshot">
       <span class="block-title">Production Dashboard</span>
       <span class="block-desc">Live seam data, line status and quality overview for the production floor</span>
     </a>
@@ -137,7 +139,7 @@
         <a class="block-btn" href="pages/dashboard.html">Dashboard</a>
       </div>
     </div>
-    <a class="block index auth-only" href="pages/submissions-log.html" title="Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time">
+    <a class="block index admin-only" href="pages/submissions-log.html" title="Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time">
       <span class="block-title">Logs</span>
       <span class="block-desc">Every submission and verification across all records on one filterable line-by-line list, with CSV export &mdash; instead of opening records one at a time</span>
     </a>

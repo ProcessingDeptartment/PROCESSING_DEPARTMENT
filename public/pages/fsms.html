@@ -30,6 +30,8 @@
   @media (max-width:640px){
     td.document{ width:auto; white-space:normal; }
   }
+  tr.admin-only{ display:none; }
+  body.is-admin tr.admin-only{ display:table-row; }
 </style>
 <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -67,7 +69,7 @@
         <td class="document"><a href="../prps/prp-list.html">PRP List</a></td>
         <td class="description">Pre-Requisite Programmes &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr onclick="location.href='specifications.html'">
+      <tr class="admin-only" onclick="location.href='specifications.html'">
         <td class="document"><a href="specifications.html">Specifications</a></td>
         <td class="description">Limits and tolerances the records check against &mdash; QA Manager / Administrator can update them (versioned)</td>
       </tr>
@@ -79,7 +81,7 @@
         <td class="document"><a href="fsms-calendar.html">FSMS Calendar</a></td>
         <td class="description">Annual QAM schedule &amp; compliance tracker &mdash; audits, testing, calibration, medicals, recalls, training; set up a new year by cloning the last</td>
       </tr>
-      <tr onclick="location.href='verifier-assignments.html'">
+      <tr class="admin-only" onclick="location.href='verifier-assignments.html'">
         <td class="document"><a href="verifier-assignments.html">Verifier Assignments</a></td>
         <td class="description">Set which role signs off each record &mdash; drives the Awaiting Verification queue and the record verification panels</td>
       </tr>
@@ -93,6 +95,20 @@
   <a class="back-link" href="../index.html">&larr; Back to home</a>
 
 </div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=2"></script>
+<script>
+  (function () {
+    function applyAdmin() {
+      var user = window.Auth && window.Auth.getCurrentUser();
+      document.body.classList.toggle('is-admin', !!(user && /ADMIN/i.test(user.role || '')));
+    }
+    applyAdmin();
+    document.addEventListener('authSuccess', applyAdmin);
+  })();
+</script>
 
 </body>
 </html>

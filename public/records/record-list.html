@@ -93,8 +93,11 @@
 <script src="../lib/master-index-data.js?v=4"></script>
 <script>(function () {
 
+  const isAdmin = !!(window.Auth && /ADMIN/i.test(window.Auth.getCurrentRole() || ''));
+
   const RECORDS = window.MasterIndexData.rows
     .filter(r => r.href)
+    .filter(r => isAdmin || /7\.4/i.test(r.docNo || r.name || ''))
     .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
