@@ -120,9 +120,118 @@
     return Array.prototype.map.call(document.querySelectorAll('.rt-content [data-pdf], .rt-sheet [data-pdf]'), function (b) { return b.getAttribute('data-pdf'); });
   }
   var idsBeforeSubmit = [];
+  /* ---------------- Admin submit guard ----------------
+     When the current user is ADMINISTRATOR, show a modal before any submit so
+     they can choose "Save to system" (real submit) or "Test run – don't save"
+     (simulate without touching the database).                                  */
+  function isAdmin() {
+    return typeof window.Auth === 'object' && typeof window.Auth.getCurrentRole === 'function'
+      && window.Auth.getCurrentRole() === 'ADMINISTRATOR';
+  }
+  function showAdminSubmitModal(onSave, onTestRun) {
+    // Remove any stale modal
+    var old = document.getElementById('rt-admin-modal-overlay');
+    if (old) old.parentNode.removeChild(old);
+
+    var overlay = document.createElement('div');
+    overlay.id = 'rt-admin-modal-overlay';
+    overlay.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:99999',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'background:rgba(0,0,0,0.55)', 'backdrop-filter:blur(2px)'
+    ].join(';');
+
+    var box = document.createElement('div');
+    box.style.cssText = [
+      'background:#1e1e2e', 'border:1.5px solid #444', 'border-radius:12px',
+      'padding:28px 32px', 'max-width:380px', 'width:90%', 'text-align:center',
+      'box-shadow:0 8px 40px rgba(0,0,0,0.6)', 'font-family:inherit'
+    ].join(';');
+
+    var icon = document.createElement('div');
+    icon.textContent = '⚠️';
+    icon.style.cssText = 'font-size:2.2rem;margin-bottom:12px;';
+
+    var title = document.createElement('div');
+    title.textContent = 'Administrator Submission';
+    title.style.cssText = 'font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:8px;';
+
+    var msg = document.createElement('div');
+    msg.textContent = 'You are logged in as Administrator. How should this submission be handled?';
+    msg.style.cssText = 'font-size:0.9rem;color:#bbb;margin-bottom:24px;line-height:1.5;';
+
+    function makeBtn(label, bg, fg, cb) {
+      var b = document.createElement('button');
+      b.textContent = label;
+      b.type = 'button';
+      b.style.cssText = [
+        'display:block', 'width:100%', 'padding:13px 16px', 'margin-bottom:10px',
+        'border:none', 'border-radius:8px', 'cursor:pointer',
+        'font-size:0.95rem', 'font-weight:600', 'letter-spacing:0.02em',
+        'background:' + bg, 'color:' + fg, 'transition:opacity .15s'
+      ].join(';');
+      b.addEventListener('mouseover', function () { b.style.opacity = '0.85'; });
+      b.addEventListener('mouseout',  function () { b.style.opacity = '1'; });
+      b.addEventListener('click', function () {
+        overlay.parentNode && overlay.parentNode.removeChild(overlay);
+        cb();
+      });
+      return b;
+    }
+
+    var btnSaveReal = makeBtn('💾  Save to system', '#2563eb', '#fff', onSave);
+    var btnTest     = makeBtn('🧪  Test run – don\'t save', '#374151', '#f9d71c', onTestRun);
+    var btnCancel   = makeBtn('Cancel', '#111', '#888', function () { endSaving(); });
+    btnCancel.style.marginBottom = '0';
+    btnCancel.style.border = '1px solid #444';
+
+    [icon, title, msg, btnSaveReal, btnTest, btnCancel].forEach(function (el) { box.appendChild(el); });
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // Close on overlay click outside the box
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) { overlay.parentNode && overlay.parentNode.removeChild(overlay); endSaving(); }
+    });
+  }
+
+  function doSubmitReal() {
+    var real = findEngineBtn('submit');
+    if (real && !real.disabled) { clearNote(); beginSaving(); real.click(); }
+  }
+  function doTestRun() {
+    endSaving();
+    // Show a prominent toast-style notice that nothing was saved
+    var notice = document.createElement('div');
+    notice.textContent = '🧪 Test run complete — no data was saved to the system';
+    notice.style.cssText = [
+      'position:fixed', 'top:16px', 'left:50%', 'transform:translateX(-50%)',
+      'z-index:99998', 'background:#1c3a1c', 'color:#86efac',
+      'border:1px solid #4ade80', 'border-radius:8px',
+      'padding:12px 24px', 'font-size:0.92rem', 'font-weight:600',
+      'box-shadow:0 4px 20px rgba(0,0,0,0.4)', 'text-align:center', 'max-width:420px'
+    ].join(';');
+    document.body.appendChild(notice);
+    setTimeout(function () { if (notice.parentNode) notice.parentNode.removeChild(notice); }, 5000);
+  }
+
   function submitAndPrint() {
     var real = findEngineBtn('submit');
     if (!real || real.disabled || saving) return;
+    if (isAdmin()) {
+      beginSaving();
+      showAdminSubmitModal(
+        function () {   // Save to system
+          idsBeforeSubmit = pdfIds();
+          printAfterSubmit = true;
+          clearTimeout(printTimer);
+          printTimer = setTimeout(function () { printAfterSubmit = false; }, 20000);
+          doSubmitReal();
+        },
+        function () { doTestRun(); }  // Test run
+      );
+      return;
+    }
     idsBeforeSubmit = pdfIds();
     printAfterSubmit = true;
     clearTimeout(printTimer);
@@ -155,6 +264,14 @@
       var real = findEngineBtn(kind);
       if (!real || real.disabled) return;
       clearNote();
+      if (kind === 'submit' && isAdmin()) {
+        beginSaving();
+        showAdminSubmitModal(
+          function () { doSubmitReal(); },
+          function () { doTestRun(); }
+        );
+        return;
+      }
       if (kind !== 'clear') beginSaving();
       real.click();
     };
