@@ -99,10 +99,10 @@
     .filter(r => r.href)
     .filter(r => {
       if (isAdmin) return true;
-      const id = (r.docNo || r.name || '').trim();
-      const ADMIN_ONLY = ['7.7.4', '7.7.4.1.a', '7.7.4.1.b', '7.7.7.1.c'];
-      if (ADMIN_ONLY.some(h => id.toLowerCase() === h.toLowerCase())) return false;
-      return /7\.4/i.test(id);
+      const id = (r.docNo || r.name || '').trim().toLowerCase();
+      // Non-admins see exactly these three records only
+      const VISIBLE = ['rec 7.4.0', 'rec 7.4.1', 'rec 7.4.2'];
+      return VISIBLE.includes(id);
     })
     .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
 
