@@ -342,12 +342,12 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=2"></script>
-<script src="../lib/login-ui.js?v=3"></script>
+<script src="../lib/auth.js?v=4"></script>
+<script src="../lib/login-ui.js?v=5"></script>
 <script src="../lib/permission-rules.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/doc-header.js?v=5"></script>
-<script src="../lib/master-index-data.js?v=6"></script>
+<script src="../lib/master-index-data.js?v=7"></script>
 <script src="../lib/sop-index-data.js?v=1"></script>
 <script>(function () {
   const DATA = window.MasterIndexData;
@@ -947,12 +947,20 @@
   });
 
   (async function init() {
-    canEdit = !window.PermissionRules || window.PermissionRules.can('manageMasterIndex');
-    $('addRecordBtn').disabled = !canEdit;
-    $('addRecordBtn').title = canEdit ? '' : 'Document control roles may add records to the index.';
+    const isAdmin = !!(window.Auth && /ADMIN/i.test(window.Auth.getCurrentRole() || ''));
 
-    const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
-    document.body.classList.toggle('no-manage-templates', !canManageTemplates);
+    canEdit = isAdmin;
+
+    // Hide admin-only buttons entirely from non-admins
+    if (!isAdmin) {
+      $('addRecordBtn').style.display = 'none';
+      $('headersBtn').style.display = 'none';
+    }
+    $('addRecordBtn').disabled = !canEdit;
+    $('addRecordBtn').title = canEdit ? '' : '';
+
+    // Edit template column (covers SOPs, policies, procedures): admin only
+    document.body.classList.toggle('no-manage-templates', !isAdmin);
 
     $('hdrCode').textContent = DATA.header.docNumber || 'REC 01';
     $('hdrRev').textContent = 'Rev ' + (DATA.header.revision || '?')
@@ -977,7 +985,7 @@
     render();
 
     if (!canEdit) {
-      $('saveState').textContent = 'Read-only — document control roles may edit the Y/N columns';
+      $('saveState').textContent = 'Read-only — administrator access required to edit';
       $('saveState').style.color = 'var(--palette-label)';
     }
   })();

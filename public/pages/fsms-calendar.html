@@ -117,7 +117,24 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/auth.js?v=4"></script>
+<script src="../lib/login-ui.js?v=5"></script>
+<script>
+(function () {
+  // Admin-only page guard
+  function checkAdmin() {
+    var role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;
+    if (!/ADMIN/i.test(role || '')) {
+      document.body.innerHTML = '<div style="font-family:\'Segoe UI\',system-ui,sans-serif;padding:60px 20px;text-align:center;color:#1b2330;">'
+        + '<h2 style="margin:0 0 8px;">Access restricted</h2>'
+        + '<p style="color:#5c6771;">The FSMS Calendar is only accessible to administrators.</p>'
+        + '<a href="fsms.html" style="color:#1d4ed8;">Back to FSMS</a></div>';
+    }
+  }
+  checkAdmin();
+  document.addEventListener('authSuccess', function () { location.reload(); });
+})();
+</script>
 <script>
 (function () {
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

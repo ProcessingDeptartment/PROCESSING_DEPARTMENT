@@ -211,7 +211,7 @@ window.MasterIndexData = {
       {
           "docNo": "REC 7.1.0",
           "name": "Daily Weight Sampling",
-          "details": "Not in use | xlsx: New document",
+          "details": "New document",
           "revision": 1,
           "obsoleteRetrieved": "N/A",
           "distributed": "Y",
@@ -615,7 +615,7 @@ window.MasterIndexData = {
       {
           "docNo": "REC 7.4.4",
           "name": "GRADING AND BOXING TRACEABILITY",
-          "details": "Withdrawn as entry form; superseded by system-generated traceability report | xlsx: New document",
+          "details": "New document",
           "reportOnly": true,
           "revision": 1,
           "obsoleteRetrieved": "N/A",
@@ -1242,8 +1242,8 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 7.9.3",
-          "name": "Room Temperature & Humidity Log",
-          "details": "Document review - format | xlsx title: Dry Room Temperature & Humidity Log",
+          "name": "Dry Room Temperature & Humidity Log",
+          "details": "Document review - format",
           "revision": 5,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
@@ -1253,8 +1253,8 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 7.9.3.1",
-          "name": "Room Temperature & Humidity Log",
-          "details": "Document review | xlsx title: Dry Room Temperature & Humidity Log",
+          "name": "Dry Room Temperature & Humidity Log",
+          "details": "Document review",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
@@ -1264,8 +1264,8 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 7.9.3.2",
-          "name": "Grading Room Temperature & Humidity Log (merged into REC 7.9.3.1)",
-          "details": "Retired: merged into REC 7.9.3.1 | xlsx: New document; title: Grading Room Temperature & Humidity Log",
+          "name": "Grading Room Temperature & Humidity Log",
+          "details": "New document",
           "revision": 1,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
