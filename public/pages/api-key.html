@@ -6,7 +6,7 @@
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Facility Access Key</title>
+<title>Device Sign-in</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
@@ -39,7 +39,7 @@
 <body>
 <div id="ak-root">
   <div class="ak-top">
-    <h1>Facility Access Key</h1>
+    <h1>Device Sign-in</h1>
     <a class="btn btn-ghost" href="../index.html">← Home</a>
   </div>
   <div class="ak-body">
@@ -50,31 +50,13 @@
       <div class="row">
         <button class="btn btn-primary" id="enrolBtn">Sign in &amp; allow this device to save</button>
       </div>
-      <p class="muted" id="enrolMsg" style="margin:8px 0 18px;">Your passkey fetches the access key and stores it on this device. Do this once per device.</p>
+      <p class="muted" id="enrolMsg" style="margin:8px 0 18px;">Sign in with your passkey to allow this device to save records. Do this once per device.</p>
 
-      <label for="keyInput">Access key</label>
-      <input type="password" id="keyInput" placeholder="Paste the key" autocomplete="off" spellcheck="false">
       <div class="row">
-        <button class="btn btn-primary" id="saveBtn">Save &amp; test</button>
-        <button class="btn btn-flat" id="showBtn">Show</button>
-        <button class="btn btn-flat" id="clearBtn">Clear from this device</button>
+        <button class="btn btn-flat" id="clearBtn">Remove access from this device</button>
       </div>
-      <p class="muted" style="margin-top:14px;">
-        The key is stored on this device only and is sent with every request to the records
-        database. Enter it once per device (per browser). Ask the system administrator for it.
-      </p>
     </div>
 
-    <div class="panel">
-      <div class="note">
-        <strong>What this protects, and what it doesn't.</strong>
-        This stops the records database being read or wiped by anyone who simply has its address.
-        It does <em>not</em> identify who you are: it's one shared key for the whole facility, and
-        anyone who can already use this site can read it out of their own browser. Per-person
-        identity and role enforcement need Entra ID login, which isn't built yet — so this is a
-        lock on the front door, not an audit trail of who did what.
-      </div>
-    </div>
   </div>
 </div>
 
@@ -93,7 +75,7 @@
   async function test() {
     try {
       const res = await window.FacilityApi.fetch('/api/storage/prefix/' + encodeURIComponent('__keycheck__'));
-      if (res.status === 401) { setState('Not authorised — this key is missing or wrong. Nothing will save.', 'bad'); return false; }
+      if (res.status === 401) { setState('Not authorised — this device is not signed in. Nothing will save.', 'bad'); return false; }
       if (!res.ok) { setState('Database reachable but returned ' + res.status + '.', 'bad'); return false; }
       setState('Authorised — this device can read and write records.', 'ok');
       return true;
@@ -103,27 +85,13 @@
     }
   }
 
-  $('saveBtn').addEventListener('click', async () => {
-    window.FacilityApi.setKey($('keyInput').value);
-    setState('Testing…');
-    await test();
-  });
-
-  $('showBtn').addEventListener('click', () => {
-    const i = $('keyInput');
-    i.type = i.type === 'password' ? 'text' : 'password';
-    $('showBtn').textContent = i.type === 'password' ? 'Show' : 'Hide';
-  });
-
   $('clearBtn').addEventListener('click', async () => {
-    if (!window.confirm('Remove the access key from this device? Records will stop saving until it is entered again.')) return;
+    if (!window.confirm('Remove access from this device? Records will stop saving until you sign in again.')) return;
     window.FacilityApi.clearKey();
-    $('keyInput').value = '';
     await test();
   });
 
-  // Passkey sign-in: the server checks the user's passkey and returns the access key, which is
-  // saved on this device and tested.
+  // Passkey sign-in: the server checks the passkey and the device stores the returned key (never displayed).
   async function enrol() {
     const pin = $('passInput').value.trim();
     const msg = $('enrolMsg');
@@ -137,7 +105,6 @@
       if (!res.ok || !j.ok) { msg.textContent = j.error || ('Failed (' + res.status + ')'); return; }
       window.FacilityApi.setKey(j.key);
       $('passInput').value = '';
-      $('keyInput').value = j.key;
       msg.textContent = 'Signed in as ' + j.displayName + '. This device can now save records.';
       await test();
     } catch (e) {
@@ -147,7 +114,6 @@
   $('enrolBtn').addEventListener('click', enrol);
   $('passInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') enrol(); });
 
-  $('keyInput').value = window.FacilityApi.getKey();
   test();
 })();
 </script>
