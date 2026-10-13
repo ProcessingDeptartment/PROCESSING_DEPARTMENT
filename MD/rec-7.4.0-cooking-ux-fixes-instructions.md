@@ -1,7 +1,7 @@
-# REC 7.4.0 Dry Cooking — UX Fixes: Time Picker, Field Alignment, Slide Order, Next Gate
+# REC 7.4.0 Dry Cooking — UX Fixes: Time Picker, Field Alignment, Slide Order, Next Gate, OOSW in Job Info
 
 Status: instructions only, no code written. For Claude Code.
-Date: 2026-10-13
+Date: 2026-10-13 (updated same day)
 Raised by: Michaela
 Scope: REC 7.4.0 only.
 
@@ -11,7 +11,7 @@ This file **amends** `rec-7.4.0-pot-slides-blanching-stage-instructions.md`. Whe
 
 | Earlier file | What this file changes |
 |---|---|
-| `rec-7.4.0-pot-slides-blanching-stage-instructions.md` | Time field replaced with segmented HH:MM input. Field rows on every slide aligned to a strict grid. Slide 1 always opens as Blanching (no choice). Next gate relaxed for Cooking slides only. |
+| `rec-7.4.0-pot-slides-blanching-stage-instructions.md` | Time field replaced with segmented HH:MM input. Field rows on every slide aligned to a strict grid. Slide 1 choice kept but Blanching removed from choices once one Blanching slide exists. Next gate relaxed for Cooking slides only. OOSW added to Job Info section. |
 
 ---
 
@@ -47,7 +47,7 @@ This file **amends** `rec-7.4.0-pot-slides-blanching-stage-instructions.md`. Whe
 
 All time fields in REC 7.4.0:
 - `blanchTime` on the Blanching slide.
-- Every cooking time field on the Cooking slide (Start time, End time, and any other `…Time` field).
+- Every cooking time field on the Cooking slide (Start time, End time, and any other `...Time` field).
 - **Total time** is calculated and read-only — it remains a plain read-only text display, not a segmented input.
 
 ---
@@ -61,7 +61,7 @@ All time fields in REC 7.4.0:
 ### 2.1 Grid definition
 
 ```
-Two-column grid on tablet portrait (≥ 600 px):
+Two-column grid on tablet portrait (>= 600 px):
   grid-template-columns: 1fr 1fr;
   column-gap: 16px;
   row-gap: 12px;
@@ -95,25 +95,43 @@ Before marking complete, the developer must view the Blanching slide and a Cooki
 
 ---
 
-## 3. Slide 1 always opens as Blanching — no choice on slide 1
+## 3. Stage choice on new slides — Blanching removed once one exists
 
-**Problem:** Dry cooking always starts with one blanching stage. Presenting a Blanching / Cooking choice on the first slide is unnecessary friction and risks operators accidentally starting a cooking pot before blanching.
+**Replaces section 3 of the previous version of this file ("Slide 1 always opens as Blanching").**
 
-### 3.1 New rule
+### 3.1 Rule
 
-- **Slide 1 is always a Blanching slide.** It opens directly with the Blanching fields — no stage-choice buttons are shown on slide 1.
-- The Blanching slide title reads "Blanching" (unchanged).
-- Slides 2, 3, 4 … still show the Blanching / Cooking choice when first opened (so a second blanching batch is still possible, matching the existing multi-batch model).
+- **Every new slide, including slide 1, starts with the Blanching / Cooking choice buttons.** The operator always chooses the stage explicitly.
+- **Once one Blanching slide already exists in the entry, the Blanching button is removed from the choice.** Only the Cooking button is shown for any subsequent new slide.
+- This enforces the real-world process: one blanching stage happens first, then all remaining slides are cooking pots. A second blanching batch is not possible within a single entry.
 
-### 3.2 Edge cases
+### 3.2 Visual — choice buttons
 
-- The operator cannot convert slide 1 to a Cooking slide via the Remove and re-add path. After removing slide 1, a new slide 1 is automatically created as Blanching.
-- If a saved draft's slide 1 is Cooking (created before this rule was applied), display it without change — do not migrate or reorder old data. The rule applies only to new entries created after this change is deployed.
-- Old entries (existing submissions) are unaffected.
+When both options are available (no Blanching slide yet):
+```
++---------------------+   +---------------------+
+|      Blanching      |   |      Cooking        |
++---------------------+   +---------------------+
+```
 
-### 3.3 Slide bar
+When Blanching already exists (one or more Blanching slides present):
+```
++-------------------------------------------------+
+|                    Cooking                      |
++-------------------------------------------------+
+  i  Blanching already recorded for this entry
+```
+The info note under the single button is muted text, not a warning. It is brief and factual.
 
-The "B" chip for slide 1 (Blanching) still appears in the slide bar as described in the earlier file. No other changes to the bar.
+### 3.3 Edge cases
+
+- Removing the only Blanching slide restores the two-button choice on any undecided new slide and on any slide whose stage was never chosen.
+- If a saved draft already has a stage chosen on a slide, the choice is fixed as before — removal and re-add is the way to change it (unchanged from the earlier file).
+- Old entries with multiple Blanching slides display as-is; the restriction applies only to new slides added after this change is deployed.
+
+### 3.4 Slide bar
+
+No change to the slide bar. "B" chips and pot-number chips behave exactly as described in the earlier file.
 
 ---
 
@@ -150,16 +168,66 @@ The old hint "Complete all fields to continue" only appeared beside the (disable
 
 ---
 
-## 5. Testing checklist additions
+## 5. OOSW in Job Info section
 
-These extend section 13 of `rec-7.4.0-pot-slides-blanching-stage-instructions.md`.
+**Problem:** The OOSW (Out-Of-Shell Weight) total from REC 7.1.5 is the hard ceiling on total cooking weight for the job. The rule is active throughout the entry but the value is not visible in the job header, so the operator has no immediate reference point.
 
-1. **Time field:** tap the HH box and type `09`; MM box receives focus automatically; type `30`; field shows `09:30`. Now button fills current time. Up arrow on MM box at 59 wraps to 0 and HH remains unchanged. Tab moves HH → MM → next field.
+### 5.1 New field in Job Info
+
+Add **OOSW (kg)** as a read-only display field in the Job Info section at the top of the form. It sits alongside the existing job fields (Job number, Processing for, Whole weight, Harvest farm, Intake date).
+
+- **Label:** `OOSW (kg)`
+- **Value:** the total OOSW kg from REC 7.1.5 for this job — the same value already used by the R1 weight rule.
+- **Read-only.** The operator cannot edit it. It is fetched at the same time as the other job info fields.
+- If no OOSW record exists for the job: show `Not recorded` in muted text (same behaviour as the "OOSW not found" case in the weight rules).
+- It updates if the form is refreshed but does not poll live — a page load or draft-open fetch is sufficient.
+
+### 5.2 Placement in the Job Info grid
+
+The Job Info section already uses a grid (or equivalent row layout). Place OOSW (kg) in a logical position near Whole weight (kg), since both are weights tied to the same job. Suggested order:
+
+```
+Job Number          Harvest Farm
+Processing For      Intake Date
+Whole Weight (kg)   OOSW (kg)       <- new field alongside Whole Weight
+```
+
+If the existing grid is 4-column (label | value | label | value), OOSW fits naturally as the right-hand pair on the Whole Weight row:
+
+```
+| Whole Weight (kg) | [value] | OOSW (kg) | [value — read-only] |
+```
+
+Do not restructure the rest of the Job Info layout to accommodate this — slot it into the nearest available cell.
+
+### 5.3 "Available to cook" relationship
+
+The live **"Available to cook (kg)"** figure shown under the Abalone weight field on each Cooking slide is `OOSW - total cooked kg`. Showing OOSW in the header gives the operator both the ceiling and the running remainder without having to scroll to a cooking slide. These two displays are complementary; neither replaces the other.
+
+### 5.4 Print
+
+OOSW (kg) **prints** in the Job Info grid on the PDF, in the same position as on screen (section 4 of `rec-7.4.0-print-layout-instructions.md`). The print grid already has room for it on the Whole Weight row. Value is static on print (same as all other Job Info values).
+
+### 5.5 Database / API
+
+No schema change. The value already exists on the server (it is fetched for the R1 rule). Expose it in the job-info response payload that is already sent to the form on load. Add a field `ooswKg` (number or null) to that response; null maps to "Not recorded" on screen.
+
+---
+
+## 6. Testing checklist additions
+
+These extend section 13 of `rec-7.4.0-pot-slides-blanching-stage-instructions.md` and the earlier version of this file.
+
+1. **Time field:** tap the HH box and type `09`; MM box receives focus automatically; type `30`; field shows `09:30`. Now button fills current time. Up arrow on MM box at 59 wraps to 0 and HH remains unchanged. Tab moves HH -> MM -> next field.
 2. **Time field tablet:** both boxes are at least 44 px tall and easy to tap individually. The colon separator is not focusable.
 3. **Grid alignment:** at 768 px wide, all labels in the left column share the same x start; all inputs in the same row have the same height and level top edges; the HH:MM pair height matches adjacent text inputs.
-4. **Slide 1 is Blanching:** open a new entry — slide 1 shows Blanching fields immediately, no choice buttons. Removing slide 1 and re-creating slide 1 also opens as Blanching. Slide 2 still shows the choice.
-5. **Old draft with Cooking as slide 1:** opens without change; no error.
-6. **Cooking Next gate:** on a Cooking slide with empty fields, the Next button is enabled. Press it — a new slide is added. Return to the incomplete Cooking slide; its chip in the slide bar shows a warning dot.
-7. **Blanching Next gate unchanged:** on the Blanching slide with empty fields, the Next button is disabled with the hint "Complete all fields to continue".
-8. **Submit blocked:** with any incomplete Cooking slide, Submit is blocked and the button shows a hint identifying the problem.
-9. **Submit allowed:** once all required fields on all slides are filled (including any ticked additions), Submit is enabled.
+4. **Stage choice — first slide:** slide 1 shows both Blanching and Cooking buttons. Choose Blanching.
+5. **Stage choice — second slide:** press Next (after completing Blanching). New slide shows only the Cooking button with the muted "Blanching already recorded" note. The Blanching button is absent.
+6. **Stage choice — remove Blanching:** remove the Blanching slide. Open a new slide — both buttons are back.
+7. **Cooking Next gate:** on a Cooking slide with empty fields, the Next button is enabled. Press it — a new slide is added. Return to the incomplete Cooking slide; its chip in the slide bar shows a warning dot.
+8. **Blanching Next gate unchanged:** on the Blanching slide with empty fields, the Next button is disabled with the hint "Complete all fields to continue".
+9. **Submit blocked:** with any incomplete Cooking slide, Submit is blocked and the button shows a hint identifying the problem.
+10. **Submit allowed:** once all required fields on all slides are filled (including any ticked additions), Submit is enabled.
+11. **OOSW in Job Info:** open an entry for a job that has an OOSW record — the OOSW (kg) value appears correctly in the Job Info section alongside Whole Weight. It is not editable.
+12. **OOSW missing:** open an entry for a job with no REC 7.1.5 record — Job Info shows `Not recorded` in muted text for OOSW (kg).
+13. **OOSW on print / PDF:** the OOSW (kg) value appears in the Job Info grid on the printed output.

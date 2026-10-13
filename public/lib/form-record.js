@@ -2251,18 +2251,8 @@
         const start = crateStart();
         rows.forEach((r, i) => { r[jn.column] = start ? String(start + i) : ''; });
       }
-      // slides: slide 1 of a new entry is always Blanching (no stage choice); later slides ask Blanching or Cooking.
-      // The salt batch code is pre-filled from the sticky store; the keys come back so the caller can mark them carried.
-      function blanchSeed(idx) {
-        const r = { process: 'Blanching' }, keys = [];
-        roster.columns.filter(c => c.carryOnAdd && !c.addition && rowColVisible(c, r)).forEach(c => {
-          const v = stickyGet(config.recordKey, c.carryGroup || c.key);
-          if (v) { r[c.key] = v; keys.push(idx + ':' + c.key); }
-        });
-        return { row: r, keys };
-      }
-      const seedKeys = [];
-      if (roster.slides && !rows.length) { const sd = blanchSeed(0); rows.push(sd.row); seedKeys.push(...sd.keys); }
+      // slides: every entry starts on a blank slide that asks Blanching or Cooking
+      if (roster.slides && !rows.length) rows.push({});
 
       // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
       // from the Abalone Receiving baskets for this job). One fetch per job, cached; a column
@@ -2316,6 +2306,31 @@
         if (!jw) return;
         const f = jwFigures();
         const known = f.oosw != null && !!jwState.job;
+        // Job info shows the job's OOSW total next to Whole weight (display only -- no record field; its value is
+        // copied into the saved values as jiOoswKg so the print sheet can show it)
+        if (jw.cookFromOosw) {
+          const wholeInp = el('fr_f_jiIntakeWeight');
+          const wholeBox = wholeInp && (wholeInp.closest('label') || wholeInp.parentElement);
+          if (wholeBox) {
+            let box = el('fr_ooswDisplay');
+            if (!box) {
+              box = wholeBox.cloneNode(true);
+              box.id = 'fr_ooswDisplay';
+              box.removeAttribute('data-col');
+              const tn = Array.from(box.childNodes).find(n => n.nodeType === 3 && n.textContent.trim());
+              if (tn) tn.textContent = 'OOSW (kg)';
+              const inp = box.querySelector('input');
+              inp.id = 'fr_ooswDisplayInput'; inp.removeAttribute('name'); inp.readOnly = true; inp.tabIndex = -1;
+              wholeBox.parentNode.insertBefore(box, wholeBox.nextSibling);
+            }
+            const inp = box.querySelector('input');
+            const has = f.oosw != null && !!jwState.job;
+            inp.value = !jwState.job ? '' : has ? jwKg(f.oosw) : 'Not recorded';
+            inp.style.color = jwState.job && !has ? '#8a8f98' : '';
+            inp.style.fontStyle = jwState.job && !has ? 'italic' : '';
+            box.dataset.kg = has ? jwKg(f.oosw) : '';
+          }
+        }
         const span = (txt, n) => `<span${n != null && n < -1e-9 ? ' style="color:#b30000;font-weight:bold;"' : ''}>${txt}${n != null ? ' ' + jwKg(n) + ' kg' : ''}</span>`;
         if (jw.manualField) {
           const mEl = el('fr_f_' + jw.manualField);
@@ -2683,7 +2698,7 @@
 
       // carryOnAdd columns (batch numbers): "+ Add pot" pre-fills them from the pot above. `carried`
       // holds "rowIndex:colKey" for values not typed on that row; editing one un-marks it.
-      const carried = new Set(seedKeys);
+      const carried = new Set();
       const carryCols2 = roster.columns.filter(c => c.carryOnAdd);
       function paintCarried() {
         carried.forEach(k => {
@@ -2737,20 +2752,12 @@
                   }
                   if (roster.slides) rows = rows.map((_, j) => readRow(j));
                   if (jn) rows = rows.map((_, k) => readRow(k));
-                  if (roster.slides && i === 0) {
-                    // slide 1 is always Blanching: removing it leaves a fresh Blanching slide in its place
-                    const sd = blanchSeed(0);
-                    rows[0] = sd.row;
-                    Array.from(carried).forEach(k => { if (k.split(':')[0] === '0') carried.delete(k); });
-                    sd.keys.forEach(k => carried.add(k));
-                  } else {
-                    rows.splice(i, 1);
-                    if (roster.slides && i < slideCur) slideCur--;
-                    const nc = new Set();
-                    carried.forEach(k => { const [ci, ck] = k.split(':'); const n = Number(ci); if (n < i) nc.add(k); else if (n > i) nc.add((n - 1) + ':' + ck); });
-                    carried.clear(); nc.forEach(k => carried.add(k));
-                    if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
-                  }
+                  rows.splice(i, 1);
+                  if (roster.slides && i < slideCur) slideCur--;
+                  const nc = new Set();
+                  carried.forEach(k => { const [ci, ck] = k.split(':'); const n = Number(ci); if (n < i) nc.add(k); else if (n > i) nc.add((n - 1) + ':' + ck); });
+                  carried.clear(); nc.forEach(k => carried.add(k));
+                  if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
 
                   const next = new Set();
                   collapsedRows.forEach(x => { if (x < i) next.add(x); else if (x > i) next.add(x - 1); });
@@ -2884,6 +2891,16 @@
         container.querySelectorAll('.fr-slide').forEach(card => {
           const i = Number(card.dataset.rosterRow), row = cur[i] || {};
           card.classList.toggle('fr-slide-hidden', i !== slideCur);
+          // one Blanching stage per entry: once another slide is Blanching, an undecided slide offers Cooking only
+          const choose = card.querySelector('.fr-stage-choose');
+          if (choose) {
+            const taken = cur.some((r, j) => j !== i && r.process === 'Blanching');
+            const bb = choose.querySelector('[data-stage="Blanching"]');
+            if (bb) bb.style.display = taken ? 'none' : '';
+            let note = choose.querySelector('.fr-stage-note');
+            if (taken && !note) { note = document.createElement('p'); note.className = 'fr-stage-note'; note.textContent = 'Blanching already recorded for this entry'; choose.appendChild(note); }
+            else if (!taken && note) note.remove();
+          }
           const block = card.querySelector('[data-additions]');
           if (block) block.style.display = row.process === 'Cooking' ? '' : 'none';
           adds.forEach(a => {
@@ -3280,10 +3297,7 @@
       // while this roster stays the single store). Same storage shape as typed rows -- nothing else changes.
       container._setRows = (newRows) => {
         rows = (newRows || []).map(r => Object.assign({}, r));
-        if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) {
-          if (roster.slides) { const sd = blanchSeed(0); rows.push(sd.row); sd.keys.forEach(k => carried.add(k)); }
-          else rows.push({});
-        }
+        if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
         draw();
       };
       container._addRow = (process) => {
@@ -3576,6 +3590,7 @@
       if (!await refreshProvisional(el('fr_modalSections'), config, finalize, toast)) return;
 
       const values = {};
+      { const oo = el('fr_ooswDisplay'); if (oo && oo.dataset.kg !== undefined) values.jiOoswKg = oo.dataset.kg; }
       let missingRequired = null, missingKey = null;
       let unverifiedRequired = null, unverifiedKey = null;
       let invalidJobNumber = null, invalidJobKey = null;
@@ -4125,7 +4140,8 @@
       const job = `<table class="dc-job"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
         ${jr('Job Number', e(v.jobNo), 'Harvest Farm', e(v.harvestFarm))}
         ${jr('Processing For', e(v.jiProcessingFor), 'Intake Date', fdate(v.intakeDate))}
-        ${jr('Whole Weight (kg)', e(v.jiIntakeWeight), 'Cooking Date', fdate(v.cookingDate))}
+        ${jr('Whole Weight (kg)', e(v.jiIntakeWeight), 'OOSW (kg)', v.jiOoswKg ? e(v.jiOoswKg) : v.jiOoswKg === undefined ? '' : '<span style="color:#888">Not recorded</span>')}
+        ${jr('Cooking Date', fdate(v.cookingDate), '', '')}
       </tbody></table>`;
 
       const rows = getRosterRows(sub, ri, roster.key).filter(r => r && ((r.process === 'Blanching' || r.process === 'Cooking')
