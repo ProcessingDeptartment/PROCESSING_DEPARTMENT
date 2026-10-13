@@ -622,7 +622,7 @@
       if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
       if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
 
-      if (field.type === 'time') return window.FRTimePicker ? window.FRTimePicker.html(id, v, field.readOnly) : `<input type="time" id="${id}" value="${esc(v)}">`;
+      if (field.type === 'time') return window.FRTimePicker ? window.FRTimePicker.html(id, v, field.readOnly, field.seg) : `<input type="time" id="${id}" value="${esc(v)}">`;
       if (field.type === 'datetime') return `<input type="datetime-local" id="${id}" value="${esc(v)}"${ro}>`;
 
       if (field.type === 'batchseq' || field.type === 'derived') {
@@ -1979,10 +1979,10 @@
       const slides = !!roster.slides;
       const cell = c => {
         const id = `${ns}_roster_${idx}_${c.key}`;
-        let input = fieldInputHtml(id, c, row[c.key], row);
+        let input = fieldInputHtml(id, slides && c.type === 'time' ? Object.assign({}, c, { seg: true }) : c, row[c.key], row);
         // slides: the unit is a fixed suffix inside the input (visible even when the label wraps); "Now" fills the time
         if (slides && c.unit) input = `<span class="fr-unit-wrap" data-unit="${esc(c.unit)}">${input}</span>`;
-        if (slides && c.nowButton) input = `<span class="fr-now-wrap">${input}<button type="button" class="fr-btn fr-now-btn no-print" data-now="${id}">Now</button></span>`;
+        if (slides && c.type === 'time' && !c.readOnly) input = `<span class="fr-now-wrap">${input}<button type="button" class="fr-btn fr-now-btn no-print" data-now="${id}">Now</button></span>`;
         return `<label class="fr-field" data-col="${esc(c.key)}">${esc(c.label)}${c.required || c.requiredWhen ? ' *' : ''}
           ${input}${roster.jobWeights && c.key === roster.jobWeights.column ? '<span class="fr-pot-avail no-print" data-avail></span>' : ''}
         </label>`;
@@ -2015,7 +2015,7 @@
               <span class="fr-pot-warn no-print" data-dup-warn></span>
               <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">Remove slide</button></div>
             ${hiddenIn}${stage}
-            ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
+            <div class="fr-slide-grid">${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}</div>
             ${addBlock}
           </div>`;
         }
@@ -2251,8 +2251,18 @@
         const start = crateStart();
         rows.forEach((r, i) => { r[jn.column] = start ? String(start + i) : ''; });
       }
-      // slides: every entry starts on a blank slide that asks Blanching or Cooking
-      if (roster.slides && !rows.length) rows.push({});
+      // slides: slide 1 of a new entry is always Blanching (no stage choice); later slides ask Blanching or Cooking.
+      // The salt batch code is pre-filled from the sticky store; the keys come back so the caller can mark them carried.
+      function blanchSeed(idx) {
+        const r = { process: 'Blanching' }, keys = [];
+        roster.columns.filter(c => c.carryOnAdd && !c.addition && rowColVisible(c, r)).forEach(c => {
+          const v = stickyGet(config.recordKey, c.carryGroup || c.key);
+          if (v) { r[c.key] = v; keys.push(idx + ':' + c.key); }
+        });
+        return { row: r, keys };
+      }
+      const seedKeys = [];
+      if (roster.slides && !rows.length) { const sd = blanchSeed(0); rows.push(sd.row); seedKeys.push(...sd.keys); }
 
       // Per-row cross-record group subtotals (e.g. OOSW's per-size-range "whole weight" pulled
       // from the Abalone Receiving baskets for this job). One fetch per job, cached; a column
@@ -2673,7 +2683,7 @@
 
       // carryOnAdd columns (batch numbers): "+ Add pot" pre-fills them from the pot above. `carried`
       // holds "rowIndex:colKey" for values not typed on that row; editing one un-marks it.
-      const carried = new Set();
+      const carried = new Set(seedKeys);
       const carryCols2 = roster.columns.filter(c => c.carryOnAdd);
       function paintCarried() {
         carried.forEach(k => {
@@ -2727,12 +2737,20 @@
                   }
                   if (roster.slides) rows = rows.map((_, j) => readRow(j));
                   if (jn) rows = rows.map((_, k) => readRow(k));
-                  rows.splice(i, 1);
-                  if (roster.slides && i < slideCur) slideCur--;
-                  const nc = new Set();
-                  carried.forEach(k => { const [ci, ck] = k.split(':'); const n = Number(ci); if (n < i) nc.add(k); else if (n > i) nc.add((n - 1) + ':' + ck); });
-                  carried.clear(); nc.forEach(k => carried.add(k));
-                  if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
+                  if (roster.slides && i === 0) {
+                    // slide 1 is always Blanching: removing it leaves a fresh Blanching slide in its place
+                    const sd = blanchSeed(0);
+                    rows[0] = sd.row;
+                    Array.from(carried).forEach(k => { if (k.split(':')[0] === '0') carried.delete(k); });
+                    sd.keys.forEach(k => carried.add(k));
+                  } else {
+                    rows.splice(i, 1);
+                    if (roster.slides && i < slideCur) slideCur--;
+                    const nc = new Set();
+                    carried.forEach(k => { const [ci, ck] = k.split(':'); const n = Number(ci); if (n < i) nc.add(k); else if (n > i) nc.add((n - 1) + ':' + ck); });
+                    carried.clear(); nc.forEach(k => carried.add(k));
+                    if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
+                  }
 
                   const next = new Set();
                   collapsedRows.forEach(x => { if (x < i) next.add(x); else if (x > i) next.add(x - 1); });
@@ -2895,9 +2913,12 @@
         if (nav) {
           const missing = slideMissing(roster, cur[slideCur] || {});
           const nextBtn = nav.querySelector('.fr-slide-next');
-          if (nextBtn && !formLocked) nextBtn.disabled = missing.length > 0;
+          // Blanching (and an unchosen slide) must be complete before Next; Cooking pots overlap, so Next is always open there
+          const gated = (cur[slideCur] || {}).process !== 'Cooking';
+          if (nextBtn && !formLocked) nextBtn.disabled = gated && missing.length > 0;
           const hint = nav.querySelector('.fr-slide-hint');
-          if (hint) hint.textContent = missing.length ? 'Complete all fields to continue' : '';
+          const anyOpen = cur.some(r => !slideIsBlank(roster, r) && slideMissing(roster, r).length);
+          if (hint) hint.textContent = gated ? (missing.length ? 'Complete all fields to continue' : '') : (anyOpen ? 'Complete all pots to submit' : '');
         }
       }
       container._goSlide = (i) => {
@@ -2908,7 +2929,7 @@
       };
       container._slideNext = () => {
         rows = rows.map((_, i) => readRow(i));
-        if (slideMissing(roster, rows[slideCur] || {}).length) return;
+        if ((rows[slideCur] || {}).process !== 'Cooking' && slideMissing(roster, rows[slideCur] || {}).length) return;
         if (slideCur < rows.length - 1) slideCur++;
         else { rows.push({}); slideCur = rows.length - 1; }
         draw();
@@ -3259,7 +3280,10 @@
       // while this roster stays the single store). Same storage shape as typed rows -- nothing else changes.
       container._setRows = (newRows) => {
         rows = (newRows || []).map(r => Object.assign({}, r));
-        if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) rows.push({});
+        if (!rows.length && !roster.quickEntry && (!roster.startEmpty || roster.slides)) {
+          if (roster.slides) { const sd = blanchSeed(0); rows.push(sd.row); sd.keys.forEach(k => carried.add(k)); }
+          else rows.push({});
+        }
         draw();
       };
       container._addRow = (process) => {
@@ -3636,7 +3660,7 @@
                 const miss = slideMissing(roster, rows[n]);
                 if (miss.length) {
                   if (rcs._goSlide) rcs._goSlide(n);
-                  toast(`Slide ${n + 1}${rows[n].process ? ' (' + (rows[n].process === 'Cooking' ? 'Pot ' + rows[n].potNo + ' - Cooking' : 'Blanching') + ')' : ''}: "${miss[0]}" is required.`);
+                  toast(`Complete all pots to submit. Slide ${n + 1}${rows[n].process ? ' (' + (rows[n].process === 'Cooking' ? 'Pot ' + rows[n].potNo + ' - Cooking' : 'Blanching') + ')' : ''}: "${miss[0]}" is required.`);
                   return;
                 }
               }
