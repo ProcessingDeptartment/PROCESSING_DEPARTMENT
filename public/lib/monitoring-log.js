@@ -1003,6 +1003,13 @@
     let editingId = null;
     // NC from records (nc-raise.js): NCs raised before the entry is saved, thresholds already dealt with, skip flag
     let pendingNc = [], ncHandled = new Set(), ncSkipped = [];
+    // Field specifications (spec-gate.js): live feedback + submit gate for fields that carry a `spec`
+    const specMap = window.SpecGate ? window.SpecGate.collectSpecs(config) : {};
+    let specAccepted = {};              // out-of-spec signature -> gate result, so a cancelled NC prompt does not re-ask for passkeys
+    let specInfo = { details: [], result: null };
+    // a field whose spec has autoNc replaces any ncThresholds entry for the same field (one NC prompt, not two)
+    const specNcKeys = new Set(Object.keys(specMap).filter(k => specMap[k].spec.autoNc));
+    const liveThresholds = () => (config.ncThresholds || []).filter(t => !specNcKeys.has(t.field));
     // the id a new entry will be saved under, allocated when the form opens so photos
     // (config.imageUploadFields, lib/entry-photos.js) can be uploaded before the first save
     let formEntryId = null;
@@ -1100,6 +1107,13 @@
       const spec = specGetter();
       return spec ? spec[key] : null;
     }
+    // One source for limits: a field's own admin-set spec (field_specs, shown as field.spec) wins; the older specKey ->
+    // spec-registry range is only the fallback for fields that have no spec yet.
+    function rangeOf(field) {
+      const s = field.spec;
+      if (s && (s.min != null || s.max != null)) return { min: s.min, max: s.max };
+      return field.specKey ? specFor(field.specKey) : null;
+    }
 
     function checkField(field, value) {
 
@@ -1108,10 +1122,10 @@
         if (!v) return null;
         return v === (field.good === 'No' ? 'No' : 'Yes') ? 'ok' : 'fail';
       }
-      if (!field.specKey) return null;
+      if (!field.specKey && !(field.spec && (field.spec.min != null || field.spec.max != null))) return null;
       const v = num(value);
       if (v === null) return null;
-      const range = specFor(field.specKey);
+      const range = rangeOf(field);
       if (!range || (range.min == null && range.max == null)) return null;
       if (range.min != null && v < range.min) return 'fail';
       if (range.max != null && v > range.max) return 'fail';
@@ -1813,7 +1827,7 @@
       if (keepUnlocked) keepUnlocked = false; else unlockedStages = new Set();
       editingId = id || null;
       formEntryId = id || uid('entry');
-      pendingNc = []; ncHandled = new Set(); ncSkipped = [];
+      pendingNc = []; ncHandled = new Set(); ncSkipped = []; specAccepted = {};
 
       if (continueChain && !chainDriving && !id) {
         continueChain.forEach((lv, i) => { const sel = el(`${ns}_continue${i}`); if (sel) sel.value = ''; });
@@ -1958,6 +1972,7 @@
       fillFinance(existing, locked);
       wireProgressive(container, existing, locked);
       updateSignOffUi();
+      if (window.SpecGate) window.SpecGate.scan(container, specMap);
       if (!inline) el(modalIds.overlay).style.display = 'flex';
     }
 
@@ -2215,16 +2230,41 @@
       // Out-of-range reading: pop up the warning before it is saved. The deviation is still recorded if the person continues.
       if (config.warnOutOfSpec && inSpec === false) {
         const bad = entryFields.filter(f => checkField(f, values[f.key]) === 'fail').map(f => {
-          const r = specFor(f.specKey) || {};
+          const r = rangeOf(f) || {};
           return `${f.label}: ${values[f.key]}${f.unit ? ' ' + f.unit : ''} (allowed ${r.min != null ? r.min : 'no minimum'} to ${r.max != null ? r.max : 'no maximum'})`;
         });
         if (!window.confirm(['WARNING: OUT OF RANGE', ''].concat(bad, ['', 'This deviation must be reported. Enter the corrective action taken.', '', 'OK = save this reading as a deviation.  Cancel = go back and check the reading.']).join('\n'))) return;
       }
       } // end non-customBody field gathering
 
+      // Field specifications: strictest gate across out-of-spec fields (hard_block > double_sign > warn_submit), then one NC prompt per category (autoNc)
+      specInfo = { details: [], result: null };
+      if (window.SpecGate && (finalize || !submitFlow) && Object.keys(specMap).length) {
+        const details = window.SpecGate.collect(specMap, values, [], []);
+        if (details.length) {
+          const sig = details.map(d => d.key + '=' + d.value).join('|');
+          let result = specAccepted[sig];
+          if (!result) { result = await window.SpecGate.run(details, { root: el(modalIds.fields) }); if (!result) return; specAccepted[sig] = result; }
+          specInfo = { details, result };
+          if (window.NcRaise) {
+            for (const b of window.SpecGate.ncBreaches(details)) {
+              if (ncHandled.has(b.key)) continue;
+              const r = await window.NcRaise.open({
+                recordRef: docCode, jobNumber: String(values[jobKeyOf()] || '').trim(),
+                submissionId: editingId || '', category: b.category, severity: b.severity, description: b.description,
+                allowSkip: b.allowSkip, heading: '⚠ Out of spec — raise an NC'
+              });
+              if (!r) return;                   // cancelled: back to the form (a spec with nc_optional_skip off cannot be skipped)
+              ncHandled.add(b.key);
+              if (r.skipped) ncSkipped.push({ check: b.description, reason: r.reason, by: r.by, at: r.at }); else pendingNc.push(r.nc.ncRef);
+            }
+          }
+        }
+      }
+
       // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
       if (window.NcRaise && (finalize || !submitFlow) && (config.ncThresholds || config.ncAlways || config.redPrompt || (sc && sc.autoNc))) {
-        const breaches = window.NcRaise.findBreaches(config.ncThresholds, values).filter(b => !ncHandled.has(b.key));
+        const breaches = window.NcRaise.findBreaches(liveThresholds(), values).filter(b => !ncHandled.has(b.key));
         // a red (problem) answer on a check is a non-conformance: one NC listing every failed check
         const auto = !!(sc && sc.autoNc);
         // scored signs raise their NC automatically (below); Yes/No checks still go through the NC form
@@ -2358,6 +2398,7 @@
 
       if (pendingNc.length) savedEntry.nc_refs = (savedEntry.nc_refs || []).concat(pendingNc.filter(r => !(savedEntry.nc_refs || []).includes(r)));
       if (ncSkipped.length) { savedEntry.nc_skipped = true; savedEntry.nc_skips = (savedEntry.nc_skips || []).concat(ncSkipped); }
+      if (window.SpecGate && (finalize || !submitFlow)) window.SpecGate.stamp(savedEntry, specInfo.details, specInfo.result);
       const provisionalKeys = Array.from(el(modalIds.fields).querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.slice((ns + '_f_').length));
       if (provisionalKeys.length) savedEntry.provisionalFields = provisionalKeys;
@@ -2962,6 +3003,9 @@
       }
     } catch (e) { console.warn('ml: template override parse failed', e); }
 
+    // field specifications: pages that declare their fields inline get their specs from the static snapshot
+    if (window.SpecGate) await window.SpecGate.attach(config);
+
     const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
 
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
@@ -3282,7 +3326,8 @@
       }
       el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm(!submitFlow));
       if (el(`${ns}_ncBtn`)) el(`${ns}_ncBtn`).addEventListener('click', () => ctrl.raiseNc());
-      if (window.NcRaise && ns === 'ml_p' && config.ncThresholds) window.NcRaise.wireInline(el(`${ns}_modalFields`), config.ncThresholds, f => `${ns}_f_${f}`);
+      if (window.NcRaise && ns === 'ml_p' && config.ncThresholds) window.NcRaise.wireInline(el(`${ns}_modalFields`), window.SpecGate ? window.SpecGate.liveThresholds(config) : config.ncThresholds, f => `${ns}_f_${f}`);
+      if (window.SpecGate) window.SpecGate.wire(el(`${ns}_modalFields`), window.SpecGate.collectSpecs(config));
       if (submitFlow) el(`${ns}_submitBtn`).addEventListener('click', () => ctrl.saveForm(true));
       el(`${ns}_exportCsvBtn`).addEventListener('click', () => ctrl.exportCsv());
       el(`${ns}_exportJsonBtn`).addEventListener('click', () => ctrl.exportJson());
@@ -3309,12 +3354,20 @@
     }
 
 
+    // spec items whose limits now come from an admin-set field spec (Specifications > Field rules): read-only here
+    function managedSpecKeys() {
+      return new Set((config.entryFields || []).filter(f => f.specKey && f.spec && (f.spec.min != null || f.spec.max != null)).map(f => f.specKey));
+    }
     function buildThresholdsTable() {
       const fields = config.specFields || [];
+      const managed = managedSpecKeys();
       el('ml_thresholdsTable').innerHTML = `<thead><tr><th style="text-align:left;">Reading</th><th>Low</th><th>High</th></tr></thead><tbody>` +
-        fields.map(f => `<tr><td style="text-align:left;">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</td>
-          <td><input type="number" step="0.01" id="ml_th_${f.key}_min"></td>
-          <td><input type="number" step="0.01" id="ml_th_${f.key}_max"></td></tr>`).join('') + `</tbody>`;
+        fields.map(f => {
+          const m = managed.has(f.key), dis = m ? ' disabled title="Managed in Specifications > Field rules"' : '';
+          return `<tr><td style="text-align:left;">${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}${m ? '<br><small>Managed in Specifications &rarr; Field rules</small>' : ''}</td>
+          <td><input type="number" step="0.01" id="ml_th_${f.key}_min"${dis}></td>
+          <td><input type="number" step="0.01" id="ml_th_${f.key}_max"${dis}></td></tr>`;
+        }).join('') + `</tbody>`;
     }
     function fillThresholdsForm() {
       (config.specFields || []).forEach(f => {
@@ -3338,7 +3391,9 @@
       const changedBy = el('ml_thChangedBy').value.trim();
       const changedByTitle = el('ml_thChangedByTitle').value.trim();
       const data = {};
+      const managed = managedSpecKeys();
       (config.specFields || []).forEach(f => {
+        if (managed.has(f.key)) { data[f.key] = currentSpec ? currentSpec[f.key] : null; return; }   // not editable here
         const min = num(el(`ml_th_${f.key}_min`).value);
         const max = num(el(`ml_th_${f.key}_max`).value);
         data[f.key] = (min === null && max === null) ? null : { min: min === null ? undefined : min, max: max === null ? undefined : max };

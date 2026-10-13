@@ -75,6 +75,12 @@
   .note{ margin-top:18px; background:#fbf0dc; color:#8a5a10; border-radius:6px; padding:11px 13px; font-size:11.5px; }
   #toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#1b2330; color:#fff; padding:10px 16px; border-radius:6px; font-size:12.5px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:60; }
   #toast.show{ opacity:1; }
+  .tabs{ display:flex; gap:4px; padding:10px 20px 0; background:#1d2b38; }
+  .tabs button{ padding:9px 16px; border:0; border-radius:6px 6px 0 0; background:#2c3e50; color:#b9c3cc; font:600 13px inherit; font-family:inherit; cursor:pointer; }
+  .tabs button.on{ background:#f4f5f3; color:#1b2330; }
+  #tab-rules iframe{ width:100%; height:calc(100vh - 170px); min-height:640px; border:0; background:transparent; }
+  .managed-note{ font-size:11px; color:#2f7a52; font-weight:600; }
+  table.leaves input.managed{ background:#eef4f0; color:#3b4650; }
   @media (max-width:640px){ .container{ padding:12px; } .card-head .meta{ margin-left:0; text-align:left; } table.leaves td.k{ width:auto; } .toolbar .count{ margin-left:0; } }
 </style>
 <link rel="stylesheet" href="../styles/responsive.css?v=1">
@@ -83,11 +89,17 @@
 
 <div class="header">
   <h1>Specifications</h1>
-  <p>Limits and tolerances for every record. Update a value or add a spec item here &mdash; each change is published as a new version with who, why and when.</p>
+  <p>Limits and tolerances for every record. Update a value or add a spec item here &mdash; each change is published as a new version with who, why and when. Use <b>Field rules</b> to set a field's range, how an out-of-spec value is flagged, the submit gate and automatic NCs.</p>
   <a class="back-link" href="fsms.html">&larr; Back to FSMS</a>
 </div>
+<div class="tabs" role="tablist">
+  <button type="button" id="tabBtnSpecs" class="on" data-tab="specs" role="tab">Limits &amp; profiles</button>
+  <button type="button" id="tabBtnRules" data-tab="rules" role="tab">Field rules</button>
+</div>
 
-<div class="container">
+<div class="container" id="tab-rules" hidden></div>
+
+<div class="container" id="tab-specs">
   <div class="state info" id="state">Loading&hellip;</div>
   <div class="toolbar" id="toolbar" style="display:none;">
     <input type="search" id="q" placeholder="Search records&hellip;">
@@ -163,6 +175,21 @@
   var EDIT_ROLES = ['QA_MANAGER', 'ADMINISTRATOR'];
   function canEdit() { return !!(window.Auth && EDIT_ROLES.indexOf(window.Auth.getCurrentRole()) >= 0); }
 
+  // ---- tabs: Limits & profiles (this page) | Field rules (spec-admin.html, embedded) ----
+  function showTab(name) {
+    var rules = name === 'rules';
+    $('tab-specs').hidden = rules; $('tab-rules').hidden = !rules;
+    $('tabBtnSpecs').classList.toggle('on', !rules); $('tabBtnRules').classList.toggle('on', rules);
+    if (rules && !$('tab-rules').firstChild) {
+      var fr = document.createElement('iframe'); fr.src = 'spec-admin.html?embed=1'; fr.title = 'Field rules';
+      $('tab-rules').appendChild(fr);
+    }
+    try { history.replaceState(null, '', rules ? '#field-rules' : location.pathname + location.search); } catch (e) { }
+  }
+  $('tabBtnSpecs').addEventListener('click', function () { showTab('specs'); });
+  $('tabBtnRules').addEventListener('click', function () { showTab('rules'); });
+  if (location.hash === '#field-rules') showTab('rules');
+
   var META = ['versionNumber', 'changeReason', 'publishedBy', 'changedByTitle', 'publishedAt'];
   var HIDDEN_KEY = 'spec_list_hidden', CUSTOM_KEY = 'spec_custom_entries';
 
@@ -219,6 +246,9 @@
       var fields = (over && over.engine === 'monitoring-log' && over.specFields) || (def && def.specFields) || [];
       fields.forEach(function (f) { if (f && f.key) labels[f.key] = { label: f.label || humanise(f.key), unit: f.unit || '' }; });
       e.canLink = !!(def && def.entryFields && !def.customBody);
+      // a spec item whose entry field has a field rule takes its limits from that rule (Field rules tab), so it is read-only here
+      e.managed = {};
+      ((def && def.entryFields) || []).forEach(function (f) { if (f && f.specKey && f.spec && (f.spec.min != null || f.spec.max != null)) e.managed[f.specKey] = true; });
     } catch (x) {  }
     e.labels = labels;
   }
@@ -290,19 +320,21 @@
     }).join('');
   }
 
-  function rowHtml(l, i, ro, labels) {
+  function rowHtml(l, i, ro, labels, managed) {
     var v = l.value, cell;
+    var man = !!(managed && l.path.length && managed[l.path[0]]);
+    if (man) ro = ' readonly class="managed" title="Managed in the Field rules tab"';
     if (typeof v === 'number') cell = '<input type="number" step="any" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
     else if (typeof v === 'boolean') cell = '<input type="text" readonly value="' + esc(v) + '">';
     else if (v == null) cell = '<input type="number" step="any" data-i="' + i + '" value="" placeholder="not set"' + ro + '>';
     else cell = '<input type="text" data-i="' + i + '" value="' + esc(v) + '"' + ro + '>';
-    return '<tr><td class="k">' + labelOf(l.path, labels) + '</td><td>' + cell + '</td><td class="x"></td></tr>';
+    return '<tr><td class="k">' + labelOf(l.path, labels) + '</td><td>' + cell + '</td><td class="x">' + (man ? '<span class="managed-note">Managed in Field rules</span>' : '') + '</td></tr>';
   }
 
   function body(e) {
     var edit = canEdit(), ro = edit ? '' : ' readonly';
     var leaves = leavesOf(e.published);
-    var rows = leaves.map(function (l, i) { return rowHtml(l, i, ro, e.labels); }).join('');
+    var rows = leaves.map(function (l, i) { return rowHtml(l, i, ro, e.labels, e.managed); }).join('');
     var user = (window.Auth && window.Auth.getCurrentUsername()) || '';
     var hist = e.versions.map(function (h) {
       return '<div class="hist-item"><span class="v">v' + h.versionNumber + '</span>' +

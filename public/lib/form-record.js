@@ -1683,6 +1683,9 @@
       }
     } catch (e) { console.warn('fr: template override parse failed', e); }
 
+    // field specifications: pages that declare their fields inline get their specs from the static snapshot
+    if (window.SpecGate) await window.SpecGate.attach(config);
+
     const rosterList = getRosterList(config);
 
     const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
@@ -1702,6 +1705,13 @@
     let editingId = null;
     // NC from records (nc-raise.js): NCs raised before the submission is saved, thresholds already dealt with, skip flag
     let pendingNc = [], ncHandled = new Set(), ncSkipped = [];
+    // Field specifications (spec-gate.js): live feedback + submit gate for fields that carry a `spec`
+    const specMap = window.SpecGate ? window.SpecGate.collectSpecs(config) : {};
+    let specAccepted = {};              // out-of-spec signature -> gate result, so a cancelled NC prompt does not re-ask for passkeys
+    let specInfo = { details: [], result: null };
+    // a field whose spec has autoNc replaces any ncThresholds entry for the same field (one NC prompt, not two)
+    const specNcKeys = new Set(Object.keys(specMap).filter(k => specMap[k].spec.autoNc));
+    const liveThresholds = () => (config.ncThresholds || []).filter(t => !specNcKeys.has(t.field));
 
     let formLocked = false;
     let clearArmed = false;
@@ -3317,7 +3327,7 @@
 
     function openForm(id) {
       editingId = id || null;
-      pendingNc = []; ncHandled = new Set(); ncSkipped = [];
+      pendingNc = []; ncHandled = new Set(); ncSkipped = []; specAccepted = {};
       const existing = id ? submissions.find(s => s.id === id) : null;
       const locked = isSubmitted(existing);
       const container = el('fr_modalSections');
@@ -3513,6 +3523,7 @@
       el('fr_submitBtn').style.display = locked ? 'none' : '';
       el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
       formLocked = locked;
+      if (window.SpecGate) window.SpecGate.scan(container, specMap);
       if (hasRoster) rosterList.forEach((r, i) => { if (r.jobNumbered) { const rc = el(rosterDomId('fr_rosterRows', i)); if (rc && rc._crateRefresh) rc._crateRefresh(locked, false); } });
       // Sign-off block: populate from stored completedBy when viewing a submitted entry,
       // disable fields so they can't be edited, and re-enable for a new or draft entry.
@@ -3680,9 +3691,33 @@
       if (finalize) {
         const ok = await runBusinessRules(config, values, editingId, rosterRowsByIndex);
         if (!ok) return;
+        // Field specifications: strictest gate across out-of-spec fields (hard_block > double_sign > warn_submit), then one NC prompt per category (autoNc)
+        specInfo = { details: [], result: null };
+        if (window.SpecGate && Object.keys(specMap).length) {
+          const details = window.SpecGate.collect(specMap, values, rosterRowsByIndex, rosterList);
+          if (details.length) {
+            const sig = details.map(d => d.key + '[' + d.rowIndex + ']=' + d.value).join('|');
+            let result = specAccepted[sig];
+            if (!result) { result = await window.SpecGate.run(details, { root: el('fr_modalSections') }); if (!result) return; specAccepted[sig] = result; }
+            specInfo = { details, result };
+            if (window.NcRaise) {
+              for (const b of window.SpecGate.ncBreaches(details)) {
+                if (ncHandled.has(b.key)) continue;
+                const r = await window.NcRaise.open({
+                  recordRef: config.docCode, jobNumber: String(values[config.batchField || 'jobNo'] || '').trim(),
+                  submissionId: editingId || '', category: b.category, severity: b.severity, description: b.description,
+                  allowSkip: b.allowSkip, heading: '⚠ Out of spec — raise an NC'
+                });
+                if (!r) return;                   // cancelled: back to the form (a spec with nc_optional_skip off cannot be skipped)
+                ncHandled.add(b.key);
+                if (r.skipped) ncSkipped.push({ check: b.description, reason: r.reason, by: r.by, at: r.at }); else pendingNc.push(r.nc.ncRef);
+              }
+            }
+          }
+        }
         // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
         if (window.NcRaise && (config.ncThresholds || config.ncAlways || config.ncBadAnswers)) {
-          const breaches = window.NcRaise.findBreaches(config.ncThresholds, values, rosterRowsByIndex).filter(b => !ncHandled.has(b.key));
+          const breaches = window.NcRaise.findBreaches(liveThresholds(), values, rosterRowsByIndex).filter(b => !ncHandled.has(b.key));
           // checklist records: config.ncBadAnswers = [{ field, bad }] -- a roster/top-level answer equal to `bad` is a failed check; one NC lists them all
           if (config.ncBadAnswers) {
             const failed = [];
@@ -3833,6 +3868,7 @@
 
       if (pendingNc.length) savedSub.nc_refs = (savedSub.nc_refs || []).concat(pendingNc.filter(r => !(savedSub.nc_refs || []).includes(r)));
       if (ncSkipped.length) { savedSub.nc_skipped = true; savedSub.nc_skips = (savedSub.nc_skips || []).concat(ncSkipped); }
+      if (window.SpecGate && finalize) window.SpecGate.stamp(savedSub, specInfo.details, specInfo.result);
       const provisionalKeys = Array.from(el('fr_modalSections').querySelectorAll('[data-provisional="1"]'))
         .map((e) => e.id.replace(/^fr_f_/, ''));
       if (provisionalKeys.length) savedSub.provisionalFields = provisionalKeys;
@@ -4334,7 +4370,8 @@
         }
       });
     }
-    if (window.NcRaise && config.ncThresholds) window.NcRaise.wireInline(el('fr_modalSections'), config.ncThresholds, f => 'fr_f_' + f);
+    if (window.NcRaise && config.ncThresholds) window.NcRaise.wireInline(el('fr_modalSections'), liveThresholds(), f => 'fr_f_' + f);
+    if (window.SpecGate) window.SpecGate.wire(el('fr_modalSections'), specMap);
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
     el('fr_exportJsonBtn').addEventListener('click', exportJson);
     el('fr_printBtn').addEventListener('click', printPdf);

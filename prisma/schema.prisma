@@ -4975,3 +4975,51 @@ model FsmsEvent {
   @@index([yearId, categoryId], map: "idx_fsms_event_year_cat")
   @@map("fsms_event")
 }
+
+// Field specifications (MD/field-specifications-system-instructions.md): admin-set limits per record field,
+// enforced by public/lib/spec-gate.js; embedded into each field as `spec` by src/record-def.js.
+model FieldSpec {
+  id                Int      @id @default(autoincrement())
+  recordKey         String   @map("record_key")
+  fieldKey          String   @map("field_key")
+  specMin           Decimal? @map("spec_min")
+  specMax           Decimal? @map("spec_max")
+  allowedValues     String?  @map("allowed_values")
+  highlightRed      Boolean  @default(false) @map("highlight_red")
+  showWarningBubble Boolean  @default(false) @map("show_warning_bubble")
+  gateMode          String   @default("none") @map("gate_mode") // none | warn_submit | double_sign | hard_block
+  autoNc            Boolean  @default(false) @map("auto_nc")
+  ncCategory        String?  @map("nc_category")
+  ncSeverity        String?  @default("minor") @map("nc_severity") // minor | major | critical
+  ncOptionalSkip    Boolean  @default(true) @map("nc_optional_skip")
+  labelOverride     String?  @map("label_override")
+  notes             String?
+  active            Boolean  @default(true)
+  versionNumber     Int      @default(1) @map("version_number")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([recordKey, fieldKey])
+  @@index([recordKey], map: "idx_fspecs_record")
+  @@index([recordKey, active], map: "idx_fspecs_active")
+  @@map("field_specs")
+}
+
+// One row per published change to a FieldSpec (reason, who, title, full snapshot). Newest = PUBLISHED, older = OBSOLETE.
+model FieldSpecVersion {
+  id             Int      @id @default(autoincrement())
+  specId         Int      @map("spec_id")
+  recordKey      String   @map("record_key")
+  fieldKey       String   @map("field_key")
+  versionNumber  Int      @map("version_number")
+  status         String   @default("PUBLISHED")
+  snapshot       Json
+  changeReason   String   @map("change_reason")
+  publishedBy    String   @map("published_by")
+  changedByTitle String   @map("changed_by_title")
+  publishedAt    DateTime @default(now()) @map("published_at") @db.Timestamptz(6)
+
+  @@unique([specId, versionNumber])
+  @@index([recordKey, fieldKey], map: "idx_fspec_versions_record")
+  @@map("field_spec_versions")
+}

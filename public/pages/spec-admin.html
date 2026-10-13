@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field Rules</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+  <style>
+    :root { --ink:#1d2125; --muted:#5a6068; --line:#d5dade; --card:#fff; --bg:#f4f5f7; --accent:#1565c0; --warn:#B45309; --ok:#1B7A3A; --bad:#B30000; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+    .wrap { max-width:1000px; margin:0 auto; padding:16px; }
+    .back-link { display:inline-block; margin-bottom:10px; padding:8px 14px; border:1px solid #c9cfd4; border-radius:4px; background:#fff; color:#1d2b38; text-decoration:none; }
+    h1 { margin:6px 0 2px; font-size:22px; }
+    h2 { margin:0 0 10px; font-size:16px; }
+    .lede { margin:0 0 16px; color:var(--muted); }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+    label.lbl { display:block; font-size:12px; font-weight:600; color:var(--muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:.4px; }
+    select, input[type=text], input[type=number], textarea { width:100%; padding:9px 10px; border:1px solid #bcc3c9; border-radius:4px; font:inherit; background:#fff; color:var(--ink); }
+    textarea { min-height:70px; resize:vertical; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .full { grid-column:1/-1; }
+    .toggle { display:flex; align-items:center; gap:8px; padding:6px 0; font-weight:600; }
+    .toggle input { width:18px; height:18px; }
+    .radios { display:flex; flex-wrap:wrap; gap:6px 18px; padding:4px 0; }
+    .radios label { display:flex; align-items:center; gap:6px; font-weight:600; }
+    .hint { font-size:12px; color:var(--muted); font-weight:400; }
+    .badge { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+    .badge.set { background:#dff3e5; color:var(--ok); }
+    .badge.none { background:#eceef0; color:#6b7280; }
+    .badge.off { background:#fdecc8; color:var(--warn); }
+    .btns { display:flex; gap:10px; margin-top:14px; }
+    button { padding:9px 18px; border-radius:4px; border:1px solid #bcc3c9; background:#fff; font:inherit; font-weight:600; cursor:pointer; }
+    button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { background:#f0f2f4; font-size:12px; }
+    code { font-size:12px; background:#eef0f2; padding:1px 5px; border-radius:3px; }
+    .notice { padding:12px 14px; border-left:4px solid var(--warn); background:#fff3dc; border-radius:4px; margin-bottom:16px; }
+    .notice pre { margin:8px 0 0; padding:8px; background:#fff; border:1px solid var(--line); border-radius:4px; overflow:auto; font-size:12px; white-space:pre-wrap; }
+    .toast { position:fixed; right:16px; bottom:16px; background:#1d2125; color:#fff; padding:10px 16px; border-radius:6px; opacity:0; transition:opacity .2s; pointer-events:none; max-width:80vw; }
+    .toast.show { opacity:1; }
+    .toast.err { background:var(--bad); }
+    .gate { text-align:center; padding:40px 16px; }
+    [hidden] { display:none !important; }
+    body.embed { background:transparent; }
+    body.embed .wrap { padding:0; max-width:none; }
+    body.embed .page-head { display:none; }
+    .ver { margin:0; padding:0; list-style:none; font-size:13px; }
+    .ver li { padding:8px 0; border-bottom:1px solid var(--line); }
+    .ver .v { font-weight:700; margin-right:6px; }
+    @media (max-width:640px) { .grid { grid-template-columns:1fr; } .tbl-wrap { overflow-x:auto; } }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --ink:#f1f2f3; --muted:#a4acb4; --line:#3a3f45; --card:#1f2327; --bg:#14171a; }
+      select, input[type=text], input[type=number], textarea, button { background:#2a2f34; color:#f1f2f3; border-color:#4a5058; }
+      th { background:#2a2f34; } code { background:#2a2f34; } .notice { background:#3B2500; } .notice pre { background:#1f2327; }
+      .back-link { background:#2a2f34; color:#f1f2f3; border-color:#4a5058; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-head">
+  <a class="back-link" href="fsms.html">&larr; Back to FSMS</a>
+  <h1>Field rules</h1>
+  <p class="lede">Set the allowed range for a field, how an out-of-spec value is shown, what happens at submission, and whether an NC is raised. Every change is published as a new version with who and why.</p>
+  </div>
+
+  <div class="card gate" id="gate" hidden>
+    <h2>Sign-in required</h2>
+    <p class="lede">Only the QA Manager or an Administrator can manage field rules. Sign in to continue.</p>
+    <button class="primary" id="signInBtn">Sign in</button>
+  </div>
+
+  <div id="app" hidden>
+    <div class="notice" id="exportNotice" hidden>
+      <b>Saved.</b> Re-run the record-def export and push to update the live site:
+      <pre>node scripts/export-record-defs.mjs &amp;&amp; git add public/data/record-defs/ &amp;&amp; git commit -m "chore: export record defs with updated specs" &amp;&amp; git push</pre>
+    </div>
+
+    <div class="card">
+      <h2>1 &middot; Record and field</h2>
+      <div class="grid">
+        <div>
+          <label class="lbl" for="recSel">Record</label>
+          <select id="recSel"><option value="">Loading records&hellip;</option></select>
+        </div>
+        <div>
+          <label class="lbl" for="fieldSel">Field</label>
+          <select id="fieldSel" disabled><option value="">Choose a record first</option></select>
+        </div>
+      </div>
+      <p class="hint" id="fieldInfo" style="margin:10px 0 0"></p>
+    </div>
+
+    <div class="card" id="editor" hidden>
+      <h2>2 &middot; Specification for <span id="edTitle"></span></h2>
+      <div class="grid">
+        <div><label class="lbl" for="fMin">Min value</label><input type="number" step="any" id="fMin" placeholder="no lower limit"></div>
+        <div><label class="lbl" for="fMax">Max value</label><input type="number" step="any" id="fMax" placeholder="no upper limit"></div>
+        <div class="full"><label class="lbl" for="fAllowed">Allowed values <span class="hint">(text / select fields; comma-separated, e.g. Pass,Accept)</span></label><input type="text" id="fAllowed"></div>
+        <div class="full"><label class="lbl" for="fLabel">Label override <span class="hint">(name shown in warnings; optional)</span></label><input type="text" id="fLabel"></div>
+
+        <div class="full">
+          <label class="toggle"><input type="checkbox" id="fRed"> Highlight field red when out of spec</label>
+          <label class="toggle"><input type="checkbox" id="fBubble"> Show warning bubble under the field</label>
+        </div>
+
+        <div class="full">
+          <label class="lbl">When out of spec, at submission</label>
+          <div class="radios">
+            <label><input type="radio" name="gate" value="none"> None (record only)</label>
+            <label><input type="radio" name="gate" value="warn_submit"> Warn at submit</label>
+            <label><input type="radio" name="gate" value="double_sign"> Double sign (two passkeys)</label>
+            <label><input type="radio" name="gate" value="hard_block"> Hard block</label>
+          </div>
+        </div>
+
+        <div class="full">
+          <label class="toggle"><input type="checkbox" id="fNc"> Auto-raise an NC when out of spec</label>
+        </div>
+        <div id="ncBox" class="full grid" hidden>
+          <div><label class="lbl" for="fNcCat">NC category</label><input type="text" id="fNcCat" placeholder="e.g. Temperature out of spec" list="ncCats"></div>
+          <div><label class="lbl" for="fNcSev">NC severity</label>
+            <select id="fNcSev"><option value="minor">Minor</option><option value="major">Major</option><option value="critical">Critical</option></select></div>
+          <div class="full"><label class="toggle"><input type="checkbox" id="fNcSkip"> Operator can skip the NC <span class="hint">(skip needs a reason and passkey, and is logged)</span></label></div>
+        </div>
+        <datalist id="ncCats"><option>Weight deviation</option><option>Temperature out of spec</option><option>Labelling error</option><option>Equipment failure</option><option>Process deviation</option><option>Product quality</option><option>Dry room issue</option><option>Documentation error</option><option>Hygiene / sanitation</option><option>Pest activity</option><option>Other</option></datalist>
+
+        <div class="full"><label class="lbl" for="fNotes">Admin notes <span class="hint">(not shown to operators)</span></label><textarea id="fNotes"></textarea></div>
+        <div class="full"><label class="toggle"><input type="checkbox" id="fOff"> Deactivate this spec <span class="hint">(removes enforcement after export + deploy)</span></label></div>
+
+        <div class="full"><h2 style="margin:8px 0 0">Change details <span class="hint">(required; recorded with the new version)</span></h2></div>
+        <div class="full"><label class="lbl" for="cReason">Reason for change</label><textarea id="cReason" placeholder="Why is this changing?"></textarea></div>
+        <div><label class="lbl" for="cBy">Your name</label><input type="text" id="cBy"></div>
+        <div><label class="lbl" for="cTitle">Your title</label><input type="text" id="cTitle"></div>
+      </div>
+      <div class="btns">
+        <button class="primary" id="saveBtn">Save specification</button>
+        <button id="clearBtn" type="button">Cancel</button>
+      </div>
+    </div>
+
+    <div class="card" id="history" hidden>
+      <h2>Version history <span class="hint" id="histFor"></span></h2>
+      <ul class="ver" id="verList"></ul>
+    </div>
+
+    <div class="card" id="summary" hidden>
+      <h2>3 &middot; Specs on this record</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Field label</th><th>Field key</th><th>Min</th><th>Max</th><th>Gate mode</th><th>NC</th><th>Ver.</th><th>Active</th><th></th></tr></thead>
+          <tbody id="specRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../lib/palette-map.js"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/permission-rules.js?v=6"></script>
+<script src="../lib/auth.js?v=4"></script>
+<script src="../lib/login-ui.js?v=5"></script>
+<script>
+(function () {
+  'use strict';
+  var GATE_LABEL = { none: 'None', warn_submit: 'Warn at submit', double_sign: 'Double sign', hard_block: 'Hard block' };
+  var EMBED = /[?&]embed=1/.test(location.search);
+  if (EMBED) document.body.classList.add('embed');
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  var fields = [];      // [{ key, label, type, where }] for the chosen record
+  var specs = {};       // field_key -> spec row (incl. inactive)
+  var current = null;   // field key being edited
+  var recStart = 1;     // the record's docRevisionStart, for the document-revision bump
+
+  function toast(msg, isErr) {
+    var t = $('toast'); t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = 'toast'; }, 3500);
+  }
+  function api(path, opts) { return window.FacilityApi.fetch(path, opts); }
+  function json(path, opts) {
+    return api(path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
+    });
+  }
+
+  /* ---- admin gate ---- */
+  function isAdmin() { var u = window.Auth.getCurrentUser(); return !!u && /ADMIN|QA_MANAGER/i.test(u.role || ''); }
+  function refreshGate() {
+    var ok = isAdmin();
+    $('gate').hidden = ok; $('app').hidden = !ok;
+    if (ok && !$('recSel').dataset.loaded) loadRecords();
+  }
+  $('signInBtn').addEventListener('click', function () { window.LoginUI.showLoginModal(); });
+  document.addEventListener('authSuccess', refreshGate);
+
+  /* ---- step 1: record + field pickers ---- */
+  function loadRecords() {
+    json('/api/record-defs').then(function (rows) {
+      $('recSel').dataset.loaded = '1';
+      $('recSel').innerHTML = '<option value="">— choose a record —</option>' + rows.map(function (r) {
+        return '<option value="' + esc(r.record_key) + '">' + esc((r.doc_code ? r.doc_code + ' — ' : '') + (r.title || r.record_key)) + '  [' + esc(r.record_key) + ']</option>';
+      }).join('');
+    }).catch(function (e) { $('recSel').innerHTML = '<option value="">Could not load records</option>'; toast('Could not load records: ' + e.message, true); });
+  }
+
+  // every field and roster column of a record config, in order
+  function listFields(cfg) {
+    var out = [], seen = {};
+    function add(list, where) {
+      (list || []).forEach(function (f) {
+        if (!f || !f.key || seen[f.key]) return;
+        seen[f.key] = 1; out.push({ key: f.key, label: f.label || f.key, type: f.type || 'text', unit: f.unit || '', where: where });
+      });
+    }
+    add(cfg.fields, ''); add(cfg.entryFields, '');
+    (cfg.sections || []).forEach(function (s) { add(s.fields, s.title || ''); });
+    if (cfg.roster) add(cfg.roster.columns, (cfg.roster.title || 'Roster') + ' (rows)');
+    (cfg.rosters || []).forEach(function (r) { add(r.columns, (r.title || 'Roster') + ' (rows)'); });
+    return out;
+  }
+
+  $('recSel').addEventListener('change', function () {
+    var key = this.value;
+    $('editor').hidden = true; $('summary').hidden = true; $('history').hidden = true; current = null; fields = []; specs = {};
+    var fs = $('fieldSel');
+    if (!key) { fs.disabled = true; fs.innerHTML = '<option value="">Choose a record first</option>'; $('fieldInfo').textContent = ''; return; }
+    fs.disabled = true; fs.innerHTML = '<option value="">Loading fields&hellip;</option>';
+    Promise.all([json('/api/record-def/' + encodeURIComponent(key)), json('/api/specs/' + encodeURIComponent(key) + '?all=1')])
+      .then(function (res) {
+        recStart = (res[0].config && res[0].config.docRevisionStart) || 1;
+        fields = listFields(res[0].config || {});
+        res[1].forEach(function (s) { specs[s.field_key] = s; });
+        drawFieldPicker(); drawSummary();
+      })
+      .catch(function (e) { fs.innerHTML = '<option value="">Could not load</option>'; toast('Could not load record: ' + e.message, true); });
+  });
+
+  function status(k) { var s = specs[k]; return !s ? 'No spec' : s.active ? 'Spec set' : 'Spec off'; }
+  function drawFieldPicker() {
+    var fs = $('fieldSel');
+    fs.innerHTML = '<option value="">— choose a field —</option>' + fields.map(function (f) {
+      return '<option value="' + esc(f.key) + '">' + (specs[f.key] ? '● ' : '') + esc(f.label) + '  [' + esc(f.key) + ' · ' + esc(f.type) + (f.where ? ' · ' + esc(f.where) : '') + ']  — ' + status(f.key) + '</option>';
+    }).join('');
+    fs.disabled = false;
+    $('fieldInfo').textContent = fields.length + ' fields · ' + Object.keys(specs).filter(function (k) { return specs[k].active; }).length + ' with an active spec';
+  }
+  $('fieldSel').addEventListener('change', function () { if (this.value) openEditor(this.value); else { $('editor').hidden = true; current = null; } });
+
+  /* ---- step 2: editor ---- */
+  function setGate(v) { Array.prototype.forEach.call(document.querySelectorAll('input[name=gate]'), function (r) { r.checked = r.value === v; }); }
+  function getGate() { var r = document.querySelector('input[name=gate]:checked'); return r ? r.value : 'none'; }
+  function showNc() { $('ncBox').hidden = !$('fNc').checked; }
+  $('fNc').addEventListener('change', showNc);
+
+  function openEditor(key) {
+    current = key;
+    var f = fields.filter(function (x) { return x.key === key; })[0] || { label: key, key: key };
+    var s = specs[key];
+    $('edTitle').textContent = f.label + ' (' + key + ')';
+    $('fMin').value = s && s.spec_min != null ? s.spec_min : '';
+    $('fMax').value = s && s.spec_max != null ? s.spec_max : '';
+    $('fAllowed').value = s && s.allowed_values || '';
+    $('fLabel').value = s && s.label_override || '';
+    $('fRed').checked = !!(s && s.highlight_red);
+    $('fBubble').checked = !!(s && s.show_warning_bubble);
+    setGate(s ? s.gate_mode : 'none');
+    $('fNc').checked = !!(s && s.auto_nc);
+    $('fNcCat').value = s && s.nc_category || '';
+    $('fNcSev').value = s && s.nc_severity || 'minor';
+    $('fNcSkip').checked = s ? !!s.nc_optional_skip : true;
+    $('fNotes').value = s && s.notes || '';
+    $('fOff').checked = !!(s && !s.active);
+    var u = window.Auth && window.Auth.getCurrentUser ? window.Auth.getCurrentUser() : null;
+    $('cReason').value = ''; $('cBy').value = u ? (u.displayName || '') : '';
+    $('cTitle').value = u ? ((window.SignOffBlock && window.SignOffBlock.roleLabel ? window.SignOffBlock.roleLabel(u.role) : String(u.role || '').toLowerCase().replace(/_/g, ' ').replace(/w/g, function (c) { return c.toUpperCase(); })) || '') : '';
+    showNc(); drawHistory(s);
+    $('fieldSel').value = key;
+    $('editor').hidden = false;
+    $('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function val(id) { var v = $(id).value.trim(); return v === '' ? null : v; }
+  $('saveBtn').addEventListener('click', function () {
+    if (!current) return;
+    var btn = this, rec = $('recSel').value;
+    var min = val('fMin'), max = val('fMax');
+    if (min !== null && max !== null && Number(min) > Number(max)) { toast('Min cannot be greater than max.', true); return; }
+    if (min === null && max === null && !val('fAllowed')) { toast('Enter a min, a max or a list of allowed values.', true); return; }
+    if ($('fNc').checked && !val('fNcCat')) { toast('Enter an NC category (or turn auto-NC off).', true); return; }
+    var body = {
+      spec_min: min, spec_max: max, allowed_values: val('fAllowed'), label_override: val('fLabel'),
+      highlight_red: $('fRed').checked, show_warning_bubble: $('fBubble').checked, gate_mode: getGate(),
+      auto_nc: $('fNc').checked, nc_category: val('fNcCat'), nc_severity: $('fNcSev').value, nc_optional_skip: $('fNcSkip').checked,
+      notes: val('fNotes'), active: !$('fOff').checked
+    };
+    var reason = val('cReason'), by = val('cBy'), ttl = val('cTitle');
+    if (!reason || !by || !ttl) { toast('Enter the reason for the change, your name and your title.', true); return; }
+    body.change_reason = reason; body.published_by = by; body.changed_by_title = ttl;
+    var existing = specs[current], isNew = !existing;
+    if (isNew) { body.record_key = rec; body.field_key = current; }
+    btn.disabled = true;
+    json(isNew ? '/api/specs' : '/api/specs/' + existing.id, { method: isNew ? 'POST' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (row) {
+        specs[row.field_key] = row;
+        drawFieldPicker(); drawSummary();
+        $('fieldSel').value = row.field_key;
+        $('exportNotice').hidden = false;
+        drawHistory(row);
+        return bumpDocRev(rec, reason, by, ttl).then(function (note) { toast('Specification saved' + note + '.'); });
+      })
+      .catch(function (e) { toast('Could not save: ' + e.message, true); })
+      .then(function () { btn.disabled = false; });
+  });
+  $('clearBtn').addEventListener('click', function () { $('editor').hidden = true; $('history').hidden = true; $('fieldSel').value = ''; current = null; });
+
+  // Same control the old Thresholds modal applied: a spec change is a document change, so the record's revision moves on.
+  function bumpDocRev(rec, reason, by, ttl) {
+    if (!window.DocumentRevision) return Promise.resolve('');
+    return window.DocumentRevision.bump(rec, { reason: 'Field spec: ' + reason, changedBy: by, changedByTitle: ttl }, recStart)
+      .then(function (r) { return ' - document is now Rev ' + r.revisionNumber; })
+      .catch(function () { return ' (but the document revision could not be updated)'; });
+  }
+
+  function fmtWhen(ts) { var d = new Date(ts); if (isNaN(d.getTime())) return ''; var p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+  function drawHistory(s) {
+    var box = $('history');
+    if (!s) { box.hidden = true; return; }
+    box.hidden = false; $('histFor').textContent = '— ' + s.field_key;
+    $('verList').innerHTML = '<li class="hint">Loading&hellip;</li>';
+    json('/api/specs/' + s.id + '/versions').then(function (vs) {
+      $('verList').innerHTML = vs.length ? vs.map(function (v) {
+        var sn = v.snapshot || {};
+        var lim = (sn.spec_min == null && sn.spec_max == null) ? '' : ' &middot; limits ' + (sn.spec_min == null ? '—' : esc(sn.spec_min)) + ' to ' + (sn.spec_max == null ? '—' : esc(sn.spec_max));
+        return '<li><span class="v">v' + v.version_number + '</span><span class="badge ' + (v.status === 'PUBLISHED' ? 'set' : 'none') + '">' + esc(v.status) + '</span> ' + esc(fmtWhen(v.published_at))
+          + ' by ' + esc(v.published_by) + ' (' + esc(v.changed_by_title) + ')' + lim + '<br><span class="hint">' + esc(v.change_reason) + '</span></li>';
+      }).join('') : '<li class="hint">No versions yet.</li>';
+    }).catch(function () { $('verList').innerHTML = '<li class="hint">Could not load the history.</li>'; });
+  }
+
+  /* ---- step 3: summary ---- */
+  function labelOf(k) { var f = fields.filter(function (x) { return x.key === k; })[0]; return f ? f.label : k; }
+  function drawSummary() {
+    var rows = Object.keys(specs).map(function (k) { return specs[k]; }).sort(function (a, b) { return a.id - b.id; });
+    $('summary').hidden = false;
+    $('specRows').innerHTML = rows.length ? rows.map(function (s) {
+      return '<tr><td>' + esc(labelOf(s.field_key)) + '</td><td><code>' + esc(s.field_key) + '</code></td>'
+        + '<td>' + (s.spec_min == null ? '—' : esc(s.spec_min)) + '</td><td>' + (s.spec_max == null ? '—' : esc(s.spec_max)) + '</td>'
+        + '<td>' + esc(GATE_LABEL[s.gate_mode] || s.gate_mode) + '</td>'
+        + '<td>' + (s.auto_nc ? esc(s.nc_category || 'Yes') + ' <span class="hint">(' + esc(s.nc_severity) + (s.nc_optional_skip ? ', skippable' : ', not skippable') + ')</span>' : '—') + '</td>'
+        + '<td>v' + esc(s.version_number) + '</td>'
+        + '<td><span class="badge ' + (s.active ? 'set' : 'off') + '">' + (s.active ? 'Active' : 'Off') + '</span></td>'
+        + '<td><button type="button" data-edit="' + esc(s.field_key) + '">Edit</button></td></tr>';
+    }).join('') : '<tr><td colspan="9" class="hint">No specs on this record yet. Pick a field above to add one.</td></tr>';
+  }
+  $('specRows').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-edit]'); if (b) openEditor(b.getAttribute('data-edit'));
+  });
+
+  // One page for specifications: a direct visit goes to the Field rules tab there (the tab embeds this page)
+  if (!EMBED && window.top === window.self) { location.replace('specifications.html#field-rules'); return; }
+  refreshGate();
+})();
+</script>
+</body>
+</html>

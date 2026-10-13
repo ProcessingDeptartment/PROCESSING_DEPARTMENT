@@ -20,6 +20,31 @@ function fieldOut(f) {
   return o;
 }
 
+// Field specifications (table field_specs, MD/field-specifications-system-instructions.md): attach each active spec to the
+// field / roster column with the same key as `field.spec`. Fields with no spec get no key. A missing table (migration
+// not yet applied) must not break record rendering, so any query error just means "no specs".
+function specOut(r) {
+  const n = (v) => (v == null ? null : Number(v));
+  return {
+    min: n(r.specMin), max: n(r.specMax),
+    allowed: r.allowedValues ? r.allowedValues.split(',').map((x) => x.trim()).filter(Boolean) : null,
+    highlightRed: r.highlightRed, showWarningBubble: r.showWarningBubble, gateMode: r.gateMode,
+    autoNc: r.autoNc, ncCategory: r.ncCategory, ncSeverity: r.ncSeverity, ncOptionalSkip: r.ncOptionalSkip,
+    labelOverride: r.labelOverride, version: r.versionNumber,
+  };
+}
+async function attachSpecs(prisma, recordKey, cfg) {
+  let rows = [];
+  try { rows = await prisma.fieldSpec.findMany({ where: { recordKey, active: true } }); } catch (e) { return; }
+  if (!rows.length) return;
+  const byKey = new Map(rows.map((r) => [r.fieldKey, specOut(r)]));
+  const tag = (list) => (list || []).forEach((f) => { if (f && byKey.has(f.key)) f.spec = byKey.get(f.key); });
+  tag(cfg.fields); tag(cfg.entryFields);
+  (cfg.sections || []).forEach((sec) => tag(sec.fields));
+  if (cfg.roster) tag(cfg.roster.columns);
+  (cfg.rosters || []).forEach((r) => tag(r.columns));
+}
+
 // prisma: a PrismaClient; recordKey: string. Returns { engine, version, config } or null.
 async function assembleRecordConfig(prisma, recordKey) {
   const def = await prisma.recordDefinition.findUnique({
@@ -87,6 +112,8 @@ async function assembleRecordConfig(prisma, recordKey) {
   if (def.primaryBatchField) cfg.batchField = def.primaryBatchField;
   if (def.extraBatchFields && def.extraBatchFields.length) cfg.extraBatchFields = def.extraBatchFields;
   if (def.clientHook) cfg.clientHook = def.clientHook;
+
+  await attachSpecs(prisma, recordKey, cfg);
 
   return { engine: def.engine, version: def.version, config: cfg };
 }
