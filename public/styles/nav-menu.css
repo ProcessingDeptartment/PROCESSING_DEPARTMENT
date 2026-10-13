@@ -3,6 +3,7 @@
    Everything is scoped to .nm-* so it can load on any page without leaking.
    ======================================================================== */
 .nm-btn {
+  order: 999;                            /* always the far-right item of the top bar */
   width: 48px; height: 48px; flex-shrink: 0;
   margin: -6px -8px -6px 0;              /* keep the 48px target inside a ~36px bar */
   padding: 0;

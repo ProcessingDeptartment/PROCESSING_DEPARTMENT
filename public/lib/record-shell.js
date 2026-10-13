@@ -33,6 +33,15 @@
     document.head.appendChild(s);
   }
 
+  /* post-submit pop-up (post-submit-prompt.js) -- loaded beside this script */
+  (function () {
+    if (window.PostSubmitPrompt || document.querySelector('script[data-psp-js]')) return;
+    var s = document.createElement('script');
+    s.setAttribute('data-psp-js', '1');
+    s.src = SELF ? SELF.replace(/record-shell\.js/, 'post-submit-prompt.js') : '../lib/post-submit-prompt.js';
+    document.head.appendChild(s);
+  })();
+
   function h(tag, cls, html) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
