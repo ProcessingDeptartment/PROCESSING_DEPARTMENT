@@ -2440,6 +2440,7 @@
         } else toast(finalize ? 'Entry submitted.' + softNote : 'Draft saved.');
       }
       else toast(editingId ? 'Entry updated.' : 'Entry added.');
+      if (finalize && submitFlow && window.PostSubmitPrompt) window.PostSubmitPrompt.show();
     }
 
     function download(blob, filename) {

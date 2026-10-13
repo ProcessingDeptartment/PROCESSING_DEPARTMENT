@@ -3925,6 +3925,7 @@
       renderTable();
 
       refreshVerification();
+      if (finalize && window.PostSubmitPrompt) window.PostSubmitPrompt.show();
       toast(finalize ? 'Submitted for verification.' + (finalRange ? ' Crates numbered ' + finalRange[0] + (finalRange[1] !== finalRange[0] ? ' to ' + finalRange[1] : '') + '.' : '') : 'Draft saved.');
     }
 
