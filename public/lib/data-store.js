@@ -57,16 +57,19 @@
   }
 
   async function set(key, value) {
+    await whenReady();
     const b = requireBackend();
     return b ? b.set(key, value) : false;
   }
 
   async function remove(key) {
+    await whenReady();
     const b = requireBackend();
     return b ? b.remove(key) : false;
   }
 
   async function getByPrefix(prefix) {
+    await whenReady();
     const b = requireBackend();
     return b ? b.getByPrefix(prefix) : {};
   }
