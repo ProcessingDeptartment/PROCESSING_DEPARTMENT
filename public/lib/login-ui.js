@@ -18,6 +18,8 @@
   .login-box .user-list input[type=radio] { margin:0; width:auto; }
   .login-box button { width:100%; padding:12px; background:#1d4ed8; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; margin-top:8px; }
   .login-box button:hover { background:#1d3a9e; }
+  .login-box button.login-cancel { background:#fff; color:#1d2b38; border:1px solid #1d2b38; }
+  .login-box button.login-cancel:hover { background:#eef1f4; }
   .login-box button:disabled { background:#cbd5e1; cursor:default; }
   `;
 
@@ -74,6 +76,7 @@
           <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
         </label>
         <button id="loginBtn">Sign In</button>
+        <button id="loginCancelBtn" type="button" class="login-cancel">Cancel</button>
       </div>
     `;
 
@@ -131,6 +134,10 @@
     }
 
     loginBtn.addEventListener('click', attemptLogin);
+    modal.querySelector('#loginCancelBtn').addEventListener('click', hideLoginModal);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) hideLoginModal();
+    });
     passwordInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') attemptLogin();
     });

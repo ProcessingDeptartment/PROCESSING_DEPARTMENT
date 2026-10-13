@@ -10,7 +10,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <style>
   body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
-  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:50; }
+  .header .hd-text{ flex:1; min-width:0; }
   .header h1{ margin:0; font-size:18px; font-weight:600; }
   .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
   .container{ max-width:1100px; margin:0 auto; padding:20px; }
@@ -54,10 +55,14 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body>
-<div class="header">
-  <h1>Record List</h1>
-  <p>Open a record to fill it in. Revisions shown are the current document-control revision.</p>
+<div class="header" id="listHeader">
+  <div class="hd-text">
+    <h1>Record List</h1>
+    <p>Open a record to fill it in. Revisions shown are the current document-control revision.</p>
+  </div>
 </div>
+<script src="../lib/nav-menu.js"></script>
+<script>NavMenu.attach(document.getElementById('listHeader'));</script>
 <div class="container">
   <div class="info-bar">
     Looking for the controlled document-control register (change history, issue dates,
@@ -88,7 +93,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/auth.js?v=4"></script>
-<script src="../lib/login-ui.js?v=5"></script>
+<script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/document-revision.js?v=3"></script>
 <script src="../lib/master-index-data.js?v=4"></script>
 <script>(function () {
