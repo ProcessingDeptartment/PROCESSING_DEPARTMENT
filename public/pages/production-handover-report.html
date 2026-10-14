@@ -893,7 +893,7 @@ function validatePrint() {
     document.getElementById('printWarning').classList.toggle('hidden', isReady);
 }
 
-async function preparePrint() {
+function preparePrint() {
     const dateVal = document.getElementById('hDate').value;
     const shiftVal = document.getElementById('hShift').value;
     const managerName = document.getElementById('hName').value || '---';
@@ -927,18 +927,17 @@ async function preparePrint() {
         }
     });
 
-    const finalized = await window.HandoverDB.finalizeAndExport();
-    if (!finalized) {
-      return;
-    }
-
-    mobilePrintHelper();
+    // Print must be called synchronously from the user gesture — do it before any await
+    window.print();
     setTimeout(() => {
         toRestore.forEach(el => {
             el.style.display = el.style.displayBackup || '';
             delete el.style.displayBackup;
         });
     }, 400);
+
+    // Save to DB in the background (does not block print)
+    window.HandoverDB.finalizeAndExport();
 }
 
 function renderPrintList(items) {
