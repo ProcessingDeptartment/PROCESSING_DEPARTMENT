@@ -73,7 +73,7 @@ async function verifyAuthorisedPasskey(prisma, pin, ip) {
 // Map a human-readable title to a role constant. Mirrors the label map in permission-rules.js.
 function titleToRole(title) {
   const t = String(title).toLowerCase().replace(/\s+/g, ' ').trim();
-  if (t.includes('administrator') || t.includes('admin'))           return 'ADMINISTRATOR';
+  if (t.includes('administrator') || t.includes('admin') || t.includes('ppicm')) return 'ADMINISTRATOR';
   if (t.includes('production manager'))                             return 'PRODUCTION_MANAGER';
   if (t.includes('qa manager'))                                     return 'QA_MANAGER';
   if (t.includes('production supervisor'))                          return 'PRODUCTION_SUPERVISOR';

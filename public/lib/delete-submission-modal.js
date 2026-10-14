@@ -19,7 +19,7 @@
   'use strict';
 
   // Authorised roles (display titles, lowercase-matched).
-  const AUTHORISED_TITLE_FRAGMENTS = ['administrator', 'production manager', 'qa manager'];
+  const AUTHORISED_TITLE_FRAGMENTS = ['administrator', 'ppicm', 'production manager', 'qa manager'];
 
   // ── Styles ─────────────────────────────────────────────────────────────────────────────────────
   let stylesInjected = false;
