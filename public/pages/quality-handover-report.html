@@ -663,10 +663,34 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
             if (!finalized) {
                 return;
             }
-            window.print();
+            mobilePrintHelper();
         }
 </script>
-    <script src="../lib/handover-db.js"></script>
+    <script src="../lib/handover-db.js">
+function mobilePrintHelper() {
+    const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (!isMobile) { window.print(); return; }
+    // On mobile, show a brief overlay guide then trigger print
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const tip = document.createElement('div');
+    tip.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+    const steps = isIOS
+        ? '<li>Safari will open a print preview</li><li>Tap the <b>Share icon</b> &#x2197; at the top</li><li>Choose <b>Print</b> or <b>Save to Files</b></li>'
+        : '<li>A print preview will open</li><li>Tap the <b>&#8942; menu</b> and choose <b>Save as PDF</b></li><li>Pick a save location and tap <b>Save</b></li>';
+    tip.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px 20px;max-width:360px;width:100%;font-family:system-ui,sans-serif;font-size:14px;">'
+        + '<p style="font-size:17px;font-weight:800;margin:0 0 4px">&#128196; Save as PDF</p>'
+        + '<p style="color:#6b7280;font-size:11px;margin:0 0 14px">' + (isIOS ? 'iPhone / iPad' : 'Android') + ' — follow these steps:</p>'
+        + '<ol style="margin:0 0 18px;padding-left:18px;line-height:1.9">' + steps + '</ol>'
+        + '<div style="display:flex;gap:10px">'
+        + '<button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;background:#1d4ed8;color:#fff;border:none;padding:12px 0;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">Got it</button>'
+        + '<button onclick="this.closest('[style*=fixed]').remove();window.print()" style="flex:1;background:#f3f4f6;color:#111;border:none;padding:12px 0;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">Try again</button>'
+        + '</div></div>';
+    document.body.appendChild(tip);
+    setTimeout(() => window.print(), 120);
+}
+
+</script>
 </body>
 </html>
 

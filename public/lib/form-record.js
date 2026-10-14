@@ -4381,18 +4381,70 @@
 
     function printSheets(list, filename) {
       if (!list.length) { toast('Nothing to print — no submissions match these filters.'); return; }
-      el('fr_printSheet').innerHTML = list.map(buildSheet).join('');
-      document.body.classList.add('fr-printing');
-      // slide records bring their own page margin + footer, only while printing
-      let pageStyle = null;
-      if (hasRoster && rosterList.some(r => r.slides)) { pageStyle = document.createElement('style'); pageStyle.textContent = slideFooterCss(); document.head.appendChild(pageStyle); }
-      // compact records: tighter font + margins to fit on one A4 page
-      const sheetEl = el('fr_printSheet');
-      if (config.printCompact) sheetEl.classList.add('fr-sheet-compact');
-      let compactStyle = null;
-      if (config.printCompact) { compactStyle = document.createElement('style'); compactStyle.textContent = compactPageCss(); document.head.appendChild(compactStyle); }
-      try { withPrintTitle(filename, () => window.print()); }
-      finally { document.body.classList.remove('fr-printing'); if (pageStyle) pageStyle.remove(); if (compactStyle) compactStyle.remove(); if (config.printCompact) sheetEl.classList.remove('fr-sheet-compact'); }
+      const sheetsHtml = list.map(buildSheet).join('');
+      const extraCss = (hasRoster && rosterList.some(r => r.slides) ? slideFooterCss() : '')
+        + (config.printCompact ? compactPageCss() : '');
+      const compactClass = config.printCompact ? ' fr-sheet-compact' : '';
+
+      // Open a dedicated print window — works on all devices including phones.
+      // On Android Chrome this triggers the native PDF/print dialog.
+      // On iOS Safari the user taps Share → Print or Save to PDF from the new page.
+      const pw = window.open('', '_blank', 'width=900,height=700');
+      if (!pw) {
+        // Popup blocked — fall back to in-page print (desktop only)
+        el('fr_printSheet').innerHTML = sheetsHtml;
+        document.body.classList.add('fr-printing');
+        const sheetEl = el('fr_printSheet');
+        if (config.printCompact) sheetEl.classList.add('fr-sheet-compact');
+        let pageStyle = null, compactStyle = null;
+        if (hasRoster && rosterList.some(r => r.slides)) { pageStyle = document.createElement('style'); pageStyle.textContent = slideFooterCss(); document.head.appendChild(pageStyle); }
+        if (config.printCompact) { compactStyle = document.createElement('style'); compactStyle.textContent = compactPageCss(); document.head.appendChild(compactStyle); }
+        try { withPrintTitle(filename, () => window.print()); }
+        finally { document.body.classList.remove('fr-printing'); if (pageStyle) pageStyle.remove(); if (compactStyle) compactStyle.remove(); if (config.printCompact) sheetEl.classList.remove('fr-sheet-compact'); }
+        return;
+      }
+
+      pw.document.write(`<!doctype html><html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${filename.replace(/</g,'&lt;')}</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;padding:0;background:#fff;}
+${STYLE}
+/* In the print window the sheet is always visible — no .fr-printing toggle needed */
+.fr-sheet{display:block !important;}
+@media screen{
+  body{padding:12px;}
+  .fr-print-bar{
+    position:sticky;top:0;z-index:999;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#1a2026;color:#fff;padding:10px 14px;margin:-12px -12px 14px;
+    font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;
+  }
+  .fr-print-bar button{
+    padding:7px 18px;font-size:14px;font-weight:600;cursor:pointer;border:none;border-radius:4px;
+    background:#2f7a52;color:#fff;
+  }
+  .fr-print-bar button:hover{background:#246040;}
+  .fr-print-bar .fr-pb-hint{font-size:12px;color:#aab;margin-left:4px;}
+}
+@media print{
+  .fr-print-bar{display:none !important;}
+}
+${extraCss}
+</style>
+</head><body>
+<div class="fr-print-bar">
+  <button onclick="window.print()">⬇ Save / Print PDF</button>
+  <span class="fr-pb-hint">iOS: tap Share → Print or Save to PDF</span>
+</div>
+<div class="fr-sheet${compactClass}">${sheetsHtml}</div>
+</body></html>`);
+      pw.document.close();
+      pw.focus();
+      // Small delay to allow the new window to render before triggering print
+      setTimeout(() => { try { pw.print(); } catch(e) { /* iOS may block auto-print; user uses the button */ } }, 600);
     }
 
 
