@@ -3637,6 +3637,32 @@
       disarmClear();
     }
 
+    // Human-readable list of what an amendment changed (old -> new), for the amendment log and the PDF note.
+    function describeAmendChanges(existing, newValues, newRosterRows) {
+      const out = [];
+      const show = v => { const t = v == null ? '' : String(v).trim(); return t === '' ? '(blank)' : t; };
+      const same = (x, y) => String(x == null ? '' : x).trim() === String(y == null ? '' : y).trim();
+      allFields(config).forEach(f => {
+        if (f.type === 'computed') return;
+        const o = (existing.values || {})[f.key], n = newValues[f.key];
+        if (!same(o, n)) out.push(`${f.label || f.key}: ${show(o)} → ${show(n)}`);
+      });
+      if (hasRoster) rosterList.forEach((roster, ri) => {
+        const oldRows = getRosterRows(existing, ri, roster.key) || [], newRows = (newRosterRows && newRosterRows[ri]) || [];
+        const title = roster.rowTitle || 'Row';
+        for (let n = 0; n < Math.max(oldRows.length, newRows.length); n++) {
+          if (n >= newRows.length) { out.push(`${roster.title || 'Roster'}: ${title} ${n + 1} removed`); continue; }
+          if (n >= oldRows.length) { out.push(`${roster.title || 'Roster'}: ${title} ${n + 1} added`); continue; }
+          (roster.columns || []).forEach(c => {
+            if (c.type === 'computed' || c.type === 'derived') return;
+            const o = oldRows[n][c.key], v = newRows[n][c.key];
+            if (!same(o, v)) out.push(`${roster.title || 'Roster'} ${title} ${n + 1} – ${c.label || c.key}: ${show(o)} → ${show(v)}`);
+          });
+        }
+      });
+      return out;
+    }
+
     function closeForm() { amendId = null; editingId = null; openForm(null); }
 
 
@@ -3952,6 +3978,7 @@
             amendedByTitle: completedBy.title,
             amendedBySignature: completedBy.signature,
             reason: amendReason,
+            changes: describeAmendChanges(existing, values, rosterRowsByIndex),
             previousValues: existing.values,
             previousRoster: existing.roster,
             previousRosters: existing.rosters,
@@ -4194,7 +4221,14 @@
       // pull the whole Completed by block the operator filled in at submit (name, title, date, signature)
       const cb = sub.completedBy && typeof sub.completedBy === 'object' ? sub.completedBy : null;
       const cbWhen = cb && cb.date ? window.DocHeader.fmtDate(cb.date) : when;
-      return `<table class="fr-sheet-sign"><tbody>
+      const amendHtml = (sub.amendments || []).length
+        ? `<div class="fr-sheet-amend" style="margin-top:4mm;border:1px solid #c87800;padding:2mm 3mm;font-size:9pt;page-break-inside:avoid;">
+            <strong>Amended after submission${sub.amendments.length > 1 ? ' (' + sub.amendments.length + ' times)' : ''}</strong>
+            ${sub.amendments.map(am => `<div style="margin-top:1.5mm;"><strong>${am.ts ? esc(fmtDateTimeAbbr(am.ts)) : ''}</strong> — ${esc(am.amendedBy || '')}${am.amendedByTitle ? ' (' + esc(am.amendedByTitle) + ')' : ''}${am.clearedVerification ? ' — verification cleared' : ''}
+              <div>Reason: ${esc(am.reason || '(none recorded)')}</div>
+              ${am.changes && am.changes.length ? '<div>Changed: ' + am.changes.map(esc).join('; ') + '</div>' : ''}</div>`).join('')}
+          </div>` : '';
+      return amendHtml + `<table class="fr-sheet-sign"><tbody>
         <tr><td class="fr-sheet-lbl">Completed by:</td><td>${esc(cb && cb.by ? cb.by : who)}</td>
             <td class="fr-sheet-lbl">Title:</td><td>${esc(cb ? cb.title : '')}</td>
             <td class="fr-sheet-lbl">Date:</td><td>${esc(cbWhen)}</td>
