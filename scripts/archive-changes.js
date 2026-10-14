@@ -26,6 +26,8 @@
  * Folder resolution, in order: --out "<folder>" / ARCHIVE_DIR in .env / ..\DB ARCHIVE
  *   (CSV: EXPORT_DIR in .env / ..\DB EXPORTS). No hardcoded personal path, same reasoning as backup.js.
  *
+ * submission_images.image_data (photos) is excluded -- see EXCLUDE_COLUMNS.
+ *
  * Usage:  node scripts/archive-changes.js [--out "<folder>"] [--no-csv]
  */
 const fs = require('fs');
@@ -45,6 +47,18 @@ function canon(v) {
   return JSON.stringify(v);
 }
 const safeName = (t) => t.replace(/[^A-Za-z0-9_.-]/g, '_');
+
+// Columns left out of the archive. submission_images.image_data is the base64 photo: every photo is
+// already a file under PROCESSING_DEPARTMENT\Images (scripts/image-archive-agent.mjs), and copying it
+// into the monthly .jsonl and the CSV would double the storage. The column is nullable, so a restore
+// loads these rows with image_data NULL (the files on disk are the copy). This also means the
+// 90-day purge (image_data -> NULL) does not register as a change.
+// Only list nullable columns: archive-to-sql.js restores a missing key as NULL.
+const EXCLUDE_COLUMNS = { submission_images: ['image_data'] };
+const snapRows = (t) => {
+  const drop = (EXCLUDE_COLUMNS[t] || []).map((c) => ` - '${c}'`).join('');
+  return drop ? `json_agg(to_jsonb(x)${drop})` : 'json_agg(x)';
+};
 
 // Replay a table's log into Map(id -> {hash,row}). Shared shape with archive-to-sql.js.
 function replay(dir, table, asOf) {
@@ -98,7 +112,7 @@ async function main() {
        JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum = ANY(i.indkey)
        WHERE i.indisprimary AND n.nspname = 'public' ORDER BY c.relname, a.attnum`)) (pks[r.t] ||= []).push(r.col);
     const snap = names.length ? await tx.$queryRawUnsafe(
-      names.map((t) => `SELECT '${t}' AS t, COALESCE(json_agg(x), '[]'::json) AS rows FROM "${t}" x`).join(' UNION ALL ')) : [];
+      names.map((t) => `SELECT '${t}' AS t, COALESCE(${snapRows(t)}, '[]'::json) AS rows FROM "${t}" x`).join(' UNION ALL ')) : [];
     return { names, pks, snap };
   }, { isolationLevel: 'RepeatableRead', maxWait: 30000, timeout: 120000 });
 

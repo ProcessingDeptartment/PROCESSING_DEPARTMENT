@@ -121,9 +121,9 @@ The browser caches the submission list in `localStorage`. After deleting from th
 ## Notes
 
 - The record **definitions** (form structure, field config) are NOT deleted — only the submission data.
-- Images attached to dry-monitoring entries are tracked in `sub_dry_monitoring_images`. If you also want to delete those:
+- Images attached to dry-monitoring entries are tracked in the central table `submission_images` (`record_key = 'dry-monitoring'`). If you also want to delete those:
   ```sql
-  DELETE FROM sub_dry_monitoring_images;
+  DELETE FROM submission_images WHERE record_key = 'dry-monitoring';
   ```
-  Note: this does not delete the image files from cloud storage (if any are stored externally) — only the DB records. Check with the image upload implementation before running this.
+  Note: this deletes only the DB rows. Photos already copied by the archive agent stay on the file server under `Images\742\`. Until `sub_dry_monitoring_images` is dropped, its old copies remain too; delete them separately if wanted.
 - No code changes or redeployment needed — data deletion takes effect immediately.

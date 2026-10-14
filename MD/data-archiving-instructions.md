@@ -41,7 +41,12 @@ Primary keys identify rows; a table with no primary key uses the row content as 
 
 ## 3. Restore / leaving Neon
 
-1. Create the schema on the new host: `npx prisma migrate deploy` (with `DATABASE_URL` pointing at it).
+1. Create the schema on the new host from `schema.prisma` (**not** `prisma migrate deploy` — the migrations cannot be replayed on an empty database; later ones assume tables created outside them):
+   ```bash
+   npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script --output schema.sql
+   psql "<new connection string>" -f schema.sql
+   ```
+   This needs no database connection. It does not create views, triggers or the 5 tables listed under §6.
 2. Build the SQL from the archive (works with Neon switched off):
    ```bash
    node scripts/archive-to-sql.js --out restore.sql
@@ -51,7 +56,9 @@ Primary keys identify rows; a table with no primary key uses the row content as 
 4. Point the API at the new host (`DATABASE_URL` in the Render dashboard and local `.env`).
 5. Verify row counts against the latest `backup.js` file (its `counts` section).
 
-The SQL uses `json_populate_recordset` (types come from the target schema) and switches foreign-key checks off for the load (`session_replication_role = replica`, which needs a privileged role). **The rebuild SQL has not yet been loaded into a real database — do a trial restore into a scratch database before relying on it.**
+The SQL uses `json_populate_recordset` (types come from the target schema) and switches foreign-key checks off for the load (`session_replication_role = replica`, which needs a privileged role).
+
+**Trial restore, 2026-10-14:** schema built from `schema.prisma`, `restore.sql` loaded into an empty in-memory Postgres (PGlite, scratch only), row counts compared with live Neon. Result: **214 of 214 schema tables restored with identical row counts** (4,583 rows; re-run after `dry_process_movement_audit` was added to the schema). Only 2 statements failed, both for the `bak_*` tables below. Not tested: a real Postgres 18 server, views/triggers, or the app running against the restored database.
 
 For the app's own restore path use `scripts/restore.js` with a `backup.js` file (KeyValue only; the other tables are derived).
 
@@ -70,6 +77,7 @@ For the app's own restore path use `scripts/restore.js` with a `backup.js` file 
 ## 6. Not built / open items
 
 - **`pg_dump` binary dumps:** not installed — `get.enterprisedb.com` returned 403 to `winget`. Neon is Postgres 18.6, so the client tools must be v18+. If IT allows that host, a `pg_dump -Fc` job can be added on top (it would also give a one-command `pg_restore`).
-- **Photos:** archived separately by `scripts/image-archive-agent.mjs` into `PROCESSING_DEPARTMENT\Images`. No purge of Neon image data was built.
+- **Photos:** all record photos live in the central table `submission_images` (replaces `sub_dry_monitoring_images`, which is left in place until dropped by hand). `scripts/image-archive-agent.mjs` copies them to `PROCESSING_DEPARTMENT\Images\<recNo>\YYYY\MM\` as `<recNo>_<job>_<submissionId>_<fieldKey>_<date>_<id>.<ext>`; see `central-image-archive-instructions.md`. `archive-changes.js` picks `submission_images` up automatically but **leaves out the base64 `image_data` column** (`EXCLUDE_COLUMNS` in the script), because the files in `Images\` are the copy. A restore loads those rows with `image_data` NULL; the photos are then only the files on disk. Add another table or column to `EXCLUDE_COLUMNS` only if the column is nullable. No purge of Neon image data was built: the 90-day purge SQL in the central-image-archive doc (`SET image_data = NULL` where `archived_locally`) is not scheduled.
 - **Host:** both tasks run on Michaela's PC. They must move to the file server with the site (see the site-migration note).
-- **Trial restore** into a scratch database (see §3).
+- **Tables not in `schema.prisma`** (5): the `bak_20261002*` manual backup copies. Their rows are in the archive, but a restore skips them with an error unless their tables are created by hand first. (`dry_process_movement_audit` was added to the schema 2026-10-14.)
+- **Trial restore on a real Postgres server** (the 2026-10-14 trial used PGlite).
