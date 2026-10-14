@@ -4809,6 +4809,23 @@ model DryWeightOverride {
   @@map("dry_weight_override")
 }
 
+// Drying process: every admin reversal of a wrongly answered Yes is kept as a row here. Written by
+// raw SQL in src/index.js (POST /api/drying-process/reverse-movement); created by migration
+// 20260929170000_drying_process_entries. Declared here so schema-built restores include it.
+model DryProcessMovementAudit {
+  id         Int       @id @default(autoincrement())
+  jobNo      String    @map("job_no")
+  movement   String    // dryRoom | dryContainer | gradingRoom
+  entryId    String?   @map("entry_id")
+  oldStamp   DateTime? @map("old_stamp")
+  reversedBy String    @map("reversed_by")
+  reversedAt DateTime  @default(now()) @map("reversed_at")
+  reason     String
+
+  @@index([jobNo], map: "dry_process_movement_audit_job_no_idx")
+  @@map("dry_process_movement_audit")
+}
+
 // Passkey system for signature verification
 model UserPasskey {
   id            String   @id @default(cuid())
