@@ -387,9 +387,10 @@
         }
 
         if (window.toast) window.toast(`Submission deleted — ${data.remaining} entr${data.remaining === 1 ? 'y' : 'ies'} remain`);
+        // close() nulls currentOpts, so grab the callback first.
+        const onDeleted = currentOpts.onDeleted;
         this.close();
-        if (currentOpts && typeof currentOpts.onDeleted === 'function') currentOpts.onDeleted();
-        if (data && typeof currentOpts?.onDeleted === 'function') currentOpts.onDeleted(data);
+        if (typeof onDeleted === 'function') onDeleted(data);
       } catch (e) {
         if (window.toast) window.toast('Network error: ' + e.message);
         btn.disabled = false;
