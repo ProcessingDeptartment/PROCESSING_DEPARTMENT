@@ -4444,7 +4444,7 @@ ${STYLE}
 @media print{
   .fr-print-bar{display:none !important;}
 }
-${docHeaderStyles ? `<style>${docHeaderStyles}</style>` : ''}
+${docHeaderStyles || ''}
 ${extraCss}
 </style>
 </head><body>
