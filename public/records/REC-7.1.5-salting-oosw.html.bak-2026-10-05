@@ -34,6 +34,6 @@
   FormRecord.init({ mount: '#frRoot', recordKey: 'salting-oosw' });
 })();
 </script>
-<script src="../lib/record-shell.js?v=10"></script>
+<script src="../lib/record-shell.js?v=12"></script>
 </body>
 </html>

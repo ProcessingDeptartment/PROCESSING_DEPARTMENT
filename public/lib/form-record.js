@@ -4404,8 +4404,12 @@
     function printSubmission(id) {
       const sub = submissions.find(s => s.id === id);
       if (!sub) return;
-      const stamp = dateOf(sub.values) || new Date(sub.createdAt).toISOString().slice(0, 10);
-      printSheets([sub], safeKey(config.docCode) + '_' + safeKey(config.title) + '_' + safeKey(stamp));
+      const jobNo = safeKey(String((config.batchField && sub.values && sub.values[config.batchField]) || ''));
+      const submitDate = sub.submittedAt
+        ? new Date(sub.submittedAt).toISOString().slice(0, 10)
+        : (dateOf(sub.values) || new Date(sub.createdAt).toISOString().slice(0, 10));
+      const parts = [safeKey(config.docCode), jobNo, submitDate].filter(Boolean);
+      printSheets([sub], parts.join('_'));
     }
 
 

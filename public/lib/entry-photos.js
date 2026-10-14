@@ -1,8 +1,8 @@
-// Photos on problem answers (REC 7.4.2 Dry Monitoring, config.imageUploadFields).
+// Photos on problem answers (config.imageUploadFields; REC 7.4.2 Dry Monitoring first).
 // Loaded on demand by monitoring-log.js. Images go to the API as compressed base64 data URIs
-// (src/dry-monitoring-images.js); a failed upload is parked in localStorage and retried.
+// (src/submission-images.js, table submission_images); a failed upload is parked in localStorage and retried.
 (function () {
-  const PATH = '/api/dry-monitoring';
+  const pathFor = (rk) => '/api/images/' + encodeURIComponent(rk || 'dry-monitoring');
   const PENDING_PREFIX = 'draft_images_';
   const MAX_SIDE = 1280, Q1 = 0.82, Q2 = 0.65, RECOMPRESS_OVER = 900 * 1024, MAX_DATA = 2 * 1024 * 1024;
 
@@ -166,7 +166,7 @@
         const caption = inp.value.trim();
         const span = document.createElement('span'); span.className = 'fr-it-cap'; inp.replaceWith(span);
         if (caption !== (img.caption || '')) {
-          try { await call('PATCH', `${PATH}/images/${img.id}`, { caption }); img.caption = caption; }
+          try { await call('PATCH', `/api/images/${img.id}`, { caption }); img.caption = caption; }
           catch (e) { toast('Caption not saved — ' + e.message); }
         }
         paint(t, img);
@@ -180,13 +180,13 @@
         t.remove(); refresh(); return;
       }
       if (!confirm('Delete this photo? This cannot be undone.')) return;
-      try { await call('DELETE', `${PATH}/images/${img.id}`); t.remove(); refresh(); }
+      try { await call('DELETE', `/api/images/${img.id}`); t.remove(); refresh(); }
       catch (e) { toast(e.message || 'Could not delete the photo.'); }
     }
     async function upload(t, payload, tmpId) {
       setState(t, 'Uploading…'); inFlight++;
       try {
-        const r = await call('POST', `${PATH}/${encodeURIComponent(sid)}/images`, payload);
+        const r = await call('POST', `${pathFor(opts.recordKey)}/${encodeURIComponent(sid)}`, payload);
         pendSet(sid, f.key, pendGet(sid, f.key).filter((p) => p.tmpId !== tmpId));
         setState(t, '');
         paint(t, { ...payload, ...r });
@@ -210,7 +210,7 @@
       for (const file of files) {
         let c;
         try { c = await compress(file); } catch (e) { toast(e.message); continue; }
-        const payload = { fieldKey: f.key, imageData: c.data, fileName: file.name, fileSizeBytes: file.size, mimeType: c.mime, caption: '', uploadedBy: me() };
+        const payload = { fieldKey: f.key, fieldLabel: f.label, jobNo: opts.jobNo ? opts.jobNo() : '', imageData: c.data, fileName: file.name, fileSizeBytes: file.size, mimeType: c.mime, caption: '', uploadedBy: me() };
         const tmpId = 'p' + Date.now() + Math.random().toString(36).slice(2, 6);
         const t = thumb({ imageData: c.data, uploadedBy: payload.uploadedBy, uploadedAt: Date.now() });
         refresh();
@@ -252,24 +252,24 @@
       return { f, b };
     }).filter(Boolean);
     let byField = {};
-    try { byField = await call('GET', `${PATH}/${encodeURIComponent(opts.submissionId)}/images`); }
+    try { byField = await call('GET', `${pathFor(opts.recordKey)}/${encodeURIComponent(opts.submissionId)}`); }
     catch (e) { console.warn('photos: could not load', e); }
     blocks.forEach(({ f, b }) => b.load(byField[f.key] || []));
   }
 
   let countCache = { at: 0, p: null };
-  function counts(force) {
+  function counts(force, recordKey) {
     if (force || !countCache.p || Date.now() - countCache.at > 30000) {
-      countCache = { at: Date.now(), p: call('GET', `${PATH}/images/counts`).catch(() => ({})) };
+      countCache = { at: Date.now(), p: call('GET', `${pathFor(recordKey)}/counts`).catch(() => ({})) };
     }
     return countCache.p;
   }
 
   // print block per field: { fieldKey: html }, "Photos:" omitted where there are none
-  async function printBlocks(submissionId) {
+  async function printBlocks(submissionId, recordKey) {
     injectCss();
     let byField = {};
-    try { byField = await call('GET', `${PATH}/${encodeURIComponent(submissionId)}/images`); } catch (e) { return {}; }
+    try { byField = await call('GET', `${pathFor(recordKey)}/${encodeURIComponent(submissionId)}`); } catch (e) { return {}; }
     const out = {};
     Object.keys(byField).forEach((k) => {
       const list = byField[k] || [];
@@ -288,8 +288,8 @@
 
   // PDF grid of every photo on a job's checks. items: [{ id, label(fieldKey) }], oldest check first; each cell is
   // captioned with the date of the image and the check that failed. '' when there are no photos.
-  async function printGrid(items, fmtDate) {
-    const lists = await Promise.all(items.map((it) => call('GET', `${PATH}/${encodeURIComponent(it.id)}/images`).catch(() => ({}))));
+  async function printGrid(items, fmtDate, recordKey) {
+    const lists = await Promise.all(items.map((it) => call('GET', `${pathFor(recordKey)}/${encodeURIComponent(it.id)}`).catch(() => ({}))));
     const day = (ts) => { const d = new Date(ts); if (isNaN(d)) return ''; const iso = d.toISOString().slice(0, 10); return fmtDate ? fmtDate(iso) : iso; };
     const cells = [];
     lists.forEach((byField, i) => Object.keys(byField || {}).forEach((k) => (byField[k] || []).forEach((img) => cells.push(

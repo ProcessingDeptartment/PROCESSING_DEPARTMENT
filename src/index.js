@@ -82,8 +82,8 @@ app.use('/api', (req, res, next) => {
   if (req.path === '/health') return next();      // uptime probes must stay reachable
   if (req.path === '/auth/admin-login') return next(); // public endpoint — password checked inside
   if (req.path === '/auth/device-enroll') return next(); // public — passkey checked inside
-  // the local photo archive agent carries its own key instead (src/dry-monitoring-images.js)
-  if (require('./dry-monitoring-images').isArchiveRequest(req)) return next();
+  // the local photo archive agent carries its own key instead (src/submission-images.js)
+  if (require('./submission-images').isArchiveRequest(req)) return next();
   const header = req.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (tokenMatches(token)) return next();
@@ -903,8 +903,8 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
   }
 });
 
-// REC 7.4.2 photos on problem answers (src/dry-monitoring-images.js)
-require('./dry-monitoring-images').mount(app, prisma);
+// REC 7.4.2 photos on problem answers (src/submission-images.js)
+require('./submission-images').mount(app, prisma);
 require('./nc-log').mount(app, prisma); // Non-Conformance Log
 require('./field-specs').mount(app, prisma, assembleRecordConfig); // field specifications (limits, gates, auto-NC)
 require('./fsms-calendar').mount(app, prisma); // FSMS annual calendar

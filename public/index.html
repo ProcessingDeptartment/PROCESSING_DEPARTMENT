@@ -205,7 +205,7 @@
   refreshSessionBar();
 </script>
 
-<script>  // ---- photo archive banner: the local agent copies REC 7.4.2 photos to the file server ----
+<script>  // ---- photo archive banner: the local agent copies record photos to the file server ----
   // Administrators also get "Archive now": it flags a request the file-server agent
   // (scripts/image-archive-agent.mjs --on-request) picks up within ~20 s.
   (function () {
@@ -215,7 +215,7 @@
     var timer = null;
     async function load() {
       try {
-        var res = await window.FacilityApi.fetch('/api/dry-monitoring/images/archive-status', { cache: 'no-store' });
+        var res = await window.FacilityApi.fetch('/api/images/archive-status', { cache: 'no-store' });
         if (!res.ok) return;
         var s = await res.json(), parts = [];
         if (s.pending > 0) parts.push('📷 ' + s.pending + ' photo' + (s.pending === 1 ? '' : 's') + ' not yet archived to local server.');
@@ -239,7 +239,7 @@
     async function requestArchive() {
       var btn = document.getElementById('archiveNowBtn'); if (btn) { btn.disabled = true; btn.textContent = 'Requesting…'; }
       try {
-        var res = await window.FacilityApi.fetch('/api/dry-monitoring/images/archive-request', { method: 'POST' });
+        var res = await window.FacilityApi.fetch('/api/images/archive-request', { method: 'POST' });
         if (!res.ok) throw new Error((await res.json().catch(function () { return {}; })).error || ('HTTP ' + res.status));
       } catch (e) { alert('Could not request archiving: ' + e.message); }
       load();

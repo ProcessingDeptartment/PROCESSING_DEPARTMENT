@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Local archive agent for REC 7.4.2 photos. Runs on the factory file server (Node 18+, no npm deps).
+// Local archive agent for record photos (all image-enabled records, table submission_images). Runs on the factory file server (Node 18+, no npm deps).
 // Polls the API for photos not yet archived, writes each to ARCHIVE_ROOT\YYYY\MM\, then marks it
 // archived. It always asks for everything still unarchived, so after downtime it simply catches up.
 //
@@ -56,14 +56,15 @@ async function api(method, p, body) {
   return r.json();
 }
 
-// DM_<submissionId>_<fieldKey>_<YYYYMMDD>_<imageId>.<ext>, filed under <ROOT>\<YYYY>\<MM>
+// <recNo>_<jobNo>_<submissionId>_<fieldKey>_<YYYYMMDD>_<imageId>.<ext>, filed under <ROOT>/<recNo>/<YYYY>/<MM>
 function targetPath(img) {
   const d = new Date(img.uploadedAt);
   const y = String(d.getFullYear()), mo = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
   const mime = String(img.mimeType || (img.imageData.match(/^data:([^;]+);/) || [])[1] || 'image/jpeg').toLowerCase();
   const safe = (s) => String(s).replace(/[^A-Za-z0-9_-]/g, '');
-  const name = `DM_${safe(img.submissionId)}_${safe(img.fieldKey)}_${y}${mo}${day}_${img.id}.${EXT[mime] || 'jpg'}`;
-  return path.join(ROOT, y, mo, name);
+  const rec = safe(img.recordNo) || 'misc', job = safe(img.jobNo) || 'NOJOB';
+  const name = `${rec}_${job}_${safe(img.submissionId)}_${safe(img.fieldKey)}_${y}${mo}${day}_${img.id}.${EXT[mime] || 'jpg'}`;
+  return path.join(ROOT, rec, y, mo, name);
 }
 
 async function archiveOne(img) {
@@ -76,13 +77,13 @@ async function archiveOne(img) {
       fs.writeFileSync(tmp, Buffer.from(b64, 'base64'));
       fs.renameSync(tmp, file);
     }
-    await api('POST', `/api/dry-monitoring/images/${img.id}/mark-archived`, { archivedPath: file });
+    await api('POST', `/api/images/${img.id}/mark-archived`, { archivedPath: file });
     log(`Archived image ${img.id} → ${file}`);
     return true;
   } catch (e) {
     log(`FAILED image ${img.id}: ${e.message}`);
     try {
-      const r = await api('POST', `/api/dry-monitoring/images/${img.id}/archive-error`, { error: e.message });
+      const r = await api('POST', `/api/images/${img.id}/mark-archive-failed`, { error: e.message });
       if (r.failed) log(`Image ${img.id} gave up after ${r.attempts} attempts (archive_failed set)`);
     } catch (e2) { log(`  could not report the failure: ${e2.message}`); }
     return false;
@@ -92,7 +93,7 @@ async function archiveOne(img) {
 async function pass() {
   let total = 0;
   for (;;) {
-    const batch = await api('GET', '/api/dry-monitoring/images/pending-archive');
+    const batch = await api('GET', '/api/images/pending-archive');
     if (!batch.length) break;
     let okCount = 0;
     for (const img of batch) if (await archiveOne(img)) okCount++;
@@ -108,7 +109,7 @@ async function main() {
     log(`Image archive agent started: ${API_BASE} → ${ROOT}, archiving when "Archive now" is pressed (checks every ${REQUEST_POLL_MS / 1000}s)`);
     for (;;) {
       try {
-        const r = await api('GET', '/api/dry-monitoring/images/archive-request');
+        const r = await api('GET', '/api/images/archive-request');
         if (r.requested) {
           log(`Archive requested${r.by ? ' by ' + r.by : ''}`);
           const n = await pass(); log(`Pass done: ${n} archived`);

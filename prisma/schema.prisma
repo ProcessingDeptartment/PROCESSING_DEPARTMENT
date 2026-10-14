@@ -4863,6 +4863,38 @@ model SubDryMonitoringImage {
   @@map("sub_dry_monitoring_images")
 }
 
+// Central photo table for all image-enabled records (migration 20261014090000_submission_images,
+// routes in src/submission-images.js). Supersedes SubDryMonitoringImage.
+model SubmissionImage {
+  id              Int       @id @default(autoincrement())
+  recordKey       String    @map("record_key")
+  recordNo        String    @map("record_no")
+  submissionId    String    @map("submission_id")
+  jobNo           String?   @map("job_no")
+  fieldKey        String    @map("field_key")
+  fieldLabel      String?   @map("field_label")
+  imageData       String?   @map("image_data")
+  fileName        String?   @map("file_name")
+  fileSizeBytes   Int?      @map("file_size_bytes")
+  mimeType        String?   @map("mime_type")
+  caption         String?
+  uploadedBy      String?   @map("uploaded_by")
+  uploadedAt      DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+  sortOrder       Int       @default(0) @map("sort_order")
+  archivedLocally Boolean   @default(false) @map("archived_locally")
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(6)
+  archivedPath    String?   @map("archived_path")
+  archiveAttempts Int       @default(0) @map("archive_attempts")
+  archiveFailed   Boolean   @default(false) @map("archive_failed")
+  legacyId        Int?      @map("legacy_id")
+
+  @@index([recordKey, submissionId], map: "idx_si_record")
+  @@index([recordKey, submissionId, fieldKey], map: "idx_si_field")
+  @@index([jobNo], map: "idx_si_job")
+  @@index([uploadedAt], map: "idx_si_uploaded_at")
+  @@map("submission_images")
+}
+
 // Non-Conformance Log (migration 20261006120000_nc_log, routes in src/nc-log.js).
 model NcLog {
   id               Int       @id @default(autoincrement())

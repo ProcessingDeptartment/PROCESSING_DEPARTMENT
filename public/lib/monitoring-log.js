@@ -1445,7 +1445,7 @@
       html += `</tbody></table>`;
       table.innerHTML = html;
       if (photosOn) {
-        loadLib('entry-photos.js?v=3', 'EntryPhotos').then((P) => P && P.counts(true)).then((counts) => {
+        loadLib('entry-photos.js?v=4', 'EntryPhotos').then((P) => P && P.counts(true, recordKey)).then((counts) => {
           if (!counts) return;
           table.querySelectorAll('[data-photos-for]').forEach((td) => {
             const n = counts[td.dataset.photosFor] || 0;
@@ -1909,8 +1909,8 @@
       if (config.checkHistory) wireCheckHistory(container);
       if (photosOn) {
         const sid = formEntryId;
-        loadLib('entry-photos.js?v=3', 'EntryPhotos').then((P) => {
-          if (P && formEntryId === sid) P.attach(container, { submissionId: sid, ns, locked, fields: photoFields(), toast });
+        loadLib('entry-photos.js?v=4', 'EntryPhotos').then((P) => {
+          if (P && formEntryId === sid) P.attach(container, { submissionId: sid, recordKey, ns, locked, fields: photoFields(), toast, jobNo: () => String((el(ns + '_f_' + jobKeyOf()) || {}).value || '').trim() });
         });
       }
 
@@ -2763,9 +2763,9 @@
     async function addCheckPhotoGrid(sheet, list) {
       const slot = sheet.querySelector('#ml_dc_photos');
       if (!slot) return;
-      const P = await loadLib('entry-photos.js?v=3', 'EntryPhotos');
+      const P = await loadLib('entry-photos.js?v=4', 'EntryPhotos');
       if (!P || !P.printGrid) return;
-      const html = await P.printGrid(list.map(e => ({ id: e.id, label: (k) => (entryFields.find(f => f.key === k) || {}).label || k })), histFmt);
+      const html = await P.printGrid(list.map(e => ({ id: e.id, label: (k) => (entryFields.find(f => f.key === k) || {}).label || k })), histFmt, recordKey);
       if (!html) return;
       slot.innerHTML = html;
       await Promise.all(Array.from(slot.querySelectorAll('img')).map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
@@ -2773,9 +2773,9 @@
 
     // photos print under their field's cell (4col) or row (classic sheet); waits for the images to decode
     async function addPrintPhotos(sheet, entryRow) {
-      const P = await loadLib('entry-photos.js?v=3', 'EntryPhotos');
+      const P = await loadLib('entry-photos.js?v=4', 'EntryPhotos');
       if (!P) return;
-      const blocks = await P.printBlocks(entryRow.id);
+      const blocks = await P.printBlocks(entryRow.id, recordKey);
       Object.keys(blocks).forEach((k) => {
         const cellEl = sheet.querySelector(`[data-sheet-field="${k}"]`);
         if (!cellEl) return;
