@@ -4443,8 +4443,8 @@ ${extraCss}
 </body></html>`);
       pw.document.close();
       pw.focus();
-      // Small delay to allow the new window to render before triggering print
-      setTimeout(() => { try { pw.print(); } catch(e) { /* iOS may block auto-print; user uses the button */ } }, 600);
+      // Auto-print removed — user taps the green button in the popup tab.
+      // pw.print() was triggering a second "auto print blocked" dialog on mobile.
     }
 
 
