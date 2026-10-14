@@ -250,7 +250,7 @@
       </div>`;
   }
 
-  function buildModal(opts) {
+  function buildModal(opts, adminMode) {
     return `
       <div class="dsm-overlay" id="dsm_overlay" onclick="window._dsm.overlayClick(event)">
         <div class="dsm-modal" role="dialog" aria-modal="true" aria-labelledby="dsm_title">
@@ -267,8 +267,8 @@
 
             <!-- Slot 1 -->
             <div class="dsm-pk-row">
-              <div class="dsm-label">First authorisation</div>
-              <div class="dsm-sublabel">Administrator, Production Manager or QA Manager</div>
+              <div class="dsm-label">${adminMode ? 'Administrator authorisation' : 'First authorisation'}</div>
+              <div class="dsm-sublabel">${adminMode ? 'Enter your admin passkey to confirm deletion' : 'Administrator, Production Manager or QA Manager'}</div>
               <div class="dsm-pk-input-row">
                 <div class="dsm-pk-display" id="dsm_pk1_display">—</div>
                 <button type="button" class="dsm-pad-btn" onclick="window._dsm.togglePad(1)">Enter PIN</button>
@@ -278,8 +278,8 @@
               <div class="dsm-pk-err" id="dsm_pk1_err"></div>
             </div>
 
-            <!-- Slot 2 -->
-            <div class="dsm-pk-row">
+            <!-- Slot 2 (hidden for administrator single-auth) -->
+            ${adminMode ? '' : `<div class="dsm-pk-row">
               <div class="dsm-label">Second authorisation <span style="font-size:12px;color:#777">(must be a different person)</span></div>
               <div class="dsm-sublabel">Administrator, Production Manager or QA Manager</div>
               <div class="dsm-pk-input-row">
@@ -289,7 +289,7 @@
               </div>
               ${padHtml(2)}
               <div class="dsm-pk-err" id="dsm_pk2_err"></div>
-            </div>
+            </div>`}
 
             <!-- Reason -->
             <div>
@@ -341,10 +341,11 @@
     async confirm() {
       if (!currentOpts) return;
       if (!state[1].verified) {
-        document.getElementById('dsm_pk1_err').textContent = 'First passkey has not been verified';
+        document.getElementById('dsm_pk1_err').textContent = 'Passkey has not been verified';
         return;
       }
-      if (!state[2].verified) {
+      const adminMode = !!currentOpts._adminMode;
+      if (!adminMode && !state[2].verified) {
         document.getElementById('dsm_pk2_err').textContent = 'Second passkey has not been verified';
         return;
       }
@@ -363,15 +364,14 @@
         const body = {
           key: currentOpts.prefix + currentOpts.recordKey,
           submissionId: currentOpts.entryId,
-          passkey1: state[1].pin || '__verified__' + state[1].name, // server will re-verify; pins cleared on verify — re-send from cache
-          passkey2: state[2].pin || '__verified__' + state[2].name,
           reason,
+          adminSingleAuth: adminMode || undefined,
         };
         // The server verifies the PINs. But we cleared state[slot].pin in verifySlot because the
         // verify step already ran against the API. We must store the raw pin until confirm.
         // Fix: hold rawPin separately (see open() which stores in _rawPin).
         body.passkey1 = currentOpts._rawPin1 || state[1].pin;
-        body.passkey2 = currentOpts._rawPin2 || state[2].pin;
+        if (!adminMode) body.passkey2 = currentOpts._rawPin2 || state[2].pin;
 
         const apiBase = (window.FacilityApi && window.FacilityApi.base) || '';
         const resp = await (window.FacilityApi
@@ -429,8 +429,12 @@
 
       currentOpts = Object.assign({ prefix: 'formrecord:', _rawPin1: '', _rawPin2: '' }, opts);
 
+      // Administrator shortcut: one passkey only (server re-checks the passkey's role).
+      const role = window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() : null;
+      currentOpts._adminMode = (role === 'ADMINISTRATOR');
+
       const wrapper = document.createElement('div');
-      wrapper.innerHTML = buildModal(currentOpts);
+      wrapper.innerHTML = buildModal(currentOpts, currentOpts._adminMode);
       document.body.appendChild(wrapper.firstElementChild);
     }
   };

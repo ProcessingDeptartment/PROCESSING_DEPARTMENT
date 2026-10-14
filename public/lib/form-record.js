@@ -1714,6 +1714,7 @@
     const liveThresholds = () => (config.ncThresholds || []).filter(t => !specNcKeys.has(t.field));
 
     let formLocked = false;
+    let amendId = null;   // id of the submitted/verified record currently open for amendment (null = none)
     let clearArmed = false;
     let clearTimer = null;
     function formHasInput() {
@@ -1935,8 +1936,10 @@
             ? '<span class="fr-badge fr-badge-ok">✓ Submitted</span>'
             : '<span class="fr-badge">Draft</span>'}</td>`;
         const canDelete = window.PermissionRules ? window.PermissionRules.can('deleteSubmission') : false;
+        const canEdit = isSubmitted(sub) && (window.PermissionRules ? window.PermissionRules.can('editSubmission') : true);
         html += `<td style="white-space:nowrap;">
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-open="${sub.id}">${isSubmitted(sub) ? 'View' : 'Open'}</button>
+          ${canEdit ? `<button class="fr-btn fr-btn-flat fr-btn-sm fr-btn-amend" data-amend="${sub.id}" title="${sub.verification ? 'Amend verified record — only the verifier role may do this' : 'Amend this submitted record'}">Edit</button>` : ''}
           <button class="fr-btn fr-btn-flat fr-btn-sm" data-pdf="${sub.id}" title="Print this submission as the paper form">PDF</button>
           ${canDelete ? `<button class="fr-btn fr-btn-sm fr-btn-delete" data-delete="${sub.id}" title="Delete this submission (requires double sign-off)">Delete</button>` : ''}
         </td>`;
@@ -1945,6 +1948,7 @@
       html += `</tbody></table>`;
       wrap.innerHTML = html;
       wrap.querySelectorAll('[data-open]').forEach(btn => btn.addEventListener('click', () => openForm(btn.dataset.open)));
+      wrap.querySelectorAll('[data-amend]').forEach(btn => btn.addEventListener('click', () => openAmend(btn.dataset.amend)));
       wrap.querySelectorAll('[data-pdf]').forEach(btn => btn.addEventListener('click', () => printSubmission(btn.dataset.pdf)));
       wrap.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => {
         const sub = submissions.find(s => s.id === btn.dataset.delete);
@@ -3363,16 +3367,60 @@
       };
     }
 
+    // Amend a submitted (or verified) record: reopens it editable with a mandatory reason + passkey re-sign-off.
+    async function openAmend(id) {
+      const sub = submissions.find(s => s.id === id);
+      if (!sub || !isSubmitted(sub)) return;
+      // verified records may only be amended by the verifier role for this record
+      if (sub.verification) {
+        const gate = await window.SignOffBlock.verifyGate(config.recordKey);
+        if (!gate.allowed) {
+          toast('Only ' + gate.rolesLabel + ' may amend a verified record. You are signed in as '
+            + (gate.role ? window.SignOffBlock.roleLabel(gate.role) : 'not signed in') + '.');
+          return;
+        }
+      }
+      amendId = id;
+      openForm(id);
+    }
+
     function openForm(id) {
       editingId = id || null;
+      if (id !== amendId) amendId = null;   // amend mode only applies to the record it was opened for
       pendingNc = []; ncHandled = new Set(); ncSkipped = []; specAccepted = {};
       const existing = id ? submissions.find(s => s.id === id) : null;
-      const locked = isSubmitted(existing);
+      const amending = !!existing && isSubmitted(existing) && amendId === existing.id;
+      const locked = isSubmitted(existing) && !amending;
       const container = el('fr_modalSections');
       let html = (window.NcRaise && existing ? window.NcRaise.bannerHtml(existing.nc_refs) : '') + (locked
         ? `<div class="fr-locked">Submitted${existing.submittedAt
             ? ' on ' + fmtDateTimeAbbr(existing.submittedAt) : ''} — this submission can no longer be changed.</div>`
         : '');
+      if (amending) {
+        const wasVerified = !!existing.verification;
+        html += `<div class="fr-amend-banner" style="padding:10px 13px;margin-bottom:12px;border-left:4px solid #c87800;background:#fff8ee;color:#7a4800;border-radius:0 4px 4px 0;">
+          <strong style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;">⚠ Amendment mode</strong>
+          <div style="font-size:12px;margin-top:4px;">You are editing a ${wasVerified ? '<strong>verified</strong>' : 'submitted'} record.
+            ${wasVerified ? 'Saving will <strong>clear the verification</strong> and return the record to Submitted status.' : ''}
+            Every change is logged with a mandatory reason and your passkey sign-off.</div>
+          <label class="fr-field" style="margin-top:10px;display:block;">
+            <span style="font-weight:600;font-size:12px;">Reason for amendment <span style="color:#a30000;">*</span></span>
+            <textarea id="fr_amendReason" rows="2" style="width:100%;margin-top:4px;font-size:12.5px;border:1.5px solid #c87800;border-radius:4px;padding:6px;resize:vertical;" placeholder="Describe what is being corrected and why…"></textarea>
+          </label>
+        </div>`;
+      }
+      if (existing && existing.amendments && existing.amendments.length) {
+        html += `<details class="fr-section-collapsible"><summary class="fr-section-title">Amendment history (${existing.amendments.length})</summary><div style="font-size:11.5px;">`;
+        existing.amendments.slice().reverse().forEach(a => {
+          html += `<div style="padding:6px 0;border-bottom:1px solid #e2e4e3;">
+            <strong>${esc(a.amendedBy || '—')}</strong>
+            <span class="fr-muted"> · ${esc(a.amendedByTitle || '')} · ${a.ts ? fmtDateTimeAbbr(a.ts) : ''}</span>
+            ${a.clearedVerification ? '<span class="fr-badge fr-badge-warn" style="margin-left:4px;">Verification cleared</span>' : ''}
+            <div style="margin-top:3px;color:#5a6068;font-style:italic;">${esc(a.reason || '(no reason recorded)')}</div>
+          </div>`;
+        });
+        html += `</div></details>`;
+      }
       if (existing && existing.values && existing.values.oosWarningAck) {
         html += `<div class="fr-oos-warning" style="color:#b30000;font-weight:bold;">
           ${warningLinesHtml(existing.values.oosWarningNote, 'Batch weight exceeding OOSW - possible batch mix')}</div>`;
@@ -3557,9 +3605,11 @@
       // the blanket disable pass above re-enabled the Next button: restore its complete/incomplete state
       container.querySelectorAll('[id^="fr_rosterRows"]').forEach(r => { if (r._updateSlideUi) r._updateSlideUi(); });
       if (config.boxInspection && window.BoxInspection) window.BoxInspection.afterRender({ container, locked, el, toast });
-      el('fr_saveBtn').style.display = locked ? 'none' : '';
+      // amend mode: no draft save (a submitted record never reverts to draft) -- only Re-submit / Cancel
+      el('fr_saveBtn').style.display = (locked || amending) ? 'none' : '';
       el('fr_submitBtn').style.display = locked ? 'none' : '';
-      el('fr_cancelBtn').textContent = locked ? 'Close' : 'Clear';
+      el('fr_submitBtn').textContent = amending ? 'Re-submit (amend)' : 'Submit';
+      el('fr_cancelBtn').textContent = locked ? 'Close' : (amending ? 'Cancel amendment' : 'Clear');
       formLocked = locked;
       if (window.SpecGate) window.SpecGate.scan(container, specMap);
       if (hasRoster) rosterList.forEach((r, i) => { if (r.jobNumbered) { const rc = el(rosterDomId('fr_rosterRows', i)); if (rc && rc._crateRefresh) rc._crateRefresh(locked, false); } });
@@ -3578,11 +3628,16 @@
         if (_sob) _sob.setAttribute('open', '');
       } else {
         _signOffIds.forEach(id => { const i = el(id); if (i) i.disabled = false; });
+        if (amending) {
+          // the amender signs afresh -- never carry over the original (or a stale) sign-off
+          _signOffIds.forEach(id => { const i = el(id); if (i) { i.value = ''; delete i.dataset.verified; const d = el(id + '_display'); if (d) d.innerHTML = ''; } });
+          suggestCompletedBy();
+        }
       }
       disarmClear();
     }
 
-    function closeForm() { editingId = null; openForm(null); }
+    function closeForm() { amendId = null; editingId = null; openForm(null); }
 
 
     async function saveForm(finalize) {
@@ -3628,6 +3683,21 @@
       // Business rules (see BusinessRules.run / public/data/business-rules.json): every
       // cross-record check for every form lives in that one registry, not in form code or record
       // JSON. A rule can veto the finalize (returns false -> abort, same as the gates above).
+      const amendingSub = editingId && amendId === editingId ? submissions.find(s => s.id === editingId) : null;
+      const amending = !!amendingSub && isSubmitted(amendingSub);
+      let amendReason = '';
+      if (amending) {
+        if (!finalize) { toast('A submitted record can only be re-submitted, not saved as a draft.'); return; }
+        const reasonEl = el('fr_amendReason');
+        amendReason = reasonEl ? reasonEl.value.trim() : '';
+        if (!amendReason) { if (reasonEl) { revealField(reasonEl); reasonEl.focus(); } toast('A reason for amendment is required before re-submitting.'); return; }
+        const sigEl = el('fr_cb_signature');
+        if (!sigEl || !sigEl.value.trim() || sigEl.dataset.verified !== 'true') {
+          toast('A verified passkey signature is required to amend a submitted record.');
+          if (sigEl) revealField(sigEl);
+          return;
+        }
+      }
       let completedBy = null;
       if (finalize) {
         completedBy = {
@@ -3659,7 +3729,7 @@
       // column group the row's process hides are cleared -- after a confirm if any would be lost.
       // recordDate fields: read-only date stamped with the day the entry is completed.
       allFields(config).filter(f => f.recordDate).forEach(f => {
-        if (finalize) { const d = new Date(); values[f.key] = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        if (finalize && !amending) { const d = new Date(); values[f.key] = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
       });
       if (rosterRowsByIndex) {
         for (let ri = 0; ri < rosterList.length; ri++) {
@@ -3867,17 +3937,36 @@
       let savedSub;
       if (editingId) {
         const existing = submissions.find(s => s.id === editingId);
-        if (isSubmitted(existing)) { toast('This submission is submitted and can no longer be changed.'); return; }
+        if (isSubmitted(existing) && !amending) { toast('This submission is submitted and can no longer be changed.'); return; }
+        const now = Date.now();
         existing.history = existing.history || [];
         existing.history.push({
-          ts: Date.now(), previousValues: existing.values,
+          ts: now, previousValues: existing.values,
           previousRoster: existing.roster, previousRosters: existing.rosters
         });
+        if (amending) {
+          existing.amendments = existing.amendments || [];
+          existing.amendments.push({
+            ts: now,
+            amendedBy: completedBy.by,
+            amendedByTitle: completedBy.title,
+            amendedBySignature: completedBy.signature,
+            reason: amendReason,
+            previousValues: existing.values,
+            previousRoster: existing.roster,
+            previousRosters: existing.rosters,
+            previousCompletedBy: existing.completedBy,
+            previousVerification: existing.verification || null,
+            clearedVerification: !!existing.verification
+          });
+          // an amended record goes back to the verification queue
+          delete existing.verification;
+        }
         existing.values = values;
         if (hasRoster) rosterList.forEach((roster, i) => setRosterRows(existing, i, roster.key, rosterRowsByIndex[i]));
-        existing.updatedAt = Date.now();
+        existing.updatedAt = now;
         existing.status = status;
-        if (finalize) { existing.submittedAt = Date.now(); existing.completedBy = completedBy; }
+        if (finalize) { if (!amending) existing.submittedAt = now; existing.completedBy = completedBy; }
         savedSub = existing;
       } else {
         const sub = {
@@ -3940,8 +4029,8 @@
       renderTable();
 
       refreshVerification();
-      if (finalize && window.PostSubmitPrompt) window.PostSubmitPrompt.show();
-      toast(finalize ? 'Submitted for verification.' + (finalRange ? ' Crates numbered ' + finalRange[0] + (finalRange[1] !== finalRange[0] ? ' to ' + finalRange[1] : '') + '.' : '') : 'Draft saved.');
+      if (finalize && !amending && window.PostSubmitPrompt) window.PostSubmitPrompt.show();
+      toast(amending ? 'Record amended and re-submitted for verification.' : finalize ? 'Submitted for verification.' + (finalRange ? ' Crates numbered ' + finalRange[0] + (finalRange[1] !== finalRange[0] ? ' to ' + finalRange[1] : '') + '.' : '') : 'Draft saved.');
     }
 
 

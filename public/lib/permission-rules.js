@@ -32,6 +32,10 @@
 
     // Delete a submitted/draft entry from a record. Requires double passkey sign-off on the API.
     // This rule controls whether the UI shows the delete button at all.
+    // Amend a submitted record (reason + passkey re-sign-off). Verified records are additionally
+    // gated to the record's verifier roles via SignOffBlock.verifyGate().
+    editSubmission: ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'ADMINISTRATOR'],
+
     deleteSubmission: ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMINISTRATOR'],
   };
 

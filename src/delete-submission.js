@@ -99,33 +99,41 @@ function entrySummary(entry) {
 
 module.exports = function registerDeleteSubmission(app, prisma) {
   app.post('/api/submissions/delete-one', async (req, res) => {
-    const { key, submissionId, passkey1, passkey2, reason } = req.body || {};
+    const { key, submissionId, passkey1, passkey2, reason, adminSingleAuth } = req.body || {};
     const ip = req.ip || 'unknown';
+    // Administrator single-passkey mode: validated server-side against the passkey's role below.
+    const single = adminSingleAuth === true;
 
     // --- Input validation ---
-    if (!key || !submissionId || !passkey1 || !passkey2 || !reason) {
+    if (!key || !submissionId || !passkey1 || (!single && !passkey2) || !reason) {
       return res.status(400).json({ ok: false, error: 'key, submissionId, passkey1, passkey2 and reason are all required' });
     }
     if (String(reason).trim().length < 10) {
       return res.status(400).json({ ok: false, error: 'Reason must be at least 10 characters' });
     }
-    if (String(passkey1).trim() === String(passkey2).trim()) {
+    if (!single && String(passkey1).trim() === String(passkey2).trim()) {
       return res.status(400).json({ ok: false, error: 'The two passkeys must belong to two different people' });
     }
     if (!key.startsWith('formrecord:') && !key.startsWith('monitoring_log:')) {
       return res.status(400).json({ ok: false, error: 'Key must start with formrecord: or monitoring_log:' });
     }
 
-    // --- Verify both passkeys ---
+    // --- Verify passkey(s) ---
     const [v1, v2] = await Promise.all([
       verifyAuthorisedPasskey(prisma, String(passkey1).trim(), ip + '_1'),
-      verifyAuthorisedPasskey(prisma, String(passkey2).trim(), ip + '_2'),
+      single ? Promise.resolve(null) : verifyAuthorisedPasskey(prisma, String(passkey2).trim(), ip + '_2'),
     ]);
 
     if (!v1.ok) return res.status(403).json({ ok: false, error: `First signatory: ${v1.error}` });
-    if (!v2.ok) return res.status(403).json({ ok: false, error: `Second signatory: ${v2.error}` });
-    if (v1.username === v2.username) {
-      return res.status(400).json({ ok: false, error: 'Both passkeys belong to the same person — two distinct people must confirm' });
+    if (single) {
+      if (titleToRole(v1.title || '') !== 'ADMINISTRATOR') {
+        return res.status(403).json({ ok: false, error: 'Single-passkey deletion requires an Administrator passkey' });
+      }
+    } else {
+      if (!v2.ok) return res.status(403).json({ ok: false, error: `Second signatory: ${v2.error}` });
+      if (v1.username === v2.username) {
+        return res.status(400).json({ ok: false, error: 'Both passkeys belong to the same person — two distinct people must confirm' });
+      }
     }
 
     // --- Load the record's entry array ---
@@ -184,13 +192,14 @@ module.exports = function registerDeleteSubmission(app, prisma) {
           data: {
             key,
             action: 'delete-submission-reason',
-            actor: v2.displayName,
-            role: v2.title || '',
+            actor: (v2 || v1).displayName,
+            role: (v2 || v1).title || '',
             before: JSON.stringify({ submissionId, summary }),
             after: JSON.stringify({
               reason: String(reason).trim(),
               signatory1: { username: v1.username, name: v1.displayName, title: v1.title },
-              signatory2: { username: v2.username, name: v2.displayName, title: v2.title },
+              signatory2: v2 ? { username: v2.username, name: v2.displayName, title: v2.title } : null,
+              adminSingleAuth: single,
               deletedAt: new Date().toISOString(),
             }),
           }
@@ -205,7 +214,7 @@ module.exports = function registerDeleteSubmission(app, prisma) {
 
       // Log to server console for immediate visibility.
       console.log(`[delete-submission] ${key} | entry ${submissionId} (${summary}) deleted`
-        + ` | by ${v1.displayName} + ${v2.displayName} | reason: ${String(reason).trim()}`);
+        + ` | by ${v1.displayName}${v2 ? ' + ' + v2.displayName : ' (admin single-auth)'} | reason: ${String(reason).trim()}`);
 
       res.json({ ok: true, removed: { id: submissionId, summary }, remaining: updated.length });
     } catch (e) {
