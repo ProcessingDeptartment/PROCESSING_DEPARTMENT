@@ -74,17 +74,6 @@
 
   function buildTopbar(parts) {
     var bar = h('header', 'rt-topbar');
-    var back = h('button', 'rt-back', '←');
-    back.type = 'button';
-    back.setAttribute('aria-label', 'Back');
-    back.title = 'Back';
-    back.addEventListener('click', function () {
-      // go to the previous page if it was on this site, else to the Record List
-      var sameSite = document.referrer && document.referrer.indexOf(location.origin) === 0;
-      if (sameSite && history.length > 1) history.back();
-      else location.href = '../records/record-list.html';
-    });
-    bar.appendChild(back);
     bar.appendChild(h('div', 'rt-logo', 'AB'));
 
     if (parts.docLine) {
@@ -113,7 +102,25 @@
     bar.insertBefore(h('span', 'rt-wi-slot'), bar.lastChild);
 
     bar.appendChild(h('div', 'rt-actions'));
-    withNavMenu(function () { window.NavMenu.attach(bar); });
+    withNavMenu(function () {
+      // Build back button and insert it immediately left of the hamburger
+      var back = h('button', 'rt-back no-print', '←');
+      back.type = 'button';
+      back.setAttribute('aria-label', 'Go back');
+      back.title = 'Go back';
+      back.addEventListener('click', function () {
+        var sameSite = document.referrer && document.referrer.indexOf(location.origin) === 0;
+        if (sameSite && history.length > 1) history.back();
+        else location.href = '../records/record-list.html';
+      });
+      var menuBtn = window.NavMenu.attach(bar);   // hamburger appended as last child
+      // Insert back just before the hamburger so they sit side-by-side on the right
+      if (menuBtn && menuBtn.parentNode === bar) {
+        bar.insertBefore(back, menuBtn);
+      } else {
+        bar.appendChild(back);
+      }
+    });
     return bar;
   }
 
