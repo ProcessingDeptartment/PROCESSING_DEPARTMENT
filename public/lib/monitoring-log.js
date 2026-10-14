@@ -2867,17 +2867,87 @@
       const entryRow = entries.find(e => e.id === id);
       if (!entryRow) return;
       const dateF = roleField('date');
+
+      // Build sheet HTML in the hidden print sheet (existing logic)
       const sheet = el('ml_printSheet');
       sheet.innerHTML = prog ? buildJobSheet(entryRow) : buildEntrySheet(entryRow);
       if (config.printLayout === '4col' && config.checkHistory) { if (photosOn) await addCheckPhotoGrid(sheet, printJobChecks(entryRow)); }
       else if (photosOn) await addPrintPhotos(sheet, entryRow);
+      const sheetsHtml = sheet.innerHTML;
+      sheet.innerHTML = ''; // clean up
+
       const dc = !prog && config.printLayout === '4col';
-      if (dc) dcPageStyle(); else setPageOrientation('portrait');
-      document.body.classList.add('ml-printing-entry');
-      document.body.classList.toggle('ml-printing-dc', dc);
       const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);
-      withPrintTitle(safeKey(docCode) + '_' + safeKey(title) + '_' + stamp, () => window.print());
-      document.body.classList.remove('ml-printing-entry', 'ml-printing-dc');
+      const filename = safeKey(docCode) + '_' + safeKey(title) + '_' + stamp;
+
+      // Capture doc-header for the popup
+      const docHeaderHtml = (() => {
+        if (!window.DocHeader) return '';
+        const h = window.DocHeader.current(config.recordKey);
+        if (!h) return '';
+        return window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png');
+      })();
+      const docHeaderStyles = (() => {
+        const s = document.getElementById('dh-styles');
+        return s ? s.textContent : '';
+      })();
+
+      // Page style (orientation / footer)
+      const pageStyleEl = document.getElementById('ml-page-style');
+      const pageStyleCss = pageStyleEl ? pageStyleEl.textContent : '';
+
+      const pw = window.open('', '_blank', 'width=900,height=700');
+      if (!pw) {
+        // Popup blocked — fall back to in-page print
+        sheet.innerHTML = sheetsHtml;
+        document.body.classList.add('ml-printing-entry');
+        document.body.classList.toggle('ml-printing-dc', dc);
+        if (dc) dcPageStyle(); else setPageOrientation('portrait');
+        withPrintTitle(filename, () => window.print());
+        document.body.classList.remove('ml-printing-entry', 'ml-printing-dc');
+        sheet.innerHTML = '';
+        return;
+      }
+
+      pw.document.write(`<!doctype html><html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${filename.replace(/</g,'&lt;')}</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;padding:0;background:#fff;}
+${STYLE}
+.ml-sheet{display:block !important;}
+@media screen{
+  body{padding:12px;}
+  .ml-print-bar{
+    position:sticky;top:0;z-index:999;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#1a2026;color:#fff;padding:10px 14px;margin:-12px -12px 14px;
+    font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;
+  }
+  .ml-print-bar button{
+    padding:7px 18px;font-size:14px;font-weight:600;cursor:pointer;border:none;border-radius:4px;
+    background:#2f7a52;color:#fff;
+  }
+  .ml-print-bar button:hover{background:#246040;}
+  .ml-print-bar .ml-pb-hint{font-size:12px;color:#aab;margin-left:4px;}
+}
+@media print{ .ml-print-bar{display:none !important;} }
+${docHeaderStyles ? docHeaderStyles : ''}
+${pageStyleCss}
+</style>
+</head><body>
+<div class="ml-print-bar">
+  <button onclick="window.print()">⬇ Save / Print PDF</button>
+  <span class="ml-pb-hint">iOS: tap Share → Print or Save to PDF</span>
+</div>
+${docHeaderHtml ? `<div style="margin-bottom:6px;">${docHeaderHtml}</div>` : ''}
+<div class="ml-sheet${dc ? ' ml-sheet-dc' : ''}">${sheetsHtml}</div>
+</body></html>`);
+      pw.document.close();
+      pw.focus();
+      // Auto-print removed — user taps the green button in the popup tab.
     }
 
     function exportEntryJson(id) {
