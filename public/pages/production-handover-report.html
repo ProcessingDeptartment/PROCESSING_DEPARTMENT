@@ -228,7 +228,7 @@ body {
             <h1 class="text-3xl font-black text-slate-900">REC 9.9.1 Production Handover</h1>
             <div class="flex gap-4 items-center">
                 <span id="printWarning" class="text-[10px] text-red-500 font-bold uppercase">Complete footer to print</span>
-                <button id="printBtn" disabled onclick="preparePrint()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 disabled:bg-slate-300 transition-all">GENERATE PDF</button>
+                <button id="printBtn" disabled onclick="preparePrint()" onmousedown="if(this.disabled){document.getElementById('handover-footer').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('handover-footer').style.outline='3px solid #ef4444';setTimeout(()=>document.getElementById('handover-footer').style.outline='',1500)}" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 disabled:bg-slate-300 transition-all">GENERATE PDF</button>
             </div>
         </div>
 
@@ -569,7 +569,7 @@ body {
             <div id="print-gen-comments" class="print-only print-gen-comments-box whitespace-pre-wrap break-words"></div>
         </div>
 
-        <div class="bg-slate-900 p-4 rounded-xl text-white mb-6 no-print">
+        <div id="handover-footer" class="bg-slate-900 p-4 rounded-xl text-white mb-6 no-print">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Date:</label>
@@ -588,6 +588,13 @@ body {
                     <input type="text" id="hName" class="bg-white text-black font-bold border-none w-full rounded-md p-2 outline-none text-xs uppercase" oninput="validatePrint()">
                 </div>
             </div>
+        </div>
+
+        <div class="flex justify-end mb-4 no-print" id="footer-print-btn-wrap">
+            <button id="printBtnFooter" disabled onclick="preparePrint()" 
+                class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 disabled:bg-slate-300 transition-all">
+                GENERATE PDF
+            </button>
         </div>
 
         <div class="print-only signature-area">
@@ -1138,6 +1145,34 @@ function mobilePrintHelper() {
 }
 
 </script>
+
+        <script>
+        // Keep footer print button in sync with main print button
+        (function() {
+            const orig = window.validatePrint;
+            // Patch validatePrint to also sync footer button
+            function syncFooterBtn() {
+                const main = document.getElementById('printBtn');
+                const foot = document.getElementById('printBtnFooter');
+                if (main && foot) foot.disabled = main.disabled;
+            }
+            const origValidate = window.validatePrint;
+            if (origValidate) {
+                window.validatePrint = function() { origValidate(); syncFooterBtn(); };
+            } else {
+                // Watch for it to be defined
+                let tries = 0;
+                const iv = setInterval(function() {
+                    if (window.validatePrint && window.validatePrint !== arguments.callee) {
+                        const fn = window.validatePrint;
+                        window.validatePrint = function() { fn(); syncFooterBtn(); };
+                        clearInterval(iv);
+                    }
+                    if (++tries > 50) clearInterval(iv);
+                }, 100);
+            }
+        })();
+        </script>
 </body>
 </html>
 
