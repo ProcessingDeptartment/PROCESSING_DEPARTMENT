@@ -2965,6 +2965,12 @@
         const c = el(modalIds.fields);
         if (c && c.scrollIntoView) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return true;
+      },
+      // ?print=1 support: print entry <id> as the paper form if it lives here.
+      printIfPresent: (id) => {
+        if (!entries.some(e => e.id === id)) return false;
+        printEntry(id);
+        return true;
       } };
   }
 
@@ -3620,9 +3626,18 @@
       let id = (location.hash || '').replace(/^#/, '');
       try { id = decodeURIComponent(id); } catch (e) { /* keep raw */ }
       id = id.trim();
+      // ?entry=<id> (Submissions Log View/PDF links) works the same as #<id>; ?print=1 then prints it
+      const qs = new URLSearchParams(location.search);
+      const fromQuery = !id && !!qs.get('entry');
+      if (fromQuery) id = qs.get('entry').trim();
       if (!id) return;
       if (!primary.openIfPresent(id) && !(secondary && secondary.openIfPresent(id))) {
         toast('That entry has not reached this device yet.');
+        return;
+      }
+      if (fromQuery && qs.get('print') === '1' && !openFromHash.printed) {
+        openFromHash.printed = true;
+        setTimeout(() => { primary.printIfPresent(id) || (secondary && secondary.printIfPresent(id)); }, 400);
       }
     }
 

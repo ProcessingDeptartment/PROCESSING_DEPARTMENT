@@ -9,6 +9,7 @@
     { username: 'qa manager',          role: 'QA_MANAGER',            displayName: 'QA Manager',          noPassword: true },
     { username: 'production manager',  role: 'PRODUCTION_MANAGER',    displayName: 'Production Manager',  noPassword: true },
     { username: 'operator',            role: 'OPERATOR',              displayName: 'Operator',            noPassword: true },
+    { username: 'admin',               role: 'ADMIN',                 displayName: 'Admin',               noPassword: true },
     { username: 'administrator',       role: 'ADMINISTRATOR',         displayName: 'Administrator' }
   ];
 

@@ -52,7 +52,7 @@
   body.authenticated.is-admin tr.admin-only{ display:table-row; }
   body.authenticated tr.auth-only{ display:table-row; }
   .block.admin-only{ display:none; }
-  body.authenticated.is-admin .block.admin-only{ display:flex; }
+  body.authenticated .block.admin-only{ display:flex; }
   .section-title{ font-size:18px; font-weight:600; color:#1b2330; margin:0 0 12px; }
   .more-title{ margin-top:28px; }
   .block-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
@@ -178,7 +178,7 @@
 
 <script src="lib/data-store.js?v=5"></script>
 <script src="lib/api-backend.js?v=18"></script>
-<script src="lib/auth.js?v=4"></script>
+<script src="lib/auth.js?v=5"></script>
 <script src="lib/login-ui.js?v=6"></script>
 <script>  function refreshSessionBar() {
     var user = window.Auth.getCurrentUser();
@@ -187,7 +187,7 @@
     document.getElementById('deviceLink').style.display = user ? 'none' : '';
     document.getElementById('logoutBtn').style.display = user ? '' : 'none';
     document.body.classList.toggle('authenticated', !!user);
-    document.body.classList.toggle('is-admin', !!user && /ADMIN/i.test(user.role || ''));
+    document.body.classList.toggle('is-admin', !!user && /ADMIN(ISTRATOR)?$/.test(user.role || ''));
   }
 
   document.getElementById('loginBtnTop').addEventListener('click', function () {

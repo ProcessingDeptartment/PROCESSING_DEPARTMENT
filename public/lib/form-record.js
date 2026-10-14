@@ -4598,11 +4598,19 @@
       let id = (location.hash || '').replace(/^#/, '');
       try { id = decodeURIComponent(id); } catch (e) { /* keep raw */ }
       id = id.trim();
+      // ?entry=<id> (Submissions Log View/PDF links) works the same as #<id>; ?print=1 then prints it
+      const qs = new URLSearchParams(location.search);
+      const fromQuery = !id && !!qs.get('entry');
+      if (fromQuery) id = qs.get('entry').trim();
       if (!id) return;
       if (!submissions.some(s => s.id === id)) { toast('That entry has not reached this device yet.'); return; }
       openForm(id);
       const panel = el('fr_modalSections');
       if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (fromQuery && qs.get('print') === '1' && !openFromHash.printed) {
+        openFromHash.printed = true;
+        setTimeout(() => printSubmission(id), 400);
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -39,13 +39,17 @@
   .btn:hover{ background:#f2f4f6; }
   .btn-primary{ background:#2f4356; color:#fff; border-color:#2f4356; }
   .btn-primary:hover{ background:#3b5470; }
+  .btn-closed{ background:#6b7280; color:#fff; border-color:#6b7280; }
+  .btn-closed:hover{ background:#4b5563; }
+
+  /* closed-jobs banner */
+  .closed-notice{ display:none; align-items:center; gap:10px; padding:8px 14px; background:#f0f4f0; border:1px solid #c5d5c5; border-radius:6px; margin-bottom:14px; font-size:12px; color:#3a5a3a; }
+  .closed-notice.show{ display:flex; }
 
   table.log-table{ width:100%; border-collapse:collapse; }
-  table.log-table th,table.log-table td{ border-bottom:1px solid #eceeef; padding:8px 12px; text-align:left; font-size:12px; vertical-align:top; }
+  table.log-table th,table.log-table td{ border-bottom:1px solid #eceeef; padding:8px 12px; text-align:left; font-size:12px; vertical-align:middle; }
   table.log-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; position:sticky; top:0; z-index:1; cursor:pointer; white-space:nowrap; }
   table.log-table tbody tr:hover{ background:#f9fafb; }
-  td.doc a{ color:#1d4ed8; text-decoration:none; font-weight:600; }
-  td.doc a:hover{ text-decoration:underline; }
   td.when{ white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-size:11.5px; }
   td.detail{ color:#5c6771; font-size:11.5px; }
   .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; }
@@ -57,6 +61,14 @@
   .tablewrap{ max-height:70vh; overflow:auto; }
   .note{ color:#5c6771; }
   .note code{ background:#f0f2f4; padding:1px 4px; border-radius:3px; }
+
+  /* Action buttons in table */
+  td.actions{ white-space:nowrap; }
+  .act-btn{ display:inline-block; padding:3px 9px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer; text-decoration:none; border:1px solid; line-height:1.5; }
+  .act-btn-view{ background:#fff; color:#2f4356; border-color:#2f4356; }
+  .act-btn-view:hover{ background:#e8edf2; }
+  .act-btn-pdf{ background:#2f7a52; color:#fff; border-color:#2f7a52; margin-left:4px; }
+  .act-btn-pdf:hover{ background:#235c3d; }
 
   @media (max-width:900px){ .summary-row{ grid-template-columns:repeat(2,1fr); } }
   @media (max-width:640px){
@@ -85,6 +97,12 @@
     <div class="summary-card" data-quick="draft"><div class="num" id="sumDrafts">0</div><div class="lbl">Open drafts</div></div>
   </div>
 
+  <div id="closedNotice" class="closed-notice">
+    <span id="closedCount">0</span> event(s) hidden — job marked complete or closed.
+    <button class="btn btn-closed" id="btnShowClosed">Show closed jobs</button>
+    <button class="btn" id="btnHideClosed" style="display:none;">Hide closed jobs</button>
+  </div>
+
   <div class="panel">
     <div class="panel-head">
       <h2>Log</h2>
@@ -103,8 +121,8 @@
           <option value="draft">Draft</option>
         </select>
         <select id="fRecord"><option value="">All records</option></select>
-        <input type="date" id="fFrom" title="Submitted from (date)">
-        <input type="date" id="fTo" title="Submitted to (date)">
+        <input type="date" id="fFrom" title="Activity date from">
+        <input type="date" id="fTo" title="Activity date to">
         <button class="btn" id="btnReset">Reset</button>
         <button class="btn btn-primary" id="btnCsv">Export CSV</button>
       </div>
@@ -120,7 +138,7 @@
       <div id="scopeNote">Reading&hellip;</div>
       <div style="margin-top:6px;">One row per event: a submission when it was submitted, a verification when it was signed off, and a draft
       while it is still open. Both record engines are covered &mdash; form records (<code>formrecord:*</code>) and monitoring logs
-      (<code>monitoring_log:*</code>).</div>
+      (<code>monitoring_log:*</code>). Jobs marked as complete or closed are hidden by default &mdash; use the notice above the table to reveal them for batch traceability.</div>
     </div>
   </div>
 
@@ -129,12 +147,11 @@
 <script src="../lib/master-index-data.js?v=4"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=2"></script>
+<script src="../lib/auth.js?v=5"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script>(function () {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
-
 
   const indexByKey = {};
   ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach((row) => {
@@ -156,7 +173,6 @@
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
   }
 
-
   function verifyTs(v) {
     if (v && v.verifiedDate) {
       const t = Date.parse(v.verifiedDate + 'T00:00:00');
@@ -164,7 +180,6 @@
     }
     return (v && v.loggedAt) || 0;
   }
-
 
   const DATEISH = /date/i;
   function entryDate(values) {
@@ -179,7 +194,6 @@
     return k ? String(values[k]).trim() : '';
   }
 
-  // Fallback unique ref when there's no job number: batch/lot fields, then entry ID prefix.
   function fallbackRef(values, entryId) {
     if (values) {
       const k = Object.keys(values).find((key) => /(batch|lot).*(no|num|id|code)/i.test(key) && values[key]);
@@ -188,8 +202,6 @@
     return entryId ? String(entryId).slice(0, 8) : '';
   }
 
-  // Read completedBy from the sign-off block object (entry.completedBy.by), with
-  // fallback to scanning values fields for legacy data.
   function completedByOf(entry) {
     const cb = entry && entry.completedBy;
     if (cb && typeof cb === 'object' && cb.by && String(cb.by).trim()) return String(cb.by).trim();
@@ -200,8 +212,40 @@
     return k ? String(v[k]) : '';
   }
 
+  // Set of job/ref keys that are closed or complete
+  const CLOSED_JOBS = new Set();
+
+  // Load job statuses from storage — keys like jobstatus:<jobNo> or jobStatus:<jobNo>
+  async function loadClosedJobs() {
+    try {
+      const statuses = await window.storage.getByPrefix('jobstatus:', true);
+      Object.keys(statuses || {}).forEach((key) => {
+        let data;
+        try { data = JSON.parse(statuses[key]); } catch (e) { return; }
+        const jobNo = key.replace(/^jobstatus:/i, '');
+        const st = (data && (data.status || data.state || '')).toLowerCase();
+        if (/close|complet/i.test(st)) CLOSED_JOBS.add(jobNo.toLowerCase());
+      });
+      // Also try mixed-case prefix
+      const statuses2 = await window.storage.getByPrefix('jobStatus:', true);
+      Object.keys(statuses2 || {}).forEach((key) => {
+        let data;
+        try { data = JSON.parse(statuses2[key]); } catch (e) { return; }
+        const jobNo = key.replace(/^jobStatus:/i, '');
+        const st = (data && (data.status || data.state || '')).toLowerCase();
+        if (/close|complet/i.test(st)) CLOSED_JOBS.add(jobNo.toLowerCase());
+      });
+    } catch (e) { /* no job status store — that's fine */ }
+  }
+
+  function isClosedJob(ref) {
+    if (!ref) return false;
+    return CLOSED_JOBS.has(String(ref).toLowerCase());
+  }
+
   let EVENTS = [];
   let sortKey = 'ts', sortDir = -1;
+  let showClosed = false;
 
   function pushEvents(rec, entry) {
     const jobNo = jobNoOf(entry.values);
@@ -252,7 +296,6 @@
   }
 
   async function collect() {
-
     const [forms, logs] = await Promise.all([
       window.storage.getByPrefix('formrecord:', true),
       window.storage.getByPrefix('monitoring_log:', true)
@@ -288,11 +331,14 @@
     const ev = $('fEvent').value, st = $('fStatus').value, rk = $('fRecord').value;
     const from = $('fFrom').value, to = $('fTo').value;
     return EVENTS.filter((e) => {
+      // Hide closed-job rows unless showClosed is true
+      if (!showClosed && isClosedJob(e.ref)) return false;
+
       if (ev && e.event !== ev) return false;
       if (st && e.status !== st) return false;
       if (rk && e.recordKey !== rk) return false;
       if (from || to) {
-        const d = dayOf(e.ts);
+        const d = e.entryDate || dayOf(e.ts);
         if (from && (!d || d < from)) return false;
         if (to && (!d || d > to)) return false;
       }
@@ -304,38 +350,50 @@
     });
   }
 
-  const EVENT_BADGE = {
-    submitted: '<span class="badge badge-info">Submitted</span>',
-    verified: '<span class="badge badge-ok">Verified</span>',
-    draft: '<span class="badge badge-muted">Draft saved</span>'
-  };
   const STATUS_BADGE = {
     pending: '<span class="badge badge-warn">Awaiting verification</span>',
     verified: '<span class="badge badge-ok">Verified</span>',
     draft: '<span class="badge badge-muted">Draft</span>'
   };
 
-  function docLabel(e) {
-    const label = (e.docNo ? esc(e.docNo) + ' — ' : '') + esc(e.name);
-    return e.href ? '<a href="' + esc(e.href) + '">' + label + '</a>' : label;
-  }
-
-  // Job/ref cell: job number in bold if present, otherwise fallback ref in muted style.
+  // Job/ref cell
   function refCell(e) {
     if (e.jobNo) return '<strong>' + esc(e.jobNo) + '</strong>';
     if (e.ref) return '<span style="color:#8a939b;font-family:\'IBM Plex Mono\',monospace;font-size:11px;">' + esc(e.ref) + '</span>';
     return '<span style="color:#ccc;">—</span>';
   }
 
+  // Record column — label only, no link
+  function recordLabel(e) {
+    return (e.docNo ? esc(e.docNo) + ' — ' : '') + esc(e.name);
+  }
+
+  // Actions cell: View button always; PDF button only when verified
+  function actionsCell(e) {
+    let html = '';
+    // View button: opens the record page with the entry pre-loaded
+    if (e.href && e.entryId) {
+      html += '<a class="act-btn act-btn-view" href="' + esc(e.href) + '?entry=' + esc(e.entryId) + '" target="_blank">View</a>';
+    } else if (e.href) {
+      html += '<a class="act-btn act-btn-view" href="' + esc(e.href) + '" target="_blank">View</a>';
+    }
+    // PDF button: only when status is verified
+    if (e.status === 'verified' && e.href && e.entryId) {
+      html += '<a class="act-btn act-btn-pdf" href="' + esc(e.href) + '?entry=' + esc(e.entryId) + '&print=1" target="_blank">PDF</a>';
+    }
+    return html || '—';
+  }
+
+  // Column definitions — new order
   const COLS = [
-    { key: 'ts',         label: 'Submitted' },
-    { key: 'who',        label: 'Completed by' },
     { key: 'ref',        label: 'Job / Ref' },
     { key: 'name',       label: 'Record' },
-    { key: 'event',      label: 'Event' },
     { key: 'entryDate',  label: 'Activity date' },
-    { key: 'verifiedBy', label: 'Verified by' },
+    { key: 'ts',         label: 'Submission date' },
     { key: 'status',     label: 'Status' },
+    { key: 'who',        label: 'Completed by' },
+    { key: 'verifiedBy', label: 'Verified by' },
+    { key: '__actions',  label: '' },   // actions — not sortable
   ];
 
   function render() {
@@ -344,28 +402,45 @@
       return String(a[sortKey] || '').localeCompare(String(b[sortKey] || '')) * sortDir;
     });
 
-    $('sumAll').textContent = rows.length;
-    $('sumPending').textContent = rows.filter((r) => r.event === 'submitted' && r.status === 'pending').length;
-    $('sumVerified').textContent = rows.filter((r) => r.event === 'verified').length;
-    $('sumDrafts').textContent = rows.filter((r) => r.event === 'draft').length;
+    // Update summary counts (against ALL events including the closed filter)
+    const allFiltered = rows; // already filtered
+    $('sumAll').textContent = allFiltered.length;
+    $('sumPending').textContent = allFiltered.filter((r) => r.event === 'submitted' && r.status === 'pending').length;
+    $('sumVerified').textContent = allFiltered.filter((r) => r.event === 'verified').length;
+    $('sumDrafts').textContent = allFiltered.filter((r) => r.event === 'draft').length;
+
+    // Closed-jobs notice
+    const closedCount = EVENTS.filter((e) => isClosedJob(e.ref)).length;
+    const notice = $('closedNotice');
+    if (closedCount > 0) {
+      notice.classList.add('show');
+      $('closedCount').textContent = closedCount;
+      $('btnShowClosed').style.display = showClosed ? 'none' : '';
+      $('btnHideClosed').style.display = showClosed ? '' : 'none';
+    } else {
+      notice.classList.remove('show');
+    }
 
     const wrap = $('tableWrap');
     if (!rows.length) { wrap.innerHTML = '<div class="empty">No events match these filters.</div>'; return; }
 
     wrap.innerHTML = '<table class="log-table"><thead><tr>' +
-      COLS.map((c) => '<th data-sort="' + c.key + '">' + esc(c.label) +
-        (sortKey === c.key ? (sortDir === 1 ? ' ▲' : ' ▼') : '') + '</th>').join('') +
+      COLS.map((c) => {
+        if (c.key === '__actions') return '<th style="width:100px;"></th>';
+        return '<th data-sort="' + c.key + '">' + esc(c.label) +
+          (sortKey === c.key ? (sortDir === 1 ? ' ▲' : ' ▼') : '') + '</th>';
+      }).join('') +
       '</tr></thead><tbody>' +
       rows.map((e) =>
         '<tr>' +
-        '<td class="when" style="white-space:nowrap;">' + fmtWhen(e.ts) + '</td>' +
-        '<td>' + esc(e.who || '—') + '</td>' +
         '<td>' + refCell(e) + '</td>' +
-        '<td class="doc">' + docLabel(e) + '</td>' +
-        '<td>' + (EVENT_BADGE[e.event] || esc(e.event)) + '</td>' +
+        '<td>' + recordLabel(e) + '</td>' +
         '<td class="when">' + esc(e.entryDate || '—') + '</td>' +
-        '<td>' + esc(e.verifiedBy || '—') + '</td>' +
+        '<td class="when">' + fmtWhen(e.ts) + '</td>' +
         '<td>' + (STATUS_BADGE[e.status] || '') + '</td>' +
+        '<td>' + esc(e.who || '—') + '</td>' +
+        '<td>' + esc(e.verifiedBy || '—') + '</td>' +
+        '<td class="actions">' + actionsCell(e) + '</td>' +
         '</tr>').join('') +
       '</tbody></table>';
 
@@ -381,9 +456,9 @@
 
   function toCsv() {
     const rows = filtered();
-    const head = ['Submitted', 'Completed by', 'Job / Ref', 'Event', 'Doc no', 'Record', 'Activity date', 'Verified by', 'Status', 'Detail', 'Record key', 'Entry id'];
+    const head = ['Job / Ref', 'Record', 'Activity date', 'Submission date', 'Status', 'Completed by', 'Verified by', 'Doc no', 'Record key', 'Entry id'];
     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-    const body = rows.map((e) => [fmtWhen(e.ts), e.who, e.ref, e.event, e.docNo, e.name, e.entryDate, e.verifiedBy, e.status, e.detail, e.recordKey, e.entryId].map(q).join(','));
+    const body = rows.map((e) => [e.ref, (e.docNo ? e.docNo + ' — ' : '') + e.name, e.entryDate, fmtWhen(e.ts), e.status, e.who, e.verifiedBy, e.docNo, e.recordKey, e.entryId].map(q).join(','));
     const csv = [head.map(q).join(',')].concat(body).join('\r\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -417,6 +492,8 @@
     });
     $('btnCsv').addEventListener('click', toCsv);
 
+    $('btnShowClosed').addEventListener('click', () => { showClosed = true; render(); });
+    $('btnHideClosed').addEventListener('click', () => { showClosed = false; render(); });
 
     document.querySelectorAll('.summary-card').forEach((card) => {
       card.addEventListener('click', () => {
@@ -435,7 +512,7 @@
     wire();
 
     try { await window.storage.whenReady(); } catch (e) {  }
-    await collect();
+    await Promise.all([collect(), loadClosedJobs()]);
     fillRecordFilter();
     render();
     const backend = window.storage.backendName();
