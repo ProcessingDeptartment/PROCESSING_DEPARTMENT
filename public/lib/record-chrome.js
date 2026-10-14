@@ -23,7 +23,8 @@
   'use strict';
 
   var WAKE_AFTER_MS = 3000;
-  var SAVE_TIMEOUT_MS = 20000;
+  var SAVE_TIMEOUT_MS = 20000;       // after this the save is "slow" -- say so, but keep the bar locked
+  var SAVE_HARD_TIMEOUT_MS = 180000; // only then treat the call as hung and free the bar
 
   function h(tag, cls, text) {
     var e = document.createElement(tag);
@@ -95,7 +96,7 @@
     var t = String(msg || '');
     if (/^Draft saved/i.test(t)) { endSaving(); var d = new Date(); setState('draft', 'Draft saved ' + pad(d.getHours()) + ':' + pad(d.getMinutes())); }
     else if (/submitted|^Entry (added|updated)|^Correction saved|^Verification logged/i.test(t)) { endSaving(); setState('saved', 'Saved'); }
-    else if (/failed|could not be saved/i.test(t)) { endSaving(); setState('error', 'Error — tap to retry'); }
+    else if (/failed|could not be saved/i.test(t)) { endSaving(); setState('error', 'Error — your entries are kept; press Save draft or Submit to retry'); }
     else return false;
     return true;
   }
@@ -105,8 +106,14 @@
     setState('saving', 'Saving…');
     syncBar();
     clearTimeout(saveTimer);
-    // No confirmation in time (validation refused it, or the call hung): free the bar again.
-    saveTimer = setTimeout(function () { if (saving) { endSaving(); if (lastState && lastState.state === 'saving') setState(navigator.onLine ? 'error' : 'offline', navigator.onLine ? 'Error — tap to retry' : 'Offline — will retry'); } }, SAVE_TIMEOUT_MS);
+    // A slow save is not a failed one: the server can take 40s+ to answer after the write has landed. Freeing the bar
+    // at this point let a second Save draft / Submit through, which stored a duplicate record. So only say it is slow;
+    // the bar stays locked until the engine reports back, and is freed only if the call looks truly hung.
+    saveTimer = setTimeout(function () {
+      if (!saving) return;
+      setState('saving', 'Still saving… please wait, do not tap again');
+      saveTimer = setTimeout(function () { if (saving) { endSaving(); if (lastState && lastState.state === 'saving') setState(navigator.onLine ? 'error' : 'offline', navigator.onLine ? 'Error — your entries are kept; press Save draft or Submit to retry' : 'Offline — will retry'); } }, SAVE_HARD_TIMEOUT_MS - SAVE_TIMEOUT_MS);
+    }, SAVE_TIMEOUT_MS);
   }
   function endSaving() { saving = false; clearTimeout(saveTimer); syncBar(); }
   window.addEventListener('offline', function () { setState('offline', 'Offline — will retry'); });
@@ -195,9 +202,19 @@
     });
   }
 
+  // The engine's own Save draft / Submit buttons stay live under the bar. While a save is in flight a second click on
+  // either would store a duplicate record, so swallow it -- except the click this bar itself sends via engineClick().
+  var engineClickOk = false;
+  function engineClick(btn) { engineClickOk = true; try { btn.click(); } finally { engineClickOk = false; } }
+  document.addEventListener('click', function (e) {
+    if (!saving || engineClickOk) return;
+    var b = e.target && e.target.closest && e.target.closest('button[id$="Btn"]');
+    if (!b || !(IDS.save.test(b.id) || IDS.submit.test(b.id))) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+  }, true);
   function doSubmitReal() {
     var real = findEngineBtn('submit');
-    if (real && !real.disabled) { clearNote(); beginSaving(); real.click(); }
+    if (real && !real.disabled) { clearNote(); beginSaving(); engineClick(real); }
   }
   function doTestRun() {
     endSaving();
@@ -273,7 +290,7 @@
         return;
       }
       if (kind !== 'clear') beginSaving();
-      real.click();
+      engineClick(real);
     };
   }
   function buildBar() {
@@ -846,7 +863,7 @@
           if (!typedSomething() || window.confirm('Open the access-key page? Anything typed on this page will be lost.')) location.href = '/pages/api-key.html';
           return;
         }
-        if (chip.dataset.state === 'error') { var real = findEngineBtn('save'); if (real && !real.disabled) proxy('save')(); }
+        // An error chip never saves anything itself: a draft is saved only when the Save draft button is pressed.
       });
       actions.parentNode.insertBefore(chip, actions);
       setState(lastState ? lastState.state : 'ready', lastState ? lastState.text : 'Ready');
