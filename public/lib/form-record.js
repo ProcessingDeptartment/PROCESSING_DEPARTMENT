@@ -4386,6 +4386,18 @@
         + (config.printCompact ? compactPageCss() : '');
       const compactClass = config.printCompact ? ' fr-sheet-compact' : '';
 
+      // Capture doc-header HTML and styles for the popup window
+      const docHeaderHtml = (() => {
+        if (!window.DocHeader) return '';
+        const h = window.DocHeader.current(config.recordKey);
+        if (!h) return '';
+        return window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png');
+      })();
+      const docHeaderStyles = (() => {
+        const s = document.getElementById('dh-styles');
+        return s ? s.textContent : '';
+      })();
+
       // Open a dedicated print window — works on all devices including phones.
       // On Android Chrome this triggers the native PDF/print dialog.
       // On iOS Safari the user taps Share → Print or Save to PDF from the new page.
@@ -4432,6 +4444,7 @@ ${STYLE}
 @media print{
   .fr-print-bar{display:none !important;}
 }
+${docHeaderStyles ? `<style>${docHeaderStyles}</style>` : ''}
 ${extraCss}
 </style>
 </head><body>
@@ -4439,6 +4452,7 @@ ${extraCss}
   <button onclick="window.print()">⬇ Save / Print PDF</button>
   <span class="fr-pb-hint">iOS: tap Share → Print or Save to PDF</span>
 </div>
+${docHeaderHtml ? `<div style="margin-bottom:6px;">${docHeaderHtml}</div>` : ''}
 <div class="fr-sheet${compactClass}">${sheetsHtml}</div>
 </body></html>`);
       pw.document.close();
