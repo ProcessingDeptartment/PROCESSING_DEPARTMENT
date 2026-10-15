@@ -4398,6 +4398,25 @@
         return s ? s.textContent : '';
       })();
 
+      // iOS PWA (saved to home screen) blocks both window.open and window.print.
+      // Detect standalone mode and show instructions to open in Safari instead.
+      if (window.navigator.standalone === true) {
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+        ov.innerHTML = `<div style="background:#fff;border-radius:14px;padding:24px;max-width:340px;width:100%;font-family:system-ui,sans-serif;text-align:center;">
+          <div style="font-size:32px;margin-bottom:8px;">📄</div>
+          <div style="font-weight:800;font-size:17px;margin-bottom:8px;">Open in Safari to print</div>
+          <div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:20px;">
+            Tap the <strong>Share</strong> button <span style="font-size:18px;">⎋</span> at the bottom of the screen,<br>
+            then tap <strong>"Open in Safari"</strong>.<br><br>
+            From Safari you can tap PDF and save as a PDF file.
+          </div>
+          <button onclick="this.closest('div').parentNode.remove()" style="background:#1d4ed8;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;width:100%;">Got it</button>
+        </div>`;
+        document.body.appendChild(ov);
+        return;
+      }
+
       // Open a dedicated print window — works on all devices including phones.
       // On Android Chrome this triggers the native PDF/print dialog.
       // On iOS Safari the user taps Share → Print or Save to PDF from the new page.
