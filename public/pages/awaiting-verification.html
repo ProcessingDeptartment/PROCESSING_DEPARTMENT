@@ -577,6 +577,12 @@
         }
       } else if (col.key === '__roster_total') {
         v = rosterTotal(def, row, col.idx);
+        var rt = def && def.roster && def.roster.totals && def.roster.totals[col.idx];
+        var jw0 = def && def.roster && def.roster.jobWeights;
+        if (rt && jw0 && rt.sum === jw0.column && rt.where && (rt.where[jw0.processColumn] || []).indexOf(jw0.cook) !== -1) {
+          var jwr = jobWeightsFor(row, def);
+          red = !!(jwr && jwr !== 'loading' && jwr.oosw != null && jwr.oosw < jwr.cooked);
+        }
       } else if (col.key === '__roster_count') {
         v = row.rosterCount != null ? String(row.rosterCount) : '—';
       } else {
@@ -594,8 +600,8 @@
     }
     return '<dl class="vals">' + pairs.map(function (p) {
       return '<dt' + (p.red ? ' style="color:#a3352d;font-weight:700;"' : '') + '>' + esc(p.label) + '</dt>' +
-        '<dd' + (p.red ? ' style="color:#a3352d;font-weight:700;" title="OOSW is lower than the total cooked weight — possible batch mix"' : '') + '>' +
-        esc(p.value) + (p.red ? ' ⚠' : '') + '</dd>';
+        '<dd' + (p.red ? ' style="color:#fff;background:#c0392b;font-weight:700;padding:1px 8px;border-radius:4px;display:inline-block;" title="OOSW is lower than the total cooked weight — possible batch mix"' : '') + '>' +
+        esc(p.value) + (p.red ? ' ⚠ OOSW lower than cooked weight' : '') + '</dd>';
     }).join('') + '</dl>' + blocks;
   }
 
