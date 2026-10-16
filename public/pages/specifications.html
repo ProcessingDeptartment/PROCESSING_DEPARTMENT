@@ -83,12 +83,23 @@
   .tabs button.on{ background:#f4f5f3; color:#1b2330; }
   #tab-rules iframe{ width:100%; height:calc(100vh - 170px); min-height:640px; border:0; background:transparent; }
   .managed-note{ font-size:11px; color:#2f7a52; font-weight:600; }
+  #tab-edits .edits-toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  #tab-edits .edits-toolbar input[type=search]{ flex:1; max-width:340px; padding:7px 10px; border:1px solid #d0d5db; border-radius:5px; font:inherit; font-size:13px; background:#fff; color:#1b2330; }
+  #tab-edits .edits-toolbar .count{ font-size:12px; color:#5c6771; }
   #tab-edits .rec-list{ display:flex; flex-direction:column; gap:6px; }
-  #tab-edits .rec-row{ background:#fff; border:1px solid #e2e4e3; border-radius:7px; padding:11px 14px; display:flex; align-items:center; gap:12px; }
+  #tab-edits .rec-row{ background:#fff; border:1px solid #e2e4e3; border-radius:7px; overflow:hidden; }
+  #tab-edits .rec-main{ padding:11px 14px; display:flex; align-items:center; gap:12px; }
   #tab-edits .rec-row .rec-code{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5c6771; min-width:80px; }
   #tab-edits .rec-row .rec-name{ flex:1; font-size:13px; font-weight:600; }
-  #tab-edits .rec-row a{ font-size:12px; color:#2f7a52; text-decoration:none; font-weight:600; white-space:nowrap; }
-  #tab-edits .rec-row a:hover{ text-decoration:underline; }
+  #tab-edits .rec-row .rec-actions{ display:flex; align-items:center; gap:10px; }
+  #tab-edits .rec-row a.edit-link{ font-size:12px; color:#2f7a52; text-decoration:none; font-weight:600; white-space:nowrap; }
+  #tab-edits .rec-row a.edit-link:hover{ text-decoration:underline; }
+  #tab-edits .rec-row button.preview-btn{ font-size:11.5px; padding:4px 10px; border:1px solid #c7d4f5; border-radius:4px; background:#f0f4ff; color:#2d4278; font-weight:600; cursor:pointer; white-space:nowrap; }
+  #tab-edits .rec-row button.preview-btn:hover{ background:#e3eaf9; }
+  #tab-edits .rec-preview{ border-top:1px solid #e2e4e3; background:#f8f9fa; display:none; }
+  #tab-edits .rec-preview.open{ display:block; }
+  #tab-edits .rec-preview iframe{ width:100%; height:520px; border:0; display:block; }
+  #tmplModal:not([hidden]){ display:flex; }
   table.leaves input.managed{ background:#eef4f0; color:#3b4650; }
   @media (max-width:640px){ .container{ padding:12px; } .card-head .meta{ margin-left:0; text-align:left; } table.leaves td.k{ width:auto; } .toolbar .count{ margin-left:0; } }
 </style>
@@ -110,7 +121,22 @@
 
 <div class="container" id="tab-rules" hidden></div>
 <div class="container" id="tab-edits" hidden>
+  <div class="edits-toolbar">
+    <input type="search" id="editsQ" placeholder="Search records&hellip;" autocomplete="off">
+    <span class="count" id="editsCount"></span>
+  </div>
   <div id="edits-list" class="rec-list"></div>
+</div>
+
+<!-- full-screen modal for template editor -->
+<div id="tmplModal" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:stretch;justify-content:center;" hidden>
+  <div style="flex:1;max-width:1200px;margin:16px;display:flex;flex-direction:column;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.35);">
+    <div style="display:flex;align-items:center;padding:10px 16px;background:#2c3e50;color:#fff;gap:12px;">
+      <span id="tmplModalTitle" style="flex:1;font-weight:700;font-size:14px;"></span>
+      <button id="tmplModalClose" style="background:transparent;border:none;color:#fff;font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;">&times;</button>
+    </div>
+    <iframe id="tmplModalFrame" src="" style="flex:1;border:0;width:100%;"></iframe>
+  </div>
 </div>
 
 <div class="container" id="tab-specs">
@@ -204,21 +230,66 @@
     var hash = name === 'rules' ? '#field-rules' : name === 'edits' ? '#record-edits' : location.pathname + location.search;
     try { history.replaceState(null, '', hash); } catch (e) { }
   }
-  function renderEdits() {
-    var rows = (window.MasterIndexData && window.MasterIndexData.rows) || [];
-    var sorted = rows.slice().sort(function (a, b) {
-      return ((a.docNo || '') + ' ' + (a.name || '')).localeCompare((b.docNo || '') + ' ' + (b.name || ''), undefined, { numeric: true });
-    });
-    if (!sorted.length) { $('edits-list').innerHTML = '<div class="empty">No records found.</div>'; return; }
-    $('edits-list').innerHTML = sorted.map(function (r) {
-      var href = r.href ? '../records/' + r.href + '?editTemplate=1' : '';
+  var _editsAllRows = [];
+  function renderEdits(q) {
+    var rows = _editsAllRows;
+    if (!rows.length) {
+      rows = (window.MasterIndexData && window.MasterIndexData.rows) || [];
+      rows = rows.slice().sort(function (a, b) {
+        return ((a.docNo || '') + ' ' + (a.name || '')).localeCompare((b.docNo || '') + ' ' + (b.name || ''), undefined, { numeric: true });
+      });
+      _editsAllRows = rows;
+    }
+    var lo = (q || '').toLowerCase();
+    var filtered = lo ? rows.filter(function (r) {
+      return (r.name || '').toLowerCase().indexOf(lo) >= 0 || (r.docNo || '').toLowerCase().indexOf(lo) >= 0 || (r.recordKey || '').toLowerCase().indexOf(lo) >= 0;
+    }) : rows;
+    $('editsCount').textContent = filtered.length + ' record' + (filtered.length === 1 ? '' : 's');
+    if (!filtered.length) { $('edits-list').innerHTML = '<div class="empty">No records found.</div>'; return; }
+    $('edits-list').innerHTML = filtered.map(function (r) {
+      var base = r.href ? '../records/' + r.href : '';
+      var editUrl = base ? base + '?editTemplate=1' : '';
+      var previewUrl = base || '';
+      var recName = esc(r.name || r.recordKey || '');
+      var recCode = esc(r.docNo || '');
       return '<div class="rec-row">' +
-        '<span class="rec-code">' + esc(r.docNo || '') + '</span>' +
-        '<span class="rec-name">' + esc(r.name || r.recordKey || '') + '</span>' +
-        (href ? '<a href="' + esc(href) + '">Edit form template &rarr;</a>' : '<span style="font-size:12px;color:#8a939b;">No template link</span>') +
+        '<div class="rec-main">' +
+        '<span class="rec-code">' + recCode + '</span>' +
+        '<span class="rec-name">' + recName + '</span>' +
+        '<div class="rec-actions">' +
+        (previewUrl ? '<button class="preview-btn" data-url="' + esc(previewUrl) + '" data-name="' + recName + '">&#128065; Preview layout</button>' : '') +
+        (editUrl ? '<button class="preview-btn" style="background:#f0fff4;border-color:#b2e4c4;color:#1b5e35;" data-url="' + esc(editUrl) + '" data-name="' + recName + '" data-modal="1">&#9998; Edit template</button>' : '<span style="font-size:12px;color:#8a939b;">No template</span>') +
+        '</div>' +
+        '</div>' +
+        '<div class="rec-preview" id="prev-' + esc(r.recordKey || r.href || '') + '"><iframe src="" loading="lazy"></iframe></div>' +
         '</div>';
     }).join('');
+    // preview toggle
+    $('edits-list').addEventListener('click', function (e) {
+      var btn = e.target.closest('button.preview-btn');
+      if (!btn) return;
+      var row = btn.closest('.rec-row');
+      var url = btn.dataset.url;
+      if (btn.dataset.modal) {
+        // open full-screen modal
+        $('tmplModal').hidden = false;
+        $('tmplModalTitle').textContent = btn.dataset.name + ' — Edit form template';
+        $('tmplModalFrame').src = url;
+      } else {
+        // toggle inline preview
+        var pane = row.querySelector('.rec-preview');
+        var open = pane.classList.toggle('open');
+        if (open) { var fr = pane.querySelector('iframe'); if (!fr.src || fr.src === location.href) fr.src = url; }
+        btn.textContent = open ? '▲ Hide preview' : '👁 Preview layout';
+      }
+    }, { once: false });
   }
+  // modal close
+  $('tmplModalClose').addEventListener('click', function () { $('tmplModal').hidden = true; $('tmplModalFrame').src = ''; });
+  $('tmplModal').addEventListener('click', function (e) { if (e.target === this) { this.hidden = true; $('tmplModalFrame').src = ''; } });
+  // edits search
+  $('editsQ').addEventListener('input', function () { renderEdits(this.value); });
+
   $('tabBtnSpecs').addEventListener('click', function () { showTab('specs'); });
   $('tabBtnRules').addEventListener('click', function () { showTab('rules'); });
   $('tabBtnEdits').addEventListener('click', function () { showTab('edits'); });

@@ -117,11 +117,11 @@
   .ml-score button{ min-width:84px; flex:1 1 84px; max-width:150px; padding:7px 10px; font-size:14px; font-weight:700; min-height:36px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
   .ml-score button:hover:not(:disabled){ border-color:#8a939b !important; }
   .ml-score button.on.s0{ background:var(--palette-ok-bg,#e8f3ec); border-color:var(--palette-ok,#2f7a52) !important; color:var(--palette-ok,#2f7a52); }
-  .ml-score button.on.s1{ background:#fff3dc; border-color:#d98200 !important; color:#8a5200; font-weight:800; }
+  .ml-score button.on.s1{ background:#eab308; border-color:#ca8a04 !important; color:#000; font-weight:800; }
   .ml-score button.on.s1::after{ content:' \\26A0'; }
-  .ml-score button.on.s3{ background:#a3352d; border-color:#6e1d17 !important; color:#fff; font-weight:800; }
+  .ml-score button.on.s3{ background:#dc2626; border-color:#991b1b !important; color:#fff; font-weight:800; }
   .ml-score button.on.s3::after{ content:' \\26A0'; }
-  .ml-score button.on.s2{ background:var(--palette-fail-bg,#fbe8e6); border-color:var(--palette-fail,#a3352d) !important; color:var(--palette-fail,#a3352d); font-weight:800; }
+  .ml-score button.on.s2{ background:#dc2626; border-color:#991b1b !important; color:#fff; font-weight:800; }
   .ml-score button.on.s2::after{ content:' \\26A0'; }
   .ml-score button:disabled{ opacity:.55; cursor:not-allowed; }
   .ml-info{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; margin-left:6px; padding:0; border-radius:50%; border:1px solid #8a939b; background:#fff; color:#3a4651; font:700 13px/1 serif; cursor:pointer; vertical-align:middle; }
@@ -129,14 +129,14 @@
   .ml-lblrow{ display:block; }
   .ml-scorepanel{ display:block; margin:2px 0 0; }
   .ml-statusbadge{ display:inline-block; padding:8px 22px; border-radius:8px; font-size:22px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:2px solid #c9cdd1; color:#54606b; background:#f4f5f6; }
-  .ml-statusbadge.st-green{ background:#e8f3ec; border-color:#2f7a52; color:#1f5a3a; }
-  .ml-statusbadge.st-amber{ background:#fff3dc; border-color:#d98200; color:#8a5200; }
-  .ml-statusbadge.st-red{ background:#fbe8e6; border-color:#a3352d; color:#a3352d; }
-  .ml-statusbadge.st-critical{ background:#a3352d; border-color:#6e1d17; color:#fff; }
+  .ml-statusbadge.st-green{ background:#16a34a; border-color:#15803d; color:#fff; }
+  .ml-statusbadge.st-amber{ background:#eab308; border-color:#ca8a04; color:#000; }
+  .ml-statusbadge.st-red{ background:#dc2626; border-color:#991b1b; color:#fff; }
+  .ml-statusbadge.st-critical{ background:#991b1b; border-color:#6e1d17; color:#fff; }
   .ml-interp{ display:block; margin-top:6px; font-size:13px; font-weight:700; color:#8a5200; text-transform:none; letter-spacing:0; }
   .ml-sc-bg{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100000; display:flex; align-items:center; justify-content:center; padding:14px; }
   .ml-sc-modal{ background:#fff; color:#1d2125; border-radius:10px; max-width:600px; width:100%; max-height:92vh; overflow:auto; padding:16px 18px; border-top:6px solid #8a939b; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; text-transform:none; letter-spacing:0; }
-  .ml-sc-modal.st-amber{ border-top-color:#d98200; } .ml-sc-modal.st-red{ border-top-color:#a3352d; } .ml-sc-modal.st-critical{ border-top-color:#6e1d17; }
+  .ml-sc-modal.st-amber{ border-top-color:#eab308; } .ml-sc-modal.st-red{ border-top-color:#a3352d; } .ml-sc-modal.st-critical{ border-top-color:#6e1d17; }
   .ml-sc-modal h2{ margin:0 0 6px; font-size:18px; }
   .ml-sc-modal p{ margin:6px 0; font-size:14px; }
   .ml-sc-modal ul{ margin:4px 0 8px 18px; padding:0; font-size:14px; }
@@ -338,6 +338,7 @@
   .ml-hist-bad{ color:var(--palette-fail,#a3352d); font-weight:700; }
   .ml-sheet .sheet-title{ font-weight:700; font-size:14px; text-align:center; padding:4px; }
   @media print{
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff; }
     .no-print{ display:none !important; }
     .ml-top{ display:none !important; }
