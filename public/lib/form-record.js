@@ -4412,7 +4412,7 @@
 
       // iOS PWA (saved to home screen) blocks both window.open and window.print.
       // Detect standalone mode and show instructions to open in Safari instead.
-      if (window.navigator.standalone === true) {
+      if (window.navigator.standalone === true && !window.__pdfOnly) {
         const ov = document.createElement('div');
         ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
         ov.innerHTML = `<div style="background:#fff;border-radius:14px;padding:24px;max-width:340px;width:100%;font-family:system-ui,sans-serif;text-align:center;">

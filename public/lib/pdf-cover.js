@@ -51,6 +51,7 @@ window.__pdfFail = function (msg) {
     b.addEventListener('click', function () { location.reload(); });
     box.appendChild(t); box.appendChild(b);
     document.documentElement.appendChild(box);
+    try { if (window.parent !== window) window.parent.postMessage({ pdfReady: 1 }, location.origin); } catch (e) { /* ignore */ }
   } catch (e) { /* ignore */ }
 };
 
@@ -61,7 +62,10 @@ window.__pdfSameTab = function () {
   return {
     document: {
       write: function (h) { buf += h; },
-      close: function () { document.open(); document.write(buf); document.close(); }
+      close: function () {
+        try { if (window.parent !== window) window.parent.postMessage({ pdfReady: 1 }, location.origin); } catch (e) { /* ignore */ }
+        document.open(); document.write(buf); document.close();
+      }
     },
     focus: function () {}
   };

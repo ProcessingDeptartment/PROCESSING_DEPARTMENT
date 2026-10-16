@@ -651,13 +651,22 @@
     wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;';
     wrap.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#1d2b38;color:#fff;font-size:13px;font-weight:600;">' +
         '<button type="button" id="pdfClose" style="background:#fff;color:#1d2b38;border:none;border-radius:6px;padding:7px 14px;font-weight:700;cursor:pointer;">&larr; Back to verifications</button>' +
-        '<span id="pdfMsg">Loading PDF…</span></div>' +
+        '<span id="pdfMsg">Preparing PDF…</span></div>' +
       '<iframe id="pdfFrame" style="flex:1;border:0;width:100%;background:#fff;"></iframe>';
     document.body.appendChild(wrap);
     var fr = $('pdfFrame');
-    fr.addEventListener('load', function () { var m = $('pdfMsg'); if (m) m.textContent = ''; });
+    // the frame's first load is just the blank print page: keep "Preparing" up until it says the sheet (or an error) is showing
+    var slow = setTimeout(function () { var m = $('pdfMsg'); if (m && m.textContent) m.textContent = 'Still preparing — the server may be waking up…'; }, 12000);
+    function onMsg(ev) {
+      if (ev.origin !== location.origin || !ev.data || !ev.data.pdfReady) return;
+      var m = $('pdfMsg'); if (m) m.textContent = '';
+      clearTimeout(slow);
+    }
+    window.addEventListener('message', onMsg);
     fr.src = url;
-    $('pdfClose').addEventListener('click', function () { wrap.remove(); });
+    $('pdfClose').addEventListener('click', function () {
+      clearTimeout(slow); window.removeEventListener('message', onMsg); wrap.remove();
+    });
   }
   document.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a.pdf-open');
