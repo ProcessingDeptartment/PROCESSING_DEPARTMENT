@@ -196,6 +196,12 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
         fields.push({ key: 'roster:total:' + i, label: (t.label || 'Total ' + (i + 1)) + ' (roster total)' });
       });
     }
+    // Records that compare cooked weight against OOSW (roster.jobWeights) get both figures;
+    // the queue preview shows them in red when OOSW is lower than the total cooked weight.
+    if (def.roster && def.roster.jobWeights) {
+      fields.push({ key: 'jobweights:oosw', label: 'OOSW total (kg) — from REC 7.1.5' });
+      fields.push({ key: 'jobweights:cooked', label: 'Total cooked weight (kg) — whole job' });
+    }
     return fields;
   }
 

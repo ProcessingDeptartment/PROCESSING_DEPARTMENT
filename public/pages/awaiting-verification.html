@@ -406,6 +406,46 @@
     return sum.toFixed(2);
   }
 
+  // OOSW (REC 7.1.5) vs total cooked weight for roster.jobWeights records (REC 7.4.0).
+  // Fetched once per job and cached; the preview re-renders when the figures arrive.
+  var JOBW = {};   // recordKey|job -> { oosw, cooked } or 'loading'
+  function jobWeightsFor(row, def) {
+    var jw = def && def.roster && def.roster.jobWeights;
+    if (!jw) return null;
+    var job = String((row.values || {})[def.batchField || 'jobNo'] || '').trim();
+    if (!job) return null;
+    var rows = null;
+    Object.keys(row.values).forEach(function (k) { if (Array.isArray(row.values[k])) rows = row.values[k]; });
+    var thisCooked = 0;
+    (rows || []).forEach(function (r) {
+      if (r[jw.processColumn] === jw.cook) thisCooked += parseFloat(r[jw.column]) || 0;
+    });
+    var key = row.recordKey + '|' + job + '|' + (row.id || '');
+    var c = JOBW[key];
+    if (c === undefined) {
+      JOBW[key] = 'loading';
+      var base = (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com');
+      var get = function (path) {
+        return (window.FacilityApi ? window.FacilityApi.fetch(path) : fetch(base + path))
+          .then(function (r) { return r.ok ? r.json() : null; });
+      };
+      var enc = encodeURIComponent;
+      Promise.all([
+        get('/api/lookup/' + enc(jw.capSource) + '/' + enc(jw.capMatchField) + '/' + enc(job)),
+        get('/api/lookup/' + enc(row.recordKey) + '/' + enc(def.batchField || 'jobNo') + '/' + enc(job) +
+          '?excludeId=' + enc(row.id || '') + '&rosterCol=' + enc(jw.column) + '&groupCol=' + enc(jw.processColumn))
+      ]).then(function (res) {
+        var cap = res[0] && res[0].__rosterSums && res[0].__rosterSums[jw.capSumColumn];
+        var g = (res[1] && res[1].__matchRosterGroupSums) || {};
+        var oosw = cap != null && !isNaN(parseFloat(cap)) ? parseFloat(cap) : null;
+        JOBW[key] = { oosw: oosw, cooked: (parseFloat(g[jw.cook]) || 0) + thisCooked };
+      }).catch(function () { JOBW[key] = { oosw: null, cooked: thisCooked }; })
+        .then(function () { render(); });
+      return 'loading';
+    }
+    return c;
+  }
+
   function previewDl(row) {
     var def = DEFS[row.recordKey];
     var values = row.values || {};
@@ -434,6 +474,8 @@
         if (tm) {
           var tdef = def && def.roster && def.roster.totals && def.roster.totals[+tm[1]];
           cols.push({ key: '__roster_total', idx: +tm[1], label: (tdef && tdef.label) || 'Roster total' });
+        } else if (col === 'jobweights:oosw' || col === 'jobweights:cooked') {
+          cols.push({ key: '__' + col.replace(':', '_'), label: col === 'jobweights:oosw' ? 'OOSW total (kg)' : 'Total cooked weight (kg)' });
         } else if (col === 'roster:count') {
           cols.push({ key: '__roster_count', label: ((def.roster && def.roster.title) || 'Roster') + ' entries' });
         } else {
@@ -453,7 +495,20 @@
 
     var pairs = cols.map(function (col) {
       var v;
-      if (col.key === '__roster_total') {
+      var red = false;
+      if (col.key === '__jobweights_oosw' || col.key === '__jobweights_cooked') {
+        var jwf = jobWeightsFor(row, def);
+        if (jwf === 'loading') v = 'Loading…';
+        else if (!jwf) v = '—';
+        else {
+          var isOosw = col.key === '__jobweights_oosw';
+          var n = isOosw ? jwf.oosw : jwf.cooked;
+          v = n == null ? 'Not recorded' : n.toFixed(2);
+          // cooked weight above OOSW = possible batch mix
+          red = jwf.oosw != null && jwf.oosw < jwf.cooked;
+          if (isOosw && jwf.oosw == null) red = false;
+        }
+      } else if (col.key === '__roster_total') {
         v = rosterTotal(def, values, col.idx);
       } else if (col.key === '__roster_count') {
         v = row.rosterCount != null ? String(row.rosterCount) : '—';
@@ -463,14 +518,16 @@
         else if (typeof raw === 'object') v = JSON.stringify(raw);
         else v = String(raw);
       }
-      return { label: col.label, value: v };
+      return { label: col.label, value: v, red: red };
     }).filter(function (p) { return p.value !== '—' || cols.length <= 4; });
 
     if (!pairs.length) {
       return '<span style="color:#8a939b;font-size:12px;">No field values captured on this entry.</span>';
     }
     return '<dl class="vals">' + pairs.map(function (p) {
-      return '<dt>' + esc(p.label) + '</dt><dd>' + esc(p.value) + '</dd>';
+      return '<dt' + (p.red ? ' style="color:#a3352d;font-weight:700;"' : '') + '>' + esc(p.label) + '</dt>' +
+        '<dd' + (p.red ? ' style="color:#a3352d;font-weight:700;" title="OOSW is lower than the total cooked weight — possible batch mix"' : '') + '>' +
+        esc(p.value) + (p.red ? ' ⚠' : '') + '</dd>';
     }).join('') + '</dl>';
   }
 
