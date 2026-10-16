@@ -4729,9 +4729,25 @@ function fallbackDl(canvas,filename){
       if (fromQuery) id = qs.get('entry').trim();
       if (!id) return;
       if (!submissions.some(s => s.id === id)) { toast('That entry has not reached this device yet.'); return; }
-      openForm(id);
-      const panel = el('fr_modalSections');
-      if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // printonly=1 (Awaiting Verification "View PDF"): print straight from the loaded entry without
+      // opening the editable form. A white cover hides the page (print output is built separately).
+      const printOnly = fromQuery && qs.get('print') === '1' && qs.get('printonly') === '1';
+      if (printOnly && !document.getElementById('pdfCover')) {
+        const st = document.createElement('style');
+        st.textContent = '@media print{#pdfCover{display:none!important}}';
+        document.head.appendChild(st);
+        const cover = document.createElement('div');
+        cover.id = 'pdfCover';
+        cover.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;font:600 15px "Segoe UI",system-ui,sans-serif;color:#1d2b38;';
+        cover.textContent = 'Preparing PDF…';
+        document.body.appendChild(cover);
+        window.addEventListener('afterprint', () => { cover.textContent = 'PDF ready — you can close this tab.'; try { window.close(); } catch (e) { /* ignore */ } });
+      }
+      if (!printOnly) {
+        openForm(id);
+        const panel = el('fr_modalSections');
+        if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       if (fromQuery && qs.get('print') === '1' && !openFromHash.printed) {
         openFromHash.printed = true;
         setTimeout(() => printSubmission(id), 400);

@@ -3759,13 +3759,34 @@ function fallbackDl(canvas,filename){
       const fromQuery = !id && !!qs.get('entry');
       if (fromQuery) id = qs.get('entry').trim();
       if (!id) return;
-      if (!primary.openIfPresent(id) && !(secondary && secondary.openIfPresent(id))) {
+      // printonly=1 (Awaiting Verification "View PDF"): print straight from the loaded entry without
+      // opening the editable form. A white cover hides the page (print output is built separately).
+      const printOnly = fromQuery && qs.get('print') === '1' && qs.get('printonly') === '1';
+      if (printOnly && !document.getElementById('pdfCover')) {
+        const st = document.createElement('style');
+        st.textContent = '@media print{#pdfCover{display:none!important}}';
+        document.head.appendChild(st);
+        const cover = document.createElement('div');
+        cover.id = 'pdfCover';
+        cover.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;font:600 15px "Segoe UI",system-ui,sans-serif;color:#1d2b38;';
+        cover.textContent = 'Preparing PDF…';
+        document.body.appendChild(cover);
+        window.addEventListener('afterprint', () => { cover.textContent = 'PDF ready — you can close this tab.'; try { window.close(); } catch (e) { /* ignore */ } });
+      }
+      const found = printOnly
+        ? (primary.printIfPresent ? true : false)
+        : (primary.openIfPresent(id) || (secondary && secondary.openIfPresent(id)));
+      if (!found) {
         toast('That entry has not reached this device yet.');
         return;
       }
       if (fromQuery && qs.get('print') === '1' && !openFromHash.printed) {
         openFromHash.printed = true;
-        setTimeout(() => { primary.printIfPresent(id) || (secondary && secondary.printIfPresent(id)); }, 400);
+        setTimeout(() => {
+          const ok = primary.printIfPresent(id) || (secondary && secondary.printIfPresent(id));
+          const cv = document.getElementById('pdfCover');
+          if (!ok && cv) cv.textContent = 'That entry has not reached this device yet — close this tab and try again.';
+        }, 400);
       }
     }
 
