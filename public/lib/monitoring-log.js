@@ -2915,7 +2915,8 @@
         return;
       }
 
-      const pw = window.open('', '_blank', 'width=900,height=700');
+      // print-only tab (View PDF): a popup opened from a timer is blocked, so print in-page
+      const pw = window.__pdfOnly ? null : window.open('', '_blank', 'width=900,height=700');
       if (!pw) {
         // Popup blocked — fall back to in-page print
         sheet.innerHTML = sheetsHtml;
@@ -3762,6 +3763,7 @@ function fallbackDl(canvas,filename){
       // printonly=1 (Awaiting Verification "View PDF"): print straight from the loaded entry without
       // opening the editable form. A white cover hides the page (print output is built separately).
       const printOnly = fromQuery && qs.get('print') === '1' && qs.get('printonly') === '1';
+      if (printOnly) window.__pdfOnly = true;
       if (printOnly && !document.getElementById('pdfCover')) {
         const st = document.createElement('style');
         st.textContent = '@media print{#pdfCover{display:none!important}}';
