@@ -172,20 +172,29 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
     return DEFS[rk];
   }
 
+  // Hidden fields that are internal bookkeeping (ids, audit stamps), not worth previewing.
+  var INTERNAL_KEY = /(SourceIds?|SourceSubmissionId|TypedManually|RawJson|stampSource|movementReversed|warningAck|warningNote|calculatedBy|ncEntryId)$/i;
+
   function fieldsFromDef(def) {
     var seen = {};
     var fields = [];
+    function add(f) {
+      if (!f || !f.key || seen[f.key]) return;
+      if (INTERNAL_KEY.test(f.key) || /Old$/.test(f.key)) return;
+      seen[f.key] = true;
+      fields.push({ key: f.key, label: f.label || humanLabel(f.key) });
+    }
+    // Form-engine records keep fields in sections; monitoring-log records in entryFields.
     (def.sections || []).forEach(function (sec) {
-      if (sec.legacyBlock || sec.movementBlock) return;
-      (sec.fields || []).forEach(function (f) {
-        if (!f.key || seen[f.key]) return;
-        if (f.hidden && f.key !== def.batchField && f.key !== 'entryDate') return;
-        seen[f.key] = true;
-        fields.push({ key: f.key, label: f.label || humanLabel(f.key) });
-      });
+      if (sec.legacyBlock) return;
+      (sec.fields || []).forEach(add);
     });
+    (def.entryFields || []).forEach(add);
     if (def.roster) {
       fields.push({ key: 'roster:count', label: (def.roster.title || 'Roster') + ' count' });
+      (def.roster.totals || []).forEach(function (t, i) {
+        fields.push({ key: 'roster:total:' + i, label: (t.label || 'Total ' + (i + 1)) + ' (roster total)' });
+      });
     }
     return fields;
   }

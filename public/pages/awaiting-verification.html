@@ -380,6 +380,32 @@
     }));
   }
 
+  // Mirrors form-record.js roster.totals: count rows, or sum a column (optionally filtered by `where`).
+  function rosterTotal(def, values, idx) {
+    var t = def && def.roster && def.roster.totals && def.roster.totals[idx];
+    if (!t) return '—';
+    var rows = null;
+    Object.keys(values).forEach(function (k) { if (Array.isArray(values[k])) rows = values[k]; });
+    if (!rows) return '—';
+    var match = function (r) {
+      return !t.where || Object.keys(t.where).every(function (k) {
+        return t.where[k].indexOf(String(r[k] == null ? '' : r[k])) !== -1;
+      });
+    };
+    if (t.count) {
+      return String(rows.filter(function (r) {
+        return match(r) && Object.keys(r).some(function (k) { return String(r[k] || '').trim() !== ''; });
+      }).length);
+    }
+    var sum = 0;
+    rows.forEach(function (r) {
+      if (!match(r)) return;
+      var parts = String(r[t.sum] == null ? '' : r[t.sum]).split(/[+,;\s]+/).filter(Boolean);
+      parts.forEach(function (p) { if (/^-?\d+(\.\d+)?$/.test(p)) sum += parseFloat(p); });
+    });
+    return sum.toFixed(2);
+  }
+
   function previewDl(row) {
     var def = DEFS[row.recordKey];
     var values = row.values || {};
@@ -404,7 +430,11 @@
     var source = (configCols && configCols.length) ? configCols : fallbackCols;
     if (source && source.length) {
       source.forEach(function (col) {
-        if (col === 'roster:count') {
+        var tm = /^roster:total:(\d+)$/.exec(col);
+        if (tm) {
+          var tdef = def && def.roster && def.roster.totals && def.roster.totals[+tm[1]];
+          cols.push({ key: '__roster_total', idx: +tm[1], label: (tdef && tdef.label) || 'Roster total' });
+        } else if (col === 'roster:count') {
           cols.push({ key: '__roster_count', label: ((def.roster && def.roster.title) || 'Roster') + ' entries' });
         } else {
           cols.push({ key: col, label: labelMap[col] || humanLabel(col) });
@@ -423,7 +453,9 @@
 
     var pairs = cols.map(function (col) {
       var v;
-      if (col.key === '__roster_count') {
+      if (col.key === '__roster_total') {
+        v = rosterTotal(def, values, col.idx);
+      } else if (col.key === '__roster_count') {
         v = row.rosterCount != null ? String(row.rosterCount) : '—';
       } else {
         var raw = values[col.key];
