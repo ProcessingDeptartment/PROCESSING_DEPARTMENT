@@ -3769,9 +3769,9 @@ function fallbackDl(canvas,filename){
         const cover = document.createElement('div');
         cover.id = 'pdfCover';
         cover.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;font:600 15px "Segoe UI",system-ui,sans-serif;color:#1d2b38;';
-        cover.textContent = 'Preparing PDF…';
+        // blank cover: nothing to read, just the print dialog
         document.body.appendChild(cover);
-        window.addEventListener('afterprint', () => { cover.textContent = 'PDF ready — you can close this tab.'; try { window.close(); } catch (e) { /* ignore */ } });
+        window.addEventListener('afterprint', () => { try { window.close(); } catch (e) { /* ignore */ } });
       }
       const found = printOnly
         ? (primary.printIfPresent ? true : false)
