@@ -4432,8 +4432,7 @@
       // Open a dedicated print window — works on all devices including phones.
       // On Android Chrome this triggers the native PDF/print dialog.
       // On iOS Safari the user taps Share → Print or Save to PDF from the new page.
-      // print-only tab (View PDF): a popup opened from a timer is blocked, so print in-page
-      const pw = window.__pdfOnly ? null : window.open('', '_blank', 'width=900,height=700');
+      const pw = window.open('', '_blank', 'width=900,height=700');
       if (!pw) {
         // Popup blocked — fall back to in-page print (desktop only)
         el('fr_printSheet').innerHTML = sheetsHtml;
@@ -4448,6 +4447,8 @@
         return;
       }
 
+      // View PDF tab: the green-button print window is the only thing shown, so drop this blank tab
+      if (window.__pdfOnly) setTimeout(() => { try { window.close(); } catch (e) { /* ignore */ } }, 2500);
       pw.document.write(`<!doctype html><html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">

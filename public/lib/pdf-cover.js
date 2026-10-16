@@ -11,6 +11,5 @@
     // hide everything on screen at once (even before the body exists); print output is unaffected
     st.textContent = '@media screen{html{background:#fff!important}body{visibility:hidden!important}}';
     document.head.appendChild(st);
-    window.addEventListener('afterprint', function () { try { window.close(); } catch (e) { /* ignore */ } });
   } catch (e) { /* ignore */ }
 })();
