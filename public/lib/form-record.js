@@ -4045,7 +4045,6 @@
       // entry-log records: the server stamps dates/steam numbers, so pick up what it actually stored
       if (config.entryLog || crateRoster) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
       const finalRange = finalize ? crateRange(savedSub) : null;
-      if (amending && window.NcRaise && window.NcRaise.recordUpdated) window.NcRaise.recordUpdated(savedSub.id); // NC feedback loop
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       if (config.boxInspection && window.BoxInspection) await window.BoxInspection.refresh(); // inspected boxes leave the list
