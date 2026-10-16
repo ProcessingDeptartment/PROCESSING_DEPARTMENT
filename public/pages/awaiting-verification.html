@@ -48,9 +48,9 @@
   .age.old{ color:#a3352d; font-weight:700; }
   .rev{ background:transparent; border:none; color:#1d4ed8; cursor:pointer; font-size:11.5px; padding:0; text-decoration:underline; }
   tr.detail td{ background:#f8fafc; }
-  dl.vals{ margin:0; display:grid; grid-template-columns:max-content 1fr; gap:2px 14px; }
-  dl.vals dt{ color:#5c6771; font-weight:600; }
-  dl.vals dd{ margin:0; }
+  dl.vals{ margin:0; display:grid; grid-template-columns:max-content 1fr; gap:4px 18px; align-items:baseline; font-size:12px; }
+  dl.vals dt{ color:#5c6771; font-weight:600; white-space:nowrap; }
+  dl.vals dd{ margin:0; font-weight:500; color:#1b2330; word-break:break-word; }
   tr.foreign td{ color:#8a939b; }
 
   .empty{ padding:24px; text-align:center; color:#8a939b; background:#fff; border:1px solid #e2e4e3; border-radius:8px; }
@@ -205,6 +205,7 @@
   function whenOf(entry) { return entry.submittedAt || entry.updatedAt || entry.createdAt || 0; }
 
   var STATE = { scope: 'mine', role: null, user: null, rows: [], picked: {}, open: {} };
+  var DEFS = {};   // recordKey -> parsed record-def (or null if unavailable)
 
   async function scan() {
     var pair = await Promise.all([
@@ -231,7 +232,15 @@
             id: entry.id || '', name: meta.name || recordKey, docNo: meta.docNo || '',
             href: meta.href ? '../records/' + meta.href : null,
             values: entry.values || {},
-            entryDate: entryDate(entry.values), ref: entryRef(entry.values), who: nameOf(entry.completedBy) || nameOf(entry.stage && entry.stage.submittedBy) || nameOf(entry.submittedBy) || nameOf(entry.submittedByName) || personOf(entry.values),
+            entryDate: entryDate(entry.values), ref: entryRef(entry.values),
+            rosterCount: (function () {
+              var arr = null;
+              Object.keys(entry.values || {}).forEach(function (k) {
+                if (Array.isArray(entry.values[k])) arr = entry.values[k];
+              });
+              return arr ? arr.length : null;
+            })(),
+            who: nameOf(entry.completedBy) || nameOf(entry.stage && entry.stage.submittedBy) || nameOf(entry.submittedBy) || nameOf(entry.submittedByName) || personOf(entry.values),
             submittedAt: whenOf(entry), allowedRoles: allowed,
             mine: allowed.indexOf(STATE.role) !== -1
           });
@@ -240,6 +249,7 @@
     });
     rows.sort(function (a, b) { return (a.submittedAt || Infinity) - (b.submittedAt || Infinity); });
     STATE.rows = rows;
+    await loadDefs(rows.map(function (r) { return r.recordKey; }));
   }
 
   function visibleRows() {
@@ -320,16 +330,21 @@
             ? '<input type="checkbox" class="row-pick" data-rid="' + esc(rid) + '"' + (STATE.picked[rid] ? ' checked' : '') + '>'
             : '') + '</td>' +
           '<td class="when">' + esc(r.entryDate || '—') + '</td>' +
-          '<td>' + esc(r.ref || '—') + '</td>' +
+          '<td>' + esc(r.ref || '—') + (r.rosterCount != null ? '<br><span style="color:#5c6771;font-size:11px;">' + r.rosterCount + ' rows</span>' : '') + '</td>' +
           '<td>' + esc(r.who || '—') + '</td>' +
           '<td class="when">' + submittedDate + '</td>' +
           '<td class="' + ageCls + '">' + waitDays + '</td>' +
           '<td><button type="button" class="rev" data-rid="' + esc(rid) + '">' + (open ? 'Hide' : 'Preview') + '</button></td>' +
         '</tr>';
         var formLink = r.href && r.id
-          ? '<div style="margin-top:10px;"><a href="' + esc(r.href) + '#' + encodeURIComponent(r.id) + '" target="_blank" style="font-size:11.5px;color:#1d4ed8;">View submission form &rarr;</a></div>'
+          ? '<div style="margin-top:10px;">' +
+              '<a href="' + esc(r.href) + '#' + encodeURIComponent(r.id) + '" target="_blank" ' +
+                 'style="font-size:12px;color:#1d4ed8;font-weight:600;text-decoration:none;border:1px solid #c3d4f7;padding:4px 10px;border-radius:4px;background:#f0f5ff;">' +
+                'Open full record &rarr;' +
+              '</a>' +
+            '</div>'
           : '';
-        var detail = open ? '<tr class="detail"><td></td><td colspan="6">' + valuesDl(r.values) + formLink + '</td></tr>' : '';
+        var detail = open ? '<tr class="detail"><td></td><td colspan="6">' + previewDl(r) + formLink + '</td></tr>' : '';
         return main + detail;
       }).join('') +
       '</tbody></table></div>';
@@ -342,14 +357,74 @@
       .replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
 
-  function valuesDl(values) {
-    var keys = Object.keys(values || {}).filter(function (k) {
-      var v = values[k];
-      return v != null && v !== '' && typeof v !== 'object';
-    });
-    if (!keys.length) return '<span style="color:#8a939b;">No field values captured on this entry.</span>';
-    return '<dl class="vals">' + keys.map(function (k) {
-      return '<dt>' + esc(humanLabel(k)) + '</dt><dd>' + esc(values[k]) + '</dd>';
+  async function loadDefs(recordKeys) {
+    var unique = recordKeys.filter(function (k, i, a) { return a.indexOf(k) === i && !(k in DEFS); });
+    await Promise.all(unique.map(async function (rk) {
+      try {
+        var res = await fetch('../data/record-defs/' + encodeURIComponent(rk) + '.json', { cache: 'default' });
+        DEFS[rk] = res.ok ? await res.json() : null;
+      } catch (e) {
+        DEFS[rk] = null;
+      }
+    }));
+  }
+
+  function previewDl(row) {
+    var def = DEFS[row.recordKey];
+    var values = row.values || {};
+
+    var labelMap = {};
+    if (def) {
+      (def.sections || []).forEach(function (sec) {
+        (sec.fields || []).forEach(function (f) {
+          if (f.key && f.label) labelMap[f.key] = f.label;
+        });
+      });
+      if (def.roster && def.roster.columns) {
+        def.roster.columns.forEach(function (c) {
+          if (c.key && c.label) labelMap[c.key] = c.label;
+        });
+      }
+    }
+
+    var cols = [];
+    if (def && def.listColumns && def.listColumns.length) {
+      def.listColumns.forEach(function (col) {
+        if (col === 'roster:count') {
+          cols.push({ key: '__roster_count', label: ((def.roster && def.roster.title) || 'Roster') + ' entries' });
+        } else {
+          cols.push({ key: col, label: labelMap[col] || humanLabel(col) });
+        }
+      });
+    } else {
+      var shown = 0;
+      Object.keys(values).forEach(function (k) {
+        if (shown >= 8) return;
+        var v = values[k];
+        if (v == null || v === '' || typeof v === 'object') return;
+        cols.push({ key: k, label: labelMap[k] || humanLabel(k) });
+        shown++;
+      });
+    }
+
+    var pairs = cols.map(function (col) {
+      var v;
+      if (col.key === '__roster_count') {
+        v = row.rosterCount != null ? String(row.rosterCount) : '—';
+      } else {
+        var raw = values[col.key];
+        if (raw == null || raw === '') v = '—';
+        else if (typeof raw === 'object') v = JSON.stringify(raw);
+        else v = String(raw);
+      }
+      return { label: col.label, value: v };
+    }).filter(function (p) { return p.value !== '—' || cols.length <= 4; });
+
+    if (!pairs.length) {
+      return '<span style="color:#8a939b;font-size:12px;">No field values captured on this entry.</span>';
+    }
+    return '<dl class="vals">' + pairs.map(function (p) {
+      return '<dt>' + esc(p.label) + '</dt><dd>' + esc(p.value) + '</dd>';
     }).join('') + '</dl>';
   }
 
