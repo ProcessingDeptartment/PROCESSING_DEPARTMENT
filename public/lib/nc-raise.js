@@ -18,6 +18,7 @@
     + '.nc-pending{font-size:12px;color:#8a5200;font-weight:600}'
     + '.nc-banner{margin:0 0 10px;padding:8px 11px;border-left:3px solid #d98200;background:#fff3dc;color:#7a4a00;font-size:12.5px;font-weight:600;border-radius:3px}'
     + '.nc-banner.nc-closed{border-left-color:#8a8f96;background:#eceef0;color:#4b5158}'
+    + '.nc-banner.nc-progress{border-left-color:#c9a400;background:#fff9c4;color:#665500}'
     + '.nc-banner a{color:inherit;text-decoration:underline;margin-left:6px}'
     + '.nc-inline-warn{display:block;margin-top:3px;font-size:11.5px;font-weight:600;color:#8a5200}'
     + '.nc-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:14px}'
@@ -183,9 +184,29 @@
     (root || document).querySelectorAll('.nc-banner[data-nc-refs]').forEach(function (b) {
       api('/api/nc?ref=' + encodeURIComponent(b.getAttribute('data-nc-refs')))
         .then(function (r) { return r.json(); })
-        .then(function (rows) { if (rows.length && rows.every(function (n) { return n.status === 'closed'; })) b.classList.add('nc-closed'); })
+        .then(function (rows) {
+          if (!rows.length) return;
+          var link = function (n) { return esc(n.ncRef) + ' <a href="../pages/nc-log.html?nc=' + encodeURIComponent(n.ncRef) + '">View →</a>'; };
+          var open = rows.filter(function (n) { return n.status === 'open'; });
+          var prog = rows.filter(function (n) { return n.status === 'in_progress'; });
+          var done = rows.filter(function (n) { return n.status === 'closed'; });
+          var parts = [];
+          if (open.length) parts.push('⚠ NC open: ' + open.map(link).join(' · ') + ' — awaiting corrective action.');
+          if (prog.length) parts.push('🔄 NC in progress: ' + prog.map(link).join(' · ') + ' — under review.');
+          if (done.length) parts.push('✔ NC resolved: ' + done.map(function (n) { return link(n) + (n.closedBy ? ' (closed by ' + esc(n.closedBy) + ')' : ''); }).join(' · '));
+          b.innerHTML = parts.join('<br>');
+          b.classList.toggle('nc-closed', !open.length && !prog.length);
+          b.classList.toggle('nc-progress', !open.length && prog.length > 0);
+        })
         .catch(function () { });
     });
+  }
+
+  // A submitted record linked to NCs was amended: server moves its open NCs to in_progress, logs it, emails.
+  function recordUpdated(submissionId) {
+    if (!submissionId) return Promise.resolve();
+    return api('/api/nc/record-updated', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ submission_id: submissionId, updated_by: userName() || 'Unknown' }) }).catch(function () { });
   }
 
   // Raise an NC without the modal (REC 7.4.2 scored checks, config.scoring.autoNc). opts: { recordRef, jobNumber,
@@ -199,5 +220,5 @@
   }
 
   window.NcRaise = { open: open, create: create, findBreaches: findBreaches, wireInline: wireInline, buttonHtml: buttonHtml,
-    bannerHtml: bannerHtml, hydrateBanners: hydrateBanners };
+    bannerHtml: bannerHtml, hydrateBanners: hydrateBanners, recordUpdated: recordUpdated };
 })();

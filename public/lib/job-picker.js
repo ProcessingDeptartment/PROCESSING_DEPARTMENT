@@ -512,7 +512,6 @@
       try { input.focus(); } catch (e) { }
       drawList();
     });
-    input.addEventListener('focus', drawList);
     input.addEventListener('click', () => { if (list.hidden) drawList(); });
     input.addEventListener('input', drawList);
     input.addEventListener('keydown', (ev) => {

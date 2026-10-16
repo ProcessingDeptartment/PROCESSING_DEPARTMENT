@@ -1205,7 +1205,7 @@
     let pre = null;
     if (gateRoot) { gateRoot.style.visibility = 'hidden'; pre = setTimeout(() => { gateRoot.style.visibility = ''; }, 5000); }
     const unprelock = () => { if (pre) { clearTimeout(pre); pre = null; } if (gateRoot) gateRoot.style.visibility = ''; };
-    loadLib('job-picker.js?v=12', 'JobPicker').then((jp) => {
+    loadLib('job-picker.js?v=13', 'JobPicker').then((jp) => {
       try {
         if (!jp) return;
         const jobKey0 = fields[0].key;
@@ -4045,6 +4045,7 @@
       // entry-log records: the server stamps dates/steam numbers, so pick up what it actually stored
       if (config.entryLog || crateRoster) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
       const finalRange = finalize ? crateRange(savedSub) : null;
+      if (amending && window.NcRaise && window.NcRaise.recordUpdated) window.NcRaise.recordUpdated(savedSub.id); // NC feedback loop
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       if (config.boxInspection && window.BoxInspection) await window.BoxInspection.refresh(); // inspected boxes leave the list
@@ -4129,13 +4130,9 @@
       if (roster.cardRows && roster.printTable) {
         const ptCols = cols.filter(c => !c.legacy && !c.printHidden);
         let ptRows = getRosterRows(sub, i, roster.key);
-        // entry-log records (REC 7.4.1): list every steam for the job up to this entry, not just this entry's
-        if (config.entryLog && i === 0 && window.EntryLog) {
-          const job = String(sub.values[config.batchField || 'jobNo'] || '').trim();
-          const at = window.EntryLog.entryAt(sub);
-          const prior = job ? window.EntryLog.jobState(config, submissions, job, sub.id, at).steams : [];
-          ptRows = prior.concat(ptRows).sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
-        }
+        // entry-log records (REC 7.4.1): a printed entry shows ONLY its own steams; the job's full history
+        // is printed from the drying report, so earlier entries are never repeated on this entry's PDF
+        if (config.entryLog) ptRows = ptRows.slice().sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
         ptRows = ptRows.filter(r => ptCols.some(c => String(r[c.key] || '').trim() !== ''));
         const ptBody = (ptRows.length ? ptRows : [{}]).map(r =>
           `<tr>${ptCols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
