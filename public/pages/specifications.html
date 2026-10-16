@@ -66,6 +66,8 @@
   .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .actions .hint{ color:#8a5a10; font-size:12px; }
   .actions .spacer{ margin-left:auto; }
+  .rev-rule{ background:#f0f4ff; border:1px solid #c7d4f5; border-radius:5px; padding:8px 11px; font-size:12px; color:#2d4278; margin-bottom:10px; line-height:1.5; }
+  .rev-rule strong{ display:block; margin-bottom:2px; }
 
   .hist{ margin-top:16px; }
   .hist-item{ padding:7px 0; border-top:1px solid #eceeef; font-size:12px; display:flex; gap:10px; }
@@ -364,8 +366,10 @@
       (e.rk ? '<label style="display:flex;gap:6px;align-items:flex-start;margin:-6px 0 14px;font-size:12px;color:#3b4650;"><input type="checkbox" data-n="linkform" checked style="margin-top:2px;"> ' +
         '<span>Also add a field for this item to the record’s form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
       '<div class="sec">Publish as ' + (cur ? 'a new version' : 'the first version') + '</div>' +
+      '<div class="rev-rule"><strong>⚠ Do not publish a new version until all specification changes for this record are complete.</strong>' +
+        'Multiple changes can be grouped under one revision. In the reason field below, list each change and why it was made — e.g. "Max seam thickness raised from 2.5 to 3.0 mm (customer request); min cook temp corrected from 72°C to 74°C (SOP update)".</div>' +
       '<div class="attr">' +
-        '<label>Reason for the change<input data-f="reason" placeholder="e.g. Customer revised max seam thickness"></label>' +
+        '<label>Reason for the change (list each change and reason)<input data-f="reason" placeholder="e.g. Max seam 2.5→3.0 mm (customer request); min cook temp 72→74°C (SOP update)"></label>' +
         '<label>Your name<input data-f="by" value="' + esc(user) + '"></label>' +
         '<label>Your title<input data-f="title" placeholder="e.g. QA Manager"></label>' +
       '</div>' +
