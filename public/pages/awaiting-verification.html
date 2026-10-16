@@ -359,7 +359,7 @@
                 'Open full record &rarr;' +
               '</a>' +
               '<a href="print-entry.html?rec=' + encodeURIComponent(r.recordKey) + '&engine=' + (r.engine === 'log' ? 'log' : 'form') +
-                 '&entry=' + encodeURIComponent(r.id) + '&print=1&printonly=1" target="_blank" ' +
+                 '&entry=' + encodeURIComponent(r.id) + '&print=1&printonly=1" class="pdf-open" ' +
                  'style="font-size:12px;color:#1d4ed8;font-weight:600;text-decoration:none;border:1px solid #c3d4f7;padding:4px 10px;border-radius:4px;background:#f0f5ff;margin-left:8px;">' +
                 'View PDF &rarr;' +
               '</a>' +
@@ -642,6 +642,29 @@
         esc(p.value) + (p.red ? ' ⚠ OOSW lower than cooked weight' : '') + '</dd>';
     }).join('') + '</dl>' + blocks;
   }
+
+  // View PDF opens inside this page (full-screen panel) so no new tab is made and the queue state is kept.
+  function openPdfPanel(url) {
+    var old = $('pdfPanel'); if (old) old.remove();
+    var wrap = document.createElement('div');
+    wrap.id = 'pdfPanel';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#1d2b38;color:#fff;font-size:13px;font-weight:600;">' +
+        '<button type="button" id="pdfClose" style="background:#fff;color:#1d2b38;border:none;border-radius:6px;padding:7px 14px;font-weight:700;cursor:pointer;">&larr; Back to queue</button>' +
+        '<span id="pdfMsg">Loading PDF…</span></div>' +
+      '<iframe id="pdfFrame" style="flex:1;border:0;width:100%;background:#fff;"></iframe>';
+    document.body.appendChild(wrap);
+    var fr = $('pdfFrame');
+    fr.addEventListener('load', function () { var m = $('pdfMsg'); if (m) m.textContent = ''; });
+    fr.src = url;
+    $('pdfClose').addEventListener('click', function () { wrap.remove(); });
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a.pdf-open');
+    if (!a) return;
+    e.preventDefault();
+    openPdfPanel(a.getAttribute('href'));
+  });
 
   function wireGroups() {
     document.querySelectorAll('.row-pick').forEach(function (cb) {
