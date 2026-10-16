@@ -206,6 +206,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
     if (def.scoring) {
       fields.push({ key: 'scoring:over', label: 'Overdrying assessment (colour block + flagged signs)' });
       fields.push({ key: 'scoring:under', label: 'Underdrying assessment (colour block + flagged signs)' });
+      fields.push({ key: 'scoring:other', label: 'Other signs (e.g. wrinkles) — flagged signs on neither side' });
     }
     return fields;
   }
