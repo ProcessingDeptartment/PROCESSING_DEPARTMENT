@@ -538,6 +538,13 @@
     var configCols = PREVIEW_CONFIG[row.recordKey];   // admin override
     var fallbackCols = def && def.listColumns && def.listColumns.length ? def.listColumns : null;
     var source = (configCols && configCols.length) ? configCols : fallbackCols;
+    if (!(source && source.length) && def && def.scoring) {
+      // scored records (REC 7.4.2) with nothing configured: key facts plus both assessment blocks
+      var have = {};
+      (def.entryFields || []).forEach(function (f) { have[f.key] = true; });
+      source = ['jobNo', 'entryDate', 'dryRoomArea', 'noOfTrolleys', 'estimatedDryDate', 'batchStatus']
+        .filter(function (k) { return have[k]; }).concat(['scoring:over', 'scoring:under']);
+    }
     if (source && source.length) {
       source.forEach(function (col) {
         var tm = /^roster:total:(\d+)$/.exec(col);
