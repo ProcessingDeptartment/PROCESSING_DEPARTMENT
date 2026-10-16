@@ -53,3 +53,16 @@ window.__pdfFail = function (msg) {
     document.documentElement.appendChild(box);
   } catch (e) { /* ignore */ }
 };
+
+// View PDF: instead of a second window, write the finished print page into THIS tab (same document the
+// engine would have written into a popup). Only write / close / focus are used on the popup, so this stands in for it.
+window.__pdfSameTab = function () {
+  var buf = '';
+  return {
+    document: {
+      write: function (h) { buf += h; },
+      close: function () { document.open(); document.write(buf); document.close(); }
+    },
+    focus: function () {}
+  };
+};

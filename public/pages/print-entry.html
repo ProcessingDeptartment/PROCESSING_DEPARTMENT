@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Print entry</title>
-<script src="../lib/pdf-cover.js?v=4"></script>
+<script src="../lib/pdf-cover.js?v=5"></script>
 <script src="../lib/palette-map.js"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
 </head>
@@ -30,30 +30,31 @@
   ];
   var formOnly = ['lookups.js?v=4', 'auth.js?v=5', 'login-ui.js?v=6', 'document-revision.js?v=3', 'traceability.js?v=10',
     'signoff-block.js?v=8', 'permission-rules.js?v=8', 'nc-raise.js?v=5', 'delete-submission-modal.js?v=1',
-    'time-picker.js?v=2', 'spec-gate.js?v=4', 'form-record.js?v=116'];
+    'time-picker.js?v=2', 'spec-gate.js?v=4', 'form-record.js?v=117'];
   var logOnly = ['auth.js?v=5', 'login-ui.js?v=6', 'spec-registry.js?v=2', 'document-revision.js?v=3', 'traceability.js?v=10',
-    'signoff-block.js?v=8', 'nc-raise.js?v=5', 'time-picker.js?v=2', 'spec-gate.js?v=4', 'monitoring-log.js?v=83'];
+    'signoff-block.js?v=8', 'nc-raise.js?v=5', 'time-picker.js?v=2', 'spec-gate.js?v=4', 'monitoring-log.js?v=84'];
   var files = common.concat(engine === 'log' ? logOnly : formOnly);
 
-  // classic scripts, strictly in order (the libs depend on each other)
-  function load(i) {
-    if (i >= files.length) return start();
+  // download all scripts at once, execute them in order (async=false keeps the order)
+  var pending = files.length;
+  function done() { if (--pending === 0) start(); }
+  files.forEach(function (f) {
     var s = document.createElement('script');
-    s.src = '../lib/' + files[i];
-    s.onload = function () { load(i + 1); };
-    s.onerror = function () { load(i + 1); };
+    s.src = '../lib/' + f;
+    s.async = false;
+    s.onload = done;
+    s.onerror = done;
     document.body.appendChild(s);
-  }
+  });
   function start() {
     try {
       if (engine === 'log') MonitoringLog.init({ mount: '#mlRoot', recordKey: rec });
       else FormRecord.init({ mount: '#frRoot', recordKey: rec });
     } catch (e) {
       console.error(e);
-      if (window.__pdfTapPrompt) window.__pdfTapPrompt(function () { location.reload(); });
+      if (window.__pdfFail) window.__pdfFail('Could not prepare the PDF. Try again.');
     }
   }
-  load(0);
 })();
 </script>
 </body>
