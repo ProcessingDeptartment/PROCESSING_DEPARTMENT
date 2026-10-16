@@ -494,7 +494,7 @@
       if (n > worst) worst = n;
       if (n >= (minFor[k] != null ? minFor[k] : 1)) flagged.push({ key: k, score: n });
     });
-    if (!entered) return '<div style="margin-top:8px;color:#8a939b;font-size:12px;">' + title + ': no scores recorded.</div>';
+    if (!entered) return '<div style="color:#8a939b;font-size:11.5px;">' + title + ': no scores recorded.</div>';
     var statuses = sc.statuses || ['Green', 'Amber', 'Red', 'Critical'];
     var status = statuses[Math.min(worst, statuses.length - 1)];
     // a side with nothing flagged is Green regardless of a lone score below that sign's minimum
@@ -508,20 +508,20 @@
     var worstSigns = flagged.filter(function (fl) { return fl.score === worst; }).map(function (fl) {
       return ((fieldBy[fl.key] || {}).label || humanLabel(fl.key)) + ': ' + optLabel(fl.key, fl.score);
     }).join(', ');
-    var html = '<div style="margin-top:10px;padding:9px 12px;border-radius:7px;border:1px solid ' + c.bd + ';border-left-width:5px;background:' + c.bg + ';color:' + c.fg + ';">' +
-      '<div style="font-weight:700;font-size:12.5px;">' + esc(title) + ' — ' + esc(status) +
+    var html = '<div style="padding:5px 9px;border-radius:6px;border:1px solid ' + c.bd + ';border-left-width:4px;background:' + c.bg + ';color:' + c.fg + ';">' +
+      '<div style="font-weight:700;font-size:11.5px;">' + esc(title) + ' — ' + esc(status) +
         (worstSigns ? '<span style="font-weight:500;"> · worst: ' + esc(worstSigns) + '</span>' : '') + '</div>';
     if (!flagged.length) {
-      html += '<div style="font-size:12px;margin-top:3px;">No ' + title.toLowerCase() + ' signs recorded.</div>';
+      html += '<div style="font-size:11px;margin-top:2px;">No ' + title.toLowerCase() + ' signs recorded.</div>';
     } else {
-      html += '<ul style="margin:5px 0 0;padding-left:18px;font-size:12px;line-height:1.5;">' + flagged.map(function (fl) {
+      html += '<ul style="margin:3px 0 0;padding-left:16px;font-size:11px;line-height:1.4;">' + flagged.map(function (fl) {
         var f = fieldBy[fl.key] || {};
         var opt = (f.scoreOptions || []).filter(function (o) { return String(o.value) === String(fl.score); })[0] || {};
         return '<li><b>' + esc(f.label || humanLabel(fl.key)) + '</b> — ' + esc(opt.label || 'Flagged') +
           (opt.detail ? ': ' + esc(opt.detail) : '') + '</li>';
       }).join('') + '</ul>';
       var steps = (sc.steps && sc.steps[side]) || [];
-      if (steps.length) html += '<div style="font-size:12px;margin-top:5px;font-style:italic;">' + steps.map(esc).join(' ') + '</div>';
+      if (steps.length) html += '<div style="font-size:11px;margin-top:3px;font-style:italic;">' + steps.map(esc).join(' ') + '</div>';
     }
     return html + '</div>';
   }
@@ -584,6 +584,7 @@
     }
 
     var blocks = cols.filter(function (c) { return c.block; }).map(function (c) { return scoringBlock(def, values, c.block); }).join('');
+    if (blocks) blocks = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px;margin-top:10px;align-items:start;">' + blocks + '</div>';
     cols = cols.filter(function (c) { return !c.block; });
     var longKeys = {};
     (def && def.entryFields || []).concat([].concat.apply([], ((def && def.sections) || []).map(function (sec) { return sec.fields || []; })))
