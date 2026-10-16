@@ -1,4 +1,19 @@
 (function () {
+  // View PDF (printonly=1): cover the page the instant this script loads, before the record form renders.
+  try {
+    const q0 = new URLSearchParams(location.search);
+    if (q0.get('printonly') === '1' && q0.get('print') === '1' && q0.get('entry') && !document.getElementById('pdfCover')) {
+      window.__pdfOnly = true;
+      const st0 = document.createElement('style');
+      st0.textContent = '@media print{#pdfCover{display:none!important}}';
+      document.head.appendChild(st0);
+      const cv0 = document.createElement('div');
+      cv0.id = 'pdfCover';
+      cv0.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;';
+      document.documentElement.appendChild(cv0);
+      window.addEventListener('afterprint', () => { try { window.close(); } catch (e) { /* ignore */ } });
+    }
+  } catch (e) { /* ignore */ }
   function el(id) { return document.getElementById(id); }
 
   // Shared libs loaded on demand from next to this engine: the job picker (search -> confirm
