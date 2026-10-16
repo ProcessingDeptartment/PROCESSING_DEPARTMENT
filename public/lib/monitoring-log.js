@@ -2951,6 +2951,10 @@ ${STYLE}
   }
   .ml-print-bar button:hover{background:#246040;}
   .ml-print-bar .ml-pb-hint{font-size:12px;color:#aab;margin-left:4px;}
+  .ml-print-bar button+button{margin-left:4px;}
+  #ml-img-btn{background:#0f766e;}
+  #ml-img-btn:hover{background:#0d6460;}
+  #ml-img-btn:disabled{opacity:.6;cursor:wait;}
 }
 @media print{ .ml-print-bar{display:none !important;} }
 ${docHeaderStyles ? docHeaderStyles : ''}
@@ -2959,10 +2963,45 @@ ${pageStyleCss}
 </head><body>
 <div class="ml-print-bar">
   <button onclick="window.print()">⬇ Save / Print PDF</button>
+  <button id="ml-img-btn" onclick="saveAsImage('ml-img-btn','${filename}')">📷 Save as Image</button>
   <span class="ml-pb-hint">iOS: tap Share → Print or Save to PDF</span>
 </div>
 ${docHeaderHtml ? `<div style="margin-bottom:6px;">${docHeaderHtml}</div>` : ''}
 <div class="ml-sheet${dc ? ' ml-sheet-dc' : ''}">${sheetsHtml}</div>
+<script>
+function saveAsImage(btnId,filename){
+  var btn=document.getElementById(btnId);
+  if(btn){btn.disabled=true;btn.textContent='Capturing…';}
+  var target=document.querySelector('.ml-sheet')||document.body;
+  var scr=document.createElement('script');
+  scr.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  scr.onload=function(){
+    html2canvas(target,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
+      canvas.toBlob(function(blob){
+        var file=new File([blob],filename+'.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[file]})){
+          navigator.share({files:[file],title:filename}).catch(function(){fallbackDl(canvas,filename);});
+        } else { fallbackDl(canvas,filename); }
+        if(btn){btn.disabled=false;btn.textContent='📷 Save as Image';}
+      },'image/png');
+    }).catch(function(){
+      if(btn){btn.disabled=false;btn.textContent='📷 Save as Image';}
+      alert('Could not capture image. Use the PDF button instead.');
+    });
+  };
+  scr.onerror=function(){
+    if(btn){btn.disabled=false;btn.textContent='📷 Save as Image';}
+    alert('Image library failed to load. Check your connection.');
+  };
+  document.head.appendChild(scr);
+}
+function fallbackDl(canvas,filename){
+  var a=document.createElement('a');
+  a.href=canvas.toDataURL('image/png');
+  a.download=filename+'.png';
+  a.click();
+}
+<\/script>
 </body></html>`);
       pw.document.close();
       pw.focus();

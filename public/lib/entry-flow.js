@@ -96,7 +96,11 @@
     function intakeKg() { var f = $('fr_f_jiIntakeWeight'); var n = f ? num(f.value) : null; return n > 0 ? n : null; }
 
     function build(host) {
-      var det = host.closest('details') || host.parentNode;
+      // Insert the entry panel OUTSIDE any jp-gated ancestor so it is always visible.
+      // (The jp-gated section hides the raw roster table, not the entry UI.)
+      var jpGated = host.closest('.jp-gated');
+      var insertRef = jpGated || host.closest('details') || host;
+      var insertParent = insertRef.parentNode;
       var panel = document.createElement('div');
       panel.id = 'ef_oosw';
       panel.className = 'ef-panel no-print';
@@ -114,8 +118,8 @@
       totals.className = 'ef-totals no-print';
       totals.innerHTML = '<div class="ef-toastwrap"></div><div id="ef_conf"></div><div class="ef-totals-head">Size range totals</div>' +
         '<div class="ef-hint">Percentages are auto-calculated from the total.</div><div id="ef_trows"></div>';
-      host.parentNode.insertBefore(panel, host);
-      host.parentNode.insertBefore(totals, host);
+      insertParent.insertBefore(panel, insertRef);
+      insertParent.insertBefore(totals, insertRef);
       // the engine's own table / totals stay in the DOM (the store, and what prints) but are not shown on screen
       host.classList.add('ef-screen-hide');
       var rt = host.parentNode.querySelector('[id^="fr_rosterTotals"]'); if (rt) rt.classList.add('ef-screen-hide');
