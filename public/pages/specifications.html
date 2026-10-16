@@ -61,7 +61,8 @@
   .addrow{ display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px; padding:10px; background:#f4f5f3; border-radius:6px; }
   .attr{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:10px; }
   .attr label, .addrow label{ display:flex; flex-direction:column; gap:3px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; }
-  .attr input, .addrow input, .addrow select, .panel input{ padding:7px 9px; border:1px solid #d0d5db; border-radius:5px; font-size:12.5px; text-transform:none; letter-spacing:0; color:#1b2330; background:#fff; }
+  .attr input, .addrow input, .addrow select, .panel input, .attr textarea{ padding:7px 9px; border:1px solid #d0d5db; border-radius:5px; font-size:12.5px; text-transform:none; letter-spacing:0; color:#1b2330; background:#fff; }
+  .attr textarea{ resize:vertical; min-height:72px; font-family:inherit; line-height:1.5; }
   .panel .attr{ margin-bottom:12px; }
   .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .actions .hint{ color:#8a5a10; font-size:12px; }
@@ -342,7 +343,7 @@
     var hist = e.versions.map(function (h) {
       return '<div class="hist-item"><span class="v">v' + h.versionNumber + '</span>' +
         '<span>' + fmtWhen(h.publishedAt) + ' · ' + esc(h.publishedBy || '—') + (h.changedByTitle ? ' (' + esc(h.changedByTitle) + ')' : '') +
-        '<br><span class="why">' + esc(h.changeReason || '') + '</span></span>' +
+        '<br><span class="why">' + (h.changeReason || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l){ return '· ' + esc(l); }).join('<br>') + '</span></span>' +
         (h.status === 'PUBLISHED' ? '<span class="pill" style="margin-left:auto;align-self:flex-start;">Current</span>' : '') + '</div>';
     }).join('');
     var head = (e.href ? '<p style="margin:0 0 10px;"><a href="' + esc(e.href) + '">Open the record &rarr;</a>' +
@@ -367,9 +368,9 @@
         '<span>Also add a field for this item to the record’s form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
       '<div class="sec">Publish as ' + (cur ? 'a new version' : 'the first version') + '</div>' +
       '<div class="rev-rule"><strong>⚠ Do not publish a new version until all specification changes for this record are complete.</strong>' +
-        'Multiple changes can be grouped under one revision. In the reason field below, list each change and why it was made — e.g. "Max seam thickness raised from 2.5 to 3.0 mm (customer request); min cook temp corrected from 72°C to 74°C (SOP update)".</div>' +
+        'Multiple changes can be grouped under one revision. Enter one change per line in the reason field below — each line will be shown as a separate item in the version history.</div>' +
       '<div class="attr">' +
-        '<label>Reason for the change (list each change and reason)<input data-f="reason" placeholder="e.g. Max seam 2.5→3.0 mm (customer request); min cook temp 72→74°C (SOP update)"></label>' +
+        '<label style="grid-column:1/-1;">Changes in this revision — one per line<textarea data-f="reason" rows="3" placeholder="Max seam thickness 2.5→3.0 mm (customer request)\nMin cook temp 72→74°C (SOP update)"></textarea></label>' +
         '<label>Your name<input data-f="by" value="' + esc(user) + '"></label>' +
         '<label>Your title<input data-f="title" placeholder="e.g. QA Manager"></label>' +
       '</div>' +
