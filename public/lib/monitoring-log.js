@@ -3802,6 +3802,7 @@ function fallbackDl(canvas,filename){
         : (primary.openIfPresent(id) || (secondary && secondary.openIfPresent(id)));
       if (!found) {
         toast('That entry has not reached this device yet.');
+        if (window.__pdfOnly && window.__pdfFail) window.__pdfFail('That entry could not be loaded. Check your connection and access key, then try again.');
         return;
       }
       if (fromQuery && qs.get('print') === '1' && !openFromHash.printed) {
@@ -3809,7 +3810,7 @@ function fallbackDl(canvas,filename){
         setTimeout(() => {
           const ok = primary.printIfPresent(id) || (secondary && secondary.printIfPresent(id));
           const cv = document.getElementById('pdfCover');
-          if (!ok && cv) cv.textContent = 'That entry has not reached this device yet — close this tab and try again.';
+          if (!ok && window.__pdfFail) window.__pdfFail('That entry could not be loaded. Check your connection and access key, then try again.');
         }, 400);
       }
     }

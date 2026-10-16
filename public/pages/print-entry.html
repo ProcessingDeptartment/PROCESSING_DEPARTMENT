@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Print entry</title>
+<script src="../lib/pdf-cover.js?v=4"></script>
+<script src="../lib/palette-map.js"></script>
+<link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
+</head>
+<body class="rt-tablet">
+<!--
+  Print-only page for Awaiting Verification "View PDF":
+    print-entry.html?rec=<recordKey>&engine=form|log&entry=<id>&print=1&printonly=1
+  Loads the entry straight from the database through the same engine the record page uses, but with no
+  record sidebar / top bar and nothing visible: the engine goes directly to the print window for that entry.
+  (pdf-cover.js keeps the page blank; if the browser blocks the window it shows one "Open PDF" button.)
+-->
+<div id="frRoot" style="display:none"></div>
+<div id="mlRoot" style="display:none"></div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var rec = (q.get('rec') || '').trim();
+  var engine = q.get('engine') === 'log' ? 'log' : 'form';
+  if (!rec || !q.get('entry')) { document.body.style.visibility = 'visible'; document.body.textContent = 'Missing record or entry.'; return; }
+
+  var common = [
+    'doc-header.js?v=5', 'master-index-data.js?v=4', 'data-store.js?v=5', 'job-status.js?v=2', 'api-backend.js?v=18'
+  ];
+  var formOnly = ['lookups.js?v=4', 'auth.js?v=5', 'login-ui.js?v=6', 'document-revision.js?v=3', 'traceability.js?v=10',
+    'signoff-block.js?v=8', 'permission-rules.js?v=8', 'nc-raise.js?v=5', 'delete-submission-modal.js?v=1',
+    'time-picker.js?v=2', 'spec-gate.js?v=4', 'form-record.js?v=116'];
+  var logOnly = ['auth.js?v=5', 'login-ui.js?v=6', 'spec-registry.js?v=2', 'document-revision.js?v=3', 'traceability.js?v=10',
+    'signoff-block.js?v=8', 'nc-raise.js?v=5', 'time-picker.js?v=2', 'spec-gate.js?v=4', 'monitoring-log.js?v=83'];
+  var files = common.concat(engine === 'log' ? logOnly : formOnly);
+
+  // classic scripts, strictly in order (the libs depend on each other)
+  function load(i) {
+    if (i >= files.length) return start();
+    var s = document.createElement('script');
+    s.src = '../lib/' + files[i];
+    s.onload = function () { load(i + 1); };
+    s.onerror = function () { load(i + 1); };
+    document.body.appendChild(s);
+  }
+  function start() {
+    try {
+      if (engine === 'log') MonitoringLog.init({ mount: '#mlRoot', recordKey: rec });
+      else FormRecord.init({ mount: '#frRoot', recordKey: rec });
+    } catch (e) {
+      console.error(e);
+      if (window.__pdfTapPrompt) window.__pdfTapPrompt(function () { location.reload(); });
+    }
+  }
+  load(0);
+})();
+</script>
+</body>
+</html>

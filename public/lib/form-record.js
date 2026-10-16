@@ -4751,7 +4751,11 @@ function fallbackDl(canvas,filename){
       const fromQuery = !id && !!qs.get('entry');
       if (fromQuery) id = qs.get('entry').trim();
       if (!id) return;
-      if (!submissions.some(s => s.id === id)) { toast('That entry has not reached this device yet.'); return; }
+      if (!submissions.some(s => s.id === id)) {
+        toast('That entry has not reached this device yet.');
+        if (window.__pdfOnly && window.__pdfFail) window.__pdfFail('That entry could not be loaded. Check your connection and access key, then try again.');
+        return;
+      }
       // printonly=1 (Awaiting Verification "View PDF"): print straight from the loaded entry without
       // opening the editable form. A white cover hides the page (print output is built separately).
       const printOnly = fromQuery && qs.get('print') === '1' && qs.get('printonly') === '1';

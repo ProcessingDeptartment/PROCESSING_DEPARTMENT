@@ -358,7 +358,8 @@
                  'style="font-size:12px;color:#1d4ed8;font-weight:600;text-decoration:none;border:1px solid #c3d4f7;padding:4px 10px;border-radius:4px;background:#f0f5ff;">' +
                 'Open full record &rarr;' +
               '</a>' +
-              '<a href="' + esc(r.href) + '?entry=' + encodeURIComponent(r.id) + '&print=1&printonly=1" target="_blank" ' +
+              '<a href="print-entry.html?rec=' + encodeURIComponent(r.recordKey) + '&engine=' + (r.engine === 'log' ? 'log' : 'form') +
+                 '&entry=' + encodeURIComponent(r.id) + '&print=1&printonly=1" target="_blank" ' +
                  'style="font-size:12px;color:#1d4ed8;font-weight:600;text-decoration:none;border:1px solid #c3d4f7;padding:4px 10px;border-radius:4px;background:#f0f5ff;margin-left:8px;">' +
                 'View PDF &rarr;' +
               '</a>' +
