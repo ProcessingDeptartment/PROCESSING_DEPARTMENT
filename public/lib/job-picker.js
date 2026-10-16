@@ -358,6 +358,7 @@
     const details = sel.getAttribute('data-job-entry') === 'merged' ? null : focusBlock;
     let active = -1;
     let matches = [];
+    let userInteracted = false; // true once operator clicks or types; blocks auto-drawList until then
 
     // ---- gate (new entries on a record with a job picker only) ----
     let gate = null;
@@ -512,8 +513,8 @@
       try { input.focus(); } catch (e) { }
       drawList();
     });
-    input.addEventListener('click', () => { if (list.hidden) drawList(); });
-    input.addEventListener('input', drawList);
+    input.addEventListener('click', () => { userInteracted = true; if (list.hidden) drawList(); });
+    input.addEventListener('input', () => { userInteracted = true; drawList(); });
     input.addEventListener('keydown', (ev) => {
       if (ev.key === 'ArrowDown') { ev.preventDefault(); if (list.hidden) drawList(); else setActive(active + 1); }
       else if (ev.key === 'ArrowUp') { ev.preventDefault(); setActive(active - 1); }
@@ -552,7 +553,7 @@
 
     paint();
     syncGateFlag();
-    sel._jobPicker = { refresh: paint, focus: focusPicker, drawList: () => { if (!input.hidden && document.activeElement === input) drawList(); }, gated: () => !!gate };
+    sel._jobPicker = { refresh: paint, focus: focusPicker, drawList: () => { if (!input.hidden && document.activeElement === input && userInteracted) drawList(); }, gated: () => !!gate };
     return sel._jobPicker;
   }
 
