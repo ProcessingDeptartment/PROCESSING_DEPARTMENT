@@ -446,6 +446,58 @@
     return c;
   }
 
+  // REC 7.4.2 style scoring: one coloured block per side (overdrying / underdrying), built only from the
+  // scores actually submitted. Block colour = worst score on that side; each flagged sign lists the
+  // score it got and the comment that goes with that score (the option's detail text).
+  var SIDE_COLOURS = {
+    Green:    { bg: '#e8f3ec', bd: '#2f7a52', fg: '#1f5a3a' },
+    Amber:    { bg: '#fff6d6', bd: '#d9a400', fg: '#7a5b00' },
+    Red:      { bg: '#fbe8e6', bd: '#c0392b', fg: '#8f2a20' },
+    Critical: { bg: '#f3d3cf', bd: '#7d1d14', fg: '#5c120c' }
+  };
+  function scoringBlock(def, values, side) {
+    var sc = def && def.scoring;
+    if (!sc) return '';
+    var keys = side === 'over' ? (sc.over || []) : (sc.under || []).map(function (u) { return u.key; });
+    var minFor = {};
+    if (side === 'under') (sc.under || []).forEach(function (u) { minFor[u.key] = u.min; });
+    var fieldBy = {};
+    (def.entryFields || []).forEach(function (f) { fieldBy[f.key] = f; });
+    var title = side === 'over' ? 'Overdrying' : 'Underdrying';
+    var entered = 0, worst = 0, flagged = [];
+    keys.forEach(function (k) {
+      var raw = values[k];
+      if (raw === '' || raw == null || !isFinite(Number(raw))) return;
+      entered++;
+      var n = Number(raw);
+      if (n > worst) worst = n;
+      if (n >= (minFor[k] != null ? minFor[k] : 1)) flagged.push({ key: k, score: n });
+    });
+    if (!entered) return '<div style="margin-top:8px;color:#8a939b;font-size:12px;">' + title + ': no scores recorded.</div>';
+    var statuses = sc.statuses || ['Green', 'Amber', 'Red', 'Critical'];
+    var status = statuses[Math.min(worst, statuses.length - 1)];
+    // a side with nothing flagged is Green regardless of a lone score below that sign's minimum
+    if (!flagged.length) status = statuses[0];
+    var c = SIDE_COLOURS[status] || SIDE_COLOURS.Green;
+    var total = keys.reduce(function (a, k) { var x = Number(values[k]); return a + (isFinite(x) ? x : 0); }, 0);
+    var html = '<div style="margin-top:10px;padding:9px 12px;border-radius:7px;border:1px solid ' + c.bd + ';border-left-width:5px;background:' + c.bg + ';color:' + c.fg + ';">' +
+      '<div style="font-weight:700;font-size:12.5px;">' + esc(title) + ' — ' + esc(status) +
+        '<span style="font-weight:500;"> · worst ' + worst + ', total ' + total + '</span></div>';
+    if (!flagged.length) {
+      html += '<div style="font-size:12px;margin-top:3px;">No ' + title.toLowerCase() + ' signs recorded.</div>';
+    } else {
+      html += '<ul style="margin:5px 0 0;padding-left:18px;font-size:12px;line-height:1.5;">' + flagged.map(function (fl) {
+        var f = fieldBy[fl.key] || {};
+        var opt = (f.scoreOptions || []).filter(function (o) { return String(o.value) === String(fl.score); })[0] || {};
+        return '<li><b>' + esc(f.label || humanLabel(fl.key)) + '</b> — ' + esc(opt.label || ('score ' + fl.score)) +
+          ' (score ' + fl.score + ')' + (opt.detail ? ': ' + esc(opt.detail) : '') + '</li>';
+      }).join('') + '</ul>';
+      var steps = (sc.steps && sc.steps[side]) || [];
+      if (steps.length) html += '<div style="font-size:12px;margin-top:5px;font-style:italic;">' + steps.map(esc).join(' ') + '</div>';
+    }
+    return html + '</div>';
+  }
+
   function previewDl(row) {
     var def = DEFS[row.recordKey];
     var values = row.values || {};
@@ -474,6 +526,8 @@
         if (tm) {
           var tdef = def && def.roster && def.roster.totals && def.roster.totals[+tm[1]];
           cols.push({ key: '__roster_total', idx: +tm[1], label: (tdef && tdef.label) || 'Roster total' });
+        } else if (col === 'scoring:over' || col === 'scoring:under') {
+          cols.push({ key: '__' + col.replace(':', '_'), block: col.split(':')[1] });
         } else if (col === 'jobweights:oosw' || col === 'jobweights:cooked') {
           cols.push({ key: '__' + col.replace(':', '_'), label: col === 'jobweights:oosw' ? 'OOSW total (kg)' : 'Total cooked weight (kg)' });
         } else if (col === 'roster:count') {
@@ -493,6 +547,8 @@
       });
     }
 
+    var blocks = cols.filter(function (c) { return c.block; }).map(function (c) { return scoringBlock(def, values, c.block); }).join('');
+    cols = cols.filter(function (c) { return !c.block; });
     var pairs = cols.map(function (col) {
       var v;
       var red = false;
@@ -521,6 +577,7 @@
       return { label: col.label, value: v, red: red };
     }).filter(function (p) { return p.value !== '—' || cols.length <= 4; });
 
+    if (!pairs.length && blocks) return blocks;
     if (!pairs.length) {
       return '<span style="color:#8a939b;font-size:12px;">No field values captured on this entry.</span>';
     }
@@ -528,7 +585,7 @@
       return '<dt' + (p.red ? ' style="color:#a3352d;font-weight:700;"' : '') + '>' + esc(p.label) + '</dt>' +
         '<dd' + (p.red ? ' style="color:#a3352d;font-weight:700;" title="OOSW is lower than the total cooked weight — possible batch mix"' : '') + '>' +
         esc(p.value) + (p.red ? ' ⚠' : '') + '</dd>';
-    }).join('') + '</dl>';
+    }).join('') + '</dl>' + blocks;
   }
 
   function wireGroups() {

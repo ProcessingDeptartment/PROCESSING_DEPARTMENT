@@ -202,6 +202,11 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
       fields.push({ key: 'jobweights:oosw', label: 'OOSW total (kg) — from REC 7.1.5' });
       fields.push({ key: 'jobweights:cooked', label: 'Total cooked weight (kg) — whole job' });
     }
+    // Scored records (REC 7.4.2): coloured overdrying / underdrying blocks built from the submitted scores.
+    if (def.scoring) {
+      fields.push({ key: 'scoring:over', label: 'Overdrying assessment (colour block + flagged signs)' });
+      fields.push({ key: 'scoring:under', label: 'Underdrying assessment (colour block + flagged signs)' });
+    }
     return fields;
   }
 
