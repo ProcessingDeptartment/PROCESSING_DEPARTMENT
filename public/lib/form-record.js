@@ -4433,6 +4433,12 @@
       // On Android Chrome this triggers the native PDF/print dialog.
       // On iOS Safari the user taps Share → Print or Save to PDF from the new page.
       const pw = window.open('', '_blank', 'width=900,height=700');
+      if (!pw && window.__pdfOnly && !window.__pdfTapped && window.__pdfTapPrompt) {
+        // blocked without a tap (iPhone): ask for one tap, then try again as a real user gesture
+        window.__pdfTapped = true;
+        window.__pdfTapPrompt(() => { printSheets(list, filename); });
+        return;
+      }
       if (!pw) {
         // Popup blocked — fall back to in-page print (desktop only)
         el('fr_printSheet').innerHTML = sheetsHtml;
