@@ -1205,7 +1205,7 @@
     let pre = null;
     if (gateRoot) { gateRoot.style.visibility = 'hidden'; pre = setTimeout(() => { gateRoot.style.visibility = ''; }, 5000); }
     const unprelock = () => { if (pre) { clearTimeout(pre); pre = null; } if (gateRoot) gateRoot.style.visibility = ''; };
-    loadLib('job-picker.js?v=13', 'JobPicker').then((jp) => {
+    loadLib('job-picker.js?v=14', 'JobPicker').then((jp) => {
       try {
         if (!jp) return;
         const jobKey0 = fields[0].key;
@@ -4045,6 +4045,7 @@
       // entry-log records: the server stamps dates/steam numbers, so pick up what it actually stored
       if (config.entryLog || crateRoster) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
       const finalRange = finalize ? crateRange(savedSub) : null;
+      if (amending && window.NcRaise && window.NcRaise.recordUpdated) window.NcRaise.recordUpdated(savedSub.id); // NC feedback loop
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       if (config.boxInspection && window.BoxInspection) await window.BoxInspection.refresh(); // inspected boxes leave the list
