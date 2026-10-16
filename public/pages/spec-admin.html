@@ -84,12 +84,14 @@
       <h2>1 &middot; Record and field</h2>
       <div class="grid">
         <div>
-          <label class="lbl" for="recSel">Record</label>
-          <select id="recSel"><option value="">Loading records&hellip;</option></select>
+          <label class="lbl" for="recFilter">Record</label>
+          <input type="search" id="recFilter" autocomplete="off" placeholder="Type to search records&hellip;" style="margin-bottom:5px;">
+          <select id="recSel" style="display:none;"><option value="">Loading records&hellip;</option></select>
         </div>
         <div>
-          <label class="lbl" for="fieldSel">Field</label>
-          <select id="fieldSel" disabled><option value="">Choose a record first</option></select>
+          <label class="lbl" for="fieldFilter">Field</label>
+          <input type="search" id="fieldFilter" autocomplete="off" placeholder="Type to search fields&hellip;" style="margin-bottom:5px;" disabled>
+          <select id="fieldSel" style="display:none;" disabled><option value="">Choose a record first</option></select>
         </div>
       </div>
       <p class="hint" id="fieldInfo" style="margin:10px 0 0"></p>
@@ -255,6 +257,56 @@
     $('fieldInfo').textContent = fields.length + ' fields · ' + Object.keys(specs).filter(function (k) { return specs[k].active; }).length + ' with an active spec';
   }
   $('fieldSel').addEventListener('change', function () { if (this.value) openEditor(this.value); else { $('editor').hidden = true; current = null; } });
+
+  /* ---- searchable pickers ---- */
+  function filterSelect(sel, q) {
+    var lo = q.toLowerCase();
+    Array.prototype.forEach.call(sel.options, function (o) {
+      if (!o.value) { o.style.display = ''; return; }
+      o.style.display = (o.textContent.toLowerCase().indexOf(lo) >= 0 || o.value.toLowerCase().indexOf(lo) >= 0) ? '' : 'none';
+    });
+    // show first visible match as selected hint
+    if (q) {
+      var first = null;
+      Array.prototype.some.call(sel.options, function (o) { if (o.value && o.style.display !== 'none') { first = o; return true; } });
+    }
+  }
+  function applyFilter(filterId, selId) {
+    var fi = $(filterId), sel = $(selId);
+    fi.addEventListener('input', function () {
+      filterSelect(sel, this.value);
+      sel.size = this.value ? Math.min(8, Array.prototype.filter.call(sel.options, function (o) { return o.style.display !== 'none'; }).length + 1) : 0;
+      sel.style.display = this.value ? 'block' : 'none';
+    });
+    fi.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        var vis = Array.prototype.filter.call(sel.options, function (o) { return o.value && o.style.display !== 'none'; });
+        if (vis.length === 1) { sel.value = vis[0].value; sel.dispatchEvent(new Event('change')); fi.value = vis[0].textContent.replace(/\s+/g, ' ').trim(); sel.style.display = 'none'; sel.size = 0; e.preventDefault(); }
+      }
+      if (e.key === 'Escape') { fi.value = ''; filterSelect(sel, ''); sel.style.display = 'none'; sel.size = 0; }
+    });
+    sel.addEventListener('change', function () {
+      if (this.value) {
+        var chosen = Array.prototype.filter.call(this.options, function (o) { return o.value === sel.value; })[0];
+        if (chosen) { fi.value = chosen.textContent.replace(/\s+/g, ' ').trim(); }
+        this.style.display = 'none'; this.size = 0;
+      }
+    });
+    // clicking away hides the dropdown
+    document.addEventListener('click', function (e) {
+      if (e.target !== fi && e.target !== sel) { sel.style.display = 'none'; sel.size = 0; }
+    });
+  }
+  applyFilter('recFilter', 'recSel');
+  applyFilter('fieldFilter', 'fieldSel');
+
+  // keep fieldFilter enabled state in sync with fieldSel
+  var _origDrawFP = drawFieldPicker;
+  drawFieldPicker = function () {
+    _origDrawFP();
+    $('fieldFilter').disabled = false;
+    $('fieldFilter').value = '';
+  };
 
   /* ---- step 2: editor ---- */
   function setGate(v) { Array.prototype.forEach.call(document.querySelectorAll('input[name=gate]'), function (r) { r.checked = r.value === v; }); }
