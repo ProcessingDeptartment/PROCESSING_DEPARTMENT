@@ -83,6 +83,12 @@
   .tabs button.on{ background:#f4f5f3; color:#1b2330; }
   #tab-rules iframe{ width:100%; height:calc(100vh - 170px); min-height:640px; border:0; background:transparent; }
   .managed-note{ font-size:11px; color:#2f7a52; font-weight:600; }
+  #tab-edits .rec-list{ display:flex; flex-direction:column; gap:6px; }
+  #tab-edits .rec-row{ background:#fff; border:1px solid #e2e4e3; border-radius:7px; padding:11px 14px; display:flex; align-items:center; gap:12px; }
+  #tab-edits .rec-row .rec-code{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5c6771; min-width:80px; }
+  #tab-edits .rec-row .rec-name{ flex:1; font-size:13px; font-weight:600; }
+  #tab-edits .rec-row a{ font-size:12px; color:#2f7a52; text-decoration:none; font-weight:600; white-space:nowrap; }
+  #tab-edits .rec-row a:hover{ text-decoration:underline; }
   table.leaves input.managed{ background:#eef4f0; color:#3b4650; }
   @media (max-width:640px){ .container{ padding:12px; } .card-head .meta{ margin-left:0; text-align:left; } table.leaves td.k{ width:auto; } .toolbar .count{ margin-left:0; } }
 </style>
@@ -99,9 +105,13 @@
 <div class="tabs" role="tablist">
   <button type="button" id="tabBtnSpecs" class="on" data-tab="specs" role="tab">Limits &amp; profiles</button>
   <button type="button" id="tabBtnRules" data-tab="rules" role="tab">Field rules</button>
+  <button type="button" id="tabBtnEdits" data-tab="edits" role="tab">Record edits</button>
 </div>
 
 <div class="container" id="tab-rules" hidden></div>
+<div class="container" id="tab-edits" hidden>
+  <div id="edits-list" class="rec-list"></div>
+</div>
 
 <div class="container" id="tab-specs">
   <div class="state info" id="state">Loading&hellip;</div>
@@ -179,20 +189,41 @@
   var EDIT_ROLES = ['QA_MANAGER', 'ADMINISTRATOR'];
   function canEdit() { return !!(window.Auth && EDIT_ROLES.indexOf(window.Auth.getCurrentRole()) >= 0); }
 
-  // ---- tabs: Limits & profiles (this page) | Field rules (spec-admin.html, embedded) ----
+  // ---- tabs: Limits & profiles | Field rules | Record edits ----
   function showTab(name) {
-    var rules = name === 'rules';
-    $('tab-specs').hidden = rules; $('tab-rules').hidden = !rules;
-    $('tabBtnSpecs').classList.toggle('on', !rules); $('tabBtnRules').classList.toggle('on', rules);
-    if (rules && !$('tab-rules').firstChild) {
+    ['specs', 'rules', 'edits'].forEach(function (t) {
+      $('tab-' + t).hidden = (t !== name);
+      var btn = $('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+      if (btn) btn.classList.toggle('on', t === name);
+    });
+    if (name === 'rules' && !$('tab-rules').firstChild) {
       var fr = document.createElement('iframe'); fr.src = 'spec-admin.html?embed=1'; fr.title = 'Field rules';
       $('tab-rules').appendChild(fr);
     }
-    try { history.replaceState(null, '', rules ? '#field-rules' : location.pathname + location.search); } catch (e) { }
+    if (name === 'edits') renderEdits();
+    var hash = name === 'rules' ? '#field-rules' : name === 'edits' ? '#record-edits' : location.pathname + location.search;
+    try { history.replaceState(null, '', hash); } catch (e) { }
+  }
+  function renderEdits() {
+    var rows = (window.MasterIndexData && window.MasterIndexData.rows) || [];
+    var sorted = rows.slice().sort(function (a, b) {
+      return ((a.docNo || '') + ' ' + (a.name || '')).localeCompare((b.docNo || '') + ' ' + (b.name || ''), undefined, { numeric: true });
+    });
+    if (!sorted.length) { $('edits-list').innerHTML = '<div class="empty">No records found.</div>'; return; }
+    $('edits-list').innerHTML = sorted.map(function (r) {
+      var href = r.href ? '../records/' + r.href + '?editTemplate=1' : '';
+      return '<div class="rec-row">' +
+        '<span class="rec-code">' + esc(r.docNo || '') + '</span>' +
+        '<span class="rec-name">' + esc(r.name || r.recordKey || '') + '</span>' +
+        (href ? '<a href="' + esc(href) + '">Edit form template &rarr;</a>' : '<span style="font-size:12px;color:#8a939b;">No template link</span>') +
+        '</div>';
+    }).join('');
   }
   $('tabBtnSpecs').addEventListener('click', function () { showTab('specs'); });
   $('tabBtnRules').addEventListener('click', function () { showTab('rules'); });
+  $('tabBtnEdits').addEventListener('click', function () { showTab('edits'); });
   if (location.hash === '#field-rules') showTab('rules');
+  else if (location.hash === '#record-edits') showTab('edits');
 
   var META = ['versionNumber', 'changeReason', 'publishedBy', 'changedByTitle', 'publishedAt'];
   var HIDDEN_KEY = 'spec_list_hidden', CUSTOM_KEY = 'spec_custom_entries';
