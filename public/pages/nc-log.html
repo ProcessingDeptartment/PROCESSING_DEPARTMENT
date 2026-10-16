@@ -199,7 +199,8 @@
         + '<td>' + fmt(r.raisedAt) + '</td><td>' + job + '</td><td>' + esc(r.recordRef) + '</td><td>' + esc(r.category) + '</td>'
         + '<td title="' + esc(r.description) + '">' + esc(trunc(r.description, 80)) + '</td>'
         + '<td>' + carBadge(r) + '</td>'
-        + '<td><span class="badge b-' + r.status + '">' + (STAT[r.status] || esc(r.status)) + '</span></td>'
+        + '<td><span class="badge b-' + r.status + '">' + (STAT[r.status] || esc(r.status)) + '</span>'
+        + (r.lastRecordUpdateAt && r.status !== 'closed' ? '<br><span class="badge b-in_progress" title="' + esc('Record edited ' + fmt(r.lastRecordUpdateAt) + ' by ' + (r.lastRecordUpdateBy || '')) + '">🔄 Record updated</span>' : '') + '</td>'
         + '<td title="' + esc(r.correctiveAction) + '">' + esc(trunc(r.correctiveAction, 60)) + '</td>'
         + '<td>' + (r.status === 'closed' ? esc(r.closedBy || '') + (r.closedAt ? '<br>' + fmt(r.closedAt) : '') : '') + '</td>'
         + '<td><button type="button" class="btn" data-id="' + r.id + '">View / Edit</button></td></tr>';
@@ -217,7 +218,7 @@
   async function load() {
     renderHead();
     var p = new URLSearchParams({ status: $('fStatus').value, limit: '1000' });
-    var refQ = new URLSearchParams(location.search).get('ref'); // deep link from a record's NC banner
+    var refQ = new URLSearchParams(location.search).get('ref') || new URLSearchParams(location.search).get('nc'); // deep link from a record's NC banner / email
     if (refQ) { p.set('ref', refQ); p.set('status', 'all'); }
     if ($('fJob').value.trim()) p.set('job', $('fJob').value.trim());
     if ($('fRecord').value.trim()) p.set('record', $('fRecord').value.trim());
@@ -298,7 +299,15 @@
         + '<label class="full">Corrective action <textarea name="corrective_action">' + esc(r.correctiveAction) + '</textarea></label>'
         + '<label class="full">Notes <textarea name="notes">' + esc(r.notes) + '</textarea></label>';
     }
+    h += '<div class="full"><details id="histBox"><summary style="cursor:pointer;font-weight:600">History</summary><div id="histBody" style="margin-top:6px;font-size:12px">Loading…</div></details></div>';
     $('viewBody').innerHTML = h;
+    api('/api/nc/' + r.id + '/history').then(function (x) { return x.json(); }).then(function (a) {
+      if (viewing !== r) return;
+      $('histBody').innerHTML = a.length ? a.map(function (e) {
+        return '<div style="margin-bottom:6px"><b>' + fmt(e.createdAt) + '</b> • ' + esc(e.action) + ' • ' + esc(e.actor) + (e.note ? '<br>' + esc(e.note) : '') + '</div>';
+      }).join('') : 'No history yet.';
+      if (r.lastRecordUpdateAt && r.status !== 'closed') $('histBox').open = true;
+    }).catch(function () { $('histBody').textContent = 'Could not load history.'; });
     $('viewBtns').innerHTML = '<button class="btn" type="button" data-close>' + (closed ? 'Close' : 'Cancel') + '</button>'
       + (closed ? '' : '<button class="btn primary" type="submit">Save</button>');
     show('viewModal', true);
@@ -326,7 +335,10 @@
   // ?raise=1&job=...&record=... opens the Raise NC form pre-filled (for links from a record)
   var qs = new URLSearchParams(location.search);
   if (qs.get('status')) $('fStatus').value = qs.get('status');
-  load();
+  load().then(function () { // ?nc=NC-2026-0001 (email link) opens that NC's detail
+    var n = qs.get('nc'), hit = n && rows.filter(function (x) { return x.ncRef === n; })[0];
+    if (hit) openView(hit.id);
+  });
   if (qs.get('raise')) openRaise({ job_number: qs.get('job') || '', record_ref: qs.get('record') || '' });
 })();
 </script>

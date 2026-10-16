@@ -4933,14 +4933,31 @@ model NcLog {
   notes            String?
   notifySent       Boolean   @default(false) @map("notify_sent") // reserved: Red/Critical email via the email API (not built yet)
   notifyAt         DateTime? @map("notify_at") @db.Timestamptz(6)
+  lastRecordUpdateAt DateTime? @map("last_record_update_at") @db.Timestamptz(6) // source record edited after the NC was raised
+  lastRecordUpdateBy String?   @map("last_record_update_by")
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  audit            NcAudit[]
 
   @@index([status], map: "idx_nc_status")
   @@index([jobNumber], map: "idx_nc_job")
   @@index([raisedAt(sort: Desc)], map: "idx_nc_raised_at")
   @@index([recordRef], map: "idx_nc_record")
   @@map("nc_log")
+}
+
+// NC history (migration 20261016090000_nc_feedback_loop): raised / record_updated / status_changed / closed.
+model NcAudit {
+  id        Int      @id @default(autoincrement())
+  ncId      Int      @map("nc_id")
+  action    String
+  actor     String
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  nc        NcLog    @relation(fields: [ncId], references: [id], onDelete: Cascade)
+
+  @@index([ncId], map: "idx_nc_audit_nc_id")
+  @@map("nc_audit")
 }
 
 // Seam test calculator runs -- logged when a user clicks "Submit" on the quick calculator.

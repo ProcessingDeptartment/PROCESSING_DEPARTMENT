@@ -66,6 +66,29 @@ async function sendNCAlert(nc) {
   });
 }
 
+// Source record of an open NC was amended: tell the NC recipients to review it.
+async function sendNCRecordUpdateAlert(nc, updatedBy, updatedAt) {
+  const to = (process.env.NC_EMAIL_RECIPIENTS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const t = mailer();
+  if (!t || !to.length) { console.warn(`NC record-update alert for ${nc.ncRef} skipped: SMTP_HOST or NC_EMAIL_RECIPIENTS not set`); return; }
+  const link = `${SITE_URL}/pages/nc-log.html?nc=${encodeURIComponent(nc.ncRef)}`;
+  const rows = [['NC Reference', nc.ncRef], ['Record', nc.recordRef || '—'], ['Job number', nc.jobNumber || '—'],
+    ['Updated by', updatedBy], ['Updated at', fmtDate(updatedAt)]];
+  const text = 'A record linked to an open NC has been updated.\n\n'
+    + rows.map(([k, v]) => `${(k + ':').padEnd(14)} ${v}`).join('\n')
+    + `\n\nThe record correction may resolve this NC.\nPlease review and close the NC if the issue is resolved.\n\nView NC: ${link}\n\n---\nAbagold Processing Facility — Automated Alert\n`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const html = '<p>A record linked to an open NC has been updated.</p><table cellpadding="3">'
+    + rows.map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>`).join('')
+    + `</table><p>The record correction may resolve this NC. Please review and close the NC if the issue is resolved.</p>`
+    + `<p><a href="${link}">View NC</a></p><hr><p style="color:#666">Abagold Processing Facility — Automated Alert</p>`;
+  await t.sendMail({
+    from: process.env.NC_EMAIL_FROM || process.env.SMTP_USER, to,
+    subject: `🔄 Record Updated — Review NC ${nc.ncRef} [${nc.recordRef || 'record'} / Job: ${nc.jobNumber || '—'}]`,
+    text, html,
+  });
+}
+
 function mount(app, prisma) {
   const T = prisma.ncLog;
 
@@ -78,6 +101,7 @@ function mount(app, prisma) {
     const q = req.query;
     const where = {};
     if (q.status && q.status !== 'all') where.status = String(q.status);
+    if (q.submission_id) where.submissionId = String(q.submission_id).trim();
     if (q.ref) where.ncRef = { in: String(q.ref).split(',').map((x) => x.trim()).filter(Boolean) };
     if (q.job) where.jobNumber = { contains: String(q.job).trim(), mode: 'insensitive' };
     if (q.record) where.recordRef = { contains: String(q.record).trim(), mode: 'insensitive' };
@@ -93,6 +117,33 @@ function mount(app, prisma) {
     const skip = Math.max(parseInt(q.offset, 10) || 0, 0);
     try { res.json(await T.findMany({ where, orderBy: { raisedAt: 'desc' }, take, skip })); }
     catch (e) { console.error('GET nc list failed', e); res.status(500).json({ ok: false }); }
+  });
+
+  app.get('/api/nc/:id/history', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ ok: false, error: 'bad id' });
+    try { res.json(await prisma.ncAudit.findMany({ where: { ncId: id }, orderBy: { createdAt: 'desc' } })); }
+    catch (e) { console.error('GET nc history failed', e); res.status(500).json({ ok: false }); }
+  });
+
+  // Called by the record form after a submitted record linked to NCs is amended. Open NCs move to
+  // in_progress, get stamped with who/when, an audit row, and an email. Never closes an NC itself.
+  app.post('/api/nc/record-updated', async (req, res) => {
+    const b = req.body || {};
+    const submissionId = str(b.submission_id, 80);
+    if (!submissionId) return res.status(400).json({ ok: false, error: 'submission_id is required' });
+    const by = str(b.updated_by, 120) || 'Unknown';
+    const at = new Date();
+    try {
+      const ncs = await T.findMany({ where: { submissionId, status: { in: ['open', 'in_progress'] } } });
+      for (const nc of ncs) {
+        await T.update({ where: { id: nc.id }, data: { lastRecordUpdateAt: at, lastRecordUpdateBy: by, status: 'in_progress' } });
+        await prisma.ncAudit.create({ data: { ncId: nc.id, action: 'record_updated', actor: by,
+          note: `Record ${nc.recordRef || ''} (submission ${submissionId}) was updated — review if NC is resolved.`, createdAt: at } });
+        sendNCRecordUpdateAlert(nc, by, at).catch((e) => console.error(`NC record-update alert for ${nc.ncRef} failed`, e));
+      }
+      res.json({ ok: true, updated: ncs.map((n) => n.ncRef) });
+    } catch (e) { console.error('POST nc record-updated failed', e); res.status(500).json({ ok: false }); }
   });
 
   app.post('/api/nc', async (req, res) => {
@@ -115,6 +166,7 @@ function mount(app, prisma) {
       const [{ n }] = await prisma.$queryRaw`SELECT nextval('nc_ref_seq')::int AS n`;
       data.ncRef = `NC-${new Date().getFullYear()}-${String(n).padStart(4, '0')}`;
       const nc = await T.create({ data });
+      prisma.ncAudit.create({ data: { ncId: nc.id, action: 'raised', actor: nc.raisedBy, note: 'NC opened.' } }).catch((e) => console.error('nc audit failed', e));
       sendNCAlert(nc).catch((e) => console.error(`NC alert for ${nc.ncRef} failed`, e)); // never block the save on mail
       res.status(201).json(nc);
     } catch (e) { console.error('POST nc failed', e); res.status(500).json({ ok: false }); }
@@ -143,9 +195,15 @@ function mount(app, prisma) {
       if (data.status === 'closed' && carNeeded && !carRef) return res.status(400).json({ ok: false, error: 'a CAR is required: enter the CAR reference before closing this NC' });
       if (data.status === 'closed' && cur.status !== 'closed') data.closedAt = new Date();
       if (data.status && data.status !== 'closed') { data.closedAt = null; data.closedBy = null; }
-      res.json(await T.update({ where: { id }, data }));
+      const upd = await T.update({ where: { id }, data });
+      if (data.status && data.status !== cur.status) {
+        const actor = (data.status === 'closed' ? data.closedBy : null) || str(req.get('x-user'), 120) || 'Unknown';
+        prisma.ncAudit.create({ data: { ncId: id, action: data.status === 'closed' ? 'closed' : 'status_changed', actor,
+          note: `Status ${cur.status} → ${data.status}.` } }).catch((e) => console.error('nc audit failed', e));
+      }
+      res.json(upd);
     } catch (e) { console.error('PATCH nc failed', e); res.status(500).json({ ok: false }); }
   });
 }
 
-module.exports = { mount, sendNCAlert };
+module.exports = { mount, sendNCAlert, sendNCRecordUpdateAlert };
