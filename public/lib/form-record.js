@@ -9,7 +9,7 @@
       document.head.appendChild(st0);
       const cv0 = document.createElement('div');
       cv0.id = 'pdfCover';
-      cv0.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;';
+      cv0.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#fff;';
       document.documentElement.appendChild(cv0);
       window.addEventListener('afterprint', () => { try { window.close(); } catch (e) { /* ignore */ } });
     }
