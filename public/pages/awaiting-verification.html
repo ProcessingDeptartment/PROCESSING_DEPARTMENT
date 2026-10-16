@@ -206,6 +206,17 @@
 
   var STATE = { scope: 'mine', role: null, user: null, rows: [], picked: {}, open: {} };
   var DEFS = {};   // recordKey -> parsed record-def (or null if unavailable)
+  var PREVIEW_CONFIG = {};   // recordKey -> string[] from storage (admin override)
+
+  async function loadPreviewConfig() {
+    try {
+      var raw = await window.storage.get('verification_preview_config', true);
+      if (raw && raw.value) {
+        var parsed = JSON.parse(raw.value);
+        if (parsed && typeof parsed === 'object') PREVIEW_CONFIG = parsed;
+      }
+    } catch (e) {  }
+  }
 
   async function scan() {
     var pair = await Promise.all([
@@ -388,8 +399,11 @@
     }
 
     var cols = [];
-    if (def && def.listColumns && def.listColumns.length) {
-      def.listColumns.forEach(function (col) {
+    var configCols = PREVIEW_CONFIG[row.recordKey];   // admin override
+    var fallbackCols = def && def.listColumns && def.listColumns.length ? def.listColumns : null;
+    var source = (configCols && configCols.length) ? configCols : fallbackCols;
+    if (source && source.length) {
+      source.forEach(function (col) {
         if (col === 'roster:count') {
           cols.push({ key: '__roster_count', label: ((def.roster && def.roster.title) || 'Roster') + ' entries' });
         } else {
@@ -587,6 +601,7 @@
     $('vfy_date').value = today();
     try { await window.storage.whenReady(); } catch (e) {  }
     try { await window.VerificationQueue.loadAssignments(); } catch (e) {  }
+    try { await loadPreviewConfig(); } catch (e) {  }
     try {
       await scan();
       render();
