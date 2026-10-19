@@ -506,7 +506,7 @@
         },
         scales: {
           x: { type: 'linear', min: 0, max: Math.max(rows.length - 1, 1), ticks: { font: { size: 10 }, maxTicksLimit: 8, maxRotation: 30, callback: v => Number.isInteger(v) ? (labels[v] || '') : '' }, grid: { color: '#eceeef' } },
-          y: { min: o.min, max: o.max, title: { display: true, text: o.yLabel, font: { size: 10 }, color: '#5c6771' },
+          y: { min: o.min, max: o.max, suggestedMin: o.sMin, suggestedMax: o.sMax, title: { display: true, text: o.yLabel, font: { size: 10 }, color: '#5c6771' },
                ticks: { font: { size: 10 } }, grid: { color: '#eceeef' } }
         }
       }
@@ -519,9 +519,9 @@
     overlapChart = mkChart('seamOverlapChart', rows, 'overlap_pct', v => v < 45, {
       label: '% Overlap', yLabel: '%', min: 30, max: 100, bandMin: 45, bandMax: 100, refs: [{ label: 'Min 45%', y: 45, dash: [5, 4] }]
     });
-    freeChart = mkChart('seamFreeChart', rows, 'free_space', v => v < 0.10 || v > 0.30, {
-      label: 'Free space', yLabel: 'mm', min: 0, max: 0.5, bandMin: 0.10, bandMax: 0.30,
-      refs: [{ label: 'Min 0.10 mm', y: 0.10, dash: [5, 4] }, { label: 'Max 0.30 mm', y: 0.30, dash: [5, 4] }]
+    freeChart = mkChart('seamFreeChart', rows, 'free_space', v => v < 0.03 || v > 0.19, {
+      label: 'Free space', yLabel: 'mm', sMin: 0, sMax: 0.25, bandMin: 0.03, bandMax: 0.19,
+      refs: [{ label: 'Min 0.03 mm', y: 0.03, dash: [5, 4] }, { label: 'Max 0.19 mm', y: 0.19, dash: [5, 4] }]
     });
   }
 
