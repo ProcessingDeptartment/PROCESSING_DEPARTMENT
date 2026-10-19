@@ -143,6 +143,45 @@ function mount(app, prisma) {
     } catch (e) { console.error('traceability member failed', e); bad(res, 'member lookup failed', 500); }
   });
 
+  // Batch-trace page: every main barcode on a job with its stage scans, baskets and children. :value is a job number,
+  // or a barcode (then the job(s) it is linked to are resolved first and viaBarcode says so).
+  app.get('/api/traceability/job/:value', async (req, res) => {
+    try {
+      const raw = clean(req.params.value);
+      let jobNos = [raw];
+      let links = await prisma.barcodeJobLink.findMany({ where: { jobNo: { equals: raw, mode: 'insensitive' } }, select: { barcodeId: true, jobNo: true } });
+      let viaBarcode = null;
+      if (!links.length) {
+        const bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: bcVal(raw) } });
+        if (bc) {
+          // a child barcode has no link of its own: walk up to the barcode that does
+          let root = bc;
+          for (let i = 0; i < 20 && root; i++) {
+            const l = await prisma.barcodeJobLink.findMany({ where: { barcodeId: root.id }, select: { barcodeId: true, jobNo: true } });
+            if (l.length) { links = l; break; }
+            root = root.parentId ? await prisma.traceBarcode.findUnique({ where: { id: root.parentId } }) : null;
+          }
+          viaBarcode = bc.barcodeValue;
+          jobNos = [...new Set(links.map((l) => l.jobNo).filter(Boolean))];
+        }
+      }
+      const ids = [...new Set(links.map((l) => l.barcodeId))];
+      const barcodes = [];
+      for (const id of ids) {
+        const bc = await prisma.traceBarcode.findUnique({ where: { id } });
+        const [chain, members] = await Promise.all([loadChain(prisma, bc),
+          prisma.barcodeMember.findMany({ where: { barcodeId: id }, orderBy: [{ submissionId: 'asc' }, { position: 'asc' }] })]);
+        barcodes.push({
+          value: bc.barcodeValue, status: bc.status, createdAt: bc.createdAt,
+          stageEvents: chain.stageEvents.map((e) => ({ stage: e.stage, recordKey: e.recordKey, submissionId: e.submissionId, scannedAt: e.scannedAt, scannedByUser: e.scannedByUser, locationNote: e.locationNote, weight: e.weight })),
+          children: chain.children.map((c) => ({ value: c.barcodeValue, status: c.status })),
+          members: members.map((m) => ({ value: m.memberValue, sizeRange: m.sizeRange, weight: m.weight })),
+        });
+      }
+      res.json({ ok: true, jobNos, viaBarcode, barcodes });
+    } catch (e) { console.error('traceability job failed', e); bad(res, 'job lookup failed', 500); }
+  });
+
   app.get('/api/traceability/history/:barcodeValue', async (req, res) => {
     try {
       const bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: bcVal(req.params.barcodeValue) } });

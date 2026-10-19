@@ -253,6 +253,10 @@
         <tbody id="binRows"></tbody>
       </table>
     </div>
+    <div id="scanPanel" class="scan-panel" hidden>
+      <h3 style="margin:14px 0 6px;">Barcode scans</h3>
+      <div id="scanBody"></div>
+    </div>
     <div class="genealogy" id="genealogy">
       <div class="box up"><h3>Made from &mdash; one up</h3><div id="inputs"></div></div>
       <div class="box down"><h3>Went into &mdash; one down</h3><div id="outputs"></div></div>
@@ -303,6 +307,34 @@
     } catch (e) {
       $('hint').textContent = '';
     }
+  }
+
+  // ---- barcode scans (administrator only for now): main barcode, its basket list and every stage scan
+  const isAdminUser = () => { try { return window.Auth && Auth.getCurrentRole && Auth.getCurrentRole() === 'ADMINISTRATOR'; } catch (e) { return false; } };
+  const fmtWhen = v => { try { const d = new Date(v); return d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false }); } catch (e) { return String(v || ''); } };
+  // Returns the job number to trace (a scanned barcode typed in the box resolves to its job), or '' to keep the input.
+  async function renderScans(value) {
+    const panel = $('scanPanel');
+    panel.hidden = true;
+    if (!isAdminUser()) return '';
+    let j = null;
+    try {
+      const res = await window.FacilityApi.fetch('/api/traceability/job/' + encodeURIComponent(value), { cache: 'no-store' });
+      j = res.ok ? await res.json() : null;
+    } catch (e) { j = null; }
+    if (!j || !j.barcodes || !j.barcodes.length) return '';
+    panel.hidden = false;
+    $('scanBody').innerHTML = j.barcodes.map(b => {
+      const ev = b.stageEvents.map(e => `<tr style="border-bottom:1px solid #eee;"><td>${esc(e.stage)}</td><td>${esc(fmtWhen(e.scannedAt))}</td><td>${esc(e.scannedByUser || '')}</td><td>${esc(e.locationNote || '')}</td><td>${e.weight != null ? esc(e.weight) + ' kg' : ''}</td></tr>`).join('');
+      const mem = b.members.length ? b.members.map(m => esc(m.value)).join(', ') : '<span class="none">— none recorded —</span>';
+      const kids = b.children.length ? '<div class="summary">Split into: ' + b.children.map(c => `<a href="?batch=${encodeURIComponent(c.value)}">${esc(c.value)}</a> (${esc(c.status)})`).join(', ') + '</div>' : '';
+      return `<div class="card" style="margin-bottom:10px;">
+        <div class="top"><span class="title">Main barcode ${esc(b.value)}</span><span class="date">${esc(b.status)}</span></div>
+        <div class="summary">Baskets scanned in (${b.members.length}): ${mem}</div>${kids}
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;"><thead><tr style="text-align:left;border-bottom:1px solid #ccc;"><th>Stage</th><th>When</th><th>Who</th><th>Where</th><th>Weight</th></tr></thead><tbody>${ev}</tbody></table>
+      </div>`;
+    }).join('');
+    return (j.viaBarcode && j.jobNos && j.jobNos[0]) || '';
   }
 
   function renderGenealogy(graph) {
@@ -405,6 +437,10 @@
     $('traceBtn').disabled = true;
     try {
       await renderBin(batchNo);
+      const jobFromBarcode = await renderScans(batchNo);
+      if (jobFromBarcode && jobFromBarcode !== batchNo) {   // a barcode was typed or scanned: trace the job it belongs to
+        $('batchInput').value = jobFromBarcode; $('traceBtn').disabled = false; return doTrace();
+      }
       let graph = await window.Traceability.traceGraph(batchNo);
       if (!graph.records.length) { await sleep(2000); graph = await window.Traceability.traceGraph(batchNo); }
       if (!graph.records.length) {
