@@ -113,6 +113,7 @@
   .seam-filter-btn{ border:none; border-right:1px solid #d1d5db; background:transparent; color:#5c6771; font-size:11px; font-weight:600; padding:4px 10px; cursor:pointer; transition:background .12s,color .12s; font-family:inherit; }
   .seam-filter-btn:last-child{ border-right:none; }
   .seam-filter-btn.active{ background:#2f4356; color:#fff; }
+  .seam-range{ border:1px solid #d1d5db; border-radius:4px; background:#fff; color:#5c6771; font-size:11px; font-family:inherit; padding:3px 6px; }
   .seam-charts{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   .seam-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:0 16px 14px; }
   .seam-summary{ font-size:12px; color:#5c6771; }
@@ -209,6 +210,15 @@
           <button class="seam-filter-btn active" data-filter="production">Production end</button>
           <button class="seam-filter-btn" data-filter="manufacturer">MR end</button>
         </div>
+        <select id="seamRange" class="seam-range">
+          <option value="today">Today</option>
+          <option value="24h">Last 24 h</option>
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="all" selected>All data</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <span id="seamCustom" style="display:none;gap:4px;align-items:center;"><input type="date" id="seamFrom" class="seam-range"> <span class="panel-note">to</span> <input type="date" id="seamTo" class="seam-range"></span>
         <span class="panel-note">REC 7.2.4</span>
       </div>
     </div>
@@ -405,7 +415,7 @@
   const API = '/api/seam-test-runs?limit=2000';
   let allRows = [];
   let overlapChart = null, freeChart = null;
-  let activeEnd = 'production';
+  let activeEnd = 'production', rangeSel = 'all';
   const $ = id => document.getElementById(id);
 
   function fmt(v, dec, unit) { return v == null ? '—' : Number(v).toFixed(dec) + (unit || ''); }
@@ -418,7 +428,21 @@
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
-  function filtered() { return allRows.filter(r => r.end_type === activeEnd).sort((x, y) => new Date(x.recorded_at) - new Date(y.recorded_at)); }
+  function inRange(r) {
+    const t = new Date(r.recorded_at).getTime(), now = new Date(), sod = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    switch (rangeSel) {
+      case 'today': return t >= sod;
+      case '24h': return t >= Date.now() - 864e5;
+      case '7d': return t >= Date.now() - 7 * 864e5;
+      case '30d': return t >= Date.now() - 30 * 864e5;
+      case 'custom': {
+        const f = $('seamFrom').value, to = $('seamTo').value;
+        return (!f || t >= new Date(f + 'T00:00:00').getTime()) && (!to || t < new Date(to + 'T00:00:00').getTime() + 864e5);
+      }
+      default: return true;
+    }
+  }
+  function filtered() { return allRows.filter(r => r.end_type === activeEnd && inRange(r)).sort((x, y) => new Date(x.recorded_at) - new Date(y.recorded_at)); }
 
   function updateSeamCard(rows) {
     const pctEl = $('seamSpecPct'), subEl = $('seamSpecSub');
@@ -540,6 +564,9 @@
       render();
     });
   });
+
+  $('seamRange').addEventListener('change', e => { rangeSel = e.target.value; $('seamCustom').style.display = rangeSel === 'custom' ? 'inline-flex' : 'none'; render(); });
+  ['seamFrom', 'seamTo'].forEach(id => $(id).addEventListener('change', render));
 
   // KPI card jumps to the live seam panel
   const card = $('seamCard');
