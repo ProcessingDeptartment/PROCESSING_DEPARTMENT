@@ -361,6 +361,11 @@ body.ef-unconfirmed .rt-rail, body.ef-unconfirmed .rt-actionbar-fixed { display:
 .ef-tick { margin-right: 6px; }
 .ef-toast { display: none; padding: 10px 12px; border-radius: 8px; background: var(--rt-navy-primary, #1B2330); color: #fff; font-size: 15px; cursor: pointer; }
 .ef-toast.show { display: block; }
+/* OOSW duplicate submission warning */
+.ef-dup-warning { background: var(--warn-bg, #fff3cd); border-left: 4px solid var(--warn-border, #e6a817); color: var(--warn-text, #664d03); border-radius: 6px; padding: 12px 16px; margin-bottom: 12px; font-size: 15px; line-height: 1.5; }
+.ef-dup-head { font-weight: 700; margin-bottom: 4px; }
+.ef-dup-data { margin-bottom: 2px; }
+.ef-dup-date, .ef-dup-extra { opacity: 0.8; font-size: 13px; }
 .ef-confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--rt-amber, #B45309); border-radius: 8px; background: #FFF7ED; }
 .ef-confirm span { flex: 1 1 200px; }
 .ef-totals { margin-top: 12px; padding: 14px 16px; background: #fff; border: 1px solid var(--rt-border, #E2E4E3);

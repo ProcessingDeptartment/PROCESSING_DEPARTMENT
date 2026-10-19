@@ -74,7 +74,64 @@
   function oosw(opts) {
     opts = opts || {};
     var lockProbe = opts.lockProbe || 'fr_f_intakeDate';
-    var S = { sel: '', pref: false, sig: '', opts: FALLBACK_OOSW.slice() };
+    var S = { sel: '', pref: false, sig: '', opts: FALLBACK_OOSW.slice(), dupJob: null, dupResult: null };
+
+    // ---- duplicate-submission warning. Submissions are one shared blob 'formrecord:salting-oosw' (array of
+    // { values, roster, status, submittedAt }) -- see storageKey in form-record.js.
+    function checkDuplicate(jobNo, onResult) {
+      var done = false;
+      function finish(r) { if (done) return; done = true; clearTimeout(timer); onResult(r); }
+      var timer = setTimeout(function () { finish(null); }, 5000);
+      try {
+        window.storage.get('formrecord:salting-oosw', true).then(function (r) {
+          var subs = [];
+          try { subs = r && r.value ? JSON.parse(r.value) : []; } catch (e) { }
+          var hits = (Array.isArray(subs) ? subs : []).filter(function (s) {
+            return s && s.status !== 'draft' && s.submittedAt && s.values && String(s.values.jobNo || '').trim() === jobNo;
+          }).sort(function (a, b) { return b.submittedAt - a.submittedAt; });
+          if (!hits.length) { finish({ found: false }); return; }
+          var latest = hits[0];
+          var kg = (latest.roster || []).reduce(function (t, x) { return t + (num(x.weight) || 0); }, 0);
+          var intake = num(latest.values.jiIntakeWeight) || intakeKg();
+          finish({ found: true, ooswKg: kg, ooswPct: (intake > 0 && kg > 0) ? kg / intake * 100 : null, submittedAt: latest.submittedAt, count: hits.length });
+        }).catch(function () { finish(null); });
+      } catch (e) { finish(null); }
+    }
+    function renderDupBanner(result) {
+      var panel = $('ef_oosw'); if (!panel) return;
+      var existing = $('ef_dup_warn');
+      if (!result || !result.found || isLocked()) { if (existing) existing.remove(); return; }
+      var dateStr = '';
+      try {
+        var d = new Date(result.submittedAt);
+        dateStr = d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' +
+          d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } catch (e) { }
+      var html = '<div class="ef-dup-head">⚠ A record has already been submitted for this job.</div>' +
+        '<div class="ef-dup-data">OOSW: ' + fmt2(result.ooswKg) + ' kg' + (result.ooswPct != null ? '  ·  ' + fmt2(result.ooswPct) + ' % of job weight' : '') + '</div>' +
+        (dateStr ? '<div class="ef-dup-date">Submitted: ' + esc(dateStr) + '</div>' : '') +
+        (result.count > 1 ? '<div class="ef-dup-extra">(+' + (result.count - 1) + ' more submission' + (result.count > 2 ? 's' : '') + ' for this job)</div>' : '');
+      if (!existing) {
+        existing = document.createElement('div');
+        existing.id = 'ef_dup_warn';
+        existing.className = 'ef-dup-warning no-print';
+        existing.setAttribute('role', 'alert');
+        panel.parentNode.insertBefore(existing, panel);
+      }
+      existing.innerHTML = html;
+    }
+    function dupCheck() {
+      var f = $('fr_f_jobNo'), job = f ? String(f.value || '').trim() : '';
+      var settled = job && $('fr_f_jiIntakeDate') && $('fr_f_jiIntakeDate').value;
+      if (!settled || isLocked()) { S.dupJob = null; S.dupResult = null; renderDupBanner(null); return; }
+      if (S.dupJob !== job) {
+        S.dupJob = job; S.dupResult = null; renderDupBanner(null);
+        checkDuplicate(job, function (r) {
+          if (S.dupJob !== job) return;   // job changed while fetching
+          S.dupResult = r; renderDupBanner(r);
+        });
+      } else if (S.dupResult) renderDupBanner(S.dupResult);
+    }
 
     function sizeOpts() {
       var h = rosterHost();
@@ -201,6 +258,7 @@
       if (!host) return;
       if (!$('ef_oosw')) { build(host); S.sel = ''; S.pref = false; S.sig = ''; }   // fresh form render: nothing selected
       var opts = sizeOpts(), rows = stored(), lock = isLocked();
+      dupCheck();
       var sig = JSON.stringify([opts, S.sel, S.pref, lock, rows.map(function (r) { return [r.sizeRange, r.weight]; }), intakeKg()]);
       if (!force && sig === S.sig) { updateAdd(); return; }
       S.sig = sig;
