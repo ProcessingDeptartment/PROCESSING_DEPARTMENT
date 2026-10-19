@@ -402,13 +402,14 @@
 <script src="../lib/api-backend.js?v=18"></script>
 <script>
 (function () {
-  const API = '/api/seam-test-runs?limit=200';
+  const API = '/api/seam-test-runs?limit=2000';
   let allRows = [];
   let overlapChart = null, freeChart = null;
   let activeEnd = 'production';
   const $ = id => document.getElementById(id);
 
   function fmt(v, dec, unit) { return v == null ? '—' : Number(v).toFixed(dec) + (unit || ''); }
+  function fmtDT(iso) { const d = new Date(iso); return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }); }
   function fmtTime(iso) { return new Date(iso).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }); }
   // local calendar day (not UTC) so late-evening runs land on the right bar
   function dayKey(iso) {
@@ -437,10 +438,11 @@
     const base = activeEnd === 'production' ? '#2f7a52' : '#6d28d9';
     const RED = '#ef4444';
     const oosAt = i => { const v = rows[i] && rows[i][field]; return v != null && isOos(Number(v)); };
-    const data = rows.map(r => ({ x: fmtTime(r.recorded_at), y: r[field] == null ? null : Number(r[field]) }));
+    const labels = rows.map(r => fmtDT(r.recorded_at));
+    const data = rows.map((r, i) => ({ x: i, y: r[field] == null ? null : Number(r[field]) }));
     const ptCol = c => rows.map((_, i) => oosAt(i) ? RED : c);
     const ref = (label, y, dash) => ({
-      label, data: rows.map(r => ({ x: fmtTime(r.recorded_at), y })), borderColor: '#b91c1c',
+      label, data: rows.map((r, i) => ({ x: i, y })), borderColor: '#b91c1c',
       borderDash: dash, borderWidth: 1, pointRadius: 0, pointHoverRadius: 0, fill: false
     });
     const datasets = [{
@@ -476,10 +478,10 @@
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 16 } },
-          tooltip: { bodyFont: { size: 11 }, titleFont: { size: 11 } }
+          tooltip: { bodyFont: { size: 11 }, titleFont: { size: 11 }, callbacks: { title: it => labels[it[0].parsed.x] || '' } }
         },
         scales: {
-          x: { type: 'category', labels: data.map(d => d.x), ticks: { font: { size: 10 }, maxTicksLimit: 10, maxRotation: 30 }, grid: { color: '#eceeef' } },
+          x: { type: 'linear', min: 0, max: Math.max(rows.length - 1, 1), ticks: { font: { size: 10 }, maxTicksLimit: 8, maxRotation: 30, callback: v => Number.isInteger(v) ? (labels[v] || '') : '' }, grid: { color: '#eceeef' } },
           y: { min: o.min, max: o.max, title: { display: true, text: o.yLabel, font: { size: 10 }, color: '#5c6771' },
                ticks: { font: { size: 10 } }, grid: { color: '#eceeef' } }
         }

@@ -76,7 +76,7 @@
 <script src="../lib/api-backend.js?v=18"></script>
 <script>
 (function () {
-  const API = '/api/seam-test-runs?limit=1000';
+  const API = '/api/seam-test-runs?limit=5000';
   let rows = [], endF = 'all', resF = 'all';
   const $ = id => document.getElementById(id);
   const fmt = (v, d, u) => v == null ? '—' : Number(v).toFixed(d) + (u || '');

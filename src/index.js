@@ -1001,7 +1001,7 @@ app.post('/api/seam-test-runs', async (req, res) => {
 
 app.get('/api/seam-test-runs', async (req, res) => {
   try {
-    const limit  = Math.min(parseInt(req.query.limit  || '100', 10), 500);
+    const limit  = Math.min(parseInt(req.query.limit  || '100', 10), 5000);
     const jobNo  = req.query.jobNo  || null;
     const where  = jobNo ? `WHERE job_no = $2` : '';
     const params = jobNo ? [limit, jobNo] : [limit];
