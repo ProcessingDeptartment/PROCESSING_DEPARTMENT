@@ -34,6 +34,24 @@ model KeyValueHistory {
   @@index([key, at])
 }
 
+// Per-entry audit trail: one row per entry added / changed / removed by a save (src/submission-history.js).
+model SubmissionHistory {
+  id        Int      @id @default(autoincrement())
+  key       String
+  recordKey String
+  entryId   String
+  action    String
+  event     String
+  before    String?
+  after     String?
+  actor     String?
+  role      String?
+  at        DateTime @default(now())
+
+  @@index([recordKey, entryId, at])
+  @@index([key, at])
+}
+
 // One row per date field found inside a 'formrecord:*' record, so dates are queryable without
 // parsing every JSON blob. Populated/replaced by the API whenever a formrecord:* key is written.
 // recordClass matches DATE_FIELDS_ALL_RECORDS.csv: "A - Record header date" (one date per

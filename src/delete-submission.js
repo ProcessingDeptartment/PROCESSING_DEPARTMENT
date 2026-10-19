@@ -18,6 +18,7 @@
 //   - Returns { ok: true, removed: { id, summary }, remaining: N }
 
 const { syncSubmissionRows } = require('./submission-store');
+const { recordEntryHistory } = require('./submission-history');
 const { syncRecordLinks }    = require('./record-links');
 const { syncStockLinks }     = require('./stock-link');
 const { syncSubmissionDates } = require('./submission-dates');
@@ -187,6 +188,9 @@ module.exports = function registerDeleteSubmission(app, prisma) {
           }
         });
 
+        // Per-entry trail: the removed entry's JSON, who removed it.
+        await recordEntryHistory(tx, key, row.value, newValue, { actor: v1.displayName, role: v1.title || '' }, 'delete-submission');
+
         // Audit row 2: the reason + second signatory (stored as a separate note row).
         await tx.keyValueHistory.create({
           data: {
@@ -207,7 +211,7 @@ module.exports = function registerDeleteSubmission(app, prisma) {
       });
 
       // Re-sync all projections (same as a normal PUT).
-      try { await syncSubmissionRows(prisma, key, newValue); } catch (_) {}
+      try { await syncSubmissionRows(prisma, key, newValue, { incremental: true }); } catch (e) { console.error('[delete-submission] syncSubmissionRows failed (deletion saved)', e.message); }
       try { await syncRecordLinks(prisma, key, newValue); } catch (_) {}
       try { await syncStockLinks(prisma, key, newValue); } catch (_) {}
       try { await syncSubmissionDates(prisma, key, newValue); } catch (_) {}

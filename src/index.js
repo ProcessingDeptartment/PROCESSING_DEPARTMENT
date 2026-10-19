@@ -16,6 +16,7 @@ const dateFieldMap = require('./date-field-map');
 const recordKeyMap = require('./record-key-map');
 const { assembleRecordConfig } = require('./record-def');
 const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
+const { recordEntryHistory, mount: mountEntryHistory } = require('./submission-history');
 const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
 const { syncStockLinks } = require('./stock-link');
@@ -210,6 +211,7 @@ async function handlePut(req, res) {
       });
       if (!prev || prev.value !== value) {
         await tx.keyValueHistory.create({ data: { ...who(req), key: req.params.key, action: 'set', before: prev ? prev.value : null, after: value } });
+        await recordEntryHistory(tx, req.params.key, prev ? prev.value : null, value, who(req), 'set');
       }
     });
     await syncSubmissionDates(prisma, req.params.key, value, { dateFields, recordKeys });
@@ -298,6 +300,7 @@ app.delete('/api/storage/key/:key', async (req, res) => {
       const prev = await tx.keyValue.findUnique({ where: { key: req.params.key } });
       if (!prev) return;
       await tx.keyValueHistory.create({ data: { ...who(req), key: req.params.key, action: 'delete', before: prev.value, after: null } });
+      await recordEntryHistory(tx, req.params.key, prev.value, '[]', who(req), 'delete');
       await tx.keyValue.delete({ where: { key: req.params.key } });
     });
     await prisma.submissionDateField.deleteMany({ where: { submissionKey: req.params.key } });
@@ -931,6 +934,7 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
     await prisma.$transaction(async (tx) => {
       await tx.keyValue.update({ where: { key }, data: { value: r.value } });
       await tx.keyValueHistory.create({ data: { ...who(req), key, action: 'set', before: prev.value, after: r.value } });
+      await recordEntryHistory(tx, key, prev.value, r.value, who(req), 'reverse-movement');
       await tx.$executeRawUnsafe(
         'INSERT INTO "dry_process_movement_audit" ("job_no","movement","entry_id","old_stamp","reversed_by","reason") VALUES ($1,$2,$3,$4,$5,$6)',
         r.audit.jobNo, r.audit.movement, r.audit.entryId, r.audit.oldStamp ? new Date(r.audit.oldStamp) : null, r.audit.reversedBy, r.audit.reason);
@@ -1024,6 +1028,7 @@ require('./passkeys')(app, prisma); // admin-managed signature passkeys
 require('./device-enroll')(app, prisma, API_KEY); // passkey -> access key for a new device
 require('./delete-submission')(app, prisma); // double-signoff submission deletion
 require('./submission-read')(app, prisma);    // read API over the sub_* tables
+mountEntryHistory(app, prisma);                 // per-entry audit trail read API
 
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
