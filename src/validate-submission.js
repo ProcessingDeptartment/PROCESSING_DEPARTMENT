@@ -105,6 +105,7 @@ function checkValueSet(fields, values, rowLabel, violations) {
 
 // prisma: PrismaClient (for the definition lookup). key/value: the write being attempted.
 // Returns { ok, status, violations } -- status 200 (allow) or 422 (block, only when ENFORCE).
+const defCache = new Map();
 async function validateWrite(prisma, key, value) {
   const prefix = prefixOf(key);
   if (!prefix) return { ok: true, status: 200, violations: [] };
@@ -115,7 +116,12 @@ async function validateWrite(prisma, key, value) {
 
   const recordKey = key.slice(prefix.length);
   let assembled;
-  try { assembled = await assembleRecordConfig(prisma, recordKey); }
+  try {
+    // the record definition is ~5 queries to assemble and changes only when an admin edits it: reuse it for 60 s
+    const hit = defCache.get(recordKey);
+    if (hit && Date.now() - hit.at < 60000) assembled = hit.assembled;
+    else { assembled = await assembleRecordConfig(prisma, recordKey); defCache.set(recordKey, { at: Date.now(), assembled }); }
+  }
   catch (e) { console.error('validateWrite: definition lookup failed for', recordKey, e); return { ok: true, status: 200, violations: [] }; }
   if (!assembled) return { ok: true, status: 200, violations: [] }; // no definition -> nothing to check against
 

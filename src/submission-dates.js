@@ -34,9 +34,14 @@ function extractDateFields(obj, dateFields, found) {
   }
 }
 
+const nameCache = new Map();   // recordKey -> { at, name }: a record's title changes only when an admin edits it
 async function displayName(prisma, recordKey, legacyMap) {
+  const hit = nameCache.get(recordKey);
+  if (hit && Date.now() - hit.at < 5 * 60000) return hit.name;
   const def = await prisma.recordDefinition.findUnique({ where: { recordKey }, select: { title: true } });
-  return (def && def.title) || (legacyMap[recordKey] && legacyMap[recordKey].recordName) || recordKey;
+  const name = (def && def.title) || (legacyMap[recordKey] && legacyMap[recordKey].recordName) || recordKey;
+  nameCache.set(recordKey, { at: Date.now(), name });
+  return name;
 }
 
 // deps: { dateFields: Map (date-field-map.load()), recordKeys: legacy record-key-map.load() }

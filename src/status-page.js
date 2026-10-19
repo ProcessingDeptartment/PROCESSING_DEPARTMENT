@@ -143,7 +143,7 @@ function mount(app, prisma, info) {
   });
 
   setInterval(() => flush(prisma), FLUSH_MS).unref();
-  for (const sig of ['SIGTERM', 'SIGINT']) process.once(sig, () => flush(prisma).finally(() => process.exit(0)));
+  for (const sig of ['SIGTERM', 'SIGINT']) process.once(sig, () => Promise.resolve(info.drain ? info.drain() : null).then(() => flush(prisma)).finally(() => process.exit(0)));
 
   app.post('/status/parity-check', async (req, res) => {
     try {

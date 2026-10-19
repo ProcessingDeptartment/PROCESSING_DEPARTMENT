@@ -21,6 +21,17 @@ const { entriesInOrder } = require('./submission-read');
 // TABLES_AUTHORITATIVE=1: the sub_* tables are updated INSIDE the save's transaction (so they can never lag the list)
 // and the guards / per-entry merge read the entries back from the tables. Off by default.
 const TABLES_AUTH = process.env.TABLES_AUTHORITATIVE === '1';
+// Derived-table syncs finish after the reply (set SAVE_SYNC_BACKGROUND=0 to make saves wait for them again).
+const SYNC_BACKGROUND = process.env.SAVE_SYNC_BACKGROUND !== '0';
+const pendingSyncs = new Set();
+const syncQueues = new Map();
+function queueDerived(key, fn) {
+  const task = (syncQueues.get(key) || Promise.resolve()).then(fn).catch((e) => console.error('derived sync failed', e));
+  syncQueues.set(key, task);
+  pendingSyncs.add(task);
+  task.finally(() => { pendingSyncs.delete(task); if (syncQueues.get(key) === task) syncQueues.delete(key); });
+}
+const drainSyncs = () => Promise.allSettled([...pendingSyncs]);   // used on shutdown so a deploy cannot cut a sync short
 // the stored entries as the JSON string the guards expect: from the tables when authoritative, else the saved list
 async function storedValue(db, key, blobRow) {
   if (TABLES_AUTH) {
@@ -116,6 +127,7 @@ app.post('/api/auth/admin-login', (req, res) => {
 // Status dashboard at GET / plus request/query timing for it. Mounted before the routes so the
 // timing middleware sees every request.
 require('./status-page').mount(app, prisma, {
+  drain: drainSyncs,
   version: require('../package.json').version,
   authOn: !!API_KEY,
   validateEnforce: VALIDATE_ENFORCE,
@@ -235,23 +247,26 @@ async function handlePut(req, res) {
       }
       if (TABLES_AUTH) await syncSubmissionRows(tx, req.params.key, value, { incremental: true, inTx: true });   // atomic with the save
     }, { timeout: 30000, maxWait: 10000 });
-    await syncSubmissionDates(prisma, req.params.key, value, { dateFields, recordKeys });
-    try { await syncRecordLinks(prisma, req.params.key, value); }
-    catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
-    if (!TABLES_AUTH) {
-      try { await syncSubmissionRows(prisma, req.params.key, value, { incremental: true }); }
-      catch (e) { console.error('syncSubmissionRows failed (write succeeded)', e); }
-    }
-    try { await syncStockLinks(prisma, req.params.key, value); }
-    catch (e) { console.error('syncStockLinks failed (write succeeded)', e); }
-    try { await syncClosedBoxes(prisma, req.params.key, value); }
-    catch (e) { console.error('syncClosedBoxes failed (write succeeded)', e); }
-    try { const r = await syncBoxInspections(prisma, req.params.key, value); if (r && r.skipped.length) console.warn('box inspections skipped:', r.skipped); }
-    catch (e) { console.error('syncBoxInspections failed (write succeeded)', e); }
-    if (isGovernanceKey(req.params.key)) {
-      try { await syncGovernanceKey(prisma, req.params.key, value); }
-      catch (e) { console.error('syncGovernanceKey failed (write succeeded)', e); }
-    }
+    // Derived tables. The three generic projections (dates, links, submission rows) are independent, so they run in
+    // parallel; unless SAVE_SYNC_BACKGROUND=0 they finish AFTER the reply, queued per record so two quick saves cannot
+    // interleave (the saved list is already committed, and each sync re-reconciles the whole record, so a missed one
+    // heals on the next save). The box / stock / governance projections feed lists the browser re-reads straight after
+    // saving, so those still finish before the reply.
+    const k = req.params.key, v = value;
+    const safe = (name, fn) => fn().catch((e) => console.error(name + ' failed (write succeeded)', e));
+    const generic = () => Promise.all([
+      safe('syncSubmissionDates', () => syncSubmissionDates(prisma, k, v, { dateFields, recordKeys })),
+      safe('syncRecordLinks', () => syncRecordLinks(prisma, k, v)),
+      TABLES_AUTH ? null : safe('syncSubmissionRows', () => syncSubmissionRows(prisma, k, v, { incremental: true })),
+    ]);
+    if (SYNC_BACKGROUND) queueDerived(k, generic);
+    await Promise.all([
+      safe('syncStockLinks', () => syncStockLinks(prisma, k, v)),
+      safe('syncClosedBoxes', () => syncClosedBoxes(prisma, k, v)),
+      safe('syncBoxInspections', async () => { const r = await syncBoxInspections(prisma, k, v); if (r && r.skipped.length) console.warn('box inspections skipped:', r.skipped); }),
+      isGovernanceKey(k) ? safe('syncGovernanceKey', () => syncGovernanceKey(prisma, k, v)) : null,
+    ]);
+    if (!SYNC_BACKGROUND) await generic();
     res.json({ ok: true, warnings: violations, crateRanges });
   } catch (e) {
     if (e && e.guard) return res.status(e.guard.status).json({ ok: false, guard: true, error: e.guard.error });

@@ -73,7 +73,9 @@ async function syncRecordLinks(prisma, key, value) {
   // Atomic replace: delete everything for this record key, then bulk insert the new set.
   await prisma.$transaction([
     prisma.recordLink.deleteMany({ where: { recordName: recordKey } }),
-    ...rows.map(r => prisma.recordLink.create({ data: r })),
+    // one bulk insert instead of one query per link (abalone-receiving alone has ~20); skipDuplicates because the
+    // unique edge index would otherwise abort the whole replace on a repeat
+    ...(rows.length ? [prisma.recordLink.createMany({ data: rows, skipDuplicates: true })] : []),
   ]);
 }
 
