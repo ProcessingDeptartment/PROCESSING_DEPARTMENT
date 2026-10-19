@@ -24,6 +24,7 @@
   table.dash-table tbody tr:hover{ background:#f9fafb; }
   td.num-cell{ font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
   th.num-cell{ text-align:right; }
+  td.bad{ color:#c0261b; font-weight:700; }
   .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; }
   .badge-warn{ background:#fbe8e6; color:#a3352d; }
   .badge-ok{ background:#e8f3ec; color:#2f7a52; }
@@ -65,8 +66,8 @@
     </div>
     <div class="tbl-wrap">
       <table class="dash-table">
-        <thead><tr><th>Time</th><th>End</th><th>Operator</th><th class="num-cell">Overlap</th><th class="num-cell">% Overlap</th><th class="num-cell">Free space</th><th>Result</th></tr></thead>
-        <tbody id="logBody"><tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">Loading…</td></tr></tbody>
+        <thead><tr><th>Time</th><th>End</th><th>Operator</th><th class="num-cell">Overlap</th><th class="num-cell">% Overlap</th><th class="num-cell">Body hook butting</th><th class="num-cell">Free space</th><th>Result</th></tr></thead>
+        <tbody id="logBody"><tr><td colspan="8" style="text-align:center;color:#8a939b;padding:14px;">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -86,6 +87,8 @@
     return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const cell = (v, d, u, pass) => '<td class="num-cell' + (pass === false ? ' bad' : '') + '' + '">' + fmt(v, d, u) + '</td>';
+
   function render() {
     const list = rows.filter(r => (endF === 'all' || r.end_type === endF) && (resF === 'all' || !r.all_pass))
       .sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
@@ -95,11 +98,12 @@
       return '<tr><td class="num-cell" style="text-align:left;">' + fmtDT(r.recorded_at) + '</td>'
         + '<td>' + end + '</td>'
         + '<td>' + (r.operator ? esc(r.operator) : '—') + '</td>'
-        + '<td class="num-cell">' + fmt(r.overlap, 3, ' mm') + '</td>'
-        + '<td class="num-cell">' + fmt(r.overlap_pct, 1, '%') + '</td>'
-        + '<td class="num-cell">' + fmt(r.free_space, 3, ' mm') + '</td>'
+        + cell(r.overlap, 3, ' mm', r.pass_overlap)
+        + cell(r.overlap_pct, 1, '%', r.pass_overlap_pct)
+        + cell(r.bh_butting, 1, '%', r.pass_bh_butting)
+        + cell(r.free_space, 3, ' mm', r.pass_free_space)
         + '<td><span class="badge ' + (r.all_pass ? 'badge-ok' : 'badge-warn') + '">' + (r.all_pass ? 'Pass' : 'Fail') + '</span></td></tr>';
-    }).join('') : '<tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">No records</td></tr>';
+    }).join('') : '<tr><td colspan="8" style="text-align:center;color:#8a939b;padding:14px;">No records</td></tr>';
   }
 
   async function load() {
@@ -111,7 +115,7 @@
       render();
     } catch (e) {
       console.warn('Seam log load failed', e);
-      $('logBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a3352d;padding:14px;">Could not load seam data</td></tr>';
+      $('logBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#a3352d;padding:14px;">Could not load seam data</td></tr>';
     }
   }
 
