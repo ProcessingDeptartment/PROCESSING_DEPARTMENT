@@ -446,8 +446,7 @@
     const datasets = [{
       label: o.label, data, borderColor: base, backgroundColor: base, borderWidth: 1.5, tension: 0, spanGaps: true,
       pointRadius: rows.map((_, i) => oosAt(i) ? 7 : 3), pointHoverRadius: 8, pointStyle: rows.map((_, i) => oosAt(i) ? 'rectRot' : 'circle'),
-      pointBackgroundColor: ptCol(base), pointBorderColor: rows.map((_, i) => oosAt(i) ? '#7f1d1d' : base), pointBorderWidth: rows.map((_, i) => oosAt(i) ? 2 : 1),
-      segment: { borderColor: c => (oosAt(c.p0DataIndex) || oosAt(c.p0DataIndex + 1)) ? RED : base }
+      pointBackgroundColor: ptCol(base), pointBorderColor: rows.map((_, i) => oosAt(i) ? '#7f1d1d' : base), pointBorderWidth: rows.map((_, i) => oosAt(i) ? 2 : 1)
     }].concat(o.refs.map(r => ref(r.label, r.y, r.dash)), [{
       label: 'Out of spec', data: [], pointStyle: 'rectRot', pointRadius: 6, backgroundColor: RED, borderColor: '#7f1d1d', borderWidth: 2, showLine: false
     }]);
@@ -455,6 +454,19 @@
       const { ctx: g, chartArea: a, scales: { y } } = c;
       const top = y.getPixelForValue(Math.min(o.bandMax, y.max)), bot = y.getPixelForValue(Math.max(o.bandMin, y.min));
       g.save(); g.fillStyle = 'rgba(47,122,82,0.09)'; g.fillRect(a.left, top, a.right - a.left, bot - top); g.restore();
+    },
+    afterDatasetsDraw(c) {
+      // redraw the data line in red only where it is outside tolerance
+      const { ctx: g, chartArea: a, scales: { y } } = c;
+      const pts = c.getDatasetMeta(0).data.filter(p => p && !p.skip);
+      if (pts.length < 2) return;
+      const top = y.getPixelForValue(Math.min(o.bandMax, y.max)), bot = y.getPixelForValue(Math.max(o.bandMin, y.min));
+      [[a.top, top], [bot, a.bottom]].forEach(([y0, y1]) => {
+        if (y1 <= y0) return;
+        g.save(); g.beginPath(); g.rect(a.left, y0, a.right - a.left, y1 - y0); g.clip();
+        g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y));
+        g.strokeStyle = RED; g.lineWidth = 2; g.lineJoin = 'round'; g.stroke(); g.restore();
+      });
     } };
     return new Chart(ctx, {
       type: 'line', plugins: [band],
