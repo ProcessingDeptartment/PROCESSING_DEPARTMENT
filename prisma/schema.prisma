@@ -5238,3 +5238,68 @@ model FieldSpecVersion {
   @@index([recordKey, fieldKey], map: "idx_fspec_versions_record")
   @@map("field_spec_versions")
 }
+
+// ---------------------------------------------------------------------------------------------
+// Barcode lifecycle (MD/barcode-job-lifecycle-traceability-instructions.md). A lot barcode is linked
+// to a job at intake, scanned at each stage, and split into child barcodes at grading/boxing.
+// Barcodes are never deleted -- only status changes (active | split | retired). Routes: src/barcode-trace.js
+// ---------------------------------------------------------------------------------------------
+model TraceBarcode {
+  id            Int      @id @default(autoincrement())
+  barcodeValue  String   @unique
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  createdByUser String?
+  parentId      Int?
+  parent        TraceBarcode?  @relation("BarcodeChildren", fields: [parentId], references: [id])
+  children      TraceBarcode[] @relation("BarcodeChildren")
+  jobLinks      BarcodeJobLink[]
+  stageEvents   BarcodeStageEvent[]
+  splitEvents   BarcodeSplitEvent[]
+
+  @@index([parentId])
+}
+
+model BarcodeJobLink {
+  id           Int      @id @default(autoincrement())
+  barcodeId    Int
+  barcode      TraceBarcode @relation(fields: [barcodeId], references: [id])
+  recordKey    String
+  submissionId String
+  jobNo        String?
+  linkedAt     DateTime @default(now())
+  linkedByUser String?
+  stage        String
+  notes        String?
+
+  @@index([barcodeId])
+  @@index([jobNo])
+}
+
+model BarcodeStageEvent {
+  id            Int      @id @default(autoincrement())
+  barcodeId     Int
+  barcode       TraceBarcode @relation(fields: [barcodeId], references: [id])
+  stage         String
+  recordKey     String?
+  submissionId  String?
+  scannedAt     DateTime @default(now())
+  scannedByUser String?
+  locationNote  String?
+  weight        Float?
+
+  @@index([barcodeId])
+}
+
+model BarcodeSplitEvent {
+  id           Int      @id @default(autoincrement())
+  parentId     Int
+  parent       TraceBarcode @relation(fields: [parentId], references: [id])
+  splitAt      DateTime @default(now())
+  splitByUser  String?
+  splitReason  String
+  recordKey    String?
+  submissionId String?
+
+  @@index([parentId])
+}

@@ -988,6 +988,7 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
 // REC 7.4.2 photos on problem answers (src/submission-images.js)
 require('./submission-images').mount(app, prisma);
 require('./nc-log').mount(app, prisma); // Non-Conformance Log
+require('./barcode-trace').mount(app, prisma); // barcode lifecycle: link / scan / split / history
 require('./field-specs').mount(app, prisma, assembleRecordConfig); // field specifications (limits, gates, auto-NC)
 require('./fsms-calendar').mount(app, prisma); // FSMS annual calendar
 
