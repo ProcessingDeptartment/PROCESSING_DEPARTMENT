@@ -3868,6 +3868,8 @@ function fallbackDl(canvas,filename){
     if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await loadSpec();
     await primary.load();
+    // the Delete button is drawn only when PermissionRules is present, and most log pages never include it: load it first
+    await loadLib('permission-rules.js?v=8', 'PermissionRules');
     primary.renderTable();
     if (secondary) { await secondary.load(); secondary.renderTable(); }
     refreshVerification();
