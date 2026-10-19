@@ -27,6 +27,7 @@
   function root() { return document.getElementById('frRoot') || document.getElementById('mlRoot') || document.body; }
 
   function init(cfg) {
+    if (!(window.BarcodeScan && window.BarcodeScan.allowed())) return;   // administrator-only for now
     var on = !!cfg.always || lsGet();
     var scanned = null; // { barcode, jobNo, members }
 
@@ -78,6 +79,46 @@
 
     function refresh() { ensureSwitch(); ensureBar(); applyJobLock(); }
 
+
+    // Choose the job through the page's own JobPicker (search list -> "Confirm job" popup -> record loads), exactly as if
+    // the operator had searched for it and tapped it. Plain job-number fields (no picker) are filled directly.
+    function fillJob(jobNo) {
+      var sel = jobInput();
+      if (!sel || sel.disabled) return 'none';
+      var wrap = sel.closest ? sel.closest('.jp-wrap') : null;
+      if (!wrap) {
+        sel.value = jobNo;
+        sel.dispatchEvent(new Event('input', { bubbles: true }));
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        return 'filled';
+      }
+      if (sel.value === jobNo) return 'same';
+      var input = wrap.querySelector('.jp-search'), list = wrap.querySelector('.jp-list');
+      function choose(retry) {
+        input.value = jobNo;
+        input.dispatchEvent(new Event('input', { bubbles: true }));   // the picker draws its matching list
+        var opts = list.querySelectorAll('.jp-opt'), opt = null;
+        for (var i = 0; i < opts.length; i++) if (opts[i].getAttribute('data-v') === jobNo) { opt = opts[i]; break; }
+        if (!opt && retry) {                                         // a Can/Dry filter may hide it: clear the filter, retry once
+          var on = wrap.querySelector('.jp-route button[aria-pressed="true"]');
+          if (on) { on.click(); return choose(false); }
+        }
+        if (!opt) { status('Job ' + jobNo + ' is not in the open jobs list (closed, or not set up yet).', 'bad'); return; }
+        opt.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));   // -> picker opens its confirm popup
+      }
+      if (input.hidden) {                                            // another job already chosen: use the picker's Change button
+        var change = wrap.querySelector('.jp-change');
+        if (!change) return 'none';
+        change.click();                                              // may ask "replace auto-filled values?" - answer it, then it carries on
+        var tries = 0;
+        (function wait() {
+          if (!input.hidden) { choose(true); return; }
+          if (++tries < 80) setTimeout(wait, 150);
+        })();
+      } else { choose(true); }
+      return 'confirm';
+    }
+
     function onScan(code) {
       status('Looking up ' + code + '…');
       api('/api/traceability/history/' + encodeURIComponent(code)).then(function (h) {
@@ -86,21 +127,14 @@
         var link = (h.jobLinks || []).filter(function (l) { return l.jobNo; })[0];
         var jobNo = link ? link.jobNo : '';
         if (!jobNo) { status('Barcode ' + h.barcode.value + ' has no job number linked.', 'bad'); return; }
-        var inp = jobInput();
-        if (inp && !inp.disabled) {
-          inp.readOnly = false;
-          inp.value = jobNo;
-          inp.dispatchEvent(new Event('input', { bubbles: true }));
-          inp.dispatchEvent(new Event('change', { bubbles: true }));
-          applyJobLock();
-        }
+        var picked = fillJob(jobNo);
         return api('/api/traceability/scan', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ barcodeValue: h.barcode.value, stage: cfg.stage, user: who(), locationNote: cfg.recordKey })
         }).then(function (s) {
           scanned = { barcode: h.barcode.value, jobNo: jobNo, members: (h.members || []).length };
           if (!s.ok) { status('Job ' + jobNo + ' filled, but the scan was not logged: ' + (s.error || 'error'), 'bad'); return; }
-          status('Job ' + jobNo + ' · barcode ' + scanned.barcode + ' · ' + scanned.members + ' baskets · scan logged at ' + cfg.stage, 'ok');
+          status('Job ' + jobNo + ' · barcode ' + scanned.barcode + ' · ' + scanned.members + ' baskets · scan logged at ' + cfg.stage + (picked === 'confirm' ? ' · confirm the job in the popup' : ''), 'ok');
         });
       }).catch(function () { status('Could not reach the server.', 'bad'); });
     }

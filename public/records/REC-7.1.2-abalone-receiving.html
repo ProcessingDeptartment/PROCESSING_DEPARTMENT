@@ -68,9 +68,9 @@
 })();
 </script>
 
-<script src="../lib/barcode-scan.js?v=1"></script>
-<script src="../lib/entry-flow.js?v=6"></script>
-<script>EntryFlow.receiving({ required: ['jobNo', 'receivingDate', 'receivedFrom', 'toBeProcessedFor', 'lotBarcode'] });</script>
+<script src="../lib/barcode-scan.js?v=2"></script>
+<script src="../lib/entry-flow.js?v=7"></script>
+<script>EntryFlow.receiving({ required: ['jobNo', 'receivingDate', 'receivedFrom', 'toBeProcessedFor'].concat(window.BarcodeScan && BarcodeScan.allowed() ? ['lotBarcode'] : []) });</script>
 <script>BarcodeScan.attach('fr_f_lotBarcode', {
   label: 'Scan lot', title: 'Scan the new lot barcode', readonly: true,
   // a main barcode belongs to one job: refuse one that is already linked at intake

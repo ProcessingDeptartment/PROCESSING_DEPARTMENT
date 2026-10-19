@@ -40,7 +40,16 @@ async function ancestry(prisma, bc) {
   return out;
 }
 
+// Barcode functions are administrator-only for now. The role comes from the X-Role header the app sends (the same
+// convention as the drying-process reverse-movement route), so this is a UI-level restriction, not strong auth.
+function adminOnly(req, res, next) {
+  if (String(req.get('x-role') || '').toUpperCase() === 'ADMINISTRATOR') return next();
+  return res.status(403).json({ ok: false, error: 'Barcode functions are restricted to the administrator.' });
+}
+
 function mount(app, prisma) {
+  app.use('/api/traceability', adminOnly);
+
   app.post('/api/traceability/link', async (req, res) => {
     const b = req.body || {};
     const value = bcVal(b.barcodeValue);

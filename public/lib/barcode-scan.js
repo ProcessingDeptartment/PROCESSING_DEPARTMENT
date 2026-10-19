@@ -24,6 +24,11 @@
     return zxingP;
   }
 
+  // Barcode functions are administrator-only for now (role ADMINISTRATOR = the password-protected Administrator login).
+  function allowed() {
+    try { return !!(window.Auth && Auth.getCurrentRole && Auth.getCurrentRole() === 'ADMINISTRATOR'); } catch (e) { return false; }
+  }
+
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   function open(onValue, opts) {
@@ -98,6 +103,11 @@
       var inp = document.getElementById(inputId);
       if (!inp || inp.dataset.bsAttached) return !!(inp && inp.dataset.bsAttached);
       inp.dataset.bsAttached = '1';
+      if (!allowed()) {                       // not the administrator: the barcode field stays out of sight
+        var fld = inp.closest('.fr-field, .ml-field') || inp.parentNode;
+        if (fld) fld.style.display = 'none';
+        return true;
+      }
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'ef-btn no-print'; b.textContent = '📷 ' + (opts.label || 'Scan');
       if (opts.readonly) { inp.readOnly = true; inp.placeholder = 'Scan the barcode'; }
@@ -129,5 +139,5 @@
       .observe(document.body, { childList: true, subtree: true });
   }
 
-  window.BarcodeScan = { open: open, attach: attach };
+  window.BarcodeScan = { open: open, attach: attach, allowed: allowed };
 })();
