@@ -64,6 +64,8 @@
   .ml-btn-flat:hover{ background:#d5d8d6; }
   .ml-btn:disabled{ opacity:.45; cursor:not-allowed; }
   .ml-btn-sm{ padding:4px 10px; font-size:10.5px; }
+  .ml-btn-delete{ background:#fbe8e6; color:#a3352d; border:1px solid #e8b8b3; }
+  .ml-btn-delete:hover{ background:#f5c6c3; color:#7f0000; }
   .ml-body{ padding:16px 18px 60px; max-width:1400px; margin:0 auto; }
   .ml-panel{ background:#fff; border:1px solid var(--palette-border,#e2e4e3); border-radius:6px; margin-bottom:14px; }
   .ml-panel-head{ padding:9px 14px; border-bottom:1px solid var(--palette-border,#e2e4e3); display:flex; justify-content:space-between; align-items:center; background:var(--palette-head-bg,#fbfbfa); border-radius:6px 6px 0 0; gap:10px; flex-wrap:wrap; }
@@ -1420,18 +1422,21 @@
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-expand="${jid}">Stages (${drafts.length})</button></td></tr>`;
         }
         html += `<tr class="ml-stages-row ml-hide" data-stages="${jid}"><td colspan="8"><table><thead><tr><th>Stage</th><th>Submitted</th><th>Sign-off</th><th>Status</th><th>Weight in</th><th>Weight out</th><th></th></tr></thead><tbody>`;
+        const canDeleteStage = window.PermissionRules ? window.PermissionRules.can('deleteSubmission') : false;
         subs.forEach((e) => {
           const v = e.values || {};
           html += `<tr><td>${stageNoOf(e, subs)}</td><td style="white-space:nowrap;">${esc(fmtSubmittedAt(e.submittedAt))}</td><td>${signoffCell(e)}</td>
             <td>${statusLabel(stageStatusOf(e))}</td><td class="ml-num">${num(v.weightIn)}</td><td class="ml-num">${num(v.weightOut)}</td>
             <td style="white-space:nowrap;"><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${e.id}">View</button>
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${e.id}" title="Print this stage as the paper form">PDF</button>
-              <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${e.id}" title="Export this stage as JSON">JSON</button></td></tr>`;
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${e.id}" title="Export this stage as JSON">JSON</button>
+              ${canDeleteStage ? `<button class="ml-btn ml-btn-sm ml-btn-delete" data-delete="${e.id}" title="Delete this stage (requires double sign-off)">Delete</button>` : ''}</td></tr>`;
         });
         drafts.forEach((e) => {
           html += `<tr><td colspan="6"><span class="ml-badge ml-badge-muted">Draft</span> started ${esc(dayMon(e.createdAt))}${e.completedBy && e.completedBy.by ? ' by ' + esc(e.completedBy.by) : ''}</td>
             <td style="white-space:nowrap;"><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${e.id}">Edit</button>
-              <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${e.id}" title="Print this draft as the paper form">PDF</button></td></tr>`;
+              <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${e.id}" title="Print this draft as the paper form">PDF</button>
+              ${canDeleteStage ? `<button class="ml-btn ml-btn-sm ml-btn-delete" data-delete="${e.id}" title="Delete this draft (requires double sign-off)">Delete</button>` : ''}</td></tr>`;
         });
         html += `</tbody></table></td></tr>`;
       });
@@ -1443,6 +1448,32 @@
       tableWrap.querySelectorAll('[data-expand]').forEach((b) => b.addEventListener('click', () => {
         const r = tableWrap.querySelector(`tr[data-stages="${b.dataset.expand}"]`);
         if (r) r.classList.toggle('ml-hide');
+      }));
+      tableWrap.querySelectorAll('[data-delete]').forEach((b) => b.addEventListener('click', () => {
+        const entry = entries.find(e => e.id === b.dataset.delete);
+        if (!entry) return;
+        const ref = entryJobRef(entry);
+        const dateStr = fmtSubmittedAt(entry.submittedAt) || '(no date)';
+        const summary = [dateStr, ref.val ? `Job ${ref.val}` : '', entryCompletedBy(entry) || ''].filter(Boolean).join(' · ');
+        Promise.all([
+          loadLib('permission-rules.js?v=8', 'PermissionRules'),
+          loadLib('delete-submission-modal.js?v=1', 'DeleteSubmissionModal')
+        ]).then(() => {
+          if (window.DeleteSubmissionModal) {
+            window.DeleteSubmissionModal.open({
+              recordKey: storageKey.replace(/^monitoring_log:/, ''),
+              prefix: 'monitoring_log:',
+              entryId: entry.id,
+              summary,
+              onDeleted: async () => {
+                try { await load(true); } catch (_) {}
+                renderStockTable();
+              }
+            });
+          } else {
+            toast('Delete entry feature is not loaded on this page.');
+          }
+        });
       }));
     }
 
@@ -1493,10 +1524,12 @@
         }
         if (photosOn) html += `<td class="ml-photo-count" data-photos-for="${esc(entryRow.id)}"></td>`;
         html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
+        const canDelete = window.PermissionRules ? window.PermissionRules.can('deleteSubmission') : false;
         html += `<td style="white-space:nowrap;">
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${entryRow.id}">${isSubmitted(entryRow) ? 'View' : 'Edit'}</button>
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${entryRow.id}" title="Print this entry as the paper form">PDF</button>
           <button class="ml-btn ml-btn-flat ml-btn-sm" data-json="${entryRow.id}" title="Export this entry as JSON">JSON</button>
+          ${canDelete ? `<button class="ml-btn ml-btn-sm ml-btn-delete" data-delete="${entryRow.id}" title="Delete this entry (requires double sign-off)">Delete</button>` : ''}
         </td>`;
         html += `</tr>`;
       });
@@ -1519,6 +1552,34 @@
       });
       table.querySelectorAll('[data-json]').forEach(btn => {
         btn.addEventListener('click', () => exportEntryJson(btn.dataset.json));
+      });
+      table.querySelectorAll('[data-delete]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const entry = entries.find(e => e.id === btn.dataset.delete);
+          if (!entry) return;
+          const ref = entryJobRef(entry);
+          const dateStr = fmtSubmittedAt(entry.submittedAt) || '(no date)';
+          const summary = [dateStr, ref.val ? `Job ${ref.val}` : '', entryCompletedBy(entry) || ''].filter(Boolean).join(' · ');
+          Promise.all([
+            loadLib('permission-rules.js?v=8', 'PermissionRules'),
+            loadLib('delete-submission-modal.js?v=1', 'DeleteSubmissionModal')
+          ]).then(() => {
+            if (window.DeleteSubmissionModal) {
+              window.DeleteSubmissionModal.open({
+                recordKey: storageKey.replace(/^monitoring_log:/, ''),
+                prefix: 'monitoring_log:',
+                entryId: entry.id,
+                summary,
+                onDeleted: async () => {
+                  try { await load(true); } catch (_) {}
+                  renderTable();
+                }
+              });
+            } else {
+              toast('Delete entry feature is not loaded on this page.');
+            }
+          });
+        });
       });
     }
 
