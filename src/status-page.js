@@ -7,7 +7,13 @@
 // latest archive comes from BackupRun, which scripts/backup.js writes -- the API can't see the
 // backup folder itself. The dashboard's own requests and /api/health probes are not counted as
 // traffic, so the chart shows real use rather than people looking at the chart.
+const { runParity } = require('./parity-check');
 const STARTED = new Date();
+
+// "Check data" button: last integrity result, kept in memory. The button is public like the rest of this page, so it is
+// read-only, shows counts and OK/DIFF only, and re-uses a result younger than PARITY_COOLDOWN_MS instead of re-running.
+let parity = null, parityRunning = false;
+const PARITY_COOLDOWN_MS = 30 * 1000;
 const FLUSH_MS = 60 * 1000;
 
 let pending = new Map(); // hour ISO -> { requests, errors, totalMs, maxMs, dbQueries }
@@ -139,6 +145,16 @@ function mount(app, prisma, info) {
   setInterval(() => flush(prisma), FLUSH_MS).unref();
   for (const sig of ['SIGTERM', 'SIGINT']) process.once(sig, () => flush(prisma).finally(() => process.exit(0)));
 
+  app.post('/status/parity-check', async (req, res) => {
+    try {
+      if (!parityRunning && (!parity || Date.now() - parity.at.getTime() > PARITY_COOLDOWN_MS)) {
+        parityRunning = true;
+        try { parity = await runParity(prisma); } finally { parityRunning = false; }
+      }
+    } catch (e) { console.error('parity check failed', e.message); parity = { at: new Date(), records: [], ok: false, error: String(e.message).split(String.fromCharCode(10))[0], history: null }; }
+    res.redirect(303, '/#integrity');
+  });
+
   app.get('/', async (req, res) => {
     let d = null, dbError = null;
     try { d = await gather(prisma); } catch (e) { dbError = e.message.split('\n')[0]; console.error('status page DB check failed', e); }
@@ -178,6 +194,8 @@ table{width:100%;border-collapse:collapse}td{padding:8px 0;border-top:1px solid 
 .dot{width:10px;height:10px;border-radius:50%;flex:none}.ok{background:var(--ok)}.bad{background:var(--bad)}
 svg{width:100%;height:auto;display:block}.bar{fill:var(--bar)}.ln{fill:none;stroke:var(--acc);stroke-width:2}.dt{fill:var(--acc)}
 .grid line,.grid{stroke:var(--line)}.ax{font-size:11px;fill:var(--mute)}.ax.acc{fill:var(--acc)}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:9px 16px;font:600 14px system-ui;cursor:pointer}
+.ptab td{font-size:13px}.ptab td:nth-child(n+2){text-align:center;width:auto}.ptab td:nth-child(2),.ptab td:nth-child(3){width:auto}.phead td{color:var(--mute);font-size:12px}
 .key{display:flex;gap:16px;font-size:12px;color:var(--mute);margin-top:6px}.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px;font-size:13px}.stats b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
 a{color:var(--acc)}footer{color:var(--mute);font-size:12px}
@@ -209,6 +227,14 @@ ${chart(s)}
 <div>Error rate<b>${req24 ? ((err24 / req24) * 100).toFixed(1) + '%' : '—'}</b></div>
 <div>Active hours<b>${activeHrs} / 24</b></div>
 </div></div>
+
+<div class="card" id="integrity"><h2>Data integrity</h2>
+<p class="det" style="text-align:left;margin:0 0 10px">Compares every record's saved list with its database table: entry count, exact order and entry content. Read-only.</p>
+<form method="post" action="/status/parity-check"><button class="btn" type="submit">Check data now</button></form>
+${parity ? (parity.error ? `<p class="det" style="text-align:left">Check failed: ${esc(parity.error)}</p>` : `<div class="banner" style="margin:12px 0 8px"><span class="dot ${parity.ok ? 'ok' : 'bad'}"></span>${parity.ok ? 'All records match' : 'MISMATCH found: tell the system administrator'} <span class="det" style="margin-left:auto;font-weight:400">checked ${ago(parity.at)}${parity.history != null ? ' · ' + n(parity.history) + ' audit-trail rows' : ''}</span></div>
+<table class="ptab"><tr class="phead"><td>Record</td><td>Entries</td><td>Table</td><td>Order</td><td>Content</td><td>List size</td></tr>
+${parity.records.map(r => `<tr><td>${esc(r.record)}</td><td>${n(r.entries)}</td><td>${r.tableRows == null ? '—' : n(r.tableRows)}</td><td><span class="yn ${r.order === 'OK' ? 'y' : 'n'}">${r.order === 'OK' ? 'Y' : 'N'}</span></td><td><span class="yn ${r.content === 'OK' ? 'y' : 'n'}">${r.content === 'OK' ? 'Y' : 'N'}</span></td><td>${n(r.sizeKb)} KB · ${r.pct}%</td></tr>`).join('')}
+</table>`) : '<p class="det" style="text-align:left;margin:10px 0 0">Not checked since the server started.</p>'}</div>
 
 ${d ? `<div class="grid">${tile('Open jobs', n(d.openJobs))}${tile('Record definitions', n(d.records))}${tile('Stored keys', n(d.keys))}</div>` : ''}
 ${info.siteUrl ? `<p><a href="${esc(info.siteUrl)}">Open the records site →</a></p>` : ''}
