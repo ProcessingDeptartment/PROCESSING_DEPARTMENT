@@ -164,6 +164,16 @@ function mount(app, prisma) {
           viaBarcode = bc.barcodeValue;
           jobNos = [...new Set(links.map((l) => l.jobNo).filter(Boolean))];
         }
+        else {
+          // a basket barcode: the main barcode(s) it was scanned into (the same farm basket code can recur on later deliveries)
+          const mem = await prisma.barcodeMember.findMany({ where: { memberValue: bcVal(raw) }, select: { barcodeId: true }, orderBy: { id: 'desc' } });
+          if (mem.length) {
+            const ids2 = [...new Set(mem.map((m) => m.barcodeId))];
+            links = await prisma.barcodeJobLink.findMany({ where: { barcodeId: { in: ids2 } }, select: { barcodeId: true, jobNo: true }, orderBy: { id: 'desc' } });
+            viaBarcode = bcVal(raw);
+            jobNos = [...new Set(links.map((l) => l.jobNo).filter(Boolean))];
+          }
+        }
       }
       const ids = [...new Set(links.map((l) => l.barcodeId))];
       const barcodes = [];

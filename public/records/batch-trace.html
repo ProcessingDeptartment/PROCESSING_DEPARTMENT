@@ -234,6 +234,7 @@
       <datalist id="batchList"></datalist>
     </div>
     <button id="traceBtn">Trace</button>
+    <button id="scanBtn" type="button" hidden>📷 Scan barcode</button>
   </div>
   <div class="hint" id="hint"></div>
 
@@ -275,6 +276,7 @@
 <script src="../lib/auth.js?v=5"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/traceability.js?v=11"></script>
+<script src="../lib/barcode-scan.js?v=2"></script>
 <script src="../lib/master-index-data.js?v=4"></script>
 <script>  const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -334,6 +336,10 @@
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;"><thead><tr style="text-align:left;border-bottom:1px solid #ccc;"><th>Stage</th><th>When</th><th>Who</th><th>Where</th><th>Weight</th></tr></thead><tbody>${ev}</tbody></table>
       </div>`;
     }).join('');
+    if (j.viaBarcode && j.jobNos && j.jobNos.length > 1) {
+      $('scanBody').insertAdjacentHTML('afterbegin', `<div class="summary" style="margin-bottom:8px;">“${esc(j.viaBarcode)}” appears on ${j.jobNos.length} jobs (the farm code was reused): ` +
+        j.jobNos.map(n => `<a href="?batch=${encodeURIComponent(n)}">${esc(n)}</a>`).join(', ') + '. Showing the newest.</div>');
+    }
     return (j.viaBarcode && j.jobNos && j.jobNos[0]) || '';
   }
 
@@ -473,6 +479,10 @@
   });
 
   $('traceBtn').addEventListener('click', doTrace);
+  // Scan a barcode (main, basket or child) straight into the trace. Administrator only for now.
+  function showScanBtn() { $('scanBtn').hidden = !(window.BarcodeScan && BarcodeScan.allowed()); }
+  showScanBtn(); setTimeout(showScanBtn, 600);
+  $('scanBtn').addEventListener('click', () => BarcodeScan.open(v => { $('batchInput').value = v.toUpperCase(); doTrace(); }, { title: 'Scan a barcode to trace' }));
   $('batchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doTrace(); });
   $('batchInput').addEventListener('change', () => { if ($('batchInput').value.trim()) doTrace(); });
 
