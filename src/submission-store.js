@@ -251,7 +251,11 @@ async function getSchema(prisma, recordKey) {
   return schema;
 }
 
-async function syncSubmissionRows(prisma, key, value) {
+// opts.incremental (live saves only): touch only the submissions whose stored entry changed, were added or
+// were removed, instead of deleting and re-inserting the whole table. Anything that is not a plain per-entry
+// projection (dry-stock-control derives columns from OTHER entries) and every script/backfill call keeps the
+// full rewrite, so a stale or drifted table is always healed by a normal full sync.
+async function syncSubmissionRows(prisma, key, value, opts) {
   const prefix = prefixOf(key);
   if (!prefix) return;
 
@@ -264,21 +268,42 @@ async function syncSubmissionRows(prisma, key, value) {
   if (!Array.isArray(entries)) return;
   if (recordKey === 'dry-stock-control') fillLegacyStages(entries);   // projection only: old submissions become stage 1..n
 
-  // Atomic: delete all existing rows for this record, then re-insert.
-  // This handles edits, deletions, and reordering without diffing.
+  // Atomic: one transaction. Full mode deletes every existing row for this record then re-inserts;
+  // incremental mode deletes/re-inserts only the ids that differ.
   const stmts = [];
+  const incremental = !!(opts && opts.incremental) && !(schema.extraCols && schema.extraCols.length);
+  let existing = null;   // id -> stored rawJson (incremental only)
 
-  // Delete child rows first (FK constraint), then parents.
-  if (schema.childTable) {
-    stmts.push(prisma.$executeRawUnsafe(
-      `DELETE FROM "${schema.childTable}" WHERE "parentId" IN (SELECT "id" FROM "${schema.table}")`
-    ));
+  const deleteIds = (ids) => {
+    // Delete child rows first (FK constraint), then parents.
+    if (schema.childTable) {
+      stmts.push(prisma.$executeRawUnsafe(`DELETE FROM "${schema.childTable}" WHERE "parentId" = ANY($1::text[])`, ids));
+    }
+    stmts.push(prisma.$executeRawUnsafe(`DELETE FROM "${schema.table}" WHERE "id" = ANY($1::text[])`, ids));
+  };
+
+  if (incremental) {
+    const cur = await prisma.$queryRawUnsafe(`SELECT "id", "rawJson" FROM "${schema.table}"`);
+    existing = new Map(cur.map((r) => [r.id, r.rawJson]));
+    const keep = new Set(entries.filter((e) => e && e.id).map((e) => e.id));
+    const gone = [...existing.keys()].filter((id) => !keep.has(id));
+    if (gone.length) deleteIds(gone);
+  } else {
+    if (schema.childTable) {
+      stmts.push(prisma.$executeRawUnsafe(
+        `DELETE FROM "${schema.childTable}" WHERE "parentId" IN (SELECT "id" FROM "${schema.table}")`
+      ));
+    }
+    stmts.push(prisma.$executeRawUnsafe(`DELETE FROM "${schema.table}"`));
   }
-  stmts.push(prisma.$executeRawUnsafe(`DELETE FROM "${schema.table}"`));
 
   // Insert each entry as a parent row.
   for (const entry of entries) {
     if (!entry || !entry.id) continue;
+    if (incremental && existing.has(entry.id)) {
+      if (existing.get(entry.id) === JSON.stringify(entry)) continue;   // unchanged: leave its rows alone
+      deleteIds([entry.id]);                                           // changed: replace just this submission
+    }
     const values = entry.values || entry;
 
     // Build column list and parameter list.
@@ -342,7 +367,7 @@ async function syncSubmissionRows(prisma, key, value) {
   }
 
   // Run all statements in a single transaction.
-  await prisma.$transaction(stmts);
+  if (stmts.length) await prisma.$transaction(stmts);
   if (recordKey === 'dry-cooking') await syncDryWeightOverrides(prisma, entries, completedByText);
 }
 

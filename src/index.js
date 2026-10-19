@@ -122,7 +122,7 @@ app.get('/api/storage/key/:key', async (req, res) => {
   }
 });
 
-app.put('/api/storage/key/:key', async (req, res) => {
+async function handlePut(req, res) {
   try {
     let { value } = req.body;
     if (typeof value !== 'string') return res.status(400).json({ ok: false });
@@ -215,7 +215,7 @@ app.put('/api/storage/key/:key', async (req, res) => {
     await syncSubmissionDates(prisma, req.params.key, value, { dateFields, recordKeys });
     try { await syncRecordLinks(prisma, req.params.key, value); }
     catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
-    try { await syncSubmissionRows(prisma, req.params.key, value); }
+    try { await syncSubmissionRows(prisma, req.params.key, value, { incremental: true }); }
     catch (e) { console.error('syncSubmissionRows failed (write succeeded)', e); }
     try { await syncStockLinks(prisma, req.params.key, value); }
     catch (e) { console.error('syncStockLinks failed (write succeeded)', e); }
@@ -232,6 +232,46 @@ app.put('/api/storage/key/:key', async (req, res) => {
     if (e && e.guard) return res.status(e.guard.status).json({ ok: false, guard: true, error: e.guard.error });
     console.error('PUT key failed', e);
     res.status(500).json({ ok: false });
+  }
+}
+app.put('/api/storage/key/:key', handlePut);
+
+// Per-submission save: merge ONE entry into the record's blob server-side, then run the exact same PUT pipeline
+// (guards, validation, history, table sync). Two tablets saving different submissions no longer overwrite each
+// other, and a request carries one entry instead of the whole history (so the 5 MB body limit stops mattering).
+// Saves for a record are queued in-process so the read-merge-write cannot interleave.
+const putQueues = new Map();
+app.put('/api/submissions/:recordKey/:id', async (req, res) => {
+  const recordKey = String(req.params.recordKey || '');
+  const entry = req.body && req.body.entry;
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(recordKey) || !entry || typeof entry !== 'object' || entry.id !== req.params.id) {
+    return res.status(400).json({ ok: false, error: 'bad request' });
+  }
+  const prefix = (req.body && req.body.prefix) === 'monitoring_log:' ? 'monitoring_log:' : 'formrecord:';
+  const key = prefix + recordKey;
+  const run = async () => {
+    const prevRow = await prisma.keyValue.findUnique({ where: { key } });
+    let arr = [];
+    try { arr = prevRow && prevRow.value ? JSON.parse(prevRow.value) : []; } catch (e) { arr = []; }
+    if (!Array.isArray(arr)) return { code: 500, body: { ok: false, error: 'stored value is not an array' } };
+    const i = arr.findIndex((s) => s && s.id === entry.id);
+    if (i >= 0) arr[i] = entry; else arr.push(entry);
+    const out = { code: 200, body: null };
+    const fakeRes = { status(c) { out.code = c; return this; }, json(b) { out.body = b; return this; } };
+    await handlePut({ params: { key }, body: { value: JSON.stringify(arr) }, get: (h) => req.get(h) }, fakeRes);
+    return out;
+  };
+  const prior = putQueues.get(key) || Promise.resolve();
+  const task = prior.catch(() => {}).then(run);
+  putQueues.set(key, task);
+  try {
+    const out = await task;
+    res.status(out.code).json(out.body);
+  } catch (e) {
+    console.error('PUT submission failed', e);
+    res.status(500).json({ ok: false });
+  } finally {
+    if (putQueues.get(key) === task) putQueues.delete(key);
   }
 });
 
