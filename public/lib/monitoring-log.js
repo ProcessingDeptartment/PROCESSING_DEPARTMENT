@@ -1170,12 +1170,54 @@
       return `<span class="ml-badge ${cls}">${esc(deviationLabel)}: ${text}</span>`;
     }
 
-    async function load() {
-      const raw = await storeGet(storageKey, true);
+    // Saves send ONLY the entries that changed (PUT /api/submissions/<record>/<id>); the server merges each into the
+    // stored list, so a save no longer carries -- or overwrites -- everyone else's entries and stays a few KB however
+    // much history there is. `synced` is what the server last held for each id. (Same scheme as form-record.js.)
+    const synced = new Map();
+    let blobOnly = false;   // once a save fell back to the whole-list write, stay on it this page session so a queued offline write cannot land over a newer per-entry one
+    function markSynced() { synced.clear(); entries.forEach((e) => { if (e && e.id) synced.set(e.id, JSON.stringify(e)); }); }
+    async function load(fresh) {
+      let raw = null;
+      if (fresh && window.FacilityApi) {   // bypass api-backend's 2 s read cache: we have just written
+        try {
+          const res = await window.FacilityApi.fetch('/api/storage/key/' + encodeURIComponent(storageKey));
+          if (res.ok) { const b = await res.json(); raw = b && b.value != null ? b.value : null; }
+          else raw = await storeGet(storageKey, true);
+        } catch (e) { raw = await storeGet(storageKey, true); }
+      } else raw = await storeGet(storageKey, true);
       try { entries = raw ? JSON.parse(raw) : []; } catch (e) { entries = []; }
+      markSynced();
     }
     async function persist() {
-      return storeSet(storageKey, JSON.stringify(entries), true);
+      const changed = entries.filter((e) => e && e.id && synced.get(e.id) !== JSON.stringify(e));
+      // an entry without an id cannot be saved on its own: use the whole-list write
+      if (!blobOnly && window.FacilityApi && navigator.onLine !== false && entries.every((e) => !e || e.id)) {
+        if (!changed.length) return true;
+        const prefix = 'monitoring_log:';
+        let failed = false;
+        for (const e of changed) {
+          let res = null;
+          try {
+            res = await window.FacilityApi.fetch('/api/submissions/' + encodeURIComponent(storageKey.slice(prefix.length)) + '/' + encodeURIComponent(e.id), {
+              method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entry: e, prefix })
+            });
+          } catch (err) { res = null; }
+          if (res && res.ok) { synced.set(e.id, JSON.stringify(e)); continue; }
+          // A refusal by the server's rules (guards / validation) will never succeed on retry: report it as a failed save.
+          if (res && res.status >= 400 && res.status < 500 && [401, 404, 405, 408, 429].indexOf(res.status) === -1) {
+            let why = '';
+            try { const b = await res.json(); why = (b && b.error) || ''; } catch (err) { /* no body */ }
+            window.FacilityApi.lastReject = why || ('The server refused this save (' + res.status + ').');
+            return false;
+          }
+          failed = true; break;
+        }
+        if (!failed) { window.FacilityApi.lastReject = null; return true; }
+        blobOnly = true;   // network/server trouble or an older API: fall through to the whole-list write (which queues offline)
+      }
+      const ok = await storeSet(storageKey, JSON.stringify(entries), true);
+      if (ok) markSynced();
+      return ok;
     }
 
     // ---- REC 7.4.2 QC scoring (config.scoring) -------------------------------------------------------------------
@@ -2423,13 +2465,13 @@
       if (!ok) {
         // a server refusal (sign-off rule, Complete job) says why; the stored record is re-read so the failed attempt is not left half-applied
         const why = prog && window.FacilityApi && window.FacilityApi.lastReject;
-        if (prog) { await load(); if (editingId && !entries.some((e) => e.id === editingId)) editingId = null; }
+        if (prog) { await load(true); if (editingId && !entries.some((e) => e.id === editingId)) editingId = null; }
         toast(why || 'Save failed — please retry.');
         return;
       }
       // the server stamps the stage (number, status, who/when): take the stored copy back
       if (prog && finalize) {
-        await load();
+        await load(true);
         savedEntry = entries.find((e) => e.id === savedEntry.id) || savedEntry;
       }
 

@@ -1774,7 +1774,8 @@
     }
     async function persist() {
       const changed = submissions.filter((s) => s && s.id && synced.get(s.id) !== JSON.stringify(s));
-      if (!blobOnly && window.FacilityApi && navigator.onLine !== false) {
+      // an entry without an id cannot be saved on its own: use the whole-list write
+      if (!blobOnly && window.FacilityApi && navigator.onLine !== false && submissions.every((s) => !s || s.id)) {
         if (!changed.length) return true;
         const prefix = storageKey.startsWith('monitoring_log:') ? 'monitoring_log:' : 'formrecord:';
         let failed = false;

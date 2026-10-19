@@ -244,7 +244,7 @@ const putQueues = new Map();
 app.put('/api/submissions/:recordKey/:id', async (req, res) => {
   const recordKey = String(req.params.recordKey || '');
   const entry = req.body && req.body.entry;
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(recordKey) || !entry || typeof entry !== 'object' || entry.id !== req.params.id) {
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(recordKey) || !entry || typeof entry !== 'object' || entry.id !== req.params.id) {
     return res.status(400).json({ ok: false, error: 'bad request' });
   }
   const prefix = (req.body && req.body.prefix) === 'monitoring_log:' ? 'monitoring_log:' : 'formrecord:';
