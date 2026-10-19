@@ -455,7 +455,8 @@
         $('batchTag').textContent = batchNo;
         renderGenealogy({ inputs: [], outputs: [] });
         $('count').textContent = '0 touchpoints';
-        $('timeline').innerHTML = `<li class="empty">No records reference batch “${esc(batchNo)}” yet.</li>`;
+        $('timeline').innerHTML = `<li class="empty">No records reference batch “${esc(batchNo)}” yet.` +
+          (isAdminUser() ? '' : ' If this is a barcode, sign in as <b>Administrator</b> (barcode tracing is administrator-only for now).') + '</li>';
         return;
       }
       setStatus('');
