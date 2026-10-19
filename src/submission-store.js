@@ -346,4 +346,4 @@ async function syncSubmissionRows(prisma, key, value) {
   if (recordKey === 'dry-cooking') await syncDryWeightOverrides(prisma, entries, completedByText);
 }
 
-module.exports = { syncSubmissionRows };
+module.exports = { syncSubmissionRows, getSchema, toTable };

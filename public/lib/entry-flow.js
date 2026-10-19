@@ -82,11 +82,22 @@
       var done = false;
       function finish(r) { if (done) return; done = true; clearTimeout(timer); onResult(r); }
       var timer = setTimeout(function () { finish(null); }, 5000);
-      try {
-        window.storage.get('formrecord:salting-oosw', true).then(function (r) {
+      // Ask the server for just this job's submitted entries; fall back to the shared blob if the API call fails.
+      function fromApi() {
+        return window.FacilityApi.fetch('/api/submissions/salting-oosw?full=1&status=submitted&jobNo=' + encodeURIComponent(jobNo))
+          .then(function (res) { if (!res.ok) throw new Error('api'); return res.json(); })
+          .then(function (j) { return (j.rows || []).map(function (x) { return x.entry; }).filter(Boolean); });
+      }
+      function fromBlob() {
+        return window.storage.get('formrecord:salting-oosw', true).then(function (r) {
           var subs = [];
           try { subs = r && r.value ? JSON.parse(r.value) : []; } catch (e) { }
-          var hits = (Array.isArray(subs) ? subs : []).filter(function (s) {
+          return Array.isArray(subs) ? subs : [];
+        });
+      }
+      try {
+        (window.FacilityApi ? fromApi().catch(fromBlob) : fromBlob()).then(function (subs) {
+          var hits = subs.filter(function (s) {
             return s && s.status !== 'draft' && s.submittedAt && s.values && String(s.values.jobNo || '').trim() === jobNo;
           }).sort(function (a, b) { return b.submittedAt - a.submittedAt; });
           if (!hits.length) { finish({ found: false }); return; }

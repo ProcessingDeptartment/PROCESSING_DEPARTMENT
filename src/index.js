@@ -983,6 +983,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
 require('./device-enroll')(app, prisma, API_KEY); // passkey -> access key for a new device
 require('./delete-submission')(app, prisma); // double-signoff submission deletion
+require('./submission-read')(app, prisma);    // read API over the sub_* tables
 
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
