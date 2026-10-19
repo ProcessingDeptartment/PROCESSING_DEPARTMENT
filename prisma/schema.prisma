@@ -814,6 +814,7 @@ model Sub_abalone_receiving {
 
   rows Sub_abalone_receiving_Row[]
   completedBy String?
+  lotBarcode  String?
 
   @@index([jobNo], map: "sub_abalone_receiving_jobNo_idx")
   @@map("sub_abalone_receiving")

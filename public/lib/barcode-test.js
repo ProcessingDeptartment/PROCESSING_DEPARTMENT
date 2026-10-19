@@ -52,7 +52,7 @@
       if (bar) return;
       var host = root();
       bar = document.createElement('div');
-      bar.id = 'bt_bar'; bar.className = 'no-print';
+      bar.id = 'bt_bar'; bar.className = 'no-print jp-gate-exempt';   // exempt: the job picker locks everything else until a job is confirmed
       bar.style.cssText = 'margin:0 0 14px;padding:14px;border:2px solid #2d6a3e;border-radius:12px;background:#f2faf4;display:flex;flex-wrap:wrap;align-items:center;gap:12px';
       bar.innerHTML = '<button type="button" id="bt_scan" style="font:600 18px system-ui,sans-serif;padding:14px 22px;border:0;border-radius:10px;background:#2d6a3e;color:#fff;cursor:pointer">📷 Scan job barcode</button>' +
         '<div id="bt_status" role="status" style="font:15px/1.35 system-ui,sans-serif;flex:1 1 220px;color:#555">Scan the main barcode for this job.</div>';

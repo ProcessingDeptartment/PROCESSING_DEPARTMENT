@@ -255,6 +255,26 @@ async function getSchema(prisma, recordKey) {
       `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = 'position' LIMIT 1`, schema.table);
     schema.hasPosition = Array.isArray(rows) && rows.length > 0;
   } catch { schema.hasPosition = false; }
+  // Only write columns the table really has (checked once per record). A field added to a record definition before its
+  // migration has run is left to rawJson for now, instead of failing every save of that record.
+  try {
+    const cols = await prisma.$queryRawUnsafe(`SELECT column_name FROM information_schema.columns WHERE table_name = $1`, schema.table);
+    const have = new Set(cols.map((r) => r.column_name));
+    const missing = schema.topCols.filter((c) => !have.has(c.col)).map((c) => c.col);
+    if (missing.length && have.size) {
+      console.warn('submission store: ' + schema.table + ' has no column(s) ' + missing.join(', ') + ' - skipped until migrated');
+      schema.topCols = schema.topCols.filter((c) => have.has(c.col));
+    }
+    if (schema.childTable) {
+      const rcols = await prisma.$queryRawUnsafe(`SELECT column_name FROM information_schema.columns WHERE table_name = $1`, schema.childTable);
+      const rhave = new Set(rcols.map((r) => r.column_name));
+      const rmissing = schema.rosterCols.filter((c) => !rhave.has(c.col)).map((c) => c.col);
+      if (rmissing.length && rhave.size) {
+        console.warn('submission store: ' + schema.childTable + ' has no column(s) ' + rmissing.join(', ') + ' - skipped until migrated');
+        schema.rosterCols = schema.rosterCols.filter((c) => rhave.has(c.col));
+      }
+    }
+  } catch { /* leave the schema as built */ }
   schemaCache.set(recordKey, { at: Date.now(), schema });
   return schema;
 }
