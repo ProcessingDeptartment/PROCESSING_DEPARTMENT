@@ -1754,11 +1754,54 @@
     function rosterNs(i) { return i === 0 ? 'fr' : 'fr' + i; }
     function rosterDomId(base, i) { return i === 0 ? base : base + '_' + i; }
 
-    async function load() {
-      const raw = await storeGet(storageKey, true);
+    // Saves send ONLY the submissions that changed (PUT /api/submissions/<record>/<id>); the server merges each into
+    // the stored list, so a save no longer carries -- or overwrites -- everyone else's entries, and the request stays
+    // a few KB however much history there is. `synced` is what the server last held for each id.
+    const synced = new Map();
+    let blobOnly = false;   // once any save fell back to the whole-list write, stay on it for this page session so a queued offline write can never land over a newer per-submission one
+    function markSynced() { synced.clear(); submissions.forEach((s) => { if (s && s.id) synced.set(s.id, JSON.stringify(s)); }); }
+    async function load(fresh) {
+      let raw = null;
+      if (fresh && window.FacilityApi) {   // bypass api-backend's 2 s read cache: we have just written
+        try {
+          const res = await window.FacilityApi.fetch('/api/storage/key/' + encodeURIComponent(storageKey));
+          if (res.ok) { const b = await res.json(); raw = b && b.value != null ? b.value : null; }
+          else raw = await storeGet(storageKey, true);
+        } catch (e) { raw = await storeGet(storageKey, true); }
+      } else raw = await storeGet(storageKey, true);
       try { submissions = raw ? JSON.parse(raw) : []; } catch (e) { submissions = []; }
+      markSynced();
     }
-    async function persist() { return storeSet(storageKey, JSON.stringify(submissions), true); }
+    async function persist() {
+      const changed = submissions.filter((s) => s && s.id && synced.get(s.id) !== JSON.stringify(s));
+      if (!blobOnly && window.FacilityApi && navigator.onLine !== false) {
+        if (!changed.length) return true;
+        const prefix = storageKey.startsWith('monitoring_log:') ? 'monitoring_log:' : 'formrecord:';
+        let failed = false;
+        for (const s of changed) {
+          let res = null;
+          try {
+            res = await window.FacilityApi.fetch('/api/submissions/' + encodeURIComponent(config.recordKey) + '/' + encodeURIComponent(s.id), {
+              method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entry: s, prefix })
+            });
+          } catch (e) { res = null; }
+          if (res && res.ok) { synced.set(s.id, JSON.stringify(s)); continue; }
+          // A refusal by the server's rules (guards / validation) will never succeed on retry: report it as a failed save.
+          if (res && res.status >= 400 && res.status < 500 && [401, 404, 405, 408, 429].indexOf(res.status) === -1) {
+            let why = '';
+            try { const b = await res.json(); why = (b && b.error) || ''; } catch (e) { /* no body */ }
+            window.FacilityApi.lastReject = why || ('The server refused this save (' + res.status + ').');
+            return false;
+          }
+          failed = true; break;
+        }
+        if (!failed) { window.FacilityApi.lastReject = null; return true; }
+        blobOnly = true;   // network/server trouble or an older API: fall through to the whole-list write (which queues offline)
+      }
+      const ok = await storeSet(storageKey, JSON.stringify(submissions), true);
+      if (ok) markSynced();
+      return ok;
+    }
 
 
     function renderDocBadge() {
@@ -1981,8 +2024,7 @@
             onDeleted: async () => {
               // Reload submissions from the server.
               try {
-                const raw = await storeGet(storageKey, true);
-                submissions = (Array.isArray(raw) ? raw : (raw && Array.isArray(raw.entries) ? raw.entries : []));
+                await load(true);   // the entry was deleted on the server: reload the list (and what we consider synced)
               } catch (_) {}
               renderTable();
             }
@@ -4053,12 +4095,12 @@
       const ok = await persist();
       if (!ok) {
         const why = window.FacilityApi && window.FacilityApi.lastReject;
-        if (config.entryLog) await load();   // the server refused: drop the unsaved in-memory copy
+        if (config.entryLog) await load(true);   // the server refused: drop the unsaved in-memory copy
         if (why) alert(why); else toast('Save failed — please retry.');
         return;
       }
       // entry-log records: the server stamps dates/steam numbers, so pick up what it actually stored
-      if (config.entryLog || crateRoster) { await load(); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
+      if (config.entryLog || crateRoster) { await load(true); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
       const finalRange = finalize ? crateRange(savedSub) : null;
       if (amending && window.NcRaise && window.NcRaise.recordUpdated) window.NcRaise.recordUpdated(savedSub.id); // NC feedback loop
 
