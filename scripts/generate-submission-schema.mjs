@@ -92,7 +92,7 @@ function toColName(fieldKey) {
   let col = fieldKey;
   if (/^\d/.test(col)) col = 'f_' + col;
   // Avoid Prisma reserved words
-  if (['id', 'status', 'source', 'createdAt', 'updatedAt', 'submittedAt', 'rawJson', 'inSpec'].includes(col)) {
+  if (['id', 'status', 'source', 'createdAt', 'updatedAt', 'submittedAt', 'rawJson', 'inSpec', 'position'].includes(col)) {
     col = 'val_' + col;
   }
   return col;
@@ -136,9 +136,10 @@ for (const def of definitions) {
   lines.push('  updatedAt   DateTime  @updatedAt');
   lines.push('  rawJson     String?');
   lines.push('  inSpec      Boolean?');
+  lines.push('  position    Int?');   // the entry's index in the saved list (exact order)
   lines.push('');
 
-  const seenCols = new Set(['id', 'status', 'source', 'submittedAt', 'createdAt', 'updatedAt', 'rawJson', 'inSpec']);
+  const seenCols = new Set(['id', 'status', 'source', 'submittedAt', 'createdAt', 'updatedAt', 'rawJson', 'inSpec', 'position']);
   const indexCols = [];
   for (const f of topFields) {
     const col = toColName(f.key);

@@ -13,6 +13,7 @@ model Sub_dry_export_pack_front_page {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   packingDate              DateTime? @db.Date
@@ -40,6 +41,7 @@ model Sub_live_leftovers_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   sizeClass                String?
@@ -58,6 +60,7 @@ model Sub_master_cleaning_checklist {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekOf                   DateTime? @db.Date
   responsibleOperator      String?
@@ -93,6 +96,7 @@ model Sub_master_cleaning_plan {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   effectiveDate            DateTime? @db.Date
   approvedBy               String?
@@ -129,6 +133,7 @@ model Sub_mortalities_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   mortalitiesKg            Float?
@@ -148,6 +153,7 @@ model Sub_mortality_counts_by_customer {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
 
@@ -180,6 +186,7 @@ model Sub_production_information_nrcs {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   receivingDate            DateTime? @db.Date
@@ -222,6 +229,7 @@ model Sub_dry_nrcs_packs {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   receivingDate            DateTime? @db.Date
@@ -259,6 +267,7 @@ model Sub_production_information_nrcs_rework {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   reworkDate               DateTime? @db.Date
   dateOfInspection         DateTime? @db.Date
@@ -296,6 +305,7 @@ model Sub_qa1_damaged_cans_and_lids {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   noOfCansEnds             Float?
@@ -316,6 +326,7 @@ model Sub_cans_released_form {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   noOfPieces               Float?
@@ -339,6 +350,7 @@ model Sub_gonad_inspection_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   processingFor            String?
@@ -364,6 +376,7 @@ model Sub_training_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   trainingCourse           String?
   date                     DateTime? @db.Date
@@ -402,6 +415,7 @@ model Sub_incubator_cans_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   dateIn                   DateTime?
@@ -432,6 +446,7 @@ model Sub_fixed_reader_checks {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   location                 String?
@@ -455,6 +470,7 @@ model Sub_basket_removal_shucking_gutting {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -497,6 +513,7 @@ model Sub_abalone_receiving {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   receivingDate            DateTime? @db.Date
@@ -536,6 +553,7 @@ model Sub_salting_and_tumbling {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -586,6 +604,7 @@ model Sub_bleeding_and_salting {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   processingFor            String?
@@ -622,6 +641,7 @@ model Sub_washing_control_sheet {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   completedBy              String?
@@ -660,6 +680,7 @@ model Sub_salting_oosw {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -696,6 +717,7 @@ model Sub_scrubbing_check_supervisor {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   abaloneSize              Float?
@@ -721,6 +743,7 @@ model Sub_ph_verification {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   meterSerial              String?
@@ -743,6 +766,7 @@ model Sub_thermometer_verification {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   referenceThermoSerial    String?
@@ -770,6 +794,7 @@ model Sub_thermometer_correction_factors {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
@@ -794,6 +819,7 @@ model Sub_sampling_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -816,6 +842,7 @@ model Sub_stock_loading {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -841,6 +868,7 @@ model Sub_qc_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   harvestFarm              String?
@@ -882,6 +910,7 @@ model Sub_double_seam_inspection_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   agCode                   String?
@@ -941,6 +970,7 @@ model Sub_rework_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -966,6 +996,7 @@ model Sub_product_label_checklist {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   supplier                 String?
@@ -993,6 +1024,7 @@ model Sub_labelling_of_cans {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   labelUsed                String?
@@ -1021,6 +1053,7 @@ model Sub_stock_transfers {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1050,6 +1083,7 @@ model Sub_scrubbing_checklist_qc {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1087,6 +1121,7 @@ model Sub_precooking_check_sheet {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   precookingDate           DateTime? @db.Date
@@ -1120,6 +1155,7 @@ model Sub_abalone_packing_specification {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   jobNo                    String?
@@ -1147,6 +1183,7 @@ model Sub_can_packing_control_sheet {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1170,6 +1207,7 @@ model Sub_can_filling_and_printing {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1198,6 +1236,7 @@ model Sub_printing_control_sheet {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   productionDate           DateTime? @db.Date
@@ -1221,6 +1260,7 @@ model Sub_cans_produced {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1266,6 +1306,7 @@ model Sub_retorting_control_sheet {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1297,6 +1338,7 @@ model Sub_retort_inspection_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1330,6 +1372,7 @@ model Sub_broth_cooking {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1356,6 +1399,7 @@ model Sub_ingredient_weighing {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1398,6 +1442,7 @@ model Sub_sauce_mixing {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1440,6 +1485,7 @@ model Sub_final_sauce_mix {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   potNo                    String?
@@ -1465,6 +1511,7 @@ model Sub_sauce_batch_coding {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   dateOfMix                DateTime? @db.Date
   potCode                  String?
@@ -1484,6 +1531,7 @@ model Sub_brine_mixing_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1518,6 +1566,7 @@ model Sub_dry_cooking {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   harvestFarm              String?
@@ -1560,6 +1609,7 @@ model Sub_drying_process {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   wholeWeight              Float?
@@ -1603,6 +1653,7 @@ model Sub_dried_abalone_transfer {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1640,6 +1691,7 @@ model Sub_dry_monitoring {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeWeight             Float?
@@ -1683,6 +1735,7 @@ model Sub_grading_production_log_cultivated {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1746,6 +1799,7 @@ model Sub_grading_production_log_ranched {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1801,6 +1855,7 @@ model Sub_grading_boxing_traceability {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   dateCreated              DateTime? @db.Date
@@ -1822,6 +1877,7 @@ model Sub_boxing_and_labelling {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   packingDate              DateTime? @db.Date
   tareWeight               Float?
@@ -1848,6 +1904,7 @@ model Sub_dry_stock_control {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1899,6 +1956,7 @@ model Sub_labelling_of_dry_boxes {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1929,6 +1987,7 @@ model Sub_dry_labelling_list {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   customer                 String?
   flight                   String?
@@ -1969,6 +2028,7 @@ model Sub_dry_stock_transfers {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1991,6 +2051,7 @@ model Sub_live_production_pack {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   packingDate              DateTime? @db.Date
@@ -2028,6 +2089,7 @@ model Sub_live_pack_checklist {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   customerIdn              String?
   productionDate           DateTime? @db.Date
@@ -2067,6 +2129,7 @@ model Sub_live_packing_bag_quality_check {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   dateOfChecking           DateTime? @db.Date
   dateOfPacking            DateTime? @db.Date
@@ -2109,6 +2172,7 @@ model Sub_individual_abalone_weight_checks {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2147,6 +2211,7 @@ model Sub_receiving_live_returns {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   clientIdn                String?
@@ -2170,6 +2235,7 @@ model Sub_production_areas_cleaning_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2205,6 +2271,7 @@ model Sub_live_product_areas_cleaning_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2240,6 +2307,7 @@ model Sub_personnel_facilities_cleaning_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2275,6 +2343,7 @@ model Sub_daily_cleaning_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2310,6 +2379,7 @@ model Sub_deep_cleaning_record_weekly {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2346,6 +2416,7 @@ model Sub_weekly_cleaning_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekOf                   DateTime? @db.Date
   completedBy              String?
@@ -2378,6 +2449,7 @@ model Sub_dispatch_cleaning_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   entranceDoorClosed       Boolean?
@@ -2405,6 +2477,7 @@ model Sub_facility_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   completedBy              String?
@@ -2437,6 +2510,7 @@ model Sub_facility_inspection_nc_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   completedBy              String?
   inspectionDate           DateTime? @db.Date
@@ -2474,6 +2548,7 @@ model Sub_chemical_stock_issue_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   nameOfChemical           String?
   approvedSupplier         String?
@@ -2501,6 +2576,7 @@ model Sub_internal_pest_sightings_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   areaOfSighting           String?
@@ -2525,6 +2601,7 @@ model Sub_pest_inspection_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   birdDroppingsSeen        Boolean?
@@ -2567,6 +2644,7 @@ model Sub_staff_hygiene_inspection_weekends {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   completedBy              String?
@@ -2607,6 +2685,7 @@ model Sub_staff_hygiene_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekStarting             DateTime? @db.Date
   shift                    String?
@@ -2648,6 +2727,7 @@ model Sub_allergen_cleaning_verification {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   area                     String?
@@ -2679,6 +2759,7 @@ model Sub_daily_equipment_checklist {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekOf                   DateTime? @db.Date
   completedBy              String?
@@ -2712,6 +2793,7 @@ model Sub_glass_plastic_equipment_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekOf                   DateTime? @db.Date
   completedBy              String?
@@ -2746,6 +2828,7 @@ model Sub_glass_breakage_clearance_certificate {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   timeOfBreakage           DateTime? @db.Time
@@ -2806,6 +2889,7 @@ model Sub_utensil_issue_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2842,6 +2926,7 @@ model Sub_safety_glass_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekStarting             DateTime? @db.Date
   shift                    String?
@@ -2880,6 +2965,7 @@ model Sub_goggles_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekStarting             DateTime? @db.Date
   shift                    String?
@@ -2917,6 +3003,7 @@ model Sub_knife_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   weekStarting             DateTime? @db.Date
   shift                    String?
@@ -2954,6 +3041,7 @@ model Sub_glove_issuing_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   personAllocated          String?
@@ -2975,6 +3063,7 @@ model Sub_plaster_dressing_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   dateOfIncident           DateTime? @db.Date
   time                     DateTime? @db.Time
@@ -3000,6 +3089,7 @@ model Sub_first_aid_checklist_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   shift                    String?
   dateOfIncident           DateTime? @db.Date
@@ -3024,6 +3114,7 @@ model Sub_salt_issuing_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   quantityIssued           String?
@@ -3045,6 +3136,7 @@ model Sub_chiller_batch_control {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   harvestFarm              String?
@@ -3073,6 +3165,7 @@ model Sub_dry_chiller_batch_control {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   harvestFarm              String?
@@ -3101,6 +3194,7 @@ model Sub_maintenance_job_card {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobCardNumber            String?
   maintenanceDetail        String?
@@ -3130,6 +3224,7 @@ model Sub_water_tank_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   tankType                 String?
@@ -3154,6 +3249,7 @@ model Sub_factory_maintenance_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
@@ -3188,6 +3284,7 @@ model Sub_equipment_checklist_roof {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   completedBy              String?
@@ -3221,6 +3318,7 @@ model Sub_daily_waste_removal {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   timeOfCollection         DateTime? @db.Time
@@ -3245,6 +3343,7 @@ model Sub_boiler_inspection_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   timeBoilerStarted        DateTime? @db.Time
@@ -3276,6 +3375,7 @@ model Sub_seamer_inspection_report {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   equipmentName            String?
@@ -3316,6 +3416,7 @@ model Sub_incoming_ppe_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   product                  String?
@@ -3340,6 +3441,7 @@ model Sub_incoming_goods_inspection_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   product                  String?
@@ -3364,6 +3466,7 @@ model Sub_cans_incoming_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3405,6 +3508,7 @@ model Sub_lids_incoming_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   supplier                 String?
@@ -3442,6 +3546,7 @@ model Sub_lids_incoming_inspection_internal {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   supplier                 String?
@@ -3481,6 +3586,7 @@ model Sub_incoming_goods_inspection {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   supplier                 String?
@@ -3514,6 +3620,7 @@ model Sub_dispatch_loading_inspection_checklist {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3547,6 +3654,7 @@ model Sub_dispatch_receiving_checklist {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3579,6 +3687,7 @@ model Sub_water_monitoring {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
@@ -3601,6 +3710,7 @@ model Sub_lha_water_monitoring {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
@@ -3623,6 +3733,7 @@ model Sub_chiller_temperature_monitoring {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3651,6 +3762,7 @@ model Sub_incubator_temperature_check {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -3672,6 +3784,7 @@ model Sub_dry_room_temp_humidity_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   week                     String?
   shift                    String?
@@ -3715,6 +3828,7 @@ model Sub_grading_room_temp_humidity_log {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   week                     String?
   shift                    String?
@@ -3742,6 +3856,7 @@ model Sub_internal_car {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   raisedBy                 String?
@@ -3775,6 +3890,7 @@ model Sub_disposition_investigation_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   productInvestigated      String?
   initiatedBy              String?
@@ -3813,6 +3929,7 @@ model Sub_withdrawal_mock_recall_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   chairedBy                String?
@@ -3862,6 +3979,7 @@ model Sub_traceability {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   dateInitiated            DateTime? @db.Date
   startTime                DateTime? @db.Time
@@ -3892,6 +4010,7 @@ model Sub_traceability_mock_recall_canned_braised_abalone {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3929,6 +4048,7 @@ model Sub_traceability_mock_recall_canned_abalone {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3966,6 +4086,7 @@ model Sub_traceability_mock_recall_canned_minced_abalone {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -4003,6 +4124,7 @@ model Sub_traceability_mock_recall_dried_abalone {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -4040,6 +4162,7 @@ model Sub_traceability_mock_recall_live_abalone {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   recallInitiationDate     DateTime? @db.Date
   packingDate              DateTime? @db.Date
@@ -4074,6 +4197,7 @@ model Sub_supplier_questionnaire {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   companyName              String?
   companyAddress           String?
@@ -4121,6 +4245,7 @@ model Sub_supplier_approval_record {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   supplierName             String?
   productService           String?
@@ -4150,6 +4275,7 @@ model Sub_rapid_food_handler_medicals {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   clinicSite               String?
   dateOfAssessment         DateTime? @db.Date
@@ -4189,6 +4315,7 @@ model Sub_rfh_medical_result {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   clinicSite               String?
   dateOfMedicalAssessment  DateTime? @db.Date
@@ -4216,6 +4343,7 @@ model Sub_emergency_evacuation_attendance_register {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   buildingArea             String?
@@ -4251,6 +4379,7 @@ model Sub_handling_of_emergencies_and_incidences {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   typeOfDrill              String?
   timeEvacuating           DateTime? @db.Time
@@ -4288,6 +4417,7 @@ model Sub_daily_factory_feedback_meeting {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   date                     DateTime? @db.Date
   intakes                  String?
@@ -4333,6 +4463,7 @@ model Sub_rtw_medical_questionnaire {
   updatedAt   DateTime  @updatedAt
   rawJson     String?
   inSpec      Boolean?
+  position    Int?
 
   employeeNr               String?
   skinRashes               Boolean?

@@ -136,7 +136,7 @@ function coerce(value, kind, recordKey, fieldKey) {
 function toCol(fieldKey) {
   let col = fieldKey;
   if (/^\d/.test(col)) col = 'f_' + col;
-  if (['id', 'status', 'source', 'createdAt', 'updatedAt', 'submittedAt', 'rawJson', 'inSpec'].includes(col)) {
+  if (['id', 'status', 'source', 'createdAt', 'updatedAt', 'submittedAt', 'rawJson', 'inSpec', 'position'].includes(col)) {
     col = 'val_' + col;
   }
   return col;
@@ -247,6 +247,14 @@ async function getSchema(prisma, recordKey) {
       schema.extraCols = stockExtraColumns().filter((c) => have.has(c.col));
     } catch { schema.extraCols = []; }
   }
+  // position = the entry's index in the saved list (exact order). Written only if the column exists (checked once),
+  // so deploying this code before the migration can never break saving.
+  schema.hasPosition = false;
+  try {
+    const rows = await prisma.$queryRawUnsafe(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = 'position' LIMIT 1`, schema.table);
+    schema.hasPosition = Array.isArray(rows) && rows.length > 0;
+  } catch { schema.hasPosition = false; }
   schemaCache.set(recordKey, { at: Date.now(), schema });
   return schema;
 }
@@ -298,7 +306,7 @@ async function syncSubmissionRows(prisma, key, value, opts) {
   }
 
   // Insert each entry as a parent row.
-  for (const entry of entries) {
+  for (const [pos, entry] of entries.entries()) {
     if (!entry || !entry.id) continue;
     if (incremental && existing.has(entry.id)) {
       if (existing.get(entry.id) === JSON.stringify(entry)) continue;   // unchanged: leave its rows alone
@@ -318,6 +326,7 @@ async function syncSubmissionRows(prisma, key, value, opts) {
       JSON.stringify(entry),
       entry.inSpec != null ? entry.inSpec : null,
     ];
+    if (schema.hasPosition) { cols.push('"position"'); params.push(pos); }
 
     for (const { key: fk, col, kind, legacyFrom } of schema.topCols) {
       // an "(old)" field (extraJson.legacyFrom) archives the value its removed field held on older entries
@@ -363,6 +372,18 @@ async function syncSubmissionRows(prisma, key, value, opts) {
           ...childParams
         ));
       });
+    }
+  }
+
+  // incremental: an add/remove/reorder shifts the index of entries we left alone -- refresh just those, one statement
+  if (incremental && schema.hasPosition) {
+    const moved = [];
+    entries.forEach((e, pos) => { if (e && e.id && existing.has(e.id) && existing.get(e.id) === JSON.stringify(e)) moved.push([e.id, pos]); });
+    if (moved.length) {
+      const ps = [];
+      const vals = moved.map(([id, pos]) => { ps.push(id, pos); return `($${ps.length - 1}::text, $${ps.length}::int)`; });
+      stmts.push(prisma.$executeRawUnsafe(
+        `UPDATE "${schema.table}" t SET "position" = v.pos FROM (VALUES ${vals.join(',')}) AS v(id, pos) WHERE t."id" = v.id AND t."position" IS DISTINCT FROM v.pos`, ...ps));
     }
   }
 

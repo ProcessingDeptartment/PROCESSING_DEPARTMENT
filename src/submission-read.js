@@ -8,6 +8,16 @@
 
 const { getSchema, toTable } = require('./submission-store');
 
+// The record's entries rebuilt from the table, in saved-list order (position), as the array the blob holds.
+// Returns null when the table has no position column yet or any entry lacks a position (caller keeps using the blob).
+async function entriesInOrder(prisma, recordKey) {
+  const schema = await getSchema(prisma, recordKey);
+  if (!schema || !schema.hasPosition) return null;
+  const rows = await prisma.$queryRawUnsafe(`SELECT "rawJson", "position" FROM "${toTable(recordKey)}" ORDER BY "position" ASC NULLS LAST, "createdAt" ASC`);
+  if (rows.some((r) => r.position == null || r.rawJson == null)) return null;
+  try { return rows.map((r) => JSON.parse(r.rawJson)); } catch (e) { return null; }
+}
+
 module.exports = function mount(app, prisma) {
   app.get('/api/submissions/:recordKey', async (req, res) => {
     try {
@@ -35,16 +45,16 @@ module.exports = function mount(app, prisma) {
       const full = req.query.full === '1';
 
       const rows = await prisma.$queryRawUnsafe(
-        `SELECT "id", "status", "submittedAt", "createdAt", "updatedAt"${full ? ', "rawJson"' : ''} FROM "${toTable(recordKey)}"` +
+        `SELECT "id", "status", "submittedAt", "createdAt", "updatedAt"${schema.hasPosition ? ', "position"' : ''}${full ? ', "rawJson"' : ''} FROM "${toTable(recordKey)}"` +
         (where.length ? ` WHERE ${where.join(' AND ')}` : '') +
-        ` ORDER BY COALESCE("submittedAt", "createdAt") DESC LIMIT ${limit}`,
+        (req.query.order === 'position' && schema.hasPosition ? ` ORDER BY "position" ASC LIMIT ${limit}` : ` ORDER BY COALESCE("submittedAt", "createdAt") DESC LIMIT ${limit}`),
         ...params
       );
       res.json({
         ok: true,
         recordKey,
         rows: rows.map((r) => {
-          const o = { id: r.id, status: r.status, submittedAt: r.submittedAt, createdAt: r.createdAt, updatedAt: r.updatedAt };
+          const o = { id: r.id, status: r.status, submittedAt: r.submittedAt, createdAt: r.createdAt, updatedAt: r.updatedAt, position: r.position == null ? null : r.position };
           if (full) { try { o.entry = JSON.parse(r.rawJson); } catch { o.entry = null; } }
           return o;
         }),
@@ -55,3 +65,4 @@ module.exports = function mount(app, prisma) {
     }
   });
 };
+module.exports.entriesInOrder = entriesInOrder;

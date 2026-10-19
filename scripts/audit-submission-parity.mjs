@@ -22,9 +22,17 @@ async function main() {
       let n = null;
       try { const a = JSON.parse(r.value); n = Array.isArray(a) ? a.filter((e) => e && e.id).length : null; } catch { /* leave null */ }
       const table = 'sub_' + recordKey.replace(/-/g, '_');
-      let t = null;
+      let t = null, orderOk = '-', contentOk = '-';
       try { const c = await prisma.$queryRawUnsafe(`SELECT COUNT(*)::int AS n FROM "${table}"`); t = c[0].n; } catch { /* no table */ }
-      out.push({ key: r.key, kb: Math.round(Buffer.byteLength(r.value) / 1024), pct: +(Buffer.byteLength(r.value) / LIMIT * 100).toFixed(1), blob: n, table: t, ok: t == null ? 'no-table' : (t === n ? 'OK' : 'MISMATCH') });
+      if (t != null && n != null) {
+        try {
+          const arr = JSON.parse(r.value).filter((e) => e && e.id);
+          const rows = await prisma.$queryRawUnsafe(`SELECT "id", "rawJson", "position" FROM "${table}" ORDER BY "position" ASC NULLS LAST`);
+          orderOk = rows.length === arr.length && rows.every((x, i) => x.id === arr[i].id && x.position === i) ? 'OK' : 'DIFF';
+          contentOk = rows.every((x, i) => arr[i] && x.rawJson === JSON.stringify(arr[i])) ? 'OK' : 'DIFF';
+        } catch { orderOk = contentOk = 'n/a'; }
+      }
+      out.push({ key: r.key, kb: Math.round(Buffer.byteLength(r.value) / 1024), pct: +(Buffer.byteLength(r.value) / LIMIT * 100).toFixed(1), blob: n, table: t, ok: t == null ? 'no-table' : (t === n && orderOk !== 'DIFF' && contentOk !== 'DIFF' ? 'OK' : 'MISMATCH'), order: orderOk, content: contentOk });
     }
   }
   out.sort((a, b) => b.kb - a.kb);
