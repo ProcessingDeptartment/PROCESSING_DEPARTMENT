@@ -10223,8 +10223,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "sugarBatchCode",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -10464,7 +10464,10 @@
         "batchField": "jobNo",
         "stage": "precooking"
       },
-      "primaryBatchField": "jobNo"
+      "primaryBatchField": "jobNo",
+      "extraBatchFields": [
+        "sugarBatchCode"
+      ]
     },
     {
       "recordKey": "abalone-packing-specification",
@@ -15099,8 +15102,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "saltBatchNo",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -15156,8 +15159,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "sugarBatchNo",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -15213,8 +15216,8 @@
           "computeFn": null,
           "computeArgs": null,
           "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
+          "linkField": "maltBatchNo",
+          "linkRelation": "input",
           "validateJson": null
         },
         {
@@ -15261,7 +15264,12 @@
           "productDescription"
         ]
       },
-      "primaryBatchField": "jobNo"
+      "primaryBatchField": "jobNo",
+      "extraBatchFields": [
+        "saltBatchNo",
+        "sugarBatchNo",
+        "maltBatchNo"
+      ]
     },
     {
       "recordKey": "dry-cooking",
@@ -15349,7 +15357,13 @@
             "slides": true,
             "minProcess": {
               "Cooking": 1
-            }
+            },
+            "extraBatchColumns": [
+              "blanchBatchNumber",
+              "saltBatchNumber",
+              "sugarBatchNumber",
+              "vinegarBatchNumber"
+            ]
           }
         }
       ],

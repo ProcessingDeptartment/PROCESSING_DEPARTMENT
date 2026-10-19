@@ -434,22 +434,30 @@
   function mkChart(canvasId, rows, field, isOos, o) {
     const ctx = $(canvasId);
     if (!ctx || typeof Chart === 'undefined') return null;
-    const base = activeEnd === 'production' ? '#2f7a52' : '#1d4ed8';
+    const base = activeEnd === 'production' ? '#2f7a52' : '#6d28d9';
     const RED = '#ef4444';
     const oosAt = i => { const v = rows[i] && rows[i][field]; return v != null && isOos(Number(v)); };
     const data = rows.map(r => ({ x: fmtTime(r.recorded_at), y: r[field] == null ? null : Number(r[field]) }));
     const ptCol = c => rows.map((_, i) => oosAt(i) ? RED : c);
     const ref = (label, y, dash) => ({
-      label, data: rows.map(r => ({ x: fmtTime(r.recorded_at), y })), borderColor: 'rgba(165,53,45,0.5)',
-      borderDash: dash, borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 0, fill: false
+      label, data: rows.map(r => ({ x: fmtTime(r.recorded_at), y })), borderColor: '#b91c1c',
+      borderDash: dash, borderWidth: 2, pointRadius: 0, pointHoverRadius: 0, fill: false
     });
     const datasets = [{
       label: o.label, data, borderColor: base, backgroundColor: base, borderWidth: 2, tension: 0, spanGaps: true,
-      pointRadius: 3, pointBackgroundColor: ptCol(base), pointBorderColor: ptCol(base),
+      pointRadius: rows.map((_, i) => oosAt(i) ? 7 : 3), pointHoverRadius: 8, pointStyle: rows.map((_, i) => oosAt(i) ? 'rectRot' : 'circle'),
+      pointBackgroundColor: ptCol(base), pointBorderColor: rows.map((_, i) => oosAt(i) ? '#7f1d1d' : base), pointBorderWidth: rows.map((_, i) => oosAt(i) ? 2 : 1),
       segment: { borderColor: c => (oosAt(c.p0DataIndex) || oosAt(c.p0DataIndex + 1)) ? RED : base }
-    }].concat(o.refs.map(r => ref(r.label, r.y, r.dash)));
+    }].concat(o.refs.map(r => ref(r.label, r.y, r.dash)), [{
+      label: 'Out of spec', data: [], pointStyle: 'rectRot', pointRadius: 6, backgroundColor: RED, borderColor: '#7f1d1d', borderWidth: 2, showLine: false
+    }]);
+    const band = { id: 'specBand', beforeDatasetsDraw(c) {
+      const { ctx: g, chartArea: a, scales: { y } } = c;
+      const top = y.getPixelForValue(Math.min(o.bandMax, y.max)), bot = y.getPixelForValue(Math.max(o.bandMin, y.min));
+      g.save(); g.fillStyle = 'rgba(47,122,82,0.09)'; g.fillRect(a.left, top, a.right - a.left, bot - top); g.restore();
+    } };
     return new Chart(ctx, {
-      type: 'line',
+      type: 'line', plugins: [band],
       data: { datasets },
       options: {
         responsive: true, maintainAspectRatio: false, parsing: false,
@@ -471,10 +479,10 @@
     if (overlapChart) overlapChart.destroy();
     if (freeChart) freeChart.destroy();
     overlapChart = mkChart('seamOverlapChart', rows, 'overlap_pct', v => v < 45, {
-      label: '% Overlap', yLabel: '%', min: 30, max: 100, refs: [{ label: 'Min 45%', y: 45, dash: [5, 4] }]
+      label: '% Overlap', yLabel: '%', min: 30, max: 100, bandMin: 45, bandMax: 100, refs: [{ label: 'Min 45%', y: 45, dash: [5, 4] }]
     });
     freeChart = mkChart('seamFreeChart', rows, 'free_space', v => v < 0.10 || v > 0.30, {
-      label: 'Free space', yLabel: 'mm', min: 0, max: 0.5,
+      label: 'Free space', yLabel: 'mm', min: 0, max: 0.5, bandMin: 0.10, bandMax: 0.30,
       refs: [{ label: 'Min 0.10 mm', y: 0.10, dash: [5, 4] }, { label: 'Max 0.30 mm', y: 0.30, dash: [3, 4] }]
     });
   }

@@ -6,6 +6,9 @@
   "docRevisionStart": 1,
   "stage": "precooking",
   "batchField": "jobNo",
+  "extraBatchFields": [
+    "sugarBatchCode"
+  ],
   "listColumns": [
     "jiReceivingDate",
     "jobNo",

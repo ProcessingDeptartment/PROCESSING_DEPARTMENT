@@ -146,6 +146,31 @@
         }
       }
 
+      // Per-row ingredient lots (e.g. dry-cooking salt/sugar/vinegar batch numbers on each pot card).
+      // roster.extraBatchColumns: ['col', { column:'col', rel:'input' }, ...]. Same row shape as extra
+      // fields; keyed per row + column so one row can carry several lots.
+      const xCols = (rosterCfg.extraBatchColumns || []).map(function (e) {
+        if (typeof e === 'string') return { column: e, rel: REL_INPUT };
+        if (e && e.column) return { column: e.column, rel: e.rel === REL_OUTPUT ? REL_OUTPUT : REL_INPUT };
+        return null;
+      }).filter(Boolean);
+      if (xCols.length && Array.isArray(sub.roster)) {
+        for (let i = 0; i < sub.roster.length; i++) {
+          for (const spec of xCols) {
+            const lot = String((sub.roster[i] || {})[spec.column] || '').trim();
+            if (!lot || lot === batchNo) continue;
+            await window.storage.set(
+              keyFor(lot, config.recordKey, sub.id + ':row' + i + ':' + spec.column),
+              JSON.stringify(Object.assign(
+                { batch_no: lot, linked_batch: batchNo, rel: spec.rel, link_field: spec.column },
+                baseRow
+              )),
+              true
+            );
+          }
+        }
+      }
+
       const binCol = rosterCfg.binIdColumn;
       // Grading bins (roster.fixedGroups.boxList): every full box took the bin's code at the time
       // and the bin counted on, so the row's boxes are codes grade-(seq-n) .. grade-(seq-1).
@@ -283,6 +308,16 @@
     return sortRows([...byId.values()]);
   }
 
+  // trace() over several batches, merged, de-duplicated and date-sorted (e.g. a shipment that draws
+  // from several bin codes / job numbers).
+  async function traceMulti(batchNos) {
+    const seen = new Set();
+    const list = (batchNos || []).map(b => String(b == null ? '' : b).trim()).filter(b => b && !seen.has(b) && seen.add(b));
+    const byId = new Map();
+    for (const b of list) (await trace(b)).forEach(r => { if (!byId.has(rowId(r))) byId.set(rowId(r), r); });
+    return sortRows([...byId.values()]);
+  }
+
   // One-up / one-down genealogy, computed locally from the full index. `rel` on a row is the
   // relationship of that row's batch_no to its linked_batch; the queried batch can be on either
   // side of a link (its own ingredient rows, or another batch's row that names it as linked_batch).
@@ -325,5 +360,5 @@
     }
   }
 
-  window.Traceability = { indexSubmission, removeSubmission, trace, traceGraph, knownBatches, jobsForBin, binsForJob };
+  window.Traceability = { indexSubmission, removeSubmission, trace, traceMulti, traceGraph, knownBatches, jobsForBin, binsForJob };
 })();
