@@ -345,11 +345,17 @@
           }).join('')}
           ${r.linked_batch && r.linked_batch !== batchNo
             ? `<div class="summary">Linked batch: <a href="?batch=${encodeURIComponent(r.linked_batch)}">${esc(r.linked_batch)}</a></div>` : ''}
-          ${r.href ? `<a class="open no-print" href="${esc(r.href)}">Open this record &rarr;</a>` : ''}
+          ${r.href ? `<a class="open no-print" href="${esc(entryHref(r))}">Open this record &rarr;</a>` : ''}
         </div>
       </li>`;
     }).join('');
     addPhotoCounts();
+  }
+
+  // Link straight to the submission (the record page opens ?entry=<id>), not just to the blank form.
+  function entryHref(r) {
+    if (!r.href || !r.submission_id) return r.href;
+    return r.href + (r.href.indexOf('?') < 0 ? '?' : '&') + 'entry=' + encodeURIComponent(r.submission_id);
   }
 
   // REC 7.4.2 entries with photos on problem answers get a 📷 count (src/submission-images.js)
@@ -387,7 +393,7 @@
       return `<tr style="border-bottom:1px solid #eee;"><td><a href="?batch=${encodeURIComponent(r.job_no || '')}">${esc(r.job_no || '')}</a></td>
         <td>${esc(d(r.occurred_on || (r.values || {}).gradingDate))}</td><td>${esc(r.record_title || r.record_key || '')}${r.status === 'draft' ? ' (draft)' : ''}</td>
         <td>${nb || ''}</td><td>${isNaN(g) ? '' : g.toFixed(2)}</td>
-        <td>${r.href ? `<a class="no-print" href="${esc(r.href)}">Open &rarr;</a>` : ''}</td></tr>`;
+        <td>${r.href ? `<a class="no-print" href="${esc(entryHref(r))}">Open &rarr;</a>` : ''}</td></tr>`;
     }).join('') + `<tr style="font-weight:700;"><td colspan="3">Total</td><td>${boxes || ''}</td><td>${total.toFixed(2)}</td><td></td></tr>`;
   }
 
