@@ -113,6 +113,14 @@
   .seam-filter-btn{ border:none; border-right:1px solid #d1d5db; background:transparent; color:#5c6771; font-size:11px; font-weight:600; padding:4px 10px; cursor:pointer; transition:background .12s,color .12s; font-family:inherit; }
   .seam-filter-btn:last-child{ border-right:none; }
   .seam-filter-btn.active{ background:#2f4356; color:#fff; }
+  .seam-charts{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .seam-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:0 16px 14px; }
+  .seam-summary{ font-size:12px; color:#5c6771; }
+  .seam-summary strong.ok{ color:#2f7a52; }
+  .seam-summary strong.bad{ color:#a3352d; }
+  .view-log-btn{ display:inline-flex; align-items:center; gap:6px; padding:6px 14px; background:#2f4356; color:#fff; border-radius:5px; font-size:11.5px; font-weight:600; text-decoration:none; transition:background .15s; }
+  .view-log-btn:hover{ background:#3d566e; }
+  @media (max-width:1100px){ .seam-charts{ grid-template-columns:1fr; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -193,30 +201,30 @@
     </div>
   </div>
 
-  <div class="two-col">
-
-    <div class="panel" id="seamLivePanel">
-      <div class="panel-head">
-        <h2>Double seam &mdash; live log</h2>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <div class="seam-filter-group" id="seamEndFilter">
-            <button class="seam-filter-btn active" data-filter="all">All</button>
-            <button class="seam-filter-btn" data-filter="manufacturer">Mfr</button>
-            <button class="seam-filter-btn" data-filter="production">Prod</button>
-          </div>
-          <span class="panel-note">REC 7.2.4</span>
+  <div class="panel" id="seamLivePanel">
+    <div class="panel-head">
+      <h2>Double seam &mdash; trend charts</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="seam-filter-group" id="seamEndFilter">
+          <button class="seam-filter-btn active" data-filter="production">Production end</button>
+          <button class="seam-filter-btn" data-filter="manufacturer">MR end</button>
         </div>
-      </div>
-      <div class="panel-body pad" style="padding-bottom:0;">
-        <div style="position:relative;height:120px;margin-bottom:10px;"><canvas id="seamTrendChart"></canvas></div>
-      </div>
-      <div class="panel-body" style="padding-top:0;overflow-x:auto;">
-        <table class="dash-table" id="seamLiveTable">
-          <thead><tr><th>Time</th><th>End type</th><th>Operator</th><th>Overlap</th><th>% Overlap</th><th>Free space</th><th>Result</th></tr></thead>
-          <tbody id="seamLiveBody"><tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">Loading…</td></tr></tbody>
-        </table>
+        <span class="panel-note">REC 7.2.4</span>
       </div>
     </div>
+    <div class="panel-body pad">
+      <div class="seam-charts">
+        <div style="position:relative;height:180px;"><canvas id="seamOverlapChart"></canvas></div>
+        <div style="position:relative;height:180px;"><canvas id="seamFreeChart"></canvas></div>
+      </div>
+    </div>
+    <div class="seam-foot">
+      <div id="seamSummary" class="seam-summary"></div>
+      <a class="view-log-btn" href="/pages/seam-log.html">View full seam log &rarr;</a>
+    </div>
+  </div>
+
+  <div class="two-col" style="grid-template-columns:1fr;">
 
     <div class="panel">
       <div class="panel-head">
@@ -396,8 +404,8 @@
 (function () {
   const API = '/api/seam-test-runs?limit=200';
   let allRows = [];
-  let chart = null;
-  let activeFilter = 'all';
+  let overlapChart = null, freeChart = null;
+  let activeEnd = 'production';
   const $ = id => document.getElementById(id);
 
   function fmt(v, dec, unit) { return v == null ? '—' : Number(v).toFixed(dec) + (unit || ''); }
@@ -409,7 +417,7 @@
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
-  function filtered() { return activeFilter === 'all' ? allRows : allRows.filter(r => r.end_type === activeFilter); }
+  function filtered() { return allRows.filter(r => r.end_type === activeEnd).sort((x, y) => new Date(x.recorded_at) - new Date(y.recorded_at)); }
 
   function updateSeamCard(rows) {
     const pctEl = $('seamSpecPct'), subEl = $('seamSpecSub');
@@ -423,62 +431,68 @@
     subEl.textContent = passes + ' / ' + total + ' checked';
   }
 
-  function buildChart(rows) {
-    const ctx = $('seamTrendChart');
-    if (!ctx || typeof Chart === 'undefined') return;
-    const byDay = {};
-    rows.forEach(r => {
-      const d = dayKey(r.recorded_at);
-      if (!byDay[d]) byDay[d] = { pass: 0, fail: 0 };
-      r.all_pass ? byDay[d].pass++ : byDay[d].fail++;
+  function mkChart(canvasId, rows, field, isOos, o) {
+    const ctx = $(canvasId);
+    if (!ctx || typeof Chart === 'undefined') return null;
+    const base = activeEnd === 'production' ? '#2f7a52' : '#1d4ed8';
+    const RED = '#ef4444';
+    const oosAt = i => { const v = rows[i] && rows[i][field]; return v != null && isOos(Number(v)); };
+    const data = rows.map(r => ({ x: fmtTime(r.recorded_at), y: r[field] == null ? null : Number(r[field]) }));
+    const ptCol = c => rows.map((_, i) => oosAt(i) ? RED : c);
+    const ref = (label, y, dash) => ({
+      label, data: rows.map(r => ({ x: fmtTime(r.recorded_at), y })), borderColor: 'rgba(165,53,45,0.5)',
+      borderDash: dash, borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 0, fill: false
     });
-    const days = Object.keys(byDay).sort();
-    const labels = days.map(d => { const p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }); });
-    if (chart) chart.destroy();
-    chart = new Chart(ctx, {
-      type: 'bar',
-      data: { labels, datasets: [
-        { label: 'Pass', data: days.map(d => byDay[d].pass), backgroundColor: '#86efac', borderColor: '#22c55e', borderWidth: 1 },
-        { label: 'Fail', data: days.map(d => byDay[d].fail), backgroundColor: '#fca5a5', borderColor: '#ef4444', borderWidth: 1 }
-      ] },
+    const datasets = [{
+      label: o.label, data, borderColor: base, backgroundColor: base, borderWidth: 2, tension: 0, spanGaps: true,
+      pointRadius: 3, pointBackgroundColor: ptCol(base), pointBorderColor: ptCol(base),
+      segment: { borderColor: c => (oosAt(c.p0DataIndex) || oosAt(c.p0DataIndex + 1)) ? RED : base }
+    }].concat(o.refs.map(r => ref(r.label, r.y, r.dash)));
+    return new Chart(ctx, {
+      type: 'line',
+      data: { datasets },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } } },
+        responsive: true, maintainAspectRatio: false, parsing: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 16 } },
+          tooltip: { bodyFont: { size: 11 }, titleFont: { size: 11 } }
+        },
         scales: {
-          x: { stacked: true, ticks: { font: { size: 10 } } },
-          y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } }
+          x: { type: 'category', labels: data.map(d => d.x), ticks: { font: { size: 10 }, maxTicksLimit: 10, maxRotation: 30 }, grid: { color: '#eceeef' } },
+          y: { min: o.min, max: o.max, title: { display: true, text: o.yLabel, font: { size: 10 }, color: '#5c6771' },
+               ticks: { font: { size: 10 } }, grid: { color: '#eceeef' } }
         }
       }
     });
   }
 
-  function buildTable(rows) {
-    const tbody = $('seamLiveBody');
-    if (!tbody) return;
-    const slice = rows.slice(0, 25);
-    if (!slice.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">No records</td></tr>';
-      return;
-    }
-    tbody.innerHTML = slice.map(r => {
-      const endLabel = r.end_type === 'manufacturer' ? 'Mfr' : r.end_type === 'production' ? 'Prod' : '—';
-      return '<tr>'
-        + '<td class="num-cell">' + fmtTime(r.recorded_at) + '</td>'
-        + '<td>' + endLabel + '</td>'
-        + '<td>' + (r.operator ? esc(r.operator) : '—') + '</td>'
-        + '<td class="num-cell">' + fmt(r.overlap, 3, ' mm') + '</td>'
-        + '<td class="num-cell">' + fmt(r.overlap_pct, 1, '%') + '</td>'
-        + '<td class="num-cell">' + fmt(r.free_space, 3, ' mm') + '</td>'
-        + '<td><span class="badge ' + (r.all_pass ? 'badge-ok' : 'badge-warn') + '">' + (r.all_pass ? 'Pass' : 'Fail') + '</span></td>'
-        + '</tr>';
-    }).join('');
+  function buildCharts(rows) {
+    if (overlapChart) overlapChart.destroy();
+    if (freeChart) freeChart.destroy();
+    overlapChart = mkChart('seamOverlapChart', rows, 'overlap_pct', v => v < 45, {
+      label: '% Overlap', yLabel: '%', min: 30, max: 100, refs: [{ label: 'Min 45%', y: 45, dash: [5, 4] }]
+    });
+    freeChart = mkChart('seamFreeChart', rows, 'free_space', v => v < 0.10 || v > 0.30, {
+      label: 'Free space', yLabel: 'mm', min: 0, max: 0.5,
+      refs: [{ label: 'Min 0.10 mm', y: 0.10, dash: [5, 4] }, { label: 'Max 0.30 mm', y: 0.30, dash: [3, 4] }]
+    });
+  }
+
+  function buildSummary(rows) {
+    const el = $('seamSummary');
+    if (!el) return;
+    const oos = rows.filter(r => !r.all_pass).length;
+    const name = activeEnd === 'production' ? 'Production end' : 'MR end';
+    el.innerHTML = name + ': ' + rows.length + ' checks &middot; ' +
+      (oos ? '<strong class="bad">' + oos + ' OOS</strong>' : '<strong class="ok">all in spec</strong>');
   }
 
   function render() {
+    updateSeamCard(allRows);
     const rows = filtered();
-    updateSeamCard(rows);
-    buildChart(rows);
-    buildTable(rows);
+    buildCharts(rows);
+    buildSummary(rows);
   }
 
   async function loadData() {
@@ -491,8 +505,8 @@
     } catch (e) {
       console.warn('Dashboard seam data load failed', e);
       $('seamSpecSub').textContent = 'Could not load';
-      const tbody = $('seamLiveBody');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a3352d;padding:14px;">Could not load seam data</td></tr>';
+      const el = $('seamSummary');
+      if (el) el.innerHTML = '<span style="color:#a3352d;">Could not load seam data</span>';
     }
   }
 
@@ -500,7 +514,7 @@
     btn.addEventListener('click', () => {
       document.querySelectorAll('.seam-filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      activeFilter = btn.dataset.filter;
+      activeEnd = btn.dataset.filter;
       render();
     });
   });

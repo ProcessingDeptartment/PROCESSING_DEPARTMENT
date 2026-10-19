@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Double Seam Log</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<style>
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .container{ max-width:1280px; margin:0 auto; padding:20px; }
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; overflow:hidden; }
+  .panel-head{ padding:11px 16px; border-bottom:1px solid #e2e4e3; background:#fbfbfa; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; }
+  .panel-note{ font-size:11px; color:#8a939b; }
+  .tbl-wrap{ overflow-x:auto; }
+  table.dash-table{ width:100%; border-collapse:collapse; }
+  table.dash-table th,table.dash-table td{ border-bottom:1px solid #eceeef; padding:9px 12px; text-align:left; font-size:12px; vertical-align:middle; }
+  table.dash-table th{ background:#fbfbfa; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:#5c6771; font-weight:700; white-space:nowrap; }
+  table.dash-table tbody tr:hover{ background:#f9fafb; }
+  td.num-cell{ font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
+  th.num-cell{ text-align:right; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .badge-warn{ background:#fbe8e6; color:#a3352d; }
+  .badge-ok{ background:#e8f3ec; color:#2f7a52; }
+  .seam-filter-group{ display:flex; border:1px solid #d1d5db; border-radius:4px; overflow:hidden; }
+  .seam-filter-btn{ border:none; border-right:1px solid #d1d5db; background:transparent; color:#5c6771; font-size:11px; font-weight:600; padding:4px 10px; cursor:pointer; font-family:inherit; }
+  .seam-filter-btn:last-child{ border-right:none; }
+  .seam-filter-btn.active{ background:#2f4356; color:#fff; }
+  .tools{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .tools button.ref{ background:transparent; border:1px solid #d1d5db; color:#5c6771; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-family:inherit; }
+  @media (max-width:640px){ .container{ padding:12px; } table.dash-table th,table.dash-table td{ padding:7px 8px; font-size:11.5px; } }
+</style>
+</head>
+<body>
+<script src="/lib/page-nav.js?v=1"></script>
+
+<div class="header">
+  <h1>Double Seam Log</h1>
+  <p>All double seam checks &middot; REC 7.2.4</p>
+  <a class="back-link" href="production-dashboard.html">&larr; Back to Production View</a>
+</div>
+
+<div class="container">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Seam checks</h2>
+      <div class="tools">
+        <div class="seam-filter-group" id="endFilter">
+          <button class="seam-filter-btn active" data-filter="all">All</button>
+          <button class="seam-filter-btn" data-filter="production">Production end</button>
+          <button class="seam-filter-btn" data-filter="manufacturer">MR end</button>
+        </div>
+        <div class="seam-filter-group" id="resFilter">
+          <button class="seam-filter-btn active" data-filter="all">Any result</button>
+          <button class="seam-filter-btn" data-filter="fail">Fail only</button>
+        </div>
+        <button class="ref" id="refreshBtn">&#8635; Refresh</button>
+        <span class="panel-note" id="countNote"></span>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="dash-table">
+        <thead><tr><th>Time</th><th>End</th><th>Operator</th><th class="num-cell">Overlap</th><th class="num-cell">% Overlap</th><th class="num-cell">Free space</th><th>Result</th></tr></thead>
+        <tbody id="logBody"><tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script>
+(function () {
+  const API = '/api/seam-test-runs?limit=1000';
+  let rows = [], endF = 'all', resF = 'all';
+  const $ = id => document.getElementById(id);
+  const fmt = (v, d, u) => v == null ? '—' : Number(v).toFixed(d) + (u || '');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fmtDT = iso => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  function render() {
+    const list = rows.filter(r => (endF === 'all' || r.end_type === endF) && (resF === 'all' || !r.all_pass))
+      .sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+    $('countNote').textContent = list.length + ' of ' + rows.length + ' records';
+    $('logBody').innerHTML = list.length ? list.map(r => {
+      const end = r.end_type === 'manufacturer' ? 'MR' : r.end_type === 'production' ? 'Production' : '—';
+      return '<tr><td class="num-cell" style="text-align:left;">' + fmtDT(r.recorded_at) + '</td>'
+        + '<td>' + end + '</td>'
+        + '<td>' + (r.operator ? esc(r.operator) : '—') + '</td>'
+        + '<td class="num-cell">' + fmt(r.overlap, 3, ' mm') + '</td>'
+        + '<td class="num-cell">' + fmt(r.overlap_pct, 1, '%') + '</td>'
+        + '<td class="num-cell">' + fmt(r.free_space, 3, ' mm') + '</td>'
+        + '<td><span class="badge ' + (r.all_pass ? 'badge-ok' : 'badge-warn') + '">' + (r.all_pass ? 'Pass' : 'Fail') + '</span></td></tr>';
+    }).join('') : '<tr><td colspan="7" style="text-align:center;color:#8a939b;padding:14px;">No records</td></tr>';
+  }
+
+  async function load() {
+    try {
+      const resp = await window.FacilityApi.fetch(API, { cache: 'no-store' });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok || !Array.isArray(data.rows)) throw new Error(data.error || ('HTTP ' + resp.status));
+      rows = data.rows;
+      render();
+    } catch (e) {
+      console.warn('Seam log load failed', e);
+      $('logBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a3352d;padding:14px;">Could not load seam data</td></tr>';
+    }
+  }
+
+  function wire(groupId, set) {
+    document.querySelectorAll('#' + groupId + ' .seam-filter-btn').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('#' + groupId + ' .seam-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      set(btn.dataset.filter);
+      render();
+    }));
+  }
+  wire('endFilter', v => { endF = v; });
+  wire('resFilter', v => { resF = v; });
+  $('refreshBtn').addEventListener('click', load);
+  load();
+})();
+</script>
+</body>
+</html>
