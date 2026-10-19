@@ -97,6 +97,8 @@
     </div>
     <button class="btn" id="btnRefresh">Refresh</button>
     <button class="btn" id="btnExpandAll">Expand all</button>
+    <button class="btn" id="btnSelectAll" style="display:none;" title="Administrator: select every previewed entry shown">Select all previewed</button>
+    <button class="btn" id="btnClearSel" style="display:none;">Clear selection</button>
   </div>
 
   <div id="groups"></div>
@@ -256,7 +258,7 @@
             })(),
             who: nameOf(entry.completedBy) || nameOf(entry.stage && entry.stage.submittedBy) || nameOf(entry.submittedBy) || nameOf(entry.submittedByName) || personOf(entry.values),
             submittedAt: whenOf(entry), allowedRoles: allowed,
-            mine: allowed.indexOf(STATE.role) !== -1
+            mine: STATE.role === 'ADMINISTRATOR' || allowed.indexOf(STATE.role) !== -1
           });
         });
       });
@@ -300,6 +302,9 @@
       setState('bad', '<strong>' + mineCount + '</strong> ' + (mineCount === 1 ? 'entry is' : 'entries are') + ' awaiting your verification.');
     }
     $('toolbar').style.display = '';
+    var isAdmin = STATE.role === 'ADMINISTRATOR';
+    $('btnSelectAll').style.display = isAdmin ? '' : 'none';
+    $('btnClearSel').style.display = isAdmin ? '' : 'none';
 
     var rows = visibleRows();
     var groups = groupRows(rows);
@@ -766,6 +771,10 @@
       });
 
       var record = { verifiedBy: v.verifiedBy, verifiedSig: v.verifiedSig, verifiedDate: v.verifiedDate, verifiedSignature: v.verifiedSignature, loggedAt: Date.now() };
+      if (STATE.role === 'ADMINISTRATOR' && picked.length > 1) {
+        record.bulkVerified = true;
+        record.bulkVerifiedBy = STATE.user;
+      }
 
       // 1. write verification onto each affected entry, per storage key
       for (var storeKey in byStore) {
@@ -829,6 +838,16 @@
       render();
     });
     $('btnVerify').addEventListener('click', doVerify);
+    $('btnSelectAll').addEventListener('click', function () {
+      var n = 0;
+      visibleRows().forEach(function (r) {
+        var rid = rowId(r);
+        if (r.mine && STATE.previewed[rid]) { STATE.picked[rid] = true; n++; }
+      });
+      render();
+      if (!n) toast('Preview entries first (Expand all), then select.');
+    });
+    $('btnClearSel').addEventListener('click', function () { STATE.picked = {}; render(); });
   }
 
   async function start() {
