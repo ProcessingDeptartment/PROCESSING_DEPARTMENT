@@ -471,10 +471,10 @@
     });
     const datasets = [{
       label: o.label, data, borderColor: base, backgroundColor: base, borderWidth: 1.5, tension: 0, spanGaps: true,
-      pointRadius: rows.map((_, i) => oosAt(i) ? 7 : 3), pointHoverRadius: 8, pointStyle: rows.map((_, i) => oosAt(i) ? 'rectRot' : 'circle'),
-      pointBackgroundColor: ptCol(base), pointBorderColor: rows.map((_, i) => oosAt(i) ? '#7f1d1d' : base), pointBorderWidth: rows.map((_, i) => oosAt(i) ? 2 : 1)
+      pointRadius: rows.map((_, i) => oosAt(i) ? 3.5 : 0), pointHoverRadius: 5, pointStyle: 'circle',
+      pointBackgroundColor: ptCol(base), pointBorderColor: ptCol(base), pointBorderWidth: 1
     }].concat(o.refs.map(r => ref(r.label, r.y, r.dash)), [{
-      label: 'Out of spec', data: [], pointStyle: 'rectRot', pointRadius: 6, backgroundColor: RED, borderColor: '#7f1d1d', borderWidth: 2, showLine: false
+      label: 'Out of spec', data: [], pointStyle: 'circle', pointRadius: 4, backgroundColor: RED, borderColor: RED, borderWidth: 1, showLine: false
     }]);
     const band = { id: 'specBand', beforeDatasetsDraw(c) {
       const { ctx: g, chartArea: a, scales: { y } } = c;
