@@ -49,7 +49,8 @@
         Lookups.field({ key: 'receivedFrom', label: 'Received from', list: 'farms' }),
 
         { key: 'toBeProcessedFor', label: 'Processing for', type: 'select', options: ['Can', 'Dried', 'Live', 'Other'], matchJobRoute: 'jobNo' },
-        { key: 'intakeWeight', label: 'Whole weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' }
+        { key: 'intakeWeight', label: 'Whole weight (kg)', type: 'computed', sumRosterColumn: 'wholeWeight' },
+        { key: 'lotBarcode', label: 'Lot barcode', type: 'text' }
       ]}
     ],
     roster: {
@@ -67,8 +68,23 @@
 })();
 </script>
 
-<script src="../lib/entry-flow.js?v=2"></script>
-<script>EntryFlow.receiving();</script>
+<script src="../lib/barcode-scan.js?v=1"></script>
+<script src="../lib/entry-flow.js?v=6"></script>
+<script>EntryFlow.receiving({ required: ['jobNo', 'receivingDate', 'receivedFrom', 'toBeProcessedFor', 'lotBarcode'] });</script>
+<script>BarcodeScan.attach('fr_f_lotBarcode', {
+  label: 'Scan lot', title: 'Scan the new lot barcode', readonly: true,
+  // a main barcode belongs to one job: refuse one that is already linked at intake
+  check: function (code) {
+    return window.FacilityApi.fetch('/api/traceability/history/' + encodeURIComponent(code)).then(function (r) {
+      if (r.status === 404) return null;
+      return r.json().then(function (h) {
+        var l = (h.jobLinks || []).filter(function (x) { return x.stage === 'intake'; })[0];
+        return l ? 'Barcode ' + code + ' is already used for job ' + (l.jobNo || l.submissionId) + '. Use a new barcode.' : null;
+      });
+    });
+  },
+  okText: function (v) { return 'Lot barcode ' + v + ' will be recorded for this job when you submit.'; }
+});</script>
 <script src="../lib/record-shell.js?v=11"></script>
 </body>
 </html>

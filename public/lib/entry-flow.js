@@ -318,7 +318,7 @@
     }
     function baskets() { return getRows().filter(nonBlank); }
     function sizeList() { return (window.Lookups && window.Lookups.get && window.Lookups.get('sizeRanges')) || []; }
-    function canScan() { return 'BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia); }
+    function canScan() { return !!window.BarcodeScan || ('BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)); }
     function totalKg(rows) { return rows.reduce(function (s, r) { return s + (num(r.wholeWeight) || 0); }, 0); }
     function plural(n) { return n + (n === 1 ? ' basket' : ' baskets'); }
 
@@ -481,6 +481,7 @@
       try { $('ef_w').focus(); } catch (e) { }
     }
     function scan() {
+      if (window.BarcodeScan) { window.BarcodeScan.open(gotBasket, { title: 'Scan basket barcode' }); return; }
       var m = document.createElement('div');
       m.className = 'ef-modal';
       m.innerHTML = '<div class="ef-card"><h3>Scan barcode</h3><video playsinline muted class="ef-video"></video>' +

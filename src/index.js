@@ -43,6 +43,7 @@ async function storedValue(db, key, blobRow) {
 const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
 const { syncStockLinks } = require('./stock-link');
+const { syncLotBarcodes } = require('./barcode-trace');
 const { syncClosedBoxes } = require('./closed-box');
 const { boxesForJob } = require('./recall-boxes');
 const { boxReport } = require('./box-report');
@@ -262,6 +263,7 @@ async function handlePut(req, res) {
     if (SYNC_BACKGROUND) queueDerived(k, generic);
     await Promise.all([
       safe('syncStockLinks', () => syncStockLinks(prisma, k, v)),
+      safe('syncLotBarcodes', () => syncLotBarcodes(prisma, k, v)),
       safe('syncClosedBoxes', () => syncClosedBoxes(prisma, k, v)),
       safe('syncBoxInspections', async () => { const r = await syncBoxInspections(prisma, k, v); if (r && r.skipped.length) console.warn('box inspections skipped:', r.skipped); }),
       isGovernanceKey(k) ? safe('syncGovernanceKey', () => syncGovernanceKey(prisma, k, v)) : null,

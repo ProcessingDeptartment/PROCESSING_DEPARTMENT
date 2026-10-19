@@ -5256,6 +5256,7 @@ model TraceBarcode {
   jobLinks      BarcodeJobLink[]
   stageEvents   BarcodeStageEvent[]
   splitEvents   BarcodeSplitEvent[]
+  members       BarcodeMember[]
 
   @@index([parentId])
 }
@@ -5302,4 +5303,20 @@ model BarcodeSplitEvent {
   submissionId String?
 
   @@index([parentId])
+}
+
+// The basket barcodes scanned into a main (job) barcode at intake. Not parentId: that is reserved for splits.
+model BarcodeMember {
+  id           Int      @id @default(autoincrement())
+  barcodeId    Int
+  barcode      TraceBarcode @relation(fields: [barcodeId], references: [id])
+  submissionId String
+  memberValue  String
+  position     Int      @default(0)
+  sizeRange    String?
+  weight       Float?
+  createdAt    DateTime @default(now())
+
+  @@unique([barcodeId, memberValue])
+  @@index([memberValue])
 }

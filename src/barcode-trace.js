@@ -6,8 +6,11 @@
 //   GET  /api/traceability/history/:barcodeValue   full chain (inherits parent history)
 // Barcodes are never deleted; only status changes. Scans are additive.
 
+// Stages are open-ended: more are added over time, so the API accepts any well-formed stage name. STAGES is only the
+// suggested display order for the timeline (unknown stages sort after these); it is never used to reject a scan.
 const STAGES = ['intake', 'cooking', 'drying', 'qc', 'grading', 'packing', 'dispatch'];
-const SPLIT_STAGES = ['grading'];
+// Splits are not tied to a stage: the person at the record decides when a barcode splits (POST /split works anywhere).
+const STAGE_RE = /^[a-z][a-z0-9-]{1,31}$/;
 
 const clean = (v) => String(v == null ? '' : v).trim();
 const bcVal = (v) => clean(v).toUpperCase();
@@ -43,7 +46,7 @@ function mount(app, prisma) {
     const value = bcVal(b.barcodeValue);
     if (!value) return bad(res, 'barcodeValue required');
     if (value.length > 40) return bad(res, 'barcodeValue max 40 characters');
-    if (!STAGES.includes(b.stage)) return bad(res, 'unknown stage');
+    if (!STAGE_RE.test(clean(b.stage))) return bad(res, 'stage must be lowercase letters, digits or hyphens');
     if (!clean(b.recordKey) || !clean(b.submissionId)) return bad(res, 'recordKey and submissionId required');
     try {
       let bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: value } });
@@ -63,7 +66,7 @@ function mount(app, prisma) {
     const b = req.body || {};
     const value = bcVal(b.barcodeValue);
     if (!value) return bad(res, 'barcodeValue required');
-    if (!STAGES.includes(b.stage)) return bad(res, 'unknown stage');
+    if (!STAGE_RE.test(clean(b.stage))) return bad(res, 'stage must be lowercase letters, digits or hyphens');
     try {
       const bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: value } });
       if (!bc) return bad(res, 'Unknown barcode - link it at intake first.', 404);
@@ -121,11 +124,22 @@ function mount(app, prisma) {
     }
   });
 
+  // Which main barcode(s) hold this basket barcode (newest first).
+  app.get('/api/traceability/member/:value', async (req, res) => {
+    try {
+      const mv = bcVal(req.params.value);
+      const rows = await prisma.barcodeMember.findMany({ where: { memberValue: mv }, include: { barcode: true }, orderBy: { id: 'desc' } });
+      res.json({ ok: true, memberValue: mv, mains: rows.map((m) => ({
+        barcode: m.barcode.barcodeValue, status: m.barcode.status, submissionId: m.submissionId, sizeRange: m.sizeRange, weight: m.weight })) });
+    } catch (e) { console.error('traceability member failed', e); bad(res, 'member lookup failed', 500); }
+  });
+
   app.get('/api/traceability/history/:barcodeValue', async (req, res) => {
     try {
       const bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: bcVal(req.params.barcodeValue) } });
       if (!bc) return bad(res, 'Unknown barcode', 404);
-      const [own, ancestors] = await Promise.all([loadChain(prisma, bc), ancestry(prisma, bc)]);
+      const [own, ancestors, members] = await Promise.all([loadChain(prisma, bc), ancestry(prisma, bc),
+        prisma.barcodeMember.findMany({ where: { barcodeId: bc.id }, orderBy: [{ submissionId: 'asc' }, { position: 'asc' }] })]);
       const inherited = await Promise.all(ancestors.map((a) => loadChain(prisma, a)));
       const all = (k) => [...inherited.slice().reverse().flatMap((a) => a[k]), ...own[k]];
       res.json({
@@ -136,9 +150,64 @@ function mount(app, prisma) {
         children: own.children.map((c) => ({ id: c.id, value: c.barcodeValue, status: c.status })),
         stageEvents: all('stageEvents'),
         jobLinks: all('jobLinks'),
+        members: members.map((m) => ({ value: m.memberValue, submissionId: m.submissionId, sizeRange: m.sizeRange, weight: m.weight })),
       });
     } catch (e) { console.error('traceability history failed', e); bad(res, 'history failed', 500); }
   });
 }
 
-module.exports = { mount, STAGES, SPLIT_STAGES };
+// Intake link, driven by the save itself: when a SUBMITTED REC 7.1.2 entry carries a lotBarcode, register the barcode
+// and link it to that submission (one scan = identify the job + log the stage; the form needs no second call).
+// Idempotent per (barcode, submission, stage), so re-saves add nothing. Never deletes. A code already linked at intake
+// to a different submission, or one that is split/retired, is skipped and logged rather than failing the save.
+const INTAKE = { key: 'formrecord:abalone-receiving', recordKey: 'abalone-receiving', field: 'lotBarcode' };
+
+async function syncLotBarcodes(prisma, key, value) {
+  if (key !== INTAKE.key) return;
+  let entries;
+  try { entries = JSON.parse(value); } catch (_) { return; }
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    if (!entry || !entry.id || (entry.status != null && entry.status !== 'submitted')) continue;
+    const values = entry.values || entry;
+    const code = bcVal(values[INTAKE.field]);
+    if (!code || code.length > 40) continue;
+    const submissionId = String(entry.id);
+    let bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: code } });
+    if (bc && bc.status !== 'active') { console.warn('lot barcode ' + code + ' is ' + bc.status + '; not linked to ' + submissionId); continue; }
+    if (bc) {
+      const prior = await prisma.barcodeJobLink.findFirst({ where: { barcodeId: bc.id, stage: 'intake' } });
+      if (prior && prior.submissionId === submissionId) { await syncMembers(prisma, bc.id, submissionId, entry); continue; }
+      if (prior) { console.warn('lot barcode ' + code + ' already linked at intake to ' + prior.submissionId + '; not linked to ' + submissionId); continue; }
+    } else {
+      bc = await prisma.traceBarcode.create({ data: { barcodeValue: code } });
+    }
+    const stamp = { barcodeId: bc.id, stage: 'intake', recordKey: INTAKE.recordKey, submissionId };
+    await prisma.$transaction([
+      prisma.barcodeJobLink.create({ data: { ...stamp, jobNo: clean(values.jobNo) || null } }),
+      prisma.barcodeStageEvent.create({ data: stamp }),
+    ]);
+    await syncMembers(prisma, bc.id, submissionId, entry);
+  }
+}
+
+// The main barcode's list of scanned basket barcodes, mirrored from the submitted roster so other areas can link a
+// basket code back to its main barcode (GET /api/traceability/member/:value). The same farm basket code can recur on
+// later deliveries, so uniqueness is per (main barcode, basket), and a lookup returns every main barcode holding it.
+async function syncMembers(prisma, barcodeId, submissionId, entry) {
+  const rows = Array.isArray(entry.roster) ? entry.roster : [];
+  const seen = new Set();
+  const data = [];
+  rows.forEach((r, i) => {
+    const v = bcVal(r && r.basketNr);
+    if (!v || v.length > 40 || seen.has(v)) return;
+    seen.add(v);
+    const w = Number(r.wholeWeight);
+    data.push({ barcodeId, submissionId, memberValue: v, position: i, sizeRange: clean(r.sizeRange) || null, weight: r.wholeWeight !== '' && r.wholeWeight != null && Number.isFinite(w) ? w : null });
+  });
+  await prisma.$transaction([
+    prisma.barcodeMember.deleteMany({ where: { barcodeId, submissionId, memberValue: { notIn: [...seen] } } }),
+    prisma.barcodeMember.createMany({ data, skipDuplicates: true }),
+  ]);
+}
+
+module.exports = { mount, syncLotBarcodes, STAGES };
