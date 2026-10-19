@@ -388,7 +388,12 @@ async function syncSubmissionRows(prisma, key, value, opts) {
   }
 
   // Run all statements in a single transaction.
-  if (stmts.length) await prisma.$transaction(stmts);
+  // opts.inTx: `prisma` is already a transaction client (the save's own transaction), so the statements run in order
+  // inside it and any failure propagates -- the save and its table rows commit or roll back together.
+  if (stmts.length) {
+    if (opts && opts.inTx) { for (const st of stmts) await st; }
+    else await prisma.$transaction(stmts);
+  }
   if (recordKey === 'dry-cooking') await syncDryWeightOverrides(prisma, entries, completedByText);
 }
 

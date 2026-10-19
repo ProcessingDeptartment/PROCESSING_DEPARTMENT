@@ -17,6 +17,18 @@ const recordKeyMap = require('./record-key-map');
 const { assembleRecordConfig } = require('./record-def');
 const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
 const { recordEntryHistory, mount: mountEntryHistory } = require('./submission-history');
+const { entriesInOrder } = require('./submission-read');
+// TABLES_AUTHORITATIVE=1: the sub_* tables are updated INSIDE the save's transaction (so they can never lag the list)
+// and the guards / per-entry merge read the entries back from the tables. Off by default.
+const TABLES_AUTH = process.env.TABLES_AUTHORITATIVE === '1';
+// the stored entries as the JSON string the guards expect: from the tables when authoritative, else the saved list
+async function storedValue(db, key, blobRow) {
+  if (TABLES_AUTH) {
+    const m = /^(formrecord:|monitoring_log:)(.+)$/.exec(key);
+    if (m) { try { const arr = await entriesInOrder(db, m[2]); if (arr) return JSON.stringify(arr); } catch (e) { console.error('entriesInOrder failed (using the saved list)', e.message); } }
+  }
+  return blobRow ? blobRow.value : null;
+}
 const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
 const { syncStockLinks } = require('./stock-link');
@@ -127,6 +139,7 @@ async function handlePut(req, res) {
   try {
     let { value } = req.body;
     if (typeof value !== 'string') return res.status(400).json({ ok: false });
+    const clientValue = value;   // what the browser sent, before any guard rewrites it
 
     // REC 7.4.1 Drying Process: server-side stamps, locks, one Yes per movement, per-job steam numbers.
     if (req.params.key === dryGuard.KEY) {
@@ -190,17 +203,24 @@ async function handlePut(req, res) {
       console.error('validateWrite threw (write allowed)', e);
     }
 
+    const isDryKey = req.params.key === dryGuard.KEY;
     await prisma.$transaction(async (tx) => {
-      // Two tablets submitting for the same job queue on this lock, so they cannot get the same crate numbers.
-      if (isCrateKey || isStockKey) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${req.params.key}))`;
+      // Two tablets submitting for the same job queue on this lock, so they cannot get the same crate / steam / stage numbers.
+      if (isCrateKey || isStockKey || isDryKey) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${req.params.key}))`;
       const prev = await tx.keyValue.findUnique({ where: { key: req.params.key } });
+      const prevValue = await storedValue(tx, req.params.key, prev);
+      if (isDryKey) {   // authoritative pass under the lock (the first pass above only gave an early refusal)
+        const g = dryGuard.guardWrite(prevValue, clientValue);
+        if (!g.ok) throw Object.assign(new Error('drying guard'), { guard: g });
+        value = g.value;
+      }
       if (isCrateKey) {
-        const g = crateGuard.guardWrite(prev ? prev.value : null, incomingValue);
+        const g = crateGuard.guardWrite(prevValue, incomingValue);
         if (!g.ok) throw Object.assign(new Error('crate guard'), { guard: g });
         value = g.value; crateRanges = g.ranges;
       }
       if (isStockKey) {
-        const g = stockGuard.guardWrite(prev ? prev.value : null, incomingValue, { user: req.get('x-user'), cfg: stockCfg });
+        const g = stockGuard.guardWrite(prevValue, incomingValue, { user: req.get('x-user'), cfg: stockCfg });
         if (!g.ok) throw Object.assign(new Error('dry-stock guard'), { guard: g });
         value = g.value;
       }
@@ -213,12 +233,15 @@ async function handlePut(req, res) {
         await tx.keyValueHistory.create({ data: { ...who(req), key: req.params.key, action: 'set', before: prev ? prev.value : null, after: value } });
         await recordEntryHistory(tx, req.params.key, prev ? prev.value : null, value, who(req), 'set');
       }
-    });
+      if (TABLES_AUTH) await syncSubmissionRows(tx, req.params.key, value, { incremental: true, inTx: true });   // atomic with the save
+    }, { timeout: 30000, maxWait: 10000 });
     await syncSubmissionDates(prisma, req.params.key, value, { dateFields, recordKeys });
     try { await syncRecordLinks(prisma, req.params.key, value); }
     catch (e) { console.error('syncRecordLinks failed (write succeeded)', e); }
-    try { await syncSubmissionRows(prisma, req.params.key, value, { incremental: true }); }
-    catch (e) { console.error('syncSubmissionRows failed (write succeeded)', e); }
+    if (!TABLES_AUTH) {
+      try { await syncSubmissionRows(prisma, req.params.key, value, { incremental: true }); }
+      catch (e) { console.error('syncSubmissionRows failed (write succeeded)', e); }
+    }
     try { await syncStockLinks(prisma, req.params.key, value); }
     catch (e) { console.error('syncStockLinks failed (write succeeded)', e); }
     try { await syncClosedBoxes(prisma, req.params.key, value); }
@@ -254,7 +277,7 @@ app.put('/api/submissions/:recordKey/:id', async (req, res) => {
   const run = async () => {
     const prevRow = await prisma.keyValue.findUnique({ where: { key } });
     let arr = [];
-    try { arr = prevRow && prevRow.value ? JSON.parse(prevRow.value) : []; } catch (e) { arr = []; }
+    try { const sv = await storedValue(prisma, key, prevRow); arr = sv ? JSON.parse(sv) : []; } catch (e) { arr = []; }
     if (!Array.isArray(arr)) return { code: 500, body: { ok: false, error: 'stored value is not an array' } };
     const i = arr.findIndex((s) => s && s.id === entry.id);
     if (i >= 0) arr[i] = entry; else arr.push(entry);
