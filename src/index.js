@@ -43,7 +43,7 @@ async function storedValue(db, key, blobRow) {
 const { syncRecordLinks } = require('./record-links');
 const { syncSubmissionRows } = require('./submission-store');
 const { syncStockLinks } = require('./stock-link');
-const { syncLotBarcodes } = require('./barcode-trace');
+const { syncLotBarcodes, guardLotBarcode, INTAKE_KEY: LOT_BARCODE_KEY } = require('./barcode-trace');
 const { syncClosedBoxes } = require('./closed-box');
 const { boxesForJob } = require('./recall-boxes');
 const { boxReport } = require('./box-report');
@@ -163,6 +163,16 @@ async function handlePut(req, res) {
         return res.status(g.status).json({ ok: false, guard: true, error: g.error });
       }
       value = g.value;
+    }
+
+    // REC 7.1.2 Abalone Receiving: one main (lot) barcode per job. Refused with a message the form shows.
+    if (req.params.key === LOT_BARCODE_KEY) {
+      const prevRow = await prisma.keyValue.findUnique({ where: { key: req.params.key } });
+      const g = await guardLotBarcode(prisma, prevRow ? prevRow.value : null, value);
+      if (!g.ok) {
+        console.warn('PUT', req.params.key, 'REFUSED by lot-barcode guard:', g.error);
+        return res.status(g.status).json({ ok: false, guard: true, error: g.error });
+      }
     }
 
     // REC 7.4.10 Dried Abalone Transfer: crate numbers per job, assigned here. This first pass gives an early

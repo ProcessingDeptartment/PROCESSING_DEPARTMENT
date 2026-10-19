@@ -268,4 +268,34 @@ async function syncMembers(prisma, barcodeId, submissionId, entry) {
   ]);
 }
 
-module.exports = { mount, syncLotBarcodes, STAGES };
+// Rule: a main (lot) barcode belongs to ONE job. Refuse a REC 7.1.2 save in which a new or changed lotBarcode is already
+// used by a different receiving entry, either one in the same saved list (drafts included) or one already linked at
+// intake in the barcode tables. Only entries whose lotBarcode is new or changed are checked, so an old duplicate can never
+// block saving an unrelated entry. Returns { ok } or { ok:false, status:409, error }.
+async function guardLotBarcode(prisma, prevValue, nextValue) {
+  let next; try { next = JSON.parse(nextValue); } catch (_) { return { ok: true }; }
+  if (!Array.isArray(next)) return { ok: true };
+  let prev = []; try { prev = JSON.parse(prevValue || '[]'); } catch (_) { prev = []; }
+  const lotOf = (e) => bcVal(((e && (e.values || e)) || {})[INTAKE.field]);
+  const jobOf = (e) => clean(((e && (e.values || e)) || {}).jobNo);
+  const prevLot = new Map((Array.isArray(prev) ? prev : []).filter((e) => e && e.id).map((e) => [String(e.id), lotOf(e)]));
+  for (const e of next) {
+    if (!e || !e.id) continue;
+    const code = lotOf(e);
+    if (!code || prevLot.get(String(e.id)) === code) continue;     // blank, or unchanged since the last save
+    const other = next.find((o) => o && o.id && String(o.id) !== String(e.id) && lotOf(o) === code);
+    if (other) {
+      const j = jobOf(other);
+      return { ok: false, status: 409, error: 'Barcode ' + code + ' is already used for ' + (j ? 'job ' + j : 'another receiving entry') + '. A barcode can only be used for one job - scan a new barcode.' };
+    }
+    const bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: code } });
+    if (!bc) continue;
+    const link = await prisma.barcodeJobLink.findFirst({ where: { barcodeId: bc.id, stage: 'intake', NOT: { submissionId: String(e.id) } } });
+    if (link) {
+      return { ok: false, status: 409, error: 'Barcode ' + code + ' is already used for job ' + (link.jobNo || link.submissionId) + '. A barcode can only be used for one job - scan a new barcode.' };
+    }
+  }
+  return { ok: true };
+}
+
+module.exports = { mount, syncLotBarcodes, guardLotBarcode, INTAKE_KEY: INTAKE.key, STAGES };
