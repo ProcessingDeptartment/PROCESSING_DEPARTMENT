@@ -441,10 +441,10 @@
     const ptCol = c => rows.map((_, i) => oosAt(i) ? RED : c);
     const ref = (label, y, dash) => ({
       label, data: rows.map(r => ({ x: fmtTime(r.recorded_at), y })), borderColor: '#b91c1c',
-      borderDash: dash, borderWidth: 2, pointRadius: 0, pointHoverRadius: 0, fill: false
+      borderDash: dash, borderWidth: 1, pointRadius: 0, pointHoverRadius: 0, fill: false
     });
     const datasets = [{
-      label: o.label, data, borderColor: base, backgroundColor: base, borderWidth: 2, tension: 0, spanGaps: true,
+      label: o.label, data, borderColor: base, backgroundColor: base, borderWidth: 1.5, tension: 0, spanGaps: true,
       pointRadius: rows.map((_, i) => oosAt(i) ? 7 : 3), pointHoverRadius: 8, pointStyle: rows.map((_, i) => oosAt(i) ? 'rectRot' : 'circle'),
       pointBackgroundColor: ptCol(base), pointBorderColor: rows.map((_, i) => oosAt(i) ? '#7f1d1d' : base), pointBorderWidth: rows.map((_, i) => oosAt(i) ? 2 : 1),
       segment: { borderColor: c => (oosAt(c.p0DataIndex) || oosAt(c.p0DataIndex + 1)) ? RED : base }
@@ -483,7 +483,7 @@
     });
     freeChart = mkChart('seamFreeChart', rows, 'free_space', v => v < 0.10 || v > 0.30, {
       label: 'Free space', yLabel: 'mm', min: 0, max: 0.5, bandMin: 0.10, bandMax: 0.30,
-      refs: [{ label: 'Min 0.10 mm', y: 0.10, dash: [5, 4] }, { label: 'Max 0.30 mm', y: 0.30, dash: [3, 4] }]
+      refs: [{ label: 'Min 0.10 mm', y: 0.10, dash: [5, 4] }, { label: 'Max 0.30 mm', y: 0.30, dash: [5, 4] }]
     });
   }
 
