@@ -4187,13 +4187,26 @@
       if (roster.cardRows && roster.printTable) {
         const ptCols = cols.filter(c => !c.legacy && !c.printHidden);
         let ptRows = getRosterRows(sub, i, roster.key);
-        // entry-log records (REC 7.4.1): a printed entry shows ONLY its own steams; the job's full history
-        // is printed from the drying report, so earlier entries are never repeated on this entry's PDF
-        if (config.entryLog) ptRows = ptRows.slice().sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
-        ptRows = ptRows.filter(r => ptCols.some(c => String(r[c.key] || '').trim() !== ''));
+        const hasData = r => ptCols.some(c => String(r[c.key] || '').trim() !== '');
+        let steamNote = '';
+        // entry-log records (REC 7.4.1): every entry builds on the job so far, so the PDF's steams table lists the
+        // job's earlier steams (from its earlier submitted entries) followed by this entry's own, in steam order,
+        // with a count of how many steams are complete.
+        if (config.entryLog) {
+          const own = ptRows.filter(hasData);
+          let earlier = [];
+          if (window.EntryLog) {
+            const job = String((sub.values || {})[config.batchField || 'jobNo'] || '').trim();
+            earlier = window.EntryLog.jobState(config, submissions, job, sub.id, window.EntryLog.entryAt(sub)).steams.filter(hasData);
+          }
+          ptRows = earlier.concat(own).sort((a, b) => (parseInt(a.steamNo, 10) || 0) - (parseInt(b.steamNo, 10) || 0));
+          steamNote = `<p style="margin:0 0 4px;"><b>Steams completed for this job: ${ptRows.length}</b>` +
+            (earlier.length ? ` (${earlier.length} in earlier entries + ${own.length} in this entry)` : '') + '</p>';
+        }
+        ptRows = ptRows.filter(hasData);
         const ptBody = (ptRows.length ? ptRows : [{}]).map(r =>
           `<tr>${ptCols.map(c => `<td>${esc(displayValue(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
-        return `<h3>${esc(roster.title)}</h3>
+        return `<h3>${esc(roster.title)}</h3>${steamNote}
           <table class="fr-sheet-flat"><thead><tr>${ptCols.map(c => `<th>${esc(c.label)}${c.unit ? ' (' + esc(c.unit) + ')' : ''}</th>`).join('')}</tr></thead>
           <tbody>${ptBody}</tbody></table>`;
       }
