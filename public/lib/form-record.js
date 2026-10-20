@@ -3576,7 +3576,7 @@
         const _gridCols = sec.cols || 2;
         const fieldsHtml = `<div class="fr-grid fr-grid-${_gridCols}${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
-            ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.default || ''))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}
+            ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}
           </label>`).join('')}${sec.__hiddenHtml || ''}
         </div>`;
         return wrapSection(sec, fieldsHtml);

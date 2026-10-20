@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -6,7 +6,7 @@
 <link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dry NRCS Packs â€” Production Information NRCS</title>
+<title>Dry NRCS Packs — Production Information NRCS</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
   <script src="../lib/pdf-cover.js?v=6"></script>
 <script src="../lib/palette-map.js?v=2"></script>
@@ -32,7 +32,7 @@
 <script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/form-record.js?v=124"></script>
+  <script src="../lib/form-record.js?v=125"></script>
 <script>(function () {
   // Definition (fields, sections, autofill...) lives in the DB and is fetched by the engine from
   // GET /api/record-def/dry-nrcs-packs (same as the Dry Export Pack Front Page).
@@ -73,7 +73,7 @@
     panel.id = 'attachmentsChecklist';
     panel.style.cssText = 'margin-top:16px';
     var rows = EXPECTED.map(function (e) {
-      return '<tr data-k="' + e[0] + '"><td>' + esc(e[1]) + '</td><td class="ac-att"><strong>â€”</strong></td><td class="ac-subs"></td><td class="ac-com"></td></tr>';
+      return '<tr data-k="' + e[0] + '"><td>' + esc(e[1]) + '</td><td class="ac-att"><strong>—</strong></td><td class="ac-subs"></td><td class="ac-com"></td></tr>';
     }).join('');
     panel.innerHTML = '<div class="fr-section-title">ATTACHMENTS CHECKLIST</div><div class="ac-summary" style="margin:8px 0"></div>' +
       '<div class="fr-table-wrap"><table class="fr-table" style="width:100%"><thead><tr><th>Record</th><th>Attached</th><th>Submissions</th><th>Comments</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
@@ -94,7 +94,7 @@
       var grid = input.closest('.fr-grid'), title = grid && grid.previousElementSibling;
       c.com.appendChild(input);
       input.style.width = '100%';
-      input.setAttribute('aria-label', 'Comments â€” ' + e[1]);
+      input.setAttribute('aria-label', 'Comments — ' + e[1]);
       var block = input.closest('details.fr-section-collapsible');
       if (block) { block.style.display = 'none'; return; }
       if (grid) grid.style.display = 'none';
@@ -103,26 +103,26 @@
   }
   function badge(st) { return st === 'verified' ? 'Verified' : st === 'draft' ? 'Draft' : 'Awaiting verification'; }
   function link(r) {
-    var txt = esc((codes[r.record_key] ? codes[r.record_key] + ' â€” ' : '') + (r.record_title || r.record_key)) + (r.stage ? ' [' + esc(r.stage) + ']' : '') + (r.occurred_on ? ' Â· ' + esc(r.occurred_on) : '') + ' Â· ' + badge(r.status);
+    var txt = esc((codes[r.record_key] ? codes[r.record_key] + ' — ' : '') + (r.record_title || r.record_key)) + (r.stage ? ' [' + esc(r.stage) + ']' : '') + (r.occurred_on ? ' · ' + esc(r.occurred_on) : '') + ' · ' + badge(r.status);
     return r.href ? '<a href="' + esc(r.href) + '" target="_blank" rel="noopener">' + txt + '</a>' : txt;
   }
   function counts(hits) {
     var v = hits.filter(function (r) { return r.status === 'verified'; }).length;
     var d = hits.filter(function (r) { return r.status === 'draft'; }).length;
-    return hits.length + ' submission' + (hits.length === 1 ? '' : 's') + ' Â· ' + v + ' verified' + (hits.length - v - d ? ' Â· ' + (hits.length - v - d) + ' awaiting verification' : '') + (d ? ' Â· ' + d + ' draft' : '');
+    return hits.length + ' submission' + (hits.length === 1 ? '' : 's') + ' · ' + v + ' verified' + (hits.length - v - d ? ' · ' + (hits.length - v - d) + ' awaiting verification' : '') + (d ? ' · ' + d + ' draft' : '');
   }
   function paintEmpty(msg) {
     summary.innerHTML = '<span class="fr-muted">' + msg + '</span>';
-    EXPECTED.forEach(function (e) { var c = cells[e[0]]; c.att.innerHTML = '<strong>â€”</strong>'; c.subs.innerHTML = ''; c.tr.style.cssText = ''; });
+    EXPECTED.forEach(function (e) { var c = cells[e[0]]; c.att.innerHTML = '<strong>—</strong>'; c.subs.innerHTML = ''; c.tr.style.cssText = ''; });
   }
   async function render(jobNo) {
     if (!ensurePanel()) return;
     if (!jobNo) { paintEmpty('Select a job number to check which required records are attached.'); return; }
-    paintEmpty('Loadingâ€¦');
+    paintEmpty('Loading…');
     var rows = [], failed = false;
     try { rows = window.Traceability ? await window.Traceability.trace(jobNo) : []; } catch (e) { failed = true; }
     if (jobNo !== lastJob) return;
-    if (failed || !window.Traceability) { paintEmpty('Could not load linked records â€” check your connection and re-select the job number.'); return; }
+    if (failed || !window.Traceability) { paintEmpty('Could not load linked records — check your connection and re-select the job number.'); return; }
     loadCodes();
     var seen = {}, list = [];
     rows.forEach(function (r) { var k = r.record_key + '|' + r.submission_id; if (!seen[k]) { seen[k] = 1; list.push(r); } });

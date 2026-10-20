@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -29,7 +29,7 @@
 <script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/form-record.js?v=124"></script>
+  <script src="../lib/form-record.js?v=125"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -39,7 +39,7 @@
     docRevisionStart: 5,
     listColumns: ['weekOf', 'checkedBy'],
     instructions: [
-      { label: 'Inspection', text: 'Inspect all equipment and devices daily. Ã¢Ã…â€œâ€œ = Good condition/working, X = Faulty/damaged.' }
+      { label: 'Inspection', text: 'Inspect all equipment and devices daily. âÅ““ = Good condition/working, X = Faulty/damaged.' }
     ],
     sections: [
       { title: 'Week', fields: [
@@ -52,11 +52,11 @@
       ]}
     ],
     roster: {
-      title: 'Equipment / device checks â€” covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
+      title: 'Equipment / device checks — covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
       columns: [
         { key: 'equipmentOrDevice', label: 'Equipment / device', type: 'text' },
         { key: 'date', label: 'Date', type: 'date' },
-        { key: 'condition', label: 'Condition (Ã¢Ã…â€œâ€œ good / X faulty)', type: 'select', options: ['Ã¢Ã…â€œâ€œ', 'X'] },
+        { key: 'condition', label: 'Condition (âÅ““ good / X faulty)', type: 'select', options: ['âÅ““', 'X'] },
         { key: 'comments', label: 'Comments', type: 'text' }
       ]
     }
