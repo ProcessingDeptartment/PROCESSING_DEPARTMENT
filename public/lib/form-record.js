@@ -1754,8 +1754,14 @@
               roster: (existing && existing.roster) || false,
             };
           });
+          // Update specNcKeys so liveThresholds() excludes the right fields
+          rows.forEach(row => { if (row.auto_nc) specNcKeys.add(row.field_key); });
+          // wire() attaches listeners if they were skipped (empty JSON specMap); scan() re-applies to filled values
           const formRoot = el('fr_modalSections');
-          if (formRoot && window.SpecGate) window.SpecGate.scan(formRoot, specMap);
+          if (formRoot && window.SpecGate) {
+            window.SpecGate.wire(formRoot, specMap);
+            window.SpecGate.scan(formRoot, specMap);
+          }
         })
         .catch(() => console.warn('Spec API unavailable — using cached spec values from JSON.'));
     }
