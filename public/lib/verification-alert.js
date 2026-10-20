@@ -4,12 +4,17 @@
  * Uses VerificationQueue.forCurrentUser() so the count is role-filtered.
  */
 (function () {
-  var ALERT_KEY = 'verification_outstanding_alert_shown';
+  function alertKey() {
+    var user = window.Auth && window.Auth.getCurrentUsername && window.Auth.getCurrentUsername();
+    return 'verification_alert_shown:' + (user || '');
+  }
 
   async function show() {
-    // Once per browser session, regardless of how many pages are visited.
-    if (sessionStorage.getItem(ALERT_KEY)) return;
-    sessionStorage.setItem(ALERT_KEY, '1');
+    // Once per user per browser session — keyed to the username so a different
+    // user logging in on the same tab gets their own check.
+    var key = alertKey();
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
 
     if (!window.VerificationQueue) return;
 
