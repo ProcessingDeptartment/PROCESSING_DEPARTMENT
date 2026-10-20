@@ -50,5 +50,53 @@
   BarcodeSplitDrying.init({ recordKey: 'drying-process' });
 </script>
 <script src="../lib/record-shell.js?v=11"></script>
+<script>(function () {
+  // Add "Open Print Hub for this job" link whenever a job number is loaded
+  var lastJob = '';
+  function injectPrintHubLink(jobNo) {
+    var el = document.getElementById('el-printhub-link');
+    if (!jobNo) { if (el) el.remove(); return; }
+    if (el) { el.href = '../pages/submissions-log.html?tab=print&job=' + encodeURIComponent(jobNo); return; }
+    // Find the "Entries" panel heading to attach the link near it
+    var panels = document.querySelectorAll('.el-panel');
+    var target = null;
+    for (var i = 0; i < panels.length; i++) {
+      if (/entries|history/i.test(panels[i].textContent.slice(0, 60))) { target = panels[i]; break; }
+    }
+    if (!target) {
+      // fall back: insert before the first el-panel
+      target = panels[0];
+    }
+    if (!target) return;
+    var a = document.createElement('a');
+    a.id = 'el-printhub-link';
+    a.href = '../pages/submissions-log.html?tab=print&job=' + encodeURIComponent(jobNo);
+    a.target = '_blank';
+    a.style.cssText = 'font-size:12px;color:#2f7a52;text-decoration:none;display:inline-block;margin-bottom:8px;';
+    a.textContent = 'Open Print Hub for this job →';
+    target.parentNode.insertBefore(a, target);
+  }
+
+  // Watch the job number field for changes
+  function watchJob() {
+    var jk = 'jobNo';
+    var inp = document.getElementById('fr_f_' + jk);
+    if (!inp) { setTimeout(watchJob, 500); return; }
+    function onJob() {
+      var v = String(inp.value || '').trim();
+      if (v !== lastJob) { lastJob = v; injectPrintHubLink(v); }
+    }
+    inp.addEventListener('input', onJob);
+    inp.addEventListener('change', onJob);
+    // also poll briefly in case it gets set programmatically
+    var polls = 0;
+    var t = setInterval(function () {
+      onJob();
+      if (++polls > 20) clearInterval(t);
+    }, 400);
+  }
+  watchJob();
+})();
+</script>
 </body>
   </html>

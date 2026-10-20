@@ -997,6 +997,83 @@ app.post('/api/drying-process/reverse-movement', async (req, res) => {
   }
 });
 
+// ---- Supersede / unsupersede a drying-process entry (admin/QS gate) -----------------------
+// POST /api/submissions/drying-process/:id/supersede   { supersededById, reason }
+// POST /api/submissions/drying-process/:id/unsupersede
+// GET  /api/submissions/drying-process/superseded-ids
+// ----------------------------------------------------------------------------------------------------
+app.get('/api/submissions/drying-process/superseded-ids', async (req, res) => {
+  try {
+    const rows = await prisma.$queryRawUnsafe(
+      `SELECT "id" FROM "sub_drying_process" WHERE "supersededBy" IS NOT NULL`
+    );
+    res.json({ ok: true, ids: rows.map((r) => r.id) });
+  } catch (e) {
+    console.error('superseded-ids failed', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post('/api/submissions/drying-process/:id/supersede', async (req, res) => {
+  try {
+    const role = String(req.get('x-role') || '').toUpperCase();
+    if (!['ADMINISTRATOR', 'QUALITY_SUPERVISOR'].includes(role))
+      return res.status(403).json({ ok: false, error: 'Only an administrator or quality supervisor can supersede an entry.' });
+    const id = String(req.params.id || '').trim();
+    const { supersededById, reason } = req.body || {};
+    if (!supersededById || !reason || String(reason).trim().length < 10)
+      return res.status(400).json({ ok: false, error: 'supersededById and a reason (≥10 chars) are required.' });
+    const user = String(req.get('x-user') || '').trim() || null;
+
+    const [entry, replacer] = await Promise.all([
+      prisma.$queryRawUnsafe(`SELECT "id","jobNo","status","supersededBy","entryDate" FROM "sub_drying_process" WHERE "id" = $1`, id),
+      prisma.$queryRawUnsafe(`SELECT "id","jobNo","status","entryDate" FROM "sub_drying_process" WHERE "id" = $1`, String(supersededById)),
+    ]);
+    if (!entry.length) return res.status(404).json({ ok: false, error: 'Entry not found.' });
+    if (!replacer.length) return res.status(404).json({ ok: false, error: 'Replacing entry not found.' });
+    if (entry[0].supersededBy) return res.status(400).json({ ok: false, error: 'Entry is already superseded.' });
+    if (String(entry[0].jobNo || '').toUpperCase() !== String(replacer[0].jobNo || '').toUpperCase())
+      return res.status(400).json({ ok: false, error: 'Both entries must belong to the same job.' });
+    if (id === String(supersededById))
+      return res.status(400).json({ ok: false, error: 'An entry cannot supersede itself.' });
+    if (COALESCE_STATUS(replacer[0].status) === 'draft')
+      return res.status(400).json({ ok: false, error: 'The replacing entry must be submitted (not a draft).' });
+    if (replacer[0].entryDate && entry[0].entryDate && new Date(replacer[0].entryDate) < new Date(entry[0].entryDate))
+      return res.status(400).json({ ok: false, error: 'The replacing entry must be the same date or newer than the superseded entry.' });
+
+    await prisma.$executeRawUnsafe(
+      `UPDATE "sub_drying_process" SET "supersededBy" = $1, "supersededAt" = NOW(), "supersededByUser" = $2, "supersedeReason" = $3 WHERE "id" = $4`,
+      String(supersededById), user, String(reason).trim(), id
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('supersede failed', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
+function COALESCE_STATUS(s) { return s === 'draft' ? 'draft' : 'submitted'; }
+
+app.post('/api/submissions/drying-process/:id/unsupersede', async (req, res) => {
+  try {
+    const role = String(req.get('x-role') || '').toUpperCase();
+    if (!['ADMINISTRATOR', 'QUALITY_SUPERVISOR'].includes(role))
+      return res.status(403).json({ ok: false, error: 'Only an administrator or quality supervisor can unsupersede an entry.' });
+    const id = String(req.params.id || '').trim();
+    const entry = await prisma.$queryRawUnsafe(`SELECT "id","supersededBy" FROM "sub_drying_process" WHERE "id" = $1`, id);
+    if (!entry.length) return res.status(404).json({ ok: false, error: 'Entry not found.' });
+    if (!entry[0].supersededBy) return res.status(400).json({ ok: false, error: 'Entry is not superseded.' });
+    await prisma.$executeRawUnsafe(
+      `UPDATE "sub_drying_process" SET "supersededBy" = NULL, "supersededAt" = NULL, "supersededByUser" = NULL, "supersedeReason" = NULL WHERE "id" = $1`,
+      id
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('unsupersede failed', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // REC 7.4.2 photos on problem answers (src/submission-images.js)
 require('./submission-images').mount(app, prisma);
 require('./nc-log').mount(app, prisma); // Non-Conformance Log
