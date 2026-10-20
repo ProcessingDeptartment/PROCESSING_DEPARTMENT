@@ -1,7 +1,6 @@
 -- Migration: group_verification
 -- Adds submission grouping columns to all sub_* parent tables and creates
 -- the submissions_group_verification table.
---
 -- Grouping columns (all nullable so existing rows are unaffected):
 --   submissionGroupId TEXT          -- shared ID for all submissions of same type on same day
 --   submissionDate    DATE          -- server-local calendar date (Africa/Johannesburg) at submit time
