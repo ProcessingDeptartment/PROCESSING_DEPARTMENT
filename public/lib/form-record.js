@@ -332,7 +332,19 @@
   .fr-crate-val{ display:inline-block; min-width:3.2em; padding:.5em .8em; background:#eceff1; color:#555; border:1px solid #d5d9dc;
     border-radius:6px; font-weight:600; text-align:center; }
   .fr-crate-old{ font-weight:400; color:#777; font-size:.85em; }
-  .fr-crate-gate{ margin:.4em 0; padding:.5em .8em; background:#fff8e1; border:1px solid #f0d98a; border-radius:6px; color:#6b5200; }`;
+  .fr-crate-gate{ margin:.4em 0; padding:.5em .8em; background:#fff8e1; border:1px solid #f0d98a; border-radius:6px; color:#6b5200; }
+  /* Transposed roster (rows = field types, columns = cans/entries) */
+  .fr-transposed{ border-collapse:collapse; width:100%; font-size:14px; }
+  .fr-transposed th,.fr-transposed td{ border:1px solid var(--palette-border,#d8dbe2); padding:5px 8px; text-align:left; vertical-align:middle; }
+  .fr-transposed thead th{ background:var(--palette-surface2,#f3f4f6); font-weight:600; text-align:center; white-space:nowrap; }
+  .fr-transposed tbody th{ background:var(--palette-surface2,#f3f4f6); font-weight:500; min-width:160px; max-width:200px; white-space:nowrap; }
+  .fr-transposed td{ min-width:120px; }
+  .fr-transposed td.fr-tp-spec{ background:var(--palette-surface,#f9fafb); color:var(--palette-muted,#6b7280); text-align:center; font-size:13px; }
+  .fr-transposed tr.fr-tp-spec-row th{ color:var(--palette-muted,#6b7280); font-weight:400; font-style:italic; }
+  .fr-transposed .fr-tp-cell input,.fr-transposed .fr-tp-cell select{ width:100%; min-width:90px; box-sizing:border-box; }
+  .fr-transposed .fr-tp-cell{ position:relative; }
+  .fr-nc-badge{ display:inline-block; background:#c0392b; color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:4px; vertical-align:middle; letter-spacing:.03em; }
+  @media print{ .fr-transposed thead th:last-child,.fr-transposed tfoot{ display:none; } }`;
 
   function injectStyleOnce() {
     if (document.getElementById('fr-style')) return;
@@ -2837,7 +2849,88 @@
       });
       container._isCarried = (i, key) => carried.has(i + ':' + key);
 
+      // --- Transposed roster (roster.transposedTable: true) -----------------------------------------
+      // Data model is unchanged (rows array, readRow). Only the DOM rendering is transposed:
+      // rows = field types (roster.columns), columns = entries (one can per added entry).
+      function drawTransposed() {
+        const specs = roster._specs || {};
+        const colTitle = roster.colTitle || 'Can';
+
+        const headCells = rows.map((_, i) =>
+          `<th class="fr-tp-can-head">${esc(colTitle)} ${i + 1}</th>`).join('');
+
+        const bodyRows = roster.columns.map(col => {
+          const isSpec = !!col.specFrom;
+          const specVal = isSpec ? (specs[col.specFrom] == null ? '—' : specs[col.specFrom]) : null;
+          const dataCells = rows.map((row, i) => {
+            if (isSpec) return `<td class="fr-tp-spec">${esc(String(specVal))}</td>`;
+            const id = fid(i, col.key);
+            const ncBadge = col.ncBelow ? `<span class="fr-nc-badge" id="${id}__nc" hidden>NC</span>` : '';
+            return `<td class="fr-tp-cell" data-ci="${i}" data-col="${esc(col.key)}">${fieldInputHtml(id, col, row[col.key] == null ? '' : row[col.key], row)}${ncBadge}</td>`;
+          }).join('');
+          return `<tr data-tr-col="${esc(col.key)}"${isSpec ? ' class="fr-tp-spec-row"' : ''}>
+            <th class="fr-tp-row-head">${esc(col.label)}${col.required ? ' *' : ''}</th>
+            ${dataCells}
+            <td class="no-print"></td>
+          </tr>`;
+        }).join('');
+
+        const footCells = rows.map((_, i) =>
+          `<td class="no-print" style="text-align:center;"><button type="button" class="fr-btn fr-btn-flat fr-btn-sm" data-remove-can="${i}" title="Remove ${esc(colTitle)} ${i + 1}">✕</button></td>`).join('');
+
+        container.innerHTML = `<div class="fr-transposed-wrap" style="overflow-x:auto;">
+          <table class="fr-transposed">
+            <thead><tr>
+              <th></th>${headCells}
+              <th class="no-print"><button type="button" class="fr-btn fr-btn-sm" data-add-can style="white-space:nowrap;">+ Add ${esc(colTitle)}</button></th>
+            </tr></thead>
+            <tbody>${bodyRows}</tbody>
+            <tfoot class="no-print"><tr><td></td>${footCells}<td></td></tr></tfoot>
+          </table>
+        </div>`;
+
+        if (typeof wireYesNo === 'function') wireYesNo(container);
+        if (typeof wireJobNumber === 'function') wireJobNumber(container);
+        if (typeof wireRecordPick === 'function') wireRecordPick(container, config);
+
+        container.querySelector('[data-add-can]').addEventListener('click', () => {
+          rows = rows.map((_, j) => readRow(j));
+          rows.push({});
+          drawTransposed();
+        });
+        container.querySelectorAll('[data-remove-can]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            rows = rows.map((_, j) => readRow(j));
+            const i = Number(btn.dataset.removeCan);
+            if (rows.length > 1 || confirm('Remove the last ' + colTitle + '?')) {
+              rows.splice(i, 1);
+              if (!rows.length) rows.push({});
+              drawTransposed();
+            }
+          });
+        });
+        updateTransposedNc();
+        if (container._onDraw) container._onDraw();
+      }
+
+      function updateTransposedNc() {
+        if (!roster.transposedTable) return;
+        const specs = roster._specs || {};
+        roster.columns.filter(c => c.ncBelow).forEach(col => {
+          rows.forEach((_, i) => {
+            const inp = el(fid(i, col.key));
+            const badge = el(fid(i, col.key) + '__nc');
+            if (!inp || !badge) return;
+            const val = parseFloat(inp.value);
+            const limit = parseFloat(specs[col.ncBelow]);
+            badge.hidden = isNaN(val) || isNaN(limit) || val >= limit;
+          });
+        });
+      }
+      // ------------------------------------------------------------------------------------------------
+
       function draw() {
+        if (roster.transposedTable) { drawTransposed(); return; }
         numberCrates();
         if (roster.slides) {
           // pot numbers count Cooking slides only and are automatic; Blanching has none
@@ -2891,6 +2984,7 @@
 
       // Derived cells first so totals read the fresh values (e.g. graded weight -> grade totals).
       container.addEventListener('input', (e) => {
+        if (roster.transposedTable) { updateTransposedNc(); return; }
         autoSeq(e);
         renderRosterDerived();
         renderRosterCarry();
@@ -2958,6 +3052,34 @@
       if (roster.pctTotal) {
         const ofEl = el('fr_f_' + roster.pctTotal.of);
         if (ofEl) ['input', 'change'].forEach(ev => ofEl.addEventListener(ev, renderRosterTotals));
+      }
+      // transposed roster: watch a top-level field for product specs (roster.specsWatchField)
+      // and reload specs from /api/product-data/:code whenever it changes.
+      if (roster.transposedTable && roster.specsWatchField) {
+        const specWatch = el('fr_f_' + roster.specsWatchField);
+        if (specWatch) {
+          const loadSpecs = async () => {
+            const code = String(specWatch.value || '').trim();
+            if (!code) { roster._specs = {}; drawTransposed(); return; }
+            try {
+              const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+              const res = await (window.FacilityApi
+                ? window.FacilityApi.fetch(`${base}/api/product-data/${encodeURIComponent(code)}`)
+                : fetch(`${base}/api/product-data/${encodeURIComponent(code)}`));
+              roster._specs = res.ok ? await res.json() : {};
+            } catch (e) { roster._specs = {}; }
+            // Fill any top-level fields marked to receive a value from the loaded specs
+            if (roster.specsFields) {
+              Object.entries(roster.specsFields).forEach(([fieldKey, specKey]) => {
+                const inp = el('fr_f_' + fieldKey);
+                if (inp) { inp.value = roster._specs[specKey] != null ? String(roster._specs[specKey]) : ''; inp.dispatchEvent(new Event('input', { bubbles: true })); }
+              });
+            }
+            drawTransposed();
+          };
+          ['change', 'input'].forEach(ev => specWatch.addEventListener(ev, loadSpecs));
+          if (String(specWatch.value || '').trim()) loadSpecs();
+        }
       }
       // ---- roster.slides (REC 7.4.0 Dry Cooking): one pot per slide ------------------------------------------
       // Every slide stays in the DOM (hidden/shown only, so typed values survive and print is untouched). A numbered
@@ -3595,7 +3717,7 @@
         html += rosterList.map((roster, i) => wrapSection({ title: roster.title, collapsible: roster.collapsible }, `
         ${roster.quickEntry ? quickEntryHtml(roster, i) : ''}
         <div id="${rosterDomId('fr_rosterRows', i)}"${roster.quickEntry ? ' class="fr-qe-list"' : (roster.fixedRows ? ' class="fr-fixed-rows"' : '')}></div>
-        ${roster.quickEntry ? '' : `${roster.slides
+        ${roster.quickEntry || roster.transposedTable ? '' : `${roster.slides
           ? `<div class="fr-slide-nav no-print" id="${rosterDomId('fr_slideNav', i)}"><span class="fr-slide-hint" aria-live="polite"></span><button type="button" class="fr-btn fr-slide-next" disabled>Next</button></div>`
           : roster.processChoice
           ? `<div class="fr-pot-add no-print" id="${rosterDomId('fr_potChoose', i)}">${roster.processChoice.options.map(o => `<button type="button" class="fr-btn fr-pot-add-btn fr-pot-add-${esc(o)}" data-choose="${esc(o)}">+ Add ${esc(o.toLowerCase())} pot</button>`).join('')}</div>`
@@ -3628,6 +3750,7 @@
           renderRosterEditor(config.boxInspection && window.BoxInspection ? window.BoxInspection.mergeRows(savedRows, locked, editingId) : savedRows, roster, i);
           const rowsId = rosterDomId('fr_rosterRows', i);
           if (roster.quickEntry) { wireQuickEntry(roster, i, container.querySelector('#' + rowsId)); return; }
+          if (roster.transposedTable) return; // add/remove wired inside drawTransposed()
           const rowsEl = container.querySelector('#' + rowsId);
           if (roster.slides) {
             /* Next is wired inside renderRosterEditor */

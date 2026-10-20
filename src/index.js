@@ -1150,6 +1150,22 @@ app.get('/api/seam-test-runs', async (req, res) => {
   }
 });
 
+// ProductData: GET /api/product-data  →  all products (for dropdowns)
+// ProductData: GET /api/product-data/:code  →  single product specs by agCode
+app.get('/api/product-data', async (req, res) => {
+  try {
+    const rows = await prisma.productData.findMany({ orderBy: { agCode: 'asc' } });
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get('/api/product-data/:code', async (req, res) => {
+  try {
+    const row = await prisma.productData.findUnique({ where: { agCode: req.params.code } });
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    res.json(row);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 require('./passkeys')(app, prisma); // admin-managed signature passkeys

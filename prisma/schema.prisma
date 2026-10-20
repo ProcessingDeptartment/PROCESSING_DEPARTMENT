@@ -270,6 +270,28 @@ model JobNrcsAgCode {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Product catalogue for canning QC (REC 7.2.11). One row per product variant; agCode is the
+// production code used on job paperwork. Spec minimums drive NC checking in the canning inspection.
+// ---------------------------------------------------------------------------------------------
+model ProductData {
+  id                 Int      @id @default(autoincrement())
+  agCode             String   @unique
+  productDescription String
+  canSize            String
+  containerType      String   @default("tin")
+  nettWeightMin      Float?
+  drainWeightMin     Float?
+  phMin              Float?
+  brixMin            Float?
+  saltMin            Float?
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([agCode])
+}
+
+// ---------------------------------------------------------------------------------------------
 // Generic cross-record link -- the relational successor to traceability.js's batch_link:* keys.
 // linkField is open-ended (job number is only the ERP reconciliation key). Written by the API on
 // every submission from each field whose RecordFieldDef.linkField is set. Dates stay in
