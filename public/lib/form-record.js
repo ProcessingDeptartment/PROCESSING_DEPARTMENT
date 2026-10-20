@@ -11,7 +11,15 @@
       cv0.id = 'pdfCover';
       cv0.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#fff;';
       document.documentElement.appendChild(cv0);
-      window.addEventListener('afterprint', () => { try { window.close(); } catch (e) { /* ignore */ } });
+      window.addEventListener('afterprint', () => {
+        try {
+          const q = new URLSearchParams(location.search);
+          if (q.get('closeAfter') === '1' && window.opener) {
+            window.opener.postMessage({ pdfReady: 1 }, location.origin);
+          }
+          window.close();
+        } catch (e) { /* ignore */ }
+      });
     }
   } catch (e) { /* ignore */ }
   function el(id) { return document.getElementById(id); }
@@ -4873,7 +4881,15 @@ function fallbackDl(canvas,filename){
         cover.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;font:600 15px "Segoe UI",system-ui,sans-serif;color:#1d2b38;';
         // blank cover: nothing to read, just the print dialog
         document.body.appendChild(cover);
-        window.addEventListener('afterprint', () => { try { window.close(); } catch (e) { /* ignore */ } });
+        window.addEventListener('afterprint', () => {
+          try {
+            const q = new URLSearchParams(location.search);
+            if (q.get('closeAfter') === '1' && window.opener) {
+              window.opener.postMessage({ pdfReady: 1 }, location.origin);
+            }
+            window.close();
+          } catch (e) { /* ignore */ }
+        });
       }
       if (!printOnly) {
         openForm(id);

@@ -843,7 +843,7 @@
           const jobCell = e.jobNo ? '<strong>' + esc(e.jobNo) + '</strong>' : esc(e.ref || '—');
           const recCell = (e.docNo ? esc(e.docNo) + ' &mdash; ' : '') + esc(e.name);
           const verDate = e.verifyTs ? dayOf(e.verifyTs) : '—';
-          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1" target="_blank">PDF</a>' : '—';
+          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1&closeAfter=1">PDF</a>' : '—';
           return '<tr>'
             + '<td>' + jobCell + '</td>'
             + '<td>' + recCell + '</td>'
@@ -854,6 +854,29 @@
             + '</tr>';
         }).join('')
       + '</tbody></table>';
+
+    wrap.querySelectorAll('[data-pdf-href]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = btn.getAttribute('data-pdf-href');
+        const pdfWin = window.open(href, 'pdfPrint' + Date.now());
+        if (pdfWin) {
+          const closeListener = (ev) => {
+            try {
+              if (ev.source === pdfWin && ev.data && ev.data.pdfReady === 1) {
+                window.removeEventListener('message', closeListener);
+                setTimeout(() => { if (!pdfWin.closed) pdfWin.close(); }, 500);
+              }
+            } catch (e) { /* ignore cross-origin issues */ }
+          };
+          window.addEventListener('message', closeListener);
+          setTimeout(() => {
+            window.removeEventListener('message', closeListener);
+            try { if (!pdfWin.closed) pdfWin.close(); } catch (e) { /* ignore */ }
+          }, 30000);
+        }
+      });
+    });
   }
 
   (async function init() {
