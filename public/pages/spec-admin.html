@@ -76,7 +76,7 @@
 
   <div id="app" hidden>
     <div class="notice" id="exportNotice" hidden>
-      <b>Saved.</b> Re-run the record-def export and push to update the live site:
+      <b>Spec saved. Changes are live immediately</b> — forms now load specs directly from the database. Re-run the export script to update the cached JSON (used as a fallback and for offline/print use):
       <pre>node scripts/export-record-defs.mjs &amp;&amp; git add public/data/record-defs/ &amp;&amp; git commit -m "chore: export record defs with updated specs" &amp;&amp; git push</pre>
     </div>
 

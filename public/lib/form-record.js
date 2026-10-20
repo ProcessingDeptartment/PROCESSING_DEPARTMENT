@@ -1722,6 +1722,43 @@
     let pendingNc = [], ncHandled = new Set(), ncSkipped = [];
     // Field specifications (spec-gate.js): live feedback + submit gate for fields that carry a `spec`
     const specMap = window.SpecGate ? window.SpecGate.collectSpecs(config) : {};
+    // Live fetch: merge DB specs over the JSON snapshot so admin saves are visible immediately (no export run needed)
+    if (window.SpecGate && config.recordKey) {
+      (window.FacilityApi ? window.FacilityApi.fetch : fetch)('/api/specs/' + encodeURIComponent(config.recordKey))
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(rows => {
+          if (!Array.isArray(rows) || !rows.length) return;
+          function buildSpec(row) {
+            return {
+              min:               row.spec_min ?? null,
+              max:               row.spec_max ?? null,
+              allowed:           row.allowed_values ? row.allowed_values.split(',').map(s => s.trim()) : null,
+              highlightRed:      row.highlight_red,
+              showWarningBubble: row.show_warning_bubble,
+              gateMode:          row.gate_mode,
+              autoNc:            row.auto_nc,
+              ncCategory:        row.nc_category,
+              ncSeverity:        row.nc_severity,
+              ncOptionalSkip:    row.nc_optional_skip,
+              labelOverride:     row.label_override ?? null,
+              version:           row.version_number ?? null,
+            };
+          }
+          rows.forEach(row => {
+            const existing = specMap[row.field_key];
+            const spec = buildSpec(row);
+            specMap[row.field_key] = {
+              spec,
+              label: spec.labelOverride || (existing && existing.label) || row.field_key,
+              unit:  (existing && existing.unit) || '',
+              roster: (existing && existing.roster) || false,
+            };
+          });
+          const formRoot = el('fr_modalSections');
+          if (formRoot && window.SpecGate) window.SpecGate.scan(formRoot, specMap);
+        })
+        .catch(() => console.warn('Spec API unavailable — using cached spec values from JSON.'));
+    }
     let specAccepted = {};              // out-of-spec signature -> gate result, so a cancelled NC prompt does not re-ask for passkeys
     let specInfo = { details: [], result: null };
     // a field whose spec has autoNc replaces any ncThresholds entry for the same field (one NC prompt, not two)
