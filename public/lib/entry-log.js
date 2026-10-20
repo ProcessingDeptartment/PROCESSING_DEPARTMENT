@@ -470,6 +470,30 @@
     // 7: cooked weight not greater than the whole weight
     const whole = parseFloat(values.jiIntakeWeight), cooked = parseFloat(values.cookedWeight);
     if (!isNaN(whole) && !isNaN(cooked) && cooked > whole) { toast(`Cooked weight (${cooked} kg) is more than the whole weight (${whole} kg).`); return false; }
+    // 7b: OOSW lower than cooked weight — soft warning with diff shown
+    let ooswWarnReason = null;
+    const ooswVal = parseFloat(values.jiOoswKg);
+    if (!isNaN(ooswVal) && !isNaN(cooked) && ooswVal < cooked) {
+      const diff = Math.round((cooked - ooswVal) * 100) / 100;
+      const pct = ooswVal > 0 ? Math.round((diff / ooswVal) * 100 * 10) / 10 : null;
+      const pctStr = pct != null ? ` (${pct}%)` : '';
+      const isSmall = pct != null && pct < 3;
+      const reasonOptions = isSmall
+        ? '\n\n  1 = Batches mix\n  2 = Weight deviations on scale due to water weight\n  3 = Other (type reason)'
+        : '\n\n  1 = Batches mix\n  2 = Other (type reason)';
+      const reasonPrompt = `OOSW (${ooswVal} kg) is lower than cooked weight (${cooked} kg) — difference: ${diff} kg${pctStr}.\n\nThis must be explained before submitting. Select or type a reason:${reasonOptions}`;
+      const raw = (window.prompt ? window.prompt(reasonPrompt, '') : null);
+      if (raw === null) return false;
+      let reason = String(raw).trim();
+      if (reason === '1') reason = 'Batches mix';
+      else if (reason === '2') reason = isSmall ? 'Weight deviations on scale due to water weight' : 'Batches mix';
+      else if (reason === '3' && isSmall) reason = '';
+      if (!reason) {
+        toast('A reason is required when OOSW is lower than cooked weight.');
+        return false;
+      }
+      ooswWarnReason = `OOSW lower than cooked weight by ${diff} kg${pctStr} — ${reason}`;
+    }
     const n = parseInt(values.noOfTrolleys, 10);
 
     const warn = [];
@@ -488,11 +512,14 @@
     if (missing.length) warn.push(`Steam ${missing.join(', ')}: temperature, time or start time not filled in`);
     if (odd.length) warn.push(`Outside the normal range: ${odd.join(', ')}`);
 
-    if (warn.length) {
-      const ok = confirm('Please check before submitting:\n\n• ' + warn.join('\n• ') + '\n\nOK to submit anyway (this is recorded on the entry), or Cancel to go back?');
-      if (!ok) return false;
+    if (warn.length || ooswWarnReason) {
+      if (warn.length) {
+        const ok = confirm('Please check before submitting:\n\n• ' + warn.join('\n• ') + '\n\nOK to submit anyway (this is recorded on the entry), or Cancel to go back?');
+        if (!ok) return false;
+      }
+      const allWarnings = [...warn, ...(ooswWarnReason ? [ooswWarnReason] : [])];
       values.warningAck = 'Yes';
-      values.warningNote = warn.join('; ');
+      values.warningNote = allWarnings.join('; ');
     }
     return true;
   }
