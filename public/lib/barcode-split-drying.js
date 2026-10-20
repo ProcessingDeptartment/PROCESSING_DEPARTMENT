@@ -122,32 +122,33 @@
     function steamFormHtml() {
       if (!steam.formOpen) return '';
       var f = steam.form;
-      var bcField = '<input id="bsd_sf_bc" type="text" value="' + esc(f.barcodeValue) + '" placeholder="Scan or type trolley barcode" autocomplete="off" autocapitalize="characters" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font:14px monospace">' +
-        '<button type="button" id="bsd_sf_scan" style="padding:7px 12px;font:13px system-ui,sans-serif;border:1px solid #2d6a3e;border-radius:6px;background:#f2faf4;color:#2d6a3e;cursor:pointer;white-space:nowrap">&#128247; Scan</button>';
+      var filled = !!f.barcodeValue;
       var statusLine = steam.statusMsg
         ? '<div role="status" style="margin-top:6px;font:13px system-ui,sans-serif;color:' + (steam.statusKind === 'bad' ? '#b33' : '#1f6a37') + '">' + esc(steam.statusMsg) + '</div>'
         : '';
-      return '<div style="margin-top:10px;padding:12px 14px;border:1px solid #a3d4b0;border-radius:8px;background:#fff">' +
-        '<div style="font:600 13px system-ui,sans-serif;color:#2d6a3e;margin-bottom:10px">New steam entry</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
-        '<span style="font:12px system-ui,sans-serif;color:#666;min-width:90px">Trolley barcode</span>' +
-        bcField + '</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">' +
+      return '<div style="margin-top:10px;padding:14px;border:1px solid #a3d4b0;border-radius:8px;background:#fff">' +
+        '<div style="font:600 13px system-ui,sans-serif;color:#2d6a3e;margin-bottom:12px">New steam entry</div>' +
+        '<div style="margin-bottom:12px">' +
+        '<div style="font:11px system-ui,sans-serif;color:#666;text-transform:uppercase;margin-bottom:5px">Trolley barcode</div>' +
+        '<button type="button" id="bsd_sf_scan" style="display:block;width:100%;padding:13px;font:600 15px system-ui,sans-serif;border:2px solid #2d6a3e;border-radius:8px;background:#f2faf4;color:#2d6a3e;cursor:pointer;text-align:center;box-sizing:border-box">&#128247; Scan trolley barcode</button>' +
+        '<input id="bsd_sf_bc" type="text" value="' + esc(f.barcodeValue) + '" placeholder="or type barcode manually" autocomplete="off" autocapitalize="characters" ' +
+        'style="margin-top:7px;width:100%;padding:8px 10px;border:1px solid ' + (filled ? '#a3d4b0' : '#ccc') + ';border-radius:6px;font:14px monospace;box-sizing:border-box;background:' + (filled ? '#f2faf4' : '#fff') + '">' +
+        (filled ? '<div style="font:12px system-ui,sans-serif;color:#2d6a3e;margin-top:3px">&#10003; ' + esc(f.barcodeValue) + '</div>' : '') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">' +
         '<label style="display:block"><span style="font:11px system-ui,sans-serif;color:#666;display:block;margin-bottom:3px">Steam temp (&deg;C)</span>' +
         '<input id="bsd_sf_temp" type="number" step="0.1" value="' + esc(f.temp) + '" placeholder="e.g. 85" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font:14px system-ui,sans-serif;box-sizing:border-box"></label>' +
         '<label style="display:block"><span style="font:11px system-ui,sans-serif;color:#666;display:block;margin-bottom:3px">Duration (min)</span>' +
         '<input id="bsd_sf_dur" type="number" step="1" value="' + esc(f.duration) + '" placeholder="e.g. 45" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font:14px system-ui,sans-serif;box-sizing:border-box"></label>' +
         '<label style="display:block"><span style="font:11px system-ui,sans-serif;color:#666;display:block;margin-bottom:3px">Start time</span>' +
-        '<div style="display:flex;gap:6px">' +
-        '<input id="bsd_sf_time" type="datetime-local" value="' + esc(f.startTime) + '" style="flex:1;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font:13px system-ui,sans-serif;min-width:0;box-sizing:border-box">' +
-        '<button type="button" id="bsd_sf_now" style="padding:6px 8px;font:12px system-ui,sans-serif;border:1px solid #888;border-radius:6px;background:#f5f5f5;color:#333;cursor:pointer;white-space:nowrap">Now</button>' +
-        '</div></label></div>' +
+        '<input id="bsd_sf_time" type="datetime-local" value="' + esc(f.startTime) + '" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font:13px system-ui,sans-serif;box-sizing:border-box">' +
+        '<button type="button" id="bsd_sf_now" style="margin-top:5px;width:100%;padding:5px;font:12px system-ui,sans-serif;border:1px solid #888;border-radius:5px;background:#f5f5f5;color:#333;cursor:pointer">Now</button>' +
+        '</label></div>' +
         '<div style="display:flex;gap:8px">' +
-        '<button type="button" id="bsd_sf_add" ' + (steam.busy ? 'disabled ' : '') + 'style="padding:8px 18px;font:600 13px system-ui,sans-serif;border:0;border-radius:7px;background:#2d6a3e;color:#fff;cursor:' + (steam.busy ? 'default' : 'pointer') + '">' + (steam.busy ? 'Saving&hellip;' : 'Add steam') + '</button>' +
-        '<button type="button" id="bsd_sf_cancel" style="padding:8px 14px;font:13px system-ui,sans-serif;border:1px solid #ccc;border-radius:7px;background:#fff;color:#555;cursor:pointer">Cancel</button>' +
+        '<button type="button" id="bsd_sf_add" ' + (steam.busy ? 'disabled ' : '') + 'style="flex:1;padding:10px;font:600 13px system-ui,sans-serif;border:0;border-radius:7px;background:' + (steam.busy ? '#aaa' : '#2d6a3e') + ';color:#fff;cursor:' + (steam.busy ? 'default' : 'pointer') + '">' + (steam.busy ? 'Saving&hellip;' : 'Add steam') + '</button>' +
+        '<button type="button" id="bsd_sf_cancel" style="padding:10px 16px;font:13px system-ui,sans-serif;border:1px solid #ccc;border-radius:7px;background:#fff;color:#555;cursor:pointer">Cancel</button>' +
         '</div>' + statusLine + '</div>';
     }
-
     function steamSectionHtml() {
       if (!trolley.submitted) return '';
       var entries = steam.entries.map(steamEntryHtml).join('');
