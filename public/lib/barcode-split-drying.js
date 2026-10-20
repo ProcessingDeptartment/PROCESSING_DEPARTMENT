@@ -122,14 +122,8 @@
     function steamFormHtml() {
       if (!steam.formOpen) return '';
       var f = steam.form;
-      var known = knownTrolleyBarcodes();
-      var bcOpts = known.map(function (v) { return '<option value="' + esc(v) + '"' + (f.barcodeValue === v ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join('');
-      var bcField = known.length > 0
-        ? '<select id="bsd_sf_bc" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font:14px monospace">' +
-          '<option value="">-- Select trolley barcode --</option>' + bcOpts + '</select>' +
-          '<button type="button" id="bsd_sf_scan" style="padding:7px 12px;font:13px system-ui,sans-serif;border:1px solid #2d6a3e;border-radius:6px;background:#f2faf4;color:#2d6a3e;cursor:pointer;white-space:nowrap">&#128247; Scan</button>'
-        : '<input id="bsd_sf_bc" type="text" value="' + esc(f.barcodeValue) + '" placeholder="Scan or type trolley barcode" autocomplete="off" autocapitalize="characters" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font:14px monospace">' +
-          '<button type="button" id="bsd_sf_scan" style="padding:7px 12px;font:13px system-ui,sans-serif;border:1px solid #2d6a3e;border-radius:6px;background:#f2faf4;color:#2d6a3e;cursor:pointer;white-space:nowrap">&#128247; Scan</button>';
+      var bcField = '<input id="bsd_sf_bc" type="text" value="' + esc(f.barcodeValue) + '" placeholder="Scan or type trolley barcode" autocomplete="off" autocapitalize="characters" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font:14px monospace">' +
+        '<button type="button" id="bsd_sf_scan" style="padding:7px 12px;font:13px system-ui,sans-serif;border:1px solid #2d6a3e;border-radius:6px;background:#f2faf4;color:#2d6a3e;cursor:pointer;white-space:nowrap">&#128247; Scan</button>';
       var statusLine = steam.statusMsg
         ? '<div role="status" style="margin-top:6px;font:13px system-ui,sans-serif;color:' + (steam.statusKind === 'bad' ? '#b33' : '#1f6a37') + '">' + esc(steam.statusMsg) + '</div>'
         : '';
@@ -233,8 +227,10 @@
 
       // Steam form fields
       var sfBc = panel.querySelector('#bsd_sf_bc');
-      if (sfBc) sfBc.addEventListener('change', function () { steam.form.barcodeValue = (sfBc.value || '').trim().toUpperCase(); });
-      if (sfBc && sfBc.tagName === 'INPUT') sfBc.addEventListener('input', function () { steam.form.barcodeValue = sfBc.value.trim().toUpperCase(); sfBc.value = steam.form.barcodeValue; });
+      if (sfBc) {
+        sfBc.addEventListener('input', function () { steam.form.barcodeValue = sfBc.value.trim().toUpperCase(); sfBc.value = steam.form.barcodeValue; });
+        sfBc.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); sfBc.blur(); } });
+      }
 
       var sfScan = panel.querySelector('#bsd_sf_scan');
       if (sfScan) sfScan.addEventListener('click', function () {
