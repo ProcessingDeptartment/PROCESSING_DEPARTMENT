@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -35,9 +35,9 @@
 <script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/form-record.js?v=126"></script>
+  <script src="../lib/form-record.js?v=127"></script>
 <script>(function () {
-  // Definition lives in the DB — fetched by the engine from GET /api/record-def/drying-process
+  // Definition lives in the DB â€” fetched by the engine from GET /api/record-def/drying-process
   // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
   FormRecord.init({ mount: '#frRoot', recordKey: 'drying-process' });
 })();
@@ -73,7 +73,7 @@
     a.href = '../pages/submissions-log.html?tab=print&job=' + encodeURIComponent(jobNo);
     a.target = '_blank';
     a.style.cssText = 'font-size:12px;color:#2f7a52;text-decoration:none;display:inline-block;margin-bottom:8px;';
-    a.textContent = 'Open Print Hub for this job →';
+    a.textContent = 'Open Print Hub for this job â†’';
     target.parentNode.insertBefore(a, target);
   }
 
