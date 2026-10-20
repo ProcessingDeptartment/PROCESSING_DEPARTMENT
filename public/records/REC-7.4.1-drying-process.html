@@ -43,8 +43,12 @@
 })();
 </script>
 <script src="../lib/barcode-scan.js?v=2"></script>
-<script src="../lib/barcode-test.js?v=5"></script>
-<script>BarcodeTest.init({ stage: 'drying', recordKey: 'drying-process' });</script>
+<script src="../lib/barcode-test.js?v=6"></script>
+<script src="../lib/barcode-split-drying.js?v=1"></script>
+<script>
+  BarcodeTest.init({ stage: 'drying', recordKey: 'drying-process' });
+  BarcodeSplitDrying.init({ recordKey: 'drying-process' });
+</script>
 <script src="../lib/record-shell.js?v=11"></script>
 </body>
   </html>

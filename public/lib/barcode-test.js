@@ -133,6 +133,7 @@
           body: JSON.stringify({ barcodeValue: h.barcode.value, stage: cfg.stage, user: who(), locationNote: cfg.recordKey })
         }).then(function (s) {
           scanned = { barcode: h.barcode.value, jobNo: jobNo, members: (h.members || []).length };
+          try { document.dispatchEvent(new CustomEvent('bt:scanned', { detail: scanned, bubbles: false })); } catch (e) { }
           if (!s.ok) { status('Job ' + jobNo + ' filled, but the scan was not logged: ' + (s.error || 'error'), 'bad'); return; }
           status('Job ' + jobNo + ' · barcode ' + scanned.barcode + ' · ' + scanned.members + ' baskets · scan logged at ' + cfg.stage + (picked === 'confirm' ? ' · confirm the job in the popup' : ''), 'ok');
         });
@@ -147,7 +148,9 @@
       new MutationObserver(kick).observe(document.body, { childList: true, subtree: true });
     }
     if (document.body) boot(); else document.addEventListener('DOMContentLoaded', boot);
+    window.BarcodeTest.getScanned = function () { return scanned; };
   }
 
-  window.BarcodeTest = { init: init };
+  window.BarcodeTest = { init: init, getScanned: function () { return null; } };
+  // overwritten by init to return the live closure's scanned variable
 })();
