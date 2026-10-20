@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REC 7.4.4 Grading, Boxing & Traceability</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
 <link rel="stylesheet" href="../styles/responsive.css?v=1">
 <style>
@@ -118,8 +118,8 @@
 <script>(function () {
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  var kg = function (n) { return n == null ? '—' : Number(n).toFixed(2); };
-  var dash = function (s) { return s == null || s === '' ? '—' : s; };
+  var kg = function (n) { return n == null ? 'â€”' : Number(n).toFixed(2); };
+  var dash = function (s) { return s == null || s === '' ? 'â€”' : s; };
   var DATA = null, VIEW = [];
 
   var COLS = [
@@ -129,8 +129,8 @@
     { h: 'Graded kg', cls: 'num', v: function (b) { return kg(b.gradedKg); } },
     { h: 'Date graded', v: function (b) { return b.dateGraded; } },
     { h: 'Nett kg (7.4.5)', cls: 'num', v: function (b) { return kg(b.nettKg); } },
-    { h: 'Balance kg', cls: 'num', html: function (b) { return b.balanceKg == null ? '—' : '<span class="' + (Math.abs(b.balanceKg) > 0.005 ? 'neg' : '') + '">' + (b.balanceKg > 0 ? '+' : '') + kg(b.balanceKg) + '</span>'; }, csv: function (b) { return b.balanceKg == null ? '' : b.balanceKg; } },
-    { h: 'Inspected', v: function (b) { return b.inspection ? (b.inspection.approved ? 'Yes – approved' : 'Yes – not approved') : 'No'; } },
+    { h: 'Balance kg', cls: 'num', html: function (b) { return b.balanceKg == null ? 'â€”' : '<span class="' + (Math.abs(b.balanceKg) > 0.005 ? 'neg' : '') + '">' + (b.balanceKg > 0 ? '+' : '') + kg(b.balanceKg) + '</span>'; }, csv: function (b) { return b.balanceKg == null ? '' : b.balanceKg; } },
+    { h: 'Inspected', v: function (b) { return b.inspection ? (b.inspection.approved ? 'Yes â€“ approved' : 'Yes â€“ not approved') : 'No'; } },
     { h: 'NRCS AG code', cls: 'code', v: function (b) { return b.agCode; } },
     { h: 'Shipment (7.4.8)', v: function (b) { var s = b.shipment; return s ? [s.customer, s.flight, s.airwaybillNr, s.etd].filter(Boolean).join(' / ') : ''; } },
     { h: 'Export invoice no.', v: function (b) { return b.exportInvoiceNo; } },
@@ -139,7 +139,7 @@
   ];
 
   function jobsHtml(b) {
-    if (!b.blended) { var j = b.jobs[0]; return esc(j ? j.jobNo : '—'); }
+    if (!b.blended) { var j = b.jobs[0]; return esc(j ? j.jobNo : 'â€”'); }
     var rows = b.jobs.map(function (j) { return '<div>' + esc(j.jobNo) + ' &mdash; ' + (j.weightKg != null ? kg(j.weightKg) + ' kg' : 'weight not recorded') + '</div>'; }).join('');
     return '<details class="blend"><summary>' + b.jobs.map(function (j) { return esc(j.jobNo); }).join(', ') + '<span class="badge">Blended ' + b.jobs.length + '</span></summary><div class="wts">' + rows + '</div></details>';
   }
@@ -172,7 +172,7 @@
       return '<tr>' + COLS.map(function (c) { return '<td class="' + (c.cls || '') + '">' + (c.html ? c.html(b) : esc(dash(c.v(b)))) + '</td>'; }).join('') + '</tr>';
     }).join('');
     $('tbl').innerHTML = head + '<tbody>' + (body || '<tr><td colspan="' + COLS.length + '" class="muted">No boxes match.</td></tr>') + '</tbody>';
-    $('statusLine').textContent = VIEW.length + ' of ' + DATA.boxes.length + ' boxes · generated ' + new Date(DATA.generatedAt).toLocaleString();
+    $('statusLine').textContent = VIEW.length + ' of ' + DATA.boxes.length + ' boxes Â· generated ' + new Date(DATA.generatedAt).toLocaleString();
   }
 
   function renderWarnings() {
@@ -200,7 +200,7 @@
     var q = function (s) { s = String(s == null ? '' : s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     var lines = [COLS.map(function (c) { return q(c.h); }).join(',')];
     VIEW.forEach(function (b) { lines.push(COLS.map(function (c) { return q(c.csv ? c.csv(b) : (c.v(b) == null ? '' : c.v(b))); }).join(',')); });
-    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var blob = new Blob(['ï»¿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'REC-7.4.4-' + new Date().toISOString().slice(0, 10) + '.csv';
@@ -217,7 +217,7 @@
   }
 
   async function load() {
-    $('statusLine').textContent = 'Loading…';
+    $('statusLine').textContent = 'Loadingâ€¦';
     try {
       var res = await window.FacilityApi.fetch('/api/report/boxes');
       var d = res.ok ? await res.json() : null;

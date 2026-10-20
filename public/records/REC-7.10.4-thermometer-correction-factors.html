@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>REC 7.10.4 Thermometer Correction Factors</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -43,25 +43,25 @@
     instructions: [
       { label: 'Verify thermometer accuracy', text: 'Verification must be done using a standard reference thermometer or master thermometer calibrated by a SANAS accredited authority.' },
       { label: 'How to establish correction factors', text: 'Place the probes in one container filled with water and allow the thermometer to read for 2 minutes, then record the findings.' },
-      { label: 'Tolerance', text: 'Readings should not exceed a difference of 0.5°C. If exceeded, report the thermometer and add the correction factor.' },
+      { label: 'Tolerance', text: 'Readings should not exceed a difference of 0.5Â°C. If exceeded, report the thermometer and add the correction factor.' },
       { label: 'Frequency', text: 'Weekly.' }
     ],
     entryFields: [
       { key: 'month', label: 'Month', type: 'month' },
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'referenceThermoSerial', label: 'Reference thermometer serial/internal number', type: 'text' },
-      { key: 'referenceReading', label: 'Reference thermometer reading', type: 'number', unit: '°C' },
+      { key: 'referenceReading', label: 'Reference thermometer reading', type: 'number', unit: 'Â°C' },
       { key: 'testThermoSerial', label: 'Test thermometer serial/internal number', type: 'text' },
-      { key: 'testReading', label: 'Test thermometer reading', type: 'number', unit: '°C' },
+      { key: 'testReading', label: 'Test thermometer reading', type: 'number', unit: 'Â°C' },
       {
-        key: 'difference', label: 'Difference / correction factor', type: 'computed', unit: '°C', specKey: 'diffTolerance',
+        key: 'difference', label: 'Difference / correction factor', type: 'computed', unit: 'Â°C', specKey: 'diffTolerance',
         computeFn: 'subtract', computeArgs: { a: 'testReading', b: 'referenceReading' }
       },
       { key: 'correctionUsed', label: 'Correction factor to be used?', type: 'yesno' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'diffTolerance', label: 'Reference vs test difference', unit: '°C', ...Thresholds.get('thermometer-correction-factors', 'diffTolerance') }
+      { key: 'diffTolerance', label: 'Reference vs test difference', unit: 'Â°C', ...Thresholds.get('thermometer-correction-factors', 'diffTolerance') }
     ],
     deviationLabel: 'Within tolerance',
     deviationPolarity: 'accurate'

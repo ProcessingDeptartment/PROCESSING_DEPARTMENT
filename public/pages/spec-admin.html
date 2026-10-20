@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -162,7 +162,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/document-revision.js?v=3"></script>
@@ -208,8 +208,8 @@
   function loadRecords() {
     json('/api/record-defs').then(function (rows) {
       $('recSel').dataset.loaded = '1';
-      $('recSel').innerHTML = '<option value="">— choose a record —</option>' + rows.map(function (r) {
-        return '<option value="' + esc(r.record_key) + '">' + esc((r.doc_code ? r.doc_code + ' — ' : '') + (r.title || r.record_key)) + '  [' + esc(r.record_key) + ']</option>';
+      $('recSel').innerHTML = '<option value="">â€” choose a record â€”</option>' + rows.map(function (r) {
+        return '<option value="' + esc(r.record_key) + '">' + esc((r.doc_code ? r.doc_code + ' â€” ' : '') + (r.title || r.record_key)) + '  [' + esc(r.record_key) + ']</option>';
       }).join('');
     }).catch(function (e) { $('recSel').innerHTML = '<option value="">Could not load records</option>'; toast('Could not load records: ' + e.message, true); });
   }
@@ -249,11 +249,11 @@
   function status(k) { var s = specs[k]; return !s ? 'No spec' : s.active ? 'Spec set' : 'Spec off'; }
   function drawFieldPicker() {
     var fs = $('fieldSel');
-    fs.innerHTML = '<option value="">— choose a field —</option>' + fields.map(function (f) {
-      return '<option value="' + esc(f.key) + '">' + (specs[f.key] ? '● ' : '') + esc(f.label) + '  [' + esc(f.key) + ' · ' + esc(f.type) + (f.where ? ' · ' + esc(f.where) : '') + ']  — ' + status(f.key) + '</option>';
+    fs.innerHTML = '<option value="">â€” choose a field â€”</option>' + fields.map(function (f) {
+      return '<option value="' + esc(f.key) + '">' + (specs[f.key] ? 'â— ' : '') + esc(f.label) + '  [' + esc(f.key) + ' Â· ' + esc(f.type) + (f.where ? ' Â· ' + esc(f.where) : '') + ']  â€” ' + status(f.key) + '</option>';
     }).join('');
     fs.disabled = false;
-    $('fieldInfo').textContent = fields.length + ' fields · ' + Object.keys(specs).filter(function (k) { return specs[k].active; }).length + ' with an active spec';
+    $('fieldInfo').textContent = fields.length + ' fields Â· ' + Object.keys(specs).filter(function (k) { return specs[k].active; }).length + ' with an active spec';
   }
   $('fieldSel').addEventListener('change', function () { if (this.value) openEditor(this.value); else { $('editor').hidden = true; current = null; } });
 
@@ -362,12 +362,12 @@
   function drawHistory(s) {
     var box = $('history');
     if (!s) { box.hidden = true; return; }
-    box.hidden = false; $('histFor').textContent = '— ' + s.field_key;
+    box.hidden = false; $('histFor').textContent = 'â€” ' + s.field_key;
     $('verList').innerHTML = '<li class="hint">Loading&hellip;</li>';
     json('/api/specs/' + s.id + '/versions').then(function (vs) {
       $('verList').innerHTML = vs.length ? vs.map(function (v) {
         var sn = v.snapshot || {};
-        var lim = (sn.spec_min == null && sn.spec_max == null) ? '' : ' &middot; limits ' + (sn.spec_min == null ? '—' : esc(sn.spec_min)) + ' to ' + (sn.spec_max == null ? '—' : esc(sn.spec_max));
+        var lim = (sn.spec_min == null && sn.spec_max == null) ? '' : ' &middot; limits ' + (sn.spec_min == null ? 'â€”' : esc(sn.spec_min)) + ' to ' + (sn.spec_max == null ? 'â€”' : esc(sn.spec_max));
         return '<li><span class="v">v' + v.version_number + '</span><span class="badge ' + (v.status === 'PUBLISHED' ? 'set' : 'none') + '">' + esc(v.status) + '</span> ' + esc(fmtWhen(v.published_at))
           + ' by ' + esc(v.published_by) + ' (' + esc(v.changed_by_title) + ')' + lim + '<br><span class="hint">' + esc(v.change_reason) + '</span></li>';
       }).join('') : '<li class="hint">No versions yet.</li>';
@@ -381,9 +381,9 @@
     $('summary').hidden = false;
     $('specRows').innerHTML = rows.length ? rows.map(function (s) {
       return '<tr><td>' + esc(labelOf(s.field_key)) + '</td><td><code>' + esc(s.field_key) + '</code></td>'
-        + '<td>' + (s.spec_min == null ? '—' : esc(s.spec_min)) + '</td><td>' + (s.spec_max == null ? '—' : esc(s.spec_max)) + '</td>'
+        + '<td>' + (s.spec_min == null ? 'â€”' : esc(s.spec_min)) + '</td><td>' + (s.spec_max == null ? 'â€”' : esc(s.spec_max)) + '</td>'
         + '<td>' + esc(GATE_LABEL[s.gate_mode] || s.gate_mode) + '</td>'
-        + '<td>' + (s.auto_nc ? esc(s.nc_category || 'Yes') + ' <span class="hint">(' + esc(s.nc_severity) + (s.nc_optional_skip ? ', skippable' : ', not skippable') + ')</span>' : '—') + '</td>'
+        + '<td>' + (s.auto_nc ? esc(s.nc_category || 'Yes') + ' <span class="hint">(' + esc(s.nc_severity) + (s.nc_optional_skip ? ', skippable' : ', not skippable') + ')</span>' : 'â€”') + '</td>'
         + '<td>v' + esc(s.version_number) + '</td>'
         + '<td><span class="badge ' + (s.active ? 'set' : 'off') + '">' + (s.active ? 'Active' : 'Off') + '</span></td>'
         + '<td><button type="button" data-edit="' + esc(s.field_key) + '">Edit</button></td></tr>';

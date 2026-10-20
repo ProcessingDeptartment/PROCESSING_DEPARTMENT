@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Standards Register</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
@@ -57,11 +57,11 @@
 <div id="sr-root">
   <div class="sr-top">
     <h1>Standards Register</h1>
-    <a class="btn btn-ghost" href="../index.html">← Home</a>
+    <a class="btn btn-ghost" href="../index.html">â† Home</a>
   </div>
 
   <div class="sr-body">
-    <div class="state" id="state">Checking…</div>
+    <div class="state" id="state">Checkingâ€¦</div>
 
     
     <div class="panel">
@@ -74,7 +74,7 @@
       <h2>Register a standard</h2>
       <div class="drop" id="drop">
         <strong>Drop the PDF here</strong> or click to choose<br>
-        <span class="muted">The file stays on your machine — this records what it is</span>
+        <span class="muted">The file stays on your machine â€” this records what it is</span>
         <input type="file" id="file" accept=".pdf,.docx,.doc" hidden>
       </div>
       <div id="fileInfo" class="muted" style="margin-top:10px;"></div>
@@ -83,7 +83,7 @@
         <div>
           <label for="scheme">Scheme</label>
           <select id="scheme">
-            <option value="">—</option>
+            <option value="">â€”</option>
             <option value="fssc-22000">FSSC 22000</option>
             <option value="brcgs-food">BRCGS Food Safety</option>
             <option value="friend-of-the-sea">Friend of the Sea</option>
@@ -126,7 +126,7 @@
         <strong>The file is not stored here.</strong> Scheme documents are licensed and large,
         and this app's storage holds record data, not binaries. After registering, copy the file
         into the standards library so the auditor agents can read it:
-        <div class="mono" style="margin-top:6px;" id="destPath">…\20. Paperless\STANDARDS\&lt;scheme&gt;\</div>
+        <div class="mono" style="margin-top:6px;" id="destPath">â€¦\20. Paperless\STANDARDS\&lt;scheme&gt;\</div>
       </div>
     </div>
 
@@ -137,7 +137,7 @@
         <thead>
           <tr><th>Scheme</th><th>Document</th><th>Version</th><th>Effective</th><th>Status</th><th>Fingerprint</th><th></th></tr>
         </thead>
-        <tbody id="rows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+        <tbody id="rows"><tr><td colspan="7" class="muted">Loadingâ€¦</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -234,9 +234,9 @@
         '<td>' + esc(d.scheme) + '</td>' +
         '<td>' + esc(d.title) + '<br><span class="muted mono">' + esc(d.fileName) + '</span></td>' +
         '<td>' + esc(d.version) + '</td>' +
-        '<td>' + esc(d.effective || '—') + '</td>' +
+        '<td>' + esc(d.effective || 'â€”') + '</td>' +
         '<td><span class="tag ' + esc(d.status) + '">' + esc(d.status) + '</span></td>' +
-        '<td class="mono">' + esc((d.sha256 || '').slice(0, 12)) + '…</td>' +
+        '<td class="mono">' + esc((d.sha256 || '').slice(0, 12)) + 'â€¦</td>' +
         '<td><button class="btn btn-flat btn-sm" data-del="' + esc(d.id) + '">Remove</button></td>' +
         '</tr>';
     }).join('');
@@ -256,10 +256,10 @@
 
   async function takeFile(file) {
     if (!file) return;
-    el('fileInfo').textContent = 'Reading…';
+    el('fileInfo').textContent = 'Readingâ€¦';
     pending = { name: file.name, size: file.size, sha256: await fingerprint(file) };
-    el('fileInfo').innerHTML = '<strong>' + esc(pending.name) + '</strong> — ' +
-      humanSize(pending.size) + ' · <span class="mono">' + esc(pending.sha256.slice(0, 16)) + '…</span>';
+    el('fileInfo').innerHTML = '<strong>' + esc(pending.name) + '</strong> â€” ' +
+      humanSize(pending.size) + ' Â· <span class="mono">' + esc(pending.sha256.slice(0, 16)) + 'â€¦</span>';
 
     if (!el('title').value) el('title').value = pending.name.replace(/\.(pdf|docx?|DOCX?|PDF)$/, '');
     el('save').disabled = false;
@@ -285,12 +285,12 @@
     };
 
     el('save').disabled = true;
-    el('saveMsg').textContent = 'Saving…';
+    el('saveMsg').textContent = 'Savingâ€¦';
     var ok = await window.storage.set(KEY_PREFIX + doc.id, JSON.stringify(doc), true);
 
     el('save').disabled = false;
     if (ok === false) {
-      el('saveMsg').textContent = 'Could not save — nothing was recorded.';
+      el('saveMsg').textContent = 'Could not save â€” nothing was recorded.';
       return;
     }
     el('saveMsg').textContent = 'Registered.';
@@ -323,7 +323,7 @@
   });
 
   el('scheme').addEventListener('change', function () {
-    el('destPath').textContent = '…\\20. Paperless\\STANDARDS\\' + (el('scheme').value || '<scheme>') + '\\';
+    el('destPath').textContent = 'â€¦\\20. Paperless\\STANDARDS\\' + (el('scheme').value || '<scheme>') + '\\';
   });
   el('save').addEventListener('click', save);
   el('clear').addEventListener('click', clearForm);

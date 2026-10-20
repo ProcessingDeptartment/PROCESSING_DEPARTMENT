@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Device Sign-in</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   :root{
@@ -41,11 +41,11 @@
 <div id="ak-root">
   <div class="ak-top">
     <h1>Device Sign-in</h1>
-    <a class="btn btn-ghost" href="../index.html">← Home</a>
+    <a class="btn btn-ghost" href="../index.html">â† Home</a>
   </div>
   <div class="ak-body">
     <div class="panel">
-      <div class="state" id="state">Checking…</div>
+      <div class="state" id="state">Checkingâ€¦</div>
       <label for="passInput">Sign in with your passkey</label>
       <input type="password" id="passInput" inputmode="numeric" placeholder="Your passkey" autocomplete="off">
       <div class="row">
@@ -76,9 +76,9 @@
   async function test() {
     try {
       const res = await window.FacilityApi.fetch('/api/storage/prefix/' + encodeURIComponent('__keycheck__'));
-      if (res.status === 401) { setState('Not authorised — this device is not signed in. Nothing will save.', 'bad'); return false; }
+      if (res.status === 401) { setState('Not authorised â€” this device is not signed in. Nothing will save.', 'bad'); return false; }
       if (!res.ok) { setState('Database reachable but returned ' + res.status + '.', 'bad'); return false; }
-      setState('Authorised — this device can read and write records.', 'ok');
+      setState('Authorised â€” this device can read and write records.', 'ok');
       return true;
     } catch (e) {
       setState('Could not reach the records database. Check the connection and retry.', 'bad');
@@ -106,7 +106,7 @@
     const pin = $('passInput').value.trim();
     const msg = $('enrolMsg');
     if (!pin) { msg.textContent = 'Enter your passkey first.'; return; }
-    msg.textContent = 'Checking…';
+    msg.textContent = 'Checkingâ€¦';
     try {
       const res = await window.FacilityApi.fetch('/api/auth/device-enroll', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin, deviceId: deviceId(), label: navigator.userAgent })

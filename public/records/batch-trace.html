@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>Batch Traceability</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   * { box-sizing: border-box; }
@@ -234,7 +234,7 @@
       <datalist id="batchList"></datalist>
     </div>
     <button id="traceBtn">Trace</button>
-    <button id="scanBtn" type="button" hidden>📷 Scan barcode</button>
+    <button id="scanBtn" type="button" hidden>ðŸ“· Scan barcode</button>
   </div>
   <div class="hint" id="hint"></div>
 
@@ -283,7 +283,7 @@
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   const REL_LABEL = { input: 'made from', output: 'went into' };
-  const STATUS_LABEL = { verified: 'Verified · complete', submitted: 'Awaiting verification', draft: 'Draft' };
+  const STATUS_LABEL = { verified: 'Verified Â· complete', submitted: 'Awaiting verification', draft: 'Draft' };
 
   // record_key -> doc code (e.g. "REC 7.1.4"), same lookup form-record.js uses for job-trace picks.
   const docCodeByKey = {};
@@ -305,7 +305,7 @@
       $('batchList').innerHTML = list.map(b => `<option value="${esc(b)}">`).join('');
       $('hint').textContent = list.length
         ? `${list.length} batch number${list.length === 1 ? '' : 's'} indexed so far.`
-        : 'No batches indexed yet — save a record that declares a batch field to populate this.';
+        : 'No batches indexed yet â€” save a record that declares a batch field to populate this.';
     } catch (e) {
       $('hint').textContent = '';
     }
@@ -328,7 +328,7 @@
     panel.hidden = false;
     $('scanBody').innerHTML = j.barcodes.map(b => {
       const ev = b.stageEvents.map(e => `<tr style="border-bottom:1px solid #eee;"><td>${esc(e.stage)}</td><td>${esc(fmtWhen(e.scannedAt))}</td><td>${esc(e.scannedByUser || '')}</td><td>${esc(e.locationNote || '')}</td><td>${e.weight != null ? esc(e.weight) + ' kg' : ''}</td></tr>`).join('');
-      const mem = b.members.length ? b.members.map(m => esc(m.value)).join(', ') : '<span class="none">— none recorded —</span>';
+      const mem = b.members.length ? b.members.map(m => esc(m.value)).join(', ') : '<span class="none">â€” none recorded â€”</span>';
       const kids = b.children.length ? '<div class="summary">Split into: ' + b.children.map(c => `<a href="?batch=${encodeURIComponent(c.value)}">${esc(c.value)}</a> (${esc(c.status)})`).join(', ') + '</div>' : '';
       return `<div class="card" style="margin-bottom:10px;">
         <div class="top"><span class="title">Main barcode ${esc(b.value)}</span><span class="date">${esc(b.status)}</span></div>
@@ -337,7 +337,7 @@
       </div>`;
     }).join('');
     if (j.viaBarcode && j.jobNos && j.jobNos.length > 1) {
-      $('scanBody').insertAdjacentHTML('afterbegin', `<div class="summary" style="margin-bottom:8px;">“${esc(j.viaBarcode)}” appears on ${j.jobNos.length} jobs (the farm code was reused): ` +
+      $('scanBody').insertAdjacentHTML('afterbegin', `<div class="summary" style="margin-bottom:8px;">â€œ${esc(j.viaBarcode)}â€ appears on ${j.jobNos.length} jobs (the farm code was reused): ` +
         j.jobNos.map(n => `<a href="?batch=${encodeURIComponent(n)}">${esc(n)}</a>`).join(', ') + '. Showing the newest.</div>');
     }
     return (j.viaBarcode && j.jobNos && j.jobNos[0]) || '';
@@ -346,7 +346,7 @@
   function renderGenealogy(graph) {
     const cell = list => list && list.length
       ? list.map(b => `<a href="?batch=${encodeURIComponent(b)}">${esc(b)}</a>`).join('')
-      : '<span class="none">— none recorded —</span>';
+      : '<span class="none">â€” none recorded â€”</span>';
     $('inputs').innerHTML = cell(graph.inputs);
     $('outputs').innerHTML = cell(graph.outputs);
   }
@@ -366,7 +366,7 @@
         <div class="card">
           <div class="top">
             <span class="title">${docCode ? `<span class="doc-code">${esc(docCode)}</span>` : ''}${esc(r.record_title || r.record_key)}</span>
-            <span class="date"><span class="photo-count"></span>${esc(r.occurred_on || '—')}</span>
+            <span class="date"><span class="photo-count"></span>${esc(r.occurred_on || 'â€”')}</span>
           </div>
           ${tags}
           ${r.summary ? `<div class="summary">${esc(r.summary)}</div>` : ''}
@@ -374,8 +374,8 @@
             const b = p.batches || {}, ak = p.additionsKg || {};
             if (p.process === 'Blanching') {
               // new Blanching slide: time, temperature, salt batch (old blanching cards keep their kg / old fields)
-              const bits = [p.blanchTime, p.blanchTempC != null ? p.blanchTempC + ' °C' : '', p.abaloneKg != null ? p.abaloneKg + ' kg' : '', b.blanch ? 'salt batch ' + b.blanch : ''].filter(Boolean);
-              return `<div class="summary">Blanching${bits.length ? ' &mdash; ' + esc(bits.join(' — ')) : ''}</div>`;
+              const bits = [p.blanchTime, p.blanchTempC != null ? p.blanchTempC + ' Â°C' : '', p.abaloneKg != null ? p.abaloneKg + ' kg' : '', b.blanch ? 'salt batch ' + b.blanch : ''].filter(Boolean);
+              return `<div class="summary">Blanching${bits.length ? ' &mdash; ' + esc(bits.join(' â€” ')) : ''}</div>`;
             }
             const adds = [['Salt', 'salt'], ['Sugar', 'sugar'], ['Vinegar', 'vinegar']]
               .filter(x => b[x[1]] || ak[x[1]] != null).map(x => x[0] + (ak[x[1]] != null ? ' ' + ak[x[1]] + ' kg' : '') + (b[x[1]] ? ' batch ' + b[x[1]] : ''));
@@ -396,7 +396,7 @@
     return r.href + (r.href.indexOf('?') < 0 ? '?' : '&') + 'entry=' + encodeURIComponent(r.submission_id);
   }
 
-  // REC 7.4.2 entries with photos on problem answers get a 📷 count (src/submission-images.js)
+  // REC 7.4.2 entries with photos on problem answers get a ðŸ“· count (src/submission-images.js)
   async function addPhotoCounts() {
     const cards = document.querySelectorAll('[data-photo-sid]');
     if (!cards.length) return;
@@ -406,7 +406,7 @@
       const counts = await res.json();
       cards.forEach((li) => {
         const n = counts[li.dataset.photoSid] || 0;
-        if (n) li.querySelector('.photo-count').textContent = '📷 ' + n + ' photo' + (n === 1 ? '' : 's') + ' · ';
+        if (n) li.querySelector('.photo-count').textContent = 'ðŸ“· ' + n + ' photo' + (n === 1 ? '' : 's') + ' Â· ';
       });
     } catch (e) {}
   }
@@ -438,7 +438,7 @@
   async function doTrace() {
     const batchNo = $('batchInput').value.trim();
     if (!batchNo) { setStatus('Enter a batch number to trace.'); $('results').hidden = true; return; }
-    setStatus('Tracing…', 'loading');
+    setStatus('Tracingâ€¦', 'loading');
     $('results').hidden = true;
     $('traceBtn').disabled = true;
     try {
@@ -455,7 +455,7 @@
         $('batchTag').textContent = batchNo;
         renderGenealogy({ inputs: [], outputs: [] });
         $('count').textContent = '0 touchpoints';
-        $('timeline').innerHTML = `<li class="empty">No records reference batch “${esc(batchNo)}” yet.` +
+        $('timeline').innerHTML = `<li class="empty">No records reference batch â€œ${esc(batchNo)}â€ yet.` +
           (isAdminUser() ? '' : ' If this is a barcode, sign in as <b>Administrator</b> (barcode tracing is administrator-only for now).') + '</li>';
         return;
       }

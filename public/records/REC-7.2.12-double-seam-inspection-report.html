@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>REC 7.2.12 Double Seam Inspection Report</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
 <style>
   /* Matrix + spec-editor styles, scoped to the engine's mount. */
@@ -334,7 +334,7 @@
   }
 
   const SECTION_STYLE = 'border:1px solid var(--palette-border,#e2e4e3);border-radius:6px;padding:10px 14px;background:#fff;';
-  const jobSummary = (v) => (v ? '— ' + v : '');
+  const jobSummary = (v) => (v ? 'â€” ' + v : '');
 
   function headerFieldHtml(k, label, type, hint) {
     if (k === 'microVerified') {

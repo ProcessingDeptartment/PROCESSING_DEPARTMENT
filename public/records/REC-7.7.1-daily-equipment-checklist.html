@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>REC 7.7.1 Daily Equipment Checklist</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -29,7 +29,7 @@
 <script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/form-record.js?v=123"></script>
+  <script src="../lib/form-record.js?v=124"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -39,7 +39,7 @@
     docRevisionStart: 5,
     listColumns: ['weekOf', 'checkedBy'],
     instructions: [
-      { label: 'Inspection', text: 'Inspect all equipment and devices daily. âÅ““ = Good condition/working, X = Faulty/damaged.' }
+      { label: 'Inspection', text: 'Inspect all equipment and devices daily. Ã¢Ã…â€œâ€œ = Good condition/working, X = Faulty/damaged.' }
     ],
     sections: [
       { title: 'Week', fields: [
@@ -52,11 +52,11 @@
       ]}
     ],
     roster: {
-      title: 'Equipment / device checks — covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
+      title: 'Equipment / device checks â€” covers scales, compressor, seamer, malt/sugar/salt buckets, grader, washing machines, cooking pots, steamer, printers, can dust blower, pH meters, temperature probes, vacuum gauges, stopwatches, micrometres, gauge blocks, vernier caliper, scales, salt/brix meters',
       columns: [
         { key: 'equipmentOrDevice', label: 'Equipment / device', type: 'text' },
         { key: 'date', label: 'Date', type: 'date' },
-        { key: 'condition', label: 'Condition (âÅ““ good / X faulty)', type: 'select', options: ['âÅ““', 'X'] },
+        { key: 'condition', label: 'Condition (Ã¢Ã…â€œâ€œ good / X faulty)', type: 'select', options: ['Ã¢Ã…â€œâ€œ', 'X'] },
         { key: 'comments', label: 'Comments', type: 'text' }
       ]
     }

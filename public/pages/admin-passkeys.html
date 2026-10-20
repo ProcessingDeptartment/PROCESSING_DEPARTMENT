@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -138,7 +138,7 @@
   <div class="admin-panel">
     <a class="back-link" href="../index.html">&larr; Back to home</a>
     <a class="back-link" style="margin-left:14px;" href="admin-verification-preview.html">Verification Preview Fields &rarr;</a>
-    <h1>🔐 Passkey Management</h1>
+    <h1>ðŸ” Passkey Management</h1>
     <p>Admin only: Create and manage user passkeys for signature verification.</p>
 
     <div class="passkey-form">
@@ -147,7 +147,7 @@
         <input type="text" id="username" placeholder="Username (email)" />
         <input type="text" id="displayName" placeholder="Full name" />
         <input type="text" id="title" placeholder="Job title" />
-        <input type="text" id="passkey" placeholder="Passkey (4–8 digits)" maxlength="8" />
+        <input type="text" id="passkey" placeholder="Passkey (4â€“8 digits)" maxlength="8" />
       </div>
       <div class="form-row full">
         <button onclick="createPasskey()" class="btn btn-primary">
@@ -160,7 +160,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
       <h2 style="margin:0;">Active Users</h2>
       <div class="filter-bar" style="flex:0 0 auto; width:280px;">
-        <input type="text" id="searchInput" placeholder="Search name or email…" oninput="filterUsers()" />
+        <input type="text" id="searchInput" placeholder="Search name or emailâ€¦" oninput="filterUsers()" />
       </div>
     </div>
     <p class="user-count" id="userCount"></p>
@@ -179,7 +179,7 @@
         </tr>
       </thead>
       <tbody id="usersList">
-        <tr><td colspan="8" style="text-align: center; color: #999;">Loading…</td></tr>
+        <tr><td colspan="8" style="text-align: center; color: #999;">Loadingâ€¦</td></tr>
       </tbody>
     </table>
   </div>
@@ -187,7 +187,7 @@
   <!-- Edit Modal -->
   <div class="modal-overlay" id="editModal">
     <div class="modal-box">
-      <h2>✏️ Edit User</h2>
+      <h2>âœï¸ Edit User</h2>
       <input type="hidden" id="editUsername" />
       <div class="modal-field">
         <label>Email / Username</label>
@@ -203,7 +203,7 @@
       </div>
       <div class="modal-field">
         <label>New Passkey <span style="font-weight:400;text-transform:none;">(leave blank to keep existing)</span></label>
-        <input type="text" id="editPasskey" placeholder="4–8 digits (optional)" maxlength="8" />
+        <input type="text" id="editPasskey" placeholder="4â€“8 digits (optional)" maxlength="8" />
         <div class="modal-hint">Only fill this in if you want to reset their passkey.</div>
       </div>
       <div id="editMessage" style="display:none; margin-top:10px;"></div>
@@ -214,7 +214,7 @@
     </div>
   </div>
 
-  <script src="../lib/palette-map.js"></script>
+  <script src="../lib/palette-map.js?v=2"></script>
   <script src="../lib/api-backend.js?v=18"></script>
   <script src="../lib/permission-rules.js?v=8"></script>
   <script src="../lib/auth.js?v=5"></script>
@@ -222,7 +222,7 @@
   <script>
     let allUsers = [];
 
-    // ── Create / Reset ────────────────────────────────────────────────────────
+    // â”€â”€ Create / Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function createPasskey() {
       const username    = document.getElementById('username').value.trim();
       const displayName = document.getElementById('displayName').value.trim();
@@ -234,7 +234,7 @@
         return;
       }
       if (!/^\d{4,8}$/.test(passkey)) {
-        showMessage('Passkey must be 4–8 digits', 'error');
+        showMessage('Passkey must be 4â€“8 digits', 'error');
         return;
       }
 
@@ -247,7 +247,7 @@
         const result = await response.json();
         if (!response.ok) { showMessage(result.error || 'Error creating passkey', 'error'); return; }
 
-        showMessage(`✓ Passkey created for ${displayName}`, 'success');
+        showMessage(`âœ“ Passkey created for ${displayName}`, 'success');
         ['username','displayName','title','passkey'].forEach(id => document.getElementById(id).value = '');
         loadUsers();
       } catch (error) {
@@ -255,7 +255,7 @@
       }
     }
 
-    // ── Load Users ────────────────────────────────────────────────────────────
+    // â”€â”€ Load Users â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadUsers() {
       try {
         const response = await FacilityApi.fetch('/api/admin/passkeys/list', {
@@ -289,13 +289,13 @@
         row.innerHTML = `
           <td><strong>${user.displayName}</strong></td>
           <td><code style="font-size:12px;">${user.username}</code></td>
-          <td>${user.title || '<span style="color:#bbb;">—</span>'}</td>
+          <td>${user.title || '<span style="color:#bbb;">â€”</span>'}</td>
           <td>${user.passkeyPlain
-            ? `<div class="pin-cell"><span class="pin-masked" id="pin-val-${user.id}">••••</span><button class="pin-toggle" onclick="togglePin('${user.id}','${user.passkeyPlain}')" id="pin-btn-${user.id}">Show</button></div>`
+            ? `<div class="pin-cell"><span class="pin-masked" id="pin-val-${user.id}">â€¢â€¢â€¢â€¢</span><button class="pin-toggle" onclick="togglePin('${user.id}','${user.passkeyPlain}')" id="pin-btn-${user.id}">Show</button></div>`
             : `<span class="pin-none">not set</span>`
           }</td>
           <td class="status-${user.isActive ? 'active' : 'inactive'}">
-            ${user.isActive ? '✓ Active' : '✗ Disabled'}
+            ${user.isActive ? 'âœ“ Active' : 'âœ— Disabled'}
           </td>
           <td>${lastUsed}</td>
           <td>${created}</td>
@@ -311,7 +311,7 @@
       });
     }
 
-    // ── Filter ────────────────────────────────────────────────────────────────
+    // â”€â”€ Filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function filterUsers() {
       const q = document.getElementById('searchInput').value.toLowerCase();
       if (!q) { renderUsers(allUsers); return; }
@@ -323,7 +323,7 @@
       renderUsers(filtered);
     }
 
-    // ── Edit Modal ────────────────────────────────────────────────────────────
+    // â”€â”€ Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function openEditModal(user) {
       document.getElementById('editUsername').value        = user.username;
       document.getElementById('editUsernameDisplay').value = user.username;
@@ -346,7 +346,7 @@
 
       if (!displayName) { showEditMessage('Full name is required', 'error'); return; }
       if (passkey && !/^\d{4,8}$/.test(passkey)) {
-        showEditMessage('Passkey must be 4–8 digits if provided', 'error');
+        showEditMessage('Passkey must be 4â€“8 digits if provided', 'error');
         return;
       }
 
@@ -363,7 +363,7 @@
         if (!response.ok) { showEditMessage(result.error || 'Error saving', 'error'); return; }
 
         closeEditModal();
-        showMessage(`✓ Updated ${displayName}`, 'success');
+        showMessage(`âœ“ Updated ${displayName}`, 'success');
         loadUsers();
       } catch (error) {
         showEditMessage('Error: ' + error.message, 'error');
@@ -382,7 +382,7 @@
       if (e.target === this) closeEditModal();
     });
 
-    // ── Disable / Enable ──────────────────────────────────────────────────────
+    // â”€â”€ Disable / Enable â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function disableUser(username) {
       if (!confirm(`Disable passkey for ${username}?`)) return;
       try {
@@ -393,7 +393,7 @@
         });
         const result = await response.json();
         if (!response.ok) { showMessage(result.error || 'Error', 'error'); return; }
-        showMessage('✓ Passkey disabled', 'success');
+        showMessage('âœ“ Passkey disabled', 'success');
         loadUsers();
       } catch (error) {
         showMessage('Error: ' + error.message, 'error');
@@ -409,14 +409,14 @@
         });
         const result = await response.json();
         if (!response.ok) { showMessage(result.error || 'Error', 'error'); return; }
-        showMessage('✓ Passkey re-enabled', 'success');
+        showMessage('âœ“ Passkey re-enabled', 'success');
         loadUsers();
       } catch (error) {
         showMessage('Error: ' + error.message, 'error');
       }
     }
 
-    // ── Show / Hide PIN ───────────────────────────────────────────────────────
+    // â”€â”€ Show / Hide PIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function togglePin(id, pin) {
       const val = document.getElementById('pin-val-' + id);
       const btn = document.getElementById('pin-btn-' + id);
@@ -426,13 +426,13 @@
         val.className = 'pin-value';
         btn.textContent = 'Hide';
       } else {
-        val.textContent = '••••';
+        val.textContent = 'â€¢â€¢â€¢â€¢';
         val.className = 'pin-masked';
         btn.textContent = 'Show';
       }
     }
 
-    // ── Delete ────────────────────────────────────────────────────────────────
+    // â”€â”€ Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function deleteUser(username, displayName) {
       if (!confirm(`Permanently delete passkey record for ${displayName}?\n\nThis cannot be undone. Their passkey log history will remain.`)) return;
       try {
@@ -443,14 +443,14 @@
         });
         const result = await response.json();
         if (!response.ok) { showMessage(result.error || 'Error', 'error'); return; }
-        showMessage(`✓ Deleted ${displayName}`, 'success');
+        showMessage(`âœ“ Deleted ${displayName}`, 'success');
         loadUsers();
       } catch (error) {
         showMessage('Error: ' + error.message, 'error');
       }
     }
 
-    // ── Global Message ────────────────────────────────────────────────────────
+    // â”€â”€ Global Message â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function showMessage(msg, type) {
       const el = document.getElementById('message');
       el.textContent = msg;
@@ -459,7 +459,7 @@
       setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 
-    // ── Init ──────────────────────────────────────────────────────────────────
+    // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     loadUsers();
   </script>
 </body>

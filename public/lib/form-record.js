@@ -2013,6 +2013,13 @@
       }).sort((a, b) => (dateOf(b.values) || '').localeCompare(dateOf(a.values) || '') || b.createdAt - a.createdAt);
     }
 
+    function categoryDot() {
+      if (!window.PaletteMap) return '';
+      var colour = window.PaletteMap.dotColourFor(config.recordKey || '');
+      if (!colour) return '';
+      return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${colour};margin-right:5px;flex-shrink:0;vertical-align:middle;" title="${window.PaletteMap.categoryFor(config.recordKey || '')}"></span>`;
+    }
+
     function renderTable() {
       const list = filtered();
       const wrap = el('fr_table');
@@ -2022,7 +2029,7 @@
       }
       const cols = listCols.length ? listCols : allFields(config).slice(0, 4).map(f => f.key);
 
-      let html = `<table class="fr-table"><thead><tr><th>Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th><th></th></tr></thead><tbody>`;
+      let html = `<table class="fr-table"><thead><tr><th>${categoryDot()}Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th><th></th></tr></thead><tbody>`;
       list.forEach(sub => {
         const ref = subJobRef(sub);
         const refCell = ref.val

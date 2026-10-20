@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>REC 8.1.8 Traceability &amp; Mock Recall Checklist for Live Abalone</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -29,7 +29,7 @@
 <script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/form-record.js?v=123"></script>
+  <script src="../lib/form-record.js?v=124"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -39,7 +39,7 @@
     docRevisionStart: 3,
     listColumns: ['recallInitiationDate', 'packingDate'],
     instructions: [
-      { label: 'Note', text: 'Static reference checklist — each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
+      { label: 'Note', text: 'Static reference checklist â€” each row references another REC record by code/label rather than pulling live data from it (cross-record data linking is a future enhancement).' }
     ],
     sections: [
       { title: 'Batch details', fields: [
@@ -48,7 +48,7 @@
       ]}
     ],
     roster: {
-      title: 'Records — covers Live Production Pack (7.5.1), Live Pack Checklist / Bag Checks (7.5.2/7.5.3), IDN/Customer Order, NRCS Health Certificate, and related cleaning/hygiene records',
+      title: 'Records â€” covers Live Production Pack (7.5.1), Live Pack Checklist / Bag Checks (7.5.2/7.5.3), IDN/Customer Order, NRCS Health Certificate, and related cleaning/hygiene records',
       columns: [
         { key: 'recordName', label: 'Record', type: 'text' },
         { key: 'recordCode', label: 'QC record / REC code', type: 'text' },

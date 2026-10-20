@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>REC 8.1.6a Traceability &amp; Mock Recall Checklist for Canned Braised Abalone</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -32,7 +32,7 @@
 <script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/form-record.js?v=123"></script>
+  <script src="../lib/form-record.js?v=124"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -44,7 +44,7 @@
     stage: 'recall-braised',
     listColumns: ['date', 'agCode', 'jobNo'],
     instructions: [
-      { label: 'How to fill this in', text: 'Choose the job number first — each roster row then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
+      { label: 'How to fill this in', text: 'Choose the job number first â€” each roster row then picks from the records actually filed against that job, linking the exact submission rather than just the record type. With no job number chosen the picker falls back to the full Master Index list.' },
       { label: 'Records not traced by job number', text: 'Cleaning (REC 7.6.1, 7.6.2), Staff Hygiene (REC 7.6.7), Glass & Plastic (REC 7.7.2) and Utensil Issue (REC 7.7.4) are daily, weekly or per-shift records covering many jobs at once, so they are deliberately NOT filed against a job number and will not appear in the picker. Retrieve them by DATE RANGE for the production dates of this job and record them as Master Index picks.' }
     ],
 
@@ -59,7 +59,7 @@
       ]}
     ],
     roster: {
-      title: 'Records — same production-chain coverage as the Canned Abalone checklist (REC 8.1.6), specific to the braised sauce line',
+      title: 'Records â€” same production-chain coverage as the Canned Abalone checklist (REC 8.1.6), specific to the braised sauce line',
       columns: [
         { key: 'submissionRef', label: 'Record for this job', type: 'recordpick', source: 'jobtrace', jobField: 'jobNo', fillCode: 'recordCode', fillName: 'recordName' },
         { key: 'recordCode', label: 'REC code', type: 'text' },

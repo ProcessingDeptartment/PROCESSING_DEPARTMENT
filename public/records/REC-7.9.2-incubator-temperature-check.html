@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>REC 7.9.2 Daily Incubator Temperature Check</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -39,18 +39,18 @@
     title: 'Daily Incubator Temperature Check',
     docRevisionStart: 6,
     instructions: [
-      { label: 'Target range', text: '36.1°C – 37.8°C, recorded at start of shift, lunch and end of shift.' }
+      { label: 'Target range', text: '36.1Â°C â€“ 37.8Â°C, recorded at start of shift, lunch and end of shift.' }
     ],
     entryFields: [
       { key: 'date', label: 'Date', type: 'date', required: true },
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
-      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: '°C', specKey: 'incubatorTemp' },
+      { key: 'startShiftTemp', label: 'Start shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
+      { key: 'lunchTemp', label: 'Lunch temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
+      { key: 'endShiftTemp', label: 'End shift temp', type: 'number', unit: 'Â°C', specKey: 'incubatorTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'incubatorTemp', label: 'Incubator temperature', unit: '°C', ...Thresholds.get('incubator-temperature-check', 'incubatorTemp') }
+      { key: 'incubatorTemp', label: 'Incubator temperature', unit: 'Â°C', ...Thresholds.get('incubator-temperature-check', 'incubatorTemp') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -314,8 +314,8 @@ window.initFieldRules = (function () {
   function loadRecords() {
     json('/api/record-defs').then(function (rows) {
       $sa('recSel').dataset.loaded = '1';
-      $sa('recSel').innerHTML = '<option value="">— choose a record —</option>' + rows.map(function (r) {
-        return '<option value="' + esc(r.record_key) + '">' + esc((r.doc_code ? r.doc_code + ' — ' : '') + (r.title || r.record_key)) + '  [' + esc(r.record_key) + ']</option>';
+      $sa('recSel').innerHTML = '<option value="">â€” choose a record â€”</option>' + rows.map(function (r) {
+        return '<option value="' + esc(r.record_key) + '">' + esc((r.doc_code ? r.doc_code + ' â€” ' : '') + (r.title || r.record_key)) + '  [' + esc(r.record_key) + ']</option>';
       }).join('');
     }).catch(function (e) { $sa('recSel').innerHTML = '<option value="">Could not load records</option>'; saToast('Could not load records: ' + e.message, true); });
   }
@@ -340,7 +340,7 @@ window.initFieldRules = (function () {
     $sa('editor').hidden = true; $sa('summary').hidden = true; $sa('history').hidden = true; current = null; fields = []; specs = {};
     var fs = $sa('fieldSel');
     if (!key) { fs.disabled = true; fs.innerHTML = '<option value="">Choose a record first</option>'; $sa('fieldInfo').textContent = ''; return; }
-    fs.disabled = true; fs.innerHTML = '<option value="">Loading fields…</option>';
+    fs.disabled = true; fs.innerHTML = '<option value="">Loading fieldsâ€¦</option>';
     Promise.all([json('/api/record-def/' + encodeURIComponent(key)), json('/api/specs/' + encodeURIComponent(key) + '?all=1')])
       .then(function (res) {
         recStart = (res[0].config && res[0].config.docRevisionStart) || 1;
@@ -354,13 +354,13 @@ window.initFieldRules = (function () {
   function status(k) { var s = specs[k]; return !s ? 'No spec' : s.active ? 'Spec set' : 'Spec off'; }
   function drawFieldPicker() {
     var fs = $sa('fieldSel');
-    fs.innerHTML = '<option value="">— choose a field —</option>' + fields.map(function (f) {
-      return '<option value="' + esc(f.key) + '">' + (specs[f.key] ? '● ' : '') + esc(f.label) + '  [' + esc(f.key) + ' · ' + esc(f.type) + (f.where ? ' · ' + esc(f.where) : '') + ']  — ' + status(f.key) + '</option>';
+    fs.innerHTML = '<option value="">â€” choose a field â€”</option>' + fields.map(function (f) {
+      return '<option value="' + esc(f.key) + '">' + (specs[f.key] ? 'â— ' : '') + esc(f.label) + '  [' + esc(f.key) + ' Â· ' + esc(f.type) + (f.where ? ' Â· ' + esc(f.where) : '') + ']  â€” ' + status(f.key) + '</option>';
     }).join('');
     fs.disabled = false;
     var ff = $sa('fieldFilter'); ff.disabled = false; ff.value = '';
     Array.prototype.forEach.call(fs.options, function (o) { o.hidden = false; });
-    $sa('fieldInfo').textContent = fields.length + ' fields · ' + Object.keys(specs).filter(function (k) { return specs[k].active; }).length + ' with an active spec';
+    $sa('fieldInfo').textContent = fields.length + ' fields Â· ' + Object.keys(specs).filter(function (k) { return specs[k].active; }).length + ' with an active spec';
   }
   $sa('fieldSel').addEventListener('change', function () { if (this.value) openEditor(this.value); else { $sa('editor').hidden = true; current = null; } });
 
@@ -458,12 +458,12 @@ window.initFieldRules = (function () {
   function drawHistory(s) {
     var box = $sa('history');
     if (!s) { box.hidden = true; return; }
-    box.hidden = false; $sa('histFor').textContent = '— ' + s.field_key;
-    $sa('verList').innerHTML = '<li class="sa-hint">Loading…</li>';
+    box.hidden = false; $sa('histFor').textContent = 'â€” ' + s.field_key;
+    $sa('verList').innerHTML = '<li class="sa-hint">Loadingâ€¦</li>';
     json('/api/specs/' + s.id + '/versions').then(function (vs) {
       $sa('verList').innerHTML = vs.length ? vs.map(function (v) {
         var sn = v.snapshot || {};
-        var lim = (sn.spec_min == null && sn.spec_max == null) ? '' : ' · limits ' + (sn.spec_min == null ? '—' : esc(sn.spec_min)) + ' to ' + (sn.spec_max == null ? '—' : esc(sn.spec_max));
+        var lim = (sn.spec_min == null && sn.spec_max == null) ? '' : ' Â· limits ' + (sn.spec_min == null ? 'â€”' : esc(sn.spec_min)) + ' to ' + (sn.spec_max == null ? 'â€”' : esc(sn.spec_max));
         return '<li><span class="sv">v' + v.version_number + '</span><span class="sa-badge ' + (v.status === 'PUBLISHED' ? 'set' : 'none') + '">' + esc(v.status) + '</span> ' + esc(fmtWhen(v.published_at)) + ' by ' + esc(v.published_by) + ' (' + esc(v.changed_by_title) + ')' + lim + '<br><span class="sa-hint">' + esc(v.change_reason) + '</span></li>';
       }).join('') : '<li class="sa-hint">No versions yet.</li>';
     }).catch(function () { $sa('verList').innerHTML = '<li class="sa-hint">Could not load the history.</li>'; });
@@ -475,9 +475,9 @@ window.initFieldRules = (function () {
     $sa('summary').hidden = false;
     $sa('specRows').innerHTML = rows.length ? rows.map(function (s) {
       return '<tr><td>' + esc(labelOf(s.field_key)) + '</td><td><code>' + esc(s.field_key) + '</code></td>'
-        + '<td>' + (s.spec_min == null ? '—' : esc(s.spec_min)) + '</td><td>' + (s.spec_max == null ? '—' : esc(s.spec_max)) + '</td>'
+        + '<td>' + (s.spec_min == null ? 'â€”' : esc(s.spec_min)) + '</td><td>' + (s.spec_max == null ? 'â€”' : esc(s.spec_max)) + '</td>'
         + '<td>' + esc(GATE_LABEL[s.gate_mode] || s.gate_mode) + '</td>'
-        + '<td>' + (s.auto_nc ? esc(s.nc_category || 'Yes') + ' <span class="sa-hint">(' + esc(s.nc_severity) + (s.nc_optional_skip ? ', skippable' : ', not skippable') + ')</span>' : '—') + '</td>'
+        + '<td>' + (s.auto_nc ? esc(s.nc_category || 'Yes') + ' <span class="sa-hint">(' + esc(s.nc_severity) + (s.nc_optional_skip ? ', skippable' : ', not skippable') + ')</span>' : 'â€”') + '</td>'
         + '<td>v' + esc(s.version_number) + '</td>'
         + '<td><span class="sa-badge ' + (s.active ? 'set' : 'off') + '">' + (s.active ? 'Active' : 'Off') + '</span></td>'
         + '<td><button type="button" class="btn sm" data-edit="' + esc(s.field_key) + '">Edit</button></td></tr>';
@@ -504,7 +504,7 @@ window.initFieldRules = (function () {
   } catch (e) {  }
 </script>
 
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <script src="../lib/master-index-data.js?v=4"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
@@ -525,8 +525,8 @@ window.initFieldRules = (function () {
   function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 2800); }
   function setState(cls, html) { var s = $('state'); s.className = 'state ' + cls; s.innerHTML = html; s.style.display = html ? '' : 'none'; }
   function fmtWhen(ts) {
-    if (!ts) return '—';
-    var d = new Date(ts); if (isNaN(d.getTime())) return '—';
+    if (!ts) return 'â€”';
+    var d = new Date(ts); if (isNaN(d.getTime())) return 'â€”';
     var p = function (n) { return String(n).padStart(2, '0'); };
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
   }
@@ -598,14 +598,14 @@ window.initFieldRules = (function () {
       if (btn.dataset.modal) {
         // open full-screen modal
         $('tmplModal').hidden = false;
-        $('tmplModalTitle').textContent = btn.dataset.name + ' — Edit form template';
+        $('tmplModalTitle').textContent = btn.dataset.name + ' â€” Edit form template';
         $('tmplModalFrame').src = url;
       } else {
         // toggle inline preview
         var pane = row.querySelector('.rec-preview');
         var open = pane.classList.toggle('open');
         if (open) { var fr = pane.querySelector('iframe'); if (!fr.src || fr.src === location.href) fr.src = url; }
-        btn.textContent = open ? '▲ Hide preview' : '👁 Preview layout';
+        btn.textContent = open ? 'â–² Hide preview' : 'ðŸ‘ Preview layout';
       }
     }, { once: false });
   }
@@ -633,7 +633,7 @@ window.initFieldRules = (function () {
   }
   async function writeJson(key, val) {
     var ok = await window.storage.set(key, JSON.stringify(val), true);
-    if (ok === false) throw new Error('Could not save — check the connection and try again.');
+    if (ok === false) throw new Error('Could not save â€” check the connection and try again.');
   }
 
   // ---- flatten a spec object into editable leaves ------------------------------------------
@@ -663,7 +663,7 @@ window.initFieldRules = (function () {
       return PART[p] && i > 0 ? PART[p] : humanise(p);
     });
     var last = parts.pop();
-    return (parts.length ? '<span class="grp">' + esc(parts.join(' › ')) + ' › </span>' : '') + esc(last);
+    return (parts.length ? '<span class="grp">' + esc(parts.join(' â€º ')) + ' â€º </span>' : '') + esc(last);
   }
 
   // Friendly names for a record's spec items, from its template (custom override first, else the
@@ -745,7 +745,7 @@ window.initFieldRules = (function () {
           (e.code ? '<span class="code">' + esc(e.code) + '</span>' : '') +
           (e.custom ? '<span class="pill custom">Added</span>' : '') +
           (cur ? '<span class="pill">v' + cur.versionNumber + '</span>' : '<span class="pill none">No spec yet</span>') +
-          '<span class="meta">' + (cur ? 'Updated ' + fmtWhen(cur.publishedAt) + ' by ' + esc(cur.publishedBy || '—') : '') + '</span>' +
+          '<span class="meta">' + (cur ? 'Updated ' + fmtWhen(cur.publishedAt) + ' by ' + esc(cur.publishedBy || 'â€”') : '') + '</span>' +
         '</div>' +
         '<div class="card-body">' + (OPEN[e.key] ? body(e) : '') + '</div></div>';
     }).join('');
@@ -769,12 +769,12 @@ window.initFieldRules = (function () {
     var user = (window.Auth && window.Auth.getCurrentUsername()) || '';
     var hist = e.versions.map(function (h) {
       return '<div class="hist-item"><span class="v">v' + h.versionNumber + '</span>' +
-        '<span>' + fmtWhen(h.publishedAt) + ' · ' + esc(h.publishedBy || '—') + (h.changedByTitle ? ' (' + esc(h.changedByTitle) + ')' : '') +
-        '<br><span class="why">' + (h.changeReason || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l){ return '· ' + esc(l); }).join('<br>') + '</span></span>' +
+        '<span>' + fmtWhen(h.publishedAt) + ' Â· ' + esc(h.publishedBy || 'â€”') + (h.changedByTitle ? ' (' + esc(h.changedByTitle) + ')' : '') +
+        '<br><span class="why">' + (h.changeReason || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l){ return 'Â· ' + esc(l); }).join('<br>') + '</span></span>' +
         (h.status === 'PUBLISHED' ? '<span class="pill" style="margin-left:auto;align-self:flex-start;">Current</span>' : '') + '</div>';
     }).join('');
     var head = (e.href ? '<p style="margin:0 0 10px;"><a href="' + esc(e.href) + '">Open the record &rarr;</a>' +
-      (edit && e.rk ? ' &nbsp;·&nbsp; <a href="' + esc(e.href) + '?editTemplate=1">Edit the form template &rarr;</a>' : '') + '</p>' : '');
+      (edit && e.rk ? ' &nbsp;Â·&nbsp; <a href="' + esc(e.href) + '?editTemplate=1">Edit the form template &rarr;</a>' : '') + '</p>' : '');
     var cur = e.versions[0];
     if (!edit) {
       return head + '<div class="sec">' + (cur ? 'Current limits (v' + cur.versionNumber + ')' : 'Limits') + '</div>' +
@@ -783,7 +783,7 @@ window.initFieldRules = (function () {
         (hist ? '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>' : '');
     }
     return head +
-      '<div class="sec">' + (cur ? 'Current limits (v' + cur.versionNumber + ')' : 'Limits — none yet, add the first item below') + '</div>' +
+      '<div class="sec">' + (cur ? 'Current limits (v' + cur.versionNumber + ')' : 'Limits â€” none yet, add the first item below') + '</div>' +
       '<table class="leaves"><tbody data-rows>' + rows + '</tbody></table>' +
       '<div class="addrow">' +
         '<label>New spec item<input data-n="name" placeholder="e.g. Seam thickness"></label>' +
@@ -792,12 +792,12 @@ window.initFieldRules = (function () {
         '<button class="btn" data-act="additem" type="button">+ Add item</button>' +
       '</div>' +
       (e.rk ? '<label style="display:flex;gap:6px;align-items:flex-start;margin:-6px 0 14px;font-size:12px;color:#3b4650;"><input type="checkbox" data-n="linkform" checked style="margin-top:2px;"> ' +
-        '<span>Also add a field for this item to the record’s form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
+        '<span>Also add a field for this item to the recordâ€™s form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
       '<div class="sec">Publish as ' + (cur ? 'a new version' : 'the first version') + '</div>' +
-      '<div class="rev-rule"><strong>⚠ Do not publish a new version until all specification changes for this record are complete.</strong>' +
-        'Multiple changes can be grouped under one revision. Enter one change per line in the reason field below — each line will be shown as a separate item in the version history.</div>' +
+      '<div class="rev-rule"><strong>âš  Do not publish a new version until all specification changes for this record are complete.</strong>' +
+        'Multiple changes can be grouped under one revision. Enter one change per line in the reason field below â€” each line will be shown as a separate item in the version history.</div>' +
       '<div class="attr">' +
-        '<label style="grid-column:1/-1;">Changes in this revision — one per line<textarea data-f="reason" rows="3" placeholder="Max seam thickness 2.5→3.0 mm (customer request)\nMin cook temp 72→74°C (SOP update)"></textarea></label>' +
+        '<label style="grid-column:1/-1;">Changes in this revision â€” one per line<textarea data-f="reason" rows="3" placeholder="Max seam thickness 2.5â†’3.0 mm (customer request)\nMin cook temp 72â†’74Â°C (SOP update)"></textarea></label>' +
         '<label>Your name<input data-f="by" value="' + esc(user) + '"></label>' +
         '<label>Your title<input data-f="title" placeholder="e.g. QA Manager"></label>' +
       '</div>' +
@@ -852,7 +852,7 @@ window.initFieldRules = (function () {
     var ready = n > 0 && f('reason').value.trim() && f('by').value.trim() && f('title').value.trim();
     card.querySelector('[data-act="publish"]').disabled = !ready;
     f('hint').textContent = n === 0 ? 'No changes yet.'
-      : n + ' change' + (n === 1 ? '' : 's') + (ready ? '.' : ' — add a reason, your name and title to publish.');
+      : n + ' change' + (n === 1 ? '' : 's') + (ready ? '.' : ' â€” add a reason, your name and title to publish.');
   }
 
   function addItem(card, e) {
@@ -862,7 +862,7 @@ window.initFieldRules = (function () {
     var key = camel(name);
     if (!key) { toast('Give the new item a name first.'); return; }
     if (META.indexOf(key) >= 0 || (e.published && Object.prototype.hasOwnProperty.call(e.published, key)) ||
-        card.querySelector('tr[data-new-key="' + key + '"]')) { toast('“' + name + '” already exists on this spec.'); return; }
+        card.querySelector('tr[data-new-key="' + key + '"]')) { toast('â€œ' + name + 'â€ already exists on this spec.'); return; }
     var tb = card.querySelector('tbody[data-rows]');
     var parts = kind === 'range' ? [['min', 'Low'], ['max', 'High']] : [[null, '']];
     parts.forEach(function (p, i) {
@@ -873,7 +873,7 @@ window.initFieldRules = (function () {
       tr.setAttribute('data-label', name);
       tr.setAttribute('data-unit', unit);
       if (i === 0) tr.setAttribute('data-first', '1');
-      tr.innerHTML = '<td class="k">' + esc(name) + (p[1] ? ' › ' + p[1] : '') + ' <em>(new)</em></td>' +
+      tr.innerHTML = '<td class="k">' + esc(name) + (p[1] ? ' â€º ' + p[1] : '') + ' <em>(new)</em></td>' +
         '<td><input type="' + (kind === 'text' ? 'text' : 'number') + '" step="any"' + (p[0] ? ' data-part="' + p[0] + '"' : '') + '></td>' +
         '<td class="x">' + (i === 0 ? '<button class="btn sm" type="button" data-act="dropitem" data-key="' + esc(key) + '">Remove</button>' : '') + '</td>';
       tb.appendChild(tr);
@@ -907,13 +907,13 @@ window.initFieldRules = (function () {
         for (var i = 0; i < toLink.length; i++) {
           try {
             var r = await window.TemplateEditor.addSpecItem({ recordKey: e.rk, key: toLink[i].key, label: toLink[i].label, unit: toLink[i].unit,
-              reason: 'Spec item “' + toLink[i].label + '” added: ' + f('reason'), changedBy: f('by'), changedByTitle: f('title') });
+              reason: 'Spec item â€œ' + toLink[i].label + 'â€ added: ' + f('reason'), changedBy: f('by'), changedByTitle: f('title') });
             if (r.ok) done++; else why = r.reason;
           } catch (x) { why = x.message || 'error'; }
         }
         e.labels = null;
-        if (done) msg += ' Added ' + done + ' field' + (done === 1 ? '' : 's') + ' to the record’s form template.';
-        if (why === 'unsupported') msg += ' This record’s form can’t check readings against limits, so only the spec was updated.';
+        if (done) msg += ' Added ' + done + ' field' + (done === 1 ? '' : 's') + ' to the recordâ€™s form template.';
+        if (why === 'unsupported') msg += ' This recordâ€™s form canâ€™t check readings against limits, so only the spec was updated.';
         else if (why) msg += ' The form template could not be updated (' + why + ').';
       }
       toast(msg);
@@ -928,7 +928,7 @@ window.initFieldRules = (function () {
     if (hide) fresh.push(e.key);
     await writeJson(HIDDEN_KEY, fresh);
     HIDDEN = fresh;
-    toast(hide ? '“' + e.name + '” removed from the list.' : '“' + e.name + '” restored.');
+    toast(hide ? 'â€œ' + e.name + 'â€ removed from the list.' : 'â€œ' + e.name + 'â€ restored.');
     render();
   }
 
@@ -969,7 +969,7 @@ window.initFieldRules = (function () {
       }
       else if (act === 'publish') {
         if (!e.versions.length && e.key.slice(-5) === '-spec' && !e.custom &&
-            !confirm('This record has no spec yet. If it checks readings against limits, open the record once first so its default limits are seeded — otherwise those checks will be switched off.\n\nCreate the spec anyway?')) return;
+            !confirm('This record has no spec yet. If it checks readings against limits, open the record once first so its default limits are seeded â€” otherwise those checks will be switched off.\n\nCreate the spec anyway?')) return;
         publish(card, e);
       }
       else if (act === 'remove') { setHidden(e, true).catch(function (x) { toast(x.message); }); }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verifier Assignments</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css">
 <style>
   body{ font-family:'Segoe UI',system-ui,sans-serif; color:var(--palette-ink,#1b2330); background:var(--palette-paper,#f4f5f3); font-size:13px; line-height:1.4; margin:0; }
@@ -69,8 +69,8 @@
   </div>
 
   <div class="toolbar">
-    <input type="text" id="search" placeholder="Filter by document number or name…" autocomplete="off">
-    <span class="default-roles">Default: <b id="defaultRoles">—</b></span>
+    <input type="text" id="search" placeholder="Filter by document number or nameâ€¦" autocomplete="off">
+    <span class="default-roles">Default: <b id="defaultRoles">â€”</b></span>
     <span class="save-state" id="saveState"></span>
   </div>
 
@@ -117,7 +117,7 @@
   };
 
   var ROLE_LABELS = (window.PermissionRules && window.PermissionRules.ROLE_LABELS) || {};
-  // roles offered as verifier options — the supervisory / management set
+  // roles offered as verifier options â€” the supervisory / management set
   var ROLE_CHOICES = ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR']
     .filter(function (r) { return (window.PermissionRules && window.PermissionRules.ROLES || []).indexOf(r) !== -1; });
 
@@ -125,7 +125,7 @@
   var ASSIGN_KEY = window.VerificationQueue.ASSIGN_KEY;
 
   function roleLabel(r) { return ROLE_LABELS[r] || r.replace(/_/g, ' '); }
-  function labelList(roles) { return (roles || []).map(roleLabel).join(', ') || '—'; }
+  function labelList(roles) { return (roles || []).map(roleLabel).join(', ') || 'â€”'; }
 
   var RECORDS = ((window.MasterIndexData && window.MasterIndexData.rows) || [])
     .filter(function (r) { return r.recordKey && r.href; })
@@ -192,7 +192,7 @@
     });
     assignments = out;
     var ok = await window.storage.set(ASSIGN_KEY, JSON.stringify(out), true);
-    if (ok === false) { setSaveState('Not saved — retry', true); return false; }
+    if (ok === false) { setSaveState('Not saved â€” retry', true); return false; }
     setSaveState('Saved');
     return true;
   }
@@ -252,12 +252,12 @@
 
     if (!canEdit) {
       $('readonlyNote').style.display = '';
-      $('readonlyNote').textContent = 'Read-only — QA management / document-control roles may change verifier assignments.';
+      $('readonlyNote').textContent = 'Read-only â€” QA management / document-control roles may change verifier assignments.';
     }
     var backend = window.storage.backendName();
     if (backend === 'local') {
       $('readonlyNote').style.display = '';
-      $('readonlyNote').textContent = 'The records API is not connected on this device — changes save to this device only. '
+      $('readonlyNote').textContent = 'The records API is not connected on this device â€” changes save to this device only. '
         + 'Set a device key on the API key page for a facility-wide save.';
     }
   }

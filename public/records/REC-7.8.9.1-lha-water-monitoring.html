@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -9,7 +9,7 @@
 <title>REC 7.8.9.1 LHA Water Monitoring</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
 <script src="../lib/pdf-cover.js?v=6"></script>
-<script src="../lib/palette-map.js"></script>
+<script src="../lib/palette-map.js?v=2"></script>
 <link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -39,9 +39,9 @@
     title: 'LHA Water Monitoring',
     docRevisionStart: 3,
     instructions: [
-      { label: 'Scope', text: 'Live Holding Area chiller unit — separate from the general Water Monitoring record (REC 7.8.9), which covers a different water source.' },
+      { label: 'Scope', text: 'Live Holding Area chiller unit â€” separate from the general Water Monitoring record (REC 7.8.9), which covers a different water source.' },
       { label: 'Frequency', text: 'Complete record twice per shift.' },
-      { label: 'Parameter', text: 'Temperature 12-18°C.' }
+      { label: 'Parameter', text: 'Temperature 12-18Â°C.' }
     ],
     entryFields: [
       { key: 'month', label: 'Month', type: 'month', required: true },
@@ -49,11 +49,11 @@
       { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
       { key: 'timeOfCheck', label: 'Time of check', type: 'time' },
       { key: 'chillerUnitOperating', label: 'Chiller unit operating', type: 'yesno' },
-      { key: 'temperature', label: 'Temperature', type: 'number', unit: '°C', specKey: 'lhaTemp' },
+      { key: 'temperature', label: 'Temperature', type: 'number', unit: 'Â°C', specKey: 'lhaTemp' },
       { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
     ],
     specFields: [
-      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: '°C', ...Thresholds.get('lha-water-monitoring', 'lhaTemp') }
+      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: 'Â°C', ...Thresholds.get('lha-water-monitoring', 'lhaTemp') }
     ],
     deviationLabel: 'Deviation',
     deviationPolarity: 'deviation'
