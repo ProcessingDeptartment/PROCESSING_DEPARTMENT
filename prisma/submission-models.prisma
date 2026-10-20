@@ -15,6 +15,11 @@ model Sub_dry_export_pack_front_page {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   packingDate              DateTime? @db.Date
   noOfBoxesExported        Float?
@@ -43,6 +48,11 @@ model Sub_live_leftovers_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   sizeClass                String?
   weight                   Float?
@@ -61,6 +71,11 @@ model Sub_master_cleaning_checklist {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   weekOf                   DateTime? @db.Date
   responsibleOperator      String?
@@ -97,6 +112,11 @@ model Sub_master_cleaning_plan {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   effectiveDate            DateTime? @db.Date
   approvedBy               String?
@@ -135,6 +155,11 @@ model Sub_mortalities_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   mortalitiesKg            Float?
   totalPack                Float?
@@ -154,6 +179,11 @@ model Sub_mortality_counts_by_customer {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
 
@@ -187,6 +217,11 @@ model Sub_production_information_nrcs {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   receivingDate            DateTime? @db.Date
@@ -231,6 +266,11 @@ model Sub_dry_nrcs_packs {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   receivingDate            DateTime? @db.Date
   dateOfInspection         DateTime? @db.Date
@@ -268,6 +308,11 @@ model Sub_production_information_nrcs_rework {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   reworkDate               DateTime? @db.Date
   dateOfInspection         DateTime? @db.Date
@@ -307,6 +352,11 @@ model Sub_qa1_damaged_cans_and_lids {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   noOfCansEnds             Float?
   palletNumberProductionDate String?
@@ -327,6 +377,11 @@ model Sub_cans_released_form {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   noOfPieces               Float?
@@ -351,6 +406,11 @@ model Sub_gonad_inspection_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   processingFor            String?
@@ -377,6 +437,11 @@ model Sub_training_register {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   trainingCourse           String?
   date                     DateTime? @db.Date
@@ -417,6 +482,11 @@ model Sub_incubator_cans_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   dateIn                   DateTime?
   productionCode           String?
@@ -448,6 +518,11 @@ model Sub_fixed_reader_checks {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   location                 String?
   startTime                DateTime? @db.Time
@@ -471,6 +546,11 @@ model Sub_basket_removal_shucking_gutting {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -515,6 +595,11 @@ model Sub_abalone_receiving {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   receivingDate            DateTime? @db.Date
   receivedFrom             String?
@@ -554,6 +639,11 @@ model Sub_salting_and_tumbling {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -606,6 +696,11 @@ model Sub_bleeding_and_salting {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   processingFor            String?
   date                     DateTime? @db.Date
@@ -642,6 +737,11 @@ model Sub_washing_control_sheet {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   completedBy              String?
@@ -682,6 +782,11 @@ model Sub_salting_oosw {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   intakeDate               DateTime? @db.Date
   harvestFarm              String?
@@ -719,6 +824,11 @@ model Sub_scrubbing_check_supervisor {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   abaloneSize              Float?
   date                     DateTime? @db.Date
@@ -745,6 +855,11 @@ model Sub_ph_verification {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   meterSerial              String?
   buffer4Reading           Float?
@@ -767,6 +882,11 @@ model Sub_thermometer_verification {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   referenceThermoSerial    String?
@@ -796,6 +916,11 @@ model Sub_thermometer_correction_factors {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
   referenceThermoSerial    String?
@@ -821,6 +946,11 @@ model Sub_sampling_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   productInfo              String?
@@ -843,6 +973,11 @@ model Sub_stock_loading {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -869,6 +1004,11 @@ model Sub_qc_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   harvestFarm              String?
@@ -911,6 +1051,11 @@ model Sub_double_seam_inspection_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   agCode                   String?
@@ -972,6 +1117,11 @@ model Sub_rework_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   reasonForRework          String?
@@ -997,6 +1147,11 @@ model Sub_product_label_checklist {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   supplier                 String?
@@ -1025,6 +1180,11 @@ model Sub_labelling_of_cans {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   labelUsed                String?
@@ -1055,6 +1215,11 @@ model Sub_stock_transfers {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   agCode                   String?
@@ -1084,6 +1249,11 @@ model Sub_scrubbing_checklist_qc {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1123,6 +1293,11 @@ model Sub_precooking_check_sheet {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   precookingDate           DateTime? @db.Date
   sizeRange                String?
@@ -1157,6 +1332,11 @@ model Sub_abalone_packing_specification {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   jobNo                    String?
   pcs                      Float?
@@ -1185,6 +1365,11 @@ model Sub_can_packing_control_sheet {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   time                     DateTime? @db.Time
@@ -1208,6 +1393,11 @@ model Sub_can_filling_and_printing {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1238,6 +1428,11 @@ model Sub_printing_control_sheet {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   productionDate           DateTime? @db.Date
   time                     DateTime? @db.Time
@@ -1261,6 +1456,11 @@ model Sub_cans_produced {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1308,6 +1508,11 @@ model Sub_retorting_control_sheet {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   time                     DateTime? @db.Time
@@ -1339,6 +1544,11 @@ model Sub_retort_inspection_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1374,6 +1584,11 @@ model Sub_broth_cooking {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   potNo                    String?
@@ -1400,6 +1615,11 @@ model Sub_ingredient_weighing {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1444,6 +1664,11 @@ model Sub_sauce_mixing {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   brothBatchDate           DateTime? @db.Date
@@ -1487,6 +1712,11 @@ model Sub_final_sauce_mix {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   potNo                    String?
   batchCodeSauce           String?
@@ -1513,6 +1743,11 @@ model Sub_sauce_batch_coding {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   dateOfMix                DateTime? @db.Date
   potCode                  String?
   bucketNumber             Float?
@@ -1532,6 +1767,11 @@ model Sub_brine_mixing_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -1567,6 +1807,11 @@ model Sub_dry_cooking {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   harvestFarm              String?
@@ -1610,6 +1855,11 @@ model Sub_drying_process {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   wholeWeight              Float?
@@ -1655,6 +1905,11 @@ model Sub_dried_abalone_transfer {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   intakeDate               DateTime? @db.Date
   intakeWeight             Float?
@@ -1692,6 +1947,11 @@ model Sub_dry_monitoring {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   intakeWeight             Float?
@@ -1736,6 +1996,11 @@ model Sub_grading_production_log_cultivated {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1801,6 +2066,11 @@ model Sub_grading_production_log_ranched {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   intakeDate               DateTime? @db.Date
   driedWeightReceived      Float?
@@ -1857,6 +2127,11 @@ model Sub_grading_boxing_traceability {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   dateCreated              DateTime? @db.Date
   binCode                  String?
@@ -1878,6 +2153,11 @@ model Sub_boxing_and_labelling {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   packingDate              DateTime? @db.Date
   tareWeight               Float?
@@ -1905,6 +2185,11 @@ model Sub_dry_stock_control {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   intakeDate               DateTime? @db.Date
@@ -1958,6 +2243,11 @@ model Sub_labelling_of_dry_boxes {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   clientName               String?
@@ -1988,6 +2278,11 @@ model Sub_dry_labelling_list {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   customer                 String?
   flight                   String?
@@ -2030,6 +2325,11 @@ model Sub_dry_stock_transfers {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   noOfBoxes                Float?
@@ -2052,6 +2352,11 @@ model Sub_live_production_pack {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   packingDate              DateTime? @db.Date
@@ -2090,6 +2395,11 @@ model Sub_live_pack_checklist {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   customerIdn              String?
   productionDate           DateTime? @db.Date
@@ -2130,6 +2440,11 @@ model Sub_live_packing_bag_quality_check {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   dateOfChecking           DateTime? @db.Date
   dateOfPacking            DateTime? @db.Date
@@ -2174,6 +2489,11 @@ model Sub_individual_abalone_weight_checks {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   shift                    String?
   completedBy              String?
@@ -2213,6 +2533,11 @@ model Sub_receiving_live_returns {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   clientIdn                String?
   boxNo                    String?
@@ -2236,6 +2561,11 @@ model Sub_production_areas_cleaning_record {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2273,6 +2603,11 @@ model Sub_live_product_areas_cleaning_record {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   shift                    String?
   completedBy              String?
@@ -2308,6 +2643,11 @@ model Sub_personnel_facilities_cleaning_record {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2345,6 +2685,11 @@ model Sub_daily_cleaning_inspection {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   shift                    String?
 
@@ -2380,6 +2725,11 @@ model Sub_deep_cleaning_record_weekly {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   shift                    String?
@@ -2418,6 +2768,11 @@ model Sub_weekly_cleaning_record {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   weekOf                   DateTime? @db.Date
   completedBy              String?
 
@@ -2451,6 +2806,11 @@ model Sub_dispatch_cleaning_inspection {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   entranceDoorClosed       Boolean?
   damagedDirtyBoxesPallets Boolean?
@@ -2478,6 +2838,11 @@ model Sub_facility_inspection {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   completedBy              String?
@@ -2511,6 +2876,11 @@ model Sub_facility_inspection_nc_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   completedBy              String?
   inspectionDate           DateTime? @db.Date
@@ -2550,6 +2920,11 @@ model Sub_chemical_stock_issue_register {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   nameOfChemical           String?
   approvedSupplier         String?
   batchNumber              String?
@@ -2578,6 +2953,11 @@ model Sub_internal_pest_sightings_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   areaOfSighting           String?
   typeOfPest               String?
@@ -2602,6 +2982,11 @@ model Sub_pest_inspection_record {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   birdDroppingsSeen        Boolean?
@@ -2646,6 +3031,11 @@ model Sub_staff_hygiene_inspection_weekends {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   completedBy              String?
 
@@ -2686,6 +3076,11 @@ model Sub_staff_hygiene_inspection {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   weekStarting             DateTime? @db.Date
   shift                    String?
@@ -2729,6 +3124,11 @@ model Sub_allergen_cleaning_verification {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   area                     String?
   equipmentSwabbed         String?
@@ -2760,6 +3160,11 @@ model Sub_daily_equipment_checklist {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   weekOf                   DateTime? @db.Date
   completedBy              String?
@@ -2795,6 +3200,11 @@ model Sub_glass_plastic_equipment_inspection {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   weekOf                   DateTime? @db.Date
   completedBy              String?
 
@@ -2829,6 +3239,11 @@ model Sub_glass_breakage_clearance_certificate {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   timeOfBreakage           DateTime? @db.Time
@@ -2891,6 +3306,11 @@ model Sub_utensil_issue_record {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   shift                    String?
   completedBy              String?
@@ -2927,6 +3347,11 @@ model Sub_safety_glass_register {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   weekStarting             DateTime? @db.Date
   shift                    String?
@@ -2967,6 +3392,11 @@ model Sub_goggles_register {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   weekStarting             DateTime? @db.Date
   shift                    String?
   completedBy              String?
@@ -3004,6 +3434,11 @@ model Sub_knife_register {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   weekStarting             DateTime? @db.Date
   shift                    String?
@@ -3043,6 +3478,11 @@ model Sub_glove_issuing_register {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   personAllocated          String?
   quantityIssued           Float?
@@ -3064,6 +3504,11 @@ model Sub_plaster_dressing_inspection {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   dateOfIncident           DateTime? @db.Date
   time                     DateTime? @db.Time
@@ -3091,6 +3536,11 @@ model Sub_first_aid_checklist_record {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   shift                    String?
   dateOfIncident           DateTime? @db.Date
   time                     DateTime? @db.Time
@@ -3116,6 +3566,11 @@ model Sub_salt_issuing_register {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   quantityIssued           String?
   batchNumber              String?
@@ -3137,6 +3592,11 @@ model Sub_chiller_batch_control {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   harvestFarm              String?
@@ -3167,6 +3627,11 @@ model Sub_dry_chiller_batch_control {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   harvestFarm              String?
   processingStep           String?
@@ -3195,6 +3660,11 @@ model Sub_maintenance_job_card {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobCardNumber            String?
   maintenanceDetail        String?
@@ -3226,6 +3696,11 @@ model Sub_water_tank_inspection {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   tankType                 String?
   filtersClean             Boolean?
@@ -3250,6 +3725,11 @@ model Sub_factory_maintenance_inspection {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
@@ -3286,6 +3766,11 @@ model Sub_equipment_checklist_roof {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   completedBy              String?
 
@@ -3320,6 +3805,11 @@ model Sub_daily_waste_removal {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   timeOfCollection         DateTime? @db.Time
   areaRemovedFrom          String?
@@ -3344,6 +3834,11 @@ model Sub_boiler_inspection_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   timeBoilerStarted        DateTime? @db.Time
@@ -3376,6 +3871,11 @@ model Sub_seamer_inspection_report {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   equipmentName            String?
@@ -3418,6 +3918,11 @@ model Sub_incoming_ppe_inspection {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   product                  String?
   supplier                 String?
@@ -3443,6 +3948,11 @@ model Sub_incoming_goods_inspection_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   product                  String?
   supplier                 String?
@@ -3467,6 +3977,11 @@ model Sub_cans_incoming_inspection {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3510,6 +4025,11 @@ model Sub_lids_incoming_inspection {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   supplier                 String?
   descriptionOfProducts    String?
@@ -3547,6 +4067,11 @@ model Sub_lids_incoming_inspection_internal {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   supplier                 String?
@@ -3588,6 +4113,11 @@ model Sub_incoming_goods_inspection {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   supplier                 String?
   productReceived          String?
@@ -3621,6 +4151,11 @@ model Sub_dispatch_loading_inspection_checklist {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3656,6 +4191,11 @@ model Sub_dispatch_receiving_checklist {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   clientDetails            String?
@@ -3689,6 +4229,11 @@ model Sub_water_monitoring {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
   freshWaterPh             Float?
@@ -3712,6 +4257,11 @@ model Sub_lha_water_monitoring {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   month                    DateTime? @db.Date
   date                     DateTime? @db.Date
   shift                    String?
@@ -3734,6 +4284,11 @@ model Sub_chiller_temperature_monitoring {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -3764,6 +4319,11 @@ model Sub_incubator_temperature_check {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   date                     DateTime? @db.Date
   shift                    String?
   startShiftTemp           Float?
@@ -3785,6 +4345,11 @@ model Sub_dry_room_temp_humidity_log {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   week                     String?
   shift                    String?
@@ -3830,6 +4395,11 @@ model Sub_grading_room_temp_humidity_log {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   week                     String?
   shift                    String?
   date                     DateTime? @db.Date
@@ -3857,6 +4427,11 @@ model Sub_internal_car {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   raisedBy                 String?
@@ -3891,6 +4466,11 @@ model Sub_disposition_investigation_record {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   productInvestigated      String?
   initiatedBy              String?
@@ -3930,6 +4510,11 @@ model Sub_withdrawal_mock_recall_record {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   chairedBy                String?
@@ -3981,6 +4566,11 @@ model Sub_traceability {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   dateInitiated            DateTime? @db.Date
   startTime                DateTime? @db.Time
   finishTime               DateTime? @db.Time
@@ -4011,6 +4601,11 @@ model Sub_traceability_mock_recall_canned_braised_abalone {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -4050,6 +4645,11 @@ model Sub_traceability_mock_recall_canned_abalone {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   agCode                   String?
@@ -4087,6 +4687,11 @@ model Sub_traceability_mock_recall_canned_minced_abalone {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   jobNo                    String?
   date                     DateTime? @db.Date
@@ -4126,6 +4731,11 @@ model Sub_traceability_mock_recall_dried_abalone {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   jobNo                    String?
   date                     DateTime? @db.Date
   agCode                   String?
@@ -4164,6 +4774,11 @@ model Sub_traceability_mock_recall_live_abalone {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   recallInitiationDate     DateTime? @db.Date
   packingDate              DateTime? @db.Date
 
@@ -4198,6 +4813,11 @@ model Sub_supplier_questionnaire {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   companyName              String?
   companyAddress           String?
@@ -4247,6 +4867,11 @@ model Sub_supplier_approval_record {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   supplierName             String?
   productService           String?
   dateOfEvaluation         DateTime? @db.Date
@@ -4276,6 +4901,11 @@ model Sub_rapid_food_handler_medicals {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   clinicSite               String?
   dateOfAssessment         DateTime? @db.Date
@@ -4317,6 +4947,11 @@ model Sub_rfh_medical_result {
   inSpec      Boolean?
   position    Int?
 
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
+
   clinicSite               String?
   dateOfMedicalAssessment  DateTime? @db.Date
   nameOfFoodHandler        String?
@@ -4344,6 +4979,11 @@ model Sub_emergency_evacuation_attendance_register {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   buildingArea             String?
@@ -4380,6 +5020,11 @@ model Sub_handling_of_emergencies_and_incidences {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   typeOfDrill              String?
   timeEvacuating           DateTime? @db.Time
@@ -4418,6 +5063,11 @@ model Sub_daily_factory_feedback_meeting {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   date                     DateTime? @db.Date
   intakes                  String?
@@ -4464,6 +5114,11 @@ model Sub_rtw_medical_questionnaire {
   rawJson     String?
   inSpec      Boolean?
   position    Int?
+
+  submissionGroupId String?
+  submissionDate    DateTime? @db.Date
+  recordType        String?
+  verifiedGroupAt   DateTime?
 
   employeeNr               String?
   skinRashes               Boolean?

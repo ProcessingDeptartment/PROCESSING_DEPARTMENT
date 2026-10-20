@@ -138,8 +138,13 @@ for (const def of definitions) {
   lines.push('  inSpec      Boolean?');
   lines.push('  position    Int?');   // the entry's index in the saved list (exact order)
   lines.push('');
+  lines.push('  submissionGroupId String?');
+  lines.push('  submissionDate    DateTime? @db.Date');
+  lines.push('  recordType        String?');
+  lines.push('  verifiedGroupAt   DateTime?');
+  lines.push('');
 
-  const seenCols = new Set(['id', 'status', 'source', 'submittedAt', 'createdAt', 'updatedAt', 'rawJson', 'inSpec', 'position']);
+  const seenCols = new Set(['id', 'status', 'source', 'submittedAt', 'createdAt', 'updatedAt', 'rawJson', 'inSpec', 'position', 'submissionGroupId', 'submissionDate', 'recordType', 'verifiedGroupAt']);
   const indexCols = [];
   for (const f of topFields) {
     const col = toColName(f.key);
