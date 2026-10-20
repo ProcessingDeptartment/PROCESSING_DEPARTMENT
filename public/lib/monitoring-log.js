@@ -2997,7 +2997,7 @@
 
       const dc = !prog && config.printLayout === '4col';
       const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);
-      const filename = safeKey(docCode) + '_' + safeKey(title) + '_' + stamp;
+      const filename = safeKey(title) + '_' + stamp;
 
       // Capture doc-header for the popup
       const docHeaderHtml = (() => {
