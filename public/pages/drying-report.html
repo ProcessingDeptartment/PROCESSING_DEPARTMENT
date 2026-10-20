@@ -179,14 +179,15 @@
   ];
 
   async function loadAll() {
-    const [receiving, drying, grading, gradingRanched, cooking] = await Promise.all([
+    const [receiving, drying, grading, gradingRanched, cooking, saltingOosw] = await Promise.all([
       getRecord('formrecord:abalone-receiving'),
       getRecord('formrecord:drying-process'),
       getRecord('formrecord:grading-production-log-cultivated'),
       getRecord('formrecord:grading-production-log-ranched'),
-      getRecord('formrecord:dry-cooking')
+      getRecord('formrecord:dry-cooking'),
+      getRecord('formrecord:salting-oosw')
     ]);
-    CACHE = { receiving, drying, grading, gradingRanched, cooking };
+    CACHE = { receiving, drying, grading, gradingRanched, cooking, saltingOosw };
   }
 
   // REC 7.4.1 is an entry log: many entries per job. Everything job-level is worked out here from ALL of the
@@ -232,8 +233,23 @@
     const latestNum = (key) => { for (let i = entries.length - 1; i >= 0; i--) { const n = num((entries[i].values || {})[key]); if (n != null) return n; } return null; };
     const cookedWeight = cookKg.length ? cookKg.reduce((a, n) => a + n, 0) : latestNum('cookedWeight');
     const trolleys = latestNum('noOfTrolleys');
-    // TODO: replace oosw_kg_manual with lookup from REC 7.1.5 when available
-    const ooswKg = sumNum(cooking, 'ooswKg');
+    // OOSW from REC 7.1.5 submissions (sum of all roster weight rows for this job).
+    // Falls back to the manually-typed ooswKg on REC 7.4.0 if no 7.1.5 records exist.
+    const saltingOoswForJob = submitted(forJob(CACHE.saltingOosw, jobNo));
+    let ooswKg = null;
+    let ooswSource = '7.1.5';
+    if (saltingOoswForJob.length) {
+      saltingOoswForJob.forEach((s) => {
+        (s.roster || []).forEach((r) => {
+          const n = num(r.weight);
+          if (n != null) ooswKg = (ooswKg || 0) + n;
+        });
+      });
+    }
+    if (ooswKg == null) {
+      ooswKg = sumNum(cooking, 'ooswKg');
+      ooswSource = '7.4.0';
+    }
 
     const gradedDried = gradingAll.reduce((a, s) => a + (num((s.values || {}).actualDriedWeight) || 0), 0) || null;
     const oldDried = pickNum(entries, 'dryWeightOld');
@@ -276,7 +292,7 @@
 
     return {
       jobNo, harvest, totalMass, totalAnimals,
-      wholeWeight, cookedWeight, ooswKg, trolleys, driedWeight, driedSource, actualYield, dryingLoss,
+      wholeWeight, cookedWeight, ooswKg, ooswSource, trolleys, driedWeight, driedSource, actualYield, dryingLoss,
       timeline, dryingDays, gradeSets,
       header: (receiving[0] && receiving[0].values) || {},
       counts: { receiving: receiving.length, drying: entries.length, grading: gradingAll.length, cooking: cooking.length }
@@ -313,7 +329,7 @@
         <tbody>
           <tr><td>Whole weight (in)</td><td class="num">${fmt(rep.wholeWeight)} kg</td></tr>
           <tr><td>Cooked weight (REC 7.4.0)</td><td class="num">${rep.cookedWeight == null ? '— <span class="muted">No cooking weight found — enter REC 7.4.0</span>' : fmt(rep.cookedWeight) + ' kg'}</td></tr>
-          <tr><td>OOSW weight (REC 7.4.0)</td><td class="num">${rep.ooswKg == null ? '— <span class="muted">Not recorded on REC 7.4.0</span>' : fmt(rep.ooswKg) + ' kg'}</td></tr>
+          <tr><td>OOSW weight (REC 7.1.5${rep.ooswSource === '7.4.0' ? ' — fallback from REC 7.4.0' : ''})</td><td class="num">${rep.ooswKg == null ? '— <span class="muted">No OOSW record found (REC 7.1.5 or REC 7.4.0)</span>' : fmt(rep.ooswKg) + ' kg'}</td></tr>
           <tr><td>No. of trolleys</td><td class="num">${rep.trolleys == null ? '—' : rep.trolleys}</td></tr>
           <tr><td>Actual dried weight${esc(rep.driedSource)}</td><td class="num">${fmt(rep.driedWeight)} kg</td></tr>
           <tr><td>Drying loss (cooked to dried)</td><td class="num">${fmt(rep.dryingLoss)} %</td></tr>
