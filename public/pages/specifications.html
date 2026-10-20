@@ -81,10 +81,41 @@
   .tabs{ display:flex; gap:4px; padding:10px 20px 0; background:#1d2b38; }
   .tabs button{ padding:9px 16px; border:0; border-radius:6px 6px 0 0; background:#2c3e50; color:#b9c3cc; font:600 13px inherit; font-family:inherit; cursor:pointer; }
   .tabs button.on{ background:#f4f5f3; color:#1b2330; }
-  #tab-rules iframe{ width:100%; height:calc(100vh - 170px); min-height:640px; border:0; background:transparent; }
   .managed-note{ font-size:11px; color:#2f7a52; font-weight:600; }
   #tab-edits .edits-toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-  #tab-edits .edits-toolbar input[type=search]{ flex:1; max-width:340px; padding:7px 10px; border:1px solid #d0d5db; border-radius:5px; font:inherit; font-size:13px; background:#fff; color:#1b2330; }
+  #tab-edits .edits-toolbar input[type=search]{ flex:1; max-width:340px; padding:7px 10px; border:1px solid #d0d5db; border-radius:6px; font:inherit; font-size:13px; background:#fff; color:#1b2330; outline:none; }
+  #tab-edits .edits-toolbar input[type=search]:focus{ border-color:#2f7a52; box-shadow:0 0 0 2px rgba(47,122,82,.13); }
+  #tab-edits .rec-row{ cursor:default; }
+
+  /* ---- Field rules tab (inlined) ---- */
+  #tab-rules .sa-card{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; padding:16px; margin-bottom:16px; }
+  #tab-rules h2.sa-h2{ margin:0 0 10px; font-size:14px; }
+  #tab-rules label.sa-lbl{ display:block; font-size:11px; font-weight:700; color:#5c6771; margin:0 0 4px; text-transform:uppercase; letter-spacing:.4px; }
+  #tab-rules select.sa-sel,#tab-rules input.sa-inp,#tab-rules textarea.sa-ta{ width:100%; padding:8px 9px; border:1px solid #d0d5db; border-radius:5px; font:inherit; font-size:12.5px; background:#fff; color:#1b2330; }
+  #tab-rules textarea.sa-ta{ min-height:70px; resize:vertical; }
+  #tab-rules .sa-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  #tab-rules .sa-full{ grid-column:1/-1; }
+  #tab-rules .sa-toggle{ display:flex; align-items:center; gap:8px; padding:5px 0; font-weight:600; font-size:13px; }
+  #tab-rules .sa-toggle input{ width:16px; height:16px; }
+  #tab-rules .sa-radios{ display:flex; flex-wrap:wrap; gap:6px 18px; padding:4px 0; }
+  #tab-rules .sa-radios label{ display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px; }
+  #tab-rules .sa-hint{ font-size:12px; color:#5c6771; font-weight:400; }
+  #tab-rules .sa-badge{ display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+  #tab-rules .sa-badge.set{ background:#dff3e5; color:#1B7A3A; }
+  #tab-rules .sa-badge.none{ background:#eceef0; color:#6b7280; }
+  #tab-rules .sa-badge.off{ background:#fdecc8; color:#B45309; }
+  #tab-rules .sa-btns{ display:flex; gap:10px; margin-top:14px; }
+  #tab-rules .sa-gate-panel{ text-align:center; padding:40px 16px; }
+  #tab-rules .sa-notice{ padding:10px 14px; border-left:4px solid #B45309; background:#fff3dc; border-radius:4px; margin-bottom:16px; font-size:13px; }
+  #tab-rules table.sa-tbl{ width:100%; border-collapse:collapse; font-size:13px; }
+  #tab-rules table.sa-tbl th,#tab-rules table.sa-tbl td{ padding:8px 10px; text-align:left; border-bottom:1px solid #e2e4e3; vertical-align:top; }
+  #tab-rules table.sa-tbl th{ background:#f4f5f3; font-size:11.5px; font-weight:700; }
+  #tab-rules .sa-ver{ margin:0; padding:0; list-style:none; font-size:13px; }
+  #tab-rules .sa-ver li{ padding:8px 0; border-bottom:1px solid #e2e4e3; }
+  #tab-rules .sa-ver .sv{ font-weight:700; margin-right:6px; }
+  #tab-rules .sa-filter-input{ padding:7px 9px; border:1px solid #d0d5db; border-radius:5px; font:inherit; font-size:12.5px; margin-bottom:5px; width:100%; }
+  #tab-rules code{ font-size:12px; background:#eef0f2; padding:1px 5px; border-radius:3px; }
+  @media (max-width:640px){ #tab-rules .sa-grid{ grid-template-columns:1fr; } }
   #tab-edits .edits-toolbar .count{ font-size:12px; color:#5c6771; }
   #tab-edits .rec-list{ display:flex; flex-direction:column; gap:6px; }
   #tab-edits .rec-row{ background:#fff; border:1px solid #e2e4e3; border-radius:7px; overflow:hidden; }
@@ -119,7 +150,87 @@
   <button type="button" id="tabBtnEdits" data-tab="edits" role="tab">Record edits</button>
 </div>
 
-<div class="container" id="tab-rules" hidden></div>
+<div class="container" id="tab-rules" hidden>
+  <div class="sa-card sa-gate-panel" id="sa-gate" hidden>
+    <h2 class="sa-h2">Sign-in required</h2>
+    <p class="sa-hint" style="margin-bottom:12px;">Only the QA Manager or an Administrator can manage field rules. Sign in to continue.</p>
+    <button class="btn primary" id="sa-signInBtn">Sign in</button>
+  </div>
+  <div id="sa-app" hidden>
+    <div class="sa-notice" id="sa-exportNotice" hidden><b>Specification changes saved.</b></div>
+    <div class="sa-card">
+      <h2 class="sa-h2">1 &middot; Record and field</h2>
+      <div class="sa-grid">
+        <div>
+          <label class="sa-lbl" for="sa-recFilter">Record</label>
+          <input type="search" class="sa-filter-input" id="sa-recFilter" autocomplete="off" placeholder="Type to filter&hellip;">
+          <select class="sa-sel" id="sa-recSel" size="5"><option value="">Loading records&hellip;</option></select>
+        </div>
+        <div>
+          <label class="sa-lbl" for="sa-fieldFilter">Field</label>
+          <input type="search" class="sa-filter-input" id="sa-fieldFilter" autocomplete="off" placeholder="Type to filter&hellip;" disabled>
+          <select class="sa-sel" id="sa-fieldSel" size="5" disabled><option value="">Choose a record first</option></select>
+        </div>
+      </div>
+      <p class="sa-hint" id="sa-fieldInfo" style="margin:10px 0 0"></p>
+    </div>
+    <div class="sa-card" id="sa-editor" hidden>
+      <h2 class="sa-h2">2 &middot; Specification for <span id="sa-edTitle"></span></h2>
+      <div class="sa-grid">
+        <div><label class="sa-lbl" for="sa-fMin">Min value</label><input type="number" step="any" class="sa-inp" id="sa-fMin" placeholder="no lower limit"></div>
+        <div><label class="sa-lbl" for="sa-fMax">Max value</label><input type="number" step="any" class="sa-inp" id="sa-fMax" placeholder="no upper limit"></div>
+        <div class="sa-full"><label class="sa-lbl" for="sa-fAllowed">Allowed values <span class="sa-hint">(text / select fields; comma-separated)</span></label><input type="text" class="sa-inp" id="sa-fAllowed"></div>
+        <div class="sa-full"><label class="sa-lbl" for="sa-fLabel">Label override <span class="sa-hint">(name shown in warnings; optional)</span></label><input type="text" class="sa-inp" id="sa-fLabel"></div>
+        <div class="sa-full">
+          <label class="sa-toggle"><input type="checkbox" id="sa-fRed"> Highlight field red when out of spec</label>
+          <label class="sa-toggle"><input type="checkbox" id="sa-fBubble"> Show warning bubble under the field</label>
+        </div>
+        <div class="sa-full">
+          <label class="sa-lbl">When out of spec, at submission</label>
+          <div class="sa-radios">
+            <label><input type="radio" name="sa-gate" value="none"> None (record only)</label>
+            <label><input type="radio" name="sa-gate" value="warn_submit"> Warn at submit</label>
+            <label><input type="radio" name="sa-gate" value="double_sign"> Double sign (two passkeys)</label>
+            <label><input type="radio" name="sa-gate" value="hard_block"> Hard block</label>
+          </div>
+        </div>
+        <div class="sa-full">
+          <label class="sa-toggle"><input type="checkbox" id="sa-fNc"> Auto-raise an NC when out of spec</label>
+        </div>
+        <div id="sa-ncBox" class="sa-full sa-grid" hidden>
+          <div><label class="sa-lbl" for="sa-fNcCat">NC category</label><input type="text" class="sa-inp" id="sa-fNcCat" placeholder="e.g. Temperature out of spec" list="sa-ncCats"></div>
+          <div><label class="sa-lbl" for="sa-fNcSev">NC severity</label>
+            <select class="sa-sel" id="sa-fNcSev"><option value="minor">Minor</option><option value="major">Major</option><option value="critical">Critical</option></select></div>
+          <div class="sa-full"><label class="sa-toggle"><input type="checkbox" id="sa-fNcSkip"> Operator can skip the NC <span class="sa-hint">(skip needs a reason and passkey, and is logged)</span></label></div>
+        </div>
+        <datalist id="sa-ncCats"><option>Weight deviation</option><option>Temperature out of spec</option><option>Labelling error</option><option>Equipment failure</option><option>Process deviation</option><option>Product quality</option><option>Dry room issue</option><option>Documentation error</option><option>Hygiene / sanitation</option><option>Pest activity</option><option>Other</option></datalist>
+        <div class="sa-full"><label class="sa-lbl" for="sa-fNotes">Admin notes <span class="sa-hint">(not shown to operators)</span></label><textarea class="sa-ta" id="sa-fNotes"></textarea></div>
+        <div class="sa-full"><label class="sa-toggle"><input type="checkbox" id="sa-fOff"> Deactivate this spec <span class="sa-hint">(removes enforcement)</span></label></div>
+        <div class="sa-full"><h2 class="sa-h2" style="margin:8px 0 0">Change details <span class="sa-hint">(required; recorded with the new version)</span></h2></div>
+        <div class="sa-full"><label class="sa-lbl" for="sa-cReason">Reason for change</label><textarea class="sa-ta" id="sa-cReason" placeholder="Why is this changing?"></textarea></div>
+        <div><label class="sa-lbl" for="sa-cBy">Your name</label><input type="text" class="sa-inp" id="sa-cBy"></div>
+        <div><label class="sa-lbl" for="sa-cTitle">Your title</label><input type="text" class="sa-inp" id="sa-cTitle"></div>
+      </div>
+      <div class="sa-btns">
+        <button class="btn primary" id="sa-saveBtn">Save specification</button>
+        <button class="btn" id="sa-clearBtn" type="button">Cancel</button>
+      </div>
+    </div>
+    <div class="sa-card" id="sa-history" hidden>
+      <h2 class="sa-h2">Version history <span class="sa-hint" id="sa-histFor"></span></h2>
+      <ul class="sa-ver" id="sa-verList"></ul>
+    </div>
+    <div class="sa-card" id="sa-summary" hidden>
+      <h2 class="sa-h2">3 &middot; Specs on this record</h2>
+      <div style="overflow-x:auto;">
+        <table class="sa-tbl">
+          <thead><tr><th>Field label</th><th>Field key</th><th>Min</th><th>Max</th><th>Gate mode</th><th>NC</th><th>Ver.</th><th>Active</th><th></th></tr></thead>
+          <tbody id="sa-specRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="container" id="tab-edits" hidden>
   <div class="edits-toolbar">
     <input type="search" id="editsQ" placeholder="Search records&hellip;" autocomplete="off">
@@ -171,12 +282,229 @@
 <div id="toast"></div>
 
 <script>
+window.initFieldRules = (function () {
+  'use strict';
+  var GATE_LABEL = { none: 'None', warn_submit: 'Warn at submit', double_sign: 'Double sign', hard_block: 'Hard block' };
+  var $sa = function (id) { return document.getElementById('sa-' + id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  var fields = [], specs = {}, current = null, recStart = 1, _init = false;
+
+  function saToast(msg, isErr) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg; t.classList.add('show');
+    t.style.background = isErr ? '#a3352d' : '';
+    clearTimeout(saToast._t); saToast._t = setTimeout(function () { t.classList.remove('show'); t.style.background = ''; }, 3500);
+  }
+  function api(path, opts) { return window.FacilityApi.fetch(path, opts); }
+  function json(path, opts) {
+    return api(path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
+    });
+  }
+
+  function isAdmin() { var u = window.Auth && window.Auth.getCurrentUser && window.Auth.getCurrentUser(); return !!u && /ADMIN|QA_MANAGER/i.test(u.role || ''); }
+  function refreshGate() {
+    var ok = isAdmin();
+    $sa('gate').hidden = ok; $sa('app').hidden = !ok;
+    if (ok && !$sa('recSel').dataset.loaded) loadRecords();
+  }
+
+  function loadRecords() {
+    json('/api/record-defs').then(function (rows) {
+      $sa('recSel').dataset.loaded = '1';
+      $sa('recSel').innerHTML = '<option value="">— choose a record —</option>' + rows.map(function (r) {
+        return '<option value="' + esc(r.record_key) + '">' + esc((r.doc_code ? r.doc_code + ' — ' : '') + (r.title || r.record_key)) + '  [' + esc(r.record_key) + ']</option>';
+      }).join('');
+    }).catch(function (e) { $sa('recSel').innerHTML = '<option value="">Could not load records</option>'; saToast('Could not load records: ' + e.message, true); });
+  }
+
+  function listFields(cfg) {
+    var out = [], seen = {};
+    function add(list, where) {
+      (list || []).forEach(function (f) {
+        if (!f || !f.key || seen[f.key]) return;
+        seen[f.key] = 1; out.push({ key: f.key, label: f.label || f.key, type: f.type || 'text', unit: f.unit || '', where: where });
+      });
+    }
+    add(cfg.fields, ''); add(cfg.entryFields, '');
+    (cfg.sections || []).forEach(function (s) { add(s.fields, s.title || ''); });
+    if (cfg.roster) add(cfg.roster.columns, (cfg.roster.title || 'Roster') + ' (rows)');
+    (cfg.rosters || []).forEach(function (r) { add(r.columns, (r.title || 'Roster') + ' (rows)'); });
+    return out;
+  }
+
+  $sa('recSel').addEventListener('change', function () {
+    var key = this.value;
+    $sa('editor').hidden = true; $sa('summary').hidden = true; $sa('history').hidden = true; current = null; fields = []; specs = {};
+    var fs = $sa('fieldSel');
+    if (!key) { fs.disabled = true; fs.innerHTML = '<option value="">Choose a record first</option>'; $sa('fieldInfo').textContent = ''; return; }
+    fs.disabled = true; fs.innerHTML = '<option value="">Loading fields…</option>';
+    Promise.all([json('/api/record-def/' + encodeURIComponent(key)), json('/api/specs/' + encodeURIComponent(key) + '?all=1')])
+      .then(function (res) {
+        recStart = (res[0].config && res[0].config.docRevisionStart) || 1;
+        fields = listFields(res[0].config || {});
+        res[1].forEach(function (s) { specs[s.field_key] = s; });
+        drawFieldPicker(); drawSummary();
+      })
+      .catch(function (e) { fs.innerHTML = '<option value="">Could not load</option>'; saToast('Could not load record: ' + e.message, true); });
+  });
+
+  function status(k) { var s = specs[k]; return !s ? 'No spec' : s.active ? 'Spec set' : 'Spec off'; }
+  function drawFieldPicker() {
+    var fs = $sa('fieldSel');
+    fs.innerHTML = '<option value="">— choose a field —</option>' + fields.map(function (f) {
+      return '<option value="' + esc(f.key) + '">' + (specs[f.key] ? '● ' : '') + esc(f.label) + '  [' + esc(f.key) + ' · ' + esc(f.type) + (f.where ? ' · ' + esc(f.where) : '') + ']  — ' + status(f.key) + '</option>';
+    }).join('');
+    fs.disabled = false;
+    var ff = $sa('fieldFilter'); ff.disabled = false; ff.value = '';
+    Array.prototype.forEach.call(fs.options, function (o) { o.hidden = false; });
+    $sa('fieldInfo').textContent = fields.length + ' fields · ' + Object.keys(specs).filter(function (k) { return specs[k].active; }).length + ' with an active spec';
+  }
+  $sa('fieldSel').addEventListener('change', function () { if (this.value) openEditor(this.value); else { $sa('editor').hidden = true; current = null; } });
+
+  function wireFilter(filterId, selId) {
+    var fi = $sa(filterId), sel = $sa(selId);
+    fi.addEventListener('input', function () {
+      var lo = this.value.toLowerCase();
+      Array.prototype.forEach.call(sel.options, function (o) {
+        if (!o.value) { o.hidden = false; return; }
+        o.hidden = !(o.textContent.toLowerCase().indexOf(lo) >= 0 || o.value.toLowerCase().indexOf(lo) >= 0);
+      });
+    });
+    fi.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { fi.value = ''; Array.prototype.forEach.call(sel.options, function (o) { o.hidden = false; }); }
+    });
+  }
+  wireFilter('recFilter', 'recSel');
+  wireFilter('fieldFilter', 'fieldSel');
+
+  function setGate(v) { Array.prototype.forEach.call(document.querySelectorAll('input[name="sa-gate"]'), function (r) { r.checked = r.value === v; }); }
+  function getGate() { var r = document.querySelector('input[name="sa-gate"]:checked'); return r ? r.value : 'none'; }
+  function showNc() { $sa('ncBox').hidden = !$sa('fNc').checked; }
+  $sa('fNc').addEventListener('change', showNc);
+
+  function openEditor(key) {
+    current = key;
+    var f = fields.filter(function (x) { return x.key === key; })[0] || { label: key, key: key };
+    var s = specs[key];
+    $sa('edTitle').textContent = f.label + ' (' + key + ')';
+    $sa('fMin').value = s && s.spec_min != null ? s.spec_min : '';
+    $sa('fMax').value = s && s.spec_max != null ? s.spec_max : '';
+    $sa('fAllowed').value = (s && s.allowed_values) || '';
+    $sa('fLabel').value = (s && s.label_override) || '';
+    $sa('fRed').checked = !!(s && s.highlight_red);
+    $sa('fBubble').checked = !!(s && s.show_warning_bubble);
+    setGate(s ? s.gate_mode : 'none');
+    $sa('fNc').checked = !!(s && s.auto_nc);
+    $sa('fNcCat').value = (s && s.nc_category) || '';
+    $sa('fNcSev').value = (s && s.nc_severity) || 'minor';
+    $sa('fNcSkip').checked = s ? !!s.nc_optional_skip : true;
+    $sa('fNotes').value = (s && s.notes) || '';
+    $sa('fOff').checked = !!(s && !s.active);
+    var u = window.Auth && window.Auth.getCurrentUser ? window.Auth.getCurrentUser() : null;
+    $sa('cReason').value = '';
+    $sa('cBy').value = u ? (u.displayName || '') : '';
+    $sa('cTitle').value = u ? (String(u.role || '').toLowerCase().replace(/_/g, ' ')) : '';
+    showNc(); drawHistory(s);
+    $sa('fieldSel').value = key;
+    $sa('editor').hidden = false;
+    $sa('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function saVal(id) { var v = $sa(id).value.trim(); return v === '' ? null : v; }
+  $sa('saveBtn').addEventListener('click', function () {
+    if (!current) return;
+    var btn = this, rec = $sa('recSel').value;
+    var min = saVal('fMin'), max = saVal('fMax');
+    if (min !== null && max !== null && Number(min) > Number(max)) { saToast('Min cannot be greater than max.', true); return; }
+    if (min === null && max === null && !saVal('fAllowed')) { saToast('Enter a min, a max or a list of allowed values.', true); return; }
+    if ($sa('fNc').checked && !saVal('fNcCat')) { saToast('Enter an NC category (or turn auto-NC off).', true); return; }
+    var body = {
+      spec_min: min, spec_max: max, allowed_values: saVal('fAllowed'), label_override: saVal('fLabel'),
+      highlight_red: $sa('fRed').checked, show_warning_bubble: $sa('fBubble').checked, gate_mode: getGate(),
+      auto_nc: $sa('fNc').checked, nc_category: saVal('fNcCat'), nc_severity: $sa('fNcSev').value, nc_optional_skip: $sa('fNcSkip').checked,
+      notes: saVal('fNotes'), active: !$sa('fOff').checked
+    };
+    var reason = saVal('cReason'), by = saVal('cBy'), ttl = saVal('cTitle');
+    if (!reason || !by || !ttl) { saToast('Enter the reason for the change, your name and your title.', true); return; }
+    body.change_reason = reason; body.published_by = by; body.changed_by_title = ttl;
+    var existing = specs[current], isNew = !existing;
+    if (isNew) { body.record_key = rec; body.field_key = current; }
+    btn.disabled = true;
+    json(isNew ? '/api/specs' : '/api/specs/' + existing.id, { method: isNew ? 'POST' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (row) {
+        specs[row.field_key] = row;
+        drawFieldPicker(); drawSummary();
+        $sa('fieldSel').value = row.field_key;
+        $sa('exportNotice').hidden = false;
+        drawHistory(row);
+        return bumpDocRev(rec, reason, by, ttl).then(function (note) { saToast('Specification saved' + note + '.'); });
+      })
+      .catch(function (e) { saToast('Could not save: ' + e.message, true); })
+      .finally(function () { btn.disabled = false; });
+  });
+  $sa('clearBtn').addEventListener('click', function () { $sa('editor').hidden = true; $sa('history').hidden = true; $sa('fieldSel').value = ''; current = null; });
+
+  function bumpDocRev(rec, reason, by, ttl) {
+    if (!window.DocumentRevision) return Promise.resolve('');
+    return window.DocumentRevision.bump(rec, { reason: 'Field spec: ' + reason, changedBy: by, changedByTitle: ttl }, recStart)
+      .then(function (r) { return ' - document is now Rev ' + r.revisionNumber; })
+      .catch(function () { return ' (but the document revision could not be updated)'; });
+  }
+
+  function fmtWhen(ts) { var d = new Date(ts); if (isNaN(d.getTime())) return ''; var p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+  function drawHistory(s) {
+    var box = $sa('history');
+    if (!s) { box.hidden = true; return; }
+    box.hidden = false; $sa('histFor').textContent = '— ' + s.field_key;
+    $sa('verList').innerHTML = '<li class="sa-hint">Loading…</li>';
+    json('/api/specs/' + s.id + '/versions').then(function (vs) {
+      $sa('verList').innerHTML = vs.length ? vs.map(function (v) {
+        var sn = v.snapshot || {};
+        var lim = (sn.spec_min == null && sn.spec_max == null) ? '' : ' · limits ' + (sn.spec_min == null ? '—' : esc(sn.spec_min)) + ' to ' + (sn.spec_max == null ? '—' : esc(sn.spec_max));
+        return '<li><span class="sv">v' + v.version_number + '</span><span class="sa-badge ' + (v.status === 'PUBLISHED' ? 'set' : 'none') + '">' + esc(v.status) + '</span> ' + esc(fmtWhen(v.published_at)) + ' by ' + esc(v.published_by) + ' (' + esc(v.changed_by_title) + ')' + lim + '<br><span class="sa-hint">' + esc(v.change_reason) + '</span></li>';
+      }).join('') : '<li class="sa-hint">No versions yet.</li>';
+    }).catch(function () { $sa('verList').innerHTML = '<li class="sa-hint">Could not load the history.</li>'; });
+  }
+
+  function labelOf(k) { var f = fields.filter(function (x) { return x.key === k; })[0]; return f ? f.label : k; }
+  function drawSummary() {
+    var rows = Object.keys(specs).map(function (k) { return specs[k]; }).sort(function (a, b) { return a.id - b.id; });
+    $sa('summary').hidden = false;
+    $sa('specRows').innerHTML = rows.length ? rows.map(function (s) {
+      return '<tr><td>' + esc(labelOf(s.field_key)) + '</td><td><code>' + esc(s.field_key) + '</code></td>'
+        + '<td>' + (s.spec_min == null ? '—' : esc(s.spec_min)) + '</td><td>' + (s.spec_max == null ? '—' : esc(s.spec_max)) + '</td>'
+        + '<td>' + esc(GATE_LABEL[s.gate_mode] || s.gate_mode) + '</td>'
+        + '<td>' + (s.auto_nc ? esc(s.nc_category || 'Yes') + ' <span class="sa-hint">(' + esc(s.nc_severity) + (s.nc_optional_skip ? ', skippable' : ', not skippable') + ')</span>' : '—') + '</td>'
+        + '<td>v' + esc(s.version_number) + '</td>'
+        + '<td><span class="sa-badge ' + (s.active ? 'set' : 'off') + '">' + (s.active ? 'Active' : 'Off') + '</span></td>'
+        + '<td><button type="button" class="btn sm" data-edit="' + esc(s.field_key) + '">Edit</button></td></tr>';
+    }).join('') : '<tr><td colspan="9" class="sa-hint">No specs on this record yet. Pick a field above to add one.</td></tr>';
+  }
+  $sa('specRows').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-edit]'); if (b) openEditor(b.getAttribute('data-edit'));
+  });
+  $sa('signInBtn').addEventListener('click', function () { if (window.LoginUI) window.LoginUI.showLoginModal(); });
+  document.addEventListener('authSuccess', function () { if (!$sa('app').hidden || !$sa('gate').hidden) refreshGate(); });
+
+  return function init() {
+    if (_init) return;
+    _init = true;
+    refreshGate();
+  };
+})();
+</script>
+
+<script>
   try {
     fetch('https://processing-department-api.onrender.com/api/health',
           { mode: 'cors', cache: 'no-store', keepalive: true }).catch(function () {});
   } catch (e) {  }
 </script>
 
+<script src="../lib/palette-map.js"></script>
 <script src="../lib/master-index-data.js?v=4"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
@@ -222,10 +550,7 @@
       var btn = $('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
       if (btn) btn.classList.toggle('on', t === name);
     });
-    if (name === 'rules' && !$('tab-rules').firstChild) {
-      var fr = document.createElement('iframe'); fr.src = 'spec-admin.html?embed=1'; fr.title = 'Field rules';
-      $('tab-rules').appendChild(fr);
-    }
+    if (name === 'rules' && window.initFieldRules) window.initFieldRules();
     if (name === 'edits') renderEdits();
     var hash = name === 'rules' ? '#field-rules' : name === 'edits' ? '#record-edits' : location.pathname + location.search;
     try { history.replaceState(null, '', hash); } catch (e) { }
