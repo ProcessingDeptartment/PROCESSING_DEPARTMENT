@@ -1073,27 +1073,6 @@ app.get('/api/seam-test-runs', async (req, res) => {
   }
 });
 
-app.get('/api/verification/count-outstanding', async (req, res) => {
-  try {
-    let outstanding = 0;
-    for (const prefix of ['formrecord:', 'monitoring_log:']) {
-      const rows = await prisma.keyValue.findMany({ where: { key: { startsWith: prefix } } });
-      for (const row of rows) {
-        let entries;
-        try { entries = JSON.parse(row.value); } catch { continue; }
-        if (!Array.isArray(entries)) continue;
-        for (const entry of entries) {
-          if (entry && entry.status !== 'draft' && !entry.verification) outstanding++;
-        }
-      }
-    }
-    res.json({ outstanding });
-  } catch (e) {
-    console.error('GET verification/count-outstanding failed', e);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
