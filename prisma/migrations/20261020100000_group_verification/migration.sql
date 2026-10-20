@@ -810,23 +810,23 @@ ALTER TABLE "sub_dry_monitoring_images"
 -- 2. Create group verification log table
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS submissions_group_verification (
-  id                TEXT        NOT NULL DEFAULT gen_random_uuid()::TEXT,
-  recordType        TEXT        NOT NULL,
-  submissionGroupId TEXT        NOT NULL,
-  submissionDate    DATE        NOT NULL,
-  verifiedBy        TEXT        NOT NULL,
-  verifiedTitle     TEXT        NOT NULL,
-  verifiedSignature TEXT        NOT NULL,
-  verifiedAt        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  recordCount       INT,
-  createdAt         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT submissions_group_verification_pkey PRIMARY KEY (id),
-  CONSTRAINT uq_group_verification UNIQUE (recordType, submissionGroupId)
+CREATE TABLE IF NOT EXISTS "submissions_group_verification" (
+  "id"                TEXT        NOT NULL DEFAULT gen_random_uuid()::TEXT,
+  "recordType"        TEXT        NOT NULL,
+  "submissionGroupId" TEXT        NOT NULL,
+  "submissionDate"    DATE        NOT NULL,
+  "verifiedBy"        TEXT        NOT NULL,
+  "verifiedTitle"     TEXT        NOT NULL,
+  "verifiedSignature" TEXT        NOT NULL,
+  "verifiedAt"        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "recordCount"       INT,
+  "createdAt"         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT "submissions_group_verification_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "uq_group_verification" UNIQUE ("recordType", "submissionGroupId")
 );
 
-CREATE INDEX IF NOT EXISTS sgv_recordType_submissionDate_idx
-  ON submissions_group_verification (recordType, submissionDate);
+CREATE INDEX IF NOT EXISTS "sgv_recordType_submissionDate_idx"
+  ON "submissions_group_verification" ("recordType", "submissionDate");
 
 -- ============================================================
 -- 3. Backfill submissionDate from createdAt for existing rows
