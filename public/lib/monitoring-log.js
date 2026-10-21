@@ -2596,6 +2596,24 @@
       }
       else toast(editingId ? 'Entry updated.' : 'Entry added.');
       if (finalize && submitFlow && window.PostSubmitPrompt) window.PostSubmitPrompt.show();
+
+      // NC auto-close: if this is a finalised submit with a Green batch status, check if any open NCs are now resolved
+      if (finalize && sc && sc.autoNc && sc.status && values[sc.status] === 'Green' && window.FacilityApi) {
+        window.FacilityApi.fetch('/api/nc/check-resolution', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            record_ref: docCode,
+            job_number: String(values[jobKeyOf()] || '').trim(),
+            submission_id: savedEntry.id || '',
+            submitted_by: userName ? userName() : '',
+            values,
+          }),
+        }).then(function (r) { return r.json(); }).then(function (data) {
+          if (!data.ncsReady || !data.ncsReady.length) return;
+          const refs = data.ncsReady.map(function (n) { return n.nc_ref; }).join(', ');
+          toast('✓ NC ready to close: ' + refs + ' — open the NC log to confirm corrective action.');
+        }).catch(function (e) { console.warn('NC check-resolution failed', e); });
+      }
     }
 
     function download(blob, filename) {

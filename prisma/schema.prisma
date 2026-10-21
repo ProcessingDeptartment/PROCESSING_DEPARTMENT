@@ -5783,6 +5783,10 @@ model NcLog {
   notifyAt         DateTime? @map("notify_at") @db.Timestamptz(6)
   lastRecordUpdateAt DateTime? @map("last_record_update_at") @db.Timestamptz(6) // source record edited after the NC was raised
   lastRecordUpdateBy String?   @map("last_record_update_by")
+  readyToCloseAt   DateTime? @map("ready_to_close_at") @db.Timestamptz(6)       // when system detected resolution
+  readyToCloseNotes String?  @map("ready_to_close_notes")                        // system note on detection
+  resolutionCheckSubmittedId String? @map("resolution_check_submitted_id")       // submission_id that triggered ready_to_close
+  resolutionTriggerField String? @map("resolution_trigger_field")                // field whose change indicated resolution
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   audit            NcAudit[]

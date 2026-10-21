@@ -41,12 +41,15 @@
   .b-critical{ background:#fee2e2; color:#991b1b; }
   .b-open{ background:#fee2e2; color:#991b1b; }
   .b-in_progress{ background:#fef3c7; color:#92400e; }
+  .b-ready_to_close{ background:#fde68a; color:#78350f; font-weight:700; }
   .b-closed{ background:#dcfce7; color:#166534; }
+  tr[data-status="ready_to_close"] td{ background:#fef3c7; }
   .empty{ padding:30px; text-align:center; color:#5c6771; }
   .modal-bg{ position:fixed; inset:0; background:rgba(15,23,32,.5); display:none; align-items:flex-start; justify-content:center; padding:30px 12px; overflow-y:auto; z-index:50; }
   .modal-bg.show{ display:flex; }
   .modal{ background:#fff; border-radius:10px; width:100%; max-width:620px; padding:18px 20px; box-sizing:border-box; }
   .modal h2{ margin:0 0 12px; font-size:16px; }
+  .rtc-banner{ background:#fef3c7; border:1px solid #fbbf24; border-radius:6px; padding:10px 12px; margin-bottom:12px; font-size:12.5px; color:#78350f; }
   .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
   .form-grid .full{ grid-column:1 / -1; }
   .form-grid label{ display:flex; flex-direction:column; gap:3px; font-size:12px; color:#5c6771; }
@@ -83,7 +86,7 @@
     <label>Status
       <select id="fStatus">
         <option value="all">All</option><option value="open">Open</option>
-        <option value="in_progress">In progress</option><option value="closed">Closed</option>
+        <option value="in_progress">In progress</option><option value="ready_to_close">Ready to close</option><option value="closed">Closed</option>
       </select>
     </label>
     <label>Job <input id="fJob" type="text" placeholder="e.g. DPR01167"></label>
@@ -141,14 +144,14 @@
   var CATEGORIES = ['Weight deviation', 'Temperature out of spec', 'Labelling error', 'Equipment failure',
     'Process deviation', 'Product quality', 'Dry room issue', 'Documentation error', 'Hygiene / sanitation', 'Other'];
   var SEV = { minor: 'Minor', major: 'Major', critical: 'Critical' };
-  var STAT = { open: 'Open', in_progress: 'In progress', closed: 'Closed' };
+  var STAT = { open: 'Open', in_progress: 'In progress', ready_to_close: 'Ready to close', closed: 'Closed' };
   var COLS = [
     { k: 'ncRef', t: 'NC Ref' }, { k: 'raisedAt', t: 'Date/Time raised' }, { k: 'jobNumber', t: 'Job number' },
     { k: 'recordRef', t: 'Record' }, { k: 'category', t: 'Category' }, { k: 'description', t: 'Description' },
     { k: 'carRequired', t: 'CAR' }, { k: 'status', t: 'Status' }, { k: 'correctiveAction', t: 'Corrective action' },
     { k: 'closedAt', t: 'Closed by / date' }, { k: '', t: 'Action' }
   ];
-  var SEV_ORDER = { minor: 0, major: 1, critical: 2 }, STAT_ORDER = { open: 0, in_progress: 1, closed: 2 };
+  var SEV_ORDER = { minor: 0, major: 1, critical: 2 }, STAT_ORDER = { open: 0, in_progress: 1, ready_to_close: 2, closed: 3 };
   var rows = [], sortKey = 'raisedAt', sortDir = -1;
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
@@ -192,9 +195,9 @@
     renderHead();
     if (!rows.length) { $('rows').innerHTML = '<tr><td class="empty" colspan="11">No NCs raised yet.</td></tr>'; return; }
     $('rows').innerHTML = sorted().map(function (r) {
-      var cls = r.status === 'closed' ? 'closed' : (r.carRequired === true ? 'hl-critical' : '');
+      var cls = r.status === 'closed' ? 'closed' : (r.carRequired === true && r.status !== 'ready_to_close' ? 'hl-critical' : '');
       var job = r.jobNumber ? '<a href="../records/batch-trace.html?batch=' + encodeURIComponent(r.jobNumber) + '">' + esc(r.jobNumber) + '</a>' : '';
-      return '<tr class="' + cls + '">'
+      return '<tr class="' + cls + '" data-status="' + esc(r.status) + '">'
         + '<td><button type="button" class="ref" data-id="' + r.id + '">' + esc(r.ncRef) + '</button></td>'
         + '<td>' + fmt(r.raisedAt) + '</td><td>' + job + '</td><td>' + esc(r.recordRef) + '</td><td>' + esc(r.category) + '</td>'
         + '<td title="' + esc(r.description) + '">' + esc(trunc(r.description, 80)) + '</td>'
@@ -280,6 +283,7 @@
     var r = rows.filter(function (x) { return x.id === id; })[0]; if (!r) return;
     viewing = r; $('viewErr').textContent = '';
     var closed = r.status === 'closed';
+    var rtc = r.status === 'ready_to_close';
     var ro = function (label, v, full) { return '<label' + (full ? ' class="full"' : '') + '>' + label + '<div class="ro">' + (esc(v) || '—') + '</div></label>'; };
     $('viewTitle').textContent = r.ncRef;
     var h = ro('Raised', fmt(r.raisedAt)) + ro('Raised by', r.raisedBy) + ro('Job number', r.jobNumber) + ro('Record', r.recordRef)
@@ -287,6 +291,15 @@
     if (closed) {
       h += ro('Raise a CAR?', carText(r)) + ro('Status', 'Closed') + ro('Closed by / date', (r.closedBy || '') + ' ' + fmt(r.closedAt))
         + ro('Corrective action', r.correctiveAction, true) + ro('Notes', r.notes, true);
+    } else if (rtc) {
+      h = '<div class="full rtc-banner">✓ <b>NC is ready to close.</b> The issue has been resolved. Please confirm the corrective action taken and close this NC.</div>' + h;
+      var rtcNote = r.readyToCloseNotes || ('Resolution detected' + (r.readyToCloseAt ? ' on ' + fmt(r.readyToCloseAt) : '') + '.');
+      h += ro('Resolution detected', rtcNote, true)
+        + ro('Raise a CAR?', carText(r))
+        + '<label class="full">Corrective action <span class="req">*</span>'
+        + '<textarea name="corrective_action" required placeholder="What was done to fix this issue? E.g. \'Replaced fan unit. Dry room stable at 30°C. Re-checked all areas.\'">' + esc(r.correctiveAction) + '</textarea></label>'
+        + '<label class="full">Notes <textarea name="notes">' + esc(r.notes) + '</textarea></label>'
+        + '<label>Closed by <span class="req">*</span><input name="closed_by" type="text" value="' + esc(r.closedBy || userName()) + '" required></label>';
     } else {
       h += '<label>Raise a CAR? <select name="car_required"><option value="">— not answered —</option>'
           + '<option value="yes"' + (r.carRequired === true ? ' selected' : '') + '>Yes — CAR required</option>'
@@ -309,12 +322,49 @@
       if (r.lastRecordUpdateAt && r.status !== 'closed') $('histBox').open = true;
     }).catch(function () { $('histBody').textContent = 'Could not load history.'; });
     $('viewBtns').innerHTML = '<button class="btn" type="button" data-close>' + (closed ? 'Close' : 'Cancel') + '</button>'
-      + (closed ? '' : '<button class="btn primary" type="submit">Save</button>');
+      + (closed ? '' : rtc
+        ? '<button class="btn" type="button" id="keepOpenBtn">Keep open</button><button class="btn primary" id="closeNcBtn" type="button" disabled>Close NC</button>'
+        : '<button class="btn primary" type="submit">Save</button>');
     show('viewModal', true);
+    if (rtc) {
+      // Enable Close NC button only when corrective_action has text; wire Keep open to save without closing
+      var caEl = $('viewForm').corrective_action;
+      var closeBtn = $('closeNcBtn');
+      if (caEl && closeBtn) {
+        var onCaInput = function () { closeBtn.disabled = !caEl.value.trim(); };
+        caEl.addEventListener('input', onCaInput); onCaInput();
+        closeBtn.addEventListener('click', async function () {
+          var ca = caEl.value.trim();
+          var by = ($('viewForm').closed_by || {}).value || ''; by = by.trim();
+          if (!ca) { $('viewErr').textContent = 'Describe the corrective action taken before closing.'; return; }
+          if (!by) { $('viewErr').textContent = 'Enter who is closing this NC.'; return; }
+          if (!confirm('Mark this NC as closed with the provided corrective action?')) return;
+          try {
+            var res = await api('/api/nc/' + viewing.id, json('PATCH', { status: 'closed', corrective_action: ca, closed_by: by, notes: ($('viewForm').notes || {}).value || '' }));
+            var out = await res.json();
+            if (!res.ok) throw new Error(out.error || ('HTTP ' + res.status));
+            show('viewModal', false); banner('ok', '✓ NC closed successfully. Reference: ' + out.ncRef + '.'); load();
+          } catch (err) { $('viewErr').textContent = 'Could not close: ' + err.message; }
+        });
+        var keepBtn = $('keepOpenBtn');
+        if (keepBtn) keepBtn.addEventListener('click', async function () {
+          var ca = caEl.value.trim();
+          var notes = ($('viewForm').notes || {}).value || '';
+          try {
+            var res = await api('/api/nc/' + viewing.id, json('PATCH', { corrective_action: ca || null, notes: notes }));
+            var out = await res.json();
+            if (!res.ok) throw new Error(out.error || ('HTTP ' + res.status));
+            show('viewModal', false); banner('ok', out.ncRef + ' updated.'); load();
+          } catch (err) { $('viewErr').textContent = 'Could not save: ' + err.message; }
+        });
+      }
+    }
   }
   $('viewForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var f = e.target;
+    // ready_to_close uses its own buttons (closeNcBtn / keepOpenBtn), not this handler
+    if (viewing && viewing.status === 'ready_to_close') return;
     var body = { status: f.status.value, corrective_action: f.corrective_action.value.trim(), notes: f.notes.value.trim(),
       car_required: f.car_required.value, car_ref: f.car_ref.value.trim() };
     if (!body.car_required) delete body.car_required;

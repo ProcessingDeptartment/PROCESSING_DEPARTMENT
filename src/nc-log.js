@@ -8,7 +8,7 @@
 // SMTP_HOST is unset the alert is skipped with a log line and the NC still saves.
 const nodemailer = require('nodemailer');
 
-const STATUSES = ['open', 'in_progress', 'closed'];
+const STATUSES = ['open', 'in_progress', 'ready_to_close', 'closed'];
 const SITE_URL = (process.env.SITE_URL || 'https://processing-department.onrender.com').replace(/\/$/, '');
 
 const str = (v, max) => {
@@ -89,11 +89,37 @@ async function sendNCRecordUpdateAlert(nc, updatedBy, updatedAt) {
   });
 }
 
+async function sendNCReadyToCloseAlert(nc, resolvedBy, resolvedAt) {
+  const to = (process.env.NC_EMAIL_RECIPIENTS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const t = mailer();
+  if (!t || !to.length) { console.warn(`NC ready-to-close alert for ${nc.ncRef} skipped: SMTP_HOST or NC_EMAIL_RECIPIENTS not set`); return; }
+  const link = `${SITE_URL}/pages/nc-log.html?status=ready_to_close`;
+  const rows = [
+    ['NC Reference', nc.ncRef], ['Record', nc.recordRef || '—'], ['Job number', nc.jobNumber || '—'],
+    ['Original issue', nc.description ? nc.description.slice(0, 120) : '—'],
+    ['Resolution detected', fmtDate(resolvedAt) + (resolvedBy ? ' by ' + resolvedBy : '')],
+  ];
+  const text = 'Non-conformance is ready to close.\n\n'
+    + rows.map(([k, v]) => `${(k + ':').padEnd(22)} ${v}`).join('\n')
+    + `\n\nA new check shows the issue is resolved.\nReview the NC log, confirm the corrective action taken, and close this NC.\nYou only need to add a brief comment about what was actually done.\n\nView NC: ${link}\n\n---\nAbagold Processing Facility — Automated Alert\n`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const html = '<p>Non-conformance is ready to close.</p><table cellpadding="3">'
+    + rows.map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>`).join('')
+    + '</table><p>A new check shows the issue is resolved.</p>'
+    + '<p>Review the NC log, confirm the corrective action taken, and close this NC.<br>You only need to add a brief comment about what was actually done.</p>'
+    + `<p><a href="${link}">View NC log (ready to close)</a></p><hr><p style="color:#666">Abagold Processing Facility — Automated Alert</p>`;
+  await t.sendMail({
+    from: process.env.NC_EMAIL_FROM || process.env.SMTP_USER, to,
+    subject: `✓ NC Ready to close — ${nc.ncRef} [${nc.jobNumber || '—'}]`,
+    text, html,
+  });
+}
+
 function mount(app, prisma) {
   const T = prisma.ncLog;
 
   app.get('/api/nc/count-open', async (req, res) => {
-    try { res.json({ openNCs: await T.count({ where: { status: { not: 'closed' } } }) }); }
+    try { res.json({ openNCs: await T.count({ where: { status: { in: ['open', 'in_progress', 'ready_to_close'] } } }) }); }
     catch (e) { console.error('GET nc count failed', e); res.status(500).json({ ok: false }); }
   });
 
@@ -146,6 +172,90 @@ function mount(app, prisma) {
     } catch (e) { console.error('POST nc record-updated failed', e); res.status(500).json({ ok: false }); }
   });
 
+  // Called after a record submission succeeds. Checks if any open NCs for the same job/record are now
+  // resolved based on the ncResolutionCondition in the record definition. Updates matching NCs to
+  // ready_to_close, fires an email alert, and returns the list for the frontend notification banner.
+  app.post('/api/nc/check-resolution', async (req, res) => {
+    const b = req.body || {};
+    const recordRef = normRecord(b.record_ref);
+    const jobNumber = str(b.job_number, 40);
+    const submissionId = str(b.submission_id, 80);
+    const values = b.values && typeof b.values === 'object' ? b.values : {};
+    if (!recordRef) return res.status(400).json({ ok: false, error: 'record_ref is required' });
+
+    // Load resolution condition from static record-def JSON
+    let resolutionCondition = null;
+    try {
+      const path = require('path');
+      const fs = require('fs');
+      // recordRef is like 'REC-7.4.2'; map to recordKey by reading the JSON files
+      const defsDir = path.join(__dirname, '..', 'public', 'data', 'record-defs');
+      const files = fs.readdirSync(defsDir).filter((f) => f.endsWith('.json'));
+      for (const file of files) {
+        try {
+          const def = JSON.parse(fs.readFileSync(path.join(defsDir, file), 'utf8'));
+          if (def.docCode && normRecord(def.docCode) === recordRef && def.ncResolutionCondition) {
+            resolutionCondition = def.ncResolutionCondition;
+            break;
+          }
+        } catch { /* skip unreadable file */ }
+      }
+    } catch (e) { console.error('check-resolution: could not load record defs', e); }
+
+    if (!resolutionCondition) {
+      return res.json({ ncsReady: [], message: 'No resolution condition defined for this record.' });
+    }
+
+    // Evaluate: for dry monitoring, triggerField = 'batchStatus', resolved when value = 'Green'
+    const triggerField = resolutionCondition.triggerField;
+    const resolvedWhen = (resolutionCondition.resolvedWhen || '').toLowerCase();
+    const fieldValue = String(values[triggerField] || '');
+    // Parse resolved condition: supports "field = value" (case-insensitive value match)
+    const resolvedMatch = resolvedWhen.match(/=\s*(.+)/);
+    const resolvedValue = resolvedMatch ? resolvedMatch[1].trim() : null;
+    const isResolved = resolvedValue ? fieldValue.toLowerCase() === resolvedValue.toLowerCase() : false;
+
+    if (!isResolved) {
+      return res.json({ ncsReady: [], message: `Condition not met (${triggerField} = ${fieldValue}).` });
+    }
+
+    try {
+      const where = { status: { in: ['open', 'in_progress'] }, recordRef };
+      if (jobNumber) where.jobNumber = jobNumber;
+      const openNcs = await T.findMany({ where });
+      if (!openNcs.length) return res.json({ ncsReady: [] });
+
+      const now = new Date();
+      const resolvedBy = str(req.get('x-user'), 120) || str(b.submitted_by, 120) || 'System';
+      const readyNcs = [];
+      for (const nc of openNcs) {
+        await T.update({ where: { id: nc.id }, data: {
+          status: 'ready_to_close',
+          readyToCloseAt: now,
+          resolutionCheckSubmittedId: submissionId || null,
+          resolutionTriggerField: triggerField || null,
+          readyToCloseNotes: `Auto-detected: ${triggerField} = ${fieldValue} on ${fmtDate(now)}${resolvedBy !== 'System' ? ' by ' + resolvedBy : ''}.`,
+        } });
+        await prisma.ncAudit.create({ data: {
+          ncId: nc.id, action: 'status_changed', actor: 'System',
+          note: `Status ${nc.status} → ready_to_close. ${triggerField} = ${fieldValue} detected on new submission (${submissionId || 'unknown'}).`,
+          createdAt: now,
+        } });
+        sendNCReadyToCloseAlert(nc, resolvedBy !== 'System' ? resolvedBy : null, now)
+          .catch((e) => console.error(`NC ready-to-close alert for ${nc.ncRef} failed`, e));
+        readyNcs.push({
+          nc_id: nc.id,
+          nc_ref: nc.ncRef,
+          job_number: nc.jobNumber,
+          original_issue: (nc.description || '').slice(0, 200),
+          current_status: `${triggerField} = ${fieldValue} — resolved`,
+          message: `${triggerField} is now ${fieldValue}. This NC is ready to close.`,
+        });
+      }
+      res.json({ ncsReady: readyNcs });
+    } catch (e) { console.error('POST nc check-resolution failed', e); res.status(500).json({ ok: false }); }
+  });
+
   app.post('/api/nc', async (req, res) => {
     const b = req.body || {};
     const data = {
@@ -195,6 +305,11 @@ function mount(app, prisma) {
       if (data.status === 'closed' && carNeeded && !carRef) return res.status(400).json({ ok: false, error: 'a CAR is required: enter the CAR reference before closing this NC' });
       if (data.status === 'closed' && cur.status !== 'closed') data.closedAt = new Date();
       if (data.status && data.status !== 'closed') { data.closedAt = null; data.closedBy = null; }
+      // closing a ready_to_close NC: require corrective_action
+      if (data.status === 'closed' && cur.status === 'ready_to_close') {
+        const ca = 'corrective_action' in b ? str(b.corrective_action, 4000) : cur.correctiveAction;
+        if (!ca) return res.status(400).json({ ok: false, error: 'corrective_action is required when closing this NC' });
+      }
       const upd = await T.update({ where: { id }, data });
       if (data.status && data.status !== cur.status) {
         const actor = (data.status === 'closed' ? data.closedBy : null) || str(req.get('x-user'), 120) || 'Unknown';
@@ -206,4 +321,4 @@ function mount(app, prisma) {
   });
 }
 
-module.exports = { mount, sendNCAlert, sendNCRecordUpdateAlert };
+module.exports = { mount, sendNCAlert, sendNCRecordUpdateAlert, sendNCReadyToCloseAlert };
