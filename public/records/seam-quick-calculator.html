@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -140,7 +140,7 @@
 <body>
 <script src="/lib/page-nav.js?v=1"></script>
 
-<!-- End-selection gate â€” shown on fresh session only -->
+<!-- End-selection gate — shown on fresh session only -->
 <div class="gate-overlay" id="gateOverlay">
   <div class="gate-card">
     <h2>Which end are you testing?</h2>
@@ -153,13 +153,13 @@
 </div>
 
 <div class="top">
-  <h1>Double Seam â€” Quick Calculator</h1>
+  <h1>Double Seam — Quick Calculator</h1>
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <div class="end-selector" id="endSelector">
       <button class="active" data-end="manufacturer">Manufacturer end</button>
       <button data-end="production">Production end</button>
     </div>
-    <button class="btn-ghost" id="backBtn">â† Home</button>
+    <button class="btn-ghost" id="backBtn">← Home</button>
   </div>
 </div>
 
@@ -187,11 +187,11 @@
           <input type="number" step="0.001" id="in_coverHook" placeholder="0.000">
         </div>
         <div class="field">
-          <span class="lbl">Plate thickness â€” end / cover <em class="sym">Te</em></span>
+          <span class="lbl">Plate thickness — end / cover <em class="sym">Te</em></span>
           <input type="number" step="0.001" id="in_plateEnd" value="0.22">
         </div>
         <div class="field">
-          <span class="lbl">Plate thickness â€” body <em class="sym">Tb</em></span>
+          <span class="lbl">Plate thickness — body <em class="sym">Tb</em></span>
           <input type="number" step="0.001" id="in_plateBody" value="0.20">
         </div>
       </div>
@@ -206,27 +206,27 @@
         <div class="results">
           <div class="result" id="res_overlap">
             <div class="lbl">Actual overlap</div>
-            <div class="val" id="val_overlap">â€”</div>
+            <div class="val" id="val_overlap">—</div>
             <div class="lim">min 1.00 mm</div>
           </div>
           <div class="result" id="res_overlapPct">
             <div class="lbl">% Overlap</div>
-            <div class="val" id="val_overlapPct">â€”</div>
+            <div class="val" id="val_overlapPct">—</div>
             <div class="lim">min 45%</div>
           </div>
           <div class="result" id="res_bhb">
             <div class="lbl">% Body hook butting</div>
-            <div class="val" id="val_bhb">â€”</div>
+            <div class="val" id="val_bhb">—</div>
             <div class="lim">min 70%</div>
           </div>
           <div class="result" id="res_freespace">
             <div class="lbl">Free space</div>
-            <div class="val" id="val_freespace">â€”</div>
-            <div class="lim">0.03 â€“ 0.19 mm</div>
+            <div class="val" id="val_freespace">—</div>
+            <div class="lim">0.03 – 0.19 mm</div>
           </div>
         </div>
         <div class="overall-banner" id="overallBanner"></div>
-        <div class="note">Quick reference only â€” not an official record.</div>
+        <div class="note">Quick reference only — not an official record.</div>
       </div>
     </div>
   </div>
@@ -245,10 +245,10 @@
   <div class="panel" style="margin-top:14px;">
     <div class="panel-head"><h2>Formulas</h2></div>
     <div class="panel-body">
-      <div class="formulas">Overlap        = BH + CH + 1.1Â·Te âˆ’ SL
-% Overlap      = Overlap Ã· (SL âˆ’ 2.2Â·Te âˆ’ 1.1Â·Tb)
-% B.H. butting = (BH âˆ’ 1.1Â·Tb) Ã· (SL âˆ’ 2.2Â·Te âˆ’ 1.1Â·Tb)
-Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
+      <div class="formulas">Overlap        = BH + CH + 1.1·Te − SL
+% Overlap      = Overlap ÷ (SL − 2.2·Te − 1.1·Tb)
+% B.H. butting = (BH − 1.1·Tb) ÷ (SL − 2.2·Te − 1.1·Tb)
+Free space     = ST − 3·Te − 2·Tb</div>
     </div>
   </div>
 
@@ -265,7 +265,7 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
   const SESSION_KEY = 'seamEndType';
   let endType = 'manufacturer';
 
-  /* â”€â”€ end-selection gate â”€â”€ */
+  /* ── end-selection gate ── */
   // Always ask on opening the page (also when restored from back/forward cache).
   // The saved value only pre-highlights the header toggle; the gate stays visible until the user picks.
   (function initGate(){
@@ -294,14 +294,14 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
     $('in_seamLength').focus();
   });
 
-  /* â”€â”€ end-type toggle in header (also works mid-session) â”€â”€ */
+  /* ── end-type toggle in header (also works mid-session) ── */
   document.querySelectorAll('#endSelector button').forEach(btn => {
     btn.addEventListener('click', () => {
       setEndType(btn.dataset.end);
     });
   });
 
-  /* â”€â”€ compute â”€â”€ */
+  /* ── compute ── */
   function calcResults(){
     const SL = num($('in_seamLength').value), ST = num($('in_seamThickness').value),
           BH = num($('in_bodyHook').value),   CH = num($('in_coverHook').value),
@@ -321,7 +321,7 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
   function show(key, value, fmt, isPass){
     const box=$('res_'+key), val=$('val_'+key);
     box.classList.remove('pass','fail');
-    if(value===null||!isFinite(value)){val.textContent='â€”';return;}
+    if(value===null||!isFinite(value)){val.textContent='—';return;}
     val.textContent=fmt(value);
     box.classList.add(isPass(value)?'pass':'fail');
   }
@@ -339,14 +339,14 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
     const allPass        = passOverlap && passOverlapPct && passBhb && passFree;
 
     const banner = $('overallBanner');
-    banner.textContent = allPass ? 'âœ“ All values pass specification' : 'âš  One or more values outside specification';
+    banner.textContent = allPass ? '✓ All values pass specification' : '⚠ One or more values outside specification';
     banner.className = 'overall-banner ' + (allPass ? 'all-pass' : 'has-fail');
 
     $('resultsWrap').classList.add('visible');
     return { passOverlap, passOverlapPct, passBhb, passFree, allPass };
   }
 
-  /* â”€â”€ save status helpers â”€â”€ */
+  /* ── save status helpers ── */
   function setSaveStatus(state, text){
     const wrap=$('saveStatus'), dot=$('saveDot'), lbl=$('saveLabel');
     wrap.style.display='flex';
@@ -354,9 +354,9 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
     lbl.textContent=text;
   }
 
-  /* â”€â”€ background save to DB â”€â”€ */
+  /* ── background save to DB ── */
   async function saveToDb(r, pass){
-    setSaveStatus('saving','Savingâ€¦');
+    setSaveStatus('saving','Saving…');
     const user = window.Auth ? window.Auth.getCurrentUser() : null;
     const payload = {
       seamLength:r.SL, seamThickness:r.ST, bodyHook:r.BH, coverHook:r.CH,
@@ -377,7 +377,7 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
     }
   }
 
-  /* â”€â”€ clear measurement inputs â€” keeps end-type â”€â”€ */
+  /* ── clear measurement inputs — keeps end-type ── */
   function clearMeasurements(){
     ['in_seamLength','in_seamThickness','in_bodyHook','in_coverHook'].forEach(id=>{
       $(id).value='';
@@ -389,7 +389,7 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
     $('saveStatus').style.display='none';
   }
 
-  /* â”€â”€ submit / calculate â”€â”€ */
+  /* ── submit / calculate ── */
   $('submitBtn').addEventListener('click', () => {
     const r = calcResults();
     if(!r){
@@ -408,13 +408,13 @@ Free space     = ST âˆ’ 3Â·Te âˆ’ 2Â·Tb</div>
     $('resultsWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
   });
 
-  /* â”€â”€ manual clear â”€â”€ */
+  /* ── manual clear ── */
   $('clearBtn').addEventListener('click', ()=>{
     clearMeasurements();
     $('in_seamLength').focus();
   });
 
-  /* â”€â”€ back â”€â”€ */
+  /* ── back ── */
   $('backBtn').addEventListener('click', ()=>{
     if(history.length>1) history.back();
     else location.href='../index.html';

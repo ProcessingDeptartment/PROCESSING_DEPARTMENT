@@ -1150,6 +1150,69 @@
     });
   }
 
+  // Section-level dynamic product specs: watch a field for agCode changes, load /api/product-data/:code,
+  // fill read-only specFrom fields, and update ncBelowSpec NC badges. Used by Water Reading in REC 7.2.11.
+  function wireSectionSpecs(container, config) {
+    const sections = (config.sections || []).filter(s => s.specsSource && s.specsSource.watchField);
+    if (!sections.length) return;
+    container._sectionSpecs = container._sectionSpecs || {};
+    const specFields = []; // { key, specFrom }
+    const ncFields = [];   // { key, ncBelowSpec }
+    sections.forEach(sec => {
+      (sec.fields || []).forEach(f => {
+        if (f.readOnly && f.specFrom) specFields.push({ key: f.key, specFrom: f.specFrom });
+        if (f.ncBelowSpec) ncFields.push({ key: f.key, ncBelowSpec: f.ncBelowSpec });
+      });
+    });
+    const updateNc = () => {
+      const specs = container._sectionSpecs;
+      ncFields.forEach(({ key, ncBelowSpec }) => {
+        const inp = el('fr_f_' + key);
+        const badge = el('fr_f_' + key + '__nc');
+        if (!inp || !badge) return;
+        const val = parseFloat(inp.value);
+        const limit = parseFloat(specs[ncBelowSpec]);
+        badge.hidden = isNaN(val) || isNaN(limit) || val >= limit;
+      });
+    };
+    const watchFields = [...new Set(sections.map(s => s.specsSource.watchField))];
+    watchFields.forEach(watchField => {
+      const loadAndApply = async () => {
+        const watchEl = el('fr_f_' + watchField);
+        if (!watchEl) return;
+        const code = String(watchEl.value || '').trim();
+        let specs = {};
+        if (code) {
+          try {
+            const base = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+            const res = await (window.FacilityApi
+              ? window.FacilityApi.fetch(`${base}/api/product-data/${encodeURIComponent(code)}`)
+              : fetch(`${base}/api/product-data/${encodeURIComponent(code)}`));
+            specs = res.ok ? await res.json() : {};
+          } catch (e) { specs = {}; }
+        }
+        container._sectionSpecs = specs;
+        specFields.forEach(({ key, specFrom }) => {
+          const inp = el('fr_f_' + key);
+          if (inp) inp.value = specs[specFrom] != null ? String(specs[specFrom]) : '';
+        });
+        updateNc();
+      };
+      const watchEl = el('fr_f_' + watchField);
+      if (watchEl) {
+        ['change', 'input'].forEach(ev => watchEl.addEventListener(ev, loadAndApply));
+        // Auto-load on init only if no existing spec values already in the fields (historical submissions preserve their own snapshot)
+        const hasExisting = specFields.some(({ key }) => { const inp = el('fr_f_' + key); return inp && String(inp.value || '').trim() !== ''; });
+        if (!hasExisting && String(watchEl.value || '').trim()) loadAndApply();
+      }
+    });
+    ncFields.forEach(({ key }) => {
+      const inp = el('fr_f_' + key);
+      if (inp) ['input', 'change'].forEach(ev => inp.addEventListener(ev, updateNc));
+    });
+    updateNc();
+  }
+
   // "Collapse all / Expand all" for the section blocks (hide only: nothing is removed or reset).
   function wireCollapseAll(container) {
     if (container._frCollapseWired) return;
@@ -3699,7 +3762,7 @@
         const _gridCols = sec.cols || 2;
         const fieldsHtml = `<div class="fr-grid fr-grid-${_gridCols}${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
           ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
-            ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}
+            ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}${f.ncBelowSpec ? `<span class="fr-nc-badge" id="fr_f_${f.key}__nc" hidden>NC</span>` : ''}
           </label>`).join('')}${sec.__hiddenHtml || ''}
         </div>`;
         return wrapSection(sec, fieldsHtml);
@@ -3785,6 +3848,7 @@
         if (inp && !inp.value) { const d = new Date(); inp.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
       });
       wireSectionSummaries(container);
+      wireSectionSpecs(container, config);
       wireCollapseAll(container);
       if (!locked) { wireJobSearch(container, config, !existing); wireAutofill(container, config); wireJobRouteCheck(container, config); }
       if (!locked) { container.addEventListener('input', refreshComputeFns); refreshComputeFns(); }
