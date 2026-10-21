@@ -2523,27 +2523,37 @@
         const span = (txt, n) => `<span${n != null && n < -1e-9 ? ' style="color:#b30000;font-weight:bold;"' : ''}>${txt}${n != null ? ' ' + jwKg(n) + ' kg' : ''}</span>`;
         if (jw.manualField) {
           const mEl = el('fr_f_' + jw.manualField);
-          const manual = mEl ? parseFloat(mEl.value) : NaN;
-          const typed = manual > 0;
-          const lab = mEl && mEl.closest('label');
-          if (lab) {
-            let line = el('fr_manualOoswLine'), warn = el('fr_manualOoswWarn');
-            if (!line) {
-              line = document.createElement('div'); line.id = 'fr_manualOoswLine'; line.className = 'fr-muted no-print'; line.style.cssText = 'font-size:13px;margin-top:4px;';
-              warn = document.createElement('div'); warn.id = 'fr_manualOoswWarn'; warn.className = 'no-print'; warn.style.cssText = 'font-size:12.5px;margin-top:4px;color:#8a5a00;background:#fff4d6;border:1px solid #f0c36d;border-radius:6px;padding:3px 8px;';
-              warn.textContent = 'OOSW weight not entered — cooking weight cap cannot be checked.';
-              lab.appendChild(line); lab.appendChild(warn);
+          if (mEl && mEl.readOnly) {
+            // Display-only: populate with the auto-fetched OOSW from REC 7.1.5
+            const has = f.oosw != null && !!jwState.job;
+            mEl.value = !jwState.job ? '' : has ? jwKg(f.oosw) : 'Not recorded';
+            mEl.style.color = jwState.job && !has ? '#8a8f98' : '';
+            mEl.style.fontStyle = jwState.job && !has ? 'italic' : '';
+            const warn = el('fr_manualOoswWarn');
+            if (warn) warn.style.display = 'none';
+          } else if (mEl) {
+            const manual = parseFloat(mEl.value);
+            const typed = manual > 0;
+            const lab = mEl.closest('label');
+            if (lab) {
+              let line = el('fr_manualOoswLine'), warn = el('fr_manualOoswWarn');
+              if (!line) {
+                line = document.createElement('div'); line.id = 'fr_manualOoswLine'; line.className = 'fr-muted no-print'; line.style.cssText = 'font-size:13px;margin-top:4px;';
+                warn = document.createElement('div'); warn.id = 'fr_manualOoswWarn'; warn.className = 'no-print'; warn.style.cssText = 'font-size:12.5px;margin-top:4px;color:#8a5a00;background:#fff4d6;border:1px solid #f0c36d;border-radius:6px;padding:3px 8px;';
+                warn.textContent = 'OOSW weight not entered — cooking weight cap cannot be checked.';
+                lab.appendChild(line); lab.appendChild(warn);
+              }
+              line.style.display = typed ? '' : 'none';
+              if (typed) line.innerHTML = f.availCook < -1e-9
+                ? `<span style="color:#b30000;font-weight:bold;">OVER by ${jwKg(-f.availCook)} kg</span>`
+                : `Available to cook: <b>${jwKg(f.availCook)} kg</b>`;
+              warn.style.display = (typed || known) ? 'none' : '';
             }
-            line.style.display = typed ? '' : 'none';
-            if (typed) line.innerHTML = f.availCook < -1e-9
-              ? `<span style="color:#b30000;font-weight:bold;">OVER by ${jwKg(-f.availCook)} kg</span>`
-              : `Available to cook: <b>${jwKg(f.availCook)} kg</b>`;
-            warn.style.display = (typed || known) ? 'none' : '';
+            document.querySelectorAll('.fr-section-summary').forEach(sp => {
+              if ((sp.getAttribute('data-summary-for') || '').split(',').indexOf(jw.manualField) === -1) return;
+              sp.dataset.frExtra = typed ? `Available: ${jwKg(f.availCook)} kg` : '';
+            });
           }
-          document.querySelectorAll('.fr-section-summary').forEach(sp => {
-            if ((sp.getAttribute('data-summary-for') || '').split(',').indexOf(jw.manualField) === -1) return;
-            sp.dataset.frExtra = typed ? `Available: ${jwKg(f.availCook)} kg` : '';
-          });
         }
         const tally = el(rosterDomId('fr_jobWeights', rosterIndex));
         if (tally) {
