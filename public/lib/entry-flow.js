@@ -133,7 +133,10 @@
     }
     function dupCheck() {
       var f = $('fr_f_jobNo'), job = f ? String(f.value || '').trim() : '';
-      var settled = job && $('fr_f_jiIntakeDate') && $('fr_f_jiIntakeDate').value;
+      // job is confirmed once the receiving autofill has landed (intakeDate / jiIntakeWeight) or it is a complete job number
+      // (3 characters + 5 digits, e.g. DPR01193): this form has no jiIntakeDate field, which the first version waited for
+      var ia = $('fr_f_intakeDate'), iw = $('fr_f_jiIntakeWeight');
+      var settled = job && ((ia && ia.value) || (iw && iw.value) || /^[A-Za-z0-9]{3}\d{5}$/.test(job));
       if (!settled || isLocked()) { S.dupJob = null; S.dupResult = null; renderDupBanner(null); return; }
       if (S.dupJob !== job) {
         S.dupJob = job; S.dupResult = null; renderDupBanner(null);
