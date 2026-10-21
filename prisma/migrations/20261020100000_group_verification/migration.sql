@@ -963,4 +963,5 @@ UPDATE "sub_emergency_evacuation_attendance_register" SET "submissionDate" = ("c
 UPDATE "sub_handling_of_emergencies_and_incidences" SET "submissionDate" = ("createdAt" AT TIME ZONE 'Africa/Johannesburg')::DATE WHERE "submissionDate" IS NULL;
 UPDATE "sub_daily_factory_feedback_meeting" SET "submissionDate" = ("createdAt" AT TIME ZONE 'Africa/Johannesburg')::DATE WHERE "submissionDate" IS NULL;
 UPDATE "sub_rtw_medical_questionnaire" SET "submissionDate" = ("createdAt" AT TIME ZONE 'Africa/Johannesburg')::DATE WHERE "submissionDate" IS NULL;
-UPDATE "sub_dry_monitoring_images" SET "submissionDate" = ("createdAt" AT TIME ZONE 'Africa/Johannesburg')::DATE WHERE "submissionDate" IS NULL;
+-- sub_dry_monitoring_images has no createdAt (uses uploaded_at); submissionDate left NULL for photo rows
+UPDATE "sub_dry_monitoring_images" SET "submissionDate" = ("uploaded_at" AT TIME ZONE 'Africa/Johannesburg')::DATE WHERE "submissionDate" IS NULL;
