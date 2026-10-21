@@ -136,7 +136,7 @@ function coerce(value, kind, recordKey, fieldKey) {
 function toCol(fieldKey) {
   let col = fieldKey;
   if (/^\d/.test(col)) col = 'f_' + col;
-  if (['id', 'status', 'source', 'createdAt', 'updatedAt', 'submittedAt', 'rawJson', 'inSpec', 'position'].includes(col)) {
+  if (['id', 'status', 'source', 'createdAt', 'updatedAt', 'submittedAt', 'rawJson', 'inSpec', 'position', 'submissionGroupId', 'submissionDate', 'recordType', 'verifiedGroupAt'].includes(col)) {
     col = 'val_' + col;
   }
   return col;
@@ -255,6 +255,13 @@ async function getSchema(prisma, recordKey) {
       `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = 'position' LIMIT 1`, schema.table);
     schema.hasPosition = Array.isArray(rows) && rows.length > 0;
   } catch { schema.hasPosition = false; }
+  // submissionGroupId / submissionDate / recordType — added by group_verification migration.
+  schema.hasGroupCols = false;
+  try {
+    const rows = await prisma.$queryRawUnsafe(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = 'submissionGroupId' LIMIT 1`, schema.table);
+    schema.hasGroupCols = Array.isArray(rows) && rows.length > 0;
+  } catch { schema.hasGroupCols = false; }
   // Only write columns the table really has (checked once per record). A field added to a record definition before its
   // migration has run is left to rawJson for now, instead of failing every save of that record.
   try {
@@ -279,6 +286,54 @@ async function getSchema(prisma, recordKey) {
   return schema;
 }
 
+// Returns a map of entry.id → { groupId, submissionDate: 'YYYY-MM-DD' } for every entry.
+// Rules:
+//   - Entries that already have a group ID keep it (even if the group is verified — the entry was
+//     already part of that group; only NEW entries after verification get a new group).
+//   - New entries share one group ID per calendar day (Africa/Johannesburg, UTC+2) unless the
+//     existing group for that day is verified, in which case they start a fresh group (Q7 Option B).
+function buildGroupAssignments(entries, recordKey, groupSnapshot, verifiedGroupIds) {
+  const assignments = new Map();
+  const dateToGroupId = new Map(); // date → group ID assigned for new entries this batch
+
+  for (const entry of entries) {
+    if (!entry || !entry.id) continue;
+
+    // Reuse existing group
+    const prev = groupSnapshot.get(entry.id);
+    if (prev && prev.groupId) {
+      assignments.set(entry.id, { groupId: prev.groupId, submissionDate: prev.date });
+      continue;
+    }
+
+    // New entry: derive the calendar date in Africa/Johannesburg (UTC+2)
+    const ts = entry.createdAt ? new Date(entry.createdAt) : new Date();
+    const localMs = ts.getTime() + 2 * 60 * 60 * 1000;
+    const date = new Date(localMs).toISOString().slice(0, 10);
+
+    // Use an already-assigned group for this date in this batch
+    if (dateToGroupId.has(date)) {
+      assignments.set(entry.id, { groupId: dateToGroupId.get(date), submissionDate: date });
+      continue;
+    }
+
+    // Look for an existing non-verified group on this date (from snapshot — surviving entries)
+    let existingGroup = null;
+    for (const [, info] of groupSnapshot) {
+      if (info.date === date && info.groupId && !verifiedGroupIds.has(info.groupId)) {
+        existingGroup = info.groupId;
+        break;
+      }
+    }
+
+    const groupId = existingGroup || `sub_group_${recordKey}_${date}_${entry.id.slice(0, 8)}`;
+    dateToGroupId.set(date, groupId);
+    assignments.set(entry.id, { groupId, submissionDate: date });
+  }
+
+  return assignments;
+}
+
 // opts.incremental (live saves only): touch only the submissions whose stored entry changed, were added or
 // were removed, instead of deleting and re-inserting the whole table. Anything that is not a plain per-entry
 // projection (dry-stock-control derives columns from OTHER entries) and every script/backfill call keeps the
@@ -295,6 +350,30 @@ async function syncSubmissionRows(prisma, key, value, opts) {
   try { entries = JSON.parse(value); } catch { return; }
   if (!Array.isArray(entries)) return;
   if (recordKey === 'dry-stock-control') fillLegacyStages(entries);   // projection only: old submissions become stage 1..n
+
+  // Snapshot existing group assignments before any deletes so we can preserve them on re-insert.
+  // Also fetch which group IDs are already verified so Q7 (new group after verification) is enforced.
+  let groupSnapshot = new Map(); // id → { groupId, submissionDate: 'YYYY-MM-DD' }
+  let verifiedGroupIds = new Set();
+  if (schema.hasGroupCols) {
+    try {
+      const rows = await prisma.$queryRawUnsafe(
+        `SELECT "id", "submissionGroupId", "submissionDate"::text AS sd FROM "${schema.table}" WHERE "submissionGroupId" IS NOT NULL`
+      );
+      groupSnapshot = new Map(rows.map(r => [r.id, { groupId: r.submissionGroupId, date: r.sd ? r.sd.slice(0, 10) : null }]));
+      const vrows = await prisma.$queryRawUnsafe(
+        `SELECT "submissionGroupId" FROM "submissions_group_verification" WHERE "recordType" = $1`, recordKey
+      );
+      verifiedGroupIds = new Set(vrows.map(r => r.submissionGroupId));
+    } catch { /* columns not yet available; group writes are skipped */ }
+  }
+
+  // Assign a group ID to every entry. All entries on the same calendar day (Africa/Johannesburg)
+  // share one group ID, unless the existing group for that day is already verified (Q7 = Option B:
+  // post-verification entries get a fresh group). Entries that already have a group ID keep it.
+  const groupAssignments = schema.hasGroupCols
+    ? buildGroupAssignments(entries, recordKey, groupSnapshot, verifiedGroupIds)
+    : null;
 
   // Atomic: one transaction. Full mode deletes every existing row for this record then re-inserts;
   // incremental mode deletes/re-inserts only the ids that differ.
@@ -347,6 +426,14 @@ async function syncSubmissionRows(prisma, key, value, opts) {
       entry.inSpec != null ? entry.inSpec : null,
     ];
     if (schema.hasPosition) { cols.push('"position"'); params.push(pos); }
+
+    if (groupAssignments) {
+      const ga = groupAssignments.get(entry.id);
+      if (ga) {
+        cols.push('"submissionGroupId"', '"submissionDate"', '"recordType"');
+        params.push(ga.groupId, new Date(ga.submissionDate + 'T00:00:00Z'), recordKey);
+      }
+    }
 
     for (const { key: fk, col, kind, legacyFrom } of schema.topCols) {
       // an "(old)" field (extraJson.legacyFrom) archives the value its removed field held on older entries
