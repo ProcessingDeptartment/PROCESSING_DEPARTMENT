@@ -79,7 +79,8 @@ function mount(app, prisma) {
     try {
       const bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: value } });
       if (!bc) return bad(res, 'Unknown barcode - link it at intake first.', 404);
-      if (bc.status !== 'active') return bad(res, notActive(bc), 409);
+      if (bc.status === 'retired') return bad(res, notActive(bc), 409);
+      // split barcodes can still be scanned — data is associated with the parent (children inherit via ancestry)
       const w = Number(b.weight);
       await prisma.barcodeStageEvent.create({ data: {
         barcodeId: bc.id, stage: b.stage, scannedByUser: clean(b.user) || null,

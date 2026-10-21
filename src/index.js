@@ -693,6 +693,7 @@ app.get('/api/lookup/:recordKey/:field/:value', async (req, res) => {
 app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
   const jobNo = String(req.params.jobNo || '').trim();
   const out = { 'dry-cooking': null, 'drying-process': null, 'drying-entry-date': null, 'drying-location': null,
+    'drying-room-date': null,
     'dry-cooked-weight': null, 'dried-transfer-weight': null, 'receiving-weight': null };
   if (!jobNo) return res.json(out);
   try {
@@ -741,6 +742,15 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
       if (!best || t >= best.t) best = { t, area, id: r.id };
     }
     if (best) out['drying-location'] = { value: best.area, ids: [best.id] };
+    // 'drying-room-date' → YYYY-MM-DD of the first recorded dry-room movement (for REC 7.4.6 dateIn)
+    const drm = ents.find(r => r['movedIntoDryRoom'] === true && r['dateIntoDryRoomAt']);
+    if (drm) {
+      const d = new Date(drm['dateIntoDryRoomAt']);
+      if (!isNaN(d)) {
+        const pad = n => String(n).padStart(2, '0');
+        out['drying-room-date'] = { value: `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`, ids: [drm.id], note: 'From REC 7.4.1' };
+      }
+    }
   } catch (e) { console.error('job-facts drying entry failed', e.message); }
   // REC 7.4.6 Dry Stock Control autofill (submitted entries only, drafts ignored):
   //   'dry-cooked-weight'      -> total cooked weight = v_dry_job_weights.cooked_kg (Cooking cards only; the one existing

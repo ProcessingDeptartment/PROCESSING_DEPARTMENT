@@ -179,15 +179,16 @@
   ];
 
   async function loadAll() {
-    const [receiving, drying, grading, gradingRanched, cooking, saltingOosw] = await Promise.all([
+    const [receiving, drying, grading, gradingRanched, cooking, saltingOosw, dryStock] = await Promise.all([
       getRecord('formrecord:abalone-receiving'),
       getRecord('formrecord:drying-process'),
       getRecord('formrecord:grading-production-log-cultivated'),
       getRecord('formrecord:grading-production-log-ranched'),
       getRecord('formrecord:dry-cooking'),
-      getRecord('formrecord:salting-oosw')
+      getRecord('formrecord:salting-oosw'),
+      getRecord('monitoring_log:dry-stock-control')
     ]);
-    CACHE = { receiving, drying, grading, gradingRanched, cooking, saltingOosw };
+    CACHE = { receiving, drying, grading, gradingRanched, cooking, saltingOosw, dryStock };
   }
 
   // REC 7.4.1 is an entry log: many entries per job. Everything job-level is worked out here from ALL of the
@@ -290,12 +291,21 @@
       gs.total = total != null ? total : ((gs.rows.reduce((a, r) => a + (r.weight || 0), 0) + (gs.bGrade || 0)) || null);
     });
 
+    // REC 7.4.6 Dry Stock Control — latest submitted stage for this job
+    const dryStockForJob = submitted(forJob(CACHE.dryStock || [], jobNo));
+    // stages are separate submissions; merge values across all stages (later stages overwrite earlier)
+    const dryStockValues = Object.assign({}, ...dryStockForJob.map(e => e.values || {}));
+    const dsWeightOut = num(dryStockValues.weightOut);
+    const ds7410 = num(dryStockValues.weight7410);
+    const dsVariance = (dsWeightOut != null && ds7410 != null) ? Math.round((dsWeightOut - ds7410) * 1000) / 1000 : null;
+
     return {
       jobNo, harvest, totalMass, totalAnimals,
       wholeWeight, cookedWeight, ooswKg, ooswSource, trolleys, driedWeight, driedSource, actualYield, dryingLoss,
       timeline, dryingDays, gradeSets,
       header: (receiving[0] && receiving[0].values) || {},
-      counts: { receiving: receiving.length, drying: entries.length, grading: gradingAll.length, cooking: cooking.length }
+      counts: { receiving: receiving.length, drying: entries.length, grading: gradingAll.length, cooking: cooking.length },
+      dryStock: { values: dryStockValues, stageCount: dryStockForJob.length, weightOut: dsWeightOut, weight7410: ds7410, variance: dsVariance }
     };
   }
 
@@ -337,6 +347,29 @@
         </tbody>
       </table>
       <div class="muted" style="margin-top:4px;">Yield = dried weight ÷ whole weight × 100. Dried weight and grading come from REC 7.4.3.1 / 7.4.3.2; an old REC 7.4.1 dry weight is used only when there is no grading record and is marked (old).</div>
+
+      <h2 class="sec">Dry Stock Control (REC 7.4.6)</h2>
+      ${rep.dryStock.stageCount === 0 ? `<div class="warn no-print">No REC 7.4.6 Dry Stock Control submitted for this job.</div>` : `
+      <table>
+        <thead><tr><th>Field</th><th class="num">Value</th></tr></thead>
+        <tbody>
+          <tr><td>Weight in (from REC 7.4.0)</td><td class="num">${rep.dryStock.values.weightIn != null ? fmt(num(rep.dryStock.values.weightIn)) + ' kg' : '—'}</td></tr>
+          <tr><td>Date in</td><td class="num">${esc(rep.dryStock.values.dateIn || '—')}</td></tr>
+          <tr><td>Count in — factory</td><td class="num">${rep.dryStock.values.countInFactory != null ? rep.dryStock.values.countInFactory : '—'}</td></tr>
+          <tr><td>Count in — finance</td><td class="num">${rep.dryStock.values.countInFinance != null ? rep.dryStock.values.countInFinance : '—'}</td></tr>
+          <tr><td>Weight out (entered)</td><td class="num">${rep.dryStock.weightOut != null ? fmt(rep.dryStock.weightOut) + ' kg' : '—'}</td></tr>
+          <tr><td>REC 7.4.10 transfer weight</td><td class="num">${rep.dryStock.weight7410 != null ? fmt(rep.dryStock.weight7410) + ' kg' : '—'}</td></tr>
+          <tr style="${rep.dryStock.variance != null && Math.abs(rep.dryStock.variance) > 0.001 ? 'color:#8a5a10;font-weight:700;' : ''}">
+            <td>Variance (weight out − REC 7.4.10)</td>
+            <td class="num">${rep.dryStock.variance != null ? fmt(rep.dryStock.variance) + ' kg' : '—'}</td>
+          </tr>
+          ${rep.dryStock.values.weightVarianceReason ? `<tr><td>Variance explanation</td><td>${esc(rep.dryStock.values.weightVarianceReason)}</td></tr>` : ''}
+          <tr><td>Date out</td><td class="num">${esc(rep.dryStock.values.dateOut || '—')}</td></tr>
+          <tr><td>Count out — factory</td><td class="num">${rep.dryStock.values.countOutFactory != null ? rep.dryStock.values.countOutFactory : '—'}</td></tr>
+          <tr><td>Count out — finance</td><td class="num">${rep.dryStock.values.countOutFinance != null ? rep.dryStock.values.countOutFinance : '—'}</td></tr>
+        </tbody>
+      </table>
+      ${rep.dryStock.variance != null && Math.abs(rep.dryStock.variance) > 0.001 && !rep.dryStock.values.weightVarianceReason ? `<div class="warn">Weight out differs from REC 7.4.10 by ${fmt(Math.abs(rep.dryStock.variance))} kg. No variance explanation recorded.</div>` : ''}`}
 
       <h2 class="sec">Harvest breakdown (receiving)</h2>
       <table>

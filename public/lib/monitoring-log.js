@@ -1705,6 +1705,27 @@
     // cooking date from REC 7.4.0, trolley count from REC 7.4.1). When the source record has nothing the field
     // unlocks so the person can type it, an amber note says why, and the entry is flagged "typed manually".
     // The stored value is a snapshot: submitted entries never re-read it.
+    // Fields with computeDiff: { a, b } show the live difference (a - b) as a read-only derived value.
+    function wireComputeDiff(container) {
+      entryFields.forEach(f => {
+        if (!f.computeDiff) return;
+        const { a, b } = f.computeDiff;
+        const inp = el(`${ns}_f_${f.key}`);
+        if (!inp) return;
+        const recompute = () => {
+          const va = parseFloat((el(`${ns}_f_${a}`) || {}).value || '');
+          const vb = parseFloat((el(`${ns}_f_${b}`) || {}).value || '');
+          inp.value = (!isNaN(va) && !isNaN(vb)) ? String(Math.round((va - vb) * 1000) / 1000) : '';
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+        [a, b].forEach(k => {
+          const src = el(`${ns}_f_${k}`);
+          if (src) { src.addEventListener('input', recompute); src.addEventListener('change', recompute); }
+        });
+        recompute();
+      });
+    }
+
     function wireFromRecord(container) {
       const rules = entryFields.filter(f => f.fromRecord);
       if (!rules.length) return;
@@ -2024,6 +2045,7 @@
       if (ctl) { ctl.hidden = !blocks; wireCollapseAll(ctl, () => container.parentElement || container); }
       if (!locked) { wireJobSearch(container, ns, entryFields, autofill, !existing, recordKey); wireAutofill(container, ns, autofill); wireJobRouteCheck(container, ns, entryFields); }
       if (!locked) wireFromRecord(container);
+      wireComputeDiff(container);
       wireCalcAndFlags(container, locked);
       if (config.checkHistory) wireCheckHistory(container);
       if (photosOn) {
@@ -2316,6 +2338,20 @@
       if (badPattern) { revealField(el(`${ns}_f_${badPatternKey}`)); toast(badPattern); return; }
 
       if (routeConflict && (finalize || !submitFlow)) { revealField(el(`${ns}_f_${routeConflictKey}`)); toast(routeConflict); return; }
+
+      // crossFieldRequired: block finalize when two numeric fields differ beyond tolerance and a reason is missing
+      const _cfr = traceConfig && traceConfig.crossFieldRequired;
+      if (finalize && _cfr && _cfr.condition && _cfr.condition.fieldsNotEqual && _cfr.requiredField) {
+        const _cva = parseFloat(raw[_cfr.condition.fieldsNotEqual[0]] || '');
+        const _cvb = parseFloat(raw[_cfr.condition.fieldsNotEqual[1]] || '');
+        const _tol = _cfr.condition.tolerance || 0;
+        if (!isNaN(_cva) && !isNaN(_cvb) && Math.abs(_cva - _cvb) > _tol && !String(raw[_cfr.requiredField] || '').trim()) {
+          const _cfi = el(`${ns}_f_${_cfr.requiredField}`);
+          if (_cfi) revealField(_cfi);
+          toast(_cfr.message || 'Please explain the variance before submitting.');
+          return;
+        }
+      }
 
       if (finalize) {
         entryFields.forEach(f => {

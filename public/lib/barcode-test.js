@@ -123,7 +123,7 @@
       status('Looking up ' + code + '…');
       api('/api/traceability/history/' + encodeURIComponent(code)).then(function (h) {
         if (!h.ok) { status(h.httpStatus === 404 ? 'Barcode ' + code + ' is not registered. Scan it at receiving (REC 7.1.2) first.' : 'Lookup failed.', 'bad'); return; }
-        if (h.barcode.status !== 'active') { status('Barcode ' + h.barcode.value + ' is ' + h.barcode.status + (h.barcode.status === 'split' ? ' - scan one of its child barcodes.' : '.'), 'bad'); return; }
+        if (h.barcode.status === 'retired') { status('Barcode ' + h.barcode.value + ' is retired and cannot be used.', 'bad'); return; }
         var link = (h.jobLinks || []).filter(function (l) { return l.jobNo; })[0];
         var jobNo = link ? link.jobNo : '';
         if (!jobNo) { status('Barcode ' + h.barcode.value + ' has no job number linked.', 'bad'); return; }
