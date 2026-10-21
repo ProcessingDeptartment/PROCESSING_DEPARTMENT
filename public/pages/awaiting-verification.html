@@ -870,9 +870,12 @@
     $('vfy_date').value = today();
     try { await window.storage.whenReady(); } catch (e) {  }
     try { await window.VerificationQueue.loadAssignments(); } catch (e) {  }
-    try { await loadPreviewConfig(); } catch (e) {  }
     try {
-      await scan();
+      // Load both config AND scan in parallel, but ensure both complete before render
+      await Promise.all([
+        loadPreviewConfig(),
+        scan()
+      ]);
       render();
     } catch (e) {
       console.error(e);

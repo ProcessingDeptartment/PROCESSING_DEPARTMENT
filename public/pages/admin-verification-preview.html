@@ -395,10 +395,25 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
       btn.disabled = true;
       try {
         await saveConfig(rk);
-        toast('Saved preview fields for this record.');
+        
+        // Verify the save actually persisted
+        var raw = await window.storage.get(STORAGE_KEY, true);
+        var saved = {};
+        try {
+          if (raw && raw.value) saved = JSON.parse(raw.value);
+        } catch (e) { }
+        var didSave = saved[rk] && JSON.stringify(saved[rk]) === JSON.stringify(CONFIG[rk]);
+        
+        if (!didSave) {
+          toast('Save failed — data was not stored. Check network and retry.');
+          btn.disabled = false;
+          return;
+        }
+        
+        toast('✓ Saved preview fields for this record.');
         refreshCard(rk);
       } catch (err) {
-        toast('Save failed — please retry.');
+        toast('Save failed — ' + (err && err.message || 'unknown error'));
         btn.disabled = false;
       }
     }
