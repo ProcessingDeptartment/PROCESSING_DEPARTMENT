@@ -2487,7 +2487,8 @@
       const jwKg = n => String(Math.round(n * 100) / 100);
       function jwFigures() {
         const mEl = jw.manualField ? el('fr_f_' + jw.manualField) : null;
-        const manual = mEl ? parseFloat(mEl.value) : NaN;
+        // readOnly display fields are populated from the server — don't use as a manual override
+        const manual = (mEl && !mEl.readOnly) ? parseFloat(mEl.value) : NaN;
         return jobWeightFigures(jwState.job ? jwState.base : null, jw, rows.map((_, i) => readRow(i)), manual);
       }
       function renderJobWeights() {
@@ -2496,7 +2497,7 @@
         const known = f.oosw != null && !!jwState.job;
         // Job info shows the job's OOSW total next to Whole weight (display only -- no record field; its value is
         // copied into the saved values as jiOoswKg so the print sheet can show it)
-        if (jw.cookFromOosw) {
+        {
           const wholeInp = el('fr_f_jiIntakeWeight');
           const wholeBox = wholeInp && (wholeInp.closest('label') || wholeInp.parentElement);
           if (wholeBox) {

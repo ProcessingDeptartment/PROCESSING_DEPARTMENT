@@ -14,7 +14,42 @@
     "ownRowFilter": {
       "column": "process",
       "equals": "Cooking"
+    }
+  },
+  {
+    "id": "R2",
+    "recordKey": "dry-cooking",
+    "type": "capAgainstOtherRecord",
+    "label": "Dry blanching weight vs OOSW",
+    "why": "Abalone blanched for dry cooking cannot exceed the OOSW weight recorded for the job on REC 7.1.5 - a higher total means batches from different jobs got mixed.",
+    "ownJobField": "jobNo",
+    "ownWeightField": "abaloneKg",
+    "source": "salting-oosw",
+    "matchField": "jobNo",
+    "sumColumn": "weight",
+    "message": "Blanching pot weight exceeding OOSW - possible batch mix",
+    "ownRowFilter": {
+      "column": "process",
+      "equals": "Blanching"
+    }
+  },
+  {
+    "id": "R3",
+    "recordKey": "dry-cooking",
+    "type": "capRowsAgainstRows",
+    "label": "Dry cooking weight vs blanching weight",
+    "why": "Abalone cooked cannot exceed abalone blanched for the same job - cooking more than was blanched means either a batch mix or an unrecorded blanching step.",
+    "ownJobField": "jobNo",
+    "column": "abaloneKg",
+    "capFilter": {
+      "column": "process",
+      "equals": "Blanching"
     },
-    "manualCapField": "ooswKg"
+    "rowFilter": {
+      "column": "process",
+      "equals": "Cooking"
+    },
+    "legacyColumn": "legacyNoBlanching",
+    "message": "Cooking weight exceeds blanched weight - cooked more than was blanched"
   }
 ]
