@@ -663,7 +663,7 @@ window.initFieldRules = (function () {
       return PART[p] && i > 0 ? PART[p] : humanise(p);
     });
     var last = parts.pop();
-    return (parts.length ? '<span class="grp">' + esc(parts.join(' º ')) + ' º </span>' : '') + esc(last);
+    return (parts.length ? '<span class="grp">' + esc(parts.join(' · ')) + ' · </span>' : '') + esc(last);
   }
 
   // Friendly names for a record's spec items, from its template (custom override first, else the
@@ -792,12 +792,12 @@ window.initFieldRules = (function () {
         '<button class="btn" data-act="additem" type="button">+ Add item</button>' +
       '</div>' +
       (e.rk ? '<label style="display:flex;gap:6px;align-items:flex-start;margin:-6px 0 14px;font-size:12px;color:#3b4650;"><input type="checkbox" data-n="linkform" checked style="margin-top:2px;"> ' +
-        '<span>Also add a field for this item to the record™s form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
+        '<span>Also add a field for this item to the record’s form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
       '<div class="sec">Publish as ' + (cur ? 'a new version' : 'the first version') + '</div>' +
-      '<div class="rev-rule"><strong>š  Do not publish a new version until all specification changes for this record are complete.</strong>' +
+      '<div class="rev-rule"><strong>⚠️  Do not publish a new version until all specification changes for this record are complete.</strong>' +
         'Multiple changes can be grouped under one revision. Enter one change per line in the reason field below " each line will be shown as a separate item in the version history.</div>' +
       '<div class="attr">' +
-        '<label style="grid-column:1/-1;">Changes in this revision " one per line<textarea data-f="reason" rows="3" placeholder="Max seam thickness 2.5†'3.0 mm (customer request)\nMin cook temp 72†'74degC (SOP update)"></textarea></label>' +
+        '<label style="grid-column:1/-1;">Changes in this revision " one per line<textarea data-f="reason" rows="3" placeholder="Max seam thickness 2.5→3.0 mm (customer request)\nMin cook temp 72→74degC (SOP update)"></textarea></label>' +
         '<label>Your name<input data-f="by" value="' + esc(user) + '"></label>' +
         '<label>Your title<input data-f="title" placeholder="e.g. QA Manager"></label>' +
       '</div>' +
@@ -862,7 +862,7 @@ window.initFieldRules = (function () {
     var key = camel(name);
     if (!key) { toast('Give the new item a name first.'); return; }
     if (META.indexOf(key) >= 0 || (e.published && Object.prototype.hasOwnProperty.call(e.published, key)) ||
-        card.querySelector('tr[data-new-key="' + key + '"]')) { toast('œ' + name + ' already exists on this spec.'); return; }
+        card.querySelector('tr[data-new-key="' + key + '"]')) { toast('"' + name + '" already exists on this spec.'); return; }
     var tb = card.querySelector('tbody[data-rows]');
     var parts = kind === 'range' ? [['min', 'Low'], ['max', 'High']] : [[null, '']];
     parts.forEach(function (p, i) {
@@ -873,7 +873,7 @@ window.initFieldRules = (function () {
       tr.setAttribute('data-label', name);
       tr.setAttribute('data-unit', unit);
       if (i === 0) tr.setAttribute('data-first', '1');
-      tr.innerHTML = '<td class="k">' + esc(name) + (p[1] ? ' º ' + p[1] : '') + ' <em>(new)</em></td>' +
+      tr.innerHTML = '<td class="k">' + esc(name) + (p[1] ? ' · ' + p[1] : '') + ' <em>(new)</em></td>' +
         '<td><input type="' + (kind === 'text' ? 'text' : 'number') + '" step="any"' + (p[0] ? ' data-part="' + p[0] + '"' : '') + '></td>' +
         '<td class="x">' + (i === 0 ? '<button class="btn sm" type="button" data-act="dropitem" data-key="' + esc(key) + '">Remove</button>' : '') + '</td>';
       tb.appendChild(tr);
@@ -907,13 +907,13 @@ window.initFieldRules = (function () {
         for (var i = 0; i < toLink.length; i++) {
           try {
             var r = await window.TemplateEditor.addSpecItem({ recordKey: e.rk, key: toLink[i].key, label: toLink[i].label, unit: toLink[i].unit,
-              reason: 'Spec item œ' + toLink[i].label + ' added: ' + f('reason'), changedBy: f('by'), changedByTitle: f('title') });
+              reason: 'Spec item "' + toLink[i].label + '" added: ' + f('reason'), changedBy: f('by'), changedByTitle: f('title') });
             if (r.ok) done++; else why = r.reason;
           } catch (x) { why = x.message || 'error'; }
         }
         e.labels = null;
-        if (done) msg += ' Added ' + done + ' field' + (done === 1 ? '' : 's') + ' to the record™s form template.';
-        if (why === 'unsupported') msg += ' This record™s form can™t check readings against limits, so only the spec was updated.';
+        if (done) msg += ' Added ' + done + ' field' + (done === 1 ? '' : 's') + ' to the record’s form template.';
+        if (why === 'unsupported') msg += ' This record’s form can’t check readings against limits, so only the spec was updated.';
         else if (why) msg += ' The form template could not be updated (' + why + ').';
       }
       toast(msg);
@@ -928,7 +928,7 @@ window.initFieldRules = (function () {
     if (hide) fresh.push(e.key);
     await writeJson(HIDDEN_KEY, fresh);
     HIDDEN = fresh;
-    toast(hide ? 'œ' + e.name + ' removed from the list.' : 'œ' + e.name + ' restored.');
+    toast(hide ? '"' + e.name + '" removed from the list.' : '"' + e.name + '" restored.');
     render();
   }
 
