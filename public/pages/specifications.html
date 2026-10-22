@@ -605,7 +605,7 @@ window.initFieldRules = (function () {
         var pane = row.querySelector('.rec-preview');
         var open = pane.classList.toggle('open');
         if (open) { var fr = pane.querySelector('iframe'); if (!fr.src || fr.src === location.href) fr.src = url; }
-        btn.textContent = open ? '–² Hide preview' : 'ðŸ' Preview layout';
+        btn.innerHTML = open ? '&minus; Hide preview' : '&#128065; Preview layout';
       }
     }, { once: false });
   }
