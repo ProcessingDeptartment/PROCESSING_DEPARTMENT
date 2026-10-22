@@ -15350,9 +15350,7 @@
               "capSource": "salting-oosw",
               "capMatchField": "jobNo",
               "capSumColumn": "weight",
-              "legacyColumn": "legacyNoBlanching",
-              "cookFromOosw": true,
-              "manualField": "ooswKg"
+              "legacyColumn": "legacyNoBlanching"
             },
             "slides": true,
             "minProcess": {
@@ -16447,25 +16445,6 @@
             },
             "legacy": true
           }
-        },
-        {
-          "key": "ooswKg",
-          "label": "OOSW weight (kg)",
-          "type": "number",
-          "required": false,
-          "readOnly": false,
-          "unit": "kg",
-          "options": null,
-          "group": null,
-          "sectionIndex": 0,
-          "parentFieldKey": null,
-          "position": 6,
-          "computeFn": null,
-          "computeArgs": null,
-          "recordPickSource": null,
-          "linkField": null,
-          "linkRelation": null,
-          "validateJson": null
         }
       ],
       "autofills": [
