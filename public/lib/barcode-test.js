@@ -127,6 +127,11 @@
         var link = (h.jobLinks || []).filter(function (l) { return l.jobNo; })[0];
         var jobNo = link ? link.jobNo : '';
         if (!jobNo) { status('Barcode ' + h.barcode.value + ' has no job number linked.', 'bad'); return; }
+        // If a child barcode was scanned, confirm with the operator before using the parent job.
+        if (h.parent) {
+          var msg = 'This barcode is a child of main parent barcode ' + h.parent.value + ' (job ' + jobNo + ').\n\nDo you want to use job ' + jobNo + '?';
+          if (!window.confirm(msg)) { status('Cancelled — scanned a child barcode. Scan the main job barcode instead.', 'bad'); return; }
+        }
         var picked = fillJob(jobNo);
         return api('/api/traceability/scan', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

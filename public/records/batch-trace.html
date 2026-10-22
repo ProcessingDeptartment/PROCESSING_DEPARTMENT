@@ -327,13 +327,23 @@
     if (!j || !j.barcodes || !j.barcodes.length) return '';
     panel.hidden = false;
     $('scanBody').innerHTML = j.barcodes.map(b => {
-      const ev = b.stageEvents.map(e => `<tr style="border-bottom:1px solid #eee;"><td>${esc(e.stage)}</td><td>${esc(fmtWhen(e.scannedAt))}</td><td>${esc(e.scannedByUser || '')}</td><td>${esc(e.locationNote || '')}</td><td>${e.weight != null ? esc(e.weight) + ' kg' : ''}</td></tr>`).join('');
+      const evRow = e => `<tr style="border-bottom:1px solid #eee;"><td>${esc(e.stage)}</td><td>${esc(fmtWhen(e.scannedAt))}</td><td>${esc(e.scannedByUser || '')}</td><td>${esc(e.locationNote || '')}</td><td>${e.weight != null ? esc(e.weight) + ' kg' : ''}</td></tr>`;
+      const ev = b.stageEvents.map(evRow).join('');
       const mem = b.members.length ? b.members.map(m => esc(m.value)).join(', ') : '<span class="none">— none recorded —</span>';
-      const kids = b.children.length ? '<div class="summary">Split into: ' + b.children.map(c => `<a href="?batch=${encodeURIComponent(c.value)}">${esc(c.value)}</a> (${esc(c.status)})`).join(', ') + '</div>' : '';
+      // Child barcodes (trolley splits at drying, or grading splits) with their own scan events.
+      const childCards = (b.children || []).filter(c => c.stageEvents && c.stageEvents.length).map(c => {
+        const cev = c.stageEvents.map(evRow).join('');
+        return `<div style="margin-top:8px;padding:8px 10px;border:1px solid #d0e8d8;border-radius:6px;background:#f8fdf9;">
+          <div style="font-size:12px;font-weight:600;color:#2d6a3e;margin-bottom:5px;">Child barcode ${esc(c.value)} <span style="font-weight:400;color:#666;">(${esc(c.status)})</span></div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;border-bottom:1px solid #ccc;"><th>Stage</th><th>When</th><th>Who</th><th>Where</th><th>Weight</th></tr></thead><tbody>${cev}</tbody></table>
+        </div>`;
+      }).join('');
+      const kids = (b.children || []).length ? '<div class="summary" style="margin-top:6px;">Split into: ' + b.children.map(c => `<a href="?batch=${encodeURIComponent(c.value)}">${esc(c.value)}</a> (${esc(c.status)})`).join(', ') + '</div>' : '';
       return `<div class="card" style="margin-bottom:10px;">
         <div class="top"><span class="title">Main barcode ${esc(b.value)}</span><span class="date">${esc(b.status)}</span></div>
         <div class="summary">Baskets scanned in (${b.members.length}): ${mem}</div>${kids}
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;"><thead><tr style="text-align:left;border-bottom:1px solid #ccc;"><th>Stage</th><th>When</th><th>Who</th><th>Where</th><th>Weight</th></tr></thead><tbody>${ev}</tbody></table>
+        ${childCards}
       </div>`;
     }).join('');
     if (j.viaBarcode && j.jobNos && j.jobNos.length > 1) {

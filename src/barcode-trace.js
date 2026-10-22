@@ -182,10 +182,18 @@ function mount(app, prisma) {
         const bc = await prisma.traceBarcode.findUnique({ where: { id } });
         const [chain, members] = await Promise.all([loadChain(prisma, bc),
           prisma.barcodeMember.findMany({ where: { barcodeId: id }, orderBy: [{ submissionId: 'asc' }, { position: 'asc' }] })]);
+        // Load stage events for each child barcode so trolley/drying splits are visible in batch trace.
+        const childrenWithEvents = await Promise.all(chain.children.map(async (c) => {
+          const cEvents = await prisma.barcodeStageEvent.findMany({ where: { barcodeId: c.id }, orderBy: { scannedAt: 'asc' } });
+          return {
+            value: c.barcodeValue, status: c.status,
+            stageEvents: cEvents.map((e) => ({ stage: e.stage, recordKey: e.recordKey, submissionId: e.submissionId, scannedAt: e.scannedAt, scannedByUser: e.scannedByUser, locationNote: e.locationNote, weight: e.weight })),
+          };
+        }));
         barcodes.push({
           value: bc.barcodeValue, status: bc.status, createdAt: bc.createdAt,
           stageEvents: chain.stageEvents.map((e) => ({ stage: e.stage, recordKey: e.recordKey, submissionId: e.submissionId, scannedAt: e.scannedAt, scannedByUser: e.scannedByUser, locationNote: e.locationNote, weight: e.weight })),
-          children: chain.children.map((c) => ({ value: c.barcodeValue, status: c.status })),
+          children: childrenWithEvents,
           members: members.map((m) => ({ value: m.memberValue, sizeRange: m.sizeRange, weight: m.weight })),
         });
       }
@@ -231,6 +239,9 @@ async function syncLotBarcodes(prisma, key, value) {
     const code = bcVal(values[INTAKE.field]);
     if (!code || code.length > 40) continue;
     const submissionId = String(entry.id);
+    // Prevent a basket/member barcode from being registered as a lot barcode.
+    const asMember = await prisma.barcodeMember.findFirst({ where: { memberValue: code } });
+    if (asMember) { console.warn('lot barcode ' + code + ' is already a basket barcode; not linking to ' + submissionId); continue; }
     let bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: code } });
     if (bc && bc.status !== 'active') { console.warn('lot barcode ' + code + ' is ' + bc.status + '; not linked to ' + submissionId); continue; }
     if (bc) {
@@ -288,6 +299,14 @@ async function guardLotBarcode(prisma, prevValue, nextValue) {
     if (other) {
       const j = jobOf(other);
       return { ok: false, status: 409, error: 'Barcode ' + code + ' is already used for ' + (j ? 'job ' + j : 'another receiving entry') + '. A barcode can only be used for one job - scan a new barcode.' };
+    }
+    // Prevent a basket/member barcode from being reused as a lot barcode.
+    const asMember = await prisma.barcodeMember.findFirst({ where: { memberValue: code } });
+    if (asMember) {
+      const ownerBc = await prisma.traceBarcode.findUnique({ where: { id: asMember.barcodeId } });
+      const ownerLink = ownerBc ? await prisma.barcodeJobLink.findFirst({ where: { barcodeId: ownerBc.id } }) : null;
+      const ownerJob = ownerLink ? ownerLink.jobNo : asMember.submissionId;
+      return { ok: false, status: 409, error: 'Barcode ' + code + ' is already recorded as a basket barcode for ' + (ownerJob ? 'job ' + ownerJob : 'another receiving entry') + '. Use a different lot barcode.' };
     }
     const bc = await prisma.traceBarcode.findUnique({ where: { barcodeValue: code } });
     if (!bc) continue;
