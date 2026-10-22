@@ -15371,7 +15371,7 @@
         {
           "key": "jobNo",
           "label": "Job number",
-          "type": "jobnumber",
+          "type": "jobsearch",
           "required": true,
           "readOnly": false,
           "unit": null,
@@ -15387,10 +15387,7 @@
           "linkRelation": "self",
           "validateJson": null,
           "extraJson": {
-            "prefixes": [
-              "DPR",
-              "3DP"
-            ]
+            "route": "Dried"
           }
         },
         {
