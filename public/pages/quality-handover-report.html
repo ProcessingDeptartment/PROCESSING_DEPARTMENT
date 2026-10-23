@@ -6,6 +6,10 @@
     <title>REC 9.9.2 Quality Handover Report</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Only used on Vivo / broken Android browsers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>       
         body { 
     font-family: Arial, sans-serif; 
@@ -157,13 +161,42 @@
             
             .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
         }
+
+        /* ===== Only applied on Vivo when generating with html2pdf ===== */
+        body.pdf-mode {
+            background: white !important;
+            padding: 0 !important;
+            color: black !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+        }
+        body.pdf-mode .no-print { display: none !important; }
+        body.pdf-mode .print-only { display: block !important; }
+        body.pdf-mode .status-icon { display: inline-block !important; font-size: 18px !important; margin-right: 6px; }
+        body.pdf-mode .print-header { display: block !important; text-align: center; border-bottom: 2.5px solid #000; margin-bottom: 12px; padding-bottom: 6px; }
+        body.pdf-mode .print-header h1 { font-size: 15px; font-weight: 900; margin: 0; text-transform: uppercase; }
+        body.pdf-mode .section-card { border: none !important; margin-bottom: 12px !important; padding: 0 !important; box-shadow: none !important; page-break-inside: avoid; }
+        body.pdf-mode .section-title { font-size: 12px !important; border-bottom: 2px solid #000 !important; margin-bottom: 4px !important; padding-bottom: 2px !important; text-transform: uppercase; color: black !important; font-weight: 800; }
+        body.pdf-mode .ccp-print-container { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+        body.pdf-mode .grid-print-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+        body.pdf-mode .ccp-block-print { margin-bottom: 0 !important; border: 1.5px solid #000 !important; padding: 8px !important; background: transparent !important; }
+        body.pdf-mode .ccp-header-print { background: #eee !important; padding: 4px; border-bottom: 1.5px solid #000; font-weight: 900; margin-bottom: 6px; }
+        body.pdf-mode .bubble-block { padding: 4px; background: #fff !important; border: 1px solid #000 !important; text-align: center; border-radius: 4px; min-height: auto; max-width: 75px; }
+        body.pdf-mode .bubble-block.conforming { background: #dcfce7 !important; }
+        body.pdf-mode .bubble-block.nc { background: #fee2e2 !important; }
+        body.pdf-mode .bubble-val-input { font-size: 14px !important; text-align: center !important; color: black !important; font-weight: 800 !important; }
+        body.pdf-mode .compliance-answer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
+        body.pdf-mode .section-print-notes { font-size: 12px !important; font-weight: 700 !important; color: #b91c1c !important; margin-top: 8px; font-style: italic; line-height: 1.4; border-top: 0.5px solid #eee; padding-top: 4px; }
+        body.pdf-mode .nrcs-summary-print { border: 1.5px solid #000; padding: 8px; font-weight: 800; font-size: 11px; background: #f8fafc; text-align: center; border-radius: 4px; text-transform: uppercase; }
+        body.pdf-mode .nrcs-row-print { display: flex !important; border-bottom: 1px solid #000; padding: 6px 0; font-size: 10px; font-weight: 800; }
+        body.pdf-mode .signature-line { border-top: 2px solid black; width: 250px; margin-top: 40px; }
     </style>
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body onload="init()">
 <script src="/lib/page-nav.js?v=1"></script>
 
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-5xl mx-auto" id="report-content">
         <div class="print-header">
             <h1 id="dynamicPrintTitle">REC 9.9.2 QUALITY HANDOVER REPORT</h1>
             <h2 id="dynamicPrintName" class="text-lg" style="margin-top: 5px;">COMPLETED BY:</h2>
@@ -442,7 +475,8 @@
 
     </div>
 
-    <script>        function init() {
+    <script>
+        function init() {
             updateComplianceIcons();
             validatePrint();
         }
@@ -596,7 +630,7 @@
             const dateVal = document.getElementById('hDate').value;
             const shiftVal = document.getElementById('hShift').value;
 
-document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HANDOVER REPORT ${shiftVal} SHIFT - ${dateVal}`;
+            document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HANDOVER REPORT ${shiftVal} SHIFT - ${dateVal}`;
             document.getElementById('dynamicPrintName').innerText = `COMPLETED BY: ${document.getElementById('hName').value || '---'}`;
             document.title = `REC_9.9.2_Quality_Handover_${shiftVal}SHIFT_${dateVal}`;
 
@@ -673,11 +707,68 @@ document.getElementById('dynamicPrintTitle').innerText = `REC 9.9.2 QUALITY HAND
             mobilePrintHelper();
         }
 </script>
-    <script>
+
+<script>
+/* ============================================================
+   SMART PRINT HELPER
+   - Vivo / iQOO / Funtouch / OriginOS  →  html2pdf.js
+   - Everything else                     →  original window.print()
+   ============================================================ */
+function isVivoOrBrokenAndroid() {
+    const ua = navigator.userAgent.toLowerCase();
+    return /android/.test(ua) && /vivo|iqoo|funtouch|originos/.test(ua);
+}
+
 function mobilePrintHelper() {
-    window.print();
+    if (isVivoOrBrokenAndroid() && typeof html2pdf !== 'undefined') {
+        // ---- Vivo path: generate real PDF file ----
+        const element = document.getElementById('report-content');
+        const filename = (document.title || 'REC_9.9.2_Quality_Handover') + '.pdf';
+
+        document.body.classList.add('pdf-mode');
+
+        const btn = document.getElementById('printBtn');
+        const originalText = btn ? btn.innerText : '';
+        if (btn) {
+            btn.innerText = 'GENERATING PDF...';
+            btn.disabled = true;
+        }
+
+        const opt = {
+            margin:       [8, 8, 8, 8],
+            filename:     filename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(element).save()
+            .then(() => {
+                document.body.classList.remove('pdf-mode');
+                if (btn) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    validatePrint();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.body.classList.remove('pdf-mode');
+                if (btn) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+                // fallback to normal print if html2pdf fails
+                window.print();
+            });
+    } else {
+        // ---- All other devices: keep original behaviour ----
+        window.print();
+    }
 }
 </script>
+
     <script src="../lib/handover-db.js"></script>
 
         <script>
@@ -701,4 +792,3 @@ function mobilePrintHelper() {
         </script>
 </body>
 </html>
-
