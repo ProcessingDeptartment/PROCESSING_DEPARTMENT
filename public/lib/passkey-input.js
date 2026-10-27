@@ -235,6 +235,7 @@
         // Approval-mode: resolve the promise and close
         if (approvalResolve) {
           const cb = approvalResolve;
+          approvalResolve = null; // clear before closeModal so it doesn't fire cb(null)
           this.closeModal();
           if (window.toast) window.toast(`Approved by ${result.displayName}`);
           cb({ displayName: result.displayName, title: result.title });
