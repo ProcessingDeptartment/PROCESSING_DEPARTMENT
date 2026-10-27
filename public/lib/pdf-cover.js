@@ -51,7 +51,7 @@ window.__pdfFail = function (msg) {
     b.addEventListener('click', function () { location.reload(); });
     box.appendChild(t); box.appendChild(b);
     document.documentElement.appendChild(box);
-    try { if (window.parent !== window) window.parent.postMessage({ pdfReady: 1 }, location.origin); } catch (e) { /* ignore */ }
+    try { const _t = window.opener || (window.parent !== window ? window.parent : null); if (_t) _t.postMessage({ pdfReady: 1 }, location.origin); } catch (e) { /* ignore */ }
   } catch (e) { /* ignore */ }
 };
 
@@ -63,7 +63,7 @@ window.__pdfSameTab = function () {
     document: {
       write: function (h) { buf += h; },
       close: function () {
-        try { if (window.parent !== window) window.parent.postMessage({ pdfReady: 1 }, location.origin); } catch (e) { /* ignore */ }
+        try { const _t = window.opener || (window.parent !== window ? window.parent : null); if (_t) _t.postMessage({ pdfReady: 1 }, location.origin); } catch (e) { /* ignore */ }
         document.open(); document.write(buf); document.close();
       }
     },

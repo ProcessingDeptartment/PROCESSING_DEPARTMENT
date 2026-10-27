@@ -257,6 +257,26 @@
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 
+  function openPdfTab(href) {
+    const url = href.includes('?') ? href + '&closeAfter=1' : href + '?closeAfter=1';
+    const pdfWin = window.open(url, 'pdfPrint' + Date.now());
+    if (!pdfWin) return;
+    const closeListener = (ev) => {
+      try {
+        if (ev.source === pdfWin && ev.data && ev.data.pdfReady === 1) {
+          window.removeEventListener('message', closeListener);
+          clearTimeout(fallbackTimer);
+          setTimeout(() => { if (!pdfWin.closed) pdfWin.close(); }, 500);
+        }
+      } catch (_) { /* ignore cross-origin */ }
+    };
+    window.addEventListener('message', closeListener);
+    const fallbackTimer = setTimeout(() => {
+      window.removeEventListener('message', closeListener);
+      try { if (!pdfWin.closed) pdfWin.close(); } catch (_) { /* ignore */ }
+    }, 30000);
+  }
+
   const indexByKey = {};
   ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach((row) => {
     if (row.recordKey) indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
@@ -511,7 +531,7 @@
       html += '<a class="act-btn act-btn-view" href="' + esc(e.href) + '" target="_blank">View</a>';
     }
     if (e.status === 'verified' && e.href && e.entryId) {
-      html += '<a class="act-btn act-btn-pdf" href="' + esc(e.href) + '?entry=' + esc(e.entryId) + '&print=1" target="_blank">PDF</a>';
+      html += '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.entryId) + '&print=1">PDF</a>';
     }
     // Supersede/unsupersede menu (admin, drying-process only, submitted events only)
     if (isAdmin() && e.event === 'submitted' && e.recordKey === 'drying-process' && e.entryId) {
@@ -633,6 +653,13 @@
       btn.addEventListener('click', async () => {
         document.querySelectorAll('.action-menu').forEach((m) => { m.style.display = 'none'; });
         await doUnsupersede(btn.getAttribute('data-unsupersede'));
+      });
+    });
+
+    wrap.querySelectorAll('[data-pdf-href]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openPdfTab(btn.getAttribute('data-pdf-href'));
       });
     });
   }
@@ -844,7 +871,7 @@
           const jobCell = e.jobNo ? '<strong>' + esc(e.jobNo) + '</strong>' : esc(e.ref || '—');
           const recCell = (e.docNo ? esc(e.docNo) + ' &mdash; ' : '') + esc(e.name);
           const verDate = e.verifyTs ? dayOf(e.verifyTs) : '—';
-          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1&closeAfter=1">PDF</a>' : '—';
+          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1">PDF</a>' : '—';
           return '<tr>'
             + '<td>' + jobCell + '</td>'
             + '<td>' + recCell + '</td>'
@@ -859,23 +886,7 @@
     wrap.querySelectorAll('[data-pdf-href]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        const href = btn.getAttribute('data-pdf-href');
-        const pdfWin = window.open(href, 'pdfPrint' + Date.now());
-        if (pdfWin) {
-          const closeListener = (ev) => {
-            try {
-              if (ev.source === pdfWin && ev.data && ev.data.pdfReady === 1) {
-                window.removeEventListener('message', closeListener);
-                setTimeout(() => { if (!pdfWin.closed) pdfWin.close(); }, 500);
-              }
-            } catch (e) { /* ignore cross-origin issues */ }
-          };
-          window.addEventListener('message', closeListener);
-          setTimeout(() => {
-            window.removeEventListener('message', closeListener);
-            try { if (!pdfWin.closed) pdfWin.close(); } catch (e) { /* ignore */ }
-          }, 30000);
-        }
+        openPdfTab(btn.getAttribute('data-pdf-href'));
       });
     });
   }
