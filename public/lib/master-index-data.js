@@ -1,3 +1,14 @@
+/**
+ * MASTER RECORD INDEX DATA — Single source of truth for all record metadata.
+ *
+ * REVISION CONTROL:
+ * When a record is revised:
+ *   1. Update `revision` and `dateOfIssue` in THIS file for that record.
+ *   2. That's all. The master index page and every PDF footer read from here automatically.
+ *   3. Never update revision numbers anywhere else (record page HTML, print footers, etc.)
+ *
+ * Last updated: 2026-10-27
+ */
 window.MasterIndexData = {
   header: {
     "document": "Master Index List",

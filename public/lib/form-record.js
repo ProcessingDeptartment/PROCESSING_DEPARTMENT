@@ -14,8 +14,9 @@
       window.addEventListener('afterprint', () => {
         try {
           const q = new URLSearchParams(location.search);
-          if (q.get('closeAfter') === '1' && window.opener) {
-            window.opener.postMessage({ pdfReady: 1 }, location.origin);
+          if (q.get('closeAfter') === '1') {
+            const _t = window.opener || (window.parent !== window ? window.parent : null);
+            if (_t) _t.postMessage({ pdfReady: 1 }, location.origin);
           }
           window.close();
         } catch (e) { /* ignore */ }
@@ -5112,8 +5113,9 @@ function fallbackDl(canvas,filename){
         window.addEventListener('afterprint', () => {
           try {
             const q = new URLSearchParams(location.search);
-            if (q.get('closeAfter') === '1' && window.opener) {
-              window.opener.postMessage({ pdfReady: 1 }, location.origin);
+            if (q.get('closeAfter') === '1') {
+              const _t = window.opener || (window.parent !== window ? window.parent : null);
+              if (_t) _t.postMessage({ pdfReady: 1 }, location.origin);
             }
             window.close();
           } catch (e) { /* ignore */ }
@@ -5139,10 +5141,9 @@ function fallbackDl(canvas,filename){
         recordKey: config.recordKey,
         defaults: {
           document: config.title,
-          docNumber: config.docCode,
-          revisionDate: config.docRevisionDate
-        },
-        revisionStart: config.docRevisionStart || 1
+          docNumber: config.docCode
+          // revisionDate and revisionStart come from MasterIndexData via doc-header.js
+        }
       });
     } catch (e) { console.error('title block unavailable', e); return null; }
   }
