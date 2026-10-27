@@ -540,7 +540,7 @@
 
   async function postAudit(entry) {
     try {
-      await fetch('/api/master-index-audit', {
+      await window.FacilityApi.fetch('/api/master-index-audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entry)
@@ -1085,7 +1085,7 @@ const isArchived = !!archived[id];
     auditModal.classList.add('open');
     auditModal.style.display = 'flex';
     try {
-      const rows = await fetch('/api/master-index-audit?limit=300').then(r => r.json());
+      const rows = await window.FacilityApi.fetch('/api/master-index-audit?limit=300').then(r => r.json());
       if (!Array.isArray(rows) || rows.length === 0) {
         $('auditContent').innerHTML = '<p style="color:var(--palette-label);font-size:12px;">No entries yet.</p>';
         return;
