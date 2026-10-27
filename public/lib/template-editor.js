@@ -191,6 +191,7 @@
         <div class="te-actions">
           <button type="button" class="te-btn-danger" id="te_resetBtn">Reset to default</button>
           <span style="flex:1;"></span>
+          <button type="button" class="te-btn-flat" id="te_historyBtn">Version history</button>
           <button type="button" class="te-btn-flat" id="te_cancelBtn">Cancel</button>
           <button type="button" class="te-btn-primary" id="te_saveBtn">Save template</button>
         </div>
@@ -328,6 +329,9 @@
       overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
       overlay.querySelector('#te_saveBtn').addEventListener('click', doSave);
+
+      const histBtn = overlay.querySelector('#te_historyBtn');
+      if (histBtn) histBtn.addEventListener('click', () => openHistory(overlay, o.recordKey));
 
       overlay.querySelector('#te_resetBtn').addEventListener('click', doReset);
 
@@ -490,6 +494,7 @@
         engine,
         savedAt: Date.now(),
         savedBy: changedBy,
+        reason: reason,
       };
       if (engine === 'form-record') {
         override.sections = working.sections;
@@ -548,6 +553,68 @@
       schemaVersion: 1, engine: 'monitoring-log', savedAt: Date.now(), savedBy: o.changedBy, entryFields, specFields
     }));
     return ok ? { ok: true, entryKey } : { ok: false, reason: 'save-failed' };
+  }
+
+  async function openHistory(overlay, recordKey) {
+    let drawer = overlay.querySelector('.te-history-drawer');
+    if (!drawer) {
+      drawer = document.createElement('div');
+      drawer.className = 'te-history-drawer';
+      drawer.style.cssText = 'position:absolute;top:0;right:0;bottom:0;width:min(440px,100%);'
+        + 'background:#fff;border-left:1px solid #d0d5db;overflow-y:auto;z-index:10;padding:16px;'
+        + 'box-shadow:-4px 0 16px rgba(0,0,0,.12);';
+      const inner = overlay.querySelector('.dh-modal-inner, .te-inner, [class*="inner"]');
+      if (inner) { inner.style.position = 'relative'; inner.appendChild(drawer); }
+    }
+    drawer.innerHTML = '<p style="font-size:12px;color:#6b7280;">Loading history…</p>';
+
+    let rows;
+    try {
+      rows = await fetch('/api/template-history/' + encodeURIComponent(recordKey)).then(r => r.json());
+    } catch (e) {
+      drawer.innerHTML = `<p style="color:#dc2626;font-size:12px;">Failed to load: ${e.message}</p>`;
+      return;
+    }
+
+    const fmt = iso => iso ? new Date(iso).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      drawer.innerHTML = '<p style="font-size:12px;color:#6b7280;">No saved versions yet.</p>';
+      return;
+    }
+
+    let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <strong style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#374151;">Version history</strong>
+      <button class="te-btn-flat te-history-close" style="font-size:11px;">Close ✕</button>
+    </div>`;
+
+    rows.forEach((r, i) => {
+      const label = i === 0 ? ' <span style="background:#e6f0e6;color:#2f5d33;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:9px;text-transform:uppercase;margin-left:6px;">Current</span>' : '';
+      html += `<div style="border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;margin-bottom:8px;">
+        <div style="font-size:11.5px;font-weight:600;color:#1f2937;">${fmt(r.at)}${label}</div>
+        ${r.reason ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;">Reason: ${r.reason}</div>` : ''}
+        ${r.savedBy ? `<div style="font-size:11px;color:#6b7280;">By: ${r.savedBy}</div>` : ''}
+        ${i > 0 && r.after
+          ? `<button class="te-btn-flat te-restore-btn" data-idx="${i}" style="margin-top:8px;font-size:11px;border-color:#b45309;color:#b45309;"
+               data-json="${r.after.replace(/"/g, '&quot;')}">Restore this version</button>`
+          : ''}
+      </div>`;
+    });
+
+    drawer.innerHTML = html;
+
+    drawer.querySelector('.te-history-close').addEventListener('click', () => drawer.remove());
+
+    drawer.querySelectorAll('.te-restore-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!confirm('Load this version as the working draft?\n\nYou will still need to click "Save template" to commit it.')) return;
+        try {
+          const obj = JSON.parse(btn.dataset.json);
+          close();
+          window.TemplateEditor.open({ ...o, currentConfig: obj, restoredVersion: true });
+        } catch (e) { alert('Could not parse version: ' + e.message); }
+      });
+    });
   }
 
   window.TemplateEditor = { load, open, addSpecItem };

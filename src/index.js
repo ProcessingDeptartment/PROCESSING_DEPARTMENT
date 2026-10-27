@@ -1176,6 +1176,37 @@ app.get('/api/product-data/:code', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// GET /api/template-history/:recordKey
+// Returns KeyValueHistory rows for the record_template:<recordKey> key, newest first.
+app.get('/api/template-history/:recordKey', async (req, res) => {
+  const key = 'record_template:' + req.params.recordKey;
+  try {
+    const rows = await prisma.keyValueHistory.findMany({
+      where: { key },
+      orderBy: { at: 'desc' },
+      take: 50,
+      select: { id: true, action: true, after: true, actor: true, role: true, at: true }
+    });
+    const out = rows.map(r => {
+      let meta = {};
+      try { meta = r.after ? JSON.parse(r.after) : {}; } catch (_) {}
+      return {
+        id: r.id,
+        action: r.action,
+        savedAt: meta.savedAt || null,
+        savedBy: meta.savedBy || r.actor || null,
+        reason: meta.reason || null,
+        after: r.after || null,
+        at: r.at
+      };
+    });
+    res.json(out);
+  } catch (e) {
+    console.error('GET /api/template-history failed', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
