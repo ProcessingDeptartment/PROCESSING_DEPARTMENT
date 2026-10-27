@@ -683,7 +683,7 @@
     wrap.querySelectorAll('[data-pdf-href]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        openPdfTab(btn.getAttribute('data-pdf-href'));
+        openPdfPanel(btn.getAttribute('data-pdf-href'));
       });
     });
   }
