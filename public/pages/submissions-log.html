@@ -277,6 +277,30 @@
     }, 30000);
   }
 
+  function openPdfPanel(url) {
+    const old = $('pdfPanel'); if (old) old.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'pdfPanel';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#1d2b38;color:#fff;font-size:13px;font-weight:600;">'
+      + '<button type="button" id="pdfClose" style="background:#fff;color:#1d2b38;border:none;border-radius:6px;padding:7px 14px;font-weight:700;cursor:pointer;">&larr; Back</button>'
+      + '<span id="pdfMsg">Preparing PDF…</span></div>'
+      + '<iframe id="pdfFrame" style="flex:1;border:0;width:100%;background:#fff;"></iframe>';
+    document.body.appendChild(wrap);
+    const fr = $('pdfFrame');
+    const slow = setTimeout(() => { const m = $('pdfMsg'); if (m) m.textContent = 'Still preparing — the server may be waking up…'; }, 12000);
+    function onMsg(ev) {
+      if (ev.origin !== location.origin || !ev.data || !ev.data.pdfReady) return;
+      const m = $('pdfMsg'); if (m) m.textContent = '';
+      clearTimeout(slow);
+    }
+    window.addEventListener('message', onMsg);
+    fr.src = url;
+    $('pdfClose').addEventListener('click', () => {
+      clearTimeout(slow); window.removeEventListener('message', onMsg); wrap.remove();
+    });
+  }
+
   const indexByKey = {};
   ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach((row) => {
     if (row.recordKey) indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
@@ -886,7 +910,7 @@
     wrap.querySelectorAll('[data-pdf-href]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        openPdfTab(btn.getAttribute('data-pdf-href'));
+        openPdfPanel(btn.getAttribute('data-pdf-href'));
       });
     });
   }
