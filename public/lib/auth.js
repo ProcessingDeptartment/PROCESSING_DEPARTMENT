@@ -118,6 +118,16 @@
     document.addEventListener('DOMContentLoaded', function () { applyRole(currentUser); });
   }
 
+  async function verifyPasskey(input) {
+    try {
+      const raw = await window.storage.get('admin_passkey', true);
+      const stored = raw && raw.value ? raw.value : '';
+      return stored && input === stored;
+    } catch (e) {
+      return false;
+    }
+  }
+
   window.Auth = {
     login,
     logout,
@@ -127,6 +137,7 @@
     isAuthenticated,
     getAvailableUsers,
     createSignOff,
+    verifyPasskey,
     USERS
   };
 })();

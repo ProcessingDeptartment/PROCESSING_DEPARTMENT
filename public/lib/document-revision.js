@@ -77,5 +77,33 @@
     return out;
   }
 
-  window.DocumentRevision = { getCurrent, getCurrentDate, history, bump, bumpAll, latestAll };
+  async function setRevision(recordKey, revisionNumber, isoDate, meta) {
+    meta = meta || {};
+    if (!meta.reason || !String(meta.reason).trim()) {
+      throw new Error('A reason is required.');
+    }
+    if (!meta.changedBy || !String(meta.changedBy).trim()) {
+      throw new Error('A name is required.');
+    }
+    if (!meta.changedByTitle || !String(meta.changedByTitle).trim()) {
+      throw new Error('A title is required.');
+    }
+    if (!revisionNumber || isNaN(Number(revisionNumber)) || Number(revisionNumber) < 1) {
+      throw new Error('A valid revision number is required.');
+    }
+    const existing = await loadHistory(recordKey);
+    const entry = {
+      revisionNumber: Number(revisionNumber),
+      reason: meta.reason,
+      changedBy: meta.changedBy,
+      changedByTitle: meta.changedByTitle,
+      changedAt: isoDate ? new Date(isoDate).getTime() : Date.now(),
+      setManually: true
+    };
+    existing.push(entry);
+    await window.storage.set('document_revision:' + recordKey, JSON.stringify(existing), true);
+    return entry;
+  }
+
+  window.DocumentRevision = { getCurrent, getCurrentDate, history, bump, bumpAll, latestAll, setRevision };
 })();

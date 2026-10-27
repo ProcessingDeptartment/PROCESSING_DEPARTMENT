@@ -148,6 +148,32 @@
   .tag-added{ background:#e6f0e6; color:#2f5d33; }
   .tag-sop{ background:#e7edf5; color:#294663; }
 
+  /* Archive column */
+  body.no-archive-col .col-archive { display: none; }
+  td.c-archive { vertical-align: middle; white-space: nowrap; }
+
+  /* Archived row appearance */
+  tr.row-archived td { color: #9ca3af !important; }
+  tr.row-archived td.c-name a { color: #9ca3af; pointer-events: none; text-decoration: none; }
+  tr.row-archived td.c-yn select,
+  tr.row-archived td.c-cat select { opacity: .5; }
+
+  /* Archive / Restore / Delete buttons */
+  .btn-archive, .btn-del {
+    font-size: 10.5px; padding: 2px 8px; background: none;
+    border: 1px solid #d0d5db; border-radius: 3px; cursor: pointer;
+    color: #6b7280; font-family: inherit; display: block; width: 100%;
+    margin-bottom: 3px; text-align: center;
+  }
+  .btn-archive:hover { border-color: #b45309; color: #b45309; }
+  .btn-restore { border-color: var(--palette-ok); color: var(--palette-ok); }
+  .btn-restore:hover { background: var(--palette-ok-bg); }
+  .btn-del { border-color: #fca5a5; color: #dc2626; }
+  .btn-del:hover { background: #fef2f2; border-color: #dc2626; }
+
+  /* Tag */
+  .tag-archived { background: #fee2e2; color: #991b1b; }
+
   @media (max-width:768px){
     .container{ padding:12px; }
     .toolbar input[type=text]{ min-width:0; width:100%; }
@@ -164,6 +190,25 @@
     td.c-yn select, td.c-cat select{ border:none; background:none; -webkit-appearance:none; appearance:none; }
     tr.hidden{ display:none; }
   }
+/* Edit Revision modal */
+#revModal { display:none; position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,.5); align-items:center; justify-content:center; }
+#revModal.open { display:flex; }
+#revModalBox { background:#fff; border-radius:8px; padding:28px 32px; width:100%; max-width:480px; box-shadow:0 8px 32px rgba(0,0,0,.18); }
+#revModalBox h3 { margin:0 0 18px; font-size:16px; color:#1b2330; }
+.rev-field { margin-bottom:14px; }
+.rev-field label { display:block; font-size:11.5px; font-weight:600; color:#4b5563; margin-bottom:4px; }
+.rev-field input, .rev-field select, .rev-field textarea {
+  width:100%; padding:8px 10px; border:1px solid #d0d5db; border-radius:5px;
+  font-size:13px; font-family:inherit; box-sizing:border-box;
+}
+.rev-field input:focus, .rev-field select:focus, .rev-field textarea:focus {
+  outline:none; border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,.1);
+}
+.rev-modal-actions { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+.btn-rev-save { background:#1d4ed8; color:#fff; border:none; padding:8px 22px; border-radius:5px; cursor:pointer; font-size:13px; font-weight:600; }
+.btn-rev-save:disabled { opacity:.5; cursor:default; }
+.btn-rev-cancel { background:none; border:1px solid #d0d5db; padding:8px 16px; border-radius:5px; cursor:pointer; font-size:13px; color:#6b7280; }
+#revModalMsg { font-size:12px; color:#dc2626; margin-top:8px; min-height:18px; }
 </style>
 <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
@@ -186,6 +231,7 @@
     <button class="btn btn-primary" id="printBtn">Print / PDF</button>
     <button class="btn btn-primary" id="addRecordBtn">Add new record</button>
     <button class="btn btn-ghost" id="headersBtn">Edit document headers</button>
+    <button id="editRevBtn" class="btn btn-ghost" style="display:none;" title="Set a record's revision number and date">Edit Revision</button>
     <button class="btn btn-ghost" id="csvBtn">Export CSV</button>
     <a class="btn btn-ghost" href="record-list.html" style="text-decoration:none;display:inline-block;">Open a record &rarr;</a>
   </div>
@@ -217,6 +263,7 @@
         <option value="bumped">Revised since the index was issued</option>
         <option value="unlisted">Not on the index list</option>
         <option value="added">Added online</option>
+        <option value="archived">Archived records</option>
       </select>
     </div>
     <div>
@@ -239,6 +286,7 @@
           <th style="width:96px;">New revision<br>distributed? Y/N</th>
           <th style="width:96px;">New date<br>of issue</th>
           <th class="col-edit-template" style="width:110px;">Edit Template</th>
+          <th class="col-archive" style="width:96px;">Archive</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -352,13 +400,13 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
-<script src="../lib/document-revision.js?v=3"></script>
+<script src="../lib/document-revision.js?v=4"></script>
 <script src="../lib/doc-header.js?v=5"></script>
-<script src="../lib/master-index-data.js?v=8"></script>
+<script src="../lib/master-index-data.js?v=9"></script>
 <script src="../lib/sop-index-data.js?v=1"></script>
 <script>(function () {
   const DATA = window.MasterIndexData;
@@ -374,6 +422,7 @@
 
   const SOP_LINK_PREFIX = 'record_sop_link:';
   const SOP_LINKS_BY_SOP = 'sop_record_links:';
+  const ARCHIVE_PREFIX = 'record_archived:';
 
   function labelForPalette(p) {
     if (!p) return 'Default';
@@ -422,6 +471,7 @@
   let recordNumbers = {};
   let addedRows = [];
   let sopLinks = {};
+  let archived = {};
   let canEdit = false;
 
   async function loadControl() {
@@ -492,6 +542,21 @@
         try { sopLinks[k.slice(SOP_LINK_PREFIX.length)] = JSON.parse(raw[k]); } catch (e) {}
       }
     } catch (e) { sopLinks = {}; }
+  }
+
+  async function loadArchived() {
+    archived = {};
+    try {
+      const raw = await window.storage.getByPrefix(ARCHIVE_PREFIX, true);
+      for (const k in raw) {
+        if (raw[k] === 'true') archived[k.slice(ARCHIVE_PREFIX.length)] = true;
+      }
+    } catch (e) { archived = {}; }
+  }
+
+  async function setArchived(id, val) {
+    if (val) archived[id] = true; else delete archived[id];
+    await window.storage.set(ARCHIVE_PREFIX + id, val ? 'true' : '', true);
   }
 
   async function saveSopLink(id, rec, sop) {
@@ -620,9 +685,8 @@
         ? categorySelect(file, currentCategory(file))
         : '<span class="cat-none">�</span>';
 
-      html += `<tr class="${online || isDoc ? '' : 'not-digitised'}" data-section="${esc(sectionOf(r))}" data-id="${esc(id)}"`
-        + ` data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}"`
-        + ` data-added="${!!r.addedId}">`
+      const isArchived = !!archived[id];
+      html += `<tr class="${(online || isDoc ? '' : 'not-digitised') + (isArchived ? ' row-archived' : '')}" data-section="${esc(sectionOf(r))}" data-id="${esc(id)}" data-archived="${isArchived}" data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}" data-added="${!!r.addedId}">`
         + `<td class="c-code">${esc(displayDocNo(r))}</td>`
         + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}${sopLine}</td>`
         + `<td class="c-cat">${catCell}</td>`
@@ -632,6 +696,14 @@
         + `<td class="c-yn">${ynSelect(id, 'distributed', dist)}</td>`
         + `<td class="c-date">${esc(issued || '')}</td>`
         + `<td class="c-edit-template col-edit-template">${(online && r.recordKey) ? `<a href="${esc(r.href)}?editTemplate=1">Edit Template</a>` : ''}</td>`
+        + `<td class="c-archive col-archive">`
+        + (canEdit
+            ? `<button class="btn-archive${isArchived ? ' btn-restore' : ''}" data-row="${esc(id)}">${isArchived ? 'Restore' : 'Archive'}</button>`
+            : '')
+        + (canEdit && r.addedId
+            ? `<button class="btn-del" data-added-id="${esc(r.addedId)}">Delete</button>`
+            : '')
+        + `</td>`
         + `</tr>`;
     }
     tableBody.innerHTML = html;
@@ -662,11 +734,14 @@
       const unlisted = row.dataset.unlisted === 'true';
       const added = row.dataset.added === 'true';
       let ok = secSel === 'all' || row.dataset.section === secSel;
-      if (status === 'online') ok = ok && online;
-      else if (status === 'paper') ok = ok && !online;
-      else if (status === 'bumped') ok = ok && bumped;
-      else if (status === 'unlisted') ok = ok && unlisted;
-      else if (status === 'added') ok = ok && added;
+      const isArchived = row.dataset.archived === 'true';
+      if (status === 'online')    ok = ok && online && !isArchived;
+      else if (status === 'paper')    ok = ok && !online && !isArchived;
+      else if (status === 'bumped')   ok = ok && bumped && !isArchived;
+      else if (status === 'unlisted') ok = ok && unlisted && !isArchived;
+      else if (status === 'added')    ok = ok && added && !isArchived;
+      else if (status === 'archived') ok = ok && isArchived;
+      else /* 'all' */                ok = ok && !isArchived;
       if (ok && q) {
         ok = row.textContent.toLowerCase().includes(q);
       }
@@ -695,6 +770,58 @@
     if (!sel || !canEdit) return;
     sel.classList.add('dirty');
     await saveCategory(sel.dataset.file, sel.value);
+  });
+
+  tableBody.addEventListener('click', async (e) => {
+    if (!canEdit) return;
+
+    // ---- Archive / Restore button ----
+    const archBtn = e.target.closest('.btn-archive');
+    if (archBtn) {
+      const id = archBtn.dataset.row;
+      const nowArchived = !archived[id];
+      const rowData = ROWS.find(r => rowId(r) === id);
+      const label = rowData ? (rowData.docNo + ' — ' + rowData.name) : id;
+      if (nowArchived) {
+        if (!confirm(`Archive "${label}"?\n\nIt will be hidden from the Record List for users but visible to admins on this index using the "Archived records" filter. You can restore it at any time.`)) return;
+      }
+      $('saveState').textContent = 'Saving…';
+      try {
+        await setArchived(id, nowArchived);
+        $('saveState').textContent = nowArchived ? 'Archived' : 'Restored';
+        setTimeout(() => { $('saveState').textContent = ''; }, 2000);
+        render();
+      } catch (err) {
+        $('saveState').textContent = 'Error: ' + err.message;
+        $('saveState').style.color = 'var(--palette-fail)';
+      }
+      return;
+    }
+
+    // ---- Delete button (added rows only) ----
+    const delBtn = e.target.closest('.btn-del');
+    if (delBtn) {
+      const addedId = delBtn.dataset.addedId;
+      const row = addedRows.find(r => r.addedId === addedId);
+      if (!row) return;
+      if (!confirm(`Permanently delete "${row.docNo} — ${row.name}" from the index?\n\nThis cannot be undone.`)) return;
+      $('saveState').textContent = 'Deleting…';
+      try {
+        addedRows = addedRows.filter(r => r.addedId !== addedId);
+        const idx = ROWS.findIndex(r => r.addedId === addedId);
+        if (idx >= 0) ROWS.splice(idx, 1);
+        await saveAddedRows();
+        // Clean up any archived flag stored for this row
+        try { await window.storage.set(ARCHIVE_PREFIX + addedId, '', true); } catch (_) {}
+        $('saveState').textContent = 'Deleted';
+        setTimeout(() => { $('saveState').textContent = ''; }, 2000);
+        render();
+      } catch (err) {
+        $('saveState').textContent = 'Error: ' + err.message;
+        $('saveState').style.color = 'var(--palette-fail)';
+      }
+      return;
+    }
   });
 
   searchInput.addEventListener('input', filter);
@@ -1020,6 +1147,8 @@
 
     // Edit template column (covers SOPs, policies, procedures): admin only
     document.body.classList.toggle('no-manage-templates', !isAdmin);
+    document.body.classList.toggle('no-archive-col', !isAdmin);
+    document.getElementById('editRevBtn').style.display = isAdmin ? '' : 'none';
 
     $('hdrCode').textContent = DATA.header.docNumber || 'REC 01';
     $('hdrRev').textContent = 'Rev ' + (DATA.header.revision || '?')
@@ -1036,7 +1165,7 @@
     ]);
     try {
       await withTimeout(Promise.all([loadControl(), loadLive(), loadCategories(),
-                                     loadRecordNumbers(), loadAddedRows(), loadSopLinks()]));
+                                     loadRecordNumbers(), loadAddedRows(), loadSopLinks(), loadArchived()]));
     } catch (e) {
       $('saveState').textContent = 'Live revision data unavailable � showing the issued baseline';
       $('saveState').style.color = 'var(--palette-fail)';
@@ -1047,9 +1176,167 @@
       $('saveState').textContent = 'Read-only � administrator access required to edit';
       $('saveState').style.color = 'var(--palette-label)';
     }
+  // ---- Edit Revision button ----
+
+  function openRevModal() {
+    const sel = document.getElementById('revSelectRecord');
+    sel.innerHTML = '<option value="">— select a record —</option>';
+    const withKeys = ROWS
+      .filter(r => r.recordKey)
+      .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+    withKeys.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.recordKey;
+      opt.textContent = (r.docNo ? r.docNo + ' — ' : '') + r.name;
+      sel.appendChild(opt);
+    });
+
+    document.getElementById('revNumber').value = '';
+    document.getElementById('revDate').value = '';
+    document.getElementById('revReason').value = '';
+    document.getElementById('revName').value = '';
+    document.getElementById('revTitle').value = '';
+    document.getElementById('revPasskey').value = '';
+    document.getElementById('revModalMsg').textContent = '';
+    document.getElementById('revSaveBtn').disabled = false;
+
+    document.getElementById('revModal').classList.add('open');
+    document.getElementById('revSelectRecord').focus();
+  }
+
+  function closeRevModal() {
+    document.getElementById('revModal').classList.remove('open');
+  }
+
+  document.getElementById('revSelectRecord').addEventListener('change', async function () {
+    const key = this.value;
+    if (!key) return;
+    const row = ROWS.find(r => r.recordKey === key);
+    try {
+      const cur = await window.DocumentRevision.getCurrent(key, row ? (row.revision || 1) : 1);
+      document.getElementById('revNumber').value = cur;
+    } catch (e) { /* leave blank */ }
+    document.getElementById('revDate').value = new Date().toISOString().slice(0, 10);
+  });
+
+  document.getElementById('editRevBtn').addEventListener('click', openRevModal);
+  document.getElementById('revCancelBtn').addEventListener('click', closeRevModal);
+
+  document.getElementById('revModal').addEventListener('click', function (e) {
+    if (e.target === this) closeRevModal();
+  });
+
+  document.getElementById('revSaveBtn').addEventListener('click', async function () {
+    const msg = document.getElementById('revModalMsg');
+    const saveBtn = this;
+
+    const recordKey = document.getElementById('revSelectRecord').value;
+    const revNumber = document.getElementById('revNumber').value.trim();
+    const revDate = document.getElementById('revDate').value;
+    const reason = document.getElementById('revReason').value.trim();
+    const name = document.getElementById('revName').value.trim();
+    const title = document.getElementById('revTitle').value.trim();
+    const passkey = document.getElementById('revPasskey').value;
+
+    msg.textContent = '';
+    msg.style.color = '#dc2626';
+
+    if (!recordKey) { msg.textContent = 'Please select a record.'; return; }
+    if (!revNumber || isNaN(Number(revNumber)) || Number(revNumber) < 1) {
+      msg.textContent = 'Enter a valid revision number.'; return;
+    }
+    if (!revDate) { msg.textContent = 'Enter the revision date.'; return; }
+    if (!reason) { msg.textContent = 'Enter a reason for the change.'; return; }
+    if (!name) { msg.textContent = 'Enter the name of who is making this change.'; return; }
+    if (!title) { msg.textContent = 'Enter a position / title.'; return; }
+    if (!passkey) { msg.textContent = 'Enter the admin passkey.'; return; }
+
+    let passkeyOk = false;
+    try {
+      passkeyOk = await window.Auth.verifyPasskey(passkey);
+    } catch (e) {
+      passkeyOk = false;
+    }
+    if (!passkeyOk) {
+      msg.textContent = 'Incorrect passkey. Change not saved.'; return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    try {
+      const row = ROWS.find(r => r.recordKey === recordKey);
+      const entry = await window.DocumentRevision.setRevision(
+        recordKey,
+        Number(revNumber),
+        revDate,
+        { reason, changedBy: name, changedByTitle: title }
+      );
+      msg.style.color = '#15803d';
+      msg.textContent = `Saved — ${row ? row.docNo + ' ' + row.name : recordKey} set to Rev ${entry.revisionNumber} (${revDate}).`;
+      saveBtn.textContent = 'Saved ✓';
+      setTimeout(closeRevModal, 1800);
+    } catch (e) {
+      msg.style.color = '#dc2626';
+      msg.textContent = 'Error: ' + e.message;
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save revision';
+    }
+  });
+
   })();
 })();
 </script>
+<!-- Edit Revision Modal -->
+<div id="revModal" role="dialog" aria-modal="true" aria-labelledby="revModalTitle">
+  <div id="revModalBox">
+    <h3 id="revModalTitle">Edit Document Revision</h3>
+
+    <div class="rev-field">
+      <label for="revSelectRecord">Record</label>
+      <select id="revSelectRecord">
+        <option value="">— select a record —</option>
+      </select>
+    </div>
+
+    <div class="rev-field">
+      <label for="revNumber">Revision number</label>
+      <input type="number" id="revNumber" min="1" max="99" placeholder="e.g. 7">
+    </div>
+
+    <div class="rev-field">
+      <label for="revDate">Revision date</label>
+      <input type="date" id="revDate">
+    </div>
+
+    <div class="rev-field">
+      <label for="revReason">Reason for change</label>
+      <textarea id="revReason" rows="2" placeholder="e.g. Updated process — new cooking times"></textarea>
+    </div>
+
+    <div class="rev-field">
+      <label for="revName">Changed by (name)</label>
+      <input type="text" id="revName" placeholder="Full name">
+    </div>
+
+    <div class="rev-field">
+      <label for="revTitle">Position / title</label>
+      <input type="text" id="revTitle" placeholder="e.g. QC Manager">
+    </div>
+
+    <div class="rev-field">
+      <label for="revPasskey">Admin passkey <span style="color:#6b7280;font-weight:400;">(required to save)</span></label>
+      <input type="password" id="revPasskey" placeholder="Enter admin passkey" autocomplete="off">
+    </div>
+
+    <div id="revModalMsg"></div>
+
+    <div class="rev-modal-actions">
+      <button class="btn-rev-cancel" id="revCancelBtn">Cancel</button>
+      <button class="btn-rev-save" id="revSaveBtn">Save revision</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
 

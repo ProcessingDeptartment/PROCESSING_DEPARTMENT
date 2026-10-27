@@ -96,11 +96,14 @@
 <script src="../lib/auth.js?v=5"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
-<script src="../lib/document-revision.js?v=3"></script>
-<script src="../lib/master-index-data.js?v=4"></script>
+<script src="../lib/document-revision.js?v=4"></script>
+<script src="../lib/master-index-data.js?v=5"></script>
 <script>(function () {
 
   const isAdmin = !!(window.Auth && /ADMIN/i.test(window.Auth.getCurrentRole() || ''));
+
+  const ARCHIVE_PREFIX = 'record_archived:';
+  let archived = {};
 
   const RECORDS = window.MasterIndexData.rows
     .filter(r => r.href)
@@ -128,7 +131,11 @@
 
   function render() {
     let html = '';
-    RECORDS.forEach(r => {
+    const visible = RECORDS.filter(r => {
+      const id = r.recordKey || ('doc:' + (r.docNo || ''));
+      return !archived[id];
+    });
+    visible.forEach(r => {
       const baseline = r.revision || 1;
       const hit = latest[r.recordKey];
       const live = hit ? hit.revisionNumber : baseline;
@@ -140,6 +147,7 @@
         + `</tr>`;
     });
     tableBody.innerHTML = html;
+    totalCount.textContent = visible.length;
     filterRecords();
   }
 
@@ -161,12 +169,22 @@
     noResults.style.display = shown === 0 ? 'block' : 'none';
   }
 
+  async function loadArchived() {
+    try {
+      const raw = await window.storage.getByPrefix(ARCHIVE_PREFIX, true);
+      for (const k in raw) {
+        if (raw[k] === 'true') archived[k.slice(ARCHIVE_PREFIX.length)] = true;
+      }
+    } catch (e) { archived = {}; }
+  }
+
   searchInput.addEventListener('input', filterRecords);
 
   (async function() {
 
     render();
     try { latest = await window.DocumentRevision.latestAll(); } catch (e) { latest = {}; }
+    try { await loadArchived(); } catch (e) { archived = {}; }
     render();
   })();
 })();

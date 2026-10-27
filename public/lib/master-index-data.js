@@ -575,7 +575,7 @@ window.MasterIndexData = {
           "revision": 7,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
-          "dateOfIssue": "30/03/2026",
+          "dateOfIssue": "03/03/2026",
           "recordKey": "dry-cooking",
           "href": "REC-7.4.0-dry-cooking.html"
       },
