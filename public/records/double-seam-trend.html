@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -126,6 +126,7 @@
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/auth.js?v=5"></script>
 <script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/thresholds.js?v=2"></script>
 <script>(function () {
   const $ = (id) => document.getElementById(id);
@@ -240,7 +241,7 @@
 
     [0, Math.floor((n - 1) / 2), n - 1].forEach((i) => {
       if (i < 0 || i >= n) return;
-      svg += `<text x="${xAt(i)}" y="${H - 6}" text-anchor="middle" fill="#6b7680">${rows[i].date || '—'}</text>`;
+      svg += `<text x="${xAt(i)}" y="${H - 6}" text-anchor="middle" fill="#6b7680">${rows[i].date || 'ï¿½'}</text>`;
     });
 
     series.forEach((s) => {
@@ -256,7 +257,7 @@
     series.forEach((s) => {
       s.points.forEach((p, i) => {
         if (p.y === null || !p.outOfSpec) return;
-        svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="4" fill="#d0342c"><title>${rows[i].date} — ${s.name}: ${p.y.toFixed(2)} (out of spec: ${spec.min}–${spec.max})</title></circle>`;
+        svg += `<circle cx="${xAt(i)}" cy="${yAt(p.y)}" r="4" fill="#d0342c"><title>${rows[i].date} ï¿½ ${s.name}: ${p.y.toFixed(2)} (out of spec: ${spec.min}ï¿½${spec.max})</title></circle>`;
       });
     });
     svg += '</svg>';
@@ -266,14 +267,14 @@
   function isOutOfSpec(v, spec) { return v != null && (v < spec.min || v > spec.max); }
 
   function td(v, decimals, spec) {
-    const out = v == null ? '—' : v.toFixed(decimals);
+    const out = v == null ? 'ï¿½' : v.toFixed(decimals);
     return `<td${isOutOfSpec(v, spec) ? ' style="color:#d0342c;font-weight:600;"' : ''}>${out}</td>`;
   }
 
   function renderTable(rows, specs) {
     $('dataTableBody').innerHTML = rows.map((r) => `
       <tr>
-        <td>${r.date || '—'}</td>
+        <td>${r.date || 'ï¿½'}</td>
         <td>${r.batch}</td>
         <td>${r.revision}</td>
         ${td(r.before.bhb, 2, specs.bhbPct)}${td(r.during.bhb, 2, specs.bhbPct)}${td(r.after.bhb, 2, specs.bhbPct)}
@@ -327,12 +328,12 @@
   }
 
   async function refresh() {
-    $('statusLine').textContent = 'Loading…';
+    $('statusLine').textContent = 'Loadingï¿½';
     currentRows = await loadRows();
     const anyOut = (r, metric, spec) => ['before', 'during', 'after'].some((s) => isOutOfSpec(r[s][metric], spec));
     const outCount = currentRows.filter((r) => anyOut(r, 'bhb', SPECS.bhbPct) || anyOut(r, 'freespace', SPECS.freespace)).length;
     $('statusLine').textContent = `${currentRows.length} submitted inspection${currentRows.length === 1 ? '' : 's'}`
-      + (outCount ? ` — ${outCount} with an out-of-spec reading` : '');
+      + (outCount ? ` ï¿½ ${outCount} with an out-of-spec reading` : '');
     renderCharts();
     renderTable(currentRows, SPECS);
     renderAlert($('alertBhb'), computeTrendAlert(currentRows, (r) => r.after.bhb, SPECS.bhbPct, 'down', '%B.H.B.'));
