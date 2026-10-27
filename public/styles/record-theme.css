@@ -1893,3 +1893,35 @@ body.rt-tablet .rt-content .fr-badge-ok, body.rt-tablet .rt-content .fr-badge-fa
 .fr-btn-amend { color: #7a4800; border-color: #c87800; }
 .fr-btn-amend:hover { background: #fff3dd; }
 .fr-amend-banner textarea { box-sizing: border-box; font-family: inherit; }
+
+/* Scan buttons — admin only, job number and lot */
+.fr-btn-scan {
+  background: var(--action);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 20px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+}
+.fr-btn-scan--lot { min-height: 56px; }
+.fr-scan-hint {
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted, #888);
+  margin-bottom: 4px;
+}
+.fr-scan-fd-suggest {
+  font-size: 13px;
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+@media print {
+  .fr-btn-scan, .fr-btn-scan--lot, .fr-scan-hint, .fr-scan-fd-suggest { display: none !important; }
+}

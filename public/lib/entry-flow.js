@@ -321,7 +321,7 @@
     }
     function baskets() { return getRows().filter(nonBlank); }
     function sizeList() { return (window.Lookups && window.Lookups.get && window.Lookups.get('sizeRanges')) || []; }
-    function canScan() { return (window.BarcodeScan && window.BarcodeScan.allowed()) || ('BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)); }
+    function canScan() { return !!(window.Auth && window.Auth.getCurrentRole && window.Auth.getCurrentRole() === 'ADMINISTRATOR'); }
     function totalKg(rows) { return rows.reduce(function (s, r) { return s + (num(r.wholeWeight) || 0); }, 0); }
     function plural(n) { return n + (n === 1 ? ' basket' : ' baskets'); }
 
@@ -384,8 +384,21 @@
 
     function wire(sec, s2) {
       var bn = s2.querySelector('#ef_bn'), w = s2.querySelector('#ef_w');
+      var isAdmin = !!(window.Auth && window.Auth.getCurrentRole && window.Auth.getCurrentRole() === 'ADMINISTRATOR');
       bn.addEventListener('input', function () { S.pendingCount = ''; s2.querySelector('#ef_err').textContent = ''; fdHint(); updateAdd(); });
-      bn.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); w.focus(); } });
+      if (isAdmin) {
+        bn.addEventListener('focus', function () { try { bn.select(); } catch (er) { } });
+        bn.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          var v = bn.value.trim();
+          if (/^fd/i.test(v)) { fdHint(); }
+          else if (num(w.value) > 0 && S.size) { addBasket(); }
+          else { w.focus(); }
+        });
+      } else {
+        bn.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); w.focus(); } });
+      }
       w.addEventListener('input', function () { s2.querySelector('#ef_err').textContent = ''; updateAdd(); });
       w.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); if (!$('ef_add').disabled) addBasket(); } });
       s2.querySelector('#ef_fd').addEventListener('click', function (e) {

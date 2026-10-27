@@ -69,7 +69,7 @@
 </script>
 
 <script src="../lib/barcode-scan.js?v=2"></script>
-<script src="../lib/entry-flow.js?v=7"></script>
+<script src="../lib/entry-flow.js?v=8"></script>
 <script>EntryFlow.receiving({ required: ['jobNo', 'receivingDate', 'receivedFrom', 'toBeProcessedFor'].concat(window.BarcodeScan && BarcodeScan.allowed() ? ['lotBarcode'] : []) });</script>
 <script>BarcodeScan.attach('fr_f_lotBarcode', {
   label: 'Scan lot', title: 'Scan the new lot barcode', readonly: true,
@@ -85,6 +85,99 @@
   },
   okText: function (v) { return 'Lot barcode ' + v + ' will be recorded for this job when you submit.'; }
 });</script>
+<script>
+/* REC-7.1.2 admin-only: job number barcode scanning (Feature A) */
+(function () {
+  'use strict';
+  if (!window.Auth || !window.Auth.getCurrentRole || window.Auth.getCurrentRole() !== 'ADMINISTRATOR') return;
+  var cameraOk = 'BarcodeDetector' in window;
+
+  function parseJobNo(s) {
+    s = String(s || '').trim().toUpperCase();
+    var list = (window.Lookups && window.Lookups.get && window.Lookups.get('jobPrefixes')) || [];
+    list = list.slice().sort(function (a, b) { return b.length - a.length; });
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
+      if (s.indexOf(p) === 0 && /^\d*$/.test(s.slice(p.length))) return { prefix: p, digits: s.slice(p.length) };
+    }
+    var m = s.match(/^(\d?[A-Z]{2,3})(\d+)$/);
+    return m ? { prefix: m[1], digits: m[2] } : { prefix: '', digits: s };
+  }
+
+  function fillJobNo(raw) {
+    var v = String(raw || '').trim();
+    var group = document.querySelector('.fr-jobnumber');
+    if (!group) return;
+    var prefixSel = group.querySelector('.fr-jn-prefix');
+    var digitsInp = group.querySelector('.fr-jn-digits');
+    if (!prefixSel || !digitsInp) return;
+    var parsed = parseJobNo(v);
+    var found = Array.from(prefixSel.options).some(function (o) { return o.value === parsed.prefix; });
+    if (found) {
+      prefixSel.value = parsed.prefix;
+      digitsInp.value = parsed.digits;
+    } else {
+      digitsInp.value = v;
+    }
+    prefixSel.dispatchEvent(new Event('change', { bubbles: true }));
+    digitsInp.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function triggerConfirm() {
+    var btn = document.getElementById('ef_confirm');
+    if (btn && !btn.disabled) btn.click();
+  }
+
+  function attachJobScan() {
+    var group = document.querySelector('.fr-jobnumber[data-jobnumber-for="fr_f_jobNo"]');
+    if (!group || group.dataset.jobScanAttached) return;
+    group.dataset.jobScanAttached = '1';
+    var label = group.closest('label.fr-field');
+    if (!label) return;
+    var grid = label.parentNode;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'no-print';
+    wrap.style.cssText = 'grid-column:1/-1;';
+
+    var hint = document.createElement('div');
+    hint.className = 'fr-scan-hint';
+    hint.textContent = 'Scan the job barcode from the job sheet, or type the job number below.';
+    wrap.appendChild(hint);
+
+    if (cameraOk && window.BarcodeScan) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'fr-btn-scan';
+      btn.textContent = '📷 Scan job barcode';
+      btn.addEventListener('click', function () {
+        window.BarcodeScan.open(function (v) {
+          fillJobNo(v);
+          setTimeout(triggerConfirm, 50);
+        }, { title: 'Scan job barcode' });
+      });
+      wrap.appendChild(btn);
+    }
+
+    grid.insertBefore(wrap, label);
+
+    var digits = group.querySelector('.fr-jn-digits');
+    if (digits) {
+      digits.addEventListener('focus', function () { try { digits.select(); } catch (e) { } });
+      digits.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); triggerConfirm(); }
+      });
+    }
+  }
+
+  var obs = new MutationObserver(function () { attachJobScan(); });
+  (function boot() {
+    var host = document.getElementById('fr_modalSections');
+    if (host) { obs.observe(host, { childList: true, subtree: true }); attachJobScan(); }
+    else setTimeout(boot, 200);
+  })();
+})();
+</script>
 <script src="../lib/record-shell.js?v=11"></script>
 </body>
 </html>
