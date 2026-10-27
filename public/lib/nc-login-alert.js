@@ -58,8 +58,13 @@
     return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
   }
 
+  function apiFetch(path) {
+    var url = apiBase() + path;
+    return window.FacilityApi ? window.FacilityApi.fetch(url) : fetch(url);
+  }
+
   function fetchOpenNCs() {
-    return fetch(apiBase() + '/api/nc?limit=200')
+    return apiFetch('/api/nc?limit=200')
       .then(function (r) { return r.json(); })
       .then(function (rows) {
         return (rows || []).filter(function (nc) { return nc.status !== 'closed'; });
