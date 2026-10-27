@@ -156,6 +156,7 @@
 
   let currentPasskey = '';
   let currentFieldId = null;
+  let approvalResolve = null;
 
   // Public API
   window.PasskeyInput = {
@@ -168,9 +169,24 @@
     openForField: function(fieldId) {
       currentPasskey = '';
       currentFieldId = fieldId;
+      approvalResolve = null;
       document.getElementById('passkey-display').textContent = '';
       document.getElementById('passkey-error').textContent = '';
       document.getElementById('passkey-modal-overlay').classList.add('active');
+    },
+
+    // Open modal for approval — returns a Promise resolving to {displayName, title} or null on cancel
+    openForApproval: function(promptText) {
+      return new Promise(function(resolve) {
+        currentPasskey = '';
+        currentFieldId = null;
+        approvalResolve = resolve;
+        const header = document.querySelector('.passkey-modal-header h3');
+        if (header) header.textContent = promptText || 'Approve change — enter your passkey';
+        document.getElementById('passkey-display').textContent = '';
+        document.getElementById('passkey-error').textContent = '';
+        document.getElementById('passkey-modal-overlay').classList.add('active');
+      });
     },
 
     // Add digit
@@ -213,6 +229,15 @@
 
         if (!response.ok) {
           document.getElementById('passkey-error').textContent = result.error || 'Passkey not recognized';
+          return;
+        }
+
+        // Approval-mode: resolve the promise and close
+        if (approvalResolve) {
+          const cb = approvalResolve;
+          this.closeModal();
+          if (window.toast) window.toast(`Approved by ${result.displayName}`);
+          cb({ displayName: result.displayName, title: result.title });
           return;
         }
 
@@ -260,6 +285,13 @@
       document.getElementById('passkey-modal-overlay').classList.remove('active');
       currentPasskey = '';
       currentFieldId = null;
+      if (approvalResolve) {
+        const cb = approvalResolve;
+        approvalResolve = null;
+        cb(null); // cancelled
+      }
+      const header = document.querySelector('.passkey-modal-header h3');
+      if (header) header.textContent = 'Enter Your Passkey';
     }
   };
 
