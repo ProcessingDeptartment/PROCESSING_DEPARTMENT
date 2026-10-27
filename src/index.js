@@ -963,6 +963,44 @@ app.get('/api/record-def/:recordKey', async (req, res) => {
   }
 });
 
+// POST /api/master-index-audit
+// Body: { recordId, docNo, docName, action, field, oldValue, newValue, reason, changedBy }
+app.post('/api/master-index-audit', async (req, res) => {
+  const { recordId, docNo, docName, action, field, oldValue, newValue, reason, changedBy } = req.body || {};
+  if (!recordId || !action || !reason) {
+    return res.status(400).json({ ok: false, error: 'recordId, action and reason are required' });
+  }
+  const allowed = ['yn_change', 'archived', 'restored'];
+  if (!allowed.includes(action)) {
+    return res.status(400).json({ ok: false, error: 'invalid action' });
+  }
+  try {
+    await prisma.masterIndexAuditLog.create({
+      data: { recordId, docNo: docNo || null, docName: docName || null, action, field: field || null,
+              oldValue: oldValue || null, newValue: newValue || null, reason, changedBy: changedBy || null }
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('POST /api/master-index-audit failed', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// GET /api/master-index-audit?limit=100&recordId=<id>
+app.get('/api/master-index-audit', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit || '200', 10), 500);
+  const where = req.query.recordId ? { recordId: req.query.recordId } : {};
+  try {
+    const rows = await prisma.masterIndexAuditLog.findMany({
+      where, orderBy: { changedAt: 'desc' }, take: limit
+    });
+    res.json(rows);
+  } catch (e) {
+    console.error('GET /api/master-index-audit failed', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // Cross-record link query: every record that mentions this value (job number, batch code, AG
 // code, lot number, person name, ...). Optionally filter by linkField to scope to one join-key
 // type. This is the relational replacement for traceability.js's prefix scan.
