@@ -84,13 +84,7 @@
   td.c-yn select:disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
   td.c-yn select.dirty{ border-color:var(--palette-primary); box-shadow:0 0 0 2px rgba(201,131,43,.15); }
 
-  td.c-cat select{ font-size:11.5px; font-weight:600; padding:3px 4px; border:1px solid #d0d5db;
-            border-radius:3px; background:#fff; color:var(--palette-ink); width:100%; min-width:132px; }
-  td.c-cat select:disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
-  td.c-cat select.dirty{ border-color:var(--palette-primary); box-shadow:0 0 0 2px rgba(201,131,43,.15); }
-  td.c-cat .cat-none{ color:var(--palette-label); }
-
-  .tag{ display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.04em;
+.tag{ display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.04em;
         text-transform:uppercase; padding:1px 6px; border-radius:9px; white-space:nowrap; }
   .tag-online{ background:var(--palette-ok-bg); color:var(--palette-ok); }
   .tag-paper{ background:#f1f2f4; color:#6b7280; }
@@ -155,8 +149,7 @@
   /* Archived row appearance */
   tr.row-archived td { color: #9ca3af !important; }
   tr.row-archived td.c-name a { color: #9ca3af; pointer-events: none; text-decoration: none; }
-  tr.row-archived td.c-yn select,
-  tr.row-archived td.c-cat select { opacity: .5; }
+  tr.row-archived td.c-yn select { opacity: .5; }
 
   /* Archive / Restore / Delete buttons */
   .btn-archive, .btn-del {
@@ -187,7 +180,7 @@
     .table-scroll{ overflow:visible; border:none; }
     table.mi{ min-width:0; }
     table.mi thead th{ position:static; }
-    td.c-yn select, td.c-cat select{ border:none; background:none; -webkit-appearance:none; appearance:none; }
+    td.c-yn select{ border:none; background:none; -webkit-appearance:none; appearance:none; }
     tr.hidden{ display:none; }
   }
 /* Edit Revision modal */
@@ -279,7 +272,6 @@
         <tr>
           <th style="width:90px;">Document No.</th>
           <th style="width:250px;">Document Name</th>
-          <th style="width:140px;">Category</th>
           <th>Details for change</th>
           <th style="width:70px;">Current<br>revision</th>
           <th style="width:96px;">Obsolete revision<br>retrieved? Y/N</th>
@@ -417,21 +409,11 @@
 
   const RECORD_NUMBER_PREFIX = 'record_number_override:';
 
-  const CATEGORY_PREFIX = 'record_category:';
-
   const ADDED_KEY = 'master_index_added_rows';
 
   const SOP_LINK_PREFIX = 'record_sop_link:';
   const SOP_LINKS_BY_SOP = 'sop_record_links:';
   const ARCHIVE_PREFIX = 'record_archived:';
-
-  function labelForPalette(p) {
-    if (!p) return 'Default';
-    return String(p).replace(/\//g, ' / ').replace(/[-_]/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
-  }
-
-  const CATEGORIES = [['', 'Default']].concat((window.Lookups && window.Lookups.get('palettes') || [])
-    .map(p => [p, labelForPalette(p)]));
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
@@ -468,7 +450,6 @@
 
   let control = {};
   let live = {};
-  let categories = {};
   let recordNumbers = {};
   let addedRows = [];
   let sopLinks = {};
@@ -484,21 +465,6 @@
 
   async function saveControl() {
     await window.storage.set(CONTROL_KEY, JSON.stringify(control), true);
-    $('saveState').textContent = 'Saved';
-    setTimeout(() => { $('saveState').textContent = ''; }, 1800);
-  }
-
-  async function loadCategories() {
-    categories = {};
-    try {
-      const raw = await window.storage.getByPrefix(CATEGORY_PREFIX, true);
-      for (const k in raw) categories[k.slice(CATEGORY_PREFIX.length)] = raw[k];
-    } catch (e) { categories = {}; }
-  }
-
-  async function saveCategory(file, value) {
-    categories[file] = value;
-    await window.storage.set(CATEGORY_PREFIX + file, value, true);
     $('saveState').textContent = 'Saved';
     setTimeout(() => { $('saveState').textContent = ''; }, 1800);
   }
@@ -608,18 +574,6 @@
     });
   }
 
-  function currentCategory(file) {
-    if (Object.prototype.hasOwnProperty.call(categories, file)) return categories[file];
-    return (window.PaletteMap && window.PaletteMap.categoryFor(file)) || '';
-  }
-
-  function categorySelect(file, value) {
-    const options = CATEGORIES.map(([v, label]) =>
-      `<option value="${esc(v)}"${v === value ? ' selected' : ''}>${esc(label)}</option>`
-    ).join('');
-    return `<select data-file="${esc(file)}"${canEdit ? '' : ' disabled'}>${options}</select>`;
-  }
-
   function ynSelect(id, field, value) {
     const opts = ['', 'Y', 'N', 'N/A'];
     const cur = value == null ? '' : String(value).toUpperCase();
@@ -648,7 +602,7 @@
       const isDoc = !!r.section;
       const linkHref = r.href || sopHrefFor(r);
       if (isDoc && r._first) {
-        html += `<tr class="sec-row"><td colspan="9">${esc(sectionOf(r))}</td></tr>`;
+        html += `<tr class="sec-row"><td colspan="8">${esc(sectionOf(r))}</td></tr>`;
       }
       const l = live[id] || {};
       const c = control[id] || {};
@@ -681,16 +635,10 @@
       const obs = c.obsoleteRetrieved != null ? c.obsoleteRetrieved : r.obsoleteRetrieved;
       const dist = c.distributed != null ? c.distributed : r.distributed;
 
-      const file = r.href ? String(r.href).toLowerCase() : '';
-      const catCell = r.href
-        ? categorySelect(file, currentCategory(file))
-        : '<span class="cat-none">�</span>';
-
-      const isArchived = !!archived[id];
+const isArchived = !!archived[id];
       html += `<tr class="${(online || isDoc ? '' : 'not-digitised') + (isArchived ? ' row-archived' : '')}" data-section="${esc(sectionOf(r))}" data-id="${esc(id)}" data-archived="${isArchived}" data-online="${online}" data-bumped="${!!l.bumped}" data-unlisted="${!!r.notOnIndexList}" data-added="${!!r.addedId}">`
         + `<td class="c-code">${esc(displayDocNo(r))}</td>`
         + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}${sopLine}</td>`
-        + `<td class="c-cat">${catCell}</td>`
         + `<td class="c-details">${esc(details || '')}${detailSub}</td>`
         + `<td class="c-rev">${rev == null ? '�' : 'Rev ' + rev}</td>`
         + `<td class="c-yn">${ynSelect(id, 'obsoleteRetrieved', obs)}</td>`
@@ -766,13 +714,6 @@
     await saveControl();
   });
 
-  tableBody.addEventListener('change', async (e) => {
-    const sel = e.target.closest('select[data-file]');
-    if (!sel || !canEdit) return;
-    sel.classList.add('dirty');
-    await saveCategory(sel.dataset.file, sel.value);
-  });
-
   tableBody.addEventListener('click', async (e) => {
     if (!canEdit) return;
 
@@ -831,17 +772,14 @@
   $('printBtn').addEventListener('click', () => window.print());
 
   $('csvBtn').addEventListener('click', () => {
-    const head = ['Document No.', 'Document Name', 'Category', 'Details for change', 'Current revision',
+    const head = ['Document No.', 'Document Name', 'Details for change', 'Current revision',
                   'Obsolete revision retrieved? Y/N', 'New revision distributed? Y/N', 'New date of issue'];
     const q = row => '"' + String(row == null ? '' : row).replace(/"/g, '""') + '"';
     const lines = [head.map(q).join(',')];
     tableBody.querySelectorAll('tr:not(.hidden):not(.sec-row)').forEach(row => {
       const cells = [...row.cells].map((td, i) => {
         const sel = td.querySelector('select');
-        if (sel) {
-          if (sel.dataset.file) return sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : sel.value;
-          return sel.value;
-        }
+        if (sel) return sel.value;
         return td.querySelector('.sub') ? td.firstChild.textContent : td.textContent;
       });
       lines.push(cells.map(q).join(','));
@@ -1165,7 +1103,7 @@
       p, new Promise((_, rej) => setTimeout(() => rej(new Error('storage timeout')), 15000))
     ]);
     try {
-      await withTimeout(Promise.all([loadControl(), loadLive(), loadCategories(),
+      await withTimeout(Promise.all([loadControl(), loadLive(),
                                      loadRecordNumbers(), loadAddedRows(), loadSopLinks(), loadArchived()]));
     } catch (e) {
       $('saveState').textContent = 'Live revision data unavailable � showing the issued baseline';
