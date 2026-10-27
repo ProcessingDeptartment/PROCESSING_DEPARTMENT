@@ -405,6 +405,7 @@
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
 <script src="../lib/document-revision.js?v=4"></script>
+<script src="../lib/passkey-input.js?v=4"></script>
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=9"></script>
 <script src="../lib/sop-index-data.js?v=1"></script>
@@ -1194,9 +1195,10 @@
     document.getElementById('revNumber').value = '';
     document.getElementById('revDate').value = '';
     document.getElementById('revReason').value = '';
-    document.getElementById('revName').value = '';
-    document.getElementById('revTitle').value = '';
-    document.getElementById('revPasskey').value = '';
+    document.getElementById('revSig_signature').value = '';
+    document.getElementById('revSig_signature').dataset.verified = '';
+    document.getElementById('revSig_by').value = '';
+    document.getElementById('revSig_title').value = '';
     document.getElementById('revModalMsg').textContent = '';
     document.getElementById('revSaveBtn').disabled = false;
 
@@ -1234,9 +1236,9 @@
     const revNumber = document.getElementById('revNumber').value.trim();
     const revDate = document.getElementById('revDate').value;
     const reason = document.getElementById('revReason').value.trim();
-    const name = document.getElementById('revName').value.trim();
-    const title = document.getElementById('revTitle').value.trim();
-    const passkey = document.getElementById('revPasskey').value;
+    const sigField = document.getElementById('revSig_signature');
+    const name = document.getElementById('revSig_by').value.trim();
+    const title = document.getElementById('revSig_title').value.trim();
 
     msg.textContent = '';
     msg.style.color = '#dc2626';
@@ -1247,18 +1249,8 @@
     }
     if (!revDate) { msg.textContent = 'Enter the revision date.'; return; }
     if (!reason) { msg.textContent = 'Enter a reason for the change.'; return; }
-    if (!name) { msg.textContent = 'Enter the name of who is making this change.'; return; }
-    if (!title) { msg.textContent = 'Enter a position / title.'; return; }
-    if (!passkey) { msg.textContent = 'Enter the admin passkey.'; return; }
-
-    let passkeyOk = false;
-    try {
-      passkeyOk = await window.Auth.verifyPasskey(passkey);
-    } catch (e) {
-      passkeyOk = false;
-    }
-    if (!passkeyOk) {
-      msg.textContent = 'Incorrect passkey. Change not saved.'; return;
+    if (sigField.dataset.verified !== 'true') {
+      msg.textContent = 'Enter your passkey to confirm this change.'; return;
     }
 
     saveBtn.disabled = true;
@@ -1315,18 +1307,21 @@
     </div>
 
     <div class="rev-field">
-      <label for="revName">Changed by (name)</label>
-      <input type="text" id="revName" placeholder="Full name">
+      <label for="revSig_signature">Passkey <span style="color:#6b7280;font-weight:400;">(tap to enter — autofills name &amp; title)</span></label>
+      <input type="text" id="revSig_signature" readonly inputmode="none" autocomplete="off"
+             placeholder="Tap to enter passkey"
+             style="cursor:pointer;background:#f9fafb;"
+             onclick="window.PasskeyInput && window.PasskeyInput.openForField('revSig_signature')">
     </div>
 
     <div class="rev-field">
-      <label for="revTitle">Position / title</label>
-      <input type="text" id="revTitle" placeholder="e.g. QC Manager">
+      <label for="revSig_by">Changed by</label>
+      <input type="text" id="revSig_by" readonly placeholder="Auto-filled from passkey" style="background:#f9fafb;color:#374151;">
     </div>
 
     <div class="rev-field">
-      <label for="revPasskey">Admin passkey <span style="color:#6b7280;font-weight:400;">(required to save)</span></label>
-      <input type="password" id="revPasskey" placeholder="Enter admin passkey" autocomplete="off">
+      <label for="revSig_title">Position / title</label>
+      <input type="text" id="revSig_title" readonly placeholder="Auto-filled from passkey" style="background:#f9fafb;color:#374151;">
     </div>
 
     <div id="revModalMsg"></div>
