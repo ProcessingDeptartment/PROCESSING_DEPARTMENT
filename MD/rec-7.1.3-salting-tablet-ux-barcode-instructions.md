@@ -1,11 +1,11 @@
-# REC 7.1.3 Salting and Tumbling — Barcode Scan + Tablet Weight UX (Instructions for Claude Code)
+# REC 7.1.3 Salting and Tumbling — Barcode Scan + Roster UX (Instructions for Claude Code)
 
-**Date:** 2026-10-27  
-**Raised by:** Michaela  
+**Date:** 2026-10-27 (Part 2 revised same day)
+**Raised by:** Michaela
 **Scope:** Two independent improvements to `REC-7.1.3-salting-and-tumbling.html` and its record definition.
 
-1. **Barcode scan** — add a lot-barcode field with camera scanner (admin-only), matching the pattern already used in REC 7.1.2 Abalone Receiving.  
-2. **Tablet weight entry** — redesign the weight and ingredient fields within each salting batch roster row so they are comfortable to use on a tablet. Job info section and size range selector are **not touched**.
+1. **Barcode scan** — add a lot-barcode field with camera scanner (admin-only), matching the pattern already used in REC 7.1.2 Abalone Receiving.
+2. **Roster row UX** — three targeted fixes to the salting batch roster row: compact size range selector, weight fields sized like job info fields, and "Add weight" button placed inline next to the weight(kg) field styled like the submit button.
 
 No field-key renames, no schema changes to existing columns, no print/PDF changes, no validation-rule changes.
 
@@ -36,26 +36,26 @@ node scripts/export-record-defs.mjs
 ```
 Then commit and push the updated JSON.
 
-If DB access is not available, edit the JSON file directly (see current state below) and commit it.
+If DB access is not available, edit the JSON file directly and commit it.
 
-**Current `sections[0].fields` array** (for reference — do not remove any of these):
+**Current `sections[0].fields` array** (do not remove any of these):
 ```jsonc
 [
-  { "key": "jobNo",         "label": "Job no.",           "type": "jobsearch" },
-  { "key": "intakeDate",    "label": "Intake date",        "type": "date" },
-  { "key": "harvestFarm",   "label": "Harvest farm",       "type": "text" },
-  { "key": "jiIntakeWeight","label": "Whole weight (kg)",  "type": "text", "readOnly": true },
-  { "key": "date",          "label": "Date",               "type": "date", "required": true },
-  { "key": "processingFor", "label": "Processing for",     "type": "select",
+  { "key": "jobNo",         "label": "Job no.",          "type": "jobsearch" },
+  { "key": "intakeDate",    "label": "Intake date",       "type": "date" },
+  { "key": "harvestFarm",   "label": "Harvest farm",      "type": "text" },
+  { "key": "jiIntakeWeight","label": "Whole weight (kg)", "type": "text", "readOnly": true },
+  { "key": "date",          "label": "Date",              "type": "date", "required": true },
+  { "key": "processingFor", "label": "Processing for",    "type": "select",
     "options": ["Can","Dried","Other"], "matchJobRoute": "jobNo" },
   // ← ADD HERE:
-  { "key": "lotBarcode",    "label": "Lot barcode",        "type": "text" }
+  { "key": "lotBarcode",    "label": "Lot barcode",       "type": "text" }
 ]
 ```
 
 ### 1.3 HTML changes — `REC-7.1.3-salting-and-tumbling.html`
 
-Add `barcode-scan.js` and the `BarcodeScan.attach` call, exactly mirroring how REC 7.1.2 does it. Copy these lines from REC 7.1.2 and place them **before** `</body>`:
+Add `barcode-scan.js` and the `BarcodeScan.attach` call before `</body>`:
 
 ```html
 <script src="../lib/barcode-scan.js?v=2"></script>
@@ -69,140 +69,127 @@ BarcodeScan.attach('fr_f_lotBarcode', {
 </script>
 ```
 
-**No** duplicate-barcode check is needed here (unlike receiving). The salting record is downstream — a barcode can legitimately appear on multiple salting jobs if a lot is split across batches.
+No duplicate-barcode check is needed here — a barcode can legitimately appear on multiple salting batches split from one lot.
 
 ### 1.4 Behaviour
 
-- **Administrator only.** `barcode-scan.js` already enforces this via `BarcodeScan.allowed()` (checks `Auth.getCurrentRole() === 'ADMINISTRATOR'`). For non-administrator users the field is automatically hidden from view.
+- **Administrator only.** `barcode-scan.js` enforces this via `BarcodeScan.allowed()`. Non-administrators see no field.
 - A "📷 Scan lot" button appears beside the lot barcode input for administrators.
-- Camera opens; scan fills the field as read-only (operator cannot type a wrong value — must scan or use the "Or type it" fallback inside the scanner modal).
-- No blocking validation — the field is informational/traceability; it does not gate submission.
+- The field is read-only; value is filled by scan (or the "Or type it" fallback in the scanner modal).
+- No blocking validation — informational/traceability only.
 
 ---
 
-## Part 2 — Tablet weight entry redesign
+## Part 2 — Roster row UX fixes
 
-### 2.1 Problem
+### 2.1 Overview
 
-Inside each salting batch roster row, the numeric weight and ingredient fields are presented as standard narrow `<input type="number">` fields. On a tablet:
+Three targeted changes to how the salting batch roster row renders. All are CSS/render tweaks inside `public/lib/form-record.js`, scoped to this roster via a new opt-in flag. No data, no field keys, no PDF output changes.
 
-- The field is narrow — a tap slightly off-centre misses it.
-- The "Add weight" / "Save row" button is labelled with long text that takes up too much space.
-- There is no visual separation between the "identity" columns (batch, size range, times) and the "measurement" columns (weights, ingredient amounts) making scanning across a filled row error-prone.
-
-### 2.2 What changes
-
-These changes are to `public/lib/form-record.js` (the shared form engine), gated behind a new per-record-definition flag so no other record is affected.
-
-**New flag on the roster definition (add to `salting-and-tumbling.json` roster object):**
+**New flag on the roster definition** (add to the `roster` object in `salting-and-tumbling.json`):
 ```jsonc
-"tabletWeightEntry": true
+"compactSizeRange": true
 ```
 
-When `tabletWeightEntry: true` is set on a roster, the form engine renders the weight/number fields in that roster using a **large-tap card layout** on touch devices (width ≤ 900px). On non-touch / desktop it falls back to the existing table layout unchanged.
+This flag switches on all three changes described below for that roster.
 
-### 2.3 Tablet card layout for weight fields
+---
 
-On a touch device with `tabletWeightEntry: true`, each **roster row** is rendered in two parts:
+### 2.2 Change 1 — Size range selector: compact width
 
-**A — Identity strip (top):** A compact, read-only strip showing the batch identifier and size range. This is always visible and does not change once the batch is started.
+The size range dropdown (`sizeRange`) currently stretches to match the full column width. Make it compact — just wide enough to show the selected value without wasted space.
 
-```
-[ Batch 1 ]  [ 100–150g ]  [ 08:00 → 09:30 · 90 min ]
-```
-
-**B — Weight/ingredient cards (below the strip):** Each numeric field becomes a large card:
-
-```
-┌─────────────────────┐   ┌─────────────────────┐
-│   Shuck weight      │   │   No. of crates     │
-│                     │   │                     │
-│      [  48.5  ]     │   │      [   12   ]     │
-│         kg          │   │                     │
-└─────────────────────┘   └─────────────────────┘
-```
-
-- Each card: **minimum 120px wide, minimum 80px tall**.
-- The numeric `<input>` inside the card: **full width of the card**, `font-size: 22px`, `text-align: center`, `inputmode="decimal"` (opens numeric keyboard on iOS/Android).
-- The unit label (e.g. "kg") is displayed below the input as small grey text — not as a placeholder (placeholder disappears on focus, which is confusing).
-- Cards lay out in a **flex-wrap row**, 2–3 per line depending on screen width.
-
-### 2.4 The add-weight / save action
-
-Replace the current long "Add weight" / "Save row" button text with a short icon+label version:
-
-| Current | Replacement |
-|---------|-------------|
-| `Add weight` | `＋ Add` |
-| `Save row` / submit row | `✓ Save` |
-
-- Button minimum height: **52px**.
-- Button minimum width: **100px**.
-- Font size: **16px**.
-- Place the save button at the **bottom of the weight cards area**, full width on narrow screens (≤ 480px), auto-width otherwise.
-
-### 2.5 Specific roster columns affected
-
-The following columns in the salting-and-tumbling roster are in scope for large-tap card rendering:
-
-| Key | Label | Unit label |
-|-----|-------|-----------|
-| `noOfCrates` | No. of crates | *(none)* |
-| `shuckWeight` | Shuck weight | kg |
-| `saltKg` | Salt | kg |
-| `saltPercentUsed` | Salt % used | % |
-| `saltBatchCode` | Salt batch code | *(text, rendered as a standard wide input, not a card — skip card style for text fields)* |
-| `bakingSodaKg` | Baking soda | kg |
-| `bakingSodaBatchCode` | Baking soda batch code | *(text — standard wide input)* |
-| `sugarKg` | Sugar | kg |
-| `sugarPercentUsed` | Sugar % used | % |
-| `sugarBatchCode` | Sugar batch code | *(text — standard wide input)* |
-
-**Text fields** (`saltBatchCode`, `bakingSodaBatchCode`, `sugarBatchCode`) use a full-width standard `<input type="text">` at 48px height — not the card layout, but still touch-sized.
-
-**Derived / read-only fields** (`standardSaltingTime`, `totalTumblingTime`) are displayed as a label+value pair, not editable — keep them compact and place them in the identity strip (Part A) or as slim read-only tiles.
-
-### 2.6 Implementation approach in `form-record.js`
-
-1. **Detect touch + flag:** In the roster render function, check:
-   ```js
-   var isTabletWeight = roster.tabletWeightEntry && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-   ```
-2. **Render identity strip:** Render `batchId`, `sizeRange`, `startTime`, `finishTime`, `totalTumblingTime`, `standardSaltingTime` as a read-only header bar above the editable fields.
-3. **Render weight cards:** For each editable numeric field not in the identity strip, render a `<div class="fr-wcard">` card containing:
-   - A `<label>` with the field label
-   - An `<input type="number" inputmode="decimal" class="fr-wcard-input">` 
-   - An optional `<span class="fr-wcard-unit">` for the unit
-4. **Render text fields:** Each batch-code text field gets `class="fr-wcard-text"` — full width, 48px height.
-5. **Save button:** Render as `<button class="fr-wcard-save">✓ Save</button>` full-width at the bottom of the card group.
-
-**CSS additions (add to the existing CSS block inside `form-record.js`):**
+**Target CSS on the size range `<select>` when `compactSizeRange: true`:**
 ```css
-/* Tablet weight-entry cards */
-.fr-wcard-group { display:flex; flex-wrap:wrap; gap:10px; padding:10px 0; }
-.fr-wcard { min-width:120px; min-height:80px; background:var(--fr-input-bg,#f8f8f8);
-  border:1px solid var(--fr-border,#ccc); border-radius:8px; padding:8px 10px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; }
-.fr-wcard label { font-size:12px; color:var(--fr-label,#666); margin-bottom:4px; white-space:nowrap; }
-.fr-wcard-input { width:100%; font-size:22px; text-align:center; border:none; background:transparent;
-  padding:4px 0; color:var(--fr-text,#111); }
-.fr-wcard-input:focus { outline:2px solid var(--fr-accent,#a0763a); border-radius:4px; }
-.fr-wcard-unit { font-size:11px; color:var(--fr-label,#999); margin-top:2px; }
-.fr-wcard-text { width:100%; min-height:48px; font-size:16px; padding:10px 12px;
-  border:1px solid var(--fr-border,#ccc); border-radius:8px; margin:6px 0; }
-.fr-wcard-save { display:block; width:100%; min-height:52px; min-width:100px; font-size:16px;
-  background:var(--fr-accent,#a0763a); color:#fff; border:none; border-radius:8px;
-  margin-top:12px; cursor:pointer; }
-.fr-wcard-id-strip { font-size:13px; color:var(--fr-label,#666); padding:6px 0 2px; border-bottom:1px solid var(--fr-border,#eee); margin-bottom:8px; }
+.fr-roster-col-sizeRange select {
+  width: auto;          /* shrink to content */
+  min-width: 90px;
+  max-width: 130px;
+  font-size: 13px;
+  padding: 4px 6px;
+}
 ```
 
-### 2.7 Version bump
+The options are short strings like `"100-150g"` — 90–130px is plenty. This keeps the row narrow on a tablet so the weight fields have more horizontal room.
 
-Every time `form-record.js` changes, bump the `?v=N` in all referencing HTML files:
+---
+
+### 2.3 Change 2 — Weight/number fields: match job info field sizing
+
+All numeric fields in the roster row (`noOfCrates`, `shuckWeight`, `saltKg`, `saltPercentUsed`, `bakingSodaKg`, `sugarKg`, `sugarPercentUsed`) must look and feel identical to the job info section inputs — same height, same font size, same padding, same border style.
+
+**The job info fields currently use** the engine's standard `.fr-field input` style. Apply that same class (or duplicate its rules) to the roster number inputs when `compactSizeRange: true`:
+
+```css
+/* Roster number inputs — match job info field style */
+.fr-roster[data-compact] input[type="number"] {
+  height: var(--fr-field-height, 40px);
+  font-size: var(--fr-field-font, 15px);
+  padding: var(--fr-field-pad, 8px 10px);
+  border: 1px solid var(--fr-border, #ccc);
+  border-radius: var(--fr-radius, 6px);
+  width: 90px;           /* fixed width — enough for a 5-digit weight */
+  box-sizing: border-box;
+  text-align: right;
+}
+```
+
+> **Note:** Add `inputmode="decimal"` as an HTML attribute on every number `<input>` in this roster so mobile keyboards open the numeric pad automatically.
+
+Text fields (`saltBatchCode`, `bakingSodaBatchCode`, `sugarBatchCode`) also receive the standard `.fr-field input` height and padding.
+
+**Attach the `data-compact` attribute** to the roster's wrapper element when the flag is active:
+```js
+// in the roster render function, when roster.compactSizeRange is true:
+rosterEl.setAttribute('data-compact', '1');
+```
+
+---
+
+### 2.4 Change 3 — "Add weight" button: inline, next to weight(kg) field, submit-button style
+
+The "Add weight" action (which saves/adds the current roster row) must sit **immediately to the right of the `shuckWeight` (Shuck weight kg) input**, on the same line, with no line break between them.
+
+Style it identically to the form's existing primary submit button — same background colour, same height, same font size, same border-radius, same padding. It is an inline-flex element, not a block/full-width element.
+
+**Layout target:**
+```
+[ Shuck weight (kg) ___90px___ ]  [ Add weight ]  ← same row, no wrap
+```
+
+**CSS:**
+```css
+.fr-roster[data-compact] .fr-roster-add-btn {
+  display: inline-flex;
+  align-items: center;
+  height: var(--fr-field-height, 40px);       /* same height as the weight input */
+  padding: 0 16px;
+  font-size: var(--fr-field-font, 15px);
+  background: var(--fr-submit-bg, #a0763a);   /* same colour as submit button */
+  color: var(--fr-submit-text, #fff);
+  border: none;
+  border-radius: var(--fr-radius, 6px);
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+.fr-roster[data-compact] .fr-roster-add-btn:hover {
+  opacity: 0.88;
+}
+```
+
+**Label:** keep as `Add weight` — no text change, only position and style.
+
+**Placement:** render the button inside the same flex/grid cell as `shuckWeight`, or in an adjacent cell with `display: flex; align-items: center` so they stay on one line. Do not put it in its own full-width row.
+
+---
+
+### 2.5 Version bump
+
+After any change to `form-record.js`, bump `?v=N` by 1 in every HTML file that references it:
 ```bash
 grep -rl "form-record.js" public/records/
 ```
-Increment the version number by 1 in each file found.
 
 ---
 
@@ -210,9 +197,9 @@ Increment the version number by 1 in each file found.
 
 | File | Change |
 |------|--------|
-| `public/data/record-defs/salting-and-tumbling.json` | Add `lotBarcode` field to Job info; add `"tabletWeightEntry": true` to roster |
+| `public/data/record-defs/salting-and-tumbling.json` | Add `lotBarcode` field to Job info; add `"compactSizeRange": true` to roster object |
 | `public/records/REC-7.1.3-salting-and-tumbling.html` | Add `barcode-scan.js` script tag + `BarcodeScan.attach` call |
-| `public/lib/form-record.js` | Add tablet weight-card render path gated on `tabletWeightEntry`; add CSS; bump version |
+| `public/lib/form-record.js` | Add `compactSizeRange` render path (compact select, job-info-matched inputs, inline Add button); add CSS; bump version |
 | All HTML files referencing `form-record.js` | Bump `?v=N` query param |
 | DB (`RecordFieldDef` via Neon console) | Add `lotBarcode` field row for the Job info section of `salting-and-tumbling` |
 
@@ -220,21 +207,21 @@ Increment the version number by 1 in each file found.
 
 ## What does NOT change
 
-- Job info section layout and fields (other than the added `lotBarcode`) — leave exactly as is.
-- Size range selector within the roster — leave exactly as is.
-- All other roster columns (batch ID, start/finish time, derived durations, standard salting time) — data unchanged; only their visual presentation differs on touch devices.
-- Print / PDF output — no change. The `tabletWeightEntry` layout is screen-only; print uses the existing table render.
-- Validation rules, field keys, DB column names — no change.
-- Any other record — `tabletWeightEntry` is an opt-in flag; no other record has it.
+- Job info section — layout and all existing fields unchanged (except the new `lotBarcode` at the bottom).
+- Size range options — the dropdown options list is unchanged; only the rendered width of the element is reduced.
+- Weight field data / keys / validation — unchanged; only the visual size matches job info fields.
+- Print / PDF output — unchanged. `compactSizeRange` flag affects screen render only.
+- Any other record — `compactSizeRange` is opt-in; no other record uses it.
 
 ---
 
 ## Testing checklist
 
-1. **Barcode field hidden for non-admin:** Log in as a standard user; open REC 7.1.3; confirm "Lot barcode" field is not visible.
-2. **Barcode scan for admin:** Log in as Administrator; open REC 7.1.3; confirm "📷 Scan lot" button appears beside the Lot barcode field; tap it; camera modal opens; type a value in the fallback box; confirm field is filled read-only.
-3. **Tablet layout on touch device:** Open REC 7.1.3 on a tablet or Chrome DevTools touch emulation at ≤ 900px; confirm weight fields render as large cards; confirm text batch-code fields render as full-width inputs; confirm "✓ Save" button is present and at least 52px tall.
-4. **Desktop unchanged:** Open on a desktop non-touch browser; confirm the existing roster table renders exactly as before — no card layout.
-5. **PDF unchanged:** Print / export a salting batch PDF; confirm layout and all field values are identical to before.
-6. **Job info unchanged:** Confirm the Job info section (job no., intake date, harvest farm, etc.) is visually and functionally identical to before, except for the new Lot barcode field appearing at the bottom.
-7. **Size range unchanged:** Confirm the size range selector in the roster row still works as before.
+1. **Barcode hidden for non-admin:** Log in as a standard user → "Lot barcode" field not visible.
+2. **Barcode scan for admin:** Log in as Administrator → "📷 Scan lot" button visible → tap → scanner modal opens → type fallback value → field filled read-only.
+3. **Size range compact:** Open a salting batch roster row → size range dropdown is narrow (≤ 130px), not stretched.
+4. **Weight fields match job info:** Compare `shuckWeight` input height, font size and border to a job info text field — they should be visually identical.
+5. **"Add weight" inline:** The Add weight button sits to the right of the shuck weight input on the same line, not on its own row. Its background colour and height match the form's submit button.
+6. **`inputmode` on mobile:** Open on a phone/tablet — tapping a number field opens the numeric/decimal keyboard.
+7. **Desktop unchanged:** On a non-compact roster (any other record) the existing table render is unaffected.
+8. **PDF unchanged:** Export a salting batch PDF — layout and values identical to before.
