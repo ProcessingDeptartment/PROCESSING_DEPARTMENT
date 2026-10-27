@@ -1,6 +1,6 @@
 (function () {
 
-  const LIB_VERSION = '2';
+  const LIB_VERSION = '3';
 
 
   const SELF = document.currentScript && document.currentScript.src;
@@ -15,6 +15,7 @@
     'lib/data-store.js',
     'lib/auth.js',
     'lib/login-ui.js',
+    'lib/nc-login-alert.js',
     'lib/document-revision.js',
     'lib/master-index-data.js',
     'lib/doc-header.js'
