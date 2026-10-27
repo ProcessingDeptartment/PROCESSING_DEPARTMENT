@@ -531,7 +531,7 @@
       html += '<a class="act-btn act-btn-view" href="' + esc(e.href) + '" target="_blank">View</a>';
     }
     if (e.status === 'verified' && e.href && e.entryId) {
-      html += '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.entryId) + '&print=1">PDF</a>';
+      html += '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.entryId) + '&print=1&printonly=1">PDF</a>';
     }
     // Supersede/unsupersede menu (admin, drying-process only, submitted events only)
     if (isAdmin() && e.event === 'submitted' && e.recordKey === 'drying-process' && e.entryId) {
@@ -871,7 +871,7 @@
           const jobCell = e.jobNo ? '<strong>' + esc(e.jobNo) + '</strong>' : esc(e.ref || '—');
           const recCell = (e.docNo ? esc(e.docNo) + ' &mdash; ' : '') + esc(e.name);
           const verDate = e.verifyTs ? dayOf(e.verifyTs) : '—';
-          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1">PDF</a>' : '—';
+          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1&printonly=1">PDF</a>' : '—';
           return '<tr>'
             + '<td>' + jobCell + '</td>'
             + '<td>' + recCell + '</td>'
