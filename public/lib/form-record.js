@@ -345,27 +345,14 @@
   .fr-transposed .fr-tp-cell{ position:relative; }
   .fr-nc-badge{ display:inline-block; background:#c0392b; color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:4px; vertical-align:middle; letter-spacing:.03em; }
   @media print{ .fr-transposed thead th:last-child,.fr-transposed tfoot{ display:none; } }
-  /* Tablet weight-entry cards (roster.tabletWeightEntry) */
-  .fr-wcard-id-strip{ font-size:13px; color:var(--palette-muted,#6b7280); padding:6px 0 4px; border-bottom:1px solid var(--palette-border,#e2e4e3); margin-bottom:8px; display:flex; flex-wrap:wrap; gap:4px 12px; align-items:flex-end; }
-  .fr-wcard-id-strip > .fr-field{ flex:0 0 auto; min-width:0; font-size:13px; }
-  .fr-wcard-group{ display:flex; flex-wrap:wrap; gap:10px; padding:6px 0; }
-  .fr-wcard{ min-width:120px; min-height:80px; background:var(--palette-surface,#f9fafb); border:1px solid var(--palette-border,#e2e4e3); border-radius:8px; padding:8px 10px; display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; }
-  .fr-wcard label{ font-size:12px; color:var(--palette-muted,#6b7280); margin-bottom:4px; white-space:nowrap; text-align:center; }
-  .fr-wcard-input{ width:100%; font-size:22px; text-align:center; border:none; background:transparent; padding:4px 0; color:var(--palette-ink,#1b2330); }
-  .fr-wcard-input:focus{ outline:2px solid var(--palette-primary,#a0763a); border-radius:4px; }
-  .fr-wcard-unit{ font-size:11px; color:var(--palette-muted,#6b7280); margin-top:2px; }
-  .fr-wcard-text{ width:100%; min-height:48px; font-size:16px; padding:10px 12px; border:1px solid var(--palette-border,#e2e4e3); border-radius:8px; box-sizing:border-box; }
-  .fr-wcard-save{ display:block; width:100%; min-height:52px; min-width:100px; font-size:16px; background:var(--palette-primary,#a0763a); color:#fff; border:none; border-radius:8px; margin-top:12px; cursor:pointer; }
-  .fr-roster-row-collapsed > .fr-wcard-id-strip,
-  .fr-roster-row-collapsed > .fr-wcard-group,
-  .fr-roster-row-collapsed > .fr-wcard-save{ display:none; }
-  @media print{ .fr-wcard-id-strip,.fr-wcard-save{ display:none !important; }
-    .fr-wcard-group{ gap:4px; }
-    .fr-wcard{ min-height:auto; min-width:80px; padding:4px 6px; border-radius:4px; }
-    .fr-wcard label{ font-size:9px; }
-    .fr-wcard-input{ font-size:10px; }
-    .fr-wcard-unit{ font-size:8px; }
-    .fr-wcard-text{ min-height:auto; font-size:10px; padding:3px 6px; } }`;
+  /* compactSizeRange roster — compact select, job-info-matched inputs, inline Add weight button */
+  [data-compact] .fr-roster-row [data-col="sizeRange"] select{ width:auto; min-width:90px; max-width:130px; font-size:13px; padding:4px 6px; }
+  [data-compact] .fr-roster-row input[type="number"]{ width:90px; text-align:right; box-sizing:border-box; }
+  .fr-field-with-btn{ display:inline-flex; align-items:flex-end; gap:8px; flex:none; }
+  .fr-field-with-btn > .fr-field{ flex:none; }
+  .fr-roster-add-btn{ display:inline-flex; align-items:center; height:38px; padding:0 14px; font-size:14px; background:var(--palette-primary,#a0763a); color:#fff; border:none; border-radius:6px; cursor:pointer; white-space:nowrap; }
+  .fr-roster-add-btn:hover{ opacity:.88; }
+  @media print{ .fr-roster-add-btn{ display:none; } }`;
 
   function injectStyleOnce() {
     if (document.getElementById('fr-style')) return;
@@ -2282,36 +2269,22 @@
           ${lines.filter(Boolean).map((cols, n) => `<div class="fr-pot-line" data-line="${n}">${cols.map(cell).join('')}</div>`).join('')}
         </div>`;
       }
-      // tabletWeightEntry: large-tap card layout for number fields on touch devices
-      if (roster.tabletWeightEntry && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
-        const identityCols = roster.columns.filter(c => c.type === 'batchseq' || c.type === 'derived' || c.type === 'time' || c.type === 'select');
-        const numberCols = roster.columns.filter(c => c.type === 'number');
-        const textCols = roster.columns.filter(c => c.type === 'text' && !c.hidden);
-        const unitMap = { shuckWeight:'kg', saltKg:'kg', bakingSodaKg:'kg', sugarKg:'kg', saltPercentUsed:'%', sugarPercentUsed:'%' };
-        const identityHtml = identityCols.map(cell).join('');
-        const cardHtml = numberCols.map(c => {
-          const cid = `${ns}_roster_${idx}_${c.key}`;
-          const unit = unitMap[c.key] || (c.unit || '');
-          const v = esc(row[c.key] == null ? '' : row[c.key]);
-          return `<div class="fr-wcard" data-col="${esc(c.key)}">
-            <label for="${cid}">${esc(c.label)}</label>
-            <input type="number" step="0.01" inputmode="decimal" class="fr-wcard-input" id="${cid}" value="${v}">
-            ${unit ? `<span class="fr-wcard-unit">${esc(unit)}</span>` : ''}
-          </div>`;
-        }).join('');
-        const textHtml = textCols.map(c => {
-          const cid = `${ns}_roster_${idx}_${c.key}`;
-          const v = esc(row[c.key] == null ? '' : row[c.key]);
-          return `<label class="fr-field" data-col="${esc(c.key)}">${esc(c.label)}
-            <input type="text" class="fr-wcard-text" id="${cid}" value="${v}">
-          </label>`;
-        }).join('');
+      // compactSizeRange: compact size-range select, job-info-matched number inputs, inline Add weight button
+      if (roster.compactSizeRange) {
+        const compactCell = c => {
+          let h = cell(c);
+          if (c.type === 'number') h = h.replace('<input type="number"', '<input type="number" inputmode="decimal"');
+          return h;
+        };
+        const addWeightBtn = `<button type="button" class="fr-roster-add-btn no-print" data-compact-add>Add weight</button>`;
+        const cols = roster.columns.map(c =>
+          c.key === 'shuckWeight'
+            ? `<div class="fr-field-with-btn">${compactCell(c)}${addWeightBtn}</div>`
+            : compactCell(c)
+        ).join('');
         return `<div class="fr-roster-row" data-roster-row="${idx}">
-          <div class="fr-wcard-id-strip">${identityHtml}</div>
-          <div class="fr-wcard-group">${cardHtml}</div>
-          ${textHtml}
-          <button type="button" class="fr-btn fr-btn-flat fr-btn-sm no-print" data-remove-roster-row="${idx}">✕</button>
-          <button type="button" class="fr-wcard-save no-print" data-roster-save="${idx}">✓ Save</button>
+          ${cols}
+          <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" data-remove-roster-row="${idx}">✕</button>
         </div>`;
       }
       const jn = roster.jobNumbered;
@@ -3144,12 +3117,16 @@
         }, 0);
       });
 
+      if (roster.compactSizeRange) {
+        const rowsContainer = el(rosterDomId('fr_rosterRows', rosterIndex));
+        if (rowsContainer) rowsContainer.setAttribute('data-compact', '1');
+      }
+
       container.addEventListener('click', (e) => {
-        const saveBtn = e.target.closest && e.target.closest('[data-roster-save]');
-        if (saveBtn && canCollapse) {
-          const i = Number(saveBtn.dataset.rosterSave);
-          pinnedOpen = -1;
-          if (rowHasData(i)) { collapsedRows.add(i); applyCollapse(); }
+        const compactAdd = e.target.closest && e.target.closest('[data-compact-add]');
+        if (compactAdd) {
+          const rr = compactAdd.closest('[id^="fr_rosterRows"]');
+          if (rr && rr._addRow) rr._addRow();
           return;
         }
         const btn = e.target.closest && e.target.closest('[data-roster-edit]');
