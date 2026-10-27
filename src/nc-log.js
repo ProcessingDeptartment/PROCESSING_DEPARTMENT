@@ -258,6 +258,7 @@ function mount(app, prisma) {
 
   app.post('/api/nc', async (req, res) => {
     const b = req.body || {};
+    const sourceFieldKey = str(b.source_field_key, 120) || null;
     const data = {
       jobNumber: str(b.job_number, 40),
       recordRef: normRecord(b.record_ref),
@@ -267,12 +268,21 @@ function mount(app, prisma) {
       description: str(b.description, 4000),
       carRequired: yesNo(b.car_required),
       correctiveAction: str(b.corrective_action, 4000),
+      sourceFieldKey,
     };
     if (!data.raisedBy || !data.category || !data.description) {
       return res.status(400).json({ ok: false, error: 'raised_by, category and description are required' });
     }
     if (data.carRequired === null) return res.status(400).json({ ok: false, error: 'car_required is required (yes or no)' });
     try {
+      // Duplicate guard for ncOnYes auto-raises: one minor NC per (submissionId, sourceFieldKey).
+      if (data.submissionId && sourceFieldKey) {
+        const existing = await T.findFirst({ where: { submissionId: data.submissionId, sourceFieldKey, status: { not: 'closed' } } });
+        if (existing) {
+          console.log(`[nc] duplicate guard: NC ${existing.ncRef} already exists for submission ${data.submissionId} / field ${sourceFieldKey}`);
+          return res.status(200).json({ ...existing, duplicate: true });
+        }
+      }
       const [{ n }] = await prisma.$queryRaw`SELECT nextval('nc_ref_seq')::int AS n`;
       data.ncRef = `NC-${new Date().getFullYear()}-${String(n).padStart(4, '0')}`;
       const nc = await T.create({ data });

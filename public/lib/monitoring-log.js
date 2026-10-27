@@ -2454,6 +2454,40 @@
             } catch (e) { console.error('auto NC failed', e); toast('The non-conformance could not be raised (' + e.message + '). Please try submitting again.'); return; }
           }
         }
+        // ncOnYes fields: auto-raise a minor NC for each field answered Yes at Submit (no modal).
+        // Duplicate guard is enforced server-side via source_field_key + submissionId.
+        if (finalize && window.NcRaise.create) {
+          const ncOnYesFields = (config.entryFields || []).filter(f => f.ncOnYes && values[f.key] === 'Yes');
+          const subId = editingId || formEntryId || '';
+          const jobNo = String(values[jobKeyOf()] || '').trim();
+          const entryDateVal = values.entryDate || '—';
+          for (const f of ncOnYesFields) {
+            const ncKey = 'ncOnYes:' + f.key;
+            if (ncHandled.has(ncKey)) continue;
+            const descriptions = {
+              footDamage:    `Foot damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
+              muscleDamage:  `Muscle damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
+              presenceOfGuts:`Presence of guts observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
+            };
+            const description = descriptions[f.key] || `${f.label} — Yes during dry room check. Job ${jobNo}, Entry date ${entryDateVal}`;
+            const note = window.NcRaise.yesNoBannerNote ? window.NcRaise.yesNoBannerNote(el(`${ns}_modalFields`), k => `${ns}_f_${k}`, f.key) : '';
+            try {
+              const nc = await window.NcRaise.create({
+                recordRef: docCode, jobNumber: jobNo, submissionId: subId,
+                category: 'Product quality', description,
+                correctiveAction: note || '',
+                sourceFieldKey: f.key,
+              });
+              ncHandled.add(ncKey); pendingNc.push(nc.ncRef);
+            } catch (e) {
+              if (e && e.duplicate) { ncHandled.add(ncKey); continue; } // duplicate guard: server said NC already exists
+              console.error('ncOnYes auto NC failed', e);
+              toast('The non-conformance could not be raised (' + e.message + '). Please try submitting again.');
+              return;
+            }
+          }
+        }
+
         if (config.ncAlways && !ncHandled.size && !pendingNc.length && !(existingForStage && existingForStage.nc_refs)) {
           breaches.push({ key: '__always', category: 'Other', severity: 'minor', description: '' });
         }
@@ -3641,6 +3675,10 @@ function fallbackDl(canvas,filename){
       el(`${ns}_saveBtn`).addEventListener('click', () => ctrl.saveForm(!submitFlow));
       if (el(`${ns}_ncBtn`)) el(`${ns}_ncBtn`).addEventListener('click', () => ctrl.raiseNc());
       if (window.NcRaise && ns === 'ml_p' && config.ncThresholds) window.NcRaise.wireInline(el(`${ns}_modalFields`), window.SpecGate ? window.SpecGate.liveThresholds(config) : config.ncThresholds, f => `${ns}_f_${f}`);
+      if (window.NcRaise && window.NcRaise.wireYesNoBanners) {
+        const ncOnYesFields = (config.entryFields || []).filter(f => f.ncOnYes).map(f => ({ key: f.key, commentKey: f.commentKey, commentMaxLength: f.commentMaxLength }));
+        if (ncOnYesFields.length) window.NcRaise.wireYesNoBanners(el(`${ns}_modalFields`), ncOnYesFields, f => `${ns}_f_${f}`);
+      }
       if (window.SpecGate) window.SpecGate.wire(el(`${ns}_modalFields`), window.SpecGate.collectSpecs(config));
       if (submitFlow) el(`${ns}_submitBtn`).addEventListener('click', () => ctrl.saveForm(true));
       el(`${ns}_exportCsvBtn`).addEventListener('click', () => ctrl.exportCsv());

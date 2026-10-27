@@ -209,16 +209,80 @@
       body: JSON.stringify({ submission_id: submissionId, updated_by: userName() || 'Unknown' }) }).catch(function () { });
   }
 
-  // Raise an NC without the modal (REC 7.4.2 scored checks, config.scoring.autoNc). opts: { recordRef, jobNumber,
-  // submissionId, category, description, correctiveAction, carRequired('yes'|'no') }. Resolves the saved NC, rejects on failure.
+  // Raise an NC without the modal. opts: { recordRef, jobNumber, submissionId, category, description,
+  // correctiveAction, carRequired('yes'|'no'), sourceFieldKey }. Resolves the saved NC, rejects on failure.
+  // When the server returns duplicate:true the promise resolves with that flag set so the caller can skip.
   function create(opts) {
     var body = { record_ref: opts.recordRef, job_number: opts.jobNumber || '', submission_id: opts.submissionId || '',
       raised_by: userName() || 'System', category: opts.category || 'Other', car_required: opts.carRequired || 'no',
-      description: opts.description, corrective_action: opts.correctiveAction || '' };
+      description: opts.description, corrective_action: opts.correctiveAction || '',
+      source_field_key: opts.sourceFieldKey || undefined };
     return api('/api/nc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); });
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (nc) { if (nc.duplicate) { var e = new Error('duplicate'); e.duplicate = true; throw e; } return nc; });
   }
 
-  window.NcRaise = { open: open, create: create, findBreaches: findBreaches, wireInline: wireInline, buttonHtml: buttonHtml,
-    bannerHtml: bannerHtml, hydrateBanners: hydrateBanners, recordUpdated: recordUpdated };
+  // Inline amber banners for ncOnYes yesno fields.
+  // fields: [{ key, commentKey }]; idFor(key) -> DOM id of the yesno span; commentIdFor(key) -> DOM id of comment textarea.
+  // Shows a ⚠ banner with optional comment box when Yes is selected; dismisses on No or None.
+  function wireYesNoBanners(root, fields, idFor, commentIdFor) {
+    if (!root || !fields || !fields.length || root._ncYesNo) return;
+    root._ncYesNo = true; injectCss();
+
+    var BANNER_CLASS = 'nc-yesno-warn';
+    var css2 = '.' + BANNER_CLASS + '{display:block;margin:4px 0 6px;padding:8px 10px;background:#fff3dc;border-left:3px solid #d98200;color:#7a4a00;font-size:12px;font-weight:600;border-radius:3px}'
+      + '.' + BANNER_CLASS + ' .nc-yesno-note{display:block;margin-top:6px;font-weight:400}'
+      + '.' + BANNER_CLASS + ' textarea{width:100%;box-sizing:border-box;margin-top:4px;padding:5px 7px;font:12px inherit;font-family:inherit;border:1px solid #d98200;border-radius:4px;resize:vertical;min-height:52px}'
+      + '@media print{.' + BANNER_CLASS + '{display:none!important}}';
+    var s = document.createElement('style'); s.textContent = css2; document.head.appendChild(s);
+
+    function getBanner(fieldKey) { return root.querySelector('.' + BANNER_CLASS + '[data-for="' + fieldKey + '"]'); }
+
+    function showBanner(fieldKey, commentKey, commentMaxLength) {
+      if (getBanner(fieldKey)) return;
+      var span = idFor ? root.querySelector('[data-yesno-for="' + idFor(fieldKey).replace(/^#/, '') + '"]') || document.getElementById(idFor(fieldKey)) : null;
+      // find the yesno span by data-yesno-for attribute
+      var yesnoSpan = root.querySelector('[data-yesno-for]') && root.querySelector('span[data-yesno-for]');
+      // Walk up from the Yes button to find the field container
+      var anchor = root.querySelector('#' + CSS.escape(idFor(fieldKey)));
+      if (!anchor) return;
+      var banner = document.createElement('span');
+      banner.className = BANNER_CLASS; banner.setAttribute('data-for', fieldKey);
+      var maxLen = commentMaxLength || 500;
+      banner.innerHTML = '⚠ A minor NC will be raised for this check on Submit.'
+        + '<span class="nc-yesno-note">Add a note below (optional but recommended):'
+        + '<textarea id="' + CSS.escape(idFor(fieldKey)) + '_ncnote" maxlength="' + maxLen + '" placeholder="What was observed? (max ' + maxLen + ' chars)"></textarea></span>';
+      anchor.after(banner);
+    }
+
+    function hideBanner(fieldKey) {
+      var b = getBanner(fieldKey);
+      if (b) b.remove();
+    }
+
+    root.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('.ml-yesno button');
+      if (!btn) return;
+      var span = btn.closest('.ml-yesno');
+      if (!span) return;
+      var forKey = span.getAttribute('data-yesno-for');
+      if (!forKey) return;
+      var field = fields.find(function (f) { return idFor(f.key) === forKey; });
+      if (!field) return;
+      var val = btn.getAttribute('data-v');
+      if (val === 'Yes') showBanner(field.key, field.commentKey, field.commentMaxLength);
+      else hideBanner(field.key);
+    });
+  }
+
+  // Returns the optional operator note from the inline banner for a given field key.
+  function yesNoBannerNote(root, idFor, fieldKey) {
+    if (!root) return '';
+    var ta = root.querySelector('#' + CSS.escape(idFor(fieldKey)) + '_ncnote');
+    return ta ? ta.value.trim().slice(0, 500) : '';
+  }
+
+  window.NcRaise = { open: open, create: create, findBreaches: findBreaches, wireInline: wireInline,
+    wireYesNoBanners: wireYesNoBanners, yesNoBannerNote: yesNoBannerNote,
+    buttonHtml: buttonHtml, bannerHtml: bannerHtml, hydrateBanners: hydrateBanners, recordUpdated: recordUpdated };
 })();
