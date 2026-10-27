@@ -59,8 +59,8 @@
   }
 
   function apiFetch(path) {
-    var url = apiBase() + path;
-    return window.FacilityApi ? window.FacilityApi.fetch(url) : fetch(url);
+    if (window.FacilityApi) return window.FacilityApi.fetch(path);
+    return fetch(apiBase() + path);
   }
 
   function fetchOpenNCs() {
