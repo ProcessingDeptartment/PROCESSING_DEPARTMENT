@@ -118,11 +118,15 @@
     document.addEventListener('DOMContentLoaded', function () { applyRole(currentUser); });
   }
 
-  async function verifyPasskey(input) {
+  async function verifyPasskey(pin) {
     try {
-      const raw = await window.storage.get('admin_passkey', true);
-      const stored = raw && raw.value ? raw.value : '';
-      return stored && input === stored;
+      const res = await fetch(apiBase() + '/api/passkey/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passkey: pin })
+      });
+      const data = await res.json();
+      return !!data.ok;
     } catch (e) {
       return false;
     }
