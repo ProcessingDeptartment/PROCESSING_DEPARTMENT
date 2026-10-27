@@ -1324,6 +1324,8 @@ const isArchived = !!archived[id];
       msg.style.color = '#15803d';
       msg.textContent = `Saved — ${row ? row.docNo + ' ' + row.name : recordKey} set to Rev ${entry.revisionNumber} (${revDate}).`;
       saveBtn.textContent = 'Saved ✓';
+      await loadLive();
+      render();
       setTimeout(closeRevModal, 1800);
     } catch (e) {
       msg.style.color = '#dc2626';
