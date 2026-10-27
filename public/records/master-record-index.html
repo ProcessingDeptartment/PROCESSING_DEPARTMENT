@@ -712,7 +712,7 @@ const isArchived = !!archived[id];
       else if (status === 'unlisted') ok = ok && unlisted && !isArchived;
       else if (status === 'added')    ok = ok && added && !isArchived;
       else if (status === 'archived') ok = ok && isArchived;
-      else /* 'all' */                ok = ok && !isArchived;
+      else /* 'all' */                ok = ok;
       if (ok && q) {
         ok = row.textContent.toLowerCase().includes(q);
       }
