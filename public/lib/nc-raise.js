@@ -223,41 +223,45 @@
   }
 
   // Inline amber banners for ncOnYes yesno fields.
-  // fields: [{ key, commentKey }]; idFor(key) -> DOM id of the yesno span; commentIdFor(key) -> DOM id of comment textarea.
-  // Shows a ⚠ banner with optional comment box when Yes is selected; dismisses on No or None.
-  function wireYesNoBanners(root, fields, idFor, commentIdFor) {
+  // fields: [{ key, commentKey, commentMaxLength }]; idFor(key) -> the value of data-yesno-for on the span.
+  // Shows a ⚠ alert line + a plain textarea when Yes is selected; dismisses on No/None.
+  function wireYesNoBanners(root, fields, idFor) {
     if (!root || !fields || !fields.length || root._ncYesNo) return;
     root._ncYesNo = true; injectCss();
 
-    var BANNER_CLASS = 'nc-yesno-warn';
-    var css2 = '.' + BANNER_CLASS + '{display:block;margin:4px 0 6px;padding:8px 10px;background:#fff3dc;border-left:3px solid #d98200;color:#7a4a00;font-size:12px;font-weight:600;border-radius:3px}'
-      + '.' + BANNER_CLASS + ' .nc-yesno-note{display:block;margin-top:6px;font-weight:400}'
-      + '.' + BANNER_CLASS + ' textarea{width:100%;box-sizing:border-box;margin-top:4px;padding:5px 7px;font:12px inherit;font-family:inherit;border:1px solid #d98200;border-radius:4px;resize:vertical;min-height:52px}'
-      + '@media print{.' + BANNER_CLASS + '{display:none!important}}';
+    var css2 = '.nc-yesno-alert{display:flex;align-items:center;gap:6px;margin:5px 0 0;padding:6px 9px;'
+      + 'background:#fff3dc;border:1px solid #e6b840;border-radius:4px;font-size:12px;font-weight:600;color:#7a4a00}'
+      + '.nc-yesno-note{margin-top:5px}'
+      + '.nc-yesno-note label{display:block;margin-bottom:3px;font-size:11.5px;font-weight:600;color:#54606b}'
+      + '.nc-yesno-note textarea{display:block;width:100%;box-sizing:border-box;padding:6px 8px;'
+      + 'font:13px/1.4 inherit;font-family:inherit;border:1px solid #b9bfc6;border-radius:5px;'
+      + 'background:#fff;color:#1d2125;resize:vertical;min-height:56px}'
+      + '.nc-yesno-note textarea:focus{outline:2px solid #2f5d8a;outline-offset:1px;border-color:#2f5d8a}'
+      + '@media print{.nc-yesno-alert,.nc-yesno-note{display:none!important}}';
     var s = document.createElement('style'); s.textContent = css2; document.head.appendChild(s);
 
-    function getBanner(fieldKey) { return root.querySelector('.' + BANNER_CLASS + '[data-for="' + fieldKey + '"]'); }
+    function getWrap(fieldKey) { return root.querySelector('.nc-yesno-wrap[data-for="' + fieldKey + '"]'); }
 
-    function showBanner(fieldKey, commentKey, commentMaxLength) {
-      if (getBanner(fieldKey)) return;
-      var span = idFor ? root.querySelector('[data-yesno-for="' + idFor(fieldKey).replace(/^#/, '') + '"]') || document.getElementById(idFor(fieldKey)) : null;
-      // find the yesno span by data-yesno-for attribute
-      var yesnoSpan = root.querySelector('[data-yesno-for]') && root.querySelector('span[data-yesno-for]');
-      // Walk up from the Yes button to find the field container
-      var anchor = root.querySelector('#' + CSS.escape(idFor(fieldKey)));
-      if (!anchor) return;
-      var banner = document.createElement('span');
-      banner.className = BANNER_CLASS; banner.setAttribute('data-for', fieldKey);
-      var maxLen = commentMaxLength || 500;
-      banner.innerHTML = '⚠ A minor NC will be raised for this check on Submit.'
-        + '<span class="nc-yesno-note">Add a note below (optional but recommended):'
-        + '<textarea id="' + CSS.escape(idFor(fieldKey)) + '_ncnote" maxlength="' + maxLen + '" placeholder="What was observed? (max ' + maxLen + ' chars)"></textarea></span>';
-      anchor.after(banner);
+    function showBanner(field) {
+      if (getWrap(field.key)) return;
+      var spanId = idFor(field.key);
+      var yesnoSpan = root.querySelector('[data-yesno-for="' + spanId + '"]');
+      if (!yesnoSpan) return;
+      var maxLen = field.commentMaxLength || 500;
+      var taId = spanId + '_ncnote';
+      var wrap = document.createElement('div');
+      wrap.className = 'nc-yesno-wrap'; wrap.setAttribute('data-for', field.key);
+      wrap.innerHTML = '<div class="nc-yesno-alert">⚠ A minor NC will be raised for this check on Submit.</div>'
+        + '<div class="nc-yesno-note">'
+        + '<label for="' + esc(taId) + '">Add a note (optional — max ' + maxLen + ' chars):</label>'
+        + '<textarea id="' + esc(taId) + '" maxlength="' + maxLen + '" placeholder="Describe what was observed…" rows="2"></textarea>'
+        + '</div>';
+      yesnoSpan.insertAdjacentElement('afterend', wrap);
     }
 
     function hideBanner(fieldKey) {
-      var b = getBanner(fieldKey);
-      if (b) b.remove();
+      var w = getWrap(fieldKey);
+      if (w) w.remove();
     }
 
     root.addEventListener('click', function (e) {
@@ -265,12 +269,12 @@
       if (!btn) return;
       var span = btn.closest('.ml-yesno');
       if (!span) return;
-      var forKey = span.getAttribute('data-yesno-for');
-      if (!forKey) return;
-      var field = fields.find(function (f) { return idFor(f.key) === forKey; });
+      var spanId = span.getAttribute('data-yesno-for');
+      if (!spanId) return;
+      var field = fields.find(function (f) { return idFor(f.key) === spanId; });
       if (!field) return;
       var val = btn.getAttribute('data-v');
-      if (val === 'Yes') showBanner(field.key, field.commentKey, field.commentMaxLength);
+      if (val === 'Yes') showBanner(field);
       else hideBanner(field.key);
     });
   }
@@ -278,7 +282,7 @@
   // Returns the optional operator note from the inline banner for a given field key.
   function yesNoBannerNote(root, idFor, fieldKey) {
     if (!root) return '';
-    var ta = root.querySelector('#' + CSS.escape(idFor(fieldKey)) + '_ncnote');
+    var ta = document.getElementById(idFor(fieldKey) + '_ncnote');
     return ta ? ta.value.trim().slice(0, 500) : '';
   }
 
