@@ -2454,29 +2454,55 @@
             } catch (e) { console.error('auto NC failed', e); toast('The non-conformance could not be raised (' + e.message + '). Please try submitting again.'); return; }
           }
         }
-        // ncOnYes fields: auto-raise a minor NC for each field answered Yes at Submit (no modal).
-        // Duplicate guard is enforced server-side via source_field_key + submissionId.
+        // ncOnYes fields: auto-raise a minor NC for each field (or group) answered Yes at Submit.
+        // Fields sharing the same ncGroup raise one combined NC instead of one each.
+        // Duplicate guard is enforced server-side via source_field_key + recordRef + jobNumber.
         if (finalize && window.NcRaise.create) {
           const ncOnYesFields = (config.entryFields || []).filter(f => f.ncOnYes && values[f.key] === 'Yes');
           const subId = editingId || formEntryId || '';
           const jobNo = String(values[jobKeyOf()] || '').trim();
           const entryDateVal = values.entryDate || '—';
+
+          // Group by ncGroup; ungrouped fields use their own key as the group.
+          const groups = {};
           for (const f of ncOnYesFields) {
-            const ncKey = 'ncOnYes:' + f.key;
+            const gk = f.ncGroup || f.key;
+            if (!groups[gk]) groups[gk] = [];
+            groups[gk].push(f);
+          }
+
+          for (const [groupKey, fields] of Object.entries(groups)) {
+            const ncKey = 'ncOnYes:' + groupKey;
             if (ncHandled.has(ncKey)) continue;
-            const descriptions = {
-              footDamage:    `Foot damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
-              muscleDamage:  `Muscle damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
-              presenceOfGuts:`Presence of guts observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
-            };
-            const description = descriptions[f.key] || `${f.label} — Yes during dry room check. Job ${jobNo}, Entry date ${entryDateVal}`;
-            const note = window.NcRaise.yesNoBannerNote ? window.NcRaise.yesNoBannerNote(el(`${ns}_modalFields`), k => `${ns}_f_${k}`, f.key) : '';
+
+            // Build description listing the specific issues found in this group.
+            let description;
+            if (fields.length === 1) {
+              const singleDescs = {
+                footDamage:    `Foot damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
+                muscleDamage:  `Muscle damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
+                presenceOfGuts:`Presence of guts observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
+              };
+              description = singleDescs[fields[0].key] || `${fields[0].label} — Yes during dry room check. Job ${jobNo}, Entry date ${entryDateVal}`;
+            } else {
+              const issueList = fields.map(f => f.label.replace(/\?$/, '').trim().toLowerCase());
+              const last = issueList.pop();
+              const readable = issueList.length ? issueList.join(', ') + ' and ' + last : last;
+              description = `Product condition: ${readable} observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`;
+            }
+
+            // Collect any per-field notes from the Yes/No banners.
+            const noteLines = fields.map(f => {
+              const n = window.NcRaise.yesNoBannerNote ? window.NcRaise.yesNoBannerNote(el(`${ns}_modalFields`), k => `${ns}_f_${k}`, f.key) : '';
+              return n ? `${f.label}: ${n}` : '';
+            }).filter(Boolean);
+
             try {
               const nc = await window.NcRaise.create({
                 recordRef: docCode, jobNumber: jobNo, submissionId: subId,
                 category: 'Product quality', description,
-                correctiveAction: note || '',
-                sourceFieldKey: f.key,
+                correctiveAction: noteLines.join('\n') || '',
+                sourceFieldKey: groupKey,
               });
               ncHandled.add(ncKey); pendingNc.push(nc.ncRef);
             } catch (e) {
