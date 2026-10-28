@@ -5099,6 +5099,7 @@ function fallbackDl(canvas,filename){
     renderTable();
     refreshVerification();
     loadReferencedIn(config);
+    if (config.recordKey) checkCertRevisionBanner(config.recordKey);
     // REC 7.4.5: the roster fills itself with the closed boxes awaiting inspection.
     if (config.boxInspection && window.BoxInspection) { await window.BoxInspection.refresh(); if (!editingId) openForm(null); }
 
@@ -5217,5 +5218,105 @@ function fallbackDl(canvas,filename){
     });
   }
 
-  window.FormRecord = { init };
+  // Cert-revision banner: shown when a pending CertRecordReview exists for this record.
+  async function checkCertRevisionBanner(recordKey) {
+    try {
+      var apiBase = (window._apiBase || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
+      var res = await fetch(apiBase + '/api/cert-revisions/pending-for-record/' + encodeURIComponent(recordKey));
+      if (!res.ok) return;
+      var pending = await res.json();
+      if (!pending || !pending.length) return;
+
+      var banner = document.createElement('div');
+      banner.className = 'fr-cert-review-banner';
+      banner.innerHTML =
+        '<div class="fr-cert-review-banner__icon">⚠️</div>' +
+        '<div class="fr-cert-review-banner__body">' +
+          '<strong>Certification update — review required</strong>' +
+          '<p>This form\'s standard(s) have been updated. A QA Manager or Quality Supervisor ' +
+          'must confirm it still complies before new entries are made.</p>' +
+          '<ul>' + pending.map(function(r) {
+            return '<li><strong>' + (r.certLabel||'') + '</strong> → v' + (r.newVersion||'') +
+              ' (' + new Date(r.detectedDate).toLocaleDateString('en-ZA') + ')</li>';
+          }).join('') + '</ul>' +
+          '<button class="fr-cert-review-banner__btn" data-reviews=\'' + JSON.stringify(pending).replace(/'/g,'&#39;') + '\'>' +
+            'Mark as reviewed' +
+          '</button>' +
+        '</div>';
+
+      var container = document.querySelector('.fr-record-container') || document.querySelector('main') || document.body;
+      container.insertBefore(banner, container.firstChild);
+
+      banner.querySelector('.fr-cert-review-banner__btn').addEventListener('click', function(e) {
+        var reviews = JSON.parse(e.currentTarget.dataset.reviews);
+        openCertReviewDialog(reviews, banner);
+      });
+    } catch(err) {
+      console.warn('cert banner check failed:', err);
+    }
+  }
+
+  function openCertReviewDialog(reviews, banner) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:8px;padding:24px;max-width:480px;width:90%;font-family:inherit;font-size:13px';
+    box.innerHTML =
+      '<h3 style="margin:0 0 12px;font-size:15px;color:#1d2b38">Sign off certification review</h3>' +
+      '<p style="color:#5c6771;margin:0 0 14px">' + reviews.map(function(r){ return r.certLabel + ' → v' + r.newVersion; }).join(', ') + '</p>' +
+      '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Outcome</label>' +
+      '<select id="crOutcome" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;margin-bottom:10px">' +
+        '<option value="reviewed-no-change">No change required — form still complies</option>' +
+        '<option value="updated">Form has been updated to comply</option>' +
+      '</select>' +
+      '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Note</label>' +
+      '<textarea id="crNote" rows="2" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;box-sizing:border-box;margin-bottom:10px" placeholder="Optional review note…"></textarea>' +
+      '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Your name *</label>' +
+      '<input id="crName" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;box-sizing:border-box;margin-bottom:10px" placeholder="Full name">' +
+      '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Passkey *</label>' +
+      '<input id="crPasskey" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;box-sizing:border-box;margin-bottom:16px" placeholder="Your initials-code">' +
+      '<div id="crMsg" style="margin-bottom:10px"></div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button id="crSubmitBtn" style="padding:8px 18px;background:#1d2b38;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600">Submit sign-off</button>' +
+        '<button id="crCancelBtn" style="padding:8px 14px;background:#f3f4f6;border:none;border-radius:4px;cursor:pointer;font-size:13px">Cancel</button>' +
+      '</div>';
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    box.querySelector('#crCancelBtn').addEventListener('click', function() { document.body.removeChild(overlay); });
+
+    box.querySelector('#crSubmitBtn').addEventListener('click', async function() {
+      var outcome = box.querySelector('#crOutcome').value;
+      var note    = box.querySelector('#crNote').value.trim();
+      var name    = box.querySelector('#crName').value.trim();
+      var passkey = box.querySelector('#crPasskey').value.trim();
+      var msgEl   = box.querySelector('#crMsg');
+
+      if (!name || !passkey) { msgEl.innerHTML = '<span style="color:#dc2626">Name and passkey are required.</span>'; return; }
+
+      this.disabled = true;
+      msgEl.innerHTML = '<span style="color:#6b7280">Saving…</span>';
+
+      var apiBase = (window._apiBase || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
+      var ok = true;
+      for (var i = 0; i < reviews.length; i++) {
+        try {
+          var r = await fetch(apiBase + '/api/cert-revisions/record-review/' + reviews[i].reviewId, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: outcome, reviewedBy: name, reviewNote: note || null, passkey }),
+          });
+          if (!r.ok) { var d = await r.json(); throw new Error(d.error || r.statusText); }
+        } catch(err) { ok = false; msgEl.innerHTML = '<span style="color:#dc2626">' + err.message + '</span>'; this.disabled = false; return; }
+      }
+      if (ok) {
+        document.body.removeChild(overlay);
+        if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+      }
+    });
+  }
+
+  window.FormRecord = { init, checkCertRevisionBanner };
 })();

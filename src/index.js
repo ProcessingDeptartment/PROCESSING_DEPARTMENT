@@ -1247,6 +1247,7 @@ app.get('/api/template-history/:recordKey', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+require('./certRevisions').mount(app, prisma); // certification version-update tracking
 require('./refs')(app, prisma); // document cross-reference registry
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
 require('./device-enroll')(app, prisma, API_KEY); // passkey -> access key for a new device

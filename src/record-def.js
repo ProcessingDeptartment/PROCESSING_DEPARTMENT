@@ -118,4 +118,22 @@ async function assembleRecordConfig(prisma, recordKey) {
   return { engine: def.engine, version: def.version, config: cfg };
 }
 
-module.exports = { assembleRecordConfig };
+// Assembles a lightweight summary of every record definition for the cert-analysis agent.
+// Returns [{ recordKey, title, docCode, sectionTitles, fieldLabels }].
+async function assembleAllRecordSummaries(prisma) {
+  const defs = await prisma.recordDefinition.findMany({
+    include: {
+      sections: { orderBy: { position: 'asc' } },
+      fields:   { orderBy: { position: 'asc' } },
+    },
+  });
+  return defs.map((def) => ({
+    recordKey:     def.recordKey,
+    title:         def.title || def.recordKey,
+    docCode:       def.docCode || null,
+    sectionTitles: def.sections.filter((s) => s.title).map((s) => s.title),
+    fieldLabels:   def.fields.filter((f) => f.label).map((f) => f.label),
+  }));
+}
+
+module.exports = { assembleRecordConfig, assembleAllRecordSummaries };

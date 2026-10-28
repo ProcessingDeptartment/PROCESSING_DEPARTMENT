@@ -1979,3 +1979,24 @@ body.rt-tablet .rt-content .fr-badge-ok, body.rt-tablet .rt-content .fr-badge-fa
 @media print {
   .ref-panel { display: none !important; }
 }
+
+/* Certification update review banner (form-record.js checkCertRevisionBanner) */
+.fr-cert-review-banner {
+  display: flex; gap: .75rem;
+  background: #fff8e1; border: 2px solid #f59e0b;
+  border-radius: 6px; padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem; font-size: .9rem;
+}
+.fr-cert-review-banner__icon { font-size: 1.4rem; line-height: 1; }
+.fr-cert-review-banner__body strong { display: block; color: #92400e; }
+.fr-cert-review-banner__body p,
+.fr-cert-review-banner__body ul { color: #78350f; margin: .25rem 0; }
+.fr-cert-review-banner__body ul { padding-left: 1.25rem; }
+.fr-cert-review-banner__btn {
+  margin-top: .75rem; padding: .4rem 1rem;
+  background: #f59e0b; color: #fff;
+  border: none; border-radius: 4px;
+  cursor: pointer; font-weight: 600;
+}
+.fr-cert-review-banner__btn:hover { background: #d97706; }
+@media print { .fr-cert-review-banner { display: none; } }

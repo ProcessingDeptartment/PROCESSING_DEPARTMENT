@@ -6069,3 +6069,48 @@ model BarcodeMember {
   @@unique([barcodeId, memberValue])
   @@index([memberValue])
 }
+
+// ---------------------------------------------------------------------------------------------
+// Certification version tracking (MD/certification-version-update-instructions.md).
+// When a standard is updated, an admin logs the revision, an AI agent proposes which record forms
+// are affected, the admin confirms the list, and banner-flags are shown on those forms until a
+// QA Manager or Quality Supervisor signs off each one.
+// ---------------------------------------------------------------------------------------------
+model CertRevision {
+  id                String             @id @default(cuid())
+  certId            String             // e.g. "SANS-2329"
+  certLabel         String
+  prevVersion       String?
+  newVersion        String
+  detectedDate      DateTime           @default(now())
+  detectedBy        String             // email
+  sourceFile        String?            // uploaded PDF filename
+  notes             String?            // what changed in this version
+  agentSuggestion   String?            // raw JSON from agent (for audit)
+  reviewStatus      String             @default("draft") // draft | pending | complete
+  reviewCompletedAt DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  recordReviews     CertRecordReview[]
+
+  @@index([certId])
+  @@index([reviewStatus])
+}
+
+model CertRecordReview {
+  id             String       @id @default(cuid())
+  certRevisionId String
+  certRevision   CertRevision @relation(fields: [certRevisionId], references: [id])
+  recordKey      String
+  recordLabel    String?
+  agentReason    String?
+  status         String       @default("pending") // pending | reviewed-no-change | updated
+  reviewedAt     DateTime?
+  reviewedBy     String?
+  reviewNote     String?
+  passkey        String?
+  createdAt      DateTime     @default(now())
+
+  @@index([certRevisionId])
+  @@index([recordKey, status])
+}
