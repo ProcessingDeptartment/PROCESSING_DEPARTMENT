@@ -2665,7 +2665,7 @@
             record_ref: docCode,
             job_number: String(values[jobKeyOf()] || '').trim(),
             submission_id: savedEntry.id || '',
-            submitted_by: userName ? userName() : '',
+            submitted_by: completedBy && completedBy.by ? completedBy.by : '',
             values,
           }),
         }).then(function (r) { return r.json(); }).then(function (data) {
