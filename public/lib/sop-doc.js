@@ -230,11 +230,9 @@
       const map = new Map();
       const rows = window.MasterIndexData && window.MasterIndexData.rows;
       if (!rows) return map;
-      for (const cat of rows) {
-        for (const row of (cat.items || [])) {
-          if (row.docNo && row.href) {
-            map.set(row.docNo.replace(/\s+/g,'').toUpperCase(), '../records/' + row.href);
-          }
+      for (const row of rows) {
+        if (row.docNo && row.href) {
+          map.set(row.docNo.replace(/\s+/g,'').toUpperCase(), '../records/' + row.href);
         }
       }
       return map;
