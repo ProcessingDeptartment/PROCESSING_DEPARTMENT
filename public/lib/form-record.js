@@ -5098,6 +5098,7 @@ function fallbackDl(canvas,filename){
     await load();
     renderTable();
     refreshVerification();
+    loadReferencedIn(config);
     // REC 7.4.5: the roster fills itself with the closed boxes awaiting inspection.
     if (config.boxInspection && window.BoxInspection) { await window.BoxInspection.refresh(); if (!editingId) openForm(null); }
 
@@ -5155,6 +5156,37 @@ function fallbackDl(canvas,filename){
     }
   }
 
+
+  async function loadReferencedIn(config) {
+    if (!config.docCode) return;
+    if (window.PermissionRules && !window.PermissionRules.can('viewDocuments')) return;
+    const recordKey = (config.docCode || '').replace(/\s+/g, '-').toUpperCase();
+    const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+    const apiKey = (() => { try { return localStorage.getItem('facility_api_key') || ''; } catch { return ''; } })();
+    try {
+      const h = {};
+      if (apiKey) h.Authorization = 'Bearer ' + apiKey;
+      const res = await fetch(API_BASE + '/api/refs/by-target?type=record&key=' + encodeURIComponent(recordKey), { headers: h });
+      if (!res.ok) return;
+      const refs = await res.json();
+      if (!Array.isArray(refs) || !refs.length) return;
+      const panel = document.createElement('section');
+      panel.className = 'ref-panel';
+      panel.innerHTML = '<h3 class="ref-panel__title">Referenced in</h3>'
+        + '<ul class="ref-panel__list">'
+        + refs.map(r => {
+            const href = '../sops/' + encodeURIComponent(r.sourceKey) + '.html';
+            const title = r.sourceTitle || r.sourceKey;
+            const ctx = r.contextText ? '<span class="ref-panel__ctx">' + String(r.contextText).replace(/</g, '&lt;') + '</span>' : '';
+            return '<li><a href="' + href + '" class="ref-panel__link">' + String(title).replace(/</g, '&lt;') + '</a>' + ctx + '</li>';
+          }).join('')
+        + '</ul>';
+      const header = document.querySelector('.fr-header');
+      if (header && header.parentNode) header.parentNode.insertBefore(panel, header.nextSibling);
+      else (config.mount instanceof Element ? config.mount : document.querySelector(config.mount || '#frRoot'))
+            ?.prepend(panel);
+    } catch (e) { /* non-fatal */ }
+  }
 
   async function mountDocHeader(config) {
     if (!window.DocHeader) return null;

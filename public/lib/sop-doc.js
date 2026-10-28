@@ -233,6 +233,31 @@
       return tr;
     }
 
+    function linkifyContent(containerEl) {
+      if (!containerEl) return;
+      let html = containerEl.innerHTML;
+      html = html.replace(/\b(REC\s*\d+(?:\.\d+)*[a-z]?)\b/gi, (match) => {
+        const key = 'REC-' + match.replace(/REC\s*/i, '').replace(/\s/g, '').toUpperCase();
+        const href = `../records/${key}.html`;
+        return `<a href="${href}" class="doc-ref doc-ref--record" title="Open ${esc(match)}">${match}</a>`;
+      });
+      html = html.replace(/\b(SANS\s*\d+(?::\d+)?)\b/gi, (match) => {
+        const key = match.replace(/\s+/g, '-').toUpperCase();
+        return `<a href="../pages/specifications.html#${key}" class="doc-ref doc-ref--spec" title="View specification">${match}</a>`;
+      });
+      html = html.replace(/\bISO(?:\/TS\s*)?\d+(?:[:\-]\d+)*\b/gi, (match) => {
+        const key = match.replace(/\s+/g, '-').toUpperCase();
+        return `<a href="../pages/specifications.html#${key}" class="doc-ref doc-ref--spec" title="View specification">${match}</a>`;
+      });
+      html = html.replace(/\b(VC\s*\d+(?::\d+)?)\b/gi, (match) => {
+        const key = match.replace(/\s+/g, '-').toUpperCase();
+        return `<a href="../pages/specifications.html#${key}" class="doc-ref doc-ref--spec" title="View specification">${match}</a>`;
+      });
+      html = html.replace(/\bFSSC\s*22000(?:\s*[Vv]\d+)?\b/gi, (match) =>
+        `<a href="../pages/specifications.html#FSSC-22000" class="doc-ref doc-ref--cert" title="View certification">${match}</a>`);
+      containerEl.innerHTML = html;
+    }
+
     function applyResolved(r) {
       $('sd-code').textContent = r.sopNo;
       $('sd-name').textContent = r.name;
@@ -246,6 +271,9 @@
         r.relatedDocs.forEach(doc => refBody.appendChild(refRow(doc.code, doc.name)));
       } else {
         refBody.innerHTML = '<tr><td class="no-refs">No related documents listed.</td></tr>';
+      }
+      if (!editing) {
+        ['sd-objective', 'sd-roles', 'sd-process', 'sd-review'].forEach(id => linkifyContent($(id)));
       }
     }
 
@@ -321,6 +349,19 @@
         reason: reason.value.trim(), changedBy: changedBy.value.trim(), changedByTitle: title.value.trim()
       }, startRev);
 
+      // Extract cross-references from the newly saved content and sync the registry
+      try {
+        const plainText = [
+          $('sd-objective').textContent,
+          $('sd-roles').textContent,
+          $('sd-process').textContent,
+          $('sd-review').textContent
+        ].join(' ');
+        if (window.SopRefSync) {
+          await window.SopRefSync.sync(cfg.recordKey, $('sd-code').textContent.trim() + ' ' + $('sd-name').textContent.trim(), plainText);
+        }
+      } catch (e) { console.warn('ref sync failed (non-fatal)', e); }
+
       reason.value = ''; changedBy.value = ''; title.value = '';
       $('sd-modal').classList.remove('open');
       current = await resolve(cfg.recordKey, cfg);
@@ -344,5 +385,27 @@
     $('sd-editBtn').style.display = canEdit() ? '' : 'none';
   }
 
+  // SopRefSync.sync(sourceKey, sourceTitle, plainText) — fire-and-forget ref extraction + API POST
+  const SopRefSync = {
+    async sync(sourceKey, sourceTitle, plainText) {
+      const { extractReferences } = await import('./ref-extractor.js');
+      const refs = extractReferences(plainText).map(r => ({
+        targetType: r.targetType,
+        targetKey: r.targetKey,
+        targetLabel: r.targetKey,
+        contextText: r.contextText
+      }));
+      const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+      const apiKey = (() => { try { return localStorage.getItem('facility_api_key') || ''; } catch { return ''; } })();
+      const h = { 'Content-Type': 'application/json' };
+      if (apiKey) h.Authorization = 'Bearer ' + apiKey;
+      await fetch(API_BASE + '/api/refs/sync', {
+        method: 'POST', headers: h,
+        body: JSON.stringify({ sourceType: 'sop', sourceKey, sourceTitle, refs })
+      });
+    }
+  };
+
   window.SopDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
+  window.SopRefSync = SopRefSync;
 })();

@@ -6033,6 +6033,27 @@ model BarcodeSplitEvent {
   @@index([parentId])
 }
 
+// Cross-reference registry: one row per (source doc, target doc) pair found by the ref-extractor.
+// Populated automatically on SOP/procedure save; backfilled by scripts/sync-sop-refs.mjs.
+model DocumentReference {
+  id           Int      @id @default(autoincrement())
+  sourceType   String   @map("source_type")
+  sourceKey    String   @map("source_key")
+  sourceTitle  String?  @map("source_title")
+  targetType   String   @map("target_type")
+  targetKey    String   @map("target_key")
+  targetLabel  String?  @map("target_label")
+  contextText  String?  @map("context_text")
+  needsReview  Boolean  @default(false) @map("needs_review")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @map("updated_at")
+
+  @@unique([sourceType, sourceKey, targetType, targetKey])
+  @@index([sourceType, sourceKey])
+  @@index([targetType, targetKey])
+  @@map("document_references")
+}
+
 // The basket barcodes scanned into a main (job) barcode at intake. Not parentId: that is reserved for splits.
 model BarcodeMember {
   id           Int      @id @default(autoincrement())
