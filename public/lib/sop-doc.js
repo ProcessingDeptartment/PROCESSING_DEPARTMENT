@@ -241,7 +241,7 @@
     function docLookup() { return _docLookup || (_docLookup = buildDocLookup()); }
 
     function codeLink(code) {
-      const norm = code.trim().replace(/\s+/g, '').toUpperCase();
+      const norm = code.trim().replace(/[.\s]+$/g, '').replace(/\s+/g, '').toUpperCase();
       const href = docLookup().get(norm);
       const recMatch = /^REC\s*\d/i.test(code.trim());
       if (recMatch) {
