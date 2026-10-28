@@ -275,12 +275,25 @@ function mount(app, prisma) {
     }
     if (data.carRequired === null) return res.status(400).json({ ok: false, error: 'car_required is required (yes or no)' });
     try {
-      // Duplicate guard for ncOnYes auto-raises: one minor NC per (submissionId, sourceFieldKey).
+      // Duplicate guard for ncOnYes auto-raises.
+      // 1. Same submission: prevents double-create if the form saves twice.
       if (data.submissionId && sourceFieldKey) {
         const existing = await T.findFirst({ where: { submissionId: data.submissionId, sourceFieldKey, status: { not: 'closed' } } });
         if (existing) {
-          console.log(`[nc] duplicate guard: NC ${existing.ncRef} already exists for submission ${data.submissionId} / field ${sourceFieldKey}`);
+          console.log(`[nc] duplicate guard (same submission): NC ${existing.ncRef} already exists for submission ${data.submissionId} / field ${sourceFieldKey}`);
           return res.status(200).json({ ...existing, duplicate: true });
+        }
+      }
+      // 2. Same ongoing issue: if an open/in_progress/ready_to_close NC already exists for this
+      //    record + job + field, return it rather than stacking a new NC for the same problem.
+      if (sourceFieldKey && data.recordRef && data.jobNumber) {
+        const existingOpen = await T.findFirst({
+          where: { sourceFieldKey, recordRef: data.recordRef, jobNumber: data.jobNumber,
+                   status: { in: ['open', 'in_progress', 'ready_to_close'] } },
+        });
+        if (existingOpen) {
+          console.log(`[nc] duplicate guard (ongoing issue): NC ${existingOpen.ncRef} already open for ${data.recordRef} / ${data.jobNumber} / field ${sourceFieldKey}`);
+          return res.status(200).json({ ...existingOpen, duplicate: true });
         }
       }
       const [{ n }] = await prisma.$queryRaw`SELECT nextval('nc_ref_seq')::int AS n`;
