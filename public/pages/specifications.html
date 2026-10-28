@@ -807,7 +807,46 @@ window.initFieldRules = (function () {
         '<span class="spacer"></span>' +
         (isHidden(e) ? '<button class="btn" data-act="restore">Restore to list</button>' : '<button class="btn danger" data-act="remove">Remove from list</button>') +
       '</div>' +
-      (hist ? '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>' : '');
+      (hist ? '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>' : '') +
+      '<div class="sop-refs-panel" data-speckey="' + esc(e.key) + '"><div class="sec" style="margin-top:12px;">Referenced in SOPs</div><div class="sop-refs-loading" style="color:#5c6771;font-size:12px;">Loading…</div></div>';
+  }
+
+  // ---- "Referenced in SOPs" lazy loader ------------------------------------------------------
+  var _sopRefsCache = {};
+  function loadSopRefs(panel) {
+    var key = panel.getAttribute('data-speckey');
+    if (!key || panel.getAttribute('data-loaded')) return;
+    panel.setAttribute('data-loaded', '1');
+    if (_sopRefsCache[key]) { renderSopRefs(panel, _sopRefsCache[key]); return; }
+    var API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+    var apiKey = '';
+    try { apiKey = localStorage.getItem('facility_api_key') || ''; } catch (e) {}
+    var h = apiKey ? { Authorization: 'Bearer ' + apiKey } : {};
+    // The spec key in document_references uses the code (e.g. SANS-2329), not the entry key.
+    // Try to resolve via the entry's code field; fall back to uppercased key.
+    var entry = ENTRIES.filter(function(x){ return x.key === key; })[0];
+    var specKey = entry && entry.code ? entry.code.replace(/\s+/g, '-').toUpperCase() : key.replace(/\s+/g, '-').toUpperCase();
+    fetch(API_BASE + '/api/refs/by-target?type=spec&key=' + encodeURIComponent(specKey), { headers: h })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(refs){
+        _sopRefsCache[key] = refs;
+        renderSopRefs(panel, refs);
+      })
+      .catch(function(){ renderSopRefs(panel, []); });
+  }
+  function renderSopRefs(panel, refs) {
+    if (!refs.length) {
+      panel.querySelector('.sop-refs-loading').textContent = 'No SOPs currently reference this specification.';
+      return;
+    }
+    var html = '<ul style="margin:4px 0 0;padding-left:18px;list-style:disc;">' +
+      refs.map(function(r){
+        var href = '../sops/' + encodeURIComponent(r.sourceKey) + '.html';
+        var title = r.sourceTitle || r.sourceKey;
+        var ctx = r.contextText ? '<span style="display:block;font-size:11px;color:#5c6771;font-style:italic;">' + esc(r.contextText) + '</span>' : '';
+        return '<li style="margin-bottom:5px;"><a href="' + esc(href) + '" style="color:#1d4ed8;font-weight:600;">' + esc(title) + '</a>' + ctx + '</li>';
+      }).join('') + '</ul>';
+    panel.querySelector('.sop-refs-loading').outerHTML = html;
   }
 
   // ---- editing -------------------------------------------------------------------------------
@@ -960,7 +999,8 @@ window.initFieldRules = (function () {
       var e = find(card), act = t.getAttribute('data-act');
       if (act === 'toggle') {
         OPEN[e.key] = !OPEN[e.key];
-        if (OPEN[e.key] && !e.labels) ensureLabels(e).then(render); else render();
+        if (OPEN[e.key] && !e.labels) ensureLabels(e).then(function(){ render(); loadSopRefs(card.querySelector('.sop-refs-panel')); });
+        else { render(); if (OPEN[e.key]) loadSopRefs(card.querySelector('.sop-refs-panel')); }
       }
       else if (act === 'reset') render();
       else if (act === 'additem') addItem(card, e);
