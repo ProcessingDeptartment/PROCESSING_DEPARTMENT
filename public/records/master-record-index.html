@@ -278,6 +278,7 @@
           <th style="width:96px;">Obsolete revision<br>retrieved? Y/N</th>
           <th style="width:96px;">New revision<br>distributed? Y/N</th>
           <th style="width:96px;">New date<br>of issue</th>
+          <th style="width:96px;">Effective<br>date</th>
           <th class="col-edit-template" style="width:110px;">Edit Template</th>
           <th class="col-archive" style="width:96px;">Archive</th>
         </tr>
@@ -466,6 +467,7 @@
   let addedRows = [];
   let sopLinks = {};
   let archived = {};
+  let docHeaders = {};
   let canEdit = false;
 
   async function loadControl() {
@@ -531,6 +533,19 @@
         if (raw[k] === 'true') archived[k.slice(ARCHIVE_PREFIX.length)] = true;
       }
     } catch (e) { archived = {}; }
+  }
+
+  async function loadDocHeaders() {
+    docHeaders = {};
+    try {
+      const raw = await window.storage.getByPrefix('doc_header:', true);
+      for (const k in raw) {
+        try {
+          const parsed = JSON.parse(raw[k]);
+          docHeaders[k.slice('doc_header:'.length)] = parsed.effectiveDate || '';
+        } catch (e) {}
+      }
+    } catch (e) { docHeaders = {}; }
   }
 
   async function setArchived(id, val) {
@@ -624,7 +639,7 @@
       const isDoc = !!r.section;
       const linkHref = r.href || sopHrefFor(r);
       if (isDoc && r._first) {
-        html += `<tr class="sec-row"><td colspan="8">${esc(sectionOf(r))}</td></tr>`;
+        html += `<tr class="sec-row"><td colspan="10">${esc(sectionOf(r))}</td></tr>`;
       }
       const l = live[id] || {};
       const c = control[id] || {};
@@ -666,6 +681,7 @@ const isArchived = !!archived[id];
         + `<td class="c-yn">${ynSelect(id, 'obsoleteRetrieved', obs)}</td>`
         + `<td class="c-yn">${ynSelect(id, 'distributed', dist)}</td>`
         + `<td class="c-date">${esc(issued || '')}</td>`
+        + `<td class="c-date">${esc(r.recordKey && docHeaders[r.recordKey] ? fmtDate(new Date(docHeaders[r.recordKey] + 'T00:00:00')) : '')}</td>`
         + `<td class="c-edit-template col-edit-template">${(online && r.recordKey) ? `<a href="${esc(r.href)}?editTemplate=1">Edit Template</a>` : ''}</td>`
         + `<td class="c-archive col-archive">`
         + (canEdit
@@ -1183,6 +1199,7 @@ const isArchived = !!archived[id];
           effectiveDate: newEffective
         });
         await saveRecordNumber(dhCurrentKey, docNumber);
+        await loadDocHeaders();
         render();
         dhSetState('Saved � records will print this block.', 'ok');
       }
@@ -1223,7 +1240,7 @@ const isArchived = !!archived[id];
     ]);
     try {
       await withTimeout(Promise.all([loadControl(), loadLive(),
-                                     loadRecordNumbers(), loadAddedRows(), loadSopLinks(), loadArchived()]));
+                                     loadRecordNumbers(), loadAddedRows(), loadSopLinks(), loadArchived(), loadDocHeaders()]));
     } catch (e) {
       $('saveState').textContent = 'Live revision data unavailable � showing the issued baseline';
       $('saveState').style.color = 'var(--palette-fail)';
