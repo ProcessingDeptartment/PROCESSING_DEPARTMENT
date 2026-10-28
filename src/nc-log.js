@@ -342,6 +342,22 @@ function mount(app, prisma) {
       res.json(upd);
     } catch (e) { console.error('PATCH nc failed', e); res.status(500).json({ ok: false }); }
   });
+
+  // DELETE /api/nc/:id — hard-delete a single NC record (admin / data-correction use).
+  app.delete('/api/nc/:id', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ ok: false, error: 'bad id' });
+    try {
+      const cur = await T.findUnique({ where: { id } });
+      if (!cur) return res.status(404).json({ ok: false, error: 'not found' });
+      // Delete any audit history first (FK constraint).
+      await prisma.ncAudit.deleteMany({ where: { ncId: id } });
+      await T.delete({ where: { id } });
+      const actor = str(req.get('x-user'), 120) || 'Unknown';
+      console.log(`[nc] deleted NC ${cur.ncRef} (id ${id}) by ${actor}`);
+      res.json({ ok: true, deleted: cur.ncRef });
+    } catch (e) { console.error('DELETE nc failed', e); res.status(500).json({ ok: false }); }
+  });
 }
 
 module.exports = { mount, sendNCAlert, sendNCRecordUpdateAlert, sendNCReadyToCloseAlert };
