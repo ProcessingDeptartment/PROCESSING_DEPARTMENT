@@ -2000,3 +2000,6 @@ body.rt-tablet .rt-content .fr-badge-ok, body.rt-tablet .rt-content .fr-badge-fa
 }
 .fr-cert-review-banner__btn:hover { background: #d97706; }
 @media print { .fr-cert-review-banner { display: none; } }
+
+.ref-row--auto .rcode { color: var(--fr-label, #5c6771); font-style: italic; }
+.ref-row--auto td:last-child { display: none; } /* hide remove btn for auto rows in view mode */

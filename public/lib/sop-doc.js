@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   const KEY = k => 'sop_doc:' + k;
   const LINKS_KEY = k => 'sop_record_links:' + k;
 
@@ -225,9 +225,42 @@
     let editing = false;
     let current = null;
 
+    // Build a normalised docNo -> href lookup from MasterIndexData
+    function buildDocLookup() {
+      const map = new Map();
+      const rows = window.MasterIndexData && window.MasterIndexData.rows;
+      if (!rows) return map;
+      for (const cat of rows) {
+        for (const row of (cat.items || [])) {
+          if (row.docNo && row.href) {
+            map.set(row.docNo.replace(/\s+/g,'').toUpperCase(), '../records/' + row.href);
+          }
+        }
+      }
+      return map;
+    }
+    let _docLookup = null;
+    function docLookup() { return _docLookup || (_docLookup = buildDocLookup()); }
+
+    function codeLink(code) {
+      const norm = code.trim().replace(/\s+/g, '').toUpperCase();
+      const href = docLookup().get(norm);
+      const recMatch = /^REC\s*\d/i.test(code.trim());
+      if (recMatch) {
+        const dest = href || ('#');
+        return `<a href="${dest}" class="doc-ref doc-ref--record" title="Open record">${esc(code)}</a>`;
+      }
+      const sansMatch = /^SANS\s*(\d+(?::\d+)?)$/i.exec(code.trim());
+      if (sansMatch) {
+        const key = 'SANS-' + sansMatch[1];
+        return `<a href="../pages/specifications.html#${key}" class="doc-ref doc-ref--spec" title="View specification">${esc(code)}</a>`;
+      }
+      return esc(code);
+    }
+
     function refRow(code, name) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="rcode" data-code="true">${esc(code)}</td>`
+      tr.innerHTML = `<td class="rcode" data-code="true">${codeLink(code)}</td>`
         + `<td data-name="true">${esc(name)}</td>`
         + `<td class="row-rm"><button class="btn btn-ghost" style="padding:2px 8px; font-size:10px;" onclick="this.closest('tr').remove()">Remove</button></td>`;
       return tr;
@@ -258,6 +291,25 @@
       containerEl.innerHTML = html;
     }
 
+    function detectMissingRefs(sections, relatedDocs) {
+      const text = [sections.objective, sections.roles, sections.process, sections.review]
+        .map(s => (s || '').replace(/<[^>]+>/g, ' ')).join(' ');
+      const seen = new Set(relatedDocs.map(d => String(d.code || '').replace(/\s+/g, '').toUpperCase()));
+      const extra = [];
+      function tryAdd(raw) {
+        const norm = raw.replace(/\s+/g, '').toUpperCase();
+        if (seen.has(norm)) return;
+        seen.add(norm);
+        extra.push({ code: raw, name: '' });
+      }
+      for (const m of text.matchAll(/\bREC\s*(\d+(?:\.\d+)*[a-z]?)\b/gi)) tryAdd(m[0]);
+      for (const m of text.matchAll(/\bSANS\s*(\d+(?::\d+)?)\b/gi)) tryAdd(m[0]);
+      for (const m of text.matchAll(/\bISO(?:\/TS\s*)?\d+(?:[:\-]\d+)*\b/gi)) tryAdd(m[0]);
+      for (const m of text.matchAll(/\bVC\s*(\d+(?::\d+)?)\b/gi)) tryAdd(m[0]);
+      for (const m of text.matchAll(/\bFSSC\s*22000(?:\s*[Vv]\d+)?\b/gi)) tryAdd(m[0]);
+      return extra;
+    }
+
     function applyResolved(r) {
       $('sd-code').textContent = r.sopNo;
       $('sd-name').textContent = r.name;
@@ -265,10 +317,17 @@
       $('sd-roles').innerHTML = r.sections.roles || '';
       $('sd-process').innerHTML = r.sections.process || '';
       $('sd-review').innerHTML = r.sections.review || '';
+      _docLookup = null; // reset so lookup rebuilds after MasterIndexData loads
       const refBody = $('sd-refBody');
       refBody.innerHTML = '';
-      if (r.relatedDocs.length) {
-        r.relatedDocs.forEach(doc => refBody.appendChild(refRow(doc.code, doc.name)));
+      const autoRefs = detectMissingRefs(r.sections, r.relatedDocs);
+      const allDocs = [...r.relatedDocs, ...autoRefs];
+      if (allDocs.length) {
+        allDocs.forEach((doc, i) => {
+          const tr = refRow(doc.code, doc.name);
+          if (i >= r.relatedDocs.length) tr.classList.add('ref-row--auto');
+          refBody.appendChild(tr);
+        });
       } else {
         refBody.innerHTML = '<tr><td class="no-refs">No related documents listed.</td></tr>';
       }
@@ -409,3 +468,4 @@
   window.SopDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
   window.SopRefSync = SopRefSync;
 })();
+
