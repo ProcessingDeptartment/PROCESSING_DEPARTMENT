@@ -268,8 +268,8 @@
       if (!containerEl) return;
       let html = containerEl.innerHTML;
       html = html.replace(/\b(REC\s*\d+(?:\.\d+)*[a-z]?)\b/gi, (match) => {
-        const key = 'REC-' + match.replace(/REC\s*/i, '').replace(/\s/g, '').toUpperCase();
-        const href = `../records/${key}.html`;
+        const norm = match.replace(/\s+/g, '').toUpperCase();
+        const href = docLookup().get(norm) || ('#');
         return `<a href="${href}" class="doc-ref doc-ref--record" title="Open ${esc(match)}">${match}</a>`;
       });
       html = html.replace(/\b(SANS\s*\d+(?::\d+)?)\b/gi, (match) => {
