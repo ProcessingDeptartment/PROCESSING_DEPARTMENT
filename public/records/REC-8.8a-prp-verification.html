@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 8.8a PRP Verification</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<script src="../lib/pdf-cover.js?v=7"></script>
+<script src="../lib/palette-map.js?v=2"></script>
+<link rel="stylesheet" href="../styles/record-theme.css?v=tv52">
+<link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body class="rt-tablet">
+<script src="../lib/record-chrome.js?v=27"></script>
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=4"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/nc-login-alert.js?v=1"></script>
+<script src="../lib/document-revision.js?v=4"></script>
+<script src="../lib/signoff-block.js?v=8"></script>
+<script src="../lib/nc-raise.js?v=5"></script>
+<script src="../lib/delete-submission-modal.js?v=1"></script>
+<script src="../lib/time-picker.js?v=2"></script>
+<script src="../lib/spec-gate.js?v=4"></script>
+<script src="../lib/form-record.js?v=136"></script>
+<script>(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'prp-verification',
+    docCode: 'REC 8.8a',
+    title: 'PRP Verification',
+    docRevisionStart: 1,
+    listColumns: ['verificationDate', 'prpReference', 'finding'],
+    sections: [
+      { title: 'Verification details', fields: [
+        { key: 'verificationDate', label: 'Verification Date', type: 'date', required: true },
+        { key: 'verifiedBy', label: 'Verified By', type: 'text' },
+        { key: 'prpReference', label: 'PRP Reference', type: 'select', options: [
+          'PRO 8.2', 'PRO 8.2.1', 'PRO 8.2.2', 'PRO 8.2.3', 'PRO 8.2.4',
+          'PRO 8.2.5', 'PRO 8.2.5.1', 'PRO 8.2.6', 'PRO 8.2.7', 'PRO 8.2.8',
+          'PRO 8.2.9', 'PRO 8.2.10', 'PRO 8.2.11', 'PRO 8.2.12', 'PRO 8.2.13',
+          'PRO 8.2.14', 'PRO 8.2.15', 'PRO 8.2.16', 'PRO 8.2.17', 'PRO 8.2.18',
+          'PRO 8.8', 'PRO 8.8a'
+        ]},
+        { key: 'verificationMethod', label: 'Method of Verification', type: 'select', options: ['Observation', 'Document Review', 'Measurement', 'Interview'] },
+        { key: 'finding', label: 'Finding', type: 'select', options: ['Conforming', 'Minor NC', 'Major NC'] },
+        { key: 'evidence', label: 'Evidence / Observations', type: 'textarea', wide: true }
+      ]},
+      { title: 'Corrective action', fields: [
+        { key: 'correctiveAction', label: 'Corrective Action Required', type: 'textarea', wide: true },
+        { key: 'followUpDate', label: 'Follow-up Date', type: 'date' },
+        { key: 'followUpBy', label: 'Follow-up By', type: 'text' },
+        { key: 'closeOutDate', label: 'Close-out Date', type: 'date' },
+        { key: 'closeOutBy', label: 'Closed Out By', type: 'text' }
+      ]}
+    ]
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=11"></script>
+</body>
+</html>

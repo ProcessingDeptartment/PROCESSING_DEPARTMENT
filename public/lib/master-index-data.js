@@ -1516,6 +1516,18 @@ window.MasterIndexData = {
           "href": "REC-8.2.8.1-rfh-medical-result.html"
       },
       {
+          "docNo": "REC 8.8a",
+          "name": "PRP Verification",
+          "section": "Verification",
+          "details": "New record",
+          "revision": 1,
+          "obsoleteRetrieved": "N/A",
+          "distributed": "Y",
+          "dateOfIssue": "28/10/2026",
+          "recordKey": "prp-verification",
+          "href": "REC-8.8a-prp-verification.html"
+      },
+      {
           "docNo": "REC 8.4.a",
           "name": "Emergency Evacuation Attendance Register",
           "details": "New document",
