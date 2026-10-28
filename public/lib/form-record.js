@@ -4391,6 +4391,28 @@
       if (config.entryLog || crateRoster) { await load(true); savedSub = submissions.find(s => s.id === savedSub.id) || savedSub; }
       const finalRange = finalize ? crateRange(savedSub) : null;
       if (amending && window.NcRaise && window.NcRaise.recordUpdated) window.NcRaise.recordUpdated(savedSub.id); // NC feedback loop
+      // After a new finalized submission, check whether any open NCs for the same job/record are now resolved.
+      // The server reads ncResolutionCondition from the record def JSON and moves matching NCs to ready_to_close.
+      if (finalize && !amending && config.docCode && window.FacilityApi) {
+        (function () {
+          var resolveBody = JSON.stringify({
+            record_ref: config.docCode,
+            job_number: String(values[config.batchField || 'jobNo'] || '').trim(),
+            submission_id: savedSub.id,
+            values: values
+          });
+          window.FacilityApi.fetch('/api/nc/check-resolution', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: resolveBody
+          }).then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+              if (!data || !data.ncsReady || !data.ncsReady.length) return;
+              data.ncsReady.forEach(function (nc) {
+                toast('✓ NC ' + nc.nc_ref + ' is ready to close — ' + nc.message);
+              });
+            })
+            .catch(function () {}); // fire-and-forget; never block the UI
+        })();
+      }
 
       if (window.Traceability && config.batchField) window.Traceability.indexSubmission(config, savedSub);
       if (config.boxInspection && window.BoxInspection) await window.BoxInspection.refresh(); // inspected boxes leave the list
