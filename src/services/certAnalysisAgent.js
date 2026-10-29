@@ -62,7 +62,7 @@ Records:
 ${recordsSummary}`;
 
   const message = await client.messages.create({
-    model:      'claude-opus-4-5',
+    model:      'claude-haiku-5-5',
     max_tokens: 4096,
     messages:   [{ role: 'user', content: prompt }],
   });
