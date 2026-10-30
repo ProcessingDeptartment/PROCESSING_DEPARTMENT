@@ -13,7 +13,8 @@ const fs   = require('fs');
 const { execFile } = require('child_process');
 const { analyseAffectedRecords } = require('./services/certAnalysisAgent');
 
-const CERTS_JSON_PATH = path.join(__dirname, '..', 'certifications', 'certifications.json');
+// Served by the static site at /certifications/certifications.json
+const CERTS_JSON_PATH = path.join(__dirname, '..', 'public', 'certifications', 'certifications.json');
 
 function readCertsJson() {
   try { return JSON.parse(fs.readFileSync(CERTS_JSON_PATH, 'utf8')); } catch { return null; }
