@@ -139,7 +139,7 @@
     ? 'http://localhost:3001'
     : 'https://processing-department-api.onrender.com';
 
-  const apiKey = (() => { try { return localStorage.getItem('apiKey') || ''; } catch { return ''; } })();
+  const apiKey = (() => { try { return localStorage.getItem('facility_api_key') || sessionStorage.getItem('facility_api_key') || ''; } catch { return ''; } })();
   function headers(extra) { return { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: 'Bearer ' + apiKey } : {}), ...(extra||{}) }; }
 
   // --- Load certifications dropdown ---
