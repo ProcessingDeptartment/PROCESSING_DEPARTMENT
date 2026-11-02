@@ -1,6 +1,9 @@
-﻿(function () {
+(function () {
   const KEY = k => 'sop_doc:' + k;
   const LINKS_KEY = k => 'sop_record_links:' + k;
+
+  // Roles whose title (lowercase) qualifies a single passkey as sufficient.
+  const AUTH_TITLES = ['administrator', 'ppicm', 'production manager', 'qa manager'];
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -128,6 +131,57 @@
     .dh-f input.err{ border-color:#c0392b; }
     .dh-actions{ display:flex; gap:10px; justify-content:flex-end; }
     .dh-error{ font-size:11px; color:#c0392b; margin:-6px 0 10px; display:none; }
+
+    /* ── Passkey step modal ───────────────────────────────────────────── */
+    .spk-overlay{ position:fixed; inset:0; background:rgba(20,25,30,.55); z-index:700;
+                  align-items:center; justify-content:center; display:none; padding:16px; }
+    .spk-overlay.open{ display:flex; }
+    .spk-box{ background:var(--paper); border-radius:10px; width:min(500px,96vw);
+              box-shadow:0 8px 40px rgba(0,0,0,.3); overflow:hidden; }
+    .spk-head{ background:var(--dark); color:var(--dark-text); padding:14px 18px;
+               display:flex; align-items:center; justify-content:space-between; }
+    .spk-head h3{ margin:0; font-size:14px; font-weight:600; }
+    .spk-head button{ background:none; border:none; color:var(--dark-text); font-size:18px;
+                      cursor:pointer; opacity:.7; line-height:1; padding:0; }
+    .spk-head button:hover{ opacity:1; }
+    .spk-body{ padding:16px; display:flex; flex-direction:column; gap:14px; }
+    .spk-slot-label{ font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+                     color:var(--label); margin-bottom:3px; }
+    .spk-slot-sub{ font-size:11px; color:var(--label); margin-bottom:6px; }
+    .spk-row{ display:flex; gap:8px; align-items:center; }
+    .spk-display{ flex:1; border:1px solid var(--border); border-radius:5px; padding:7px 10px;
+                  font-size:16px; letter-spacing:4px; background:var(--paper); color:var(--ink);
+                  min-height:36px; }
+    .spk-display.verified{ border-color:#2e7d32; background:#e8f5e9; color:#2e7d32;
+                           letter-spacing:1px; font-size:13px; }
+    .spk-display.error{ border-color:#c0392b; background:#ffebee; }
+    .spk-pad-btn{ background:rgba(0,0,0,.08); border:1px solid var(--border); border-radius:5px;
+                  padding:5px 10px; cursor:pointer; font-size:12px; font-family:inherit;
+                  color:var(--ink); white-space:nowrap; }
+    .spk-pad-btn:hover{ background:rgba(0,0,0,.14); }
+    .spk-numpad{ display:none; flex-direction:column; gap:4px; margin-top:6px;
+                 background:var(--head-bg); border:1px solid var(--border);
+                 border-radius:8px; padding:10px; }
+    .spk-numpad.open{ display:flex; }
+    .spk-numpad-row{ display:flex; gap:5px; justify-content:center; }
+    .spk-key{ flex:1; max-width:72px; padding:10px; font-size:17px; font-weight:500;
+              border:1px solid var(--border); border-radius:5px; background:var(--paper);
+              cursor:pointer; text-align:center; transition:background .1s; color:var(--ink); }
+    .spk-key:hover{ background:var(--head-bg); }
+    .spk-key.wide{ max-width:none; flex:1.5; font-size:12px; }
+    .spk-key.verify-key{ background:var(--primary); color:#fff; border-color:var(--primary); flex:1; max-width:none; font-size:12px; font-weight:700; }
+    .spk-key.verify-key:hover{ background:var(--primary-hover); }
+    .spk-err{ color:#c0392b; font-size:11.5px; min-height:16px; }
+    .spk-foot{ padding:12px 16px; background:var(--head-bg); border-top:1px solid var(--border);
+               display:flex; gap:10px; justify-content:flex-end; }
+    .spk-btn{ padding:7px 16px; border-radius:5px; font-size:13px; font-weight:600;
+              cursor:pointer; border:none; font-family:inherit; }
+    .spk-btn-cancel{ background:rgba(0,0,0,.1); color:var(--ink); }
+    .spk-btn-cancel:hover{ background:rgba(0,0,0,.18); }
+    .spk-btn-ok{ background:var(--primary); color:#fff; }
+    .spk-btn-ok:hover{ background:var(--primary-hover); }
+    .spk-btn-ok:disabled{ opacity:.45; cursor:default; }
+
     @media print{
       .dc-actions, .save-bar, .back-link, .row-add, .row-rm{ display:none !important; }
       [contenteditable]{ outline:none; background:none; }
@@ -158,6 +212,40 @@
     s.id = 'sop-doc-styles';
     s.textContent = STYLES;
     document.head.appendChild(s);
+  }
+
+  // ── Passkey numpad HTML builder ─────────────────────────────────────
+  function spkNumpadHtml(slot) {
+    const d = n => `<button type="button" class="spk-key" onclick="window._sopPk.digit(${slot},'${n}')">${n}</button>`;
+    return `
+      <div id="spk_pad${slot}" class="spk-numpad">
+        <div class="spk-numpad-row">${d(1)}${d(2)}${d(3)}</div>
+        <div class="spk-numpad-row">${d(4)}${d(5)}${d(6)}</div>
+        <div class="spk-numpad-row">${d(7)}${d(8)}${d(9)}</div>
+        <div class="spk-numpad-row">
+          <button type="button" class="spk-key wide" onclick="window._sopPk.clear(${slot})">Clear</button>
+          ${d(0)}
+          <button type="button" class="spk-key wide" onclick="window._sopPk.back(${slot})">⌫</button>
+        </div>
+        <div class="spk-numpad-row" style="margin-top:4px">
+          <button type="button" id="spk_verifyBtn${slot}" class="spk-key verify-key" onclick="window._sopPk.verify(${slot})">Verify</button>
+        </div>
+      </div>`;
+  }
+
+  function spkSlotHtml(slot, label, sublabel) {
+    return `
+      <div id="spk_slot${slot}">
+        <div class="spk-slot-label">${label}</div>
+        <div class="spk-slot-sub">${sublabel}</div>
+        <div class="spk-row">
+          <div class="spk-display" id="spk_display${slot}">—</div>
+          <button type="button" class="spk-pad-btn" onclick="window._sopPk.togglePad(${slot})">Enter PIN</button>
+          <button type="button" class="spk-pad-btn" style="color:#c0392b" onclick="window._sopPk.reset(${slot})">Reset</button>
+        </div>
+        ${spkNumpadHtml(slot)}
+        <div class="spk-err" id="spk_err${slot}"></div>
+      </div>`;
   }
 
   async function mount(cfg) {
@@ -204,6 +292,34 @@
         </div>
         <a class="back-link" href="${esc(cfg.backHref || 'sop-list.html')}">&larr; Back to SOP List</a>
       </div>
+
+      <!-- Passkey authorisation step -->
+      <div class="spk-overlay" id="sd-pkOverlay">
+        <div class="spk-box">
+          <div class="spk-head">
+            <h3>Authorise Save — ${esc(cfg.sopNo)}</h3>
+            <button type="button" onclick="window._sopPk.cancel()">✕</button>
+          </div>
+          <div class="spk-body" id="sd-pkBody">
+            ${spkSlotHtml(1,
+              'Authorisation',
+              'Administrator, QA Manager or Production Manager — 1 passkey is enough. Anyone else requires a second.'
+            )}
+            <div id="spk_slot2wrap">
+              ${spkSlotHtml(2,
+                'Second authorisation <span style="font-size:11px;font-weight:400">(must be a different person)</span>',
+                'Administrator, QA Manager or Production Manager'
+              )}
+            </div>
+          </div>
+          <div class="spk-foot">
+            <button type="button" class="spk-btn spk-btn-cancel" onclick="window._sopPk.cancel()">Cancel</button>
+            <button type="button" class="spk-btn spk-btn-ok" id="sd-pkConfirm" onclick="window._sopPk.confirm()">Continue to save…</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reason / changed-by modal -->
       <div class="dh-modal" id="sd-modal">
         <div class="dh-modal-inner">
           <h3>Save changes to ${esc(cfg.sopNo)}</h3>
@@ -225,7 +341,162 @@
     let editing = false;
     let current = null;
 
-    // Build a normalised docNo -> href lookup from MasterIndexData
+    // ── Passkey step state ──────────────────────────────────────────────
+    const pkState = {
+      1: { pin: '', verified: false, name: '', title: '', rawPin: '' },
+      2: { pin: '', verified: false, name: '', title: '', rawPin: '' },
+      singleAuthMode: false  // true once slot 1 verifies as an authorised title
+    };
+
+    function pkDots(slot) { return '●'.repeat(pkState[slot].pin.length) || ''; }
+
+    function pkUpdateDisplay(slot) {
+      const d = $('spk_display' + slot);
+      if (!d) return;
+      if (pkState[slot].verified) {
+        d.textContent = '✓ ' + pkState[slot].name;
+        d.className = 'spk-display verified';
+      } else {
+        d.textContent = pkDots(slot) || '—';
+        d.className = 'spk-display';
+      }
+    }
+
+    function pkTogglePad(slot) {
+      const pad = $('spk_pad' + slot);
+      if (!pad || pkState[slot].verified) return;
+      pad.classList.toggle('open');
+    }
+
+    function pkResetSlot(slot) {
+      pkState[slot] = { pin: '', verified: false, name: '', title: '', rawPin: '' };
+      pkUpdateDisplay(slot);
+      const err = $('spk_err' + slot);
+      if (err) err.textContent = '';
+      const pad = $('spk_pad' + slot);
+      if (pad) pad.classList.remove('open');
+    }
+
+    async function pkVerifySlot(slot) {
+      const pin = pkState[slot].pin.trim();
+      if (pin.length < 4) {
+        $('spk_err' + slot).textContent = 'Passkey must be at least 4 digits';
+        return;
+      }
+      const btn = $('spk_verifyBtn' + slot);
+      if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
+
+      try {
+        const opts = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passkey: pin, role: window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() || '' : '' })
+        };
+        const resp = window.FacilityApi
+          ? await window.FacilityApi.fetch('/api/passkey/verify', opts)
+          : await fetch('/api/passkey/verify', opts);
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          $('spk_err' + slot).textContent = data.error || 'Passkey not recognised';
+          pkState[slot].pin = '';
+          pkUpdateDisplay(slot);
+          return;
+        }
+
+        const titleLc = String(data.title || '').toLowerCase();
+        const isAuth = AUTH_TITLES.some(f => titleLc.includes(f));
+
+        // Slot 2: must be a different person from slot 1
+        if (slot === 2 && pkState[1].verified && data.username && data.username === pkState[1]._username) {
+          $('spk_err' + slot).textContent = 'Both passkeys belong to the same person — a second, different person must confirm';
+          pkState[slot].pin = '';
+          pkUpdateDisplay(slot);
+          return;
+        }
+
+        pkState[slot].verified = true;
+        pkState[slot].name = data.displayName || '';
+        pkState[slot].title = data.title || '';
+        pkState[slot].rawPin = pin;
+        pkState[slot]._username = data.username || '';
+
+        if (slot === 1 && isAuth) {
+          // Authorised role — single passkey is enough; hide second slot
+          pkState.singleAuthMode = true;
+          const wrap2 = $('spk_slot2wrap');
+          if (wrap2) wrap2.style.display = 'none';
+        } else if (slot === 1 && !isAuth) {
+          // Not an authorised title — second passkey required; show slot 2
+          pkState.singleAuthMode = false;
+          const wrap2 = $('spk_slot2wrap');
+          if (wrap2) wrap2.style.display = '';
+        }
+
+        pkUpdateDisplay(slot);
+        $('spk_err' + slot).textContent = '';
+        const pad = $('spk_pad' + slot);
+        if (pad) pad.classList.remove('open');
+
+      } catch (e) {
+        $('spk_err' + slot).textContent = 'Network error: ' + e.message;
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Verify'; }
+      }
+    }
+
+    // Public bridge used by inline onclick handlers
+    window._sopPk = {
+      digit(slot, d) {
+        if (pkState[slot].verified) return;
+        if (pkState[slot].pin.length < 8) {
+          pkState[slot].pin += d;
+          pkUpdateDisplay(slot);
+          $('spk_err' + slot).textContent = '';
+        }
+      },
+      back(slot) {
+        if (pkState[slot].verified) return;
+        pkState[slot].pin = pkState[slot].pin.slice(0, -1);
+        pkUpdateDisplay(slot);
+      },
+      clear(slot) {
+        if (pkState[slot].verified) return;
+        pkState[slot].pin = '';
+        pkUpdateDisplay(slot);
+      },
+      verify: pkVerifySlot,
+      reset: pkResetSlot,
+      togglePad: pkTogglePad,
+      cancel() {
+        $('sd-pkOverlay').classList.remove('open');
+        pkResetSlot(1); pkResetSlot(2);
+        pkState.singleAuthMode = false;
+        const wrap2 = $('spk_slot2wrap');
+        if (wrap2) wrap2.style.display = '';
+      },
+      confirm() {
+        if (!pkState[1].verified) {
+          $('spk_err1').textContent = 'Passkey has not been verified';
+          return;
+        }
+        if (!pkState.singleAuthMode && !pkState[2].verified) {
+          $('spk_err2').textContent = 'Second passkey has not been verified';
+          return;
+        }
+        // All good — close passkey overlay, pre-fill reason modal
+        $('sd-pkOverlay').classList.remove('open');
+
+        // Pre-fill Changed by / Title from the passkey that was entered
+        const byEl = $('sd-changedBy'), titleEl = $('sd-changedByTitle');
+        if (byEl && !byEl.value) byEl.value = pkState[1].name;
+        if (titleEl && !titleEl.value) titleEl.value = pkState[1].title;
+
+        $('sd-modal').classList.add('open');
+      }
+    };
+
+    // ── Build a normalised docNo -> href lookup from MasterIndexData ──────
     function buildDocLookup() {
       const map = new Map();
       const rows = window.MasterIndexData && window.MasterIndexData.rows;
@@ -376,7 +647,19 @@
     $('sd-editBtn').addEventListener('click', () => toggleEdit());
     $('sd-cancelBtn').addEventListener('click', () => toggleEdit(true));
     $('sd-modalCancel').addEventListener('click', () => $('sd-modal').classList.remove('open'));
-    $('sd-saveBtn').addEventListener('click', () => $('sd-modal').classList.add('open'));
+
+    // Save button → open passkey step first
+    $('sd-saveBtn').addEventListener('click', () => {
+      pkResetSlot(1); pkResetSlot(2);
+      pkState.singleAuthMode = false;
+      const wrap2 = $('spk_slot2wrap');
+      if (wrap2) wrap2.style.display = '';
+      // Clear pre-filled reason modal fields so they can be re-filled from passkey
+      $('sd-changedBy').value = '';
+      $('sd-changedByTitle').value = '';
+      $('sd-reason').value = '';
+      $('sd-pkOverlay').classList.add('open');
+    });
 
     $('sd-modalSave').addEventListener('click', async () => {
       const reason = $('sd-reason'), changedBy = $('sd-changedBy'), title = $('sd-changedByTitle');
@@ -421,6 +704,9 @@
 
       reason.value = ''; changedBy.value = ''; title.value = '';
       $('sd-modal').classList.remove('open');
+      // Clear passkey state after successful save
+      pkResetSlot(1); pkResetSlot(2);
+      pkState.singleAuthMode = false;
       current = await resolve(cfg.recordKey, cfg);
       toggleEdit(true);
       await refreshHeader();
@@ -466,4 +752,3 @@
   window.SopDoc = { resolve, saveOverrides, loadOverrides, canEdit, esc, mount };
   window.SopRefSync = SopRefSync;
 })();
-
