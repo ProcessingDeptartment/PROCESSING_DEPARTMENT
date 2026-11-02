@@ -1144,8 +1144,10 @@ body.rt-tablet .rt-content .pk-field.is-verified input { background: var(--rt-wh
   border: 1.5px solid var(--rt-navy-primary); border-radius: var(--rt-radius-btn);
 }
 .rt-content .fr-seg-btn:active { background: var(--rt-navy-primary); color: #fff; }
-/* radio-based segmented fields in sections: hide the actual radio input */
+.rt-content .fr-seg-btn.on { background: var(--rt-navy-primary); color: #fff; }
+/* radio-based segmented fields in sections: hide the actual radio input; :checked styles label */
 .rt-content .fr-seg-radio-inp { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+.rt-content .fr-seg-r input[type=radio]:checked + label.fr-seg-btn { background: var(--rt-navy-primary); color: #fff; }
 
 /* ---- Collection bin cards (REC 7.4.3.1 / 7.4.3.2, roster.cardLayout) -- the largest section of the
    grading log, so the roomiest layout. The bin code counts up by itself per size grade (no bin number
