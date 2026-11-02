@@ -98,57 +98,113 @@
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/document-revision.js?v=4"></script>
 <script src="../lib/master-index-data.js?v=5"></script>
+<style>
+  .live-badge { display:inline-block; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:4px; font-size:10px; font-weight:700; padding:1px 6px; vertical-align:middle; letter-spacing:.04em; }
+  .admin-panel { background:#fff8f0; border:1px solid #fbbf24; border-radius:6px; padding:12px 16px; margin-bottom:14px; font-size:12px; color:#92400e; }
+  .admin-panel strong { font-size:13px; color:#78350f; }
+  th.live-col, td.live-col { width:80px; text-align:center; white-space:nowrap; }
+  td.live-col button { font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid; cursor:pointer; font-weight:600; }
+  td.live-col button.go-live { background:#dcfce7; color:#166534; border-color:#86efac; }
+  td.live-col button.go-live:hover { background:#bbf7d0; }
+  td.live-col button.un-live { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+  td.live-col button.un-live:hover { background:#fecaca; }
+</style>
 <script>(function () {
+
+  const LIVE_PREFIX = 'record_live:';
+  const ARCHIVE_PREFIX = 'record_archived:';
+
+  // Records that are live out of the box (seeded on first admin visit)
+  const DEFAULT_LIVE = ['rec 7.4.0', 'rec 7.4.1', 'rec 7.4.2', 'rec 7.4.10'];
 
   const isAdmin = !!(window.Auth && /ADMIN/i.test(window.Auth.getCurrentRole() || ''));
 
-  const ARCHIVE_PREFIX = 'record_archived:';
-  let archived = {};
-
-  const RECORDS = window.MasterIndexData.rows
+  const ALL_RECORDS = window.MasterIndexData.rows
     .filter(r => r.href)
-    .filter(r => {
-      if (isAdmin) return true;
-      const id = (r.docNo || r.name || '').trim().toLowerCase();
-      // Non-admins see exactly these three records only
-      const VISIBLE = ['rec 7.4.0', 'rec 7.4.1', 'rec 7.4.2'];
-      return VISIBLE.includes(id);
-    })
     .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+
+  function liveKey(r) { return (r.docNo || r.name || '').trim().toLowerCase(); }
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
   const searchInput = document.getElementById('searchInput');
   const tableBody = document.getElementById('tableBody');
+  const tableHead = document.querySelector('table.records-table thead tr');
   const totalCount = document.getElementById('totalCount');
   const resultCount = document.getElementById('resultCount');
   const noResults = document.getElementById('noResults');
 
-  totalCount.textContent = RECORDS.length;
-
-
+  let liveSet = {};
+  let archived = {};
   let latest = {};
 
+  // Add Live column header for admins
+  if (isAdmin) {
+    const th = document.createElement('th');
+    th.className = 'live-col';
+    th.textContent = 'Live';
+    tableHead.appendChild(th);
+
+    const panel = document.createElement('div');
+    panel.className = 'admin-panel';
+    panel.innerHTML = '<strong>Administrator view</strong> — All records are shown. Use the <em>Live</em> toggle to control which records appear for all other logins.';
+    document.querySelector('.search-box').before(panel);
+  }
+
+  function recordsToShow() {
+    return ALL_RECORDS.filter(r => {
+      if (isAdmin) return true;
+      return liveSet[liveKey(r)] === true;
+    });
+  }
+
   function render() {
-    let html = '';
-    const visible = RECORDS.filter(r => {
+    const records = recordsToShow();
+    const visible = records.filter(r => {
       const id = r.recordKey || ('doc:' + (r.docNo || ''));
       return !archived[id];
     });
+    let html = '';
     visible.forEach(r => {
       const baseline = r.revision || 1;
       const hit = latest[r.recordKey];
-      const live = hit ? hit.revisionNumber : baseline;
-      const moved = live !== baseline ? `<span class="bumped">was Rev ${baseline}</span>` : '';
+      const lv = hit ? hit.revisionNumber : baseline;
+      const moved = lv !== baseline ? `<span class="bumped">was Rev ${baseline}</span>` : '';
+      const isLive = liveSet[liveKey(r)] === true;
+      const liveBadge = (!isAdmin && isLive) ? '' : '';
+      const liveCell = isAdmin
+        ? `<td class="live-col">${isLive
+            ? `<button class="un-live" data-key="${esc(liveKey(r))}">Live ✓</button>`
+            : `<button class="go-live" data-key="${esc(liveKey(r))}">Go Live</button>`
+          }</td>`
+        : '';
       html += `<tr>`
-        + `<td class="doc-code">${esc(r.docNo)}</td>`
+        + `<td class="doc-code">${esc(r.docNo)}${isLive && !isAdmin ? '' : isLive && isAdmin ? ' <span class="live-badge">LIVE</span>' : ''}</td>`
         + `<td class="title"><a href="${esc(r.href)}">${esc(r.name)}</a></td>`
-        + `<td class="revision">Rev ${live}${moved}</td>`
+        + `<td class="revision">Rev ${lv}${moved}</td>`
+        + liveCell
         + `</tr>`;
     });
     tableBody.innerHTML = html;
     totalCount.textContent = visible.length;
     filterRecords();
+
+    if (isAdmin) {
+      tableBody.querySelectorAll('button[data-key]').forEach(btn => {
+        btn.addEventListener('click', async function () {
+          const key = this.dataset.key;
+          const willBeLive = this.classList.contains('go-live');
+          this.disabled = true;
+          try {
+            await window.storage.set(LIVE_PREFIX + key, willBeLive ? 'true' : 'false', true);
+            liveSet[key] = willBeLive;
+          } catch (e) {
+            alert('Could not save. Please try again.');
+          }
+          render();
+        });
+      });
+    }
   }
 
   function filterRecords() {
@@ -156,8 +212,8 @@
     const rows = tableBody.querySelectorAll('tr');
     let shown = 0;
     rows.forEach(row => {
-      const docCode = row.cells[0].textContent.toLowerCase();
-      const title = row.cells[1].textContent.toLowerCase();
+      const docCode = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
+      const title = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
       if (docCode.includes(query) || title.includes(query)) {
         row.classList.remove('hidden');
         shown++;
@@ -167,6 +223,26 @@
     });
     resultCount.textContent = shown;
     noResults.style.display = shown === 0 ? 'block' : 'none';
+  }
+
+  async function loadLiveSet() {
+    try {
+      const raw = await window.storage.getByPrefix(LIVE_PREFIX, true);
+      for (const k in raw) {
+        liveSet[k.slice(LIVE_PREFIX.length)] = (raw[k] === 'true');
+      }
+    } catch (e) { liveSet = {}; }
+
+    // Seed defaults if no live flags have been set yet
+    if (Object.keys(liveSet).length === 0 && isAdmin) {
+      for (const id of DEFAULT_LIVE) {
+        try { await window.storage.set(LIVE_PREFIX + id, 'true', true); } catch (e) {}
+        liveSet[id] = true;
+      }
+    } else if (Object.keys(liveSet).length === 0) {
+      // Non-admin, no flags set yet: fall back to defaults so they see something
+      for (const id of DEFAULT_LIVE) liveSet[id] = true;
+    }
   }
 
   async function loadArchived() {
@@ -180,10 +256,10 @@
 
   searchInput.addEventListener('input', filterRecords);
 
-  (async function() {
-
+  (async function () {
     render();
     try { latest = await window.DocumentRevision.latestAll(); } catch (e) { latest = {}; }
+    try { await loadLiveSet(); } catch (e) {}
     try { await loadArchived(); } catch (e) { archived = {}; }
     render();
   })();
