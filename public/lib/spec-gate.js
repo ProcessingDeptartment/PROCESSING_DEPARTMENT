@@ -26,7 +26,7 @@
   function api(path, opts) { return window.FacilityApi ? window.FacilityApi.fetch(path, opts) : fetch(path, opts); }
 
   /* ---- check ---- */
-  function hasLimits(spec) { return !!spec && (spec.min != null || spec.max != null || (spec.allowed && spec.allowed.length)); }
+  function hasLimits(spec) { return !!spec && (spec.min != null || spec.max != null || (spec.allowed && spec.allowed.length) || (spec.bad && spec.bad.length)); }
 
   // Blank values are never out of spec (an empty required field is the form's own problem, not a spec breach).
   function check(spec, value) {
@@ -39,9 +39,13 @@
         else if (spec.max != null && n > spec.max) reason = 'Above maximum (' + spec.max + ')';
       }
     }
+    if (!reason && spec.bad && spec.bad.length) {
+      var vb = String(value).trim().toLowerCase();
+      if (spec.bad.some(function (b) { return String(b).trim().toLowerCase() === vb; })) reason = 'Value "' + String(value).trim() + '" is not acceptable for this field';
+    }
     if (!reason && spec.allowed && spec.allowed.length) {
       var v = String(value).trim().toLowerCase();
-      if (!spec.allowed.some(function (a) { return String(a).trim().toLowerCase() === v; })) reason = 'Value not in allowed list';
+      if (!spec.allowed.some(function (a) { return String(a).trim().toLowerCase() === v; })) reason = 'Value not in allowed list (' + spec.allowed.join(', ') + ')';
     }
     return { ok: !reason, reason: reason };
   }
@@ -51,6 +55,7 @@
     if (spec.min != null && spec.max != null) parts.push(spec.min + '–' + spec.max + u);
     else if (spec.max != null) parts.push('max ' + spec.max + u);
     else if (spec.min != null) parts.push('min ' + spec.min + u);
+    if (spec.bad && spec.bad.length) parts.push('bad: ' + spec.bad.join(', '));
     if (spec.allowed && spec.allowed.length) parts.push('allowed: ' + spec.allowed.join(', '));
     return parts.join('; ');
   }
@@ -297,6 +302,7 @@
     sub.out_of_spec_fields = details.map(function (d) {
       return { field_key: d.key, label: d.label, value: num(d.value) != null ? num(d.value) : d.value,
         spec_min: d.spec.min == null ? null : d.spec.min, spec_max: d.spec.max == null ? null : d.spec.max,
+        bad_values: (d.spec.bad && d.spec.bad.length) ? d.spec.bad : null,
         gate_mode: d.spec.gateMode, spec_version: d.spec.version == null ? null : d.spec.version, row: d.rowLabel || null };
     });
     if (result && result.acceptedBy) sub.out_of_spec_accepted_by = result.acceptedBy;

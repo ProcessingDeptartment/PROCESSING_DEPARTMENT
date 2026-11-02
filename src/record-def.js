@@ -28,6 +28,7 @@ function specOut(r) {
   return {
     min: n(r.specMin), max: n(r.specMax),
     allowed: r.allowedValues ? r.allowedValues.split(',').map((x) => x.trim()).filter(Boolean) : null,
+    bad: r.badValues ? r.badValues.split(',').map((x) => x.trim()).filter(Boolean) : null,
     highlightRed: r.highlightRed, showWarningBubble: r.showWarningBubble, gateMode: r.gateMode,
     autoNc: r.autoNc, ncCategory: r.ncCategory, ncSeverity: r.ncSeverity, ncOptionalSkip: r.ncOptionalSkip,
     labelOverride: r.labelOverride, version: r.versionNumber,

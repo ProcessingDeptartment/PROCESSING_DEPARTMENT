@@ -5929,6 +5929,7 @@ model FieldSpec {
   specMin           Decimal? @map("spec_min")
   specMax           Decimal? @map("spec_max")
   allowedValues     String?  @map("allowed_values")
+  badValues         String?  @map("bad_values")
   highlightRed      Boolean  @default(false) @map("highlight_red")
   showWarningBubble Boolean  @default(false) @map("show_warning_bubble")
   gateMode          String   @default("none") @map("gate_mode") // none | warn_submit | double_sign | hard_block

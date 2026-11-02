@@ -32,7 +32,7 @@ function parseMeta(b) {
 const out = (r) => ({
   id: r.id, record_key: r.recordKey, field_key: r.fieldKey,
   spec_min: r.specMin == null ? null : Number(r.specMin), spec_max: r.specMax == null ? null : Number(r.specMax),
-  allowed_values: r.allowedValues, highlight_red: r.highlightRed, show_warning_bubble: r.showWarningBubble,
+  allowed_values: r.allowedValues, bad_values: r.badValues, highlight_red: r.highlightRed, show_warning_bubble: r.showWarningBubble,
   gate_mode: r.gateMode, auto_nc: r.autoNc, nc_category: r.ncCategory, nc_severity: r.ncSeverity,
   nc_optional_skip: r.ncOptionalSkip, label_override: r.labelOverride, notes: r.notes, active: r.active,
   version_number: r.versionNumber, created_at: r.createdAt, updated_at: r.updatedAt,
@@ -50,6 +50,8 @@ function parseBody(b) {
   }
   if (d.specMin != null && d.specMax != null && d.specMin > d.specMax) throw new Error('spec_min cannot be greater than spec_max');
   if (has('allowed_values')) d.allowedValues = str(b.allowed_values, 2000);
+  if (has('bad_values')) d.badValues = str(b.bad_values, 2000);
+  if (d.allowedValues && d.badValues) throw new Error('allowed_values and bad_values cannot both be set on the same spec');
   for (const [k, col] of [['highlight_red', 'highlightRed'], ['show_warning_bubble', 'showWarningBubble'], ['auto_nc', 'autoNc'],
     ['nc_optional_skip', 'ncOptionalSkip'], ['active', 'active']]) if (has(k)) d[col] = b[k] === true || b[k] === 'true' || b[k] === 1;
   if (has('gate_mode')) { if (!GATES.includes(b.gate_mode)) throw new Error('gate_mode must be one of ' + GATES.join(' | ')); d.gateMode = b.gate_mode; }
@@ -152,6 +154,9 @@ function mount(app, prisma, assembleRecordConfig) {
       const min = 'specMin' in data ? data.specMin : (cur.specMin == null ? null : Number(cur.specMin));
       const max = 'specMax' in data ? data.specMax : (cur.specMax == null ? null : Number(cur.specMax));
       if (min != null && max != null && min > max) return res.status(400).json({ error: 'spec_min cannot be greater than spec_max' });
+      const mergedAllowed = 'allowedValues' in data ? data.allowedValues : cur.allowedValues;
+      const mergedBad = 'badValues' in data ? data.badValues : cur.badValues;
+      if (mergedAllowed && mergedBad) return res.status(400).json({ error: 'allowed_values and bad_values cannot both be set on the same spec' });
       const row = await prisma.$transaction(async (tx) => {
         const r = await tx.fieldSpec.update({ where: { id }, data: { ...data, versionNumber: cur.versionNumber + 1, updatedAt: new Date() } });
         await writeVersion(tx, r, meta);

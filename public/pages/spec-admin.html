@@ -101,7 +101,16 @@
       <div class="grid">
         <div><label class="lbl" for="fMin">Min value</label><input type="number" step="any" id="fMin" placeholder="no lower limit"></div>
         <div><label class="lbl" for="fMax">Max value</label><input type="number" step="any" id="fMax" placeholder="no upper limit"></div>
-        <div class="full"><label class="lbl" for="fAllowed">Allowed values <span class="hint">(text / select fields; comma-separated, e.g. Pass,Accept)</span></label><input type="text" id="fAllowed"></div>
+        <div>
+          <label class="lbl" for="fBad">Bad values <span class="hint">(comma-separated values that mean out of spec, e.g. <code>N</code> or <code>Fail,N/A</code>)</span></label>
+          <input type="text" id="fBad" placeholder="e.g. N">
+          <p class="hint" id="fBadHint" style="margin:4px 0 0" hidden>Tip: for a Y/N field, enter <code>N</code> here if N means a problem.</p>
+        </div>
+        <div>
+          <label class="lbl" for="fAllowed">Allowed values <span class="hint">(comma-separated values that <em>are</em> acceptable; anything else is out of spec)</span></label>
+          <input type="text" id="fAllowed" placeholder="e.g. Pass,Accept">
+        </div>
+        <div class="full hint" style="margin:-6px 0 4px">Use <b>Bad values</b> OR <b>Allowed values</b> — not both. Bad values: list what is wrong (e.g. <code>N</code>). Allowed values: list what is acceptable (e.g. <code>Y</code>, <code>Pass</code>).</div>
         <div class="full"><label class="lbl" for="fLabel">Label override <span class="hint">(name shown in warnings; optional)</span></label><input type="text" id="fLabel"></div>
 
         <div class="full">
@@ -153,7 +162,7 @@
       <h2>3 &middot; Specs on this record</h2>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Field label</th><th>Field key</th><th>Min</th><th>Max</th><th>Gate mode</th><th>NC</th><th>Ver.</th><th>Active</th><th></th></tr></thead>
+          <thead><tr><th>Field label</th><th>Field key</th><th>Min</th><th>Max</th><th>Values spec</th><th>Gate mode</th><th>NC</th><th>Ver.</th><th>Active</th><th></th></tr></thead>
           <tbody id="specRows"></tbody>
         </table>
       </div>
@@ -290,6 +299,14 @@
   function showNc() { $('ncBox').hidden = !$('fNc').checked; }
   $('fNc').addEventListener('change', showNc);
 
+  function syncBadAllowed() {
+    var hasBad = !!$('fBad').value.trim(), hasAllowed = !!$('fAllowed').value.trim();
+    $('fAllowed').disabled = hasBad && !hasAllowed;
+    $('fBad').disabled = hasAllowed && !hasBad;
+  }
+  $('fBad').addEventListener('input', syncBadAllowed);
+  $('fAllowed').addEventListener('input', syncBadAllowed);
+
   function openEditor(key) {
     current = key;
     var f = fields.filter(function (x) { return x.key === key; })[0] || { label: key, key: key };
@@ -297,7 +314,10 @@
     $('edTitle').textContent = f.label + ' (' + key + ')';
     $('fMin').value = s && s.spec_min != null ? s.spec_min : '';
     $('fMax').value = s && s.spec_max != null ? s.spec_max : '';
+    $('fBad').value = s && s.bad_values || '';
     $('fAllowed').value = s && s.allowed_values || '';
+    $('fBadHint').hidden = !(f.type === 'yesno' || f.type === 'yn' || /yes.?no/i.test(f.type));
+    syncBadAllowed();
     $('fLabel').value = s && s.label_override || '';
     $('fRed').checked = !!(s && s.highlight_red);
     $('fBubble').checked = !!(s && s.show_warning_bubble);
@@ -321,12 +341,13 @@
   $('saveBtn').addEventListener('click', function () {
     if (!current) return;
     var btn = this, rec = $('recSel').value;
-    var min = val('fMin'), max = val('fMax');
+    var min = val('fMin'), max = val('fMax'), bad = val('fBad'), allowed = val('fAllowed');
     if (min !== null && max !== null && Number(min) > Number(max)) { toast('Min cannot be greater than max.', true); return; }
-    if (min === null && max === null && !val('fAllowed')) { toast('Enter a min, a max or a list of allowed values.', true); return; }
+    if (bad && allowed) { toast('Use Bad values OR Allowed values — not both.', true); return; }
+    if (min === null && max === null && !bad && !allowed) { toast('Enter a min, a max, bad values, or allowed values.', true); return; }
     if ($('fNc').checked && !val('fNcCat')) { toast('Enter an NC category (or turn auto-NC off).', true); return; }
     var body = {
-      spec_min: min, spec_max: max, allowed_values: val('fAllowed'), label_override: val('fLabel'),
+      spec_min: min, spec_max: max, bad_values: bad, allowed_values: allowed, label_override: val('fLabel'),
       highlight_red: $('fRed').checked, show_warning_bubble: $('fBubble').checked, gate_mode: getGate(),
       auto_nc: $('fNc').checked, nc_category: val('fNcCat'), nc_severity: $('fNcSev').value, nc_optional_skip: $('fNcSkip').checked,
       notes: val('fNotes'), active: !$('fOff').checked
@@ -381,14 +402,16 @@
     var rows = Object.keys(specs).map(function (k) { return specs[k]; }).sort(function (a, b) { return a.id - b.id; });
     $('summary').hidden = false;
     $('specRows').innerHTML = rows.length ? rows.map(function (s) {
+      var valSpec = s.bad_values ? 'Bad: ' + s.bad_values : s.allowed_values ? 'Allowed: ' + s.allowed_values : '—';
       return '<tr><td>' + esc(labelOf(s.field_key)) + '</td><td><code>' + esc(s.field_key) + '</code></td>'
         + '<td>' + (s.spec_min == null ? '—' : esc(s.spec_min)) + '</td><td>' + (s.spec_max == null ? '—' : esc(s.spec_max)) + '</td>'
+        + '<td><span class="hint">' + esc(valSpec) + '</span></td>'
         + '<td>' + esc(GATE_LABEL[s.gate_mode] || s.gate_mode) + '</td>'
         + '<td>' + (s.auto_nc ? esc(s.nc_category || 'Yes') + ' <span class="hint">(' + esc(s.nc_severity) + (s.nc_optional_skip ? ', skippable' : ', not skippable') + ')</span>' : '—') + '</td>'
         + '<td>v' + esc(s.version_number) + '</td>'
         + '<td><span class="badge ' + (s.active ? 'set' : 'off') + '">' + (s.active ? 'Active' : 'Off') + '</span></td>'
         + '<td><button type="button" data-edit="' + esc(s.field_key) + '">Edit</button></td></tr>';
-    }).join('') : '<tr><td colspan="9" class="hint">No specs on this record yet. Pick a field above to add one.</td></tr>';
+    }).join('') : '<tr><td colspan="10" class="hint">No specs on this record yet. Pick a field above to add one.</td></tr>';
   }
   $('specRows').addEventListener('click', function (e) {
     var b = e.target.closest('[data-edit]'); if (b) openEditor(b.getAttribute('data-edit'));
