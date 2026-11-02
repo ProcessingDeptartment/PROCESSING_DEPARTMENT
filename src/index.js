@@ -1255,13 +1255,15 @@ app.get('/api/verification/count-overdue', async (req, res) => {
   const roleKey = (req.query.role || '').trim().toUpperCase();
 
   try {
-    // 1. Discover all sub_* tables that have the required columns.
+    // 1. Discover sub_* tables that have ALL three required columns.
     const tableRows = await prisma.$queryRaw`
       SELECT table_name
       FROM information_schema.columns
       WHERE table_schema = 'public'
         AND table_name LIKE 'sub\\_%'
-        AND column_name = 'submission_group_id'
+        AND column_name IN ('submission_group_id', 'record_type', 'submission_date')
+      GROUP BY table_name
+      HAVING COUNT(DISTINCT column_name) = 3
     `;
     const tables = tableRows.map(r => r.table_name);
     if (tables.length === 0) return res.json({ overdue: 0 });
