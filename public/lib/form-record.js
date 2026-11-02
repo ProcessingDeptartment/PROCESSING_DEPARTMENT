@@ -3812,11 +3812,16 @@
         const fieldsHtml = `<div class="fr-grid fr-grid-${_gridCols}${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
           ${sec.fields.map(f => {
             const _fid = `fr_f_${f.key}`;
-            let _finp = fieldInputHtml(_fid, f.type === 'time' && f.nowButton && !f.readOnly ? Object.assign({}, f, { seg: true }) : f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')));
-            if (f.type === 'time' && f.nowButton && !f.readOnly) _finp = `<span class="fr-now-wrap">${_finp}<button type="button" class="fr-btn fr-now-btn no-print" data-now="${_fid}">Now</button></span>`;
-            return `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
+            const _fval = existing ? (existing.values[f.key] ?? '') : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || ''));
+            // time+nowButton: plain native input (flat single line, no custom picker bubbles)
+            let _finp = (f.type === 'time' && f.nowButton && !f.readOnly)
+              ? `<span class="fr-now-wrap"><input type="time" id="${_fid}"${_fval ? ` value="${esc(_fval)}"` : ''}><button type="button" class="fr-btn fr-now-btn no-print" data-now="${_fid}">Now</button></span>`
+              : fieldInputHtml(_fid, f, _fval);
+            // segmented fields use <div> not <label> to prevent browser label→button re-click
+            const _ftag = f.type === 'segmented' ? 'div' : 'label';
+            return `<${_ftag} class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
             ${_finp}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}${f.ncBelowSpec ? `<span class="fr-nc-badge" id="${_fid}__nc" hidden>NC</span>` : ''}
-          </label>`;
+          </${_ftag}>`;
           }).join('')}${sec.__hiddenHtml || ''}
         </div>`;
         return wrapSection(sec, fieldsHtml);
