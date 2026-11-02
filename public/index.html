@@ -128,23 +128,23 @@
 
   <h2 class="section-title">Categories</h2>
   <div class="block-grid">
-    <a class="block index auth-only" href="records/record-list.html" title="Find and open a record to fill in">
+    <a class="block index auth-only" href="records/record-list.html" title="Find and open a record to fill in" data-page-id="records">
       <span class="block-title">Records</span>
       <span class="block-desc">Find and open a record to fill in</span>
     </a>
-    <a class="block index auth-only" href="pages/fsms.html" title="SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index">
+    <a class="block index auth-only" href="pages/fsms.html" title="SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index" data-page-id="fsms">
       <span class="block-title">FSMS</span>
       <span class="block-desc">SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index</span>
     </a>
-    <a class="block production auth-only" href="pages/awaiting-verification.html" title="Review and sign off submitted entries waiting for your verification">
+    <a class="block production auth-only" href="pages/awaiting-verification.html" title="Review and sign off submitted entries waiting for your verification" data-page-id="verifications">
       <span class="block-title">Verifications</span>
       <span class="block-desc">Review and sign off submitted entries waiting for your verification</span>
     </a>
-    <a class="block production admin-only" href="pages/production-dashboard.html" title="Live production floor snapshot">
+    <a class="block production admin-only" href="pages/production-dashboard.html" title="Live production floor snapshot" data-page-id="production-dashboard">
       <span class="block-title">Production Dashboard</span>
       <span class="block-desc">Live seam data, line status and quality overview for the production floor</span>
     </a>
-    <div class="block production auth-only">
+    <div class="block production auth-only" data-page-id="job-progress">
       <span class="block-title">Job Progress report</span>
       <span class="block-desc">Every job and whether it is still open, plus production view and trends</span>
       <div class="block-btns">
@@ -152,7 +152,7 @@
         <a class="block-btn" href="pages/dashboard.html">Dashboard</a>
       </div>
     </div>
-    <div class="block index admin-only">
+    <div class="block index admin-only" data-page-id="logs">
       <span class="block-title">Logs</span>
       <span class="block-desc">All submissions and verifications across every record, plus the Verified Print Hub for PDF-ready entries</span>
       <div class="block-btns">
@@ -160,11 +160,11 @@
         <a class="block-btn" href="pages/submissions-log.html?tab=print">Print Hub</a>
       </div>
     </div>
-    <a class="block production" href="pages/handovers.html" title="Shift handover reporting &mdash; Production and Quality">
+    <a class="block production" href="pages/handovers.html" title="Shift handover reporting &mdash; Production and Quality" data-page-id="handovers">
       <span class="block-title">Handovers</span>
       <span class="block-desc">Shift handover reporting &mdash; Production and Quality</span>
     </a>
-    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator — enter measurements and get instant pass/fail results">
+    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator — enter measurements and get instant pass/fail results" data-page-id="seam-calculator">
       <span class="block-title">Seam Calculator</span>
       <span class="block-desc">Double seam quick calculator</span>
     </a>
@@ -188,6 +188,10 @@
       <tr class="index admin-only">
         <td class="document"><a href="pages/devices.html">Authorised devices</a></td>
         <td class="description">Administrator only &mdash; devices that have signed in to save records</td>
+      </tr>
+      <tr class="index admin-only" data-page-id="user-access">
+        <td class="document"><a href="pages/admin-access.html">User Page Access</a></td>
+        <td class="description">Administrator only &mdash; choose which categories and pages each login role can see on the home screen</td>
       </tr>
     </tbody>
   </table>
@@ -300,6 +304,7 @@
     </div>
   </div>
 </div>
+<script src="lib/access-control.js?v=1"></script>
 <script src="lib/master-index-data.js?v=4"></script>
 <script src="lib/permission-rules.js?v=8"></script>
 <script src="lib/verification-queue.js?v=3"></script>

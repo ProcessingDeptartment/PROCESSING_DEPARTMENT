@@ -1373,6 +1373,7 @@ app.post('/api/audit/block-override', async (req, res) => {
 require('./certRevisions').mount(app, prisma); // certification version-update tracking
 require('./refs')(app, prisma); // document cross-reference registry
 require('./passkeys')(app, prisma); // admin-managed signature passkeys
+require('./access-control')(app, prisma); // admin-managed page access control per role
 require('./device-enroll')(app, prisma, API_KEY); // passkey -> access key for a new device
 require('./delete-submission')(app, prisma); // double-signoff submission deletion
 require('./submission-read')(app, prisma);    // read API over the sub_* tables

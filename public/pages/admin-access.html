@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Page Access — Admin</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#A9763A">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #1b2330; background: #f4f5f3; margin: 0; }
+
+    .brand-bar { background: #fff; border-bottom: 3px solid #a9763a; padding: 12px 20px; }
+    .brand-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+    .brand-logo { height: 36px; }
+    .back-link { margin-left: auto; font-size: 13px; color: #1d4ed8; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .header { background: #1d2b38; color: #f4f1e8; padding: 14px 20px; }
+    .header-inner { max-width: 1100px; margin: 0 auto; }
+    .header h1 { margin: 0; font-size: 17px; font-weight: 600; }
+    .header p { margin: 3px 0 0; color: #b9c3cc; font-size: 12px; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+    /* Auth gate */
+    #auth-gate { display: flex; align-items: center; justify-content: center; min-height: 200px; }
+    #auth-gate p { color: #b45309; font-weight: 600; font-size: 15px; }
+
+    /* Role tabs */
+    .role-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .role-tab {
+      padding: 7px 16px; border-radius: 20px; border: 1.5px solid #d0d5db;
+      background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151;
+      transition: all .15s;
+    }
+    .role-tab:hover { border-color: #a9763a; color: #a9763a; }
+    .role-tab.active { background: #a9763a; border-color: #a9763a; color: #fff; font-weight: 700; }
+
+    /* Info */
+    .info-box {
+      background: #fff8e6; border: 1px solid #e3b341; border-left: 4px solid #b7791f;
+      border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 12.5px; color: #5c3d00;
+    }
+
+    /* Permission grid */
+    .perm-section { margin-bottom: 28px; }
+    .perm-section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      color: #5c6771; padding-bottom: 6px; border-bottom: 1px solid #e2e4e3; margin-bottom: 10px;
+    }
+    .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+
+    .perm-item {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 1px solid #e2e4e3; border-radius: 6px; padding: 10px 12px;
+      cursor: pointer; user-select: none; transition: background .1s, border-color .1s;
+    }
+    .perm-item:hover { border-color: #a9763a; background: #fdf9f2; }
+    .perm-item.on { border-color: #15803d; background: #f0fdf4; }
+    .perm-item.on .perm-toggle { background: #15803d; border-color: #15803d; }
+    .perm-item.on .perm-toggle::after { left: 16px; }
+
+    .perm-toggle {
+      flex-shrink: 0; width: 32px; height: 18px; border-radius: 9px;
+      background: #d0d5db; border: 1.5px solid #d0d5db; position: relative; transition: all .15s;
+    }
+    .perm-toggle::after {
+      content: ''; position: absolute; top: 1px; left: 1px;
+      width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: left .15s;
+    }
+
+    .perm-label { font-size: 13px; font-weight: 500; color: #1b2330; }
+    .perm-sub { font-size: 11px; color: #6b7280; margin-top: 1px; }
+
+    /* All-on / all-off controls */
+    .section-controls { display: flex; gap: 8px; margin-bottom: 8px; }
+    .section-btn {
+      font-size: 11px; padding: 3px 10px; border: 1px solid #d0d5db; border-radius: 4px;
+      background: #fff; cursor: pointer; color: #374151;
+    }
+    .section-btn:hover { background: #f3f4f6; }
+
+    /* Save bar */
+    .save-bar {
+      position: sticky; bottom: 0; background: #1d2b38; color: #f4f1e8;
+      padding: 12px 20px; display: flex; align-items: center; gap: 12px; z-index: 100;
+      border-top: 2px solid #a9763a;
+    }
+    .save-bar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 12px; width: 100%; }
+    .save-bar p { margin: 0; font-size: 13px; color: #b9c3cc; }
+    .save-btn {
+      margin-left: auto; padding: 9px 24px; background: #a9763a; border: none; border-radius: 5px;
+      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .save-btn:hover { background: #8a5e2a; }
+    .save-btn:disabled { background: #6b7280; cursor: default; }
+    #saveStatus { font-size: 12px; }
+
+    .unrestricted-note {
+      font-size: 12px; color: #6b7280; font-style: italic; padding: 6px 0;
+    }
+
+    /* Toggle "restrict this role" switch at the top of each role panel */
+    .restrict-toggle-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: #fff; border: 1px solid #e2e4e3; border-radius: 6px; margin-bottom: 16px;
+    }
+    .restrict-toggle-row label { font-size: 13px; font-weight: 600; cursor: pointer; }
+    .restrict-toggle-row .sub { font-size: 11.5px; color: #6b7280; }
+    .restrict-enabled { border-color: #b45309 !important; background: #fff8f0 !important; }
+  </style>
+</head>
+<body>
+
+<div class="brand-bar">
+  <div class="brand-inner">
+    <img class="brand-logo" src="/assets/abagold-logo.png" alt="Abagold">
+    <a class="back-link" href="/index.html">← Back to home</a>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>User Page Access</h1>
+    <p>Administrator — control which categories and pages each role can see on the home screen</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="auth-gate" style="display:none;">
+    <p>⛔ Administrator access required.</p>
+  </div>
+
+  <div id="main" style="display:none;">
+
+    <div class="info-box">
+      <strong>How this works:</strong> For each role you can turn on restrictions. When restrictions are ON, only the pages you tick will appear for that role. When restrictions are OFF (default), the role sees everything it is normally allowed to see. The <strong>Administrator</strong> role always sees everything.
+    </div>
+
+    <div class="role-tabs" id="roleTabs"></div>
+
+    <div id="rolePanel"></div>
+
+  </div>
+
+</div>
+
+<div class="save-bar" id="saveBar" style="display:none;">
+  <div class="save-bar-inner">
+    <p>Changes are not saved until you click Save.</p>
+    <span id="saveStatus"></span>
+    <button class="save-btn" id="saveBtn" type="button">Save changes</button>
+  </div>
+</div>
+
+<script src="/lib/data-store.js?v=5"></script>
+<script src="/lib/api-backend.js?v=18"></script>
+<script src="/lib/auth.js?v=7"></script>
+<script src="/lib/login-ui.js?v=6"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── Page catalogue ─────────────────────────────────────────────────────────
+  // This list mirrors the nav blocks and rows in public/index.html.
+  // id must match the data-page-id attributes added to index.html.
+  // category groups them visually in the admin UI.
+  const PAGES = [
+    // Main categories (blocks)
+    { id: 'records',              label: 'Records',              sub: 'Find and open a record to fill in',                         category: 'Categories', authOnly: true },
+    { id: 'fsms',                 label: 'FSMS',                 sub: 'SOPs, Policies, Procedures, PRPs etc.',                     category: 'Categories', authOnly: true },
+    { id: 'verifications',        label: 'Verifications',        sub: 'Review and sign off submitted entries',                     category: 'Categories', authOnly: true },
+    { id: 'production-dashboard', label: 'Production Dashboard', sub: 'Live seam data, line status and quality',                  category: 'Categories', adminOnly: true },
+    { id: 'job-progress',         label: 'Job Progress report',  sub: 'Job Status + Dashboard buttons',                           category: 'Categories', authOnly: true },
+    { id: 'logs',                 label: 'Logs',                 sub: 'Submissions Log + Print Hub',                              category: 'Categories', adminOnly: true },
+    { id: 'handovers',            label: 'Handovers',            sub: 'Shift handover reporting',                                 category: 'Categories' },
+    { id: 'seam-calculator',      label: 'Seam Calculator',      sub: 'Double seam quick calculator',                             category: 'Categories' },
+    // More table (admin rows already hidden from non-admins by index.html)
+    { id: 'field-specifications', label: 'Field Specifications', sub: 'Set allowed ranges and enforcement rules',                 category: 'More (admin tools)', adminOnly: true },
+    { id: 'passkeys',             label: 'Passkeys',             sub: 'Add people and set numeric passkeys',                      category: 'More (admin tools)', adminOnly: true },
+    { id: 'verification-preview', label: 'Verification Preview Fields', sub: 'Choose fields a verifier sees in preview',         category: 'More (admin tools)', adminOnly: true },
+    { id: 'authorised-devices',   label: 'Authorised Devices',   sub: 'Devices that have signed in to save records',              category: 'More (admin tools)', adminOnly: true },
+    { id: 'user-access',          label: 'User Page Access',     sub: 'This page — control which pages each role can see',        category: 'More (admin tools)', adminOnly: true },
+  ];
+
+  // ── Role list (matches auth.js USERS — excluding ADMINISTRATOR which is always unrestricted) ──
+  const ROLES = [
+    { key: 'PRODUCTION_SUPERVISOR', label: 'Supervisor' },
+    { key: 'SHIFT_MANAGER',         label: 'Shift Manager' },
+    { key: 'QUALITY_SUPERVISOR',    label: 'Quality Supervisor' },
+    { key: 'QUALITY_CONTROLLER',    label: 'Quality Controller' },
+    { key: 'QA_MANAGER',            label: 'QA Manager' },
+    { key: 'PRODUCTION_MANAGER',    label: 'Production Manager' },
+    { key: 'OPERATOR',              label: 'Operator' },
+    { key: 'ADMIN',                 label: 'Admin' },
+  ];
+
+  function apiBase() {
+    return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
+  }
+  function roleHeader() {
+    return {
+      'Content-Type': 'application/json',
+      'x-role': window.__currentUserRoleKey || '',
+      'x-user': window.__currentUserName || ''
+    };
+  }
+
+  // config shape: { ROLE_KEY: { pageId: true|false } | null }
+  // null means unrestricted; {} with all falses also means unrestricted
+  let config = {};
+  let activeRole = ROLES[0].key;
+
+  // ── Fetch config ───────────────────────────────────────────────────────────
+  async function loadConfig() {
+    try {
+      const res = await fetch(apiBase() + '/api/admin/access-control', { headers: roleHeader(), cache: 'no-store' });
+      const data = await res.json();
+      config = data.config || {};
+    } catch (e) {
+      config = {};
+    }
+  }
+
+  // ── Render role tabs ───────────────────────────────────────────────────────
+  function renderTabs() {
+    const tabs = document.getElementById('roleTabs');
+    tabs.innerHTML = '';
+    ROLES.forEach(function (r) {
+      const btn = document.createElement('button');
+      btn.className = 'role-tab' + (r.key === activeRole ? ' active' : '');
+      btn.textContent = r.label;
+      btn.addEventListener('click', function () {
+        activeRole = r.key;
+        renderTabs();
+        renderPanel();
+      });
+      tabs.appendChild(btn);
+    });
+  }
+
+  // ── Is this role restricted? ───────────────────────────────────────────────
+  function isRestricted(roleKey) {
+    if (!config[roleKey]) return false;
+    return Object.values(config[roleKey]).some(Boolean);
+  }
+
+  // ── Render permissions panel for active role ───────────────────────────────
+  function renderPanel() {
+    const panel = document.getElementById('rolePanel');
+    const roleLabel = (ROLES.find(r => r.key === activeRole) || {}).label || activeRole;
+    const restricted = isRestricted(activeRole);
+    const rules = config[activeRole] || {};
+
+    // Group pages by category
+    const cats = {};
+    PAGES.forEach(function (p) {
+      if (!cats[p.category]) cats[p.category] = [];
+      cats[p.category].push(p);
+    });
+
+    let html = '';
+
+    // Restrict toggle
+    html += `<div class="restrict-toggle-row${restricted ? ' restrict-enabled' : ''}" id="restrictRow">
+      <label>
+        <input type="checkbox" id="restrictCheck" ${restricted ? 'checked' : ''}
+          style="width:16px;height:16px;margin-right:6px;cursor:pointer;accent-color:#b45309;">
+        <strong>Restrict access for ${roleLabel}</strong>
+      </label>
+      <span class="sub">${restricted
+        ? 'Only ticked pages will be visible for this role.'
+        : 'This role can see all pages it is normally allowed to see. Tick to enable restrictions.'}</span>
+    </div>`;
+
+    if (!restricted) {
+      html += `<p class="unrestricted-note">No restrictions active — enable the toggle above to choose which pages this role can access.</p>`;
+    } else {
+      Object.entries(cats).forEach(function ([cat, pages]) {
+        html += `<div class="perm-section">
+          <div class="perm-section-title">${cat}
+            <span class="section-controls" style="float:right;">
+              <button class="section-btn" data-cat="${cat}" data-val="1">All on</button>
+              <button class="section-btn" data-cat="${cat}" data-val="0">All off</button>
+            </span>
+          </div>
+          <div class="perm-grid">`;
+        pages.forEach(function (p) {
+          const on = !!rules[p.id];
+          html += `<div class="perm-item${on ? ' on' : ''}" data-page-id="${p.id}" tabindex="0" role="checkbox" aria-checked="${on}">
+            <div class="perm-toggle"></div>
+            <div>
+              <div class="perm-label">${p.label}</div>
+              ${p.sub ? `<div class="perm-sub">${p.sub}</div>` : ''}
+            </div>
+          </div>`;
+        });
+        html += `</div></div>`;
+      });
+    }
+
+    panel.innerHTML = html;
+
+    // Bind restrict toggle
+    const check = document.getElementById('restrictCheck');
+    check.addEventListener('change', function () {
+      if (check.checked) {
+        // Enable restrictions — start with everything ON
+        config[activeRole] = {};
+        PAGES.forEach(function (p) { config[activeRole][p.id] = true; });
+      } else {
+        // Remove restrictions entirely
+        delete config[activeRole];
+      }
+      renderPanel();
+    });
+
+    // Bind perm item toggles
+    panel.querySelectorAll('.perm-item').forEach(function (el) {
+      function toggle() {
+        const id = el.getAttribute('data-page-id');
+        if (!config[activeRole]) config[activeRole] = {};
+        config[activeRole][id] = !config[activeRole][id];
+        el.classList.toggle('on', !!config[activeRole][id]);
+        el.querySelector('.perm-toggle').style = '';
+        el.setAttribute('aria-checked', String(!!config[activeRole][id]));
+        // re-check if restricted still
+        if (!isRestricted(activeRole)) { delete config[activeRole]; renderPanel(); }
+      }
+      el.addEventListener('click', toggle);
+      el.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); } });
+    });
+
+    // Bind section all-on/all-off buttons
+    panel.querySelectorAll('.section-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const cat = btn.getAttribute('data-cat');
+        const val = btn.getAttribute('data-val') === '1';
+        if (!config[activeRole]) config[activeRole] = {};
+        PAGES.filter(p => p.category === cat).forEach(function (p) {
+          config[activeRole][p.id] = val;
+        });
+        if (!isRestricted(activeRole)) { delete config[activeRole]; }
+        renderPanel();
+      });
+    });
+  }
+
+  // ── Save ───────────────────────────────────────────────────────────────────
+  document.getElementById('saveBtn').addEventListener('click', async function () {
+    const btn = document.getElementById('saveBtn');
+    const status = document.getElementById('saveStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    status.textContent = '';
+    try {
+      const res = await fetch(apiBase() + '/api/admin/access-control', {
+        method: 'POST',
+        headers: roleHeader(),
+        body: JSON.stringify({ config })
+      });
+      const data = await res.json();
+      if (data.success) {
+        status.textContent = '✓ Saved';
+        status.style.color = '#15803d';
+      } else {
+        throw new Error(data.error || 'Save failed');
+      }
+    } catch (e) {
+      status.textContent = '✗ ' + e.message;
+      status.style.color = '#dc2626';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save changes';
+    }
+  });
+
+  // ── Auth gate ──────────────────────────────────────────────────────────────
+  function init() {
+    const user = window.Auth && window.Auth.getCurrentUser();
+    const role = user ? user.role : '';
+    if (!user || role !== 'ADMINISTRATOR') {
+      document.getElementById('auth-gate').style.display = 'flex';
+      return;
+    }
+    document.getElementById('main').style.display = '';
+    document.getElementById('saveBar').style.display = '';
+    loadConfig().then(function () {
+      renderTabs();
+      renderPanel();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.Auth && window.Auth.isAuthenticated()) {
+      init();
+    } else {
+      // Show login prompt
+      document.getElementById('auth-gate').style.display = 'flex';
+      document.getElementById('auth-gate').querySelector('p').textContent = 'Please log in as Administrator to use this page.';
+      // Wait for login
+      document.addEventListener('authSuccess', function () {
+        document.getElementById('auth-gate').style.display = 'none';
+        init();
+      });
+      // Trigger login modal after short delay
+      setTimeout(function () {
+        if (window.LoginUI) window.LoginUI.showLoginModal();
+      }, 300);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
