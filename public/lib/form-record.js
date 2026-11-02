@@ -3893,29 +3893,34 @@
       }
 
       if (typeof wireYesNo === 'function') wireYesNo(container);
-      // Segmented buttons (type:'segmented') in section fields
-      container.addEventListener('click', (e) => {
-        const b = e.target.closest && e.target.closest('.fr-seg-btn');
-        if (!b || b.closest('[id^="fr_rosterRows"]')) return;
-        const wrap = b.closest('[data-seg-for]');
-        const hidden = wrap && el(wrap.dataset.segFor);
-        if (!hidden) return;
-        hidden.value = b.dataset.v;
-        wrap.querySelectorAll('.fr-seg-btn').forEach(x => {
-          x.classList.toggle('on', x === b);
-          x.setAttribute('aria-checked', x === b ? 'true' : 'false');
+      // Segmented buttons (type:'segmented') in section fields — direct binding, same pattern as wireYesNo
+      container.querySelectorAll('.fr-seg:not([data-wired])').forEach(group => {
+        group.dataset.wired = '1';
+        const hidden = group.querySelector('input[type=hidden]');
+        const buttons = Array.from(group.querySelectorAll('.fr-seg-btn'));
+        buttons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            hidden.value = btn.dataset.v;
+            buttons.forEach(b => {
+              b.classList.toggle('on', b === btn);
+              b.setAttribute('aria-checked', b === btn ? 'true' : 'false');
+            });
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+          });
         });
-        hidden.dispatchEvent(new Event('input', { bubbles: true }));
       });
       // Now buttons in section time fields (nowButton:true)
-      container.addEventListener('click', (e) => {
-        const b = e.target.closest && e.target.closest('[data-now]');
-        if (!b || b.closest('[id^="fr_rosterRows"]')) return;
-        const inp = el(b.dataset.now);
-        if (!inp || inp.disabled) return;
-        const d = new Date();
-        inp.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      container.querySelectorAll('.fr-now-btn[data-now]:not([data-wired])').forEach(btn => {
+        if (btn.closest('[id^="fr_rosterRows"]')) return;
+        btn.dataset.wired = '1';
+        btn.addEventListener('click', () => {
+          const inp = el(btn.dataset.now);
+          if (!inp || inp.disabled) return;
+          const d = new Date();
+          inp.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+        });
       });
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
       if (typeof wireUpload === 'function') wireUpload(container);
