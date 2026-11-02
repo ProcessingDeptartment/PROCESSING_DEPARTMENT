@@ -3812,7 +3812,7 @@
         const fieldsHtml = `<div class="fr-grid fr-grid-${_gridCols}${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
           ${sec.fields.map(f => {
             const _fid = `fr_f_${f.key}`;
-            let _finp = fieldInputHtml(_fid, f.type === 'time' && f.nowButton && !f.readOnly ? Object.assign({}, f, { seg: true }) : f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')));
+            let _finp = fieldInputHtml(_fid, f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')));
             if (f.type === 'time' && f.nowButton && !f.readOnly) _finp = `<span class="fr-now-wrap">${_finp}<button type="button" class="fr-btn fr-now-btn no-print" data-now="${_fid}">Now</button></span>`;
             return `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
             ${_finp}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}${f.ncBelowSpec ? `<span class="fr-nc-badge" id="${_fid}__nc" hidden>NC</span>` : ''}
