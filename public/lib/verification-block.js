@@ -12,6 +12,9 @@ async function initVerificationBlock() {
   // ── 0. Per-user exemption / override check ────────────────────────────────
   if (window.__blockExempt === true || sessionStorage.getItem('blockExempt') === '1') return;
   if (sessionStorage.getItem('vb_override_granted') === '1') return;
+  // Never block on the verification pages themselves — that's where users go to fix it.
+  const _path = window.location.pathname;
+  if (_path.includes('awaiting-verification') || _path.includes('verification-queue')) return;
 
   // ── 1. Read current user role ─────────────────────────────────────────────
   // Requires auth.js to have run and restored/set the session first.
@@ -49,7 +52,7 @@ async function initVerificationBlock() {
       const q = await window.VerificationQueue.forCurrentUser();
       // Count entries whose oldest submission timestamp is > 48 h ago.
       overdueCount = (q.records || [])
-        .filter(r => r.oldest && r.oldest < cutoff48)
+        .filter(r => r.oldest && +new Date(r.oldest) < cutoff48)
         .reduce((n, r) => n + r.count, 0);
     } else {
       // Fallback to API (e.g. on pages that don't load verification-queue.js).
@@ -389,7 +392,7 @@ async function initVerificationBlock() {
       if (window.VerificationQueue) {
         const q = await window.VerificationQueue.forCurrentUser();
         newCount = (q.records || [])
-          .filter(r => r.oldest && r.oldest < cutoff48)
+          .filter(r => r.oldest && +new Date(r.oldest) < cutoff48)
           .reduce((n, r) => n + r.count, 0);
       } else {
         const params = roleKey ? '?role=' + encodeURIComponent(roleKey) : '';
