@@ -3814,10 +3814,21 @@
             const _fid = `fr_f_${f.key}`;
             const _fval = existing ? (existing.values[f.key] ?? '') : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || ''));
             // time+nowButton: plain native input (flat single line, no custom picker bubbles)
-            let _finp = (f.type === 'time' && f.nowButton && !f.readOnly)
-              ? `<span class="fr-now-wrap"><input type="time" id="${_fid}"${_fval ? ` value="${esc(_fval)}"` : ''}><button type="button" class="fr-btn fr-now-btn no-print" data-now="${_fid}">Now</button></span>`
-              : fieldInputHtml(_fid, f, _fval);
-            // segmented fields use <div> not <label> to prevent browser label→button re-click
+            // segmented in sections: native radio inputs styled as buttons (works on all devices)
+            let _finp;
+            if (f.type === 'time' && f.nowButton && !f.readOnly) {
+              _finp = `<span class="fr-now-wrap"><input type="time" id="${_fid}"${_fval ? ` value="${esc(_fval)}"` : ''}><button type="button" class="fr-btn fr-now-btn no-print" data-now="${_fid}">Now</button></span>`;
+            } else if (f.type === 'segmented' && !f.readOnly) {
+              const _labels = f.optionLabels || {};
+              _finp = `<span class="fr-seg-r" data-seg-for="${_fid}" role="radiogroup">${
+                (f.options || []).map(o => {
+                  const _oid = `${_fid}__r_${esc(o)}`;
+                  return `<input type="radio" class="fr-seg-radio-inp" id="${_oid}" name="${_fid}__rg" value="${esc(o)}"${_fval === o ? ' checked' : ''}><label for="${_oid}" class="fr-seg-btn${_fval === o ? ' on' : ''}">${esc(_labels[o] || o)}</label>`;
+                }).join('')
+              }<input type="hidden" id="${_fid}" value="${esc(_fval)}"></span>`;
+            } else {
+              _finp = fieldInputHtml(_fid, f, _fval);
+            }
             const _ftag = f.type === 'segmented' ? 'div' : 'label';
             return `<${_ftag} class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
             ${_finp}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}${f.ncBelowSpec ? `<span class="fr-nc-badge" id="${_fid}__nc" hidden>NC</span>` : ''}
@@ -3898,20 +3909,16 @@
       }
 
       if (typeof wireYesNo === 'function') wireYesNo(container);
-      // Segmented buttons (type:'segmented') in section fields — direct binding, same pattern as wireYesNo
-      container.querySelectorAll('.fr-seg:not([data-wired])').forEach(group => {
+      // Radio-based segmented fields in sections (fr-seg-r): sync radio change → hidden input + on class
+      container.querySelectorAll('.fr-seg-r:not([data-wired])').forEach(group => {
         group.dataset.wired = '1';
         const hidden = group.querySelector('input[type=hidden]');
-        const buttons = Array.from(group.querySelectorAll('.fr-seg-btn'));
-        buttons.forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (btn.disabled) return;
-            hidden.value = btn.dataset.v;
-            buttons.forEach(b => {
-              b.classList.toggle('on', b === btn);
-              b.setAttribute('aria-checked', b === btn ? 'true' : 'false');
-            });
+        const labels = Array.from(group.querySelectorAll('label.fr-seg-btn'));
+        group.querySelectorAll('input.fr-seg-radio-inp').forEach(radio => {
+          radio.addEventListener('change', () => {
+            if (!radio.checked) return;
+            hidden.value = radio.value;
+            labels.forEach(lbl => lbl.classList.toggle('on', lbl.getAttribute('for') === radio.id));
             hidden.dispatchEvent(new Event('input', { bubbles: true }));
           });
         });
