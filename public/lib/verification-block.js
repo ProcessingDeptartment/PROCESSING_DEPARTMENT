@@ -23,18 +23,32 @@
   const isPermitted = PERMITTED_ROLES.includes(userRole);
 
   // ── 2. Check overdue count ─────────────────────────────────────────────────
+  // Primary: use VerificationQueue (reads localStorage, role-aware, covers all records).
+  // Fallback: API endpoint (covers database-synced records only).
   const apiBase = (window.FacilityApi?.base?.() || window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
   const roleKey = (window.__currentUserRoleKey || '').trim();
+  const cutoff48 = Date.now() - 48 * 60 * 60 * 1000;
 
   let overdueCount = 0;
   try {
-    const params = roleKey ? '?role=' + encodeURIComponent(roleKey) : '';
-    const res = await fetch(apiBase + '/api/verification/count-overdue' + params, {
-      headers: window.FacilityApi?.headers?.() || { 'x-access-key': window.getAccessKey?.() || '' },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      overdueCount = data.overdue || 0;
+    if (window.VerificationQueue) {
+      // Load per-record verifier assignments, then get this user's pending queue.
+      await window.VerificationQueue.loadAssignments().catch(() => {});
+      const q = await window.VerificationQueue.forCurrentUser();
+      // Count entries whose oldest submission timestamp is > 48 h ago.
+      overdueCount = (q.records || [])
+        .filter(r => r.oldest && r.oldest < cutoff48)
+        .reduce((n, r) => n + r.count, 0);
+    } else {
+      // Fallback to API (e.g. on pages that don't load verification-queue.js).
+      const params = roleKey ? '?role=' + encodeURIComponent(roleKey) : '';
+      const res = await fetch(apiBase + '/api/verification/count-overdue' + params, {
+        headers: window.FacilityApi?.headers?.() || { 'x-access-key': window.getAccessKey?.() || '' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        overdueCount = data.overdue || 0;
+      }
     }
   } catch {
     return; // Never block on network error
@@ -364,14 +378,20 @@
   // ── 7. Re-check after a verification completes (optional) ─────────────────
   window.addEventListener('verification-completed', async () => {
     try {
-      const params = roleKey ? '?role=' + encodeURIComponent(roleKey) : '';
-      const res = await fetch(apiBase + '/api/verification/count-overdue' + params, {
-        headers: window.FacilityApi?.headers?.() || { 'x-access-key': window.getAccessKey?.() || '' },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.overdue === 0) document.getElementById('vb-overlay')?.remove();
+      let newCount = 0;
+      if (window.VerificationQueue) {
+        const q = await window.VerificationQueue.forCurrentUser();
+        newCount = (q.records || [])
+          .filter(r => r.oldest && r.oldest < cutoff48)
+          .reduce((n, r) => n + r.count, 0);
+      } else {
+        const params = roleKey ? '?role=' + encodeURIComponent(roleKey) : '';
+        const res = await fetch(apiBase + '/api/verification/count-overdue' + params, {
+          headers: window.FacilityApi?.headers?.() || { 'x-access-key': window.getAccessKey?.() || '' },
+        });
+        if (res.ok) { const d = await res.json(); newCount = d.overdue || 0; }
       }
+      if (newCount === 0) document.getElementById('vb-overlay')?.remove();
     } catch { /* silent */ }
   });
 })();

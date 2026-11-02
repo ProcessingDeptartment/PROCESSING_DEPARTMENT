@@ -47,7 +47,7 @@
   // page loaded (e.g. user navigated here after logging in on another page) —
   // but only if the session flag is not yet set.
   document.addEventListener('DOMContentLoaded', function () {
-    if (sessionStorage.getItem(ALERT_KEY)) return;
+    if (sessionStorage.getItem(alertKey())) return;
     if (window.Auth && window.Auth.isAuthenticated()) show();
   });
 })();
