@@ -191,7 +191,6 @@
   var fields = [];      // [{ key, label, type, where }] for the chosen record
   var specs = {};       // field_key -> spec row (incl. inactive)
   var current = null;   // field key being edited
-  var recStart = 1;     // the record's docRevisionStart, for the document-revision bump
 
   function toast(msg, isErr) {
     var t = $('toast'); t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
@@ -248,7 +247,6 @@
     fs.disabled = true; fs.innerHTML = '<option value="">Loading fields&hellip;</option>';
     Promise.all([json('/api/record-def/' + encodeURIComponent(key)), json('/api/specs/' + encodeURIComponent(key) + '?all=1')])
       .then(function (res) {
-        recStart = (res[0].config && res[0].config.docRevisionStart) || 1;
         fields = listFields(res[0].config || {});
         res[1].forEach(function (s) { specs[s.field_key] = s; });
         drawFieldPicker(); drawSummary();
@@ -365,20 +363,12 @@
         $('fieldSel').value = row.field_key;
         $('exportNotice').hidden = false;
         drawHistory(row);
-        return bumpDocRev(rec, reason, by, ttl).then(function (note) { toast('Specification saved' + note + '.'); });
+        toast('Specification saved.');
       })
       .catch(function (e) { toast('Could not save: ' + e.message, true); })
       .then(function () { btn.disabled = false; });
   });
   $('clearBtn').addEventListener('click', function () { $('editor').hidden = true; $('history').hidden = true; $('fieldSel').value = ''; current = null; });
-
-  // Same control the old Thresholds modal applied: a spec change is a document change, so the record's revision moves on.
-  function bumpDocRev(rec, reason, by, ttl) {
-    if (!window.DocumentRevision) return Promise.resolve('');
-    return window.DocumentRevision.bump(rec, { reason: 'Field spec: ' + reason, changedBy: by, changedByTitle: ttl }, recStart)
-      .then(function (r) { return ' - document is now Rev ' + r.revisionNumber; })
-      .catch(function () { return ' (but the document revision could not be updated)'; });
-  }
 
   function fmtWhen(ts) { var d = new Date(ts); if (isNaN(d.getTime())) return ''; var p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
   function drawHistory(s) {
