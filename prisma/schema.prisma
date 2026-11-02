@@ -6119,6 +6119,18 @@ model CertRecordReview {
 // Permanent audit trail for verification block overrides (verification-block.js).
 // A row is only written AFTER the passkey is validated — and access is only granted
 // if this write succeeds (500 → no unblock). Cannot be suppressed.
+// Tracks which (record_type, submission_group_id) pairs have received the 48hr unverified alert.
+// One row per group; prevents duplicate emails across hourly job runs.
+model UnverifiedAlertLog {
+  id                String   @id @default(cuid())
+  recordType        String   @map("record_type")
+  submissionGroupId String   @map("submission_group_id")
+  alertSentAt       DateTime @default(now()) @map("alert_sent_at")
+
+  @@unique([recordType, submissionGroupId])
+  @@map("unverified_alert_log")
+}
+
 model BlockOverrideAudit {
   id               Int      @id @default(autoincrement())
   userName         String   @map("user_name")

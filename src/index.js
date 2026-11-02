@@ -1331,6 +1331,13 @@ require('./delete-submission')(app, prisma); // double-signoff submission deleti
 require('./submission-read')(app, prisma);    // read API over the sub_* tables
 mountEntryHistory(app, prisma);                 // per-entry audit trail read API
 
+// ── Hourly background job: 48-hr unverified record email alerts ────────────
+const { runUnverifiedAlert } = require('./jobs/unverified-alert');
+runUnverifiedAlert(prisma).catch((e) => console.error('[unverified-alert] startup run failed:', e.message));
+setInterval(() => {
+  runUnverifiedAlert(prisma).catch((e) => console.error('[unverified-alert] interval run failed:', e.message));
+}, 60 * 60 * 1000);
+
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
     + ` — write validation ${VALIDATE_ENFORCE ? 'ENFORCED (422 on invalid)' : 'report-only'}`);
