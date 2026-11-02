@@ -3899,7 +3899,8 @@
         const hidden = group.querySelector('input[type=hidden]');
         const buttons = Array.from(group.querySelectorAll('.fr-seg-btn'));
         buttons.forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (btn.disabled) return;
             hidden.value = btn.dataset.v;
             buttons.forEach(b => {
