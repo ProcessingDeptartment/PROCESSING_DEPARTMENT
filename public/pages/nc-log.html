@@ -138,7 +138,7 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=6"></script>
+<script src="../lib/auth.js?v=7"></script>
 <script>
 (function () {
   var CATEGORIES = ['Weight deviation', 'Temperature out of spec', 'Labelling error', 'Equipment failure',
@@ -392,5 +392,6 @@
   if (qs.get('raise')) openRaise({ job_number: qs.get('job') || '', record_ref: qs.get('record') || '' });
 })();
 </script>
+<script src="../lib/verification-block.js?v=1"></script>
 </body>
 </html>

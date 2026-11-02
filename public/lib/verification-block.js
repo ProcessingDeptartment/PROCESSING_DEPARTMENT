@@ -172,7 +172,7 @@
           : 'You cannot use the system until all overdue records are verified by an authorised user.'}
       </p>
       <div class="vb-actions">
-        <a href="/pages/verification-preview.html" class="vb-btn-primary">
+        <a href="/pages/awaiting-verification.html" class="vb-btn-primary">
           View Verifications (${overdueCount})
         </a>
         ${isPermitted

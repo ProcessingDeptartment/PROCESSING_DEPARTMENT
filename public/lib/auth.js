@@ -30,6 +30,9 @@
     if (user && window.PermissionRules) {
       window.PermissionRules.setCurrentRole(user.role);
     }
+    // Expose for verification-block.js (username IS the human-readable role name)
+    window.__currentUserRole = user ? user.username : '';
+    window.__currentUserName = user ? user.displayName : '';
   }
 
   function restoreSession() {
