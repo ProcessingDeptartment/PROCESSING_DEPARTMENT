@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -21,7 +21,7 @@
 <script src="../lib/master-index-data.js?v=4"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/spec-registry.js?v=2"></script>
@@ -37,7 +37,7 @@
   <script src="../lib/monitoring-log.js?v=90"></script>
 <script>(function () {
 
-  // Definition lives in the DB â€” fetched by the engine from GET /api/record-def/abalone-packing-specification
+  // Definition lives in the DB — fetched by the engine from GET /api/record-def/abalone-packing-specification
   // (was inline until migration; see Claude outputs/relational-all-records-plan.md).
   MonitoringLog.init({ mount: '#mlRoot', recordKey: 'abalone-packing-specification' });
 })();

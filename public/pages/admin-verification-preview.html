@@ -1,9 +1,9 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verification Preview Fields â€” Administrator</title>
+<title>Verification Preview Fields — Administrator</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -14,7 +14,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <style>
@@ -87,15 +87,15 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
 <body>
 <div class="page-header">
   <h1>Verification Preview Fields</h1>
-  <p>Configure which fields a verifier sees when they expand an entry in the Awaiting Verification queue â€” without opening the full record.</p>
+  <p>Configure which fields a verifier sees when they expand an entry in the Awaiting Verification queue — without opening the full record.</p>
   <a class="back-link" href="../index.html">&larr; Back to Processing Department</a>
 </div>
 
 <div class="container">
-  <div class="state info" id="state">Loadingâ€¦</div>
+  <div class="state info" id="state">Loading…</div>
 
   <div class="toolbar" id="toolbar" style="display:none;">
-    <input class="search-box" id="search" type="search" placeholder="Filter recordsâ€¦" autocomplete="off">
+    <input class="search-box" id="search" type="search" placeholder="Filter records…" autocomplete="off">
     <button class="btn btn-primary" id="btnSaveAll">Save all changes</button>
   </div>
 
@@ -108,9 +108,9 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
   'use strict';
   var STORAGE_KEY = 'verification_preview_config';
   var DEFS = {};      // recordKey -> parsed record-def (null if unavailable)
-  var CONFIG = {};    // recordKey -> string[] â€” saved override config
-  var PENDING = {};   // recordKey -> string[] | null â€” unsaved edits (null = reset to default)
-  var OPEN = {};      // recordKey -> bool â€” accordion open state
+  var CONFIG = {};    // recordKey -> string[] — saved override config
+  var PENDING = {};   // recordKey -> string[] | null — unsaved edits (null = reset to default)
+  var OPEN = {};      // recordKey -> bool — accordion open state
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) {
@@ -200,14 +200,14 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
     // Records that compare cooked weight against OOSW (roster.jobWeights) get both figures;
     // the queue preview shows them in red when OOSW is lower than the total cooked weight.
     if (def.roster && def.roster.jobWeights) {
-      fields.push({ key: 'jobweights:oosw', label: 'OOSW total (kg) â€” from REC 7.1.5' });
-      fields.push({ key: 'jobweights:cooked', label: 'Total cooked weight (kg) â€” whole job' });
+      fields.push({ key: 'jobweights:oosw', label: 'OOSW total (kg) — from REC 7.1.5' });
+      fields.push({ key: 'jobweights:cooked', label: 'Total cooked weight (kg) — whole job' });
     }
     // Scored records (REC 7.4.2): coloured overdrying / underdrying blocks built from the submitted scores.
     if (def.scoring) {
       fields.push({ key: 'scoring:over', label: 'Overdrying assessment (colour block + flagged signs)' });
       fields.push({ key: 'scoring:under', label: 'Underdrying assessment (colour block + flagged signs)' });
-      fields.push({ key: 'scoring:other', label: 'Other signs (e.g. wrinkles) â€” flagged signs on neither side' });
+      fields.push({ key: 'scoring:other', label: 'Other signs (e.g. wrinkles) — flagged signs on neither side' });
     }
     return fields;
   }
@@ -264,7 +264,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
         '<span class="rec-badge ' + b.cls + '">' + esc(b.text) + '</span>' +
       '</div>' +
       '<div class="rec-body' + (open ? ' open' : '') + '" data-body="' + esc(rk) + '">' +
-        (open ? '<div class="avail-loading" data-editor="' + esc(rk) + '">Loading fieldsâ€¦</div>' : '') +
+        (open ? '<div class="avail-loading" data-editor="' + esc(rk) + '">Loading fields…</div>' : '') +
       '</div>' +
     '</div>';
   }
@@ -296,7 +296,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
             '<button class="sel-remove" data-action="remove" data-key="' + esc(k) + '" title="Remove">&times;</button>' +
           '</div>';
         }).join('')
-      : '<div class="sel-empty">No fields selected â€” verifier will see a fallback dump.</div>';
+      : '<div class="sel-empty">No fields selected — verifier will see a fallback dump.</div>';
 
     var availHtml = unselected.length
       ? unselected.map(function (f) {
@@ -362,7 +362,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
       head.classList.toggle('open', OPEN[hrk]);
       body.classList.toggle('open', OPEN[hrk]);
       if (OPEN[hrk]) {
-        body.innerHTML = '<div class="avail-loading" data-editor="' + esc(hrk) + '">Loading fieldsâ€¦</div>';
+        body.innerHTML = '<div class="avail-loading" data-editor="' + esc(hrk) + '">Loading fields…</div>';
         openRecord(hrk);
       }
       return;
@@ -406,22 +406,22 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
         var didSave = saved[rk] && JSON.stringify(saved[rk]) === JSON.stringify(CONFIG[rk]);
         
         if (!didSave) {
-          toast('Save failed â€” data was not stored. Check network and retry.');
+          toast('Save failed — data was not stored. Check network and retry.');
           btn.disabled = false;
           return;
         }
         
-        toast('âœ“ Saved preview fields for this record.');
+        toast('? Saved preview fields for this record.');
         refreshCard(rk);
       } catch (err) {
-        toast('Save failed â€” ' + (err && err.message || 'unknown error'));
+        toast('Save failed — ' + (err && err.message || 'unknown error'));
         btn.disabled = false;
       }
     }
   }
 
   async function start() {
-    setState('info', 'Loadingâ€¦');
+    setState('info', 'Loading…');
     try {
       await window.storage.whenReady();
       await loadConfig();
@@ -452,7 +452,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
         toast('All changes saved.');
         renderRecordList($('search').value);
       } catch (e) {
-        toast('Save failed â€” please retry.');
+        toast('Save failed — please retry.');
       } finally {
         btn.disabled = false;
       }

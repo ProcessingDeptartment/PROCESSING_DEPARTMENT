@@ -173,8 +173,8 @@
     try {
       const apiBase = (window.FacilityApi && window.FacilityApi.base) || '';
       const resp = await (window.FacilityApi
-        ? window.FacilityApi.fetch('/api/passkey/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin }) })
-        : fetch(apiBase + '/api/passkey/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin }) }));
+        ? window.FacilityApi.fetch('/api/passkey/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin, role: window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() || '' : '' }) })
+        : fetch(apiBase + '/api/passkey/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin, role: window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() || '' : '' }) }));
 
       const data = await resp.json();
       if (!resp.ok) {

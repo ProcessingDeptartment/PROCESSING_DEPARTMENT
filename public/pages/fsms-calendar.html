@@ -1,4 +1,4 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -83,7 +83,7 @@
   <div id="banner"></div>
   <div class="controls">
     <label>Year <select id="yearSel"></select></label>
-    <button class="btn primary" id="newYearBtn" type="button">Ôºã New year</button>
+    <button class="btn primary" id="newYearBtn" type="button">+ New year</button>
     <div class="tabs">
       <button class="tab on" id="tabGrid" type="button">Calendar</button>
       <button class="tab" id="tabUp" type="button">Upcoming (60 days)</button>
@@ -118,7 +118,7 @@
 
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script>
@@ -161,7 +161,7 @@
     years = await call('/api/fsms/years');
     var pick = select || (years.some(function (y) { return y.year === THIS_YEAR; }) ? THIS_YEAR : (years[0] && years[0].year));
     $('yearSel').innerHTML = years.map(function (y) { return '<option value="' + y.year + '">' + y.year + ' (' + y.events + ')</option>'; }).join('');
-    if (pick) { $('yearSel').value = pick; await loadYear(pick); } else { data = null; $('cal').innerHTML = ''; banner('info', 'No years set up yet. Click ‚ÄúNew year‚Äù.'); }
+    if (pick) { $('yearSel').value = pick; await loadYear(pick); } else { data = null; $('cal').innerHTML = ''; banner('info', 'No years set up yet. Click ìNew yearî.'); }
   }
   async function loadYear(y) {
     data = await call('/api/fsms/years/' + y);
@@ -182,8 +182,8 @@
         h += '<td class="cell ' + (showNow && m === THIS_MONTH ? 'now' : '') + '">'
           + evs.map(function (e) {
               return '<button type="button" class="chip ' + e.status + '" style="--c:' + esc(c.color) + '" data-id="' + e.id + '" title="' + esc(e.title) + '">'
-                + (e.status === 'done' ? '<span class="tick">‚úì </span>' : '') + esc(e.title) + '</button>'; }).join('')
-          + (data.readOnly ? '' : '<button type="button" class="add" data-cat="' + c.id + '" data-m="' + m + '" title="Add event">Ôºã</button>')
+                + (e.status === 'done' ? '<span class="tick">? </span>' : '') + esc(e.title) + '</button>'; }).join('')
+          + (data.readOnly ? '' : '<button type="button" class="add" data-cat="' + c.id + '" data-m="' + m + '" title="Add event">+</button>')
           + '</td>';
       }
       h += '</tr>';
@@ -198,8 +198,8 @@
     var c = catById[e.categoryId], ro = data.readOnly;
     var who = e.completedBy ? ' by ' + esc(e.completedBy) + ' on ' + new Date(e.completedAt).toLocaleDateString('en-GB') : '';
     $('panel').innerHTML = '<h2>' + esc(e.title) + '</h2>'
-      + '<div class="meta"><span class="dot" style="--c:' + esc(c.color) + '"></span>' + esc(c.name) + ' ¬∑ ' + FULL[e.month - 1] + ' ' + data.year
-      + ' ¬∑ <span class="status-pill s-' + e.status + '">' + e.status + '</span>' + who + '</div>'
+      + '<div class="meta"><span class="dot" style="--c:' + esc(c.color) + '"></span>' + esc(c.name) + ' ∑ ' + FULL[e.month - 1] + ' ' + data.year
+      + ' ∑ <span class="status-pill s-' + e.status + '">' + e.status + '</span>' + who + '</div>'
       + '<label>Title<input id="pTitle" value="' + esc(e.title) + '"' + (ro ? ' disabled' : '') + '></label>'
       + '<label>Month<select id="pMonth"' + (ro ? ' disabled' : '') + '>' + FULL.map(function (m, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === e.month ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></label>'
       + '<label>Notes (specific dates, details)<textarea id="pNotes" rows="4"' + (ro ? ' disabled' : '') + '>' + esc(e.notes || '') + '</textarea></label>'
@@ -237,12 +237,12 @@
 
   // ---------- upcoming ----------
   async function loadUpcoming() {
-    $('upList').innerHTML = '<div class="empty">Loading‚Ä¶</div>';
+    $('upList').innerHTML = '<div class="empty">LoadingÖ</div>';
     try {
       var rows = await call('/api/fsms/upcoming?days=60');
       $('upList').innerHTML = rows.length ? rows.map(function (r) {
         return '<div class="up-row" data-year="' + r.year + '" data-id="' + r.id + '"><span class="up-month">' + MONTHS[r.month - 1] + ' ' + r.year + '</span>'
-          + '<span style="--c:' + esc(r.color) + '"><span class="dot"></span><b>' + esc(r.title) + '</b> <span style="color:#5c6771">¬∑ ' + esc(r.category) + '</span>'
+          + '<span style="--c:' + esc(r.color) + '"><span class="dot"></span><b>' + esc(r.title) + '</b> <span style="color:#5c6771">∑ ' + esc(r.category) + '</span>'
           + (r.notes ? '<br><span style="color:#5c6771">' + esc(r.notes) + '</span>' : '') + '</span></div>'; }).join('')
         : '<div class="empty">Nothing pending in the next 60 days.</div>';
     } catch (e) { $('upList').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; }
@@ -270,7 +270,7 @@
       if (mode === 'clone') {
         if (!$('srcSel').value) throw new Error('No year to clone from yet.');
         var r = await call('/api/fsms/years/' + year + '/clone', json('POST', { sourceYear: parseInt($('srcSel').value, 10) }));
-        banner('ok', r.copied + ' events carried over from ' + $('srcSel').value + ' ‚Äî review the dates and adjust where needed.');
+        banner('ok', r.copied + ' events carried over from ' + $('srcSel').value + ' ó review the dates and adjust where needed.');
       } else { await call('/api/fsms/years', json('POST', { year: year })); banner('ok', year + ' created (blank).'); }
       $('yearBg').classList.remove('show');
       await loadYears(year);

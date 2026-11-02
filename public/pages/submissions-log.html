@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -154,7 +154,7 @@
     </div>
 
     <div id="closedNotice" class="closed-notice">
-      <span id="closedCount">0</span> event(s) hidden â€” job marked complete or closed.
+      <span id="closedCount">0</span> event(s) hidden — job marked complete or closed.
       <button class="btn btn-closed" id="btnShowClosed">Show closed jobs</button>
       <button class="btn" id="btnHideClosed" style="display:none;">Hide closed jobs</button>
     </div>
@@ -249,7 +249,7 @@
 <script src="../lib/master-index-data.js?v=4"></script>
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
@@ -284,11 +284,11 @@
     wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;';
     wrap.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#1d2b38;color:#fff;font-size:13px;font-weight:600;">'
       + '<button type="button" id="pdfClose" style="background:#fff;color:#1d2b38;border:none;border-radius:6px;padding:7px 14px;font-weight:700;cursor:pointer;">&larr; Back</button>'
-      + '<span id="pdfMsg">Preparing PDFâ€¦</span></div>'
+      + '<span id="pdfMsg">Preparing PDF…</span></div>'
       + '<iframe id="pdfFrame" style="flex:1;border:0;width:100%;background:#fff;"></iframe>';
     document.body.appendChild(wrap);
     const fr = $('pdfFrame');
-    const slow = setTimeout(() => { const m = $('pdfMsg'); if (m) m.textContent = 'Still preparing â€” the server may be waking upâ€¦'; }, 12000);
+    const slow = setTimeout(() => { const m = $('pdfMsg'); if (m) m.textContent = 'Still preparing — the server may be waking up…'; }, 12000);
     function onMsg(ev) {
       if (ev.origin !== location.origin || !ev.data || !ev.data.pdfReady) return;
       const m = $('pdfMsg'); if (m) m.textContent = '';
@@ -307,9 +307,9 @@
   });
 
   function fmtWhen(ts) {
-    if (!ts) return 'â€”';
+    if (!ts) return '—';
     const d = new Date(ts);
-    if (isNaN(d.getTime())) return 'â€”';
+    if (isNaN(d.getTime())) return '—';
     const p = (n) => String(n).padStart(2, '0');
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
@@ -457,7 +457,7 @@
         who: who,
         status: 'draft',
         verifiedBy: '',
-        detail: 'Draft â€” not submitted'
+        detail: 'Draft — not submitted'
       }));
     }
 
@@ -469,7 +469,7 @@
         status: 'verified',
         verifiedBy: ver.verifiedBy || '',
         detail: [ver.verifiedSig ? 'Title: ' + ver.verifiedSig : '', ver.verifiedSignature ? 'Sig: ' + ver.verifiedSignature : '']
-          .filter(Boolean).join(' Â· ')
+          .filter(Boolean).join(' · ')
       }));
     }
   }
@@ -536,11 +536,11 @@
   function refCell(e) {
     if (e.jobNo) return '<strong>' + esc(e.jobNo) + '</strong>';
     if (e.ref) return '<span style="color:#8a939b;font-family:\'IBM Plex Mono\',monospace;font-size:11px;">' + esc(e.ref) + '</span>';
-    return '<span style="color:#ccc;">â€”</span>';
+    return '<span style="color:#ccc;">—</span>';
   }
 
   function recordLabel(e) {
-    return (e.docNo ? esc(e.docNo) + ' â€” ' : '') + esc(e.name);
+    return (e.docNo ? esc(e.docNo) + ' — ' : '') + esc(e.name);
   }
 
   function isAdmin() {
@@ -565,11 +565,11 @@
         + '<div class="action-menu" id="menu-' + esc(e.entryId) + '" style="display:none;">'
         + (sup
           ? '<button data-unsupersede="' + esc(e.entryId) + '">Unsupersede</button>'
-          : '<button class="danger" data-supersede="' + esc(e.entryId) + '" data-jobno="' + esc(e.jobNo) + '">Mark as superseded byâ€¦</button>'
+          : '<button class="danger" data-supersede="' + esc(e.entryId) + '" data-jobno="' + esc(e.jobNo) + '">Mark as superseded by…</button>'
         )
         + '</div></span>';
     }
-    return html || 'â€”';
+    return html || '—';
   }
 
   const COLS = [
@@ -625,7 +625,7 @@
       COLS.map((c) => {
         if (c.key === '__actions') return '<th style="width:120px;"></th>';
         return '<th data-sort="' + c.key + '">' + esc(c.label) +
-          (sortKey === c.key ? (sortDir === 1 ? ' â–²' : ' â–¼') : '') + '</th>';
+          (sortKey === c.key ? (sortDir === 1 ? ' ?' : ' ?') : '') + '</th>';
       }).join('') +
       '</tr></thead><tbody>' +
       rows.map((e) => {
@@ -634,11 +634,11 @@
         return '<tr' + (sup ? ' class="superseded-row"' : '') + '>' +
           '<td>' + refCell(e) + '</td>' +
           '<td>' + recordLabel(e) + supBadge + '</td>' +
-          '<td class="when">' + esc(e.entryDate || 'â€”') + '</td>' +
+          '<td class="when">' + esc(e.entryDate || '—') + '</td>' +
           '<td class="when">' + fmtWhen(e.ts) + '</td>' +
           '<td>' + (STATUS_BADGE[e.status] || '') + '</td>' +
-          '<td>' + esc(e.who || 'â€”') + '</td>' +
-          '<td>' + esc(e.verifiedBy || 'â€”') + '</td>' +
+          '<td>' + esc(e.who || '—') + '</td>' +
+          '<td>' + esc(e.verifiedBy || '—') + '</td>' +
           '<td class="actions">' + actionsCell(e) + '</td>' +
           '</tr>';
       }).join('') +
@@ -709,7 +709,7 @@
     ).sort((a, b) => (b.entryDate || '').localeCompare(a.entryDate || '') || b.ts - a.ts);
 
     $('supersedeBy').innerHTML = sameJob.length
-      ? sameJob.map((e) => '<option value="' + esc(e.entryId) + '">' + esc(e.entryDate || 'no date') + ' â€” ' + esc(e.who || 'unknown') + '</option>').join('')
+      ? sameJob.map((e) => '<option value="' + esc(e.entryId) + '">' + esc(e.entryDate || 'no date') + ' — ' + esc(e.who || 'unknown') + '</option>').join('')
       : '<option value="">No other submitted entries for this job</option>';
 
     $('supersedeModal').classList.add('open');
@@ -763,9 +763,9 @@
     const rows = filtered();
     const head = ['Job / Ref', 'Record', 'Activity date', 'Submission date', 'Status', 'Completed by', 'Verified by', 'Doc no', 'Record key', 'Entry id'];
     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-    const body = rows.map((e) => [e.ref, (e.docNo ? e.docNo + ' â€” ' : '') + e.name, e.entryDate, fmtWhen(e.ts), e.status, e.who, e.verifiedBy, e.docNo, e.recordKey, e.entryId].map(q).join(','));
+    const body = rows.map((e) => [e.ref, (e.docNo ? e.docNo + ' — ' : '') + e.name, e.entryDate, fmtWhen(e.ts), e.status, e.who, e.verifiedBy, e.docNo, e.recordKey, e.entryId].map(q).join(','));
     const csv = [head.map(q).join(',')].concat(body).join('\r\n');
-    const blob = new Blob(['ï»¿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['?' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'submissions-verifications-' + dayOf(Date.now()) + '.csv';
@@ -775,7 +775,7 @@
 
   function fillRecordFilter() {
     const seen = {};
-    EVENTS.forEach((e) => { seen[e.recordKey] = (e.docNo ? e.docNo + ' â€” ' : '') + e.name; });
+    EVENTS.forEach((e) => { seen[e.recordKey] = (e.docNo ? e.docNo + ' — ' : '') + e.name; });
     $('fRecord').innerHTML = '<option value="">All records</option>' +
       Object.keys(seen).sort((a, b) => seen[a].localeCompare(seen[b]))
         .map((k) => '<option value="' + esc(k) + '">' + esc(seen[k]) + '</option>').join('');
@@ -842,7 +842,7 @@
   function fillPrintHubRecordFilter() {
     const seen = {};
     Object.values(ALL_ENTRIES_BY_RECORD).flat().forEach((e) => {
-      seen[e.recordKey] = (e.docNo ? e.docNo + ' â€” ' : '') + e.name;
+      seen[e.recordKey] = (e.docNo ? e.docNo + ' — ' : '') + e.name;
     });
     $('phRecord').innerHTML = '<option value="">All records</option>' +
       Object.keys(seen).sort((a, b) => seen[a].localeCompare(seen[b]))
@@ -892,16 +892,16 @@
       + '<th>Job / Ref</th><th>Record</th><th>Activity date</th><th>Verified date</th><th>Verified by</th><th style="width:80px;"></th>'
       + '</tr></thead><tbody>'
       + rows.map((e) => {
-          const jobCell = e.jobNo ? '<strong>' + esc(e.jobNo) + '</strong>' : esc(e.ref || 'â€”');
+          const jobCell = e.jobNo ? '<strong>' + esc(e.jobNo) + '</strong>' : esc(e.ref || '—');
           const recCell = (e.docNo ? esc(e.docNo) + ' &mdash; ' : '') + esc(e.name);
-          const verDate = e.verifyTs ? dayOf(e.verifyTs) : 'â€”';
-          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1&printonly=1">PDF</a>' : 'â€”';
+          const verDate = e.verifyTs ? dayOf(e.verifyTs) : '—';
+          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1&printonly=1">PDF</a>' : '—';
           return '<tr>'
             + '<td>' + jobCell + '</td>'
             + '<td>' + recCell + '</td>'
-            + '<td class="when">' + esc(e.entryDate || 'â€”') + '</td>'
+            + '<td class="when">' + esc(e.entryDate || '—') + '</td>'
             + '<td class="when">' + esc(verDate) + '</td>'
-            + '<td>' + esc(e.verifiedBy || 'â€”') + '</td>'
+            + '<td>' + esc(e.verifiedBy || '—') + '</td>'
             + '<td class="actions">' + pdfBtn + '</td>'
             + '</tr>';
         }).join('')
@@ -934,10 +934,10 @@
     const backend = window.storage.backendName();
     const noKey = backend !== 'local' && window.FacilityApi && !window.FacilityApi.getKey();
     $('scopeNote').innerHTML = (backend === 'local')
-      ? 'Showing <strong>this device only</strong> â€” the records API is not connected, so this reads local storage. '
+      ? 'Showing <strong>this device only</strong> — the records API is not connected, so this reads local storage. '
         + 'Set a device key on <a href="api-key.html">the API key page</a> for the facility-wide view.'
       : noKey
-        ? 'This device has <strong>no access key</strong>, so the records API returns nothing â€” an empty log here does '
+        ? 'This device has <strong>no access key</strong>, so the records API returns nothing — an empty log here does '
           + 'not mean there are no records. Set a device key on <a href="api-key.html">the API key page</a>.'
         : 'Showing <strong>facility-wide</strong> data from the records API (<code>' + esc(backend) + '</code>).';
   })();

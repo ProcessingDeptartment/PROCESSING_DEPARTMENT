@@ -6114,3 +6114,22 @@ model CertRecordReview {
   @@index([certRevisionId])
   @@index([recordKey, status])
 }
+
+// Permanent audit trail for verification block overrides (verification-block.js).
+// A row is only written AFTER the passkey is validated — and access is only granted
+// if this write succeeds (500 → no unblock). Cannot be suppressed.
+model BlockOverrideAudit {
+  id               Int      @id @default(autoincrement())
+  userName         String   @map("user_name")
+  userRole         String   @map("user_role")
+  passkeyIdentity  String   @map("passkey_identity")
+  reason           String
+  overdueCount     Int      @default(0) @map("overdue_count")
+  overriddenAt     DateTime @default(now()) @map("overridden_at")
+  ipAddress        String?  @map("ip_address")
+  userAgent        String?  @map("user_agent")
+
+  @@index([userName], map: "idx_block_override_user")
+  @@index([overriddenAt(sort: Desc)], map: "idx_block_override_date")
+  @@map("block_override_audit")
+}

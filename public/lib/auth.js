@@ -123,10 +123,10 @@
       const res = await fetch(apiBase() + '/api/passkey/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passkey: pin })
+        body: JSON.stringify({ passkey: pin, role: currentUser ? currentUser.role : '' })
       });
       const data = await res.json();
-      return !!data.ok;
+      return data.ok === true || data.valid === true;
     } catch (e) {
       return false;
     }

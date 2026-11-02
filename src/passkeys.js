@@ -126,6 +126,26 @@ module.exports = function registerPasskeys(app, prisma) {
       const user = users.find(u => checkPin(pin, u.passkey));
       if (!user) { f.push(now); fails.set(ip, f); return res.status(401).json({ error: 'Passkey not recognised' }); }
       fails.delete(ip);
+
+      if (user.title && user.title.trim() !== '') {
+        const ROLE_MAP = {
+          'Supervisor':          'PRODUCTION_SUPERVISOR',
+          'Shift Manager':       'SHIFT_MANAGER',
+          'Quality Supervisor':  'QUALITY_SUPERVISOR',
+          'Quality Controller':  'QUALITY_CONTROLLER',
+          'QA Manager':          'QA_MANAGER',
+          'Production Manager':  'PRODUCTION_MANAGER',
+          'Operator':            'OPERATOR',
+          'Admin':               'ADMIN',
+          'Administrator':       'ADMINISTRATOR',
+        };
+        const requiredRole = ROLE_MAP[user.title.trim()];
+        const callerRole   = String((req.body || {}).role || req.headers['x-user-role'] || '').trim();
+        if (requiredRole && callerRole !== requiredRole) {
+          return res.status(403).json({ ok: false, valid: false, error: `This passkey is for "${user.title}" sign-in only.` });
+        }
+      }
+
       await prisma.passkeyLog.create({ data: { username: user.username, recordKey: req.get('x-record-key') || null } });
       await prisma.userPasskey.update({ where: { username: user.username }, data: { lastUsedAt: new Date() } });
       res.json({ success: true, username: user.username, displayName: user.displayName, title: user.title || null });

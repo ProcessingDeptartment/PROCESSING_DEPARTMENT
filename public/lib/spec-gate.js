@@ -236,7 +236,7 @@
           msg.className = 'spec-gate-msg'; msg.textContent = '';
           if (!/^\d{4,8}$/.test(pin)) { msg.classList.add('is-err'); msg.textContent = 'Passkey must be 4–8 digits.'; return; }
           btn.disabled = true;
-          api('/api/passkey/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin }) })
+          api('/api/passkey/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: pin, role: window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() || '' : '' }) })
             .then(function (res) { return res.json().then(function (j) { return { ok: res.ok, j: j }; }); })
             .then(function (r) {
               if (!r.ok) { btn.disabled = false; msg.classList.add('is-err'); msg.textContent = (r.j && r.j.error) || 'Passkey not recognised'; inp.value = ''; inp.focus(); return; }

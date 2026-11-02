@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -143,11 +143,11 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/signoff-block.js?v=8"></script>
-<script src="../lib/passkey-input.js?v=5"></script>
+<script src="../lib/passkey-input.js?v=6"></script>
 <script src="../lib/verification-queue.js?v=3"></script>
 <script src="../lib/verification-alert.js?v=3"></script>
 <script>(function () {
@@ -178,8 +178,8 @@
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
   }
   function fmtDate(ts) {
-    if (!ts) return 'â€”';
-    var d = new Date(ts); if (isNaN(d.getTime())) return 'â€”';
+    if (!ts) return '—';
+    var d = new Date(ts); if (isNaN(d.getTime())) return '—';
     var p = function (n) { return String(n).padStart(2, '0'); };
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
   }
@@ -334,7 +334,7 @@
       'Verification is restricted: only the role assigned to a record can sign it off, and the ' +
       '<em>Verified by</em> name is taken from your login. Rows for other roles are shown greyed under ' +
       '<strong>All pending</strong> and cannot be selected. The signed verification stored on each record ' +
-      'remains the evidence â€” this page is a work queue.';
+      'remains the evidence — this page is a work queue.';
   }
 
   function renderGroup(g) {
@@ -342,10 +342,10 @@
     return '<div class="grp" data-record="' + esc(g.recordKey) + '">' +
       '<div class="grp-head">' +
         (selectable ? '<input type="checkbox" class="grp-all" title="Select all in this record">' : '') +
-        '<h2>' + (g.href ? '<a href="' + esc(g.href) + '">' + esc(g.docNo ? g.docNo + ' â€” ' + g.name : g.name) + '</a>'
-                         : esc(g.docNo ? g.docNo + ' â€” ' + g.name : g.name)) + '</h2>' +
+        '<h2>' + (g.href ? '<a href="' + esc(g.href) + '">' + esc(g.docNo ? g.docNo + ' — ' + g.name : g.name) + '</a>'
+                         : esc(g.docNo ? g.docNo + ' — ' + g.name : g.name)) + '</h2>' +
         '<span class="count">' + g.rows.length + '</span>' +
-        '<span class="roles">Verifier: ' + esc(labelRoles(g.allowedRoles)) + (selectable ? '' : ' â€” not you') + '</span>' +
+        '<span class="roles">Verifier: ' + esc(labelRoles(g.allowedRoles)) + (selectable ? '' : ' — not you') + '</span>' +
       '</div>' +
       '<table><thead><tr>' +
         '<th class="chk"></th><th>Entry date</th><th>Ref</th><th>Submitted by</th><th>Submitted</th><th>Waiting</th><th></th>' +
@@ -353,8 +353,8 @@
       g.rows.map(function (r) {
         var d = daysAgo(r.submittedAt);
         var ageCls = (d != null && d >= 7) ? 'age old' : 'age';
-        var submittedDate = r.submittedAt ? fmtDate(r.submittedAt) : 'â€”';
-        var waitDays = d == null ? 'â€”' : d + 'd';
+        var submittedDate = r.submittedAt ? fmtDate(r.submittedAt) : '—';
+        var waitDays = d == null ? '—' : d + 'd';
         var rid = rowId(r);
         var open = !!STATE.open[rid];
         if (open) STATE.previewed[rid] = true;   // no preview, no verify
@@ -363,9 +363,9 @@
           '<td class="chk">' + (r.mine
             ? '<input type="checkbox" class="row-pick" data-rid="' + esc(rid) + '"' + (STATE.picked[rid] ? ' checked' : '') + (canPick ? '' : ' disabled title="Preview this entry before verifying it"') + '>'
             : '') + '</td>' +
-          '<td class="when">' + esc(r.entryDate || 'â€”') + '</td>' +
-          '<td>' + esc(r.ref || 'â€”') + (r.rosterCount != null ? '<br><span style="color:#5c6771;font-size:11px;">' + r.rosterCount + ' rows</span>' : '') + '</td>' +
-          '<td>' + esc(r.who || 'â€”') + '</td>' +
+          '<td class="when">' + esc(r.entryDate || '—') + '</td>' +
+          '<td>' + esc(r.ref || '—') + (r.rosterCount != null ? '<br><span style="color:#5c6771;font-size:11px;">' + r.rosterCount + ' rows</span>' : '') + '</td>' +
+          '<td>' + esc(r.who || '—') + '</td>' +
           '<td class="when">' + submittedDate + '</td>' +
           '<td class="' + ageCls + '">' + waitDays + '</td>' +
           '<td><button type="button" class="rev" data-rid="' + esc(rid) + '">' + (open ? 'Hide' : 'Preview') + '</button></td>' +
@@ -417,9 +417,9 @@
   }
   function rosterTotal(def, row, idx) {
     var t = def && def.roster && def.roster.totals && def.roster.totals[idx];
-    if (!t) return 'â€”';
+    if (!t) return '—';
     var rows = rosterRowsOf(row);
-    if (!rows) return 'â€”';
+    if (!rows) return '—';
     var match = function (r) {
       return !t.where || Object.keys(t.where).every(function (k) {
         return t.where[k].indexOf(String(r[k] == null ? '' : r[k])) !== -1;
@@ -528,15 +528,15 @@
       return ((fieldBy[fl.key] || {}).label || humanLabel(fl.key)) + ': ' + optLabel(fl.key, fl.score);
     }).join(', ');
     var html = '<div style="padding:5px 9px;border-radius:6px;border:1px solid ' + c.bd + ';border-left-width:4px;background:' + c.bg + ';color:' + c.fg + ';">' +
-      '<div style="font-weight:700;font-size:11.5px;">' + esc(title) + ' â€” ' + esc(status) +
-        (worstSigns ? '<span style="font-weight:500;"> Â· worst: ' + esc(worstSigns) + '</span>' : '') + '</div>';
+      '<div style="font-weight:700;font-size:11.5px;">' + esc(title) + ' — ' + esc(status) +
+        (worstSigns ? '<span style="font-weight:500;"> · worst: ' + esc(worstSigns) + '</span>' : '') + '</div>';
     if (!flagged.length) {
       html += '<div style="font-size:11px;margin-top:2px;">No ' + title.toLowerCase() + ' signs recorded.</div>';
     } else {
       html += '<ul style="margin:3px 0 0;padding-left:16px;font-size:11px;line-height:1.4;">' + flagged.map(function (fl) {
         var f = fieldBy[fl.key] || {};
         var opt = (f.scoreOptions || []).filter(function (o) { return String(o.value) === String(fl.score); })[0] || {};
-        return '<li><b>' + esc(f.label || humanLabel(fl.key)) + '</b> â€” ' + esc(opt.label || 'Flagged') +
+        return '<li><b>' + esc(f.label || humanLabel(fl.key)) + '</b> — ' + esc(opt.label || 'Flagged') +
           (opt.detail ? ': ' + esc(opt.detail) : '') + '</li>';
       }).join('') + '</ul>';
       var steps = (sc.steps && sc.steps[side]) || [];
@@ -621,12 +621,12 @@
       var red = false;
       if (col.key === '__jobweights_oosw' || col.key === '__jobweights_cooked') {
         var jwf = jobWeightsFor(row, def);
-        if (jwf === 'loading') v = 'Loadingâ€¦';
-        else if (!jwf) v = 'â€”';
+        if (jwf === 'loading') v = 'Loading…';
+        else if (!jwf) v = '—';
         else {
           var isOosw = col.key === '__jobweights_oosw';
           var n = isOosw ? jwf.oosw : jwf.cooked;
-          v = n == null ? (isOosw && jwf.why ? 'Not available â€” ' + jwf.why : 'Not recorded') : n.toFixed(2);
+          v = n == null ? (isOosw && jwf.why ? 'Not available — ' + jwf.why : 'Not recorded') : n.toFixed(2);
           // cooked weight above OOSW = possible batch mix
           red = jwf.oosw != null && jwf.oosw < jwf.cooked;
           if (isOosw && jwf.oosw == null) red = false;
@@ -640,15 +640,15 @@
           red = !!(jwr && jwr !== 'loading' && jwr.oosw != null && jwr.oosw < jwr.cooked);
         }
       } else if (col.key === '__roster_count') {
-        v = row.rosterCount != null ? String(row.rosterCount) : 'â€”';
+        v = row.rosterCount != null ? String(row.rosterCount) : '—';
       } else {
         var raw = values[col.key];
-        if (raw == null || raw === '') v = 'â€”';
+        if (raw == null || raw === '') v = '—';
         else if (typeof raw === 'object') v = JSON.stringify(raw);
         else v = String(raw);
       }
       return { label: col.label, value: v, red: red };
-    }).filter(function (p) { return p.value !== 'â€”' || cols.length <= 4; });
+    }).filter(function (p) { return p.value !== '—' || cols.length <= 4; });
 
     if (!pairs.length && blocks) return blocks;
     if (!pairs.length) {
@@ -656,8 +656,8 @@
     }
     return '<dl class="vals">' + pairs.map(function (p) {
       return '<dt' + (p.red ? ' style="color:#a3352d;font-weight:700;"' : '') + '>' + esc(p.label) + '</dt>' +
-        '<dd' + (p.red ? ' style="color:#fff;background:#c0392b;font-weight:700;padding:1px 8px;border-radius:4px;display:inline-block;" title="OOSW is lower than the total cooked weight â€” possible batch mix"' : '') + '>' +
-        esc(p.value) + (p.red ? ' âš  OOSW lower than cooked weight' : '') + '</dd>';
+        '<dd' + (p.red ? ' style="color:#fff;background:#c0392b;font-weight:700;padding:1px 8px;border-radius:4px;display:inline-block;" title="OOSW is lower than the total cooked weight — possible batch mix"' : '') + '>' +
+        esc(p.value) + (p.red ? ' ? OOSW lower than cooked weight' : '') + '</dd>';
     }).join('') + '</dl>' + blocks;
   }
 
@@ -669,12 +669,12 @@
     wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;';
     wrap.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#1d2b38;color:#fff;font-size:13px;font-weight:600;">' +
         '<button type="button" id="pdfClose" style="background:#fff;color:#1d2b38;border:none;border-radius:6px;padding:7px 14px;font-weight:700;cursor:pointer;">&larr; Back to verifications</button>' +
-        '<span id="pdfMsg">Preparing PDFâ€¦</span></div>' +
+        '<span id="pdfMsg">Preparing PDF…</span></div>' +
       '<iframe id="pdfFrame" style="flex:1;border:0;width:100%;background:#fff;"></iframe>';
     document.body.appendChild(wrap);
     var fr = $('pdfFrame');
     // the frame's first load is just the blank print page: keep "Preparing" up until it says the sheet (or an error) is showing
-    var slow = setTimeout(function () { var m = $('pdfMsg'); if (m && m.textContent) m.textContent = 'Still preparing â€” the server may be waking upâ€¦'; }, 12000);
+    var slow = setTimeout(function () { var m = $('pdfMsg'); if (m && m.textContent) m.textContent = 'Still preparing — the server may be waking up…'; }, 12000);
     function onMsg(ev) {
       if (ev.origin !== location.origin || !ev.data || !ev.data.pdfReady) return;
       var m = $('pdfMsg'); if (m) m.textContent = '';
@@ -824,7 +824,7 @@
       toast('Verified ' + n + ' ' + (n === 1 ? 'entry' : 'entries') + '.');
     } catch (e) {
       console.error('verification failed', e);
-      toast('Verification could not be saved â€” please retry.');
+      toast('Verification could not be saved — please retry.');
     } finally {
       $('btnVerify').disabled = false;
     }
@@ -839,7 +839,7 @@
       });
     });
     $('btnRefresh').addEventListener('click', async function () {
-      setState('info', 'Refreshingâ€¦');
+      setState('info', 'Refreshing…');
       try { await window.VerificationQueue.loadAssignments(true); } catch (e) {  }
       STATE.previewed = {}; STATE.picked = {}; STATE.open = {};   // figures may have changed: preview again
       await scan(); render();
@@ -881,7 +881,7 @@
     } catch (e) {
       console.error(e);
       setState('bad', 'Could not load the queue. If this device has no access key, an empty queue does not mean ' +
-        'there is nothing waiting â€” set one on <a href="api-key.html">the API key page</a>.');
+        'there is nothing waiting — set one on <a href="api-key.html">the API key page</a>.');
     }
   }
 

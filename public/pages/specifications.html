@@ -1,4 +1,4 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -509,7 +509,7 @@ window.initFieldRules = (function () {
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/spec-registry.js"></script>
@@ -664,7 +664,7 @@ window.initFieldRules = (function () {
       return PART[p] && i > 0 ? PART[p] : humanise(p);
     });
     var last = parts.pop();
-    return (parts.length ? '<span class="grp">' + esc(parts.join(' ¬∑ ')) + ' ¬∑ </span>' : '') + esc(last);
+    return (parts.length ? '<span class="grp">' + esc(parts.join(' ∑ ')) + ' ∑ </span>' : '') + esc(last);
   }
 
   // Friendly names for a record's spec items, from its template (custom override first, else the
@@ -793,12 +793,12 @@ window.initFieldRules = (function () {
         '<button class="btn" data-act="additem" type="button">+ Add item</button>' +
       '</div>' +
       (e.rk ? '<label style="display:flex;gap:6px;align-items:flex-start;margin:-6px 0 14px;font-size:12px;color:#3b4650;"><input type="checkbox" data-n="linkform" checked style="margin-top:2px;"> ' +
-        '<span>Also add a field for this item to the record‚Äôs form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
+        '<span>Also add a field for this item to the recordís form template, so readings are checked against the limits (applies to number items, on records that check readings).</span></label>' : '') +
       '<div class="sec">Publish as ' + (cur ? 'a new version' : 'the first version') + '</div>' +
-      '<div class="rev-rule"><strong>‚ö†Ô∏è¬† Do not publish a new version until all specification changes for this record are complete.</strong>' +
+      '<div class="rev-rule"><strong>??† Do not publish a new version until all specification changes for this record are complete.</strong>' +
         'Multiple changes can be grouped under one revision. Enter one change per line in the reason field below " each line will be shown as a separate item in the version history.</div>' +
       '<div class="attr">' +
-        '<label style="grid-column:1/-1;">Changes in this revision " one per line<textarea data-f="reason" rows="3" placeholder="Max seam thickness 2.5‚Üí3.0 mm (customer request)\nMin cook temp 72‚Üí74degC (SOP update)"></textarea></label>' +
+        '<label style="grid-column:1/-1;">Changes in this revision " one per line<textarea data-f="reason" rows="3" placeholder="Max seam thickness 2.5?3.0 mm (customer request)\nMin cook temp 72?74degC (SOP update)"></textarea></label>' +
         '<label>Your name<input data-f="by" value="' + esc(user) + '"></label>' +
         '<label>Your title<input data-f="title" placeholder="e.g. QA Manager"></label>' +
       '</div>' +
@@ -808,7 +808,7 @@ window.initFieldRules = (function () {
         (isHidden(e) ? '<button class="btn" data-act="restore">Restore to list</button>' : '<button class="btn danger" data-act="remove">Remove from list</button>') +
       '</div>' +
       (hist ? '<div class="hist"><div class="sec">Version history</div>' + hist + '</div>' : '') +
-      '<div class="sop-refs-panel" data-speckey="' + esc(e.key) + '"><div class="sec" style="margin-top:12px;">Referenced in SOPs</div><div class="sop-refs-loading" style="color:#5c6771;font-size:12px;">Loading‚Ä¶</div></div>';
+      '<div class="sop-refs-panel" data-speckey="' + esc(e.key) + '"><div class="sec" style="margin-top:12px;">Referenced in SOPs</div><div class="sop-refs-loading" style="color:#5c6771;font-size:12px;">LoadingÖ</div></div>';
   }
 
   // ---- "Referenced in SOPs" lazy loader ------------------------------------------------------
@@ -913,7 +913,7 @@ window.initFieldRules = (function () {
       tr.setAttribute('data-label', name);
       tr.setAttribute('data-unit', unit);
       if (i === 0) tr.setAttribute('data-first', '1');
-      tr.innerHTML = '<td class="k">' + esc(name) + (p[1] ? ' ¬∑ ' + p[1] : '') + ' <em>(new)</em></td>' +
+      tr.innerHTML = '<td class="k">' + esc(name) + (p[1] ? ' ∑ ' + p[1] : '') + ' <em>(new)</em></td>' +
         '<td><input type="' + (kind === 'text' ? 'text' : 'number') + '" step="any"' + (p[0] ? ' data-part="' + p[0] + '"' : '') + '></td>' +
         '<td class="x">' + (i === 0 ? '<button class="btn sm" type="button" data-act="dropitem" data-key="' + esc(key) + '">Remove</button>' : '') + '</td>';
       tb.appendChild(tr);
@@ -952,8 +952,8 @@ window.initFieldRules = (function () {
           } catch (x) { why = x.message || 'error'; }
         }
         e.labels = null;
-        if (done) msg += ' Added ' + done + ' field' + (done === 1 ? '' : 's') + ' to the record‚Äôs form template.';
-        if (why === 'unsupported') msg += ' This record‚Äôs form can‚Äôt check readings against limits, so only the spec was updated.';
+        if (done) msg += ' Added ' + done + ' field' + (done === 1 ? '' : 's') + ' to the recordís form template.';
+        if (why === 'unsupported') msg += ' This recordís form canít check readings against limits, so only the spec was updated.';
         else if (why) msg += ' The form template could not be updated (' + why + ').';
       }
       toast(msg);

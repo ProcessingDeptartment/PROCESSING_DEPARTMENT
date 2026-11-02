@@ -222,7 +222,7 @@
       }
 
       try {
-        const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: currentPasskey }) };
+        const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: currentPasskey, role: window.Auth && window.Auth.getCurrentRole ? window.Auth.getCurrentRole() || '' : '' }) };
         const response = window.FacilityApi ? await window.FacilityApi.fetch('/api/passkey/verify', opts) : await fetch('/api/passkey/verify', opts);
 
         const result = await response.json();

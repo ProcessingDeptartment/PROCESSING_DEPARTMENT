@@ -1247,6 +1247,82 @@ app.get('/api/template-history/:recordKey', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+// ── Verification overdue count ─────────────────────────────────────────────
+// Returns { overdue: N } — records unverified AND older than 48 hours.
+// Uses SubmissionsGroupVerification: a group is overdue when it has no
+// verification row AND its submissionDate is more than 48 hours ago.
+// Falls back to sub_* table submittedAt if the group table has no match.
+app.get('/api/verification/count-overdue', async (req, res) => {
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  try {
+    // Count distinct (recordType, submissionGroupId) pairs that:
+    //   - have a submissionDate older than 48 h
+    //   - have no row in submissions_group_verification
+    const rows = await prisma.$queryRaw`
+      SELECT COUNT(*) AS n
+      FROM (
+        SELECT DISTINCT s.record_type, s.submission_group_id
+        FROM (
+          SELECT record_type, submission_group_id, submission_date
+          FROM (
+            SELECT record_type, submission_group_id, submission_date
+            FROM sub_dry_export_pack_front_page   WHERE submission_group_id IS NOT NULL
+            UNION ALL
+            SELECT record_type, submission_group_id, submission_date FROM sub_abalone_receiving     WHERE submission_group_id IS NOT NULL
+            UNION ALL
+            SELECT record_type, submission_group_id, submission_date FROM sub_bleeding_and_salting  WHERE submission_group_id IS NOT NULL
+            UNION ALL
+            SELECT record_type, submission_group_id, submission_date FROM sub_cans_produced         WHERE submission_group_id IS NOT NULL
+            UNION ALL
+            SELECT record_type, submission_group_id, submission_date FROM sub_dry_cooking           WHERE submission_group_id IS NOT NULL
+            UNION ALL
+            SELECT record_type, submission_group_id, submission_date FROM sub_drying_process        WHERE submission_group_id IS NOT NULL
+          ) all_subs
+          WHERE submission_date < ${cutoff}
+        ) s
+        LEFT JOIN submissions_group_verification v
+          ON v.record_type = s.record_type AND v.submission_group_id = s.submission_group_id
+        WHERE v.id IS NULL
+      ) unverified
+    `;
+    const overdue = Number(rows[0]?.n ?? 0);
+    res.json({ overdue });
+  } catch (err) {
+    console.error('[count-overdue] error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Block override audit log ───────────────────────────────────────────────
+// Called by verification-block.js ONLY after passkey is validated client-side.
+// Returns 500 on any failure — client refuses to unblock if this call fails.
+app.post('/api/audit/block-override', async (req, res) => {
+  const { userName, userRole, reason, overdueCount, passkeyIdentity } = req.body || {};
+
+  if (!reason || reason.trim().length < 20) {
+    return res.status(400).json({ error: 'Reason must be at least 20 characters.' });
+  }
+
+  try {
+    await prisma.blockOverrideAudit.create({
+      data: {
+        userName:        userName        || 'Unknown',
+        userRole:        userRole        || 'Unknown',
+        passkeyIdentity: passkeyIdentity || userName || 'Unknown',
+        reason:          reason.trim(),
+        overdueCount:    overdueCount    || 0,
+        overriddenAt:    new Date(),
+        ipAddress:       req.ip || req.headers['x-forwarded-for'] || null,
+        userAgent:       req.headers['user-agent'] || null,
+      },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[block-override-audit] DB write failed:', err.message);
+    res.status(500).json({ error: 'Audit log write failed.' });
+  }
+});
+
 require('./certRevisions').mount(app, prisma); // certification version-update tracking
 require('./refs')(app, prisma); // document cross-reference registry
 require('./passkeys')(app, prisma); // admin-managed signature passkeys

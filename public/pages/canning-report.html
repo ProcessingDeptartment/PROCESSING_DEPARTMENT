@@ -1,4 +1,4 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -80,14 +80,14 @@
       <h1>Canning Report</h1>
     </div>
     <div class="no-print">
-      <a class="btn btn-ghost" href="job-status.html">‚Üê Job status</a>
+      <a class="btn btn-ghost" href="job-status.html">? Job status</a>
     </div>
   </div>
   <div class="cr-body">
     <div class="panel no-print">
       <div class="toolbar">
         <span class="muted">Job no.</span>
-        <span class="jobno" id="jobLabel" style="font-size:16px;">‚Äî</span>
+        <span class="jobno" id="jobLabel" style="font-size:16px;">ó</span>
         <button class="btn btn-flat" id="refreshBtn">Refresh</button>
         <span class="grow"></span>
         <button class="btn btn-flat" id="csvBtn">Export CSV</button>
@@ -103,7 +103,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/job-status.js?v=3"></script>
 <script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script>(function () {
@@ -111,7 +111,7 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
-  const fmt = (n, d) => (n == null ? '‚Äî' : n.toFixed(d == null ? 2 : d));
+  const fmt = (n, d) => (n == null ? 'ó' : n.toFixed(d == null ? 2 : d));
   const formatDate = (s) => {
     if (!s) return '';
     const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -157,7 +157,7 @@
   }
 
   // Legacy shape: nrcsEntries: [{ agCode, additionalCans }] paired the two together.
-  // They're independent ‚Äî a job can have several AG codes, and Additional NRCS cans is
+  // They're independent ó a job can have several AG codes, and Additional NRCS cans is
   // one job-level quantity, not per-code. Derive the new shape when old data is still present.
   function migrateNrcsShape(jobFields) {
     if (Array.isArray(jobFields.nrcsAgCodes) || jobFields.additionalNrcsCans != null) {
@@ -274,25 +274,25 @@
 
       <h2 class="sec">Job details</h2>
       <dl class="kv">
-        <dt>Processed for</dt><dd>${esc(h.toBeProcessedFor || '‚Äî')}</dd>
-        <dt>GRN No.</dt><dd>${esc(rep.jobFields.grnNo || '‚Äî')}</dd>
-        <dt>PO No.</dt><dd>${esc(rep.jobFields.poNo || '‚Äî')}</dd>
-        <dt>Cost per Kg</dt><dd>${esc(rep.jobFields.costPerKg || '‚Äî')}</dd>
-        <dt>Delivery note no.</dt><dd>${esc(rep.jobFields.deliveryNoteNo || '‚Äî')}</dd>
+        <dt>Processed for</dt><dd>${esc(h.toBeProcessedFor || 'ó')}</dd>
+        <dt>GRN No.</dt><dd>${esc(rep.jobFields.grnNo || 'ó')}</dd>
+        <dt>PO No.</dt><dd>${esc(rep.jobFields.poNo || 'ó')}</dd>
+        <dt>Cost per Kg</dt><dd>${esc(rep.jobFields.costPerKg || 'ó')}</dd>
+        <dt>Delivery note no.</dt><dd>${esc(rep.jobFields.deliveryNoteNo || 'ó')}</dd>
       </dl>
 
       <div class="grid2">
         <dl class="kv">
-          <dt>Received from</dt><dd>${esc(h.receivedFrom || '‚Äî')}</dd>
-          <dt>Receiving date</dt><dd>${esc(formatDate(h.receivingDate) || '‚Äî')}</dd>
-          <dt>Actual cans</dt><dd>${rep.totalCans || '‚Äî'}</dd>
-          <dt>Comments</dt><dd>${esc(rep.jobFields.comments || '‚Äî')}</dd>
+          <dt>Received from</dt><dd>${esc(h.receivedFrom || 'ó')}</dd>
+          <dt>Receiving date</dt><dd>${esc(formatDate(h.receivingDate) || 'ó')}</dd>
+          <dt>Actual cans</dt><dd>${rep.totalCans || 'ó'}</dd>
+          <dt>Comments</dt><dd>${esc(rep.jobFields.comments || 'ó')}</dd>
         </dl>
         <dl class="kv">
           <dt>Actual yield</dt><dd>${fmt(rep.actualYield)} cans/100 kg</dd>
           <dt>Target yield</dt><dd>${TARGET_YIELD.toFixed(2)} cans/100 kg</dd>
-          <dt>${EQUIV_DRAINED_G}g equivalent cans</dt><dd>${rep.equivCans == null ? '‚Äî' : Math.round(rep.equivCans)}</dd>
-          <dt>Target cans</dt><dd>${rep.targetCans == null ? '‚Äî' : Math.round(rep.targetCans)}</dd>
+          <dt>${EQUIV_DRAINED_G}g equivalent cans</dt><dd>${rep.equivCans == null ? 'ó' : Math.round(rep.equivCans)}</dd>
+          <dt>Target cans</dt><dd>${rep.targetCans == null ? 'ó' : Math.round(rep.targetCans)}</dd>
         </dl>
       </div>
 
@@ -304,17 +304,17 @@
         </tr></thead>
         <tbody>
           ${rep.harvest.length ? rep.harvest.map((r) => `<tr>
-            <td>${esc(formatDate(r.date) || '‚Äî')}</td>
-            <td>${esc(r.sizeRange || '‚Äî')}</td>
+            <td>${esc(formatDate(r.date) || 'ó')}</td>
+            <td>${esc(r.sizeRange || 'ó')}</td>
             <td class="num">${fmt(r.mass, 3)}</td>
-            <td class="num">${r.animals == null ? '‚Äî' : r.animals}</td>
-            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : '‚Äî'}</td>
+            <td class="num">${r.animals == null ? 'ó' : r.animals}</td>
+            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : 'ó'}</td>
           </tr>`).join('') : '<tr><td colspan="5" class="muted">No Abalone Receiving records for this job.</td></tr>'}
           ${rep.harvest.length ? `<tr class="total">
             <td>TOTAL</td><td></td>
             <td class="num">${fmt(rep.totalMass, 2)} kg</td>
-            <td class="num">${rep.totalAnimals || '‚Äî'}</td>
-            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : '‚Äî'}</td>
+            <td class="num">${rep.totalAnimals || 'ó'}</td>
+            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : 'ó'}</td>
           </tr>` : ''}
         </tbody>
       </table>
@@ -325,9 +325,9 @@
           <table>
             <thead><tr><th>Measure</th><th class="num">Weight (kg)</th><th class="num">% of whole mass</th></tr></thead>
             <tbody>
-              <tr><td>Out of salt weight</td><td class="num">${fmt(rep.ooswWeight)}</td><td class="num">${rep.pct(rep.ooswWeight) == null ? '‚Äî' : fmt(rep.pct(rep.ooswWeight)) + '%'}</td></tr>
-              <tr><td>Clean weight</td><td class="num">${fmt(rep.cleanWeight)}</td><td class="num">${rep.pct(rep.cleanWeight) == null ? '‚Äî' : fmt(rep.pct(rep.cleanWeight)) + '%'}</td></tr>
-              <tr><td>Precook weight</td><td class="num">${fmt(rep.precookWeight)}</td><td class="num">${rep.pct(rep.precookWeight) == null ? '‚Äî' : fmt(rep.pct(rep.precookWeight)) + '%'}</td></tr>
+              <tr><td>Out of salt weight</td><td class="num">${fmt(rep.ooswWeight)}</td><td class="num">${rep.pct(rep.ooswWeight) == null ? 'ó' : fmt(rep.pct(rep.ooswWeight)) + '%'}</td></tr>
+              <tr><td>Clean weight</td><td class="num">${fmt(rep.cleanWeight)}</td><td class="num">${rep.pct(rep.cleanWeight) == null ? 'ó' : fmt(rep.pct(rep.cleanWeight)) + '%'}</td></tr>
+              <tr><td>Precook weight</td><td class="num">${fmt(rep.precookWeight)}</td><td class="num">${rep.pct(rep.precookWeight) == null ? 'ó' : fmt(rep.pct(rep.precookWeight)) + '%'}</td></tr>
             </tbody>
           </table>
         </div>
@@ -337,7 +337,7 @@
             <thead><tr><th>Indicator</th><th class="num">Value</th></tr></thead>
             <tbody>
               <tr><td>Whole mass per can</td><td class="num">${fmt(rep.massPerCan)} kg</td></tr>
-              <tr><td>Canning efficiency</td><td class="num">${esc(rep.jobFields.canningEfficiency || '‚Äî')}</td></tr>
+              <tr><td>Canning efficiency</td><td class="num">${esc(rep.jobFields.canningEfficiency || 'ó')}</td></tr>
               <tr><td>Actual yield</td><td class="num">${fmt(rep.actualYield)} cans/100 kg</td></tr>
             </tbody>
           </table>
@@ -349,8 +349,8 @@
         <thead><tr><th>NRCS AG code</th></tr></thead>
         <tbody>
           ${rep.nrcsAgCodes.length ? rep.nrcsAgCodes.map((code) => `<tr><td>${esc(code)}</td></tr>`).join('')
-            : '<tr><td class="muted">No NRCS AG codes captured yet for this job ‚Äî add them from Job Status Updates.</td></tr>'}
-          <tr class="total"><td>Additional NRCS cans: ${esc(rep.additionalNrcsCans || '‚Äî')}</td></tr>
+            : '<tr><td class="muted">No NRCS AG codes captured yet for this job ó add them from Job Status Updates.</td></tr>'}
+          <tr class="total"><td>Additional NRCS cans: ${esc(rep.additionalNrcsCans || 'ó')}</td></tr>
         </tbody>
       </table>
 
@@ -362,11 +362,11 @@
         </tr></thead>
         <tbody>
           ${rep.canRows.length ? rep.canRows.map((r) => `<tr>
-            <td>${esc(r.productionCode || '‚Äî')}</td>
-            <td class="num">${r.qty == null ? '‚Äî' : r.qty}</td>
-            <td class="num">${r.drained == null ? '‚Äî' : r.drained + 'g'}</td>
-            <td>${esc(r.medium || '‚Äî')}</td>
-            <td>${esc(r.agCode || '‚Äî')}</td>
+            <td>${esc(r.productionCode || 'ó')}</td>
+            <td class="num">${r.qty == null ? 'ó' : r.qty}</td>
+            <td class="num">${r.drained == null ? 'ó' : r.drained + 'g'}</td>
+            <td>${esc(r.medium || 'ó')}</td>
+            <td>${esc(r.agCode || 'ó')}</td>
           </tr>`).join('') : '<tr><td colspan="5" class="muted">No Cans Produced records for this job.</td></tr>'}
           ${rep.canRows.length ? `<tr class="total"><td>TOTAL</td><td class="num">${rep.totalCans}</td><td colspan="3"></td></tr>` : ''}
         </tbody>
@@ -458,7 +458,7 @@
   }
 
   async function show(jobNo) {
-    $('jobLabel').textContent = jobNo || '‚Äî';
+    $('jobLabel').textContent = jobNo || 'ó';
     if (!jobNo) {
       $('reportPanel').innerHTML = '<div class="muted">No job specified. Open this report from <a href="job-status.html">Job Status Updates</a>.</div>';
       return;
@@ -467,11 +467,11 @@
     const rep = buildReport(jobNo, statusRow);
     render(rep, statusRow);
     $('statusLine').textContent =
-      `${rep.counts.receiving} receiving ¬∑ ${rep.counts.cans} cans produced ¬∑ ${rep.counts.precook} precooking ¬∑ ${rep.counts.oosw} OOSW record(s) for this job`;
+      `${rep.counts.receiving} receiving ∑ ${rep.counts.cans} cans produced ∑ ${rep.counts.precook} precooking ∑ ${rep.counts.oosw} OOSW record(s) for this job`;
   }
 
   async function refresh() {
-    $('statusLine').textContent = 'Loading‚Ä¶';
+    $('statusLine').textContent = 'LoadingÖ';
     [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
     JOB_STATUSES = STATUSES.filter((s) => isCanningJob(s.job_no));
     CURRENT_JOB = new URLSearchParams(location.search).get('job');

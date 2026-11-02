@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -69,8 +69,8 @@
   </div>
 
   <div class="toolbar">
-    <input type="text" id="search" placeholder="Filter by document number or nameâ€¦" autocomplete="off">
-    <span class="default-roles">Default: <b id="defaultRoles">â€”</b></span>
+    <input type="text" id="search" placeholder="Filter by document number or name…" autocomplete="off">
+    <span class="default-roles">Default: <b id="defaultRoles">—</b></span>
     <span class="save-state" id="saveState"></span>
   </div>
 
@@ -104,7 +104,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
-<script src="../lib/auth.js?v=5"></script>
+<script src="../lib/auth.js?v=6"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/verification-queue.js?v=3"></script>
@@ -118,7 +118,7 @@
   };
 
   var ROLE_LABELS = (window.PermissionRules && window.PermissionRules.ROLE_LABELS) || {};
-  // roles offered as verifier options â€” the supervisory / management set
+  // roles offered as verifier options — the supervisory / management set
   var ROLE_CHOICES = ['QUALITY_SUPERVISOR', 'QUALITY_CONTROLLER', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR']
     .filter(function (r) { return (window.PermissionRules && window.PermissionRules.ROLES || []).indexOf(r) !== -1; });
 
@@ -126,7 +126,7 @@
   var ASSIGN_KEY = window.VerificationQueue.ASSIGN_KEY;
 
   function roleLabel(r) { return ROLE_LABELS[r] || r.replace(/_/g, ' '); }
-  function labelList(roles) { return (roles || []).map(roleLabel).join(', ') || 'â€”'; }
+  function labelList(roles) { return (roles || []).map(roleLabel).join(', ') || '—'; }
 
   var RECORDS = ((window.MasterIndexData && window.MasterIndexData.rows) || [])
     .filter(function (r) { return r.recordKey && r.href; })
@@ -193,7 +193,7 @@
     });
     assignments = out;
     var ok = await window.storage.set(ASSIGN_KEY, JSON.stringify(out), true);
-    if (ok === false) { setSaveState('Not saved â€” retry', true); return false; }
+    if (ok === false) { setSaveState('Not saved — retry', true); return false; }
     setSaveState('Saved');
     return true;
   }
@@ -253,12 +253,12 @@
 
     if (!canEdit) {
       $('readonlyNote').style.display = '';
-      $('readonlyNote').textContent = 'Read-only â€” QA management / document-control roles may change verifier assignments.';
+      $('readonlyNote').textContent = 'Read-only — QA management / document-control roles may change verifier assignments.';
     }
     var backend = window.storage.backendName();
     if (backend === 'local') {
       $('readonlyNote').style.display = '';
-      $('readonlyNote').textContent = 'The records API is not connected on this device â€” changes save to this device only. '
+      $('readonlyNote').textContent = 'The records API is not connected on this device — changes save to this device only. '
         + 'Set a device key on the API key page for a facility-wide save.';
     }
   }

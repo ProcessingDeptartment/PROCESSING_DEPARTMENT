@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -296,7 +296,7 @@
   <div class="dh-modal-inner">
     <h2 id="nrTitle">Add a new record</h2>
     <p class="dh-hint" id="nrHint">The document number and name as they appear on the paper
-      record. Revision and date of issue are the paper baseline ï¿½ once the record is digitised,
+      record. Revision and date of issue are the paper baseline ? once the record is digitised,
       revisions bumped inside the record take over this row automatically.</p>
 
     <div id="nrStep1">
@@ -314,12 +314,12 @@
       <div class="nr-q">
         <p>Is there a relevant SOP for <span id="nrQName"></span>?</p>
         <div class="nr-choices">
-          <button type="button" class="btn btn-primary" id="nrSopYes">Yes ï¿½ link an SOP</button>
+          <button type="button" class="btn btn-primary" id="nrSopYes">Yes ? link an SOP</button>
           <button type="button" class="btn btn-ghost" id="nrSopNo">No SOP</button>
         </div>
       </div>
       <div id="nrSopWrap" style="display:none;">
-        <label class="dh-f">Find an SOP<input id="nrSopFilter" type="text" placeholder="Type to narrow the listï¿½" autocomplete="off"></label>
+        <label class="dh-f">Find an SOP<input id="nrSopFilter" type="text" placeholder="Type to narrow the list?" autocomplete="off"></label>
         <label class="dh-f">Relevant SOP<select id="nrSopSelect" size="8"></select></label>
       </div>
     </div>
@@ -335,10 +335,10 @@
 
 <div id="dhModal" class="dh-modal" style="display:none;">
   <div class="dh-modal-inner">
-    <h2>Document header ï¿½ printed title block</h2>
+    <h2>Document header ? printed title block</h2>
     <p class="dh-hint">These fields print in the ABAGOLD title block at the top of every
       page of the record's PDF. Revision and revision date are set automatically and cannot
-      be typed. Effective date prints blank until the date on the paper record is known ï¿½
+      be typed. Effective date prints blank until the date on the paper record is known ?
       it is never guessed, only recorded once someone has it.</p>
 
     <label class="dh-f" style="flex-direction:row;align-items:center;gap:6px;font-weight:400;text-transform:none;letter-spacing:0;font-size:12.5px;">
@@ -374,8 +374,8 @@
       </div>
 
       <div class="dh-auto">
-        <div><b id="dhRevision">ï¿½</b><span>Revision <em>(auto)</em></span></div>
-        <div><b id="dhRevisionDate">ï¿½</b><span>Revision date <em>(auto)</em></span></div>
+        <div><b id="dhRevision">?</b><span>Revision <em>(auto)</em></span></div>
+        <div><b id="dhRevisionDate">?</b><span>Revision date <em>(auto)</em></span></div>
       </div>
 
       <div class="dh-preview-wrap">
@@ -395,7 +395,7 @@
 <div id="auditModal" class="dh-modal" style="display:none;">
   <div class="dh-modal-inner" style="max-width:860px;">
     <h2>Master Index Audit Log</h2>
-    <p class="dh-hint">Y/N changes, archives and restores â€” most recent first.</p>
+    <p class="dh-hint">Y/N changes, archives and restores — most recent first.</p>
     <div id="auditContent" style="overflow-x:auto;"></div>
     <div class="dh-actions" style="margin-top:14px;">
       <button class="btn btn-ghost" id="auditClose">Close</button>
@@ -410,7 +410,7 @@
 <script src="../lib/nc-login-alert.js?v=1"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
 <script src="../lib/document-revision.js?v=4"></script>
-<script src="../lib/passkey-input.js?v=5"></script>
+<script src="../lib/passkey-input.js?v=6"></script>
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=10"></script>
 <script src="../lib/sop-index-data.js?v=1"></script>
@@ -560,7 +560,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entry)
       });
-    } catch (e) { /* non-fatal â€” log silently */ }
+    } catch (e) { /* non-fatal — log silently */ }
   }
 
   async function saveSopLink(id, rec, sop) {
@@ -615,7 +615,7 @@
     const opts = ['', 'Y', 'N', 'N/A'];
     const cur = value == null ? '' : String(value).toUpperCase();
     const options = opts.map(o =>
-      `<option value="${o}"${o === cur ? ' selected' : ''}>${o === '' ? 'ï¿½' : o}</option>`
+      `<option value="${o}"${o === cur ? ' selected' : ''}>${o === '' ? '?' : o}</option>`
     ).join('');
     return `<select data-row="${esc(id)}" data-field="${field}"${canEdit ? '' : ' disabled'}>${options}</select>`;
   }
@@ -649,7 +649,7 @@
 
       const details = l.bumped ? l.reason : r.details;
       const detailSub = l.bumped
-        ? `<span class="sub">Changed by ${esc(l.changedBy || '')}${l.changedByTitle ? ', ' + esc(l.changedByTitle) : ''} &middot; was: ${esc(r.details || 'ï¿½')}</span>`
+        ? `<span class="sub">Changed by ${esc(l.changedBy || '')}${l.changedByTitle ? ', ' + esc(l.changedByTitle) : ''} &middot; was: ${esc(r.details || '?')}</span>`
         : '';
       const issued = l.bumped ? l.dateOfIssue : r.dateOfIssue;
 
@@ -666,7 +666,7 @@
       const sopLine = sop
         ? `<span class="sub"><span class="tag tag-sop">SOP</span> `
           + `<a class="sop-link" href="../sops/${esc(sop.href)}">`
-          + `${esc(sop.sopNo)} ï¿½ ${esc(sop.name)}</a></span>`
+          + `${esc(sop.sopNo)} ? ${esc(sop.name)}</a></span>`
         : '';
 
       const obs = c.obsoleteRetrieved != null ? c.obsoleteRetrieved : r.obsoleteRetrieved;
@@ -677,7 +677,7 @@ const isArchived = !!archived[id];
         + `<td class="c-code">${esc(displayDocNo(r))}</td>`
         + `<td class="c-name">${nameCell}${tag ? '<span class="sub">' + tag + '</span>' : ''}${sopLine}</td>`
         + `<td class="c-details">${esc(details || '')}${detailSub}</td>`
-        + `<td class="c-rev">${rev == null ? 'ï¿½' : 'Rev ' + rev}</td>`
+        + `<td class="c-rev">${rev == null ? '?' : 'Rev ' + rev}</td>`
         + `<td class="c-yn">${ynSelect(id, 'obsoleteRetrieved', obs)}</td>`
         + `<td class="c-yn">${ynSelect(id, 'distributed', dist)}</td>`
         + `<td class="c-date">${esc(issued || '')}</td>`
@@ -793,20 +793,20 @@ const isArchived = !!archived[id];
       const id = archBtn.dataset.row;
       const nowArchived = !archived[id];
       const rowData = ROWS.find(r => rowId(r) === id);
-      const label = rowData ? (rowData.docNo + ' â€” ' + rowData.name) : id;
+      const label = rowData ? (rowData.docNo + ' — ' + rowData.name) : id;
       const archiveReason = nowArchived
-        ? prompt(`Archive "${label}"?\n\nEnter reason (required â€” leave blank to cancel):\n`)
+        ? prompt(`Archive "${label}"?\n\nEnter reason (required — leave blank to cancel):\n`)
         : null;
       if (nowArchived && (!archiveReason || !archiveReason.trim())) return;
-      $('saveState').textContent = 'Savingâ€¦';
+      $('saveState').textContent = 'Saving…';
       try {
         await setArchived(id, nowArchived);
         $('saveState').textContent = nowArchived ? 'Archived' : 'Restored';
         setTimeout(() => { $('saveState').textContent = ''; }, 2000);
         await postAudit({
           recordId: id,
-          docNo: String(label.split(' â€” ')[0] || ''),
-          docName: String(label.split(' â€” ').slice(1).join(' â€” ') || ''),
+          docNo: String(label.split(' — ')[0] || ''),
+          docName: String(label.split(' — ').slice(1).join(' — ') || ''),
           action: nowArchived ? 'archived' : 'restored',
           reason: nowArchived ? archiveReason.trim() : 'Restored by admin',
           changedBy: (window.Auth && window.Auth.getDisplayName && window.Auth.getDisplayName()) || ''
@@ -825,8 +825,8 @@ const isArchived = !!archived[id];
       const addedId = delBtn.dataset.addedId;
       const row = addedRows.find(r => r.addedId === addedId);
       if (!row) return;
-      if (!confirm(`Permanently delete "${row.docNo} â€” ${row.name}" from the index?\n\nThis cannot be undone.`)) return;
-      $('saveState').textContent = 'Deletingâ€¦';
+      if (!confirm(`Permanently delete "${row.docNo} — ${row.name}" from the index?\n\nThis cannot be undone.`)) return;
+      $('saveState').textContent = 'Deleting…';
       try {
         addedRows = addedRows.filter(r => r.addedId !== addedId);
         const idx = ROWS.findIndex(r => r.addedId === addedId);
@@ -896,7 +896,7 @@ const isArchived = !!archived[id];
     const q = $('nrSopFilter').value.toLowerCase().trim();
     const rows = nrSopRows().filter(r => !q || (r.sopNo + ' ' + r.name + ' ' + (r.area || '')).toLowerCase().includes(q));
     $('nrSopSelect').innerHTML = rows.map(r =>
-      `<option value="${esc(r.recordKey)}">${esc(r.sopNo)} ï¿½ ${esc(r.name)}${r.area ? ' (' + esc(r.area) + ')' : ''}</option>`
+      `<option value="${esc(r.recordKey)}">${esc(r.sopNo)} ? ${esc(r.name)}${r.area ? ' (' + esc(r.area) + ')' : ''}</option>`
     ).join('') || '<option value="" disabled>No SOP matches that search</option>';
   }
 
@@ -945,7 +945,7 @@ const isArchived = !!archived[id];
     const name = $('nrName').value.trim();
     if (!docNo || !name) { nrSetState('Document number and name are both required.', 'error'); return; }
     const clash = ROWS.some(r => displayDocNo(r).trim().toLowerCase() === docNo.toLowerCase());
-    if (clash) { nrSetState('ï¿½' + docNo + 'ï¿½ is already on the index.', 'error'); return; }
+    if (clash) { nrSetState('?' + docNo + '? is already on the index.', 'error'); return; }
 
     const rev = parseInt($('nrRevision').value, 10);
     nrAdded = {
@@ -962,7 +962,7 @@ const isArchived = !!archived[id];
       addedBy: $('nrAddedBy').value.trim(),
       addedAt: Date.now()
     };
-    nrSetState('Savingï¿½');
+    nrSetState('Saving?');
     addedRows.push(nrAdded);
     ROWS.push(nrAdded);
     await saveAddedRows();
@@ -975,7 +975,7 @@ const isArchived = !!archived[id];
     const key = $('nrSopSelect').value;
     const sop = nrSopRows().find(r => r.recordKey === key);
     if (!sop || !nrAdded) { nrSetState('Choose an SOP first.', 'error'); return; }
-    nrSetState('Linkingï¿½');
+    nrSetState('Linking?');
     try {
       await saveSopLink(rowId(nrAdded), nrAdded, sop);
       render();
@@ -1030,7 +1030,7 @@ const isArchived = !!archived[id];
       docNumber: $('dhDocNumber').value,
       reviewedBy: $('dhReviewedBy').value,
       approvedBy: $('dhApprovedBy').value,
-      revision: $('dhRevision').textContent === 'ï¿½' ? '' : $('dhRevision').textContent,
+      revision: $('dhRevision').textContent === '?' ? '' : $('dhRevision').textContent,
       revisionDate: $('dhRevisionDate').dataset.raw || '',
       effectiveDate: $('dhEffectiveDate').value || ''
     }, 1, 3, '../assets/abagold-logo.png');
@@ -1039,7 +1039,7 @@ const isArchived = !!archived[id];
   async function dhLoad(key) {
     dhCurrentKey = key;
     const r = dhRow(key) || {};
-    dhSetState('Loadingï¿½');
+    dhSetState('Loading?');
 
     const h = await window.DocHeader.resolve(key, {
       document: r.name || '',
@@ -1053,13 +1053,13 @@ const isArchived = !!archived[id];
     $('dhDocNumber').value = h.docNumber;
     $('dhReviewedBy').value = h.reviewedBy;
     $('dhApprovedBy').value = h.approvedBy;
-    $('dhRevision').textContent = h.revision === '' ? 'ï¿½' : h.revision;
+    $('dhRevision').textContent = h.revision === '' ? '?' : h.revision;
     $('dhRevisionDate').dataset.raw = h.revisionDate || '';
-    $('dhRevisionDate').textContent = window.DocHeader.fmtDate(h.revisionDate) || 'ï¿½';
+    $('dhRevisionDate').textContent = window.DocHeader.fmtDate(h.revisionDate) || '?';
     $('dhEffectiveDate').value = isoDate(h.effectiveDate);
     dhOriginalEffectiveDate = $('dhEffectiveDate').value;
     dhRenderPreview();
-    dhSetState(canEdit ? '' : 'Read-only ï¿½ document control roles may edit this.');
+    dhSetState(canEdit ? '' : 'Read-only ? document control roles may edit this.');
   }
 
   function dhOnlineRows() { return ROWS.filter(r => r.recordKey); }
@@ -1070,7 +1070,7 @@ const isArchived = !!archived[id];
     $('dhBumpWrap').style.display = all ? '' : 'none';
 
     ['dhDocument', 'dhDocNumber', 'dhEffectiveDate'].forEach(id => { $(id).disabled = all || !canEdit; });
-    if (all) dhSetState(canEdit ? '' : 'Read-only ï¿½ document control roles may edit this.');
+    if (all) dhSetState(canEdit ? '' : 'Read-only ? document control roles may edit this.');
   }
 
   function dhBumpToggle() {
@@ -1080,7 +1080,7 @@ const isArchived = !!archived[id];
   async function dhOpen() {
     const online = dhOnlineRows();
     $('dhRecordSelect').innerHTML = online
-      .map(r => `<option value="${esc(r.recordKey)}">${esc(displayDocNo(r))} ï¿½ ${esc(r.name)}</option>`).join('');
+      .map(r => `<option value="${esc(r.recordKey)}">${esc(displayDocNo(r))} ? ${esc(r.name)}</option>`).join('');
     ['dhDocument', 'dhDocNumber', 'dhReviewedBy', 'dhApprovedBy', 'dhEffectiveDate'].forEach(id => { $(id).disabled = !canEdit; });
     $('dhSave').disabled = !canEdit;
     $('dhApplyAll').checked = false;
@@ -1099,7 +1099,7 @@ const isArchived = !!archived[id];
   const auditModal = $('auditModal');
 
   async function openAuditLog() {
-    $('auditContent').innerHTML = '<p style="color:var(--palette-label);font-size:12px;">Loadingâ€¦</p>';
+    $('auditContent').innerHTML = '<p style="color:var(--palette-label);font-size:12px;">Loading…</p>';
     auditModal.classList.add('open');
     auditModal.style.display = 'flex';
     try {
@@ -1120,7 +1120,7 @@ const isArchived = !!archived[id];
           <th style="padding:6px 8px;border-bottom:2px solid var(--palette-border);">Changed by</th>
         </tr></thead><tbody>`;
       rows.forEach(r => {
-        const change = r.field ? `${r.field}: ${r.oldValue || 'â€“'} â†’ ${r.newValue || 'â€“'}` : '';
+        const change = r.field ? `${r.field}: ${r.oldValue || '–'} ? ${r.newValue || '–'}` : '';
         html += `<tr style="border-bottom:1px solid var(--palette-border);">
           <td style="padding:5px 8px;white-space:nowrap;">${esc(fmt(r.changedAt))}</td>
           <td style="padding:5px 8px;white-space:nowrap;">${esc(r.docNo || '')} ${esc(r.docName || '')}</td>
@@ -1159,7 +1159,7 @@ const isArchived = !!archived[id];
     try {
       if (applyAll) {
         const online = dhOnlineRows();
-        dhSetState('Saving to ' + online.length + ' recordsï¿½');
+        dhSetState('Saving to ' + online.length + ' records?');
         await window.DocHeader.saveFieldsAll(online.map(r => r.recordKey), {
           reviewedBy: $('dhReviewedBy').value,
           approvedBy: $('dhApprovedBy').value
@@ -1171,7 +1171,7 @@ const isArchived = !!archived[id];
           if (!reason || !changedBy || !changedByTitle) {
             throw new Error('Reason, changed by and title are all required to bump every revision.');
           }
-          dhSetState('Bumping revisions on ' + online.length + ' recordsï¿½');
+          dhSetState('Bumping revisions on ' + online.length + ' records?');
           await window.DocumentRevision.bumpAll(
             online.map(r => ({ recordKey: r.recordKey, startAt: r.revision })),
             { reason, changedBy, changedByTitle }
@@ -1184,12 +1184,12 @@ const isArchived = !!archived[id];
         const newEffective = $('dhEffectiveDate').value;
         if (newEffective !== dhOriginalEffectiveDate) {
           if (!window.PasskeyInput) { dhSetState('Passkey module not loaded.', 'error'); return; }
-          dhSetState('Waiting for passkey approvalâ€¦');
-          const approval = await window.PasskeyInput.openForApproval('Approve effective date change â€” enter your passkey');
-          if (!approval) { dhSetState('Change cancelled â€” passkey required to update effective date.', 'error'); return; }
+          dhSetState('Waiting for passkey approval…');
+          const approval = await window.PasskeyInput.openForApproval('Approve effective date change — enter your passkey');
+          if (!approval) { dhSetState('Change cancelled — passkey required to update effective date.', 'error'); return; }
           $('dhApprovedBy').value = approval.displayName;
         }
-        dhSetState('Savingï¿½');
+        dhSetState('Saving?');
         const docNumber = $('dhDocNumber').value;
         await window.DocHeader.saveFields(dhCurrentKey, {
           document: $('dhDocument').value,
@@ -1201,7 +1201,7 @@ const isArchived = !!archived[id];
         await saveRecordNumber(dhCurrentKey, docNumber);
         await loadDocHeaders();
         render();
-        dhSetState('Saved ï¿½ records will print this block.', 'ok');
+        dhSetState('Saved ? records will print this block.', 'ok');
       }
     } catch (e) { dhSetState(e.message, 'error'); }
   });
@@ -1227,10 +1227,10 @@ const isArchived = !!archived[id];
 
     $('hdrCode').textContent = DATA.header.docNumber || 'REC 01';
     $('hdrRev').textContent = 'Rev ' + (DATA.header.revision || '?')
-      + ' ï¿½ Rev date ' + (DATA.header.revisionDate || 'not set');
-    $('hdrReviewed').textContent = DATA.header.reviewedBy || 'ï¿½';
-    $('hdrApproved').textContent = DATA.header.approvedBy || 'ï¿½';
-    $('hdrRevDate').textContent = DATA.header.revisionDate || 'ï¿½';
+      + ' ? Rev date ' + (DATA.header.revisionDate || 'not set');
+    $('hdrReviewed').textContent = DATA.header.reviewedBy || '?';
+    $('hdrApproved').textContent = DATA.header.approvedBy || '?';
+    $('hdrRevDate').textContent = DATA.header.revisionDate || '?';
     $('hdrCounts').textContent = ROWS.length + ' (' + ROWS.filter(r => r.href).length + ' online)';
 
     render();
@@ -1242,27 +1242,27 @@ const isArchived = !!archived[id];
       await withTimeout(Promise.all([loadControl(), loadLive(),
                                      loadRecordNumbers(), loadAddedRows(), loadSopLinks(), loadArchived(), loadDocHeaders()]));
     } catch (e) {
-      $('saveState').textContent = 'Live revision data unavailable ï¿½ showing the issued baseline';
+      $('saveState').textContent = 'Live revision data unavailable ? showing the issued baseline';
       $('saveState').style.color = 'var(--palette-fail)';
     }
     render();
 
     if (!canEdit) {
-      $('saveState').textContent = 'Read-only ï¿½ administrator access required to edit';
+      $('saveState').textContent = 'Read-only ? administrator access required to edit';
       $('saveState').style.color = 'var(--palette-label)';
     }
   // ---- Edit Revision button ----
 
   function openRevModal() {
     const sel = document.getElementById('revSelectRecord');
-    sel.innerHTML = '<option value="">â€” select a record â€”</option>';
+    sel.innerHTML = '<option value="">— select a record —</option>';
     const withKeys = ROWS
       .filter(r => r.recordKey)
       .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
     withKeys.forEach(r => {
       const opt = document.createElement('option');
       opt.value = r.recordKey;
-      opt.textContent = (r.docNo ? r.docNo + ' â€” ' : '') + r.name;
+      opt.textContent = (r.docNo ? r.docNo + ' — ' : '') + r.name;
       sel.appendChild(opt);
     });
 
@@ -1328,7 +1328,7 @@ const isArchived = !!archived[id];
     }
 
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Savingâ€¦';
+    saveBtn.textContent = 'Saving…';
 
     try {
       const row = ROWS.find(r => r.recordKey === recordKey);
@@ -1339,8 +1339,8 @@ const isArchived = !!archived[id];
         { reason, changedBy: name, changedByTitle: title }
       );
       msg.style.color = '#15803d';
-      msg.textContent = `Saved â€” ${row ? row.docNo + ' ' + row.name : recordKey} set to Rev ${entry.revisionNumber} (${revDate}).`;
-      saveBtn.textContent = 'Saved âœ“';
+      msg.textContent = `Saved — ${row ? row.docNo + ' ' + row.name : recordKey} set to Rev ${entry.revisionNumber} (${revDate}).`;
+      saveBtn.textContent = 'Saved ?';
       await loadLive();
       render();
       setTimeout(closeRevModal, 1800);
@@ -1363,7 +1363,7 @@ const isArchived = !!archived[id];
     <div class="rev-field">
       <label for="revSelectRecord">Record</label>
       <select id="revSelectRecord">
-        <option value="">â€” select a record â€”</option>
+        <option value="">— select a record —</option>
       </select>
     </div>
 
@@ -1379,11 +1379,11 @@ const isArchived = !!archived[id];
 
     <div class="rev-field">
       <label for="revReason">Reason for change</label>
-      <textarea id="revReason" rows="2" placeholder="e.g. Updated process â€” new cooking times"></textarea>
+      <textarea id="revReason" rows="2" placeholder="e.g. Updated process — new cooking times"></textarea>
     </div>
 
     <div class="rev-field">
-      <label for="revSig_signature">Passkey <span style="color:#6b7280;font-weight:400;">(tap to enter â€” autofills name &amp; title)</span></label>
+      <label for="revSig_signature">Passkey <span style="color:#6b7280;font-weight:400;">(tap to enter — autofills name &amp; title)</span></label>
       <input type="text" id="revSig_signature" readonly inputmode="none" autocomplete="off"
              placeholder="Tap to enter passkey"
              style="cursor:pointer;background:#f9fafb;"
