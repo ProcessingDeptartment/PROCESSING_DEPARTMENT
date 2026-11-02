@@ -148,7 +148,7 @@ module.exports = function registerPasskeys(app, prisma) {
 
       await prisma.passkeyLog.create({ data: { username: user.username, recordKey: req.get('x-record-key') || null } });
       await prisma.userPasskey.update({ where: { username: user.username }, data: { lastUsedAt: new Date() } });
-      res.json({ success: true, username: user.username, displayName: user.displayName, title: user.title || null });
+      res.json({ success: true, username: user.username, displayName: user.displayName, title: user.title || null, blockExempt: user.blockExempt === true });
     } catch (e) { console.error('passkey verify failed', e); res.status(500).json({ error: 'Could not verify passkey' }); }
   });
 };

@@ -5711,6 +5711,7 @@ model UserPasskey {
   lastResetAt   DateTime @default(now())
   lastUsedAt    DateTime?
   passkeyPlain  String?  @map("passkey_plain")
+  blockExempt   Boolean  @default(false) @map("block_exempt")
 
   @@map("user_passkeys")
 }

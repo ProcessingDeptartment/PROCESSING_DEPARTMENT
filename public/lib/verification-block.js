@@ -3,6 +3,12 @@
 // Blocked users get an override escape hatch requiring a reason + passkey (audited).
 
 (async function initVerificationBlock() {
+  // ── 0. Per-user exemption check ───────────────────────────────────────────
+  const blockExempt =
+    window.__blockExempt === true ||
+    sessionStorage.getItem('blockExempt') === '1';
+  if (blockExempt) return;
+
   // ── Session override already granted ──────────────────────────────────────
   if (sessionStorage.getItem('vb_override_granted') === '1') return;
 
