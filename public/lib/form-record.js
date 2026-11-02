@@ -3810,9 +3810,14 @@
         const compact = sec.fields.length && sec.fields.every(f => f.type === 'computed' || f.readOnly);
         const _gridCols = sec.cols || 2;
         const fieldsHtml = `<div class="fr-grid fr-grid-${_gridCols}${compact ? ' fr-compact' : ''}${sec.viewer ? ' fr-viewer' : ''}">
-          ${sec.fields.map(f => `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
-            ${fieldInputHtml(`fr_f_${f.key}`, f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')))}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}${f.ncBelowSpec ? `<span class="fr-nc-badge" id="fr_f_${f.key}__nc" hidden>NC</span>` : ''}
-          </label>`).join('')}${sec.__hiddenHtml || ''}
+          ${sec.fields.map(f => {
+            const _fid = `fr_f_${f.key}`;
+            let _finp = fieldInputHtml(_fid, f, existing ? existing.values[f.key] : (f.defaultNow ? new Date().toISOString().slice(0,10) : (f.default || '')));
+            if (f.type === 'time' && f.nowButton && !f.readOnly) _finp = `<span class="fr-now-wrap">${_finp}<button type="button" class="fr-btn fr-now-btn no-print" data-now="${_fid}">Now</button></span>`;
+            return `<label class="fr-field${f.wide ? ' wide' : ''}">${esc(f.label)}
+            ${_finp}${config.entryLog && f.serverStamp ? `<span class="fr-muted" style="font-size:11.5px;">${existing && existing.values[f.key] ? esc(fmtDateTime(existing.values[f.key])) : 'Stamped automatically when submitted'}</span>` : ''}${f.ncBelowSpec ? `<span class="fr-nc-badge" id="${_fid}__nc" hidden>NC</span>` : ''}
+          </label>`;
+          }).join('')}${sec.__hiddenHtml || ''}
         </div>`;
         return wrapSection(sec, fieldsHtml);
       };
@@ -3888,6 +3893,30 @@
       }
 
       if (typeof wireYesNo === 'function') wireYesNo(container);
+      // Segmented buttons (type:'segmented') in section fields
+      container.addEventListener('click', (e) => {
+        const b = e.target.closest && e.target.closest('.fr-seg-btn');
+        if (!b || b.closest('[id^="fr_rosterRows"]')) return;
+        const wrap = b.closest('[data-seg-for]');
+        const hidden = wrap && el(wrap.dataset.segFor);
+        if (!hidden) return;
+        hidden.value = b.dataset.v;
+        wrap.querySelectorAll('.fr-seg-btn').forEach(x => {
+          x.classList.toggle('on', x === b);
+          x.setAttribute('aria-checked', x === b ? 'true' : 'false');
+        });
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      // Now buttons in section time fields (nowButton:true)
+      container.addEventListener('click', (e) => {
+        const b = e.target.closest && e.target.closest('[data-now]');
+        if (!b || b.closest('[id^="fr_rosterRows"]')) return;
+        const inp = el(b.dataset.now);
+        if (!inp || inp.disabled) return;
+        const d = new Date();
+        inp.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      });
       if (typeof wireJobNumber === 'function') wireJobNumber(container);
       if (typeof wireUpload === 'function') wireUpload(container);
       if (typeof wireBinJobsAutofill === 'function') wireBinJobsAutofill(container, config);
