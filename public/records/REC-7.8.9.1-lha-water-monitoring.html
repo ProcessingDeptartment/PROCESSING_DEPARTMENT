@@ -14,51 +14,28 @@
   <link rel="stylesheet" href="../styles/responsive.css?v=1">
 </head>
 <body class="rt-tablet">
-<script src="../lib/record-chrome.js?v=27"></script>
-<div id="mlRoot"></div>
+<script src="../lib/record-chrome.js?v=28"></script>
+<div id="frRoot"></div>
 
 <script src="../lib/doc-header.js?v=5"></script>
 <script src="../lib/master-index-data.js?v=4"></script>
 <script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/auth.js?v=7"></script>
 <script src="../lib/login-ui.js?v=6"></script>
 <script src="../lib/nc-login-alert.js?v=1"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/thresholds.js?v=2"></script>
+<script src="../lib/traceability.js?v=11"></script>
 <script src="../lib/document-revision.js?v=4"></script>
 <script src="../lib/signoff-block.js?v=8"></script>
+<script src="../lib/compute/registry.js?v=1"></script>
 <script src="../lib/nc-raise.js?v=5"></script>
+<script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/monitoring-log.js?v=90"></script>
+  <script src="../lib/form-record.js?v=138"></script>
 <script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'lha-water-monitoring',
-    docCode: 'REC 7.8.9.1',
-    title: 'LHA Water Monitoring',
-    docRevisionStart: 3,
-    instructions: [
-      { label: 'Scope', text: 'Live Holding Area chiller unit — separate from the general Water Monitoring record (REC 7.8.9), which covers a different water source.' },
-      { label: 'Frequency', text: 'Complete record twice per shift.' },
-      { label: 'Parameter', text: 'Temperature 12-18°C.' }
-    ],
-    entryFields: [
-      { key: 'month', label: 'Month', type: 'month', required: true },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'timeOfCheck', label: 'Time of check', type: 'time' },
-      { key: 'chillerUnitOperating', label: 'Chiller unit operating', type: 'yesno' },
-      { key: 'temperature', label: 'Temperature', type: 'number', unit: '°C', specKey: 'lhaTemp' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true }
-    ],
-    specFields: [
-      { key: 'lhaTemp', label: 'LHA chiller temperature', unit: '°C', ...Thresholds.get('lha-water-monitoring', 'lhaTemp') }
-    ],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
+  FormRecord.init({ mount: '#frRoot', recordKey: 'rec-7.8.9.1' });
 })();
 </script>
 <script src="../lib/record-shell.js?v=11"></script>
