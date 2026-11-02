@@ -2,24 +2,36 @@
 // Hard block / warning when overdue verifications exist.
 // Blocked users get an override escape hatch requiring a reason + passkey (audited).
 
-(async function initVerificationBlock() {
-  // ── 0. Per-user exemption check ───────────────────────────────────────────
-  const blockExempt =
-    window.__blockExempt === true ||
-    sessionStorage.getItem('blockExempt') === '1';
-  if (blockExempt) return;
+(function () {
+// ── Guard: only run once even if authSuccess fires multiple times ────────────
+let _ran = false;
 
-  // ── Session override already granted ──────────────────────────────────────
+async function initVerificationBlock() {
+  if (_ran) return;
+
+  // ── 0. Per-user exemption / override check ────────────────────────────────
+  if (window.__blockExempt === true || sessionStorage.getItem('blockExempt') === '1') return;
   if (sessionStorage.getItem('vb_override_granted') === '1') return;
 
-  // ── 1. Read current user role ──────────────────────────────────────────────
+  // ── 1. Read current user role ─────────────────────────────────────────────
+  // Requires auth.js to have run and restored/set the session first.
   const userRole = (
     window.__currentUserRole ||
     sessionStorage.getItem('userRole') ||
     ''
   ).toLowerCase().trim();
 
-  const PERMITTED_ROLES = ['administrator', 'admin', 'qa manager', 'qc manager'];
+  // Don't run until someone is actually logged in.
+  if (!userRole) return;
+
+  // Permitted = can see warning but continue (they are the verifiers).
+  // Everyone else = hard block.
+  const PERMITTED_ROLES = [
+    'administrator', 'admin',
+    'qa manager', 'qc manager',
+    'quality supervisor', 'quality controller',
+    'production manager', 'shift manager',
+  ];
   const isPermitted = PERMITTED_ROLES.includes(userRole);
 
   // ── 2. Check overdue count ─────────────────────────────────────────────────
@@ -197,11 +209,6 @@
           ? '<button type="button" id="vb-continue" class="vb-btn-secondary">Continue to system</button>'
           : '<button type="button" id="vb-override-btn" class="vb-btn-override">Override — Enter Reason</button>'}
       </div>
-      ${!isPermitted ? `
-        <p class="vb-contact">
-          Contact your QA Manager or Administrator to verify outstanding records.
-        </p>
-      ` : ''}
     </div>
 
     ${!isPermitted ? `
@@ -311,7 +318,7 @@
 
       try {
         // 1. Validate passkey
-        const verifyRes = await fetch('/api/passkey/verify', {
+        const verifyRes = await fetch(apiBase + '/api/passkey/verify', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -331,7 +338,7 @@
         }
 
         // 2. Write audit log entry
-        const auditRes = await fetch('/api/audit/block-override', {
+        const auditRes = await fetch(apiBase + '/api/audit/block-override', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -394,4 +401,20 @@
       if (newCount === 0) document.getElementById('vb-overlay')?.remove();
     } catch { /* silent */ }
   });
+
+  // Mark as run so we don't inject the overlay twice.
+  _ran = true;
+}
+
+// ── Fire on login (authSuccess) ───────────────────────────────────────────────
+document.addEventListener('authSuccess', initVerificationBlock);
+
+// ── Fire on page load if session was already restored before this script ran ──
+if (window.Auth && window.Auth.isAuthenticated()) {
+  initVerificationBlock();
+} else {
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.Auth && window.Auth.isAuthenticated()) initVerificationBlock();
+  });
+}
 })();
