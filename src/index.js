@@ -1248,43 +1248,88 @@ app.get('/api/template-history/:recordKey', async (req, res) => {
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 // ── Verification overdue count ─────────────────────────────────────────────
-// Returns { overdue: N } — records unverified AND older than 48 hours.
-// Uses SubmissionsGroupVerification: a group is overdue when it has no
-// verification row AND its submissionDate is more than 48 hours ago.
-// Falls back to sub_* table submittedAt if the group table has no match.
+// Returns { overdue: N } — unverified groups older than 48 hours.
+// Optional ?role=ROLE_KEY filters to only records this role is assigned to verify.
 app.get('/api/verification/count-overdue', async (req, res) => {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  const roleKey = (req.query.role || '').trim().toUpperCase();
+
   try {
-    // Count distinct (recordType, submissionGroupId) pairs that:
-    //   - have a submissionDate older than 48 h
-    //   - have no row in submissions_group_verification
-    const rows = await prisma.$queryRaw`
+    // 1. Discover all sub_* tables that have the required columns.
+    const tableRows = await prisma.$queryRaw`
+      SELECT table_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name LIKE 'sub\\_%'
+        AND column_name = 'submission_group_id'
+    `;
+    const tables = tableRows.map(r => r.table_name);
+    if (tables.length === 0) return res.json({ overdue: 0 });
+
+    // 2. If a role was supplied, find which recordKeys that role verifies.
+    //    VerifierAssignment.role stores the role constant (e.g. 'QA_MANAGER').
+    //    When no assignments exist for this role, fall back to allowing all tables.
+    let allowedRecordKeys = null; // null = no filter
+    if (roleKey) {
+      const assignments = await prisma.verifierAssignment.findMany({ where: { role: roleKey } });
+      if (assignments.length > 0) {
+        // Also pull base/default assignments (records with no custom override) —
+        // if this role is in the default set, it covers all unassigned records.
+        const defaultRoles = ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'];
+        const isDefault = defaultRoles.includes(roleKey);
+        if (!isDefault) {
+          // Only the explicitly assigned records
+          allowedRecordKeys = new Set(assignments.map(a => a.recordKey));
+        }
+        // If isDefault — role covers everything, leave allowedRecordKeys = null
+      } else {
+        // No custom assignments; check if this role is in the default verifier set
+        const defaultRoles = ['QUALITY_SUPERVISOR', 'QA_MANAGER', 'PRODUCTION_MANAGER', 'SHIFT_MANAGER'];
+        if (!defaultRoles.includes(roleKey)) {
+          // Role has no verifier responsibilities — never blocked
+          return res.json({ overdue: 0 });
+        }
+        // Default verifier role — covers all tables
+      }
+    }
+
+    // 3. Build UNION of all qualifying sub_* tables, filtered by allowed recordKeys.
+    const unionParts = [];
+    for (const tbl of tables) {
+      // Each sub_* table stores record_type matching the recordKey
+      if (allowedRecordKeys) {
+        // We can't filter by record_type server-side without knowing the value;
+        // include the table and filter in the outer WHERE using record_type column.
+        unionParts.push(
+          `SELECT record_type, submission_group_id, submission_date FROM "${tbl}" WHERE submission_group_id IS NOT NULL`
+        );
+      } else {
+        unionParts.push(
+          `SELECT record_type, submission_group_id, submission_date FROM "${tbl}" WHERE submission_group_id IS NOT NULL`
+        );
+      }
+    }
+
+    const cutoffIso = cutoff.toISOString();
+    const allowedList = allowedRecordKeys ? [...allowedRecordKeys].map(k => `'${k.replace(/'/g, "''")}'`).join(',') : null;
+    const recordFilter = allowedList ? `AND s.record_type IN (${allowedList})` : '';
+
+    const sql = `
       SELECT COUNT(*) AS n
       FROM (
         SELECT DISTINCT s.record_type, s.submission_group_id
         FROM (
           SELECT record_type, submission_group_id, submission_date
-          FROM (
-            SELECT record_type, submission_group_id, submission_date
-            FROM sub_dry_export_pack_front_page   WHERE submission_group_id IS NOT NULL
-            UNION ALL
-            SELECT record_type, submission_group_id, submission_date FROM sub_abalone_receiving     WHERE submission_group_id IS NOT NULL
-            UNION ALL
-            SELECT record_type, submission_group_id, submission_date FROM sub_bleeding_and_salting  WHERE submission_group_id IS NOT NULL
-            UNION ALL
-            SELECT record_type, submission_group_id, submission_date FROM sub_cans_produced         WHERE submission_group_id IS NOT NULL
-            UNION ALL
-            SELECT record_type, submission_group_id, submission_date FROM sub_dry_cooking           WHERE submission_group_id IS NOT NULL
-            UNION ALL
-            SELECT record_type, submission_group_id, submission_date FROM sub_drying_process        WHERE submission_group_id IS NOT NULL
-          ) all_subs
-          WHERE submission_date < ${cutoff}
+          FROM (${unionParts.join(' UNION ALL ')}) all_subs
+          WHERE submission_date < '${cutoffIso}'
         ) s
         LEFT JOIN submissions_group_verification v
           ON v.record_type = s.record_type AND v.submission_group_id = s.submission_group_id
-        WHERE v.id IS NULL
+        WHERE v.id IS NULL ${recordFilter}
       ) unverified
     `;
+
+    const rows = await prisma.$queryRawUnsafe(sql);
     const overdue = Number(rows[0]?.n ?? 0);
     res.json({ overdue });
   } catch (err) {

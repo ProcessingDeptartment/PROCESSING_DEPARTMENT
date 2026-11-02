@@ -30,8 +30,9 @@
     if (user && window.PermissionRules) {
       window.PermissionRules.setCurrentRole(user.role);
     }
-    // Expose for verification-block.js (username IS the human-readable role name)
-    window.__currentUserRole = user ? user.username : '';
+    // Expose for verification-block.js
+    window.__currentUserRole = user ? user.username : '';      // human-readable, e.g. 'qa manager'
+    window.__currentUserRoleKey = user ? user.role : '';       // constant, e.g. 'QA_MANAGER'
     window.__currentUserName = user ? user.displayName : '';
   }
 

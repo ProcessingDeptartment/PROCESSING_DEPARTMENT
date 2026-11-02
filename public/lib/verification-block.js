@@ -23,10 +23,14 @@
   const isPermitted = PERMITTED_ROLES.includes(userRole);
 
   // ── 2. Check overdue count ─────────────────────────────────────────────────
+  const apiBase = (window.FacilityApi?.base?.() || window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
+  const roleKey = (window.__currentUserRoleKey || '').trim();
+
   let overdueCount = 0;
   try {
-    const res = await fetch('/api/verification/count-overdue', {
-      headers: { 'x-access-key': window.getAccessKey?.() || '' },
+    const params = roleKey ? '?role=' + encodeURIComponent(roleKey) : '';
+    const res = await fetch(apiBase + '/api/verification/count-overdue' + params, {
+      headers: window.FacilityApi?.headers?.() || { 'x-access-key': window.getAccessKey?.() || '' },
     });
     if (res.ok) {
       const data = await res.json();
@@ -360,8 +364,9 @@
   // ── 7. Re-check after a verification completes (optional) ─────────────────
   window.addEventListener('verification-completed', async () => {
     try {
-      const res = await fetch('/api/verification/count-overdue', {
-        headers: { 'x-access-key': window.getAccessKey?.() || '' },
+      const params = roleKey ? '?role=' + encodeURIComponent(roleKey) : '';
+      const res = await fetch(apiBase + '/api/verification/count-overdue' + params, {
+        headers: window.FacilityApi?.headers?.() || { 'x-access-key': window.getAccessKey?.() || '' },
       });
       if (res.ok) {
         const data = await res.json();
