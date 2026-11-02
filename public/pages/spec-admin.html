@@ -147,6 +147,7 @@
         <div><label class="lbl" for="cBy">Your name</label><input type="text" id="cBy"></div>
         <div><label class="lbl" for="cTitle">Your title</label><input type="text" id="cTitle"></div>
       </div>
+      <div class="full" style="margin-top:4px"><label class="toggle"><input type="checkbox" id="fBumpRev"> Also bump document revision <span class="hint">(tick if this spec change constitutes a document change)</span></label></div>
       <div class="btns">
         <button class="primary" id="saveBtn">Save specification</button>
         <button id="clearBtn" type="button">Cancel</button>
@@ -191,6 +192,7 @@
   var fields = [];      // [{ key, label, type, where }] for the chosen record
   var specs = {};       // field_key -> spec row (incl. inactive)
   var current = null;   // field key being edited
+  var recStart = 1;     // the record's docRevisionStart, used when operator opts in to bumping the revision
 
   function toast(msg, isErr) {
     var t = $('toast'); t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
@@ -247,6 +249,7 @@
     fs.disabled = true; fs.innerHTML = '<option value="">Loading fields&hellip;</option>';
     Promise.all([json('/api/record-def/' + encodeURIComponent(key)), json('/api/specs/' + encodeURIComponent(key) + '?all=1')])
       .then(function (res) {
+        recStart = (res[0].config && res[0].config.docRevisionStart) || 1;
         fields = listFields(res[0].config || {});
         res[1].forEach(function (s) { specs[s.field_key] = s; });
         drawFieldPicker(); drawSummary();
@@ -327,7 +330,7 @@
     $('fNotes').value = s && s.notes || '';
     $('fOff').checked = !!(s && !s.active);
     var u = window.Auth && window.Auth.getCurrentUser ? window.Auth.getCurrentUser() : null;
-    $('cReason').value = ''; $('cBy').value = u ? (u.displayName || '') : '';
+    $('cReason').value = ''; $('fBumpRev').checked = false; $('cBy').value = u ? (u.displayName || '') : '';
     $('cTitle').value = u ? ((window.SignOffBlock && window.SignOffBlock.roleLabel ? window.SignOffBlock.roleLabel(u.role) : String(u.role || '').toLowerCase().replace(/_/g, ' ').replace(/w/g, function (c) { return c.toUpperCase(); })) || '') : '';
     showNc(); drawHistory(s);
     $('fieldSel').value = key;
@@ -363,12 +366,24 @@
         $('fieldSel').value = row.field_key;
         $('exportNotice').hidden = false;
         drawHistory(row);
-        toast('Specification saved.');
+        var doBump = $('fBumpRev').checked;
+        if (doBump) {
+          return bumpDocRev(rec, reason, by, ttl).then(function (note) { toast('Specification saved' + note + '.'); });
+        } else {
+          toast('Specification saved.');
+        }
       })
       .catch(function (e) { toast('Could not save: ' + e.message, true); })
       .then(function () { btn.disabled = false; });
   });
   $('clearBtn').addEventListener('click', function () { $('editor').hidden = true; $('history').hidden = true; $('fieldSel').value = ''; current = null; });
+
+  function bumpDocRev(rec, reason, by, ttl) {
+    if (!window.DocumentRevision) return Promise.resolve('');
+    return window.DocumentRevision.bump(rec, { reason: 'Field spec: ' + reason, changedBy: by, changedByTitle: ttl }, recStart)
+      .then(function (r) { return ' — document is now Rev ' + r.revisionNumber; })
+      .catch(function () { return ' (but the document revision could not be updated)'; });
+  }
 
   function fmtWhen(ts) { var d = new Date(ts); if (isNaN(d.getTime())) return ''; var p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
   function drawHistory(s) {
