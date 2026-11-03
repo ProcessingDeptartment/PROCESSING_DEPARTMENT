@@ -1,4 +1,4 @@
-// public/lib/access-control.js  v4
+// public/lib/access-control.js  v5
 // ─────────────────────────────────────────────────────────────────────────────
 // Home-page visibility + within-page access enforcement.
 //
@@ -118,9 +118,13 @@
     var role = currentRole();
     if (!role) return;
     if (isAdmin()) {
-      // Admins: ensure unlock row is hidden, nothing else to do
+      // Admins see everything — show all data-page-id elements and hide the unlock row
       var ur = document.getElementById('passkeyUnlockRow');
       if (ur) ur.style.display = 'none';
+      document.querySelectorAll('[data-page-id]').forEach(function (el) {
+        if (el.style.display === 'none') el.style.display = '';
+        el.setAttribute('data-access', 'edit');
+      });
       return;
     }
 
