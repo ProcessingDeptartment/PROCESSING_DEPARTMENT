@@ -276,7 +276,7 @@
   // ── Fetch config ───────────────────────────────────────────────────────────
   async function loadConfig() {
     try {
-      const res = await fetch(apiBase() + '/api/admin/access-control', { headers: roleHeader(), cache: 'no-store' });
+      const res = await window.FacilityApi.fetch('/api/admin/access-control', { headers: roleHeader(), cache: 'no-store' });
       const data = await res.json();
       config = data.config || {};
     } catch (e) {
@@ -474,7 +474,7 @@
     try {
       // 1. Verify passkey — same pattern as delete-submission-modal.js
       const currentRole = (window.Auth && window.Auth.getCurrentRole) ? window.Auth.getCurrentRole() || '' : '';
-      const verifyRes = await fetch(apiBase() + '/api/passkey/verify', {
+      const verifyRes = await window.FacilityApi.fetch('/api/passkey/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ passkey, role: currentRole })
@@ -504,7 +504,7 @@
 
       // 2. Save config
       btn.textContent = 'Saving…';
-      const saveRes = await fetch(apiBase() + '/api/admin/access-control', {
+      const saveRes = await window.FacilityApi.fetch('/api/admin/access-control', {
         method: 'POST',
         headers: roleHeader(),
         body: JSON.stringify({ config })
