@@ -54,47 +54,47 @@
       </tr>
     </thead>
     <tbody>
-      <tr onclick="location.href='../sops/sop-list.html'">
+      <tr onclick="location.href='../sops/sop-list.html'" data-page-id="sop-list">
         <td class="document"><a href="../sops/sop-list.html">SOP List</a></td>
         <td class="description">Standard Operating Procedures &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr onclick="location.href='../policies/policy-list.html'">
+      <tr onclick="location.href='../policies/policy-list.html'" data-page-id="policy-list">
         <td class="document"><a href="../policies/policy-list.html">Policy List</a></td>
         <td class="description">Policies &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr onclick="location.href='../procedures/procedure-list.html'">
+      <tr onclick="location.href='../procedures/procedure-list.html'" data-page-id="procedure-list">
         <td class="document"><a href="../procedures/procedure-list.html">Procedure List</a></td>
         <td class="description">Procedures &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr onclick="location.href='../prps/prp-list.html'">
+      <tr onclick="location.href='../prps/prp-list.html'" data-page-id="prp-list">
         <td class="document"><a href="../prps/prp-list.html">PRP List</a></td>
         <td class="description">Pre-Requisite Programmes &mdash; read-only reference, not fill-in records</td>
       </tr>
-      <tr class="admin-only" onclick="location.href='specifications.html'">
+      <tr class="admin-only" onclick="location.href='specifications.html'" data-page-id="specifications">
         <td class="document"><a href="specifications.html">Specifications</a></td>
         <td class="description">Limits and tolerances the records check against &mdash; QA Manager / Administrator can update them (versioned)</td>
       </tr>
-      <tr class="admin-only" onclick="location.href='cert-revisions-admin.html'">
+      <tr class="admin-only" onclick="location.href='cert-revisions-admin.html'" data-page-id="cert-revisions">
         <td class="document"><a href="cert-revisions-admin.html">Certification Updates</a></td>
         <td class="description">Log a new edition of a standard, review which record forms are affected, and track QA sign-offs &mdash; Administrator / QA Manager</td>
       </tr>
-      <tr onclick="location.href='../records/batch-trace.html'">
+      <tr onclick="location.href='../records/batch-trace.html'" data-page-id="batch-trace">
         <td class="document"><a href="../records/batch-trace.html">Batch Traceability</a></td>
         <td class="description">Enter a product batch / lot number to see every record that touched it, front to back</td>
       </tr>
-      <tr class="admin-only" onclick="location.href='fsms-calendar.html'">
+      <tr class="admin-only" onclick="location.href='fsms-calendar.html'" data-page-id="fsms-calendar">
         <td class="document"><a href="fsms-calendar.html">FSMS Calendar</a></td>
         <td class="description">Annual QAM schedule &amp; compliance tracker &mdash; audits, testing, calibration, medicals, recalls, training; set up a new year by cloning the last</td>
       </tr>
-      <tr class="admin-only" onclick="location.href='micro-testing-record.html'">
+      <tr class="admin-only" onclick="location.href='micro-testing-record.html'" data-page-id="micro-testing">
         <td class="document"><a href="micro-testing-record.html">Micro Testing Record</a></td>
         <td class="description">Monthly, quarterly &amp; annual microbiological testing schedule &mdash; hand swabs, surface swabs, water, airplates and annual compliance tests; mark done with sample details &amp; sign-off</td>
       </tr>
-      <tr class="admin-only" onclick="location.href='verifier-assignments.html'">
+      <tr class="admin-only" onclick="location.href='verifier-assignments.html'" data-page-id="verifier-assignments">
         <td class="document"><a href="verifier-assignments.html">Verifier Assignments</a></td>
         <td class="description">Set which role signs off each record &mdash; drives the Awaiting Verification queue and the record verification panels</td>
       </tr>
-      <tr onclick="location.href='../records/master-record-index.html'">
+      <tr onclick="location.href='../records/master-record-index.html'" data-page-id="master-record-index">
         <td class="document"><a href="../records/master-record-index.html">REC 01 Master Record Index</a></td>
         <td class="description">The controlled document-control register: every record, its current revision, reason for change, distribution and issue date</td>
       </tr>
@@ -108,6 +108,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/auth.js?v=7"></script>
+<script src="../lib/access-control.js?v=5"></script>
 <script>
   (function () {
     function applyAdmin() {

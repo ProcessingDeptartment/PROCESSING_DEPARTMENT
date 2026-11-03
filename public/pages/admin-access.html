@@ -209,6 +209,17 @@
     // Categories (blocks on the home page)
     { id: 'records',              label: 'Records',              sub: 'Find and open a record to fill in',                        category: 'Categories', authOnly: true },
     { id: 'fsms',                 label: 'FSMS',                 sub: 'SOPs, Policies, Procedures, PRPs etc.',                    category: 'Categories', authOnly: true },
+    { id: 'sop-list',            label: 'SOP List',             sub: 'Standard Operating Procedures',                            category: 'Categories', authOnly: true,  parent: 'fsms' },
+    { id: 'policy-list',         label: 'Policy List',          sub: 'Company policies',                                         category: 'Categories', authOnly: true,  parent: 'fsms' },
+    { id: 'procedure-list',      label: 'Procedure List',       sub: 'Processing procedures',                                    category: 'Categories', authOnly: true,  parent: 'fsms' },
+    { id: 'prp-list',            label: 'PRP List',             sub: 'Prerequisite programmes',                                  category: 'Categories', authOnly: true,  parent: 'fsms' },
+    { id: 'specifications',      label: 'Specifications',       sub: 'Product specifications',                                   category: 'Categories', adminOnly: true, parent: 'fsms' },
+    { id: 'cert-revisions',      label: 'Certification Updates',sub: 'Certification revision history',                           category: 'Categories', adminOnly: true, parent: 'fsms' },
+    { id: 'batch-trace',         label: 'Batch Traceability',   sub: 'Batch trace records',                                      category: 'Categories', authOnly: true,  parent: 'fsms' },
+    { id: 'fsms-calendar',       label: 'FSMS Calendar',        sub: 'FSMS activity calendar',                                   category: 'Categories', adminOnly: true, parent: 'fsms' },
+    { id: 'micro-testing',       label: 'Micro Testing Record', sub: 'Microbiology testing log',                                 category: 'Categories', adminOnly: true, parent: 'fsms' },
+    { id: 'verifier-assignments',label: 'Verifier Assignments', sub: 'Who verifies which records',                               category: 'Categories', adminOnly: true, parent: 'fsms' },
+    { id: 'master-record-index', label: 'Master Record Index',  sub: 'REC 01 — master index of all records',                    category: 'Categories', authOnly: true,  parent: 'fsms' },
     { id: 'verifications',        label: 'Verifications',        sub: 'Review and sign off submitted entries',                    category: 'Categories', authOnly: true },
     { id: 'production-dashboard', label: 'Production Dashboard', sub: 'Live seam data, line status and quality',                 category: 'Categories', adminOnly: true },
     { id: 'job-progress',         label: 'Job Progress report',  sub: 'Job Status + Dashboard buttons',                          category: 'Categories', authOnly: true },
@@ -461,16 +472,28 @@
     status.textContent = '';
 
     try {
-      // 1. Verify administrator passkey
+      // 1. Verify passkey — same pattern as delete-submission-modal.js
+      const currentRole = (window.Auth && window.Auth.getCurrentRole) ? window.Auth.getCurrentRole() || '' : '';
       const verifyRes = await fetch(apiBase() + '/api/passkey/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passkey, role: 'ADMINISTRATOR' })
+        body: JSON.stringify({ passkey, role: currentRole })
       });
       const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        status.textContent = '✗ ' + (verifyData.error || 'Passkey not recognised');
+        status.style.color = '#dc2626';
+        passkeyInput.value = '';
+        passkeyInput.focus();
+        btn.disabled = false;
+        btn.textContent = 'Save changes';
+        return;
+      }
+      const _t = String(verifyData.title || '').toLowerCase();
+      const isAdminPasskey = _t.includes('administrator') || _t.includes('admin') || _t.includes('ppicm');
 
-      if (!verifyData.success && !verifyData.ok && !verifyData.valid) {
-        status.textContent = '✗ Incorrect passkey.';
+      if (!isAdminPasskey) {
+        status.textContent = '✗ ' + (verifyData.displayName || 'That user') + ' (' + (verifyData.title || 'no title') + ') is not authorised for this action';
         status.style.color = '#dc2626';
         passkeyInput.value = '';
         passkeyInput.focus();
