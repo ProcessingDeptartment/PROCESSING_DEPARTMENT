@@ -686,6 +686,25 @@
         openPdfPanel(btn.getAttribute('data-pdf-href'));
       });
     });
+
+    // Async: check print-lock for drying-process / dry-monitoring entries
+    const _lockBtns = [...wrap.querySelectorAll('[data-lock-job]')];
+    if (_lockBtns.length) {
+      const _lockJobs = [...new Set(_lockBtns.map((b) => b.getAttribute('data-lock-job')))];
+      _lockJobs.forEach(async (jobNo) => {
+        try {
+          const res = await fetch('/api/dry-monitoring/job-facts/' + encodeURIComponent(jobNo));
+          const data = res.ok ? await res.json() : null;
+          if (!(data && data['dried-transfer-weight'] != null)) {
+            wrap.querySelectorAll('[data-lock-job="' + jobNo.replace(/"/g, '') + '"]').forEach((b) => {
+              b.textContent = '\uD83D\uDD12 PDF';
+              b.style.cssText = 'opacity:0.5;cursor:not-allowed;pointer-events:none;background:#9ca3af;border-color:#9ca3af;';
+              b.title = 'Complete REC 7.4.10 (Dried Abalone Transfer) for this job before printing.';
+            });
+          }
+        } catch (_) { /* on network error: don't lock */ }
+      });
+    }
   }
 
   document.addEventListener('click', () => {
@@ -913,6 +932,25 @@
         openPdfPanel(btn.getAttribute('data-pdf-href'));
       });
     });
+
+    // Async: check print-lock for drying-process / dry-monitoring entries
+    const _lockBtns = [...wrap.querySelectorAll('[data-lock-job]')];
+    if (_lockBtns.length) {
+      const _lockJobs = [...new Set(_lockBtns.map((b) => b.getAttribute('data-lock-job')))];
+      _lockJobs.forEach(async (jobNo) => {
+        try {
+          const res = await fetch('/api/dry-monitoring/job-facts/' + encodeURIComponent(jobNo));
+          const data = res.ok ? await res.json() : null;
+          if (!(data && data['dried-transfer-weight'] != null)) {
+            wrap.querySelectorAll('[data-lock-job="' + jobNo.replace(/"/g, '') + '"]').forEach((b) => {
+              b.textContent = '\uD83D\uDD12 PDF';
+              b.style.cssText = 'opacity:0.5;cursor:not-allowed;pointer-events:none;background:#9ca3af;border-color:#9ca3af;';
+              b.title = 'Complete REC 7.4.10 (Dried Abalone Transfer) for this job before printing.';
+            });
+          }
+        } catch (_) { /* on network error: don't lock */ }
+      });
+    }
   }
 
   (async function init() {
