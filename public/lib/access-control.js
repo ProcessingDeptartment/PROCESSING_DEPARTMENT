@@ -1,23 +1,40 @@
-// public/lib/access-control.js
-// Reads the access-control config from the API and hides nav blocks/rows
-// on the home page (index.html) for the current user's role.
+// public/lib/access-control.js  v2
+// ─────────────────────────────────────────────────────────────────────────────
+// Home-page visibility + within-page access enforcement.
 //
-// Page elements that should be access-controlled must have:
-//   data-page-id="some-page-key"
+// Config shape (stored in API / returned by /api/access-control/public):
+//   { ROLE_KEY: { pageId: 'edit' | 'read' | false } }
 //
-// The access config has the shape:
-//   { ROLE_KEY: { "page-key": true } }   <- true = visible, absent/false = hidden
+//   'edit'  – visible, fully editable
+//   'read'  – visible, read-only (pages should check AccessControl.isReadOnly())
+//   false   – hidden (not shown on the home page)
+//   absent  – treated same as false
 //
-// If a role has NO entry in the config at all, all pages remain visible (default open).
-// If a role has an entry, only pages listed as true are shown; all others are hidden.
+// DEFAULT behaviour for any non-admin role:
+//   • Before passkey unlock  → only 'records' and 'verifications' are visible
+//   • After passkey unlock   → configured access (or full access if no config set)
 //
-// ADMINISTRATOR role is always fully visible and cannot be restricted.
+// Administrators always bypass all restrictions.
+//
+// API:
+//   AccessControl.getAccess(pageId)  → 'edit' | 'read' | 'none'
+//   AccessControl.isReadOnly(pageId) → bool
+//   AccessControl.canEdit(pageId)    → bool
+//   AccessControl.unlockForSession() → call after successful passkey verify
+//   AccessControl.isUnlocked()       → bool
+//   AccessControl.apply()            → re-apply rules (called after login)
+//   AccessControl.getConfig()        → Promise<config>   (admin use)
+//   AccessControl.saveConfig(config) → Promise<result>   (admin use; passkey handled by caller)
+// ─────────────────────────────────────────────────────────────────────────────
 
 (function () {
   'use strict';
 
-  var _config = null;   // { ROLE_KEY: { pageId: bool } }
-  var _applied = false;
+  var _config = null;      // { ROLE_KEY: { pageId: 'edit'|'read'|false } }
+  var _unlocked = false;   // true after the user has verified their passkey this session
+
+  // Pages visible before passkey unlock for any non-admin role.
+  var DEFAULT_VISIBLE = { records: true, verifications: true };
 
   function apiBase() {
     return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
@@ -27,7 +44,12 @@
     return window.__currentUserRoleKey || '';
   }
 
-  // Fetch config from API (or local cache).
+  function isAdmin() {
+    var r = currentRole();
+    return /ADMIN(ISTRATOR)?$/.test(r);
+  }
+
+  // ── Fetch public config ────────────────────────────────────────────────────
   function loadConfig() {
     if (_config !== null) return Promise.resolve(_config);
     return fetch(apiBase() + '/api/access-control/public', { cache: 'no-store' })
@@ -36,41 +58,88 @@
       .catch(function () { _config = {}; return _config; });
   }
 
-  // Apply visibility rules to all [data-page-id] elements.
+  // Normalise a raw config value to 'edit' | 'read' | 'none'
+  function normalise(val) {
+    if (val === 'edit' || val === true) return 'edit';
+    if (val === 'read') return 'read';
+    return 'none';
+  }
+
+  // ── Core access logic ──────────────────────────────────────────────────────
+  // Returns 'edit' | 'read' | 'none' for the current user + given page.
+  function getAccess(pageId) {
+    var role = currentRole();
+    if (!role) return 'none';
+    if (isAdmin()) return 'edit';
+
+    if (!_unlocked) {
+      // Pre-unlock: only the two default pages are accessible
+      return DEFAULT_VISIBLE[pageId] ? 'edit' : 'none';
+    }
+
+    // Post-unlock: use configured restrictions
+    if (!_config || !_config[role]) {
+      // No config = unrestricted for this role (after unlock)
+      return 'edit';
+    }
+
+    var rules = _config[role];
+    // If no page has a non-false value, treat as unrestricted
+    var hasAny = Object.keys(rules).some(function (k) {
+      return rules[k] && rules[k] !== 'none';
+    });
+    if (!hasAny) return 'edit';
+
+    return normalise(rules[pageId]);
+  }
+
+  // ── Apply visibility rules to [data-page-id] elements ─────────────────────
   function applyRules(config) {
     var role = currentRole();
-    if (!role || /ADMIN/i.test(role)) return;   // admins see everything
-
-    var rules = config[role];
-    if (!rules || typeof rules !== 'object') return;   // no entry = no restriction
-
-    // Are ANY pages explicitly enabled? If all are false/absent, assume no restriction applied yet.
-    var hasAnyEnabled = Object.values(rules).some(Boolean);
-    if (!hasAnyEnabled) return;   // empty ruleset treated as "unrestricted"
+    if (!role) return;
+    if (isAdmin()) {
+      // Admins: ensure unlock row is hidden, nothing else to do
+      var ur = document.getElementById('passkeyUnlockRow');
+      if (ur) ur.style.display = 'none';
+      return;
+    }
 
     var elements = document.querySelectorAll('[data-page-id]');
     elements.forEach(function (el) {
       var id = el.getAttribute('data-page-id');
-      if (!rules[id]) {
-        // Hide the element. For table rows use display:none; for blocks use visibility:hidden
-        // then also set display:none so no empty gap remains.
+      var access = getAccess(id);
+
+      if (access === 'none') {
         el.style.display = 'none';
-        // If it's inside a block-grid, the grid gap handles layout — no gap needed.
+        el.removeAttribute('data-access');
+      } else {
+        // Keep display managed by existing auth-only / admin-only CSS classes;
+        // only override if we hid it ourselves.
+        if (el.style.display === 'none') el.style.display = '';
+        el.setAttribute('data-access', access);
       }
     });
 
-    _applied = true;
+    // Show/hide the passkey unlock row
+    var unlockRow = document.getElementById('passkeyUnlockRow');
+    if (unlockRow) {
+      unlockRow.style.display = _unlocked ? 'none' : '';
+    }
   }
 
   function run() {
-    loadConfig().then(function (config) {
-      applyRules(config);
-    });
+    loadConfig().then(function (cfg) { applyRules(cfg); });
   }
 
-  // Expose publicly for the admin page to read/write config.
+  // Call this after the user has successfully verified their own passkey.
+  function unlockForSession() {
+    _unlocked = true;
+    run();
+  }
+
+  // ── Public API ─────────────────────────────────────────────────────────────
   window.AccessControl = {
-    // Admin CRUD
+    // Admin CRUD (passkey verification is the caller's responsibility)
     getConfig: function () {
       return fetch(apiBase() + '/api/admin/access-control', {
         headers: { 'x-role': currentRole(), 'x-user': window.__currentUserName || '' }
@@ -87,19 +156,24 @@
         body: JSON.stringify({ config: config })
       }).then(function (r) { return r.json(); });
     },
-    // Apply current rules (called after login).
+
+    // Runtime
     apply: run,
-    isApplied: function () { return _applied; }
+    getAccess: getAccess,
+    isReadOnly: function (pageId) { return getAccess(pageId) === 'read'; },
+    canEdit: function (pageId) { return getAccess(pageId) === 'edit'; },
+    unlockForSession: unlockForSession,
+    isUnlocked: function () { return _unlocked; }
   };
 
-  // Apply on DOMContentLoaded if already authenticated.
+  // ── Auto-run ───────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     if (window.Auth && window.Auth.isAuthenticated()) run();
   });
 
-  // Also apply after login.
   document.addEventListener('authSuccess', function () {
-    _config = null;   // clear cached config so we re-fetch after a role change
+    _config = null;   // clear cache so re-fetch picks up any changes
+    _unlocked = false;
     run();
   });
 
