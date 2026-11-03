@@ -96,12 +96,20 @@ function serveFile(filePath, res) {
   });
 }
 
-server.listen(PORT, () => {
-  console.log(`📄 Processing Department front-end server running at http://localhost:${PORT}`);
-  console.log(`\n🔧 BACKEND INTEGRATION NOTES:`);
-  console.log(`   - All HTML/CSS/JS files are in the 'public' folder`);
-  console.log(`   - Front-end uses localStorage for data storage (see public/lib/data-store.js)`);
-  console.log(`   - When ready to add a backend, implement the API in public/lib/api-backend.js`);
-  console.log(`   - Then load api-backend.js AFTER data-store.js on pages that need it`);
-  console.log(`   - See BACKEND_INTEGRATION.md for full details\n`);
+server.listen(PORT, '0.0.0.0', () => {
+  const os = require('os');
+  const nets = os.networkInterfaces();
+  let lanIP = 'unknown';
+  for (const iface of Object.values(nets)) {
+    for (const net of iface) {
+      if (net.family === 'IPv4' && !net.internal) {
+        lanIP = net.address;
+        break;
+      }
+    }
+    if (lanIP !== 'unknown') break;
+  }
+  console.log(`\n📄 Processing Department — local server running`);
+  console.log(`   Local:   http://localhost:${PORT}`);
+  console.log(`   Network: http://${lanIP}:${PORT}  ← share this with LAN users\n`);
 });
