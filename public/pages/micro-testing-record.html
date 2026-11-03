@@ -152,13 +152,17 @@
     <h2 id="setupTitle">Set up year</h2>
     <label class="opt" id="optAuto">
       <input type="radio" name="setupMode" value="auto" checked>
-      <div class="opt-body"><b>Auto-setup (recommended)</b><small>Creates standard monthly, quarterly and annual test slots automatically — ready in seconds.</small></div>
+      <div class="opt-body"><b>Auto-setup one year</b><small>Creates standard monthly, quarterly and annual test slots automatically — ready in seconds.</small></div>
+    </label>
+    <label class="opt" id="optAll">
+      <input type="radio" name="setupMode" value="all">
+      <div class="opt-body"><b>Set up all years (2021 – present)</b><small>Creates test slots for every year from 2021 to today in one click. Already-set-up years are skipped safely.</small></div>
     </label>
     <label class="opt" id="optClone">
       <input type="radio" name="setupMode" value="clone">
       <div class="opt-body"><b>Clone from prior year</b><small>Copies all events from an existing year, resets to pending. Keeps any custom entries you added.</small></div>
     </label>
-    <div class="modal-row">
+    <div class="modal-row" id="singleYearWrap">
       <div>Year: <input type="number" id="setupYear" style="width:90px"></div>
       <div id="cloneFromWrap">Clone from: <select id="cloneSrc"></select></div>
     </div>
@@ -203,7 +207,20 @@
   // ---------- data loading ----------
   async function init() {
     config = await call('/api/micro-testing/config');
+    // Sync categories to DB so they exist before any year setup
+    try { await call('/api/micro-testing/categories/sync', { method:'POST' }); } catch(_) {}
     await loadYears();
+    // Auto-setup the current year if it is not yet in the list
+    if (!years.some(function(y){ return y.year === THIS_YEAR; })) {
+      try {
+        await call('/api/micro-testing/years/'+THIS_YEAR+'/setup', { method:'POST' });
+        await loadYears(THIS_YEAR);
+        banner('ok', THIS_YEAR + ' set up automatically with all standard test slots.');
+      } catch(e) {
+        // 409 = already has events (race condition) — just reload quietly
+        if (e.message && e.message.indexOf('already') !== -1) { await loadYears(THIS_YEAR); }
+      }
+    }
   }
 
   async function loadYears(selectYear) {
@@ -421,34 +438,55 @@
   }
 
   // ---------- year setup modal ----------
+  var FIRST_YEAR = 2021;
   function openSetupModal() {
     var latest = years.length ? years[0].year : THIS_YEAR - 1;
-    $('setupYear').value = latest + 1;
-    $('setupTitle').textContent = 'Set up ' + (latest + 1);
+    var nextYear = Math.max(THIS_YEAR, latest + 1);
+    $('setupYear').value = nextYear;
+    $('setupTitle').textContent = years.length ? 'Set up year' : 'First-time setup';
     $('cloneSrc').innerHTML = years.map(function(y){ return '<option value="'+y.year+'">'+y.year+'</option>'; }).join('');
     $('setupErr').textContent = '';
+    // If no years yet, default to "all years"
+    if (!years.length) {
+      document.querySelector('input[name=setupMode][value=all]').checked = true;
+    } else {
+      document.querySelector('input[name=setupMode][value=auto]').checked = true;
+    }
     updateCloneWrap();
     $('setupBg').classList.add('show');
   }
   function updateCloneWrap() {
-    var isClone = document.querySelector('input[name=setupMode]:checked').value === 'clone';
-    $('cloneFromWrap').classList.toggle('hidden', !isClone);
+    var mode = document.querySelector('input[name=setupMode]:checked').value;
+    $('cloneFromWrap').classList.toggle('hidden', mode !== 'clone');
+    $('singleYearWrap').classList.toggle('hidden', mode === 'all');
   }
   async function doSetup() {
-    var year = parseInt($('setupYear').value, 10);
     var mode = document.querySelector('input[name=setupMode]:checked').value;
     $('setupErr').textContent = '';
     try {
-      if (mode === 'auto') {
-        var r = await call('/api/micro-testing/years/'+year+'/setup', { method:'POST' });
-        banner('ok', r.created + ' events created for ' + year + '. Marking done as you go will record who completed each test.');
+      if (mode === 'all') {
+        var r = await call('/api/micro-testing/years/bulk-setup', json('POST', { fromYear: FIRST_YEAR, toYear: THIS_YEAR }));
+        var created = r.results.filter(function(x){ return !x.skipped; });
+        var skipped = r.results.filter(function(x){ return x.skipped; });
+        var msg = r.totalCreated + ' events created across ' + created.length + ' year(s)';
+        if (skipped.length) msg += ' (' + skipped.map(function(x){ return x.year; }).join(', ') + ' already existed — skipped)';
+        banner('ok', msg + '.');
+        $('setupBg').classList.remove('show');
+        await loadYears(THIS_YEAR);
+      } else if (mode === 'auto') {
+        var year = parseInt($('setupYear').value, 10);
+        var r2 = await call('/api/micro-testing/years/'+year+'/setup', { method:'POST' });
+        banner('ok', r2.created + ' events created for ' + year + '. Marking done as you go will record who completed each test.');
+        $('setupBg').classList.remove('show');
+        await loadYears(year);
       } else {
+        var year = parseInt($('setupYear').value, 10);
         var src = parseInt($('cloneSrc').value, 10);
-        var r2 = await call('/api/fsms/years/'+year+'/clone', json('POST', { sourceYear: src }));
-        banner('ok', r2.copied + ' events copied from ' + src + ' into ' + year + ' — reset to pending.');
+        var r3 = await call('/api/fsms/years/'+year+'/clone', json('POST', { sourceYear: src }));
+        banner('ok', r3.copied + ' events copied from ' + src + ' into ' + year + ' — reset to pending.');
+        $('setupBg').classList.remove('show');
+        await loadYears(year);
       }
-      $('setupBg').classList.remove('show');
-      await loadYears(year);
     } catch(e) { $('setupErr').textContent = e.message; }
   }
 
@@ -476,6 +514,10 @@
   $('setupGo').addEventListener('click', doSetup);
   $('printBtn').addEventListener('click', function(){ window.print(); });
   document.querySelectorAll('input[name=setupMode]').forEach(function(r){ r.addEventListener('change', updateCloneWrap); });
+  $('setupYear').addEventListener('input', function(){
+    var y = parseInt($('setupYear').value, 10);
+    if (y) $('setupTitle').textContent = 'Set up ' + y;
+  });
 
   init().catch(function(e){ banner('bad','Could not load: '+e.message); });
 })();

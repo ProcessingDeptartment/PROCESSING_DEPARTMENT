@@ -290,6 +290,46 @@ function mount(app, prisma) {
       res.status(201).json({ ok: true, year, created: toCreate.length });
     } catch (e) { fail(res, 'POST micro setup year', e); }
   });
+
+  // Bulk-setup a range of years in one call. Skips years that already have MT events.
+  // Body: { fromYear, toYear }
+  app.post('/api/micro-testing/years/bulk-setup', async (req, res) => {
+    const fromYear = toYear((req.body || {}).fromYear);
+    const toYearVal = toYear((req.body || {}).toYear);
+    if (!fromYear || !toYearVal || fromYear > toYearVal) {
+      return res.status(400).json({ ok: false, error: 'fromYear and toYear required (fromYear ≤ toYear)' });
+    }
+    try {
+      // Upsert categories once
+      const cats = [];
+      for (const t of MICRO_TESTS) {
+        const cat = await C.upsert({
+          where: { name: t.name },
+          update: { color: t.color, sortOrder: t.sortOrder },
+          create: { name: t.name, color: t.color, sortOrder: t.sortOrder },
+        });
+        cats.push({ ...cat, freq: t.freq });
+      }
+      const catIds = cats.map((c) => c.id);
+
+      const results = [];
+      for (let yr = fromYear; yr <= toYearVal; yr++) {
+        const y = await Y.upsert({ where: { year: yr }, update: {}, create: { year: yr } });
+        const existing = await E.count({ where: { yearId: y.id, categoryId: { in: catIds } } });
+        if (existing > 0) { results.push({ year: yr, skipped: true, reason: 'already has events' }); continue; }
+        const toCreate = [];
+        for (const cat of cats) {
+          for (const m of monthsFor(cat.freq)) {
+            toCreate.push({ yearId: y.id, categoryId: cat.id, month: m, title: cat.name.replace(/^MT: /, '') });
+          }
+        }
+        await E.createMany({ data: toCreate });
+        results.push({ year: yr, created: toCreate.length });
+      }
+      const totalCreated = results.reduce((s, r) => s + (r.created || 0), 0);
+      res.status(201).json({ ok: true, results, totalCreated });
+    } catch (e) { fail(res, 'POST micro bulk-setup', e); }
+  });
 }
 
 module.exports = { mount, MICRO_TESTS };
