@@ -1,4 +1,4 @@
-// Admin-managed numeric passkeys (PINs) used in place of typed signatures.
+// Admin-managed numeric passkeys (PINs) used in place of typed signatures. v2
 //   POST /api/admin/passkeys/create   (admin)  create or reset a user's passkey
 //   POST /api/admin/passkeys/list     (admin)  list users (returns passkeyPlain for admin visibility)
 //   POST /api/admin/passkeys/update   (admin)  edit name/title and optionally reset passkey
