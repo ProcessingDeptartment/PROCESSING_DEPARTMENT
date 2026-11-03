@@ -438,7 +438,7 @@
       });
       const verifyData = await verifyRes.json();
 
-      if (!verifyData.ok && !verifyData.valid) {
+      if (!verifyData.success && !verifyData.ok && !verifyData.valid) {
         status.textContent = '✗ Incorrect passkey.';
         status.style.color = '#dc2626';
         passkeyInput.value = '';

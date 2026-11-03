@@ -34,7 +34,7 @@
   var _unlocked = false;   // true after the user has verified their passkey this session
 
   // Pages visible before passkey unlock for any non-admin role.
-  var DEFAULT_VISIBLE = { records: true, verifications: true };
+  var DEFAULT_VISIBLE = { records: true, verifications: true, handovers: true, 'seam-calculator': true };
 
   function apiBase() {
     return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
