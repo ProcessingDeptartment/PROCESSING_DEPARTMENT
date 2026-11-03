@@ -769,9 +769,7 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
     }
   } catch (e) { console.error('job-facts cooked weight failed', e.message); }
   try {
-    const tr = await prisma.$queryRawUnsafe(
-      `SELECT "id", "totalDriedWeight" FROM "sub_dried_abalone_transfer"
-       WHERE UPPER("jobNo") = UPPER($1) AND "totalDriedWeight" IS NOT NULL AND COALESCE("status", 'submitted') <> 'draft'`, jobNo);
+    const tr = await prisma.$queryRaw`SELECT "id", "totalDriedWeight" FROM "sub_dried_abalone_transfer" WHERE UPPER("jobNo") = UPPER(${jobNo}) AND "totalDriedWeight" IS NOT NULL AND COALESCE("status", 'submitted') <> 'draft'`;
     if (tr.length) {
       const sum = tr.reduce((a, r) => a + Number(r.totalDriedWeight), 0);
       out['dried-transfer-weight'] = { value: String(Math.round(sum * 1000) / 1000), ids: tr.map((r) => r.id),
