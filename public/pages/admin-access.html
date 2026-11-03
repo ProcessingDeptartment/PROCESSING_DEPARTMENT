@@ -121,9 +121,9 @@
     #saveStatus { font-size: 12px; }
 
     /* Passkey gate in save bar */
-    .passkey-gate { display: flex; align-items: center; gap: 8px; }
-    .passkey-gate label { font-size: 12px; color: #b9c3cc; white-space: nowrap; }
-    .passkey-gate input {
+    .passkey-gate-unused { display: flex; align-items: center; gap: 8px; }
+    .passkey-gate-unused label { font-size: 12px; color: #b9c3cc; white-space: nowrap; }
+    .passkey-gate-unused input {
       width: 110px; padding: 6px 10px; border-radius: 4px; border: 1px solid #4b5563;
       background: #0f172a; color: #f4f1e8; font-size: 13px; letter-spacing: 2px;
     }
@@ -188,10 +188,6 @@
   <div class="save-bar-inner">
     <p>Changes require your administrator passkey to save.</p>
     <span id="saveStatus"></span>
-    <div class="passkey-gate">
-      <label for="adminPasskeyInput">Admin passkey:</label>
-      <input type="password" id="adminPasskeyInput" placeholder="Enter PIN" inputmode="numeric" maxlength="10" autocomplete="off">
-    </div>
     <button class="save-btn" id="saveBtn" type="button">Save changes</button>
   </div>
 </div>
@@ -200,6 +196,7 @@
 <script src="/lib/api-backend.js?v=18"></script>
 <script src="/lib/auth.js?v=7"></script>
 <script src="/lib/login-ui.js?v=6"></script>
+<script src="/lib/passkey-input.js?v=1"></script>
 <script>
 (function () {
   'use strict';
@@ -456,72 +453,43 @@
     });
   }
 
-  // ── Save with passkey gate ─────────────────────────────────────────────────
+  // ── Save with passkey gate (uses PasskeyInput popup — same as delete-submission-modal) ──
   document.getElementById('saveBtn').addEventListener('click', async function () {
     const btn = document.getElementById('saveBtn');
     const status = document.getElementById('saveStatus');
-    const passkeyInput = document.getElementById('adminPasskeyInput');
-    const passkey = passkeyInput.value.trim();
+    status.textContent = '';
 
-    if (!passkey) {
-      passkeyInput.focus();
-      status.textContent = '⚠ Enter your administrator passkey first.';
-      status.style.color = '#f59e0b';
+    // 1. Open the passkey numpad popup — PasskeyInput handles FacilityApi.fetch + Bearer token
+    const result = await window.PasskeyInput.openForApproval('Administrator passkey required');
+    if (!result) return; // user cancelled
+
+    // 2. Check the returned title allows admin access
+    const ADMIN_FRAGMENTS = ['administrator', 'admin', 'ppicm'];
+    const titleLow = String(result.title || '').toLowerCase();
+    const isAdmin = ADMIN_FRAGMENTS.some(function (f) { return titleLow.includes(f); });
+    if (!isAdmin) {
+      status.textContent = '✗ ' + (result.displayName || 'That user') + ' (' + (result.title || 'no title') + ') is not authorised for this action';
+      status.style.color = '#dc2626';
       return;
     }
 
+    // 3. Save config
     btn.disabled = true;
-    btn.textContent = 'Verifying…';
-    status.textContent = '';
-
+    btn.textContent = 'Saving…';
     try {
-      // 1. Verify passkey — same pattern as delete-submission-modal.js
-      const currentRole = (window.Auth && window.Auth.getCurrentRole) ? window.Auth.getCurrentRole() || '' : '';
-      const verifyRes = await window.FacilityApi.fetch('/api/passkey/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passkey, role: currentRole })
-      });
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok) {
-        status.textContent = '✗ ' + (verifyData.error || 'Passkey not recognised');
-        status.style.color = '#dc2626';
-        passkeyInput.value = '';
-        passkeyInput.focus();
-        btn.disabled = false;
-        btn.textContent = 'Save changes';
-        return;
-      }
-      const _t = String(verifyData.title || '').toLowerCase();
-      const isAdminPasskey = _t.includes('administrator') || _t.includes('admin') || _t.includes('ppicm');
-
-      if (!isAdminPasskey) {
-        status.textContent = '✗ ' + (verifyData.displayName || 'That user') + ' (' + (verifyData.title || 'no title') + ') is not authorised for this action';
-        status.style.color = '#dc2626';
-        passkeyInput.value = '';
-        passkeyInput.focus();
-        btn.disabled = false;
-        btn.textContent = 'Save changes';
-        return;
-      }
-
-      // 2. Save config — passkey verified as admin so send ADMINISTRATOR role
-      btn.textContent = 'Saving…';
       const saveRes = await window.FacilityApi.fetch('/api/admin/access-control', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-role': 'ADMINISTRATOR',
-          'x-user': window.__currentUserName || verifyData.displayName || ''
+          'x-user': result.displayName || window.__currentUserName || ''
         },
         body: JSON.stringify({ config })
       });
       const saveData = await saveRes.json();
-
       if (saveData.success) {
         status.textContent = '✓ Saved';
         status.style.color = '#15803d';
-        passkeyInput.value = '';
       } else {
         throw new Error(saveData.error || 'Save failed');
       }
@@ -532,16 +500,6 @@
       btn.disabled = false;
       btn.textContent = 'Save changes';
     }
-  });
-
-  // Clear status when passkey field is edited
-  document.getElementById('adminPasskeyInput').addEventListener('input', function () {
-    document.getElementById('saveStatus').textContent = '';
-  });
-
-  // Allow Enter key in passkey field to trigger save
-  document.getElementById('adminPasskeyInput').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') document.getElementById('saveBtn').click();
   });
 
   // ── Auth gate ──────────────────────────────────────────────────────────────
