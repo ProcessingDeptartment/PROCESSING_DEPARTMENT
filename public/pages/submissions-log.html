@@ -693,7 +693,8 @@
       const _lockJobs = [...new Set(_lockBtns.map((b) => b.getAttribute('data-lock-job')))];
       _lockJobs.forEach(async (jobNo) => {
         try {
-          const res = await fetch('/api/dry-monitoring/job-facts/' + encodeURIComponent(jobNo));
+          const _apiFn = (window.FacilityApi && window.FacilityApi.fetch) ? (p) => window.FacilityApi.fetch(p) : fetch;
+          const res = await _apiFn('/api/dry-monitoring/job-facts/' + encodeURIComponent(jobNo));
           const data = res.ok ? await res.json() : null;
           if (!(data && data['dried-transfer-weight'] != null)) {
             wrap.querySelectorAll('[data-lock-job="' + jobNo.replace(/"/g, '') + '"]').forEach((b) => {
@@ -941,7 +942,8 @@
       const _lockJobs = [...new Set(_lockBtns.map((b) => b.getAttribute('data-lock-job')))];
       _lockJobs.forEach(async (jobNo) => {
         try {
-          const res = await fetch('/api/dry-monitoring/job-facts/' + encodeURIComponent(jobNo));
+          const _apiFn = (window.FacilityApi && window.FacilityApi.fetch) ? (p) => window.FacilityApi.fetch(p) : fetch;
+          const res = await _apiFn('/api/dry-monitoring/job-facts/' + encodeURIComponent(jobNo));
           const data = res.ok ? await res.json() : null;
           if (!(data && data['dried-transfer-weight'] != null)) {
             wrap.querySelectorAll('[data-lock-job="' + jobNo.replace(/"/g, '') + '"]').forEach((b) => {
