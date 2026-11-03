@@ -139,8 +139,34 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=18"></script>
 <script src="../lib/auth.js?v=7"></script>
+<script src="../lib/passkey-input.js?v=6"></script>
 <script>
 (function () {
+  var NC_VIEWER_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'QUALITY_SUPERVISOR', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR', 'ADMIN', 'ADMINISTRATOR'];
+  var NC_EDITOR_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMIN', 'ADMINISTRATOR'];
+  var NC_CLOSER_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'QUALITY_SUPERVISOR', 'ADMIN', 'ADMINISTRATOR'];
+  var NC_DELETE_ROLES = ['ADMIN', 'ADMINISTRATOR'];
+
+  // --- Auth gate ---
+  var _authUser = window.Auth && window.Auth.getCurrentUser && window.Auth.getCurrentUser();
+  var _authRole = _authUser ? _authUser.role : null;
+
+  if (!_authUser) {
+    window.location.href = '/index.html?redirectTo=/pages/nc-log.html';
+    // stop script execution
+    throw new Error('redirect');
+  }
+  if (!NC_VIEWER_ROLES.includes(_authRole)) {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif">'
+      + '<h2>⛔ Access Denied</h2><p>Your role does not have access to the NC Log.</p>'
+      + '<p>Role: <strong>' + (_authRole || 'none') + '</strong></p>'
+      + '<a href="/index.html">← Home</a></div>';
+    throw new Error('access denied');
+  }
+
+  // Initialize passkey number pad
+  if (window.PasskeyInput) window.PasskeyInput.init();
+
   var CATEGORIES = ['Weight deviation', 'Temperature out of spec', 'Labelling error', 'Equipment failure',
     'Process deviation', 'Product quality', 'Dry room issue', 'Documentation error', 'Hygiene / sanitation', 'Other'];
   var SEV = { minor: 'Minor', major: 'Major', critical: 'Critical' };
@@ -162,9 +188,34 @@
     return p(x.getDate()) + '/' + p(x.getMonth() + 1) + '/' + x.getFullYear() + ' ' + p(x.getHours()) + ':' + p(x.getMinutes());
   }
   function userName() { var u = window.Auth && window.Auth.getCurrentUser(); return u ? u.displayName : ''; }
-  function api(path, opts) { return window.FacilityApi.fetch(path, opts); }
-  function json(method, body) { return { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }; }
+  function userRole() { return _authRole || ''; }
+  function canEdit() { return NC_EDITOR_ROLES.includes(userRole()); }
+  function canClose() { return NC_CLOSER_ROLES.includes(userRole()); }
+  function canDelete() { return NC_DELETE_ROLES.includes(userRole()); }
+
+  function authHeaders() {
+    var u = window.Auth && window.Auth.getCurrentUser();
+    return {
+      'X-User': u ? u.displayName : '',
+      'X-Role': u ? u.role : '',
+    };
+  }
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({}, authHeaders(), opts.headers || {});
+    return window.FacilityApi.fetch(path, opts);
+  }
+  function json(method, body) {
+    return { method: method, headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()), body: JSON.stringify(body) };
+  }
   function banner(cls, msg) { $('banner').innerHTML = msg ? '<div class="banner ' + cls + '">' + esc(msg) + '</div>' : ''; }
+
+  // Prompt for passkey sign-off and return verified displayName, or null if cancelled.
+  async function requirePasskey(prompt) {
+    if (!window.PasskeyInput) return userName() || 'Unknown'; // graceful fallback
+    var result = await window.PasskeyInput.openForApproval(prompt || 'Sign off on these NC changes — enter your passkey');
+    return result ? result.displayName : null;
+  }
 
   // ---------- table ----------
   function renderHead() {
@@ -229,6 +280,8 @@
     if ($('fTo').value) p.set('to', $('fTo').value);
     try {
       var res = await api('/api/nc?' + p);
+      if (res.status === 401) { window.location.href = '/index.html?redirectTo=/pages/nc-log.html'; return; }
+      if (res.status === 403) { $('rows').innerHTML = '<tr><td class="empty" colspan="11">⛔ Access denied.</td></tr>'; return; }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       rows = await res.json(); render();
     } catch (e) {
@@ -251,6 +304,9 @@
     a.download = 'nc-log-' + new Date().toISOString().slice(0, 10) + '.csv';
     document.body.appendChild(a); a.click(); a.remove();
   });
+
+  // Hide Raise NC button for viewer-only roles
+  if (!canEdit()) $('raiseBtn').style.display = 'none';
 
   // ---------- modals ----------
   function show(id, on) { $(id).classList.toggle('show', on); }
@@ -299,7 +355,7 @@
         + '<label class="full">Corrective action <span class="req">*</span>'
         + '<textarea name="corrective_action" required placeholder="What was done to fix this issue? E.g. \'Replaced fan unit. Dry room stable at 30°C. Re-checked all areas.\'">' + esc(r.correctiveAction) + '</textarea></label>'
         + '<label class="full">Notes <textarea name="notes">' + esc(r.notes) + '</textarea></label>'
-        + '<label>Closed by <span class="req">*</span><input name="closed_by" type="text" value="' + esc(r.closedBy || userName()) + '" required></label>';
+        + '<div class="full" style="font-size:12px;color:#5c6771;padding:4px 0">🔐 Closing requires passkey sign-off — you will be prompted when you click Close NC.</div>';
     } else {
       h += '<label>Raise a CAR? <select name="car_required"><option value="">— not answered —</option>'
           + '<option value="yes"' + (r.carRequired === true ? ' selected' : '') + '>Yes — CAR required</option>'
@@ -308,7 +364,7 @@
         + '<div class="full" style="font-size:12px;color:#92400e">A CAR is the more severe process: raise it on <a href="../records/REC-8.1.1.a-internal-car.html" target="_blank" rel="noopener">REC 8.1.1.a Internal CAR</a>, then enter its reference here. This NC cannot be closed until the CAR reference is entered.</div>'
         + '<label>Status <select name="status">' + Object.keys(STAT).map(function (k) {
           return '<option value="' + k + '"' + (k === r.status ? ' selected' : '') + '>' + STAT[k] + '</option>'; }).join('') + '</select></label>'
-        + '<label>Closed by <input name="closed_by" type="text" value="' + esc(r.closedBy || userName()) + '"></label>'
+        + '<div style="font-size:12px;color:#5c6771;padding:4px 0">🔐 Saving requires passkey sign-off.</div>'
         + '<label class="full">Corrective action <textarea name="corrective_action">' + esc(r.correctiveAction) + '</textarea></label>'
         + '<label class="full">Notes <textarea name="notes">' + esc(r.notes) + '</textarea></label>';
     }
@@ -321,12 +377,14 @@
       }).join('') : 'No history yet.';
       if (r.lastRecordUpdateAt && r.status !== 'closed') $('histBox').open = true;
     }).catch(function () { $('histBody').textContent = 'Could not load history.'; });
+    var canEditThis = canEdit() || (viewing && (viewing.raisedBy === userName()));
+    var canCloseThis = canClose();
     $('viewBtns').innerHTML = '<button class="btn" type="button" data-close>' + (closed ? 'Close' : 'Cancel') + '</button>'
       + (closed ? '' : rtc
-        ? '<button class="btn" type="button" id="keepOpenBtn">Keep open</button><button class="btn primary" id="closeNcBtn" type="button" disabled>Close NC</button>'
-        : '<button class="btn primary" type="submit">Save</button>');
+        ? (canCloseThis ? '<button class="btn" type="button" id="keepOpenBtn">Keep open</button><button class="btn primary" id="closeNcBtn" type="button" disabled>Close NC</button>' : '')
+        : (canEditThis ? '<button class="btn primary" type="submit">Save</button>' : ''));
     show('viewModal', true);
-    if (rtc) {
+    if (rtc && canCloseThis) {
       // Enable Close NC button only when corrective_action has text; wire Keep open to save without closing
       var caEl = $('viewForm').corrective_action;
       var closeBtn = $('closeNcBtn');
@@ -335,23 +393,25 @@
         caEl.addEventListener('input', onCaInput); onCaInput();
         closeBtn.addEventListener('click', async function () {
           var ca = caEl.value.trim();
-          var by = ($('viewForm').closed_by || {}).value || ''; by = by.trim();
           if (!ca) { $('viewErr').textContent = 'Describe the corrective action taken before closing.'; return; }
-          if (!by) { $('viewErr').textContent = 'Enter who is closing this NC.'; return; }
-          if (!confirm('Mark this NC as closed with the provided corrective action?')) return;
+          var passkeyName = await requirePasskey('Sign off to close this NC — enter your passkey');
+          if (!passkeyName) { $('viewErr').textContent = 'Passkey sign-off is required to close an NC.'; return; }
           try {
-            var res = await api('/api/nc/' + viewing.id, json('PATCH', { status: 'closed', corrective_action: ca, closed_by: by, notes: ($('viewForm').notes || {}).value || '' }));
+            var res = await api('/api/nc/' + viewing.id, json('PATCH', { status: 'closed', corrective_action: ca,
+              notes: ($('viewForm').notes || {}).value || '', passkey_username: passkeyName }));
             var out = await res.json();
             if (!res.ok) throw new Error(out.error || ('HTTP ' + res.status));
-            show('viewModal', false); banner('ok', '✓ NC closed successfully. Reference: ' + out.ncRef + '.'); load();
+            show('viewModal', false); banner('ok', '✓ NC closed by ' + esc(passkeyName) + '. Reference: ' + out.ncRef + '.'); load();
           } catch (err) { $('viewErr').textContent = 'Could not close: ' + err.message; }
         });
         var keepBtn = $('keepOpenBtn');
         if (keepBtn) keepBtn.addEventListener('click', async function () {
           var ca = caEl.value.trim();
           var notes = ($('viewForm').notes || {}).value || '';
+          var passkeyName = await requirePasskey('Sign off on changes — enter your passkey');
+          if (!passkeyName) { $('viewErr').textContent = 'Passkey sign-off is required.'; return; }
           try {
-            var res = await api('/api/nc/' + viewing.id, json('PATCH', { corrective_action: ca || null, notes: notes }));
+            var res = await api('/api/nc/' + viewing.id, json('PATCH', { corrective_action: ca || null, notes: notes, passkey_username: passkeyName }));
             var out = await res.json();
             if (!res.ok) throw new Error(out.error || ('HTTP ' + res.status));
             show('viewModal', false); banner('ok', out.ncRef + ' updated.'); load();
@@ -363,17 +423,22 @@
   $('viewForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var f = e.target;
-    // ready_to_close uses its own buttons (closeNcBtn / keepOpenBtn), not this handler
     if (viewing && viewing.status === 'ready_to_close') return;
-    var body = { status: f.status.value, corrective_action: f.corrective_action.value.trim(), notes: f.notes.value.trim(),
-      car_required: f.car_required.value, car_ref: f.car_ref.value.trim() };
-    if (!body.car_required) delete body.car_required;
-    if (body.status === 'closed') {
-      if (body.car_required === 'yes' && !body.car_ref) { $('viewErr').textContent = 'A CAR is required: enter the CAR reference before closing.'; return; }
-      if (!f.closed_by.value.trim()) { $('viewErr').textContent = 'Enter who is closing this NC.'; return; }
-      if (!confirm('Mark this NC as resolved?')) return;
-      body.closed_by = f.closed_by.value.trim();
+    if (!canEdit() && !(viewing && viewing.raisedBy === userName())) {
+      $('viewErr').textContent = 'You do not have permission to edit this NC.'; return;
     }
+    var body = { status: f.status ? f.status.value : viewing.status,
+      corrective_action: f.corrective_action ? f.corrective_action.value.trim() : null,
+      notes: f.notes ? f.notes.value.trim() : null,
+      car_required: f.car_required ? f.car_required.value : null,
+      car_ref: f.car_ref ? f.car_ref.value.trim() : null };
+    if (!body.car_required) delete body.car_required;
+    if (body.status === 'closed' && body.car_required === 'yes' && !body.car_ref) {
+      $('viewErr').textContent = 'A CAR is required: enter the CAR reference before closing.'; return;
+    }
+    var passkeyName = await requirePasskey('Sign off on changes — enter your passkey');
+    if (!passkeyName) { $('viewErr').textContent = 'Passkey sign-off is required to save changes.'; return; }
+    body.passkey_username = passkeyName;
     try {
       var res = await api('/api/nc/' + viewing.id, json('PATCH', body));
       var out = await res.json();

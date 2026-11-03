@@ -5801,8 +5801,10 @@ model NcLog {
   carRef           String?   @map("car_ref") // the CAR reference (REC 8.1.1.a) once raised
   status           String    @default("open")
   correctiveAction String?   @map("corrective_action")
-  closedBy         String?   @map("closed_by")
+  closedBy         String?   @map("closed_by")           // passkey-authenticated username who closed this NC
   closedAt         DateTime? @map("closed_at") @db.Timestamptz(6)
+  createdBy        String?   @map("created_by")           // passkey username who raised (backfilled from raisedBy)
+  updatedBy        String?   @map("updated_by")           // passkey-authenticated username of last updater
   notes            String?
   notifySent       Boolean   @default(false) @map("notify_sent") // reserved: Red/Critical email via the email API (not built yet)
   notifyAt         DateTime? @map("notify_at") @db.Timestamptz(6)
@@ -5816,6 +5818,7 @@ model NcLog {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   audit            NcAudit[]
+  logAudit         NcLogAudit[]
 
   @@index([status], map: "idx_nc_status")
   @@index([jobNumber], map: "idx_nc_job")
@@ -5836,6 +5839,39 @@ model NcAudit {
 
   @@index([ncId], map: "idx_nc_audit_nc_id")
   @@map("nc_audit")
+}
+
+// Field-level NC change log — one row per changed field, with passkey-verified author.
+model NcLogAudit {
+  id              BigInt   @id @default(autoincrement())
+  ncId            Int      @map("nc_id")
+  nc              NcLog    @relation(fields: [ncId], references: [id], onDelete: Cascade)
+  changedBy       String   @map("changed_by")
+  changedAt       DateTime @default(now()) @map("changed_at") @db.Timestamptz(6)
+  fieldName       String?  @map("field_name")
+  oldValue        String?  @map("old_value")
+  newValue        String?  @map("new_value")
+  changeType      String   @map("change_type")   // 'edit' | 'close' | 'reopen' | 'create'
+  passkeyVerified Boolean  @default(true) @map("passkey_verified")
+
+  @@index([ncId], map: "idx_nc_log_audit_nc_id")
+  @@index([changedAt(sort: Desc)], map: "idx_nc_log_audit_changed_at")
+  @@map("nc_log_audit")
+}
+
+// Access audit log — every view/edit/close/denied event on NC records.
+model NcAccessLog {
+  id         BigInt   @id @default(autoincrement())
+  username   String
+  ncId       Int?     @map("nc_id")
+  action     String                                // 'view' | 'edit' | 'close' | 'reopen' | 'denied'
+  accessedAt DateTime @default(now()) @map("accessed_at") @db.Timestamptz(6)
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+
+  @@index([username], map: "idx_nc_access_log_username")
+  @@index([accessedAt(sort: Desc)], map: "idx_nc_access_log_accessed_at")
+  @@map("nc_access_log")
 }
 
 // Seam test calculator runs -- logged when a user clicks "Submit" on the quick calculator.

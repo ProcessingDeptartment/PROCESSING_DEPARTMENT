@@ -1,12 +1,20 @@
 // Non-Conformance Log: table nc_log (spec: Claude outputs/nc-log-page-instructions.md).
 //
-// raisedBy / closedBy are client-asserted names (see the auth note in index.js), so they record
-// who said they did it, not a verified identity.
+// Authentication: all /api/nc endpoints require X-User and check X-Role against NC_VIEWER_ROLES.
+// passkey_username in PATCH body is set by the frontend after PIN verification (PasskeyInput).
+// closedBy and updatedBy record the passkey-authenticated identity, not a typed name.
 //
 // Email alert: every NC, from any record, is mailed to NC_EMAIL_RECIPIENTS.
 // Needs SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / NC_EMAIL_FROM on the API service; when
 // SMTP_HOST is unset the alert is skipped with a log line and the NC still saves.
 const nodemailer = require('nodemailer');
+
+// Role keys must match X-Role header values sent by public/lib/auth.js.
+const NC_VIEWER_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'QUALITY_SUPERVISOR', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR', 'ADMIN', 'ADMINISTRATOR'];
+const NC_EDITOR_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMIN', 'ADMINISTRATOR'];
+const NC_CLOSER_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'QUALITY_SUPERVISOR', 'ADMIN', 'ADMINISTRATOR'];
+const NC_REOPEN_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'ADMIN', 'ADMINISTRATOR'];
+const NC_DELETE_ROLES = ['ADMIN', 'ADMINISTRATOR'];
 
 const STATUSES = ['open', 'in_progress', 'ready_to_close', 'closed'];
 const SITE_URL = (process.env.SITE_URL || 'https://processing-department.onrender.com').replace(/\/$/, '');
@@ -115,15 +123,40 @@ async function sendNCReadyToCloseAlert(nc, resolvedBy, resolvedAt) {
   });
 }
 
+async function logAccess(prisma, username, ncId, action, req) {
+  try {
+    await prisma.ncAccessLog.create({
+      data: {
+        username,
+        ncId: ncId ? parseInt(ncId) : null,
+        action,
+        ipAddress: req.ip || (req.connection && req.connection.remoteAddress) || null,
+        userAgent: req.get('user-agent') || null,
+      },
+    });
+  } catch (err) {
+    console.warn('[nc] logAccess failed:', err.message);
+  }
+}
+
 function mount(app, prisma) {
   const T = prisma.ncLog;
 
+  // count-open is intentionally public — used for nav badges on other pages.
   app.get('/api/nc/count-open', async (req, res) => {
     try { res.json({ openNCs: await T.count({ where: { status: { in: ['open', 'in_progress', 'ready_to_close'] } } }) }); }
     catch (e) { console.error('GET nc count failed', e); res.status(500).json({ ok: false }); }
   });
 
   app.get('/api/nc', async (req, res) => {
+    const role = req.get('x-role') || '';
+    const username = req.get('x-user') || '';
+    if (!username) return res.status(401).json({ error: 'Not authenticated' });
+    if (!NC_VIEWER_ROLES.includes(role)) {
+      logAccess(prisma, username || 'unknown', null, 'denied', req);
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    logAccess(prisma, username, null, 'view', req);
     const q = req.query;
     const where = {};
     if (q.status && q.status !== 'all') where.status = String(q.status);
@@ -146,10 +179,29 @@ function mount(app, prisma) {
   });
 
   app.get('/api/nc/:id/history', async (req, res) => {
+    const role = req.get('x-role') || '';
+    const username = req.get('x-user') || '';
+    if (!username) return res.status(401).json({ error: 'Not authenticated' });
+    if (!NC_VIEWER_ROLES.includes(role)) return res.status(403).json({ error: 'Access denied' });
     const id = parseInt(req.params.id, 10);
     if (!id) return res.status(400).json({ ok: false, error: 'bad id' });
     try { res.json(await prisma.ncAudit.findMany({ where: { ncId: id }, orderBy: { createdAt: 'desc' } })); }
     catch (e) { console.error('GET nc history failed', e); res.status(500).json({ ok: false }); }
+  });
+
+  app.get('/api/nc/:id/audit', async (req, res) => {
+    const role = req.get('x-role') || '';
+    const username = req.get('x-user') || '';
+    if (!username) return res.status(401).json({ error: 'Not authenticated' });
+    if (!NC_VIEWER_ROLES.includes(role)) return res.status(403).json({ error: 'Access denied' });
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ ok: false, error: 'bad id' });
+    try {
+      const nc = await T.findUnique({ where: { id }, select: { ncRef: true } });
+      if (!nc) return res.status(404).json({ ok: false, error: 'not found' });
+      const auditLog = await prisma.ncLogAudit.findMany({ where: { ncId: id }, orderBy: { changedAt: 'desc' } });
+      res.json({ ncId: id, ncRef: nc.ncRef, auditLog });
+    } catch (e) { console.error('GET nc audit failed', e); res.status(500).json({ ok: false }); }
   });
 
   // Called by the record form after a submitted record linked to NCs is amended. Open NCs move to
@@ -306,45 +358,104 @@ function mount(app, prisma) {
   });
 
   app.patch('/api/nc/:id', async (req, res) => {
+    const role = req.get('x-role') || '';
+    const xUser = str(req.get('x-user'), 120) || '';
+    if (!xUser) return res.status(401).json({ error: 'Not authenticated' });
+
     const id = parseInt(req.params.id, 10);
     if (!id) return res.status(400).json({ ok: false, error: 'bad id' });
     const b = req.body || {};
+
+    // passkey_username: set by frontend after PIN verification; falls back to x-user header.
+    const passkeyUser = str(b.passkey_username, 120) || xUser;
+
     const data = {};
     if ('corrective_action' in b) data.correctiveAction = str(b.corrective_action, 4000);
     if ('notes' in b) data.notes = str(b.notes, 4000);
     if ('car_required' in b) { data.carRequired = yesNo(b.car_required); if (data.carRequired === null) return res.status(400).json({ ok: false, error: 'invalid car_required' }); }
     if ('car_ref' in b) data.carRef = str(b.car_ref, 80);
-    if ('closed_by' in b) data.closedBy = str(b.closed_by, 120);
     if ('status' in b) {
       if (!STATUSES.includes(b.status)) return res.status(400).json({ ok: false, error: 'invalid status' });
       data.status = b.status;
     }
+
     try {
       const cur = await T.findUnique({ where: { id } });
       if (!cur) return res.status(404).json({ ok: false, error: 'not found' });
-      // the more severe process: an NC that needs a CAR cannot be closed until the CAR is referenced
+
+      // Closed NC is read-only
+      if (cur.status === 'closed' && !NC_REOPEN_ROLES.includes(role)) {
+        return res.status(403).json({ error: 'This NC is closed. Only a manager can reopen it.' });
+      }
+
+      // Edit permission: NC_EDITOR_ROLES or the creator
+      const isCreator = xUser && (cur.raisedBy === xUser || cur.createdBy === xUser);
+      if (!NC_EDITOR_ROLES.includes(role) && !isCreator) {
+        logAccess(prisma, xUser, id, 'denied', req);
+        return res.status(403).json({ error: 'You do not have permission to edit this NC.' });
+      }
+
+      // Close permission
+      if (data.status === 'closed' && !NC_CLOSER_ROLES.includes(role)) {
+        return res.status(403).json({ error: 'Your role cannot close NCs.' });
+      }
+
       const carNeeded = 'carRequired' in data ? data.carRequired : cur.carRequired;
       const carRef = 'carRef' in data ? data.carRef : cur.carRef;
       if (data.status === 'closed' && carNeeded && !carRef) return res.status(400).json({ ok: false, error: 'a CAR is required: enter the CAR reference before closing this NC' });
-      if (data.status === 'closed' && cur.status !== 'closed') data.closedAt = new Date();
+      if (data.status === 'closed' && cur.status !== 'closed') {
+        data.closedAt = new Date();
+        data.closedBy = passkeyUser;  // passkey-authenticated username
+      }
       if (data.status && data.status !== 'closed') { data.closedAt = null; data.closedBy = null; }
-      // closing a ready_to_close NC: require corrective_action
       if (data.status === 'closed' && cur.status === 'ready_to_close') {
         const ca = 'corrective_action' in b ? str(b.corrective_action, 4000) : cur.correctiveAction;
         if (!ca) return res.status(400).json({ ok: false, error: 'corrective_action is required when closing this NC' });
       }
+
+      // Stamp updatedBy with passkey-authenticated user
+      data.updatedBy = passkeyUser;
+
       const upd = await T.update({ where: { id }, data });
+
+      // Audit trail: one NcAudit row for status changes (existing system)
       if (data.status && data.status !== cur.status) {
-        const actor = (data.status === 'closed' ? data.closedBy : null) || str(req.get('x-user'), 120) || 'Unknown';
+        const actor = passkeyUser;
         prisma.ncAudit.create({ data: { ncId: id, action: data.status === 'closed' ? 'closed' : 'status_changed', actor,
           note: `Status ${cur.status} → ${data.status}.` } }).catch((e) => console.error('nc audit failed', e));
       }
+
+      // Field-level NcLogAudit rows
+      const TRACK_FIELDS = [
+        ['correctiveAction', 'corrective_action'],
+        ['notes', 'notes'],
+        ['status', 'status'],
+        ['carRef', 'car_ref'],
+      ];
+      const changeType = data.status === 'closed' ? 'close' : 'edit';
+      const auditRows = TRACK_FIELDS
+        .filter(([field]) => field in data && data[field] !== cur[field])
+        .map(([field, name]) => ({
+          ncId: id, changedBy: passkeyUser, fieldName: name,
+          oldValue: cur[field] != null ? String(cur[field]) : null,
+          newValue: data[field] != null ? String(data[field]) : null,
+          changeType, passkeyVerified: !!b.passkey_username,
+        }));
+      if (auditRows.length) {
+        prisma.ncLogAudit.createMany({ data: auditRows }).catch((e) => console.error('nc log audit failed', e));
+      }
+
+      logAccess(prisma, xUser, id, changeType, req);
       res.json(upd);
     } catch (e) { console.error('PATCH nc failed', e); res.status(500).json({ ok: false }); }
   });
 
-  // DELETE /api/nc/:id — hard-delete a single NC record (admin / data-correction use).
+  // DELETE /api/nc/:id — hard-delete a single NC record (admin only).
   app.delete('/api/nc/:id', async (req, res) => {
+    const role = req.get('x-role') || '';
+    const xUser = str(req.get('x-user'), 120) || '';
+    if (!xUser) return res.status(401).json({ error: 'Not authenticated' });
+    if (!NC_DELETE_ROLES.includes(role)) return res.status(403).json({ error: 'Admin access required to delete NCs.' });
     const id = parseInt(req.params.id, 10);
     if (!id) return res.status(400).json({ ok: false, error: 'bad id' });
     try {
@@ -352,9 +463,9 @@ function mount(app, prisma) {
       if (!cur) return res.status(404).json({ ok: false, error: 'not found' });
       // Delete any audit history first (FK constraint).
       await prisma.ncAudit.deleteMany({ where: { ncId: id } });
+      await prisma.ncLogAudit.deleteMany({ where: { ncId: id } }).catch(() => {});
       await T.delete({ where: { id } });
-      const actor = str(req.get('x-user'), 120) || 'Unknown';
-      console.log(`[nc] deleted NC ${cur.ncRef} (id ${id}) by ${actor}`);
+      console.log(`[nc] deleted NC ${cur.ncRef} (id ${id}) by ${xUser}`);
       res.json({ ok: true, deleted: cur.ncRef });
     } catch (e) { console.error('DELETE nc failed', e); res.status(500).json({ ok: false }); }
   });
