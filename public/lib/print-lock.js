@@ -21,10 +21,13 @@
    * The lock is informational / workflow guidance, not a hard security gate.
    */
 
-  var NOTICE_ID  = 'pl-transfer-lock';
-  var _locked    = false;
-  var _lastJob   = '';
-  var _applyTmr  = null;
+  var NOTICE_ID   = 'pl-transfer-lock';
+  var _locked     = false;
+  var _lastJob    = '';
+  var _applyTmr   = null;
+  var _checkDone  = false;   // set to true once first API result (or no-job) is known
+  var _printQueue = null;    // original window.print stored when interceptPrint() is active
+  var _printPend  = false;   // window.print was called before check completed
 
   /* ------ helpers ------ */
   function api(path) {
@@ -100,11 +103,41 @@
     _applyTmr = setTimeout(applyState, 60);
   }
 
+  /* ------ called once lock state is known ------ */
+  function onCheckDone() {
+    _checkDone = true;
+    applyState();
+    if (_printPend) {
+      _printPend = false;
+      if (_locked) {
+        showPrintBlocked();
+      } else {
+        if (_printQueue) _printQueue.call(window);
+      }
+    }
+  }
+
+  /* ------ full-page message shown on print-entry when locked ------ */
+  function showPrintBlocked() {
+    document.body.style.cssText = 'visibility:visible;margin:0;padding:0;background:#fff';
+    document.body.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;box-sizing:border-box">'
+      + '<div style="max-width:480px;background:#fef3e0;border:1.5px solid #c8a254;border-radius:8px;padding:24px 28px;'
+      + 'font:600 15px/1.6 \\"IBM Plex Sans\\",\\"Segoe UI\\",system-ui,sans-serif;color:#7a4f10">'
+      + '<div style="font-size:28px;margin-bottom:12px">🔒</div>'
+      + '<div style="font-size:17px;margin-bottom:8px">Print not available yet</div>'
+      + '<div style="font-weight:400;font-size:13px">'
+      + '<a href="../records/REC-7.4.10-dried-abalone-transfer.html" target="_parent"'
+      + '   style="color:#7a4f10;font-weight:600">REC 7.4.10 Dried Abalone Transfer</a>'
+      + ' must be completed for this job before printing.'
+      + '</div></div></div>';
+  }
+
   /* ------ hit the API and update lock state ------ */
   function check(jobNo) {
     if (!jobNo) {
       _locked = false;
-      applyState();
+      onCheckDone();
       return;
     }
     api('/api/dry-monitoring/job-facts/' + encodeURIComponent(jobNo))
@@ -112,12 +145,12 @@
       .then(function (data) {
         /* dried-transfer-weight is only set when a submitted transfer exists */
         _locked = !(data && data['dried-transfer-weight'] != null);
-        applyState();
+        onCheckDone();
       })
       .catch(function () {
         /* On network error: do not block the user */
         _locked = false;
-        applyState();
+        onCheckDone();
       });
   }
 
@@ -161,5 +194,17 @@
     attachObserver();
   }
 
-  window.PrintLock = { init: init };
+  /* ------ intercept window.print (used by print-entry.html) ------ */
+  function interceptPrint() {
+    _printQueue = window.print;
+    window.print = function () {
+      if (_checkDone) {
+        if (_locked) { showPrintBlocked(); } else { _printQueue.call(window); }
+      } else {
+        _printPend = true;
+      }
+    };
+  }
+
+  window.PrintLock = { init: init, interceptPrint: interceptPrint };
 })();

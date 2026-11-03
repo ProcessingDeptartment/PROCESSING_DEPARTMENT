@@ -46,13 +46,26 @@
     s.onerror = done;
     document.body.appendChild(s);
   });
+  var PRINT_LOCK_RECS = ['drying-process', 'dry-monitoring'];
+
   function start() {
-    try {
-      if (engine === 'log') MonitoringLog.init({ mount: '#mlRoot', recordKey: rec });
-      else FormRecord.init({ mount: '#frRoot', recordKey: rec });
-    } catch (e) {
-      console.error(e);
-      if (window.__pdfFail) window.__pdfFail('Could not prepare the PDF. Try again.');
+    function run() {
+      try {
+        if (engine === 'log') MonitoringLog.init({ mount: '#mlRoot', recordKey: rec });
+        else FormRecord.init({ mount: '#frRoot', recordKey: rec });
+      } catch (e) {
+        console.error(e);
+        if (window.__pdfFail) window.__pdfFail('Could not prepare the PDF. Try again.');
+      }
+    }
+    if (PRINT_LOCK_RECS.indexOf(rec) !== -1) {
+      var s = document.createElement('script');
+      s.src = '../lib/print-lock.js?v=2';
+      s.onload = function () { PrintLock.interceptPrint(); PrintLock.init(); run(); };
+      s.onerror = run;
+      document.body.appendChild(s);
+    } else {
+      run();
     }
   }
 })();
