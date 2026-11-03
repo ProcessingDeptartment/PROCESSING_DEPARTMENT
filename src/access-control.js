@@ -11,7 +11,13 @@ const CONFIG_KEY = 'access-control:config';
 // We re-use the existing KV table (StoredValue) that the rest of the app uses.
 // prisma model: StoredValue { key String @unique; value String; ... }
 
-const isAdmin = req => (req.get('x-role') || '') === 'ADMINISTRATOR';
+// Some clients and passkey flows identify the same permission as ADMIN, ADMINISTRATOR or PPICM.
+// Header values are not always sent in a single canonical case/format, so normalise before checking.
+const ADMIN_ROLE_VALUES = new Set(['ADMIN', 'ADMINISTRATOR', 'PPICM']);
+const isAdmin = req => {
+  const role = String(req.get('x-role') || '').trim().toUpperCase();
+  return ADMIN_ROLE_VALUES.has(role);
+};
 
 module.exports = function registerAccessControl(app, prisma) {
 
