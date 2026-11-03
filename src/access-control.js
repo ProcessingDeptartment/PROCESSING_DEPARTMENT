@@ -12,11 +12,14 @@ const CONFIG_KEY = 'access-control:config';
 // prisma model: StoredValue { key String @unique; value String; ... }
 
 // Some clients and passkey flows identify the same permission as ADMIN, ADMINISTRATOR or PPICM.
-// Header values are not always sent in a single canonical case/format, so normalise before checking.
+// Proxies may combine duplicate headers into a comma-separated value, so normalize each value.
 const ADMIN_ROLE_VALUES = new Set(['ADMIN', 'ADMINISTRATOR', 'PPICM']);
 const isAdmin = req => {
-  const role = String(req.get('x-role') || '').trim().toUpperCase();
-  return ADMIN_ROLE_VALUES.has(role);
+  const roles = String(req.get('x-role') || '')
+    .split(',')
+    .map(role => role.trim().toUpperCase())
+    .filter(Boolean);
+  return roles.length > 0 && roles.every(role => ADMIN_ROLE_VALUES.has(role));
 };
 
 module.exports = function registerAccessControl(app, prisma) {
