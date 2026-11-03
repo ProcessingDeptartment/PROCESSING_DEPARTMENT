@@ -412,8 +412,10 @@
       } else {
         var who = $('pWho') ? $('pWho').value.trim() : userName();
         if ((act==='done'||act==='skipped') && !who) { err.textContent = 'Enter your name to sign off.'; return; }
-        // Save samples + status together
-        await call('/api/fsms/events/'+id, json('PATCH', { notes: buildNotesJson(), status: act, completedBy: who }));
+        // For past (read-only) years the API rejects notes in the PATCH body — only send notes for writable years.
+        var patch = { status: act, completedBy: who };
+        if (!data.readOnly) patch.notes = buildNotesJson();
+        await call('/api/fsms/events/'+id, json('PATCH', patch));
       }
       closePanel();
       await refresh();
@@ -465,14 +467,28 @@
     $('setupErr').textContent = '';
     try {
       if (mode === 'all') {
-        var r = await call('/api/micro-testing/years/bulk-setup', json('POST', { fromYear: FIRST_YEAR, toYear: THIS_YEAR }));
-        var created = r.results.filter(function(x){ return !x.skipped; });
-        var skipped = r.results.filter(function(x){ return x.skipped; });
-        var msg = r.totalCreated + ' events created across ' + created.length + ' year(s)';
-        if (skipped.length) msg += ' (' + skipped.map(function(x){ return x.year; }).join(', ') + ' already existed — skipped)';
-        banner('ok', msg + '.');
-        $('setupBg').classList.remove('show');
-        await loadYears(THIS_YEAR);
+        var bulkOk = false, bulkMsg = '';
+        try {
+          var r = await call('/api/micro-testing/years/bulk-setup', json('POST', { fromYear: FIRST_YEAR, toYear: THIS_YEAR }));
+          var created = r.results.filter(function(x){ return !x.skipped; });
+          var skipped = r.results.filter(function(x){ return x.skipped; });
+          bulkMsg = r.totalCreated + ' events created across ' + created.length + ' year(s)';
+          if (skipped.length) bulkMsg += ' (' + skipped.map(function(x){ return x.year; }).join(', ') + ' already existed — skipped)';
+          bulkOk = true;
+        } catch(bulkErr) {
+          // Bulk endpoint not yet available — fall back to setting up each year individually
+          var fallbackCreated = 0;
+          for (var yr = FIRST_YEAR; yr <= THIS_YEAR; yr++) {
+            try { var ry = await call('/api/micro-testing/years/'+yr+'/setup', { method:'POST' }); fallbackCreated += ry.created || 0; } catch(_) {}
+          }
+          bulkMsg = fallbackCreated + ' events created for years ' + FIRST_YEAR + '–' + THIS_YEAR;
+          bulkOk = true;
+        }
+        if (bulkOk) {
+          banner('ok', bulkMsg + '.');
+          $('setupBg').classList.remove('show');
+          await loadYears(THIS_YEAR);
+        }
       } else if (mode === 'auto') {
         var year = parseInt($('setupYear').value, 10);
         var r2 = await call('/api/micro-testing/years/'+year+'/setup', { method:'POST' });

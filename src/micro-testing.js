@@ -254,45 +254,9 @@ function mount(app, prisma) {
     } catch (e) { fail(res, 'GET micro years', e); }
   });
 
-  // Set up a new year — creates one event per test-type per frequency-month.
-  // Idempotent check: fails with 409 if this year already has MT events.
-  app.post('/api/micro-testing/years/:year/setup', async (req, res) => {
-    const year = toYear(req.params.year);
-    if (!year) return res.status(400).json({ ok: false, error: 'bad year' });
-    try {
-      // Upsert categories
-      const cats = [];
-      for (const t of MICRO_TESTS) {
-        const cat = await C.upsert({
-          where: { name: t.name },
-          update: { color: t.color, sortOrder: t.sortOrder },
-          create: { name: t.name, color: t.color, sortOrder: t.sortOrder },
-        });
-        cats.push({ ...cat, freq: t.freq });
-      }
-
-      const y = await Y.upsert({ where: { year }, update: {}, create: { year } });
-
-      const catIds = cats.map((c) => c.id);
-      const existing = await E.count({ where: { yearId: y.id, categoryId: { in: catIds } } });
-      if (existing > 0) {
-        return res.status(409).json({ ok: false, error: `${year} already has micro testing events. Delete them first or clone from another year.` });
-      }
-
-      const toCreate = [];
-      for (const cat of cats) {
-        const months = monthsFor(cat.freq);
-        for (const m of months) {
-          toCreate.push({ yearId: y.id, categoryId: cat.id, month: m, title: cat.name.replace(/^MT: /, '') });
-        }
-      }
-      await E.createMany({ data: toCreate });
-      res.status(201).json({ ok: true, year, created: toCreate.length });
-    } catch (e) { fail(res, 'POST micro setup year', e); }
-  });
-
   // Bulk-setup a range of years in one call. Skips years that already have MT events.
   // Body: { fromYear, toYear }
+  // MUST be registered before /:year/setup so Express doesn't try to match 'bulk-setup' as :year.
   app.post('/api/micro-testing/years/bulk-setup', async (req, res) => {
     const fromYear = toYear((req.body || {}).fromYear);
     const toYearVal = toYear((req.body || {}).toYear);
@@ -330,6 +294,44 @@ function mount(app, prisma) {
       res.status(201).json({ ok: true, results, totalCreated });
     } catch (e) { fail(res, 'POST micro bulk-setup', e); }
   });
+
+  // Set up a new year — creates one event per test-type per frequency-month.
+  // Idempotent check: fails with 409 if this year already has MT events.
+  app.post('/api/micro-testing/years/:year/setup', async (req, res) => {
+    const year = toYear(req.params.year);
+    if (!year) return res.status(400).json({ ok: false, error: 'bad year' });
+    try {
+      // Upsert categories
+      const cats = [];
+      for (const t of MICRO_TESTS) {
+        const cat = await C.upsert({
+          where: { name: t.name },
+          update: { color: t.color, sortOrder: t.sortOrder },
+          create: { name: t.name, color: t.color, sortOrder: t.sortOrder },
+        });
+        cats.push({ ...cat, freq: t.freq });
+      }
+
+      const y = await Y.upsert({ where: { year }, update: {}, create: { year } });
+
+      const catIds = cats.map((c) => c.id);
+      const existing = await E.count({ where: { yearId: y.id, categoryId: { in: catIds } } });
+      if (existing > 0) {
+        return res.status(409).json({ ok: false, error: `${year} already has micro testing events. Delete them first or clone from another year.` });
+      }
+
+      const toCreate = [];
+      for (const cat of cats) {
+        const months = monthsFor(cat.freq);
+        for (const m of months) {
+          toCreate.push({ yearId: y.id, categoryId: cat.id, month: m, title: cat.name.replace(/^MT: /, '') });
+        }
+      }
+      await E.createMany({ data: toCreate });
+      res.status(201).json({ ok: true, year, created: toCreate.length });
+    } catch (e) { fail(res, 'POST micro setup year', e); }
+  });
+
 }
 
 module.exports = { mount, MICRO_TESTS };
