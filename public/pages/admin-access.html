@@ -461,16 +461,19 @@
     status.textContent = '';
 
     try {
-      // 1. Verify administrator passkey
+      // 1. Verify administrator passkey — send no role so server skips
+      //    the role-match guard; we check the returned title ourselves.
       const verifyRes = await fetch(apiBase() + '/api/passkey/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passkey, role: 'ADMINISTRATOR' })
+        body: JSON.stringify({ passkey })
       });
       const verifyData = await verifyRes.json();
+      const verified = verifyData.success === true || verifyData.ok === true || verifyData.valid === true;
+      const isAdminPasskey = verified && (verifyData.title === 'Administrator' || verifyData.title === 'Admin');
 
-      if (!verifyData.success && !verifyData.ok && !verifyData.valid) {
-        status.textContent = '✗ Incorrect passkey.';
+      if (!isAdminPasskey) {
+        status.textContent = verified ? '✗ Administrator passkey required.' : '✗ Incorrect passkey.';
         status.style.color = '#dc2626';
         passkeyInput.value = '';
         passkeyInput.focus();
