@@ -6,8 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 const dir = path.join(__dirname, 'public', 'records');
-const FROM = 'form-record.js?v=146';
-const TO   = 'form-record.js?v=147';
+const FROM = 'form-record.js?v=147';
+const TO   = 'form-record.js?v=148';
 
 let count = 0;
 fs.readdirSync(dir).forEach(name => {

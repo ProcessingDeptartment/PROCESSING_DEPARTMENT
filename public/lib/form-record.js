@@ -4902,7 +4902,7 @@ ${extraCss}
 </style>
 </head><body>
 <div class="fr-print-bar">
-  <button onclick="window.print()">⬇ Save / Print PDF</button>
+  <button onclick="try{if(window.parent!==window)window.parent.document.title=document.title;}catch(e){}window.print()">⬇ Save / Print PDF</button>
   <button id="fr-img-btn" onclick="saveAsImage('fr-img-btn','${filename}')">📷 Save as Image</button>
   <span class="fr-pb-hint">iOS: tap Share → Print or Save to PDF</span>
 </div>
