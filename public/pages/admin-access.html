@@ -472,20 +472,28 @@
     status.textContent = '';
 
     try {
-      // 1. Verify administrator passkey — send no role so server skips
-      //    the role-match guard; we check the returned title ourselves.
+      // 1. Verify passkey — same pattern as delete-submission-modal.js
+      const currentRole = (window.Auth && window.Auth.getCurrentRole) ? window.Auth.getCurrentRole() || '' : '';
       const verifyRes = await fetch(apiBase() + '/api/passkey/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passkey })
+        body: JSON.stringify({ passkey, role: currentRole })
       });
       const verifyData = await verifyRes.json();
-      const verified = verifyData.success === true || verifyData.ok === true || verifyData.valid === true;
+      if (!verifyRes.ok) {
+        status.textContent = '✗ ' + (verifyData.error || 'Passkey not recognised');
+        status.style.color = '#dc2626';
+        passkeyInput.value = '';
+        passkeyInput.focus();
+        btn.disabled = false;
+        btn.textContent = 'Save changes';
+        return;
+      }
       const _t = String(verifyData.title || '').toLowerCase();
-      const isAdminPasskey = verified && (_t.includes('administrator') || _t.includes('admin') || _t.includes('ppicm'));
+      const isAdminPasskey = _t.includes('administrator') || _t.includes('admin') || _t.includes('ppicm');
 
       if (!isAdminPasskey) {
-        status.textContent = verified ? '✗ Administrator passkey required.' : '✗ Incorrect passkey.';
+        status.textContent = '✗ ' + (verifyData.displayName || 'That user') + ' (' + (verifyData.title || 'no title') + ') is not authorised for this action';
         status.style.color = '#dc2626';
         passkeyInput.value = '';
         passkeyInput.focus();
