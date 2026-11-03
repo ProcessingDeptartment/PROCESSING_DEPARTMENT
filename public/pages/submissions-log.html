@@ -914,7 +914,9 @@
           const jobCell = e.jobNo ? '<strong>' + esc(e.jobNo) + '</strong>' : esc(e.ref || '—');
           const recCell = (e.docNo ? esc(e.docNo) + ' &mdash; ' : '') + esc(e.name);
           const verDate = e.verifyTs ? dayOf(e.verifyTs) : '—';
-          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1&printonly=1">PDF</a>' : '—';
+          const _plRec = e.recordKey === 'drying-process' || e.recordKey === 'dry-monitoring';
+          const _plAttr = (_plRec && e.jobNo) ? ' data-lock-job="' + esc(e.jobNo) + '"' : '';
+          const pdfBtn = e.href && e.id ? '<a class="act-btn act-btn-pdf" href="javascript:void(0)" data-pdf-href="' + esc(e.href) + '?entry=' + esc(e.id) + '&print=1&printonly=1"' + _plAttr + '>PDF</a>' : '—';
           return '<tr>'
             + '<td>' + jobCell + '</td>'
             + '<td>' + recCell + '</td>'
