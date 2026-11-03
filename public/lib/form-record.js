@@ -4959,10 +4959,17 @@ function fallbackDl(canvas,filename){
       const sub = submissions.find(s => s.id === id);
       if (!sub) return;
       const jobNo = safeKey(String((config.batchField && sub.values && sub.values[config.batchField]) || ''));
-      const submitDate = sub.submittedAt
-        ? new Date(sub.submittedAt).toISOString().slice(0, 10)
-        : (dateOf(sub.values) || new Date(sub.createdAt).toISOString().slice(0, 10));
-      const parts = [safeKey(config.docCode), jobNo, submitDate].filter(Boolean);
+      const tsSource = sub.submittedAt || sub.createdAt;
+      const submitTs = tsSource
+        ? (() => {
+            const d = new Date(tsSource);
+            const date = d.toISOString().slice(0, 10);
+            const hh = String(d.getUTCHours()).padStart(2, '0');
+            const mm = String(d.getUTCMinutes()).padStart(2, '0');
+            return date + '_' + hh + '-' + mm;
+          })()
+        : (dateOf(sub.values) || new Date().toISOString().slice(0, 10));
+      const parts = [safeKey(config.docCode), jobNo, submitTs].filter(Boolean);
       printSheets([sub], parts.join('_'));
     }
 
