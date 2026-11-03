@@ -54,11 +54,11 @@
       </tr>
     </thead>
     <tbody>
-      <tr class="production" onclick="location.href='production-handover-report.html'">
+      <tr class="production" onclick="location.href='production-handover-report.html'" data-page-id="production-handover">
         <td class="document"><a href="production-handover-report.html">Production Handover Report</a></td>
         <td class="description">Shift handover reporting for Production</td>
       </tr>
-      <tr class="quality" onclick="location.href='quality-handover-report.html'">
+      <tr class="quality" onclick="location.href='quality-handover-report.html'" data-page-id="quality-handover">
         <td class="document"><a href="quality-handover-report.html">Quality Handover Report</a></td>
         <td class="description">Shift handover reporting for Quality</td>
       </tr>
@@ -69,6 +69,9 @@
 
 </div>
 
-<script src="../lib/verification-block.js?v=4"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=7"></script>
+<script src="../lib/access-control.js?v=3"></script>
 </body>
 </html>

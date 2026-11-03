@@ -95,6 +95,14 @@
     .restrict-enabled { border-color: #b45309 !important; background: #fff8f0 !important; }
     .unrestricted-note { font-size: 12px; color: #6b7280; font-style: italic; padding: 6px 0; }
 
+    /* Sub-page indented items */
+    .perm-item-child {
+      margin-left: 20px; border-left: 3px solid #e2e4e3;
+      background: #fafafa;
+    }
+    .perm-item-child .perm-label { font-size: 12px; color: #374151; }
+    .perm-item-child .perm-sub   { font-size: 10.5px; }
+
     /* Legend */
     .legend { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #374151; }
@@ -204,8 +212,14 @@
     { id: 'verifications',        label: 'Verifications',        sub: 'Review and sign off submitted entries',                    category: 'Categories', authOnly: true },
     { id: 'production-dashboard', label: 'Production Dashboard', sub: 'Live seam data, line status and quality',                 category: 'Categories', adminOnly: true },
     { id: 'job-progress',         label: 'Job Progress report',  sub: 'Job Status + Dashboard buttons',                          category: 'Categories', authOnly: true },
+    { id: 'job-status',           label: 'Job Status',           sub: 'Per-job open/closed status list',                         category: 'Categories', authOnly: true,  parent: 'job-progress' },
+    { id: 'dashboard',            label: 'Dashboard',            sub: '24-hour summary and trends',                              category: 'Categories', authOnly: true,  parent: 'job-progress' },
     { id: 'logs',                 label: 'Logs',                 sub: 'Submissions Log + Print Hub',                             category: 'Categories', adminOnly: true },
+    { id: 'submissions-log',      label: 'Submissions Log',      sub: 'All submissions and verifications',                       category: 'Categories', adminOnly: true, parent: 'logs' },
+    { id: 'print-hub',            label: 'Print Hub',            sub: 'PDF-ready verified entries',                              category: 'Categories', adminOnly: true, parent: 'logs' },
     { id: 'handovers',            label: 'Handovers',            sub: 'Shift handover reporting',                                category: 'Categories' },
+    { id: 'production-handover',  label: 'Production Handover',  sub: 'Shift handover for Production',                          category: 'Categories', parent: 'handovers' },
+    { id: 'quality-handover',     label: 'Quality Handover',     sub: 'Shift handover for Quality',                             category: 'Categories', parent: 'handovers' },
     { id: 'seam-calculator',      label: 'Seam Calculator',      sub: 'Double seam quick calculator',                            category: 'Categories' },
     // More table (admin rows already hidden from non-admins by index.html)
     { id: 'field-specifications', label: 'Field Specifications', sub: 'Set allowed ranges and enforcement rules',                category: 'More (admin tools)', adminOnly: true },
@@ -335,7 +349,9 @@
           </div>
           <div class="perm-grid">`;
 
-        pages.forEach(function (p) {
+        // Only render top-level pages (no parent) in the grid; sub-pages follow their parent
+        const topPages = pages.filter(p => !p.parent);
+        topPages.forEach(function (p) {
           const access = restricted ? getPageAccess(activeRole, p.id) : 'none';
           html += `<div class="perm-item">
             <div class="perm-item-header">
@@ -348,6 +364,21 @@
               <button class="seg-btn${access === 'edit' ? ' active-edit' : ''}" data-val="edit">Edit</button>
             </div>
           </div>`;
+          // Render any children of this page indented beneath it
+          pages.filter(c => c.parent === p.id).forEach(function (c) {
+            const cAccess = restricted ? getPageAccess(activeRole, c.id) : 'none';
+            html += `<div class="perm-item perm-item-child">
+              <div class="perm-item-header">
+                <div class="perm-label">↳ ${c.label}</div>
+                ${c.sub ? `<div class="perm-sub">${c.sub}</div>` : ''}
+              </div>
+              <div class="access-seg" data-page-id="${c.id}">
+                <button class="seg-btn${cAccess === 'none' ? ' active-none' : ''}" data-val="none">Hidden</button>
+                <button class="seg-btn${cAccess === 'read' ? ' active-read' : ''}" data-val="read">View only</button>
+                <button class="seg-btn${cAccess === 'edit' ? ' active-edit' : ''}" data-val="edit">Edit</button>
+              </div>
+            </div>`;
+          });
         });
 
         html += `</div></div>`;
