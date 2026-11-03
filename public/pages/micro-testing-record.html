@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Micro Testing Record</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#A9763A">
+<style>
+  :root { --brand:#a9763a; --dark:#1d2b38; --bg:#f4f5f3; --border:#e2e4e3; --text:#1b2330; --muted:#5c6771; }
+  *,*::before,*::after { box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; color:var(--text); background:var(--bg); font-size:13px; line-height:1.4; margin:0; }
+  .header { background:var(--dark); color:#f4f1e8; padding:16px 20px; display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+  .header h1 { margin:0; font-size:18px; font-weight:600; }
+  .header p { margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link { display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover { color:#fff; }
+  .container { max-width:1600px; margin:0 auto; padding:16px 16px 80px; }
+  .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .btn { padding:7px 12px; border:1px solid var(--border); background:#fff; border-radius:6px; font-size:13px; cursor:pointer; color:var(--text); white-space:nowrap; }
+  .btn:hover { background:#f2f4f6; }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600; }
+  .btn.primary:hover { background:#96652b; }
+  .btn.danger { color:#a3352d; border-color:#e6b9b5; }
+  .btn.sm { padding:4px 8px; font-size:11.5px; }
+  select,input,textarea { padding:7px 8px; border:1px solid var(--border); border-radius:5px; font-size:13px; font-family:inherit; color:var(--text); }
+  input:focus,select:focus,textarea:focus { outline:2px solid var(--brand); outline-offset:1px; border-color:transparent; }
+  .banner { padding:10px 12px; border-radius:6px; font-size:12.5px; font-weight:600; margin-bottom:12px; }
+  .banner.ok { background:#e8f3ec; color:#2f7a52; }
+  .banner.bad { background:#fbe8e6; color:#a3352d; }
+  .banner.info { background:#eef2f7; color:#33475b; }
+
+  /* ── grid ── */
+  .grid-wrap { overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px; }
+  table.mt { border-collapse:collapse; width:100%; min-width:1300px; table-layout:fixed; }
+  table.mt th, table.mt td { border:1px solid #eceeed; padding:4px 5px; vertical-align:top; }
+  table.mt th { background:#fbfbfa; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); text-align:center; }
+  table.mt th.lbl, table.mt td.lbl { width:148px; text-align:left; position:sticky; left:0; background:#fbfbfa; z-index:1; font-weight:600; font-size:11.5px; padding:5px 8px; }
+  table.mt td.lbl { border-left:4px solid var(--c,#ccc); background:#fff; }
+  table.mt th.now { background:#f6e3b8; color:#5c3d00; }
+  table.mt td.now { background:#fff7e6; }
+  .divider-row td { background:#f5f6f4 !important; padding:2px 8px !important; font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; border:none !important; }
+  td.cell { height:52px; min-height:52px; cursor:pointer; position:relative; }
+  td.cell:hover { background:color-mix(in srgb, var(--c,#ccc) 6%, #fff); }
+  td.cell.na { background:#f9fafb; cursor:default; }
+  td.cell.na::after { content:'—'; color:#c8cdd2; font-size:12px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .chip { display:block; border:none; border-left:3px solid var(--c); background:color-mix(in srgb, var(--c) 10%, #fff); color:var(--text); padding:3px 5px; border-radius:3px; font-size:11px; line-height:1.3; width:100%; text-align:left; cursor:pointer; font-family:inherit; }
+  .chip + .chip { margin-top:2px; }
+  .chip.done { opacity:.65; }
+  .chip.done::before { content:'✓ '; font-weight:700; color:#166534; }
+  .chip.skipped { opacity:.5; font-style:italic; }
+  .chip.pending { }
+  .add-btn { border:1px dashed #cbd2d9; background:none; color:#8a949d; border-radius:3px; width:100%; font-size:11px; cursor:pointer; padding:1px 0; opacity:0; transition:opacity .15s; }
+  td.cell:hover .add-btn { opacity:1; }
+  .freq-badge { font-size:9.5px; color:var(--muted); display:block; margin-top:1px; }
+
+  /* ── legend ── */
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:10px; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--muted); }
+  .legend-dot { width:10px; height:10px; border-radius:2px; flex:none; }
+
+  /* ── side panel ── */
+  .panel-bg { position:fixed; inset:0; background:rgba(15,23,32,.35); display:none; z-index:50; }
+  .panel-bg.show { display:block; }
+  .panel { position:absolute; top:0; right:0; bottom:0; width:100%; max-width:420px; background:#fff; padding:20px; overflow-y:auto; box-shadow:-4px 0 20px rgba(0,0,0,.18); }
+  .panel h2 { margin:0 0 3px; font-size:15px; }
+  .panel .cat-line { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-bottom:14px; }
+  .panel .dot { width:10px; height:10px; border-radius:50%; background:var(--c); flex:none; }
+  .panel .det { font-size:11.5px; color:var(--muted); background:#f5f6f4; border-radius:5px; padding:7px 9px; margin-bottom:12px; }
+  .panel .det b { color:var(--text); }
+  .panel label { display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--muted); margin-bottom:9px; }
+  .panel .samples-grid { display:grid; grid-template-columns:1fr; gap:6px; margin-bottom:10px; }
+  .sample-row { display:flex; gap:6px; align-items:center; }
+  .sample-idx { font-size:10.5px; color:var(--muted); min-width:16px; text-align:right; }
+  .panel .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .status-pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+  .s-pending { background:#fef3c7; color:#92400e; }
+  .s-done { background:#dcfce7; color:#166534; }
+  .s-skipped { background:#eceeed; color:#4b5560; }
+  .err { color:#a3352d; font-size:12px; min-height:1em; margin-top:8px; }
+  .signed { font-size:11.5px; color:var(--muted); margin-top:6px; }
+
+  /* ── year setup modal ── */
+  .modal-bg { position:fixed; inset:0; background:rgba(15,23,32,.5); display:none; align-items:flex-start; justify-content:center; padding:40px 12px; z-index:60; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; border-radius:10px; width:100%; max-width:460px; padding:20px; }
+  .modal h2 { margin:0 0 14px; font-size:15px; }
+  .opt { display:flex; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; cursor:pointer; }
+  .opt:hover { background:#f5f6f4; }
+  .opt input { margin-top:3px; }
+  .opt-body b { display:block; margin-bottom:2px; }
+  .opt-body small { color:var(--muted); font-size:11.5px; }
+  .modal-row { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center; }
+  .hidden { display:none !important; }
+
+  @media print {
+    .header, .controls, .legend, .panel-bg, .modal-bg { display:none !important; }
+    .grid-wrap { border:none; overflow:visible; }
+    table.mt { min-width:0; font-size:10px; }
+    body { background:#fff; }
+  }
+</style>
+</head>
+<body>
+<script src="/lib/page-nav.js?v=1"></script>
+<div class="header">
+  <div>
+    <h1>Micro Testing Record</h1>
+    <p>Routine sampling to be taken in the first or second week of each month, to accommodate retesting when necessary</p>
+    <a class="back-link" href="fsms.html">&larr; FSMS</a>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <a class="back-link" href="fsms-calendar.html" style="margin:0">📅 FSMS Calendar</a>
+  </div>
+</div>
+
+<div class="container">
+  <div id="banner"></div>
+
+  <div class="controls">
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;">
+      Year <select id="yearSel" style="width:90px"></select>
+    </label>
+    <button class="btn primary" id="setupBtn" type="button">+ Set up year</button>
+    <button class="btn" id="printBtn" type="button">🖨 Print</button>
+    <div style="margin-left:auto;font-size:11.5px;color:var(--muted)" id="completionStats"></div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#166534"></span> Done</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#c48a00"></span> Pending</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#8a949d"></span> Skipped</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#f0f0f0;border:1px solid #ccc"></span> Not scheduled</span>
+  </div>
+
+  <div class="grid-wrap">
+    <table class="mt" id="mtTable"></table>
+  </div>
+</div>
+
+<!-- detail panel -->
+<div class="panel-bg" id="panelBg">
+  <aside class="panel" id="panel"></aside>
+</div>
+
+<!-- year setup modal -->
+<div class="modal-bg" id="setupBg">
+  <div class="modal">
+    <h2 id="setupTitle">Set up year</h2>
+    <label class="opt" id="optAuto">
+      <input type="radio" name="setupMode" value="auto" checked>
+      <div class="opt-body"><b>Auto-setup (recommended)</b><small>Creates standard monthly, quarterly and annual test slots automatically — ready in seconds.</small></div>
+    </label>
+    <label class="opt" id="optClone">
+      <input type="radio" name="setupMode" value="clone">
+      <div class="opt-body"><b>Clone from prior year</b><small>Copies all events from an existing year, resets to pending. Keeps any custom entries you added.</small></div>
+    </label>
+    <div class="modal-row">
+      <div>Year: <input type="number" id="setupYear" style="width:90px"></div>
+      <div id="cloneFromWrap">Clone from: <select id="cloneSrc"></select></div>
+    </div>
+    <div class="err" id="setupErr"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+      <button class="btn" id="setupCancel" type="button">Cancel</button>
+      <button class="btn primary" id="setupGo" type="button">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=7"></script>
+<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/nc-login-alert.js?v=1"></script>
+<script>
+(function () {
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var FULL   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var NOW = new Date(), THIS_YEAR = NOW.getFullYear(), THIS_MONTH = NOW.getMonth() + 1;
+
+  var config = null;   // { testTypes: [...] }
+  var data   = null;   // { year, readOnly, categories, events, hasYear }
+  var years  = [];     // [{id,year,events}]
+  var catById = {};
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+
+  function api(path, opts) { return window.FacilityApi.fetch(path, opts); }
+  function json(method, body) { return { method:method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }; }
+  function banner(cls, msg) { $('banner').innerHTML = msg ? '<div class="banner '+cls+'">'+esc(msg)+'</div>' : ''; }
+  async function call(path, opts) {
+    var r = await api(path, opts), body = null;
+    try { body = await r.json(); } catch(e) {}
+    if (!r.ok) throw new Error((body && body.error) || ('Request failed ('+r.status+')'));
+    return body;
+  }
+  function userName() { var u = window.Auth && window.Auth.getCurrentUser(); return u ? u.displayName : ''; }
+
+  // ---------- data loading ----------
+  async function init() {
+    config = await call('/api/micro-testing/config');
+    await loadYears();
+  }
+
+  async function loadYears(selectYear) {
+    years = await call('/api/micro-testing/years');
+    var pick = selectYear || (years.some(function(y){ return y.year === THIS_YEAR; }) ? THIS_YEAR : (years[0] && years[0].year));
+    $('yearSel').innerHTML = years.map(function(y){
+      return '<option value="'+y.year+'">'+y.year+' ('+y.events+' events)</option>';
+    }).join('');
+    if (!pick && years.length) pick = years[0].year;
+    if (pick) { $('yearSel').value = pick; await loadYear(pick); }
+    else { data = null; renderEmpty(); }
+  }
+
+  async function loadYear(yr) {
+    data = await call('/api/micro-testing/years/'+yr);
+    catById = {};
+    data.categories.forEach(function(c){ catById[c.id] = c; });
+    renderGrid();
+    renderStats();
+  }
+
+  function renderEmpty() {
+    $('mtTable').innerHTML = '<tr><td colspan="14" style="padding:40px;text-align:center;color:var(--muted)">No year set up yet. Click <b>+ Set up year</b> to get started.</td></tr>';
+    $('completionStats').textContent = '';
+  }
+
+  // ---------- grid rendering ----------
+  function renderGrid() {
+    if (!data) { renderEmpty(); return; }
+
+    var showNow = data.year === THIS_YEAR;
+    var cats = data.categories;
+
+    // Build lookup: catId → month → events[]
+    var byCell = {};
+    data.events.forEach(function(e){
+      var k = e.categoryId+':'+e.month;
+      if (!byCell[k]) byCell[k] = [];
+      byCell[k].push(e);
+    });
+
+    var html = '<thead><tr><th class="lbl">Test</th>';
+    for (var m=1; m<=12; m++) {
+      html += '<th class="'+(showNow && m===THIS_MONTH ? 'now' : '')+'">'+MONTHS[m-1]+'</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    // Group rows by frequency section
+    var groups = [
+      { label:'Monthly tests', keys:['hand-swabs','surface-swabs','env-monitoring','fresh-water','sea-water','live-abalone'] },
+      { label:'Quarterly tests', keys:['airplates'] },
+      { label:'Annual tests',   keys:['heavy-metals','sans241','com-sterility','allergen','nutritional'] },
+    ];
+
+    groups.forEach(function(grp){
+      html += '<tr class="divider-row"><td colspan="13">'+esc(grp.label)+'</td></tr>';
+      grp.keys.forEach(function(key){
+        var cat = cats.find(function(c){ return c.key === key; });
+        if (!cat) return;
+        var freq = cat.freq; // monthly / quarterly / annually
+        html += '<tr>';
+        html += '<td class="lbl" style="--c:'+esc(cat.color)+'">'+esc(cat.shortName)+'<span class="freq-badge">'+freqLabel(freq)+'</span></td>';
+        for (var m=1; m<=12; m++) {
+          var scheduled = isScheduled(freq, m);
+          if (!scheduled) {
+            html += '<td class="cell na" style="--c:'+esc(cat.color)+'"></td>';
+            continue;
+          }
+          var evs = byCell[cat.id+':'+m] || [];
+          html += '<td class="cell'+(showNow && m===THIS_MONTH ? ' now' : '')+'" style="--c:'+esc(cat.color)+'" data-cat="'+cat.id+'" data-m="'+m+'">';
+          evs.forEach(function(e){
+            html += '<button type="button" class="chip '+esc(e.status)+'" style="--c:'+esc(cat.color)+'" data-id="'+e.id+'">'+esc(summarySamples(e))+'</button>';
+          });
+          if (!data.readOnly && evs.length === 0) {
+            html += '<button type="button" class="add-btn" data-cat="'+cat.id+'" data-m="'+m+'">+ add</button>';
+          }
+          html += '</td>';
+        }
+        html += '</tr>';
+      });
+    });
+    $('mtTable').innerHTML = html + '</tbody>';
+  }
+
+  function freqLabel(f) {
+    if (f === 'monthly') return 'Monthly';
+    if (f === 'quarterly') return 'Quarterly — Jan, Apr, Jul, Oct';
+    return 'Annual';
+  }
+
+  function isScheduled(freq, month) {
+    if (freq === 'monthly') return true;
+    if (freq === 'quarterly') return [1,4,7,10].indexOf(month) !== -1;
+    // annually: show in whatever month the event was placed (default Jan)
+    // We show the cell so the event can be moved; mark not-scheduled by absence of events when readOnly
+    return month === 1; // show column 1 always; for other months cells are blank
+  }
+
+  function summarySamples(e) {
+    try {
+      var n = JSON.parse(e.notes || '{}');
+      if (n.samples && n.samples.length) {
+        var filled = n.samples.filter(function(s){ return s && s.trim(); });
+        if (filled.length) return filled.slice(0,2).join(', ')+(filled.length>2 ? ' +'+( filled.length-2) : '');
+      }
+    } catch(_){}
+    return e.title || '—';
+  }
+
+  function renderStats() {
+    if (!data) { $('completionStats').textContent = ''; return; }
+    var total = data.events.length;
+    var done = data.events.filter(function(e){ return e.status==='done'; }).length;
+    var skip = data.events.filter(function(e){ return e.status==='skipped'; }).length;
+    $('completionStats').textContent = done+'/'+total+' done'+(skip ? ', '+skip+' skipped' : '');
+  }
+
+  // ---------- panel ----------
+  function closePanel() { $('panelBg').classList.remove('show'); }
+
+  function openEvent(id) {
+    var e = data.events.filter(function(x){ return x.id===id; })[0];
+    if (!e) return;
+    var cat = catById[e.categoryId];
+    var ro = data.readOnly;
+    var notes = {};
+    try { notes = JSON.parse(e.notes || '{}'); } catch(_){}
+    var samples = notes.samples || [];
+    var count = cat ? (cat.count || 1) : 1;
+    var label = cat ? (cat.label || 'Sample') : 'Sample';
+    while (samples.length < count) samples.push('');
+
+    var who = e.completedBy ? ' by '+esc(e.completedBy)+' on '+new Date(e.completedAt).toLocaleDateString('en-GB') : '';
+
+    var samplesHtml = '<div class="samples-grid">';
+    for (var i=0; i<count; i++) {
+      samplesHtml += '<div class="sample-row"><span class="sample-idx">'+(i+1)+'.</span>'
+        + '<input type="text" class="sample-inp" data-idx="'+i+'" value="'+esc(samples[i]||'')+'" placeholder="'+esc(label)+' '+(i+1)+'"'+(ro?' disabled':'')+' style="flex:1"></div>';
+    }
+    samplesHtml += '</div>';
+
+    $('panel').innerHTML = '<h2>'+esc(cat ? cat.shortName : e.title)+'</h2>'
+      + '<div class="cat-line" style="--c:'+esc(cat ? cat.color : '#ccc')+'">'
+        + '<span class="dot"></span>'
+        + FULL[e.month-1]+' '+data.year
+        + ' &nbsp;·&nbsp; <span class="status-pill s-'+e.status+'">'+e.status+'</span>'
+        + who
+      + '</div>'
+      + (cat && cat.determinant ? '<div class="det"><b>Determinant:</b> '+esc(cat.determinant)
+          +(cat.suggestedArea ? '<br><b>Suggested areas:</b> '+esc(cat.suggestedArea) : '')+'</div>' : '')
+      + '<label>Samples / areas tested'+samplesHtml+'</label>'
+      + '<label>Lab reference / notes<textarea id="pNotes" rows="3"'+(ro?' disabled':'')+'>'+esc(notes.labRef||'')+'</textarea></label>'
+      + '<label>Your name (to sign off)<input id="pWho" value="'+esc(userName())+'"></label>'
+      + '<div class="err" id="pErr"></div>'
+      + '<div class="actions">'
+        + (e.status!=='done' ? '<button class="btn primary" data-act="done" type="button">✓ Mark done</button>' : '')
+        + (e.status!=='skipped' ? '<button class="btn" data-act="skipped" type="button">Skip</button>' : '')
+        + (e.status!=='pending' ? '<button class="btn" data-act="pending" type="button">Reopen</button>' : '')
+        + (!ro ? '<button class="btn" data-act="save" type="button">Save samples</button>' : '')
+        + (!ro ? '<button class="btn danger sm" data-act="delete" type="button">Delete</button>' : '')
+        + '<button class="btn sm" data-act="close" type="button">Close</button>'
+      + '</div>'
+      + (e.completedBy ? '<div class="signed">Signed off: '+esc(e.completedBy)+'</div>' : '');
+
+    $('panel').dataset.id = id;
+    $('panelBg').classList.add('show');
+  }
+
+  function buildNotesJson() {
+    var samples = [];
+    $('panel').querySelectorAll('.sample-inp').forEach(function(inp){
+      samples.push(inp.value.trim());
+    });
+    var labRef = $('pNotes') ? $('pNotes').value.trim() : '';
+    return JSON.stringify({ samples: samples, labRef: labRef });
+  }
+
+  async function panelAct(act) {
+    var id = parseInt($('panel').dataset.id, 10);
+    var err = $('pErr');
+    err.textContent = '';
+    try {
+      if (act === 'close') return closePanel();
+      if (act === 'delete') {
+        if (!confirm('Delete this entry?')) return;
+        await call('/api/fsms/events/'+id, { method:'DELETE' });
+      } else if (act === 'save') {
+        await call('/api/fsms/events/'+id, json('PATCH', { notes: buildNotesJson() }));
+      } else {
+        var who = $('pWho') ? $('pWho').value.trim() : userName();
+        if ((act==='done'||act==='skipped') && !who) { err.textContent = 'Enter your name to sign off.'; return; }
+        // Save samples + status together
+        await call('/api/fsms/events/'+id, json('PATCH', { notes: buildNotesJson(), status: act, completedBy: who }));
+      }
+      closePanel();
+      await refresh();
+    } catch(e) { err.textContent = e.message; }
+  }
+
+  async function addEvent(catId, month) {
+    var cat = catById[catId];
+    var name = cat ? cat.shortName : 'Entry';
+    try {
+      await call('/api/fsms/events', json('POST', {
+        year: data.year, categoryId: catId, month: month,
+        title: name,
+      }));
+      await refresh();
+    } catch(e) { banner('bad', e.message); }
+  }
+
+  async function refresh() {
+    await loadYear(data.year);
+    await loadYears(data.year);
+  }
+
+  // ---------- year setup modal ----------
+  function openSetupModal() {
+    var latest = years.length ? years[0].year : THIS_YEAR - 1;
+    $('setupYear').value = latest + 1;
+    $('setupTitle').textContent = 'Set up ' + (latest + 1);
+    $('cloneSrc').innerHTML = years.map(function(y){ return '<option value="'+y.year+'">'+y.year+'</option>'; }).join('');
+    $('setupErr').textContent = '';
+    updateCloneWrap();
+    $('setupBg').classList.add('show');
+  }
+  function updateCloneWrap() {
+    var isClone = document.querySelector('input[name=setupMode]:checked').value === 'clone';
+    $('cloneFromWrap').classList.toggle('hidden', !isClone);
+  }
+  async function doSetup() {
+    var year = parseInt($('setupYear').value, 10);
+    var mode = document.querySelector('input[name=setupMode]:checked').value;
+    $('setupErr').textContent = '';
+    try {
+      if (mode === 'auto') {
+        var r = await call('/api/micro-testing/years/'+year+'/setup', { method:'POST' });
+        banner('ok', r.created + ' events created for ' + year + '. Marking done as you go will record who completed each test.');
+      } else {
+        var src = parseInt($('cloneSrc').value, 10);
+        var r2 = await call('/api/fsms/years/'+year+'/clone', json('POST', { sourceYear: src }));
+        banner('ok', r2.copied + ' events copied from ' + src + ' into ' + year + ' — reset to pending.');
+      }
+      $('setupBg').classList.remove('show');
+      await loadYears(year);
+    } catch(e) { $('setupErr').textContent = e.message; }
+  }
+
+  // ---------- wiring ----------
+  $('mtTable').addEventListener('click', function(ev){
+    var chip = ev.target.closest('.chip');
+    var addBtn = ev.target.closest('.add-btn');
+    var cell = ev.target.closest('td.cell');
+    if (chip) { openEvent(parseInt(chip.dataset.id, 10)); return; }
+    if (addBtn) { addEvent(parseInt(addBtn.dataset.cat,10), parseInt(addBtn.dataset.m,10)); return; }
+    if (cell && cell.dataset.cat) {
+      // Click anywhere in a non-empty scheduled cell to open its first event
+      var id = cell.querySelector('.chip');
+      if (id) openEvent(parseInt(id.dataset.id, 10));
+    }
+  });
+  $('panel').addEventListener('click', function(ev){
+    var b = ev.target.closest('[data-act]');
+    if (b) panelAct(b.dataset.act);
+  });
+  $('panelBg').addEventListener('click', function(ev){ if (ev.target===$('panelBg')) closePanel(); });
+  $('yearSel').addEventListener('change', function(){ loadYear(parseInt($('yearSel').value,10)).catch(function(e){ banner('bad',e.message); }); });
+  $('setupBtn').addEventListener('click', openSetupModal);
+  $('setupCancel').addEventListener('click', function(){ $('setupBg').classList.remove('show'); });
+  $('setupGo').addEventListener('click', doSetup);
+  $('printBtn').addEventListener('click', function(){ window.print(); });
+  document.querySelectorAll('input[name=setupMode]').forEach(function(r){ r.addEventListener('change', updateCloneWrap); });
+
+  init().catch(function(e){ banner('bad','Could not load: '+e.message); });
+})();
+</script>
+<script src="../lib/verification-block.js?v=4"></script>
+</body>
+</html>
