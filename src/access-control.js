@@ -8,11 +8,8 @@
 
 const CONFIG_KEY = 'access-control:config';
 
-// We re-use the existing KV table (StoredValue) that the rest of the app uses.
-// prisma model: StoredValue { key String @unique; value String; ... }
-
-// Some clients and passkey flows identify the same permission as ADMIN, ADMINISTRATOR or PPICM.
-// Proxies may combine duplicate headers into a comma-separated value, so normalize each value.
+// The Prisma schema calls the existing KV model KeyValue (not StoredValue).
+// Proxies may combine duplicate role headers into comma-separated values, so normalize each value.
 const ADMIN_ROLE_VALUES = new Set(['ADMIN', 'ADMINISTRATOR', 'PPICM']);
 const isAdmin = req => {
   const roles = String(req.get('x-role') || '')
@@ -25,7 +22,7 @@ const isAdmin = req => {
 module.exports = function registerAccessControl(app, prisma) {
 
   async function getConfig() {
-    const row = await prisma.storedValue.findUnique({ where: { key: CONFIG_KEY } });
+    const row = await prisma.keyValue.findUnique({ where: { key: CONFIG_KEY } });
     if (!row) return {};
     try { return JSON.parse(row.value); } catch { return {}; }
   }
@@ -45,10 +42,12 @@ module.exports = function registerAccessControl(app, prisma) {
   app.post('/api/admin/access-control', async (req, res) => {
     if (!isAdmin(req)) return res.status(403).json({ error: 'Admin access required' });
     const { config } = req.body || {};
-    if (!config || typeof config !== 'object') return res.status(400).json({ error: 'config object required' });
+    if (!config || typeof config !== 'object' || Array.isArray(config)) {
+      return res.status(400).json({ error: 'config object required' });
+    }
     try {
       const value = JSON.stringify(config);
-      await prisma.storedValue.upsert({
+      await prisma.keyValue.upsert({
         where: { key: CONFIG_KEY },
         update: { value },
         create: { key: CONFIG_KEY, value }
@@ -65,6 +64,7 @@ module.exports = function registerAccessControl(app, prisma) {
     try {
       res.json({ config: await getConfig() });
     } catch (e) {
+      console.error('access-control public get failed', e);
       res.status(500).json({ error: 'Could not load config' });
     }
   });
