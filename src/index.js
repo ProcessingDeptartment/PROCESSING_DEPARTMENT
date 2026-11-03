@@ -1126,6 +1126,7 @@ require('./nc-log').mount(app, prisma); // Non-Conformance Log
 require('./barcode-trace').mount(app, prisma); // barcode lifecycle: link / scan / split / history
 require('./field-specs').mount(app, prisma, assembleRecordConfig); // field specifications (limits, gates, auto-NC)
 require('./fsms-calendar').mount(app, prisma); // FSMS annual calendar
+require('./micro-testing').mount(app, prisma); // Micro Testing Record
 
 // ---- Seam Test Runs -----------------------------------------------------------------------
 // POST /api/seam-test-runs   — save one calculator submission
