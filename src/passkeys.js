@@ -141,7 +141,10 @@ module.exports = function registerPasskeys(app, prisma) {
         };
         const requiredRole = ROLE_MAP[user.title.trim()];
         const callerRole   = String((req.body || {}).role || req.headers['x-user-role'] || '').trim();
-        if (requiredRole && callerRole !== requiredRole) {
+        // Only enforce role match when the caller explicitly provides a role.
+        // Omitting role (e.g. page-unlock bar) bypasses this check — the title
+        // is returned so the client can resolve permissions itself.
+        if (requiredRole && callerRole && callerRole !== requiredRole) {
           return res.status(403).json({ ok: false, valid: false, error: `This passkey is for "${user.title}" sign-in only.` });
         }
       }
