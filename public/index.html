@@ -308,17 +308,16 @@
       btn.textContent = '…';
       errEl.textContent = '';
       try {
-        var user = window.Auth.getCurrentUser();
         var res = await fetch(apiBase() + '/api/passkey/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ passkey: pin, role: user ? user.role : '' })
+          body: JSON.stringify({ passkey: pin })   // no role — unlock is passkey-identity based
         });
         var data = await res.json();
         if (data.success === true || data.ok === true || data.valid === true) {
           input.value = '';
-          // Tell access-control.js to show the full configured set
-          if (window.AccessControl) window.AccessControl.unlockForSession();
+          // Tell access-control.js to show pages for the passkey's role
+          if (window.AccessControl) window.AccessControl.unlockForSession(data.title || null);
         } else {
           errEl.textContent = 'Incorrect passkey';
           input.value = '';
@@ -409,7 +408,7 @@
     </div>
   </div>
 </div>
-<script src="lib/access-control.js?v=3"></script>
+<script src="lib/access-control.js?v=4"></script>
 <script src="lib/master-index-data.js?v=4"></script>
 <script src="lib/permission-rules.js?v=8"></script>
 <script src="lib/verification-queue.js?v=3"></script>

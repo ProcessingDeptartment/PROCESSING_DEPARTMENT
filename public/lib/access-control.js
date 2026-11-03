@@ -1,4 +1,4 @@
-// public/lib/access-control.js  v2
+// public/lib/access-control.js  v4
 // ─────────────────────────────────────────────────────────────────────────────
 // Home-page visibility + within-page access enforcement.
 //
@@ -32,6 +32,20 @@
 
   var _config = null;      // { ROLE_KEY: { pageId: 'edit'|'read'|false } }
   var _unlocked = false;   // true after the user has verified their passkey this session
+  var _unlockedRole = null; // role key resolved from the verified passkey's title
+
+  // Maps passkey title → role key (must match passkeys.js ROLE_MAP on the server)
+  var TITLE_TO_ROLE = {
+    'Supervisor':         'PRODUCTION_SUPERVISOR',
+    'Shift Manager':      'SHIFT_MANAGER',
+    'Quality Supervisor': 'QUALITY_SUPERVISOR',
+    'Quality Controller': 'QUALITY_CONTROLLER',
+    'QA Manager':         'QA_MANAGER',
+    'Production Manager': 'PRODUCTION_MANAGER',
+    'Operator':           'OPERATOR',
+    'Admin':              'ADMIN',
+    'Administrator':      'ADMINISTRATOR',
+  };
 
   // Pages visible before passkey unlock for any non-admin role.
   var DEFAULT_VISIBLE = { records: true, verifications: true, handovers: true, 'seam-calculator': true };
@@ -73,17 +87,23 @@
     if (isAdmin()) return 'edit';
 
     if (!_unlocked) {
-      // Pre-unlock: only the two default pages are accessible
+      // Pre-unlock: only the default pages are accessible
       return DEFAULT_VISIBLE[pageId] ? 'edit' : 'none';
     }
 
+    // Post-unlock: use the passkey's resolved role (not the login role) for config lookup
+    var effectiveRole = _unlockedRole || role;
+
+    // If the passkey owner is Administrator, grant full access
+    if (effectiveRole === 'ADMINISTRATOR' || /ADMIN(ISTRATOR)?$/.test(effectiveRole)) return 'edit';
+
     // Post-unlock: use configured restrictions
-    if (!_config || !_config[role]) {
+    if (!_config || !_config[effectiveRole]) {
       // No config = unrestricted for this role (after unlock)
       return 'edit';
     }
 
-    var rules = _config[role];
+    var rules = _config[effectiveRole];
     // If no page has a non-false value, treat as unrestricted
     var hasAny = Object.keys(rules).some(function (k) {
       return rules[k] && rules[k] !== 'none';
@@ -131,9 +151,12 @@
     loadConfig().then(function (cfg) { applyRules(cfg); });
   }
 
-  // Call this after the user has successfully verified their own passkey.
-  function unlockForSession() {
+  // Call this after the user has successfully verified their passkey.
+  // title: the passkey's title field returned by the server (e.g. 'Supervisor', 'Administrator')
+  // Access is granted based on the PASSKEY's role, not the logged-in click-login role.
+  function unlockForSession(title) {
     _unlocked = true;
+    _unlockedRole = (title && TITLE_TO_ROLE[title.trim()]) || _unlockedRole || currentRole();
     run();
   }
 
@@ -172,8 +195,15 @@
   });
 
   document.addEventListener('authSuccess', function () {
-    _config = null;   // clear cache so re-fetch picks up any changes
+    _config = null;        // clear cache so re-fetch picks up any changes
     _unlocked = false;
+    _unlockedRole = null;
+    run();
+  });
+
+  document.addEventListener('authLogout', function () {
+    _unlocked = false;
+    _unlockedRole = null;
     run();
   });
 
