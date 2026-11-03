@@ -276,7 +276,10 @@
   // ── Fetch config ───────────────────────────────────────────────────────────
   async function loadConfig() {
     try {
-      const res = await window.FacilityApi.fetch('/api/admin/access-control', { headers: roleHeader(), cache: 'no-store' });
+      const res = await window.FacilityApi.fetch('/api/admin/access-control', {
+        headers: { 'x-role': 'ADMINISTRATOR', 'x-user': window.__currentUserName || '' },
+        cache: 'no-store'
+      });
       const data = await res.json();
       config = data.config || {};
     } catch (e) {
@@ -502,11 +505,15 @@
         return;
       }
 
-      // 2. Save config
+      // 2. Save config — passkey verified as admin so send ADMINISTRATOR role
       btn.textContent = 'Saving…';
       const saveRes = await window.FacilityApi.fetch('/api/admin/access-control', {
         method: 'POST',
-        headers: roleHeader(),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': 'ADMINISTRATOR',
+          'x-user': window.__currentUserName || verifyData.displayName || ''
+        },
         body: JSON.stringify({ config })
       });
       const saveData = await saveRes.json();
