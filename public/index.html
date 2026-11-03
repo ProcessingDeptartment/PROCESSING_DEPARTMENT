@@ -90,6 +90,30 @@
   .verification-alert-btn-secondary{ background:#f3f4f6; color:#374151; padding:.6rem 1.4rem; border-radius:6px; border:1px solid #d1d5db; font-weight:600; font-size:.95rem; cursor:pointer; }
   .verification-alert-btn-secondary:hover{ background:#e5e7eb; }
   @media (prefers-color-scheme: dark){ .verification-alert-box{ background:#1f2937; color:#f3f4f6; } .verification-alert-title{ color:#fbbf24; } .verification-alert-body{ color:#e5e7eb; } .verification-alert-btn-secondary{ background:#374151; color:#f3f4f6; border-color:#4b5563; } .verification-alert-btn-secondary:hover{ background:#4b5563; } }
+
+  /* ── Passkey unlock row ─────────────────────────────────────────────────── */
+  #passkeyUnlockRow{
+    max-width:1100px; margin:12px auto 0; padding:0 20px;
+    display:none; /* shown by access-control.js when non-admin is authenticated */
+  }
+  .passkey-unlock-bar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:#fff; border:1px solid #d0d5db; border-left:4px solid #a9763a;
+    border-radius:6px; padding:10px 14px; font-size:13px;
+  }
+  .passkey-unlock-bar span{ color:#5c6771; flex:1; min-width:160px; }
+  .passkey-unlock-input{
+    padding:6px 10px; border:1px solid #d0d5db; border-radius:4px;
+    font-size:13px; width:120px; letter-spacing:2px;
+  }
+  .passkey-unlock-input:focus{ outline:2px solid #a9763a; border-color:#a9763a; }
+  .passkey-unlock-btn{
+    padding:6px 16px; background:#a9763a; color:#fff; border:none;
+    border-radius:4px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .passkey-unlock-btn:hover{ background:#8a5e2a; }
+  .passkey-unlock-btn:disabled{ background:#9ca3af; cursor:default; }
+  #passkeyUnlockError{ font-size:12px; color:#dc2626; }
 </style>
 </head>
 <body>
@@ -115,6 +139,18 @@
   <a id="deviceLink" href="pages/device-signin.html" style="display:none;color:#1d4ed8;font-weight:600;text-decoration:none;">Set up this device</a>
   <button id="loginBtnTop" type="button" style="display:none;">Log in</button>
   <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
+</div>
+
+<!-- Passkey unlock row — shown for non-admin authenticated users -->
+<div id="passkeyUnlockRow">
+  <div class="passkey-unlock-bar">
+    <span>&#128274; Enter your passkey to access additional pages</span>
+    <input type="password" id="passkeyUnlockInput" class="passkey-unlock-input"
+           placeholder="Your PIN" inputmode="numeric" maxlength="10" autocomplete="off"
+           aria-label="Your passkey PIN">
+    <button type="button" id="passkeyUnlockBtn" class="passkey-unlock-btn">Unlock</button>
+    <span id="passkeyUnlockError"></span>
+  </div>
 </div>
 
 <div class="container">
@@ -233,6 +269,53 @@
   refreshSessionBar();
 </script>
 
+<script>  // ── Passkey unlock for non-admin users ─────────────────────────────────────
+  (function () {
+    var input = document.getElementById('passkeyUnlockInput');
+    var btn   = document.getElementById('passkeyUnlockBtn');
+    var errEl = document.getElementById('passkeyUnlockError');
+
+    function apiBase() {
+      return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
+    }
+
+    async function attemptUnlock() {
+      var pin = input.value.trim();
+      if (!pin) { input.focus(); return; }
+      btn.disabled = true;
+      btn.textContent = '…';
+      errEl.textContent = '';
+      try {
+        var user = window.Auth.getCurrentUser();
+        var res = await fetch(apiBase() + '/api/passkey/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passkey: pin, role: user ? user.role : '' })
+        });
+        var data = await res.json();
+        if (data.ok === true || data.valid === true) {
+          input.value = '';
+          // Tell access-control.js to show the full configured set
+          if (window.AccessControl) window.AccessControl.unlockForSession();
+        } else {
+          errEl.textContent = 'Incorrect passkey';
+          input.value = '';
+          input.focus();
+        }
+      } catch (e) {
+        errEl.textContent = 'Could not verify — try again';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Unlock';
+      }
+    }
+
+    btn.addEventListener('click', attemptUnlock);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') attemptUnlock(); });
+    input.addEventListener('input', function () { errEl.textContent = ''; });
+  })();
+</script>
+
 <script>  // ---- photo archive banner: the local agent copies record photos to the file server ----
   // Administrators also get "Archive now": it flags a request the file-server agent
   // (scripts/image-archive-agent.mjs --on-request) picks up within ~20 s.
@@ -259,13 +342,13 @@
             + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' — is it running?') + '</span></div>';
         }
         el.innerHTML = html; el.hidden = false;
-        var btn = document.getElementById('archiveNowBtn');
-        if (btn) btn.addEventListener('click', requestArchive);
-        if (s.requestedAt && !timer) timer = setInterval(load, 10000);   // watch the request get picked up
+        var archBtn = document.getElementById('archiveNowBtn');
+        if (archBtn) archBtn.addEventListener('click', requestArchive);
+        if (s.requestedAt && !timer) timer = setInterval(load, 10000);
       } catch (e) {}
     }
     async function requestArchive() {
-      var btn = document.getElementById('archiveNowBtn'); if (btn) { btn.disabled = true; btn.textContent = 'Requesting…'; }
+      var archBtn = document.getElementById('archiveNowBtn'); if (archBtn) { archBtn.disabled = true; archBtn.textContent = 'Requesting…'; }
       try {
         var res = await window.FacilityApi.fetch('/api/images/archive-request', { method: 'POST' });
         if (!res.ok) throw new Error((await res.json().catch(function () { return {}; })).error || ('HTTP ' + res.status));
@@ -304,7 +387,7 @@
     </div>
   </div>
 </div>
-<script src="lib/access-control.js?v=1"></script>
+<script src="lib/access-control.js?v=2"></script>
 <script src="lib/master-index-data.js?v=4"></script>
 <script src="lib/permission-rules.js?v=8"></script>
 <script src="lib/verification-queue.js?v=3"></script>

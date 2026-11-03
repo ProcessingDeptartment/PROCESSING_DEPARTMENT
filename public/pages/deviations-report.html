@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deviations Report</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#A9763A">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; background: #f4f5f3; font-size: 13px; line-height: 1.4; margin: 0; }
+  .header { background: #1d2b38; color: #f4f1e8; padding: 16px 20px; display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+  .header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  .header p { margin: 4px 0 0; color: #b9c3cc; font-size: 12px; }
+  .back-link { display: inline-block; margin-top: 6px; color: #b9c3cc; text-decoration: none; font-size: 12px; }
+  .back-link:hover { color: #fff; }
+  .head-btns { display: flex; gap: 8px; align-items: flex-start; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px 20px 80px; }
+  .btn { padding: 7px 12px; border: 1px solid #d0d5db; background: #fff; border-radius: 6px; font-size: 12px; cursor: pointer; color: #1b2330; }
+  .btn:hover { background: #f2f4f6; }
+  .btn.primary { background: #a9763a; border-color: #a9763a; color: #fff; font-weight: 600; }
+  .btn.primary:hover { background: #96652b; }
+
+  /* Period bar */
+  .period-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 18px; background: #fff; border: 1px solid #e2e4e3; border-radius: 8px; padding: 10px 14px; }
+  .period-bar label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #5c6771; }
+  .period-bar input, .period-bar select { padding: 6px 8px; border: 1px solid #d0d5db; border-radius: 5px; font-size: 12px; }
+  .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .qbtn { padding: 5px 10px; border: 1px solid #d0d5db; background: #f7f7f6; border-radius: 5px; font-size: 11px; cursor: pointer; color: #3a4a57; }
+  .qbtn:hover, .qbtn.active { background: #1d2b38; color: #fff; border-color: #1d2b38; }
+
+  /* Stats tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .tile { background: #fff; border: 1px solid #e2e4e3; border-radius: 8px; padding: 14px 16px; }
+  .tile .num { font-size: 28px; font-weight: 700; line-height: 1.1; }
+  .tile .lbl { font-size: 11px; color: #5c6771; margin-top: 3px; text-transform: uppercase; letter-spacing: .03em; }
+  .tile.red .num { color: #991b1b; }
+  .tile.amber .num { color: #92400e; }
+  .tile.green .num { color: #166534; }
+  .tile.blue .num { color: #1e40af; }
+
+  /* Two-column layout */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .card { background: #fff; border: 1px solid #e2e4e3; border-radius: 8px; padding: 14px 16px; }
+  .card h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: #1b2330; }
+
+  /* Category breakdown */
+  .cat-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f0f0ef; }
+  .cat-row:last-child { border-bottom: none; }
+  .cat-name { flex: 1; font-size: 12px; color: #1b2330; }
+  .cat-bar-wrap { width: 120px; height: 8px; background: #eceeed; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .cat-bar { height: 100%; background: #a9763a; border-radius: 4px; }
+  .cat-count { font-size: 12px; font-weight: 700; color: #1b2330; width: 24px; text-align: right; flex-shrink: 0; }
+  .cat-open { font-size: 11px; color: #991b1b; width: 50px; text-align: right; flex-shrink: 0; }
+
+  /* Severity breakdown */
+  .sev-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .sev-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .sev-dot.minor { background: #9ca3af; }
+  .sev-dot.major { background: #f59e0b; }
+  .sev-dot.critical { background: #ef4444; }
+  .sev-name { flex: 1; font-size: 12px; }
+  .sev-pct { font-size: 11px; color: #5c6771; }
+  .sev-bar-wrap { width: 100px; height: 8px; background: #eceeed; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .sev-bar.minor { background: #9ca3af; height: 100%; border-radius: 4px; }
+  .sev-bar.major { background: #f59e0b; height: 100%; border-radius: 4px; }
+  .sev-bar.critical { background: #ef4444; height: 100%; border-radius: 4px; }
+  .sev-count { font-size: 12px; font-weight: 700; width: 24px; text-align: right; flex-shrink: 0; }
+
+  /* Weekly trend */
+  .trend-wrap { overflow-x: auto; }
+  .trend-table { width: 100%; border-collapse: collapse; min-width: 340px; }
+  .trend-table th { font-size: 10px; text-transform: uppercase; letter-spacing: .03em; color: #5c6771; padding: 4px 8px; text-align: left; }
+  .trend-table td { padding: 5px 8px; font-size: 12px; border-bottom: 1px solid #f0f0ef; }
+  .trend-table tr:last-child td { border-bottom: none; }
+  .trend-bar-cell { padding: 5px 8px; }
+  .trend-bar-bg { height: 10px; background: #eceeed; border-radius: 4px; overflow: hidden; }
+  .trend-bar-fill { height: 100%; background: #a9763a; border-radius: 4px; }
+
+  /* Main table */
+  .section-hd { font-size: 13px; font-weight: 600; margin: 20px 0 10px; color: #1b2330; display: flex; align-items: center; justify-content: space-between; }
+  .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #e2e4e3; border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid #eceeed; text-align: left; vertical-align: top; }
+  th { background: #fbfbfa; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: #5c6771; cursor: pointer; user-select: none; white-space: nowrap; }
+  th.nosort { cursor: default; }
+  th .arr { color: #a9763a; }
+  tr.hl-critical td { background: #fef2f2; }
+  tr.hl-major td { background: #fffbeb; }
+  tr.closed td { color: #7a848d; }
+  .ref { font-weight: 700; color: #1d4ed8; cursor: pointer; background: none; border: none; padding: 0; font-size: 13px; text-decoration: underline; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .b-minor { background: #eceeed; color: #4b5560; }
+  .b-major { background: #fef3c7; color: #92400e; }
+  .b-critical { background: #fee2e2; color: #991b1b; }
+  .b-open { background: #fee2e2; color: #991b1b; }
+  .b-in_progress { background: #fef3c7; color: #92400e; }
+  .b-ready_to_close { background: #fde68a; color: #78350f; }
+  .b-closed { background: #dcfce7; color: #166534; }
+  .b-deviation { background: #ede9fe; color: #5b21b6; }
+  .empty { padding: 30px; text-align: center; color: #5c6771; }
+  .banner { padding: 10px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px; }
+  .banner.ok { background: #e8f3ec; color: #2f7a52; }
+  .banner.bad { background: #fbe8e6; color: #a3352d; }
+
+  /* Subtabs */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e4e3; margin-bottom: 14px; }
+  .tab { padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: #5c6771; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: #a9763a; border-bottom-color: #a9763a; }
+
+  @media (max-width: 600px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .head-btns { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<script src="/lib/page-nav.js?v=1"></script>
+<div class="header">
+  <div>
+    <h1>Deviations Report</h1>
+    <p>Non-conformances and process deviations — with trend analysis</p>
+    <a class="back-link" href="../index.html">&larr; Home</a>
+  </div>
+  <div class="head-btns">
+    <button class="btn" id="csvBtn" type="button">Export CSV</button>
+    <a class="btn" href="nc-log.html">NC Log →</a>
+  </div>
+</div>
+
+<div class="container">
+  <div id="banner"></div>
+
+  <!-- Period selector -->
+  <div class="period-bar">
+    <label>From <input type="date" id="pFrom"></label>
+    <label>To <input type="date" id="pTo"></label>
+    <label>Category
+      <select id="pCat">
+        <option value="">All categories</option>
+        <option value="Weight deviation">Weight deviation</option>
+        <option value="Temperature out of spec">Temperature out of spec</option>
+        <option value="Process deviation">Process deviation</option>
+        <option value="Dry room issue">Dry room issue</option>
+        <option value="Equipment failure">Equipment failure</option>
+        <option value="Product quality">Product quality</option>
+        <option value="Labelling error">Labelling error</option>
+        <option value="Documentation error">Documentation error</option>
+        <option value="Hygiene / sanitation">Hygiene / sanitation</option>
+        <option value="Other">Other</option>
+      </select>
+    </label>
+    <label>Job <input type="text" id="pJob" placeholder="e.g. DPR01167" style="width:130px"></label>
+    <div class="quick-btns">
+      <button type="button" class="qbtn active" data-q="30">Last 30 days</button>
+      <button type="button" class="qbtn" data-q="7">Last 7 days</button>
+      <button type="button" class="qbtn" data-q="90">Last 90 days</button>
+      <button type="button" class="qbtn" data-q="0">This month</button>
+    </div>
+    <button class="btn primary" id="loadBtn" type="button">Apply</button>
+  </div>
+
+  <!-- Summary tiles -->
+  <div class="tiles" id="tiles">
+    <div class="tile"><div class="num" id="tTotal">—</div><div class="lbl">Total NCs</div></div>
+    <div class="tile red"><div class="num" id="tOpen">—</div><div class="lbl">Open</div></div>
+    <div class="tile amber"><div class="num" id="tInProgress">—</div><div class="lbl">In progress</div></div>
+    <div class="tile red"><div class="num" id="tCritical">—</div><div class="lbl">Critical</div></div>
+    <div class="tile amber"><div class="num" id="tCar">—</div><div class="lbl">CAR required</div></div>
+    <div class="tile green"><div class="num" id="tClosed">—</div><div class="lbl">Closed</div></div>
+    <div class="tile blue"><div class="num" id="tAvgClose">—</div><div class="lbl">Avg. days to close</div></div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="grid2">
+    <div class="card">
+      <h3>By category</h3>
+      <div id="catList"><div class="empty">Loading…</div></div>
+    </div>
+    <div class="card">
+      <h3>By severity</h3>
+      <div id="sevList"><div class="empty">Loading…</div></div>
+      <h3 style="margin-top:16px">By status</h3>
+      <div id="statList"></div>
+    </div>
+  </div>
+
+  <!-- Weekly trend -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Weekly trend</h3>
+    <div class="trend-wrap"><table class="trend-table" id="trendTable">
+      <thead><tr><th>Week</th><th>NCs raised</th><th>Open</th><th>Closed</th><th style="width:160px">Volume</th></tr></thead>
+      <tbody id="trendBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <!-- Full NC table -->
+  <div class="section-hd">
+    <span>All NCs in period</span>
+    <span id="rowCount" style="font-size:11px;color:#5c6771;font-weight:400"></span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="all">All</div>
+    <div class="tab" data-tab="open">Open / In progress</div>
+    <div class="tab" data-tab="car">CAR required</div>
+    <div class="tab" data-tab="deviation">Deviation categories</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr id="headRow"></tr></thead>
+      <tbody id="rows"><tr><td class="empty" colspan="10">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=7"></script>
+<script>
+(function () {
+  var VIEWER_ROLES = ['QA_MANAGER', 'PRODUCTION_MANAGER', 'QUALITY_SUPERVISOR', 'SHIFT_MANAGER', 'PRODUCTION_SUPERVISOR', 'ADMIN', 'ADMINISTRATOR'];
+  var _authUser = window.Auth && window.Auth.getCurrentUser && window.Auth.getCurrentUser();
+  var _authRole = _authUser ? _authUser.role : null;
+
+  if (!_authUser) {
+    window.location.href = '/index.html?redirectTo=/pages/deviations-report.html';
+    throw new Error('redirect');
+  }
+  if (!VIEWER_ROLES.includes(_authRole)) {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif">'
+      + '<h2>⛔ Access Denied</h2><p>Your role does not have access to the Deviations Report.</p>'
+      + '<p>Role: <strong>' + (_authRole || 'none') + '</strong></p>'
+      + '<a href="/index.html">← Home</a></div>';
+    throw new Error('access denied');
+  }
+
+  var DEVIATION_CATS = ['Weight deviation', 'Temperature out of spec', 'Process deviation', 'Dry room issue'];
+  var STAT = { open: 'Open', in_progress: 'In progress', ready_to_close: 'Ready to close', closed: 'Closed' };
+  var SEV_ORDER = { minor: 0, major: 1, critical: 2 };
+  var COLS = [
+    { k: 'ncRef', t: 'NC Ref' }, { k: 'raisedAt', t: 'Date raised' }, { k: 'jobNumber', t: 'Job' },
+    { k: 'recordRef', t: 'Record' }, { k: 'category', t: 'Category' },
+    { k: 'severity', t: 'Severity' }, { k: 'status', t: 'Status' },
+    { k: 'carRequired', t: 'CAR' }, { k: 'description', t: 'Description' }, { k: '', t: '' }
+  ];
+
+  var allRows = [], activeTab = 'all', sortKey = 'raisedAt', sortDir = -1;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var trunc = function (s, n) { s = s || ''; return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+
+  function authHeaders() {
+    var u = window.Auth && window.Auth.getCurrentUser();
+    return { 'X-User': u ? u.displayName : '', 'X-Role': u ? u.role : '' };
+  }
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({}, authHeaders(), opts.headers || {});
+    return window.FacilityApi.fetch(path, opts);
+  }
+
+  function fmt(d) {
+    if (!d) return '';
+    var x = new Date(d), p = function (n) { return String(n).padStart(2, '0'); };
+    return p(x.getDate()) + '/' + p(x.getMonth() + 1) + '/' + x.getFullYear() + ' ' + p(x.getHours()) + ':' + p(x.getMinutes());
+  }
+  function fmtDate(d) {
+    if (!d) return '';
+    var x = new Date(d), p = function (n) { return String(n).padStart(2, '0'); };
+    return p(x.getDate()) + '/' + p(x.getMonth() + 1) + '/' + x.getFullYear();
+  }
+  function isoDate(d) {
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function banner(cls, msg) { $('banner').innerHTML = msg ? '<div class="banner ' + cls + '">' + esc(msg) + '</div>' : ''; }
+
+  // --- Date range helpers ---
+  function setQuick(days) {
+    var now = new Date(), from = new Date();
+    if (days === 0) {
+      // This month
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else {
+      from.setDate(now.getDate() - days);
+    }
+    $('pFrom').value = isoDate(from);
+    $('pTo').value = isoDate(now);
+  }
+
+  document.querySelectorAll('.qbtn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.qbtn').forEach(function (x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      var q = parseInt(b.getAttribute('data-q'));
+      setQuick(q);
+    });
+  });
+
+  // Default: last 30 days
+  setQuick(30);
+
+  $('loadBtn').addEventListener('click', function () { loadData(); });
+
+  // --- Tabs ---
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      activeTab = t.getAttribute('data-tab');
+      renderTable();
+    });
+  });
+
+  // --- Load ---
+  async function loadData() {
+    $('rows').innerHTML = '<tr><td class="empty" colspan="10">Loading…</td></tr>';
+    ['tTotal','tOpen','tInProgress','tCritical','tCar','tClosed','tAvgClose'].forEach(function (id) { $(id).textContent = '—'; });
+    $('catList').innerHTML = '<div class="empty">Loading…</div>';
+    $('sevList').innerHTML = '<div class="empty">Loading…</div>';
+    $('trendBody').innerHTML = '<tr><td colspan="5" class="empty">Loading…</td></tr>';
+
+    var p = new URLSearchParams({ status: 'all', limit: '2000' });
+    if ($('pFrom').value) p.set('from', $('pFrom').value);
+    if ($('pTo').value) p.set('to', $('pTo').value);
+    if ($('pCat').value) p.set('category', $('pCat').value);
+    if ($('pJob').value.trim()) p.set('job', $('pJob').value.trim());
+
+    try {
+      var res = await api('/api/nc?' + p);
+      if (res.status === 401) { window.location.href = '/index.html?redirectTo=/pages/deviations-report.html'; return; }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      allRows = await res.json();
+      renderAll();
+    } catch (e) {
+      $('rows').innerHTML = '<tr><td class="empty" colspan="10">Could not load data (' + esc(e.message) + ').</td></tr>';
+      banner('bad', 'Could not load deviations data: ' + e.message);
+    }
+  }
+
+  function renderAll() {
+    renderTiles();
+    renderCats();
+    renderSeverity();
+    renderTrend();
+    renderTable();
+  }
+
+  // --- Tiles ---
+  function renderTiles() {
+    var total = allRows.length;
+    var open = allRows.filter(function (r) { return r.status === 'open'; }).length;
+    var inProg = allRows.filter(function (r) { return r.status === 'in_progress' || r.status === 'ready_to_close'; }).length;
+    var critical = allRows.filter(function (r) { return r.severity === 'critical'; }).length;
+    var car = allRows.filter(function (r) { return r.carRequired === true; }).length;
+    var closed = allRows.filter(function (r) { return r.status === 'closed'; }).length;
+    var closedWithDates = allRows.filter(function (r) { return r.status === 'closed' && r.raisedAt && r.closedAt; });
+    var avgClose = '—';
+    if (closedWithDates.length > 0) {
+      var totalDays = closedWithDates.reduce(function (sum, r) {
+        return sum + (new Date(r.closedAt) - new Date(r.raisedAt)) / 86400000;
+      }, 0);
+      avgClose = (totalDays / closedWithDates.length).toFixed(1) + 'd';
+    }
+    $('tTotal').textContent = total;
+    $('tOpen').textContent = open;
+    $('tInProgress').textContent = inProg;
+    $('tCritical').textContent = critical;
+    $('tCar').textContent = car;
+    $('tClosed').textContent = closed;
+    $('tAvgClose').textContent = avgClose;
+  }
+
+  // --- Category breakdown ---
+  function renderCats() {
+    var counts = {}, openCounts = {};
+    allRows.forEach(function (r) {
+      var c = r.category || 'Other';
+      counts[c] = (counts[c] || 0) + 1;
+      if (r.status !== 'closed') openCounts[c] = (openCounts[c] || 0) + 1;
+    });
+    var sorted = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+    var max = sorted.length ? counts[sorted[0]] : 1;
+    if (!sorted.length) { $('catList').innerHTML = '<div class="empty">No data.</div>'; return; }
+    $('catList').innerHTML = sorted.map(function (c) {
+      var pct = Math.round(counts[c] / max * 100);
+      var isDev = DEVIATION_CATS.indexOf(c) !== -1;
+      var openN = openCounts[c] || 0;
+      return '<div class="cat-row">'
+        + '<div class="cat-name">' + esc(c) + (isDev ? ' <span class="badge b-deviation" style="font-size:10px">deviation</span>' : '') + '</div>'
+        + '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + pct + '%"></div></div>'
+        + '<div class="cat-count">' + counts[c] + '</div>'
+        + '<div class="cat-open">' + (openN > 0 ? openN + ' open' : '') + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // --- Severity + Status breakdown ---
+  function renderSeverity() {
+    var sevCounts = { minor: 0, major: 0, critical: 0 };
+    var statCounts = {};
+    allRows.forEach(function (r) {
+      if (r.severity) sevCounts[r.severity] = (sevCounts[r.severity] || 0) + 1;
+      if (r.status) statCounts[r.status] = (statCounts[r.status] || 0) + 1;
+    });
+    var total = allRows.length || 1;
+    $('sevList').innerHTML = ['critical', 'major', 'minor'].map(function (s) {
+      var n = sevCounts[s] || 0, pct = Math.round(n / total * 100);
+      return '<div class="sev-row">'
+        + '<div class="sev-dot ' + s + '"></div>'
+        + '<div class="sev-name">' + s.charAt(0).toUpperCase() + s.slice(1) + '</div>'
+        + '<div class="sev-bar-wrap"><div class="sev-bar ' + s + '" style="width:' + pct + '%"></div></div>'
+        + '<div class="sev-count">' + n + '</div>'
+        + '<div class="sev-pct" style="width:34px;text-align:right">' + pct + '%</div>'
+        + '</div>';
+    }).join('');
+
+    var statOrder = ['open', 'in_progress', 'ready_to_close', 'closed'];
+    var statColors = { open: '#991b1b', in_progress: '#92400e', ready_to_close: '#78350f', closed: '#166534' };
+    $('statList').innerHTML = statOrder.filter(function (s) { return statCounts[s]; }).map(function (s) {
+      var n = statCounts[s] || 0, pct = Math.round(n / total * 100);
+      return '<div class="sev-row">'
+        + '<div class="sev-dot" style="background:' + statColors[s] + '"></div>'
+        + '<div class="sev-name">' + (STAT[s] || s) + '</div>'
+        + '<div class="sev-bar-wrap"><div class="sev-bar" style="background:' + statColors[s] + ';width:' + pct + '%;height:100%;border-radius:4px"></div></div>'
+        + '<div class="sev-count">' + n + '</div>'
+        + '<div class="sev-pct" style="width:34px;text-align:right">' + pct + '%</div>'
+        + '</div>';
+    }).join('') || '<div class="empty" style="padding:10px 0">No data.</div>';
+  }
+
+  // --- Weekly trend ---
+  function renderTrend() {
+    if (!allRows.length) { $('trendBody').innerHTML = '<tr><td colspan="5" class="empty">No data.</td></tr>'; return; }
+    // Group by ISO week
+    var weeks = {};
+    allRows.forEach(function (r) {
+      var d = new Date(r.raisedAt);
+      // Monday of that week
+      var day = d.getDay(), diff = (day === 0 ? -6 : 1 - day);
+      var mon = new Date(d); mon.setDate(d.getDate() + diff); mon.setHours(0,0,0,0);
+      var key = isoDate(mon);
+      if (!weeks[key]) weeks[key] = { raised: 0, open: 0, closed: 0, monDate: new Date(mon) };
+      weeks[key].raised++;
+      if (r.status === 'closed') weeks[key].closed++;
+      else weeks[key].open++;
+    });
+    var keys = Object.keys(weeks).sort();
+    var maxRaised = keys.reduce(function (m, k) { return Math.max(m, weeks[k].raised); }, 1);
+    $('trendBody').innerHTML = keys.map(function (k) {
+      var w = weeks[k];
+      var sun = new Date(w.monDate); sun.setDate(sun.getDate() + 6);
+      var label = fmtDate(w.monDate) + ' – ' + fmtDate(sun);
+      var pct = Math.round(w.raised / maxRaised * 100);
+      return '<tr>'
+        + '<td>' + label + '</td>'
+        + '<td><b>' + w.raised + '</b></td>'
+        + '<td style="color:#991b1b">' + w.open + '</td>'
+        + '<td style="color:#166534">' + w.closed + '</td>'
+        + '<td class="trend-bar-cell"><div class="trend-bar-bg"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  // --- Main table ---
+  function filteredRows() {
+    var r = allRows.slice();
+    if (activeTab === 'open') r = r.filter(function (x) { return x.status === 'open' || x.status === 'in_progress' || x.status === 'ready_to_close'; });
+    if (activeTab === 'car') r = r.filter(function (x) { return x.carRequired === true; });
+    if (activeTab === 'deviation') r = r.filter(function (x) { return DEVIATION_CATS.indexOf(x.category) !== -1; });
+    return r.sort(function (a, b) {
+      var getV = function (row) {
+        if (sortKey === 'severity') return SEV_ORDER[row.severity] || 0;
+        if (sortKey === 'carRequired') return row.carRequired === true ? 2 : row.carRequired === false ? 0 : 1;
+        var v = row[sortKey]; return v == null ? '' : String(v).toLowerCase();
+      };
+      var x = getV(a), y = getV(b);
+      return (x < y ? -1 : x > y ? 1 : 0) * sortDir;
+    });
+  }
+
+  function renderTable() {
+    var data = filteredRows();
+    $('rowCount').textContent = data.length + ' row' + (data.length !== 1 ? 's' : '');
+    $('headRow').innerHTML = COLS.map(function (c) {
+      if (!c.k) return '<th class="nosort"></th>';
+      var arr = c.k === sortKey ? ' <span class="arr">' + (sortDir > 0 ? '▲' : '▼') + '</span>' : '';
+      return '<th data-k="' + c.k + '">' + c.t + arr + '</th>';
+    }).join('');
+    if (!data.length) { $('rows').innerHTML = '<tr><td class="empty" colspan="10">No NCs match these filters.</td></tr>'; return; }
+    $('rows').innerHTML = data.map(function (r) {
+      var isCritical = r.severity === 'critical' && r.status !== 'closed';
+      var isMajor = r.severity === 'major' && r.status !== 'closed';
+      var cls = r.status === 'closed' ? 'closed' : (isCritical ? 'hl-critical' : (isMajor ? 'hl-major' : ''));
+      var isDev = DEVIATION_CATS.indexOf(r.category) !== -1;
+      var carBadge = r.carRequired === true
+        ? '<span class="badge b-critical">CAR' + (r.carRef ? ' ' + esc(r.carRef) : '') + '</span>'
+        : (r.carRequired === false ? '<span class="badge b-minor">No</span>' : '');
+      return '<tr class="' + cls + '">'
+        + '<td><a href="nc-log.html?nc=' + encodeURIComponent(r.ncRef) + '" class="ref">' + esc(r.ncRef) + '</a></td>'
+        + '<td style="white-space:nowrap">' + fmtDate(r.raisedAt) + '</td>'
+        + '<td>' + esc(r.jobNumber || '') + '</td>'
+        + '<td>' + esc(r.recordRef || '') + '</td>'
+        + '<td>' + esc(r.category || '') + (isDev ? ' <span class="badge b-deviation" style="font-size:10px">⚠</span>' : '') + '</td>'
+        + '<td><span class="badge b-' + esc(r.severity) + '">' + (r.severity ? r.severity.charAt(0).toUpperCase() + r.severity.slice(1) : '') + '</span></td>'
+        + '<td><span class="badge b-' + esc(r.status) + '">' + esc(STAT[r.status] || r.status) + '</span></td>'
+        + '<td>' + carBadge + '</td>'
+        + '<td title="' + esc(r.description) + '">' + esc(trunc(r.description, 80)) + '</td>'
+        + '<td><a href="nc-log.html?nc=' + encodeURIComponent(r.ncRef) + '" class="btn" style="white-space:nowrap">View</a></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  $('headRow').addEventListener('click', function (e) {
+    var th = e.target.closest('th[data-k]'); if (!th) return;
+    var k = th.getAttribute('data-k');
+    sortDir = k === sortKey ? -sortDir : -1; sortKey = k; renderTable();
+  });
+
+  // --- CSV ---
+  $('csvBtn').addEventListener('click', function () {
+    var head = ['NC Ref', 'Date raised', 'Job', 'Record', 'Category', 'Is deviation', 'Severity', 'Status', 'CAR required', 'Description', 'Corrective action', 'Raised by', 'Closed by', 'Closed at'];
+    var q = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [head.join(',')].concat(filteredRows().map(function (r) {
+      return [r.ncRef, fmtDate(r.raisedAt), r.jobNumber, r.recordRef, r.category,
+        DEVIATION_CATS.indexOf(r.category) !== -1 ? 'Yes' : 'No',
+        r.severity, STAT[r.status] || r.status,
+        r.carRequired === true ? 'Yes' : r.carRequired === false ? 'No' : '',
+        r.description, r.correctiveAction, r.raisedBy, r.closedBy, fmtDate(r.closedAt)].map(q).join(',');
+    }));
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' }));
+    a.download = 'deviations-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  loadData();
+})();
+</script>
+<script src="../lib/verification-block.js?v=4"></script>
+</body>
+</html>
