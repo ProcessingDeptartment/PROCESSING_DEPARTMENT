@@ -133,9 +133,37 @@
     }
   }
 
+  // Maps passkey title → role key (mirrors ROLE_MAP in src/passkeys.js)
+  const TITLE_TO_ROLE = {
+    'Supervisor':          'PRODUCTION_SUPERVISOR',
+    'Shift Manager':       'SHIFT_MANAGER',
+    'Quality Supervisor':  'QUALITY_SUPERVISOR',
+    'Quality Controller':  'QUALITY_CONTROLLER',
+    'QA Manager':          'QA_MANAGER',
+    'Production Manager':  'PRODUCTION_MANAGER',
+    'Operator':            'OPERATOR',
+    'Admin':               'ADMIN',
+    'Administrator':       'ADMINISTRATOR',
+  };
+
+  // Log in using the result object from PasskeyInput.openForApproval()
+  // result = { displayName, title }
+  function loginByPasskeyResult(result) {
+    if (!result || !result.title) return { ok: false, error: 'No title returned from passkey' };
+    const role = TITLE_TO_ROLE[result.title.trim()] || null;
+    // Find matching USERS entry by role, or fall back to a synthetic user
+    const user = (role ? USERS.find(u => u.role === role) : null) ||
+                 { username: result.displayName.toLowerCase(), role: role || result.title, displayName: result.displayName, noPassword: true };
+    currentUser = user;
+    safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+    applyRole(user);
+    return { ok: true, user };
+  }
+
   window.Auth = {
     login,
     logout,
+    loginByPasskeyResult,
     getCurrentUser,
     getCurrentUsername,
     getCurrentRole,

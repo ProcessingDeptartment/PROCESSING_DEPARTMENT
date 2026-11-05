@@ -76,6 +76,12 @@
           <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
         </label>
         <button id="loginBtn">Sign In</button>
+        <div style="display:flex;align-items:center;gap:10px;margin:12px 0 4px;">
+          <hr style="flex:1;border:none;border-top:1px solid #e2e8f0;">
+          <span style="font-size:11px;color:#94a3b8;white-space:nowrap;">or</span>
+          <hr style="flex:1;border:none;border-top:1px solid #e2e8f0;">
+        </div>
+        <button id="loginPasskeyBtn" type="button" style="background:#f8fafc;color:#1d2b38;border:1px solid #d0d5db;">Sign in with passkey</button>
         <button id="loginCancelBtn" type="button" class="login-cancel">Cancel</button>
       </div>
     `;
@@ -134,6 +140,37 @@
     }
 
     loginBtn.addEventListener('click', attemptLogin);
+
+    // Passkey sign-in
+    const passkeyBtn = modal.querySelector('#loginPasskeyBtn');
+    if (passkeyBtn) {
+      passkeyBtn.addEventListener('click', async function () {
+        if (!window.PasskeyInput) {
+          errorDiv.textContent = 'Passkey input not available on this page';
+          errorDiv.style.display = 'block';
+          return;
+        }
+        // Hide the login modal temporarily while the numpad is showing
+        hideLoginModal();
+        const result = await window.PasskeyInput.openForApproval('Enter your passkey to sign in');
+        if (!result) {
+          // Cancelled — reopen login modal
+          showLoginModal();
+          return;
+        }
+        if (window.Auth) {
+          const loginResult = window.Auth.loginByPasskeyResult(result);
+          if (loginResult.ok) {
+            document.dispatchEvent(new CustomEvent('authSuccess', { detail: loginResult.user }));
+          } else {
+            showLoginModal();
+            errorDiv.textContent = loginResult.error || 'Sign-in failed';
+            errorDiv.style.display = 'block';
+          }
+        }
+      });
+    }
+
     modal.querySelector('#loginCancelBtn').addEventListener('click', hideLoginModal);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) hideLoginModal();
