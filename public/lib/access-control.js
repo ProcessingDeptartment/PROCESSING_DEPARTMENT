@@ -1,4 +1,4 @@
-// public/lib/access-control.js  v5
+// public/lib/access-control.js  v6
 // Home-page visibility and within-page access enforcement.
 // Config: { ROLE_KEY: { pageId: 'edit' | 'read' | false } }
 // Before passkey unlock, non-admin users see only the default pages.
@@ -7,9 +7,16 @@
 (function () {
   'use strict';
 
+  var SESSION_UNLOCK_KEY = 'processing.access.unlocked';
+  var SESSION_ROLE_KEY   = 'processing.access.unlockedRole';
+
+  function safeGet(key) { try { return sessionStorage.getItem(key); } catch (e) { return null; } }
+  function safeSet(key, val) { try { sessionStorage.setItem(key, val); } catch (e) {} }
+  function safeRemove(key) { try { sessionStorage.removeItem(key); } catch (e) {} }
+
   var _config = null;
-  var _unlocked = false;
-  var _unlockedRole = null;
+  var _unlocked = safeGet(SESSION_UNLOCK_KEY) === '1';
+  var _unlockedRole = safeGet(SESSION_ROLE_KEY) || null;
 
   // Maps passkey title to role key (must match the server's passkey role map).
   var TITLE_TO_ROLE = {
@@ -114,6 +121,8 @@
   function unlockForSession(title) {
     _unlocked = true;
     _unlockedRole = (title && TITLE_TO_ROLE[title.trim()]) || _unlockedRole || currentRole();
+    safeSet(SESSION_UNLOCK_KEY, '1');
+    safeSet(SESSION_ROLE_KEY, _unlockedRole || '');
     run();
   }
 
@@ -156,6 +165,8 @@
   document.addEventListener('authLogout', function () {
     _unlocked = false;
     _unlockedRole = null;
+    safeRemove(SESSION_UNLOCK_KEY);
+    safeRemove(SESSION_ROLE_KEY);
     run();
   });
 })();

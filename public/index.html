@@ -145,10 +145,7 @@
 <div id="passkeyUnlockRow">
   <div class="passkey-unlock-bar">
     <span>&#128274; Enter your passkey to access additional pages</span>
-    <input type="password" id="passkeyUnlockInput" class="passkey-unlock-input"
-           placeholder="Your PIN" inputmode="numeric" maxlength="10" autocomplete="off"
-           aria-label="Your passkey PIN">
-    <button type="button" id="passkeyUnlockBtn" class="passkey-unlock-btn">Unlock</button>
+    <button type="button" id="passkeyUnlockBtn" class="passkey-unlock-btn">Enter passkey</button>
     <span id="passkeyUnlockError"></span>
   </div>
 </div>
@@ -242,8 +239,9 @@
 
 <script src="lib/data-store.js?v=5"></script>
 <script src="lib/api-backend.js?v=18"></script>
-<script src="lib/auth.js?v=7"></script>
-<script src="lib/login-ui.js?v=6"></script>
+<script src="lib/auth.js?v=8"></script>
+<script src="lib/passkey-input.js?v=1"></script>
+<script src="lib/login-ui.js?v=7"></script>
 <script src="lib/nc-login-alert.js?v=1"></script>
 <script>  function refreshSessionBar() {
     var user = window.Auth.getCurrentUser();
@@ -293,47 +291,19 @@
 
 <script>  // ── Passkey unlock for non-admin users ─────────────────────────────────────
   (function () {
-    var input = document.getElementById('passkeyUnlockInput');
     var btn   = document.getElementById('passkeyUnlockBtn');
     var errEl = document.getElementById('passkeyUnlockError');
 
-    function apiBase() {
-      return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
-    }
-
-    async function attemptUnlock() {
-      var pin = input.value.trim();
-      if (!pin) { input.focus(); return; }
-      btn.disabled = true;
-      btn.textContent = '…';
+    btn.addEventListener('click', async function () {
       errEl.textContent = '';
-      try {
-        var res = await fetch(apiBase() + '/api/passkey/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ passkey: pin })   // no role — unlock is passkey-identity based
-        });
-        var data = await res.json();
-        if (data.success === true || data.ok === true || data.valid === true) {
-          input.value = '';
-          // Tell access-control.js to show pages for the passkey's role
-          if (window.AccessControl) window.AccessControl.unlockForSession(data.title || null);
-        } else {
-          errEl.textContent = 'Incorrect passkey';
-          input.value = '';
-          input.focus();
-        }
-      } catch (e) {
-        errEl.textContent = 'Could not verify — try again';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Unlock';
+      if (!window.PasskeyInput) { errEl.textContent = 'Passkey input not ready'; return; }
+      var result = await window.PasskeyInput.openForApproval('Enter your passkey to unlock pages');
+      if (!result) return; // cancelled
+      // Tell access-control.js to show pages for the passkey's role
+      if (window.AccessControl) {
+        window.AccessControl.unlockForSession(result.title || null);
       }
-    }
-
-    btn.addEventListener('click', attemptUnlock);
-    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') attemptUnlock(); });
-    input.addEventListener('input', function () { errEl.textContent = ''; });
+    });
   })();
 </script>
 
@@ -408,7 +378,7 @@
     </div>
   </div>
 </div>
-<script src="lib/access-control.js?v=5"></script>
+<script src="lib/access-control.js?v=6"></script>
 <script src="lib/master-index-data.js?v=4"></script>
 <script src="lib/permission-rules.js?v=8"></script>
 <script src="lib/verification-queue.js?v=3"></script>
