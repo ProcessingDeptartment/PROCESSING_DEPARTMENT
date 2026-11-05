@@ -477,6 +477,41 @@
     btn.disabled = true;
     btn.textContent = 'Saving…';
     try {
+<<<<<<< Updated upstream
+=======
+      // 1. Verify passkey — same pattern as delete-submission-modal.js
+      const currentRole = (window.Auth && window.Auth.getCurrentRole) ? window.Auth.getCurrentRole() || '' : '';
+      const verifyRes = await window.FacilityApi.fetch('/api/passkey/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passkey, role: currentRole })
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        status.textContent = '✗ ' + (verifyData.error || 'Passkey not recognised');
+        status.style.color = '#dc2626';
+        passkeyInput.value = '';
+        passkeyInput.focus();
+        btn.disabled = false;
+        btn.textContent = 'Save changes';
+        return;
+      }
+      const _t = String(verifyData.title || '').toLowerCase();
+      const isAdminPasskey = _t.includes('administrator') || _t.includes('admin') || _t.includes('PPICM');
+
+      if (!isAdminPasskey) {
+        status.textContent = '✗ ' + (verifyData.displayName || 'That user') + ' (' + (verifyData.title || 'no title') + ') is not authorised for this action';
+        status.style.color = '#dc2626';
+        passkeyInput.value = '';
+        passkeyInput.focus();
+        btn.disabled = false;
+        btn.textContent = 'Save changes';
+        return;
+      }
+
+      // 2. Save config — passkey verified as admin so send ADMINISTRATOR role
+      btn.textContent = 'Saving…';
+>>>>>>> Stashed changes
       const saveRes = await window.FacilityApi.fetch('/api/admin/access-control', {
         method: 'POST',
         headers: {
