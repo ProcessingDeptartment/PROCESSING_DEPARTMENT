@@ -1,6 +1,5 @@
 (function () {
 
-
   const USERS = [
     { username: 'supervisor',          role: 'PRODUCTION_SUPERVISOR', displayName: 'Supervisor',          noPassword: true },
     { username: 'shift manager',       role: 'SHIFT_MANAGER',         displayName: 'Shift Manager',       noPassword: true },
@@ -17,7 +16,6 @@
 
   const SESSION_KEY = 'processing.auth.username';
 
-  // API base — dev server injects window.FACILITY_API_BASE; production falls back to Render URL.
   function apiBase() {
     return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
   }
@@ -30,9 +28,8 @@
     if (user && window.PermissionRules) {
       window.PermissionRules.setCurrentRole(user.role);
     }
-    // Expose for verification-block.js
-    window.__currentUserRole = user ? user.username : '';      // human-readable, e.g. 'qa manager'
-    window.__currentUserRoleKey = user ? user.role : '';       // constant, e.g. 'QA_MANAGER'
+    window.__currentUserRole = user ? user.username : '';
+    window.__currentUserRoleKey = user ? user.role : '';
     window.__currentUserName = user ? user.displayName : '';
   }
 
@@ -45,8 +42,6 @@
     applyRole(user);
   }
 
-  // login() returns a Promise<{ok, user?, error?}>.
-  // No-password users resolve immediately; admin password is checked server-side.
   function login(username, password) {
     const user = USERS.find(u => u.username === username.toLowerCase().trim());
     if (!user) return Promise.resolve({ ok: false, error: 'Invalid username' });
@@ -58,7 +53,6 @@
       return Promise.resolve({ ok: true, user });
     }
 
-    // Admin: verify password server-side.
     return fetch(apiBase() + '/api/auth/admin-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -102,7 +96,6 @@
     return USERS.map(u => ({ username: u.username, displayName: u.displayName, role: u.role, noPassword: !!u.noPassword }));
   }
 
-
   function createSignOff(action) {
     if (!currentUser) return null;
     return {
@@ -114,23 +107,27 @@
     };
   }
 
-
   restoreSession();
 
-  // PermissionRules may load after auth.js; re-apply the restored role once the DOM is ready.
   if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', function () { applyRole(currentUser); });
   }
 
   async function verifyPasskey(pin) {
     try {
-      const res = await fetch(apiBase() + '/api/passkey/verify', {
+      const opts = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passkey: pin, role: currentUser ? currentUser.role : '' })
-      });
-      const data = await res.json();
-      return data.ok === true || data.valid === true;
+        body: JSON.stringify({
+          passkey: pin,
+          role: currentUser ? currentUser.role : ''
+        })
+      };
+      const res = (window.FacilityApi && window.FacilityApi.fetch)
+        ? await window.FacilityApi.fetch('/api/passkey/verify', opts)
+        : await fetch(apiBase() + '/api/passkey/verify', opts);
+      const data = await res.json().catch(function () { return {}; });
+      return res.ok && (data.success === true || data.ok === true || data.valid === true || data.username != null);
     } catch (e) {
       return false;
     }
