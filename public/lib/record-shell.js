@@ -301,9 +301,34 @@
     var iv = setInterval(function () { scan(); if (++n > 20) clearInterval(iv); }, 400);
   }
 
+  function enforcePageAccessLevel() {
+    var pageId = document.body.getAttribute('data-page-id');
+    if (!pageId || !window.AccessControl) return;
+    if (!window.AccessControl.isReadOnly(pageId)) return;
+
+    document.querySelectorAll('input, select, textarea').forEach(function (el) {
+      el.disabled = true;
+    });
+
+    document.querySelectorAll(
+      '.fr-btn-submit, .fr-btn-draft, .fr-btn-amend, .fr-btn-delete, [data-amend], [data-delete]'
+    ).forEach(function (el) {
+      el.style.display = 'none';
+    });
+
+    if (document.querySelector('.fr-access-banner')) return;
+    var banner = document.createElement('div');
+    banner.className = 'fr-access-banner fr-access-banner--readonly';
+    banner.textContent = 'View only — you do not have edit access to this record';
+    var main = document.querySelector('.rt-content, .fr-main, main') || document.body;
+    main.prepend(banner);
+  }
+
   function boot() {
     mount();
     watchTotals();
+    enforcePageAccessLevel();
+    document.addEventListener('authSuccess', enforcePageAccessLevel);
     // The engines render into their mount on DOMContentLoaded and then
     // re-render once more after an async auth/permission check resolves --
     // which replaces the node we wrapped. Watch <body> and re-wrap whenever a

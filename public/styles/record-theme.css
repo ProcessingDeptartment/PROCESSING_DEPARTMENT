@@ -1,4 +1,4 @@
-/* ========================================================================
+﻿/* ========================================================================
    TABLET RECORD-ENTRY SHELL  (added 2026-09-09)
 
    Scope: the individual record-entry pages reached from Record List only
@@ -2007,3 +2007,17 @@ body.rt-tablet .rt-content .fr-badge-ok, body.rt-tablet .rt-content .fr-badge-fa
 
 .ref-row--auto .rcode { color: var(--fr-label, #5c6771); font-style: italic; }
 .ref-row--auto td:last-child { display: none; } /* hide remove btn for auto rows in view mode */
+
+/* ---- access-level banner (record-shell.js enforcePageAccessLevel) ---- */
+.fr-access-banner {
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+.fr-access-banner--readonly {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+}
