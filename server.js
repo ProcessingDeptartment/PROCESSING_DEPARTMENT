@@ -8,6 +8,8 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
+// Permanent archive beside the repo (MD/10_Archive-System.md). Browsed by public/pages/archive.html.
+const ARCHIVE_DIR = path.resolve(process.env.ARCHIVE_OUT || path.resolve(__dirname, '..', 'PROCESSING ARCHIVE'));
 
 // Simple MIME type mapping
 const mimeTypes = {
@@ -34,6 +36,46 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
     res.end();
+    return;
+  }
+
+  // Archive: the index, and any file inside ARCHIVE_DIR (read-only).
+  const urlPath = req.url.split('?')[0];
+  if (urlPath === '/api/archive/index' || urlPath.startsWith('/api/archive/file/')) {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      res.writeHead(405, { 'Content-Type': 'text/plain' });
+      res.end('Method not allowed');
+      return;
+    }
+    if (urlPath === '/api/archive/index') {
+      fs.readFile(path.join(ARCHIVE_DIR, 'index.json'), (err, data) => {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(err ? '[]' : data);   // no archive yet -> empty list
+      });
+      return;
+    }
+    let rel;
+    try { rel = decodeURIComponent(urlPath.slice('/api/archive/file/'.length)); } catch (e) { rel = null; }
+    const target = rel == null ? null : path.resolve(ARCHIVE_DIR, rel.replace(/\\/g, '/').replace(/^\/+/, ''));
+    // Prevent directory traversal: the resolved path must stay inside the archive.
+    if (!target || rel.includes('\0') || !target.startsWith(ARCHIVE_DIR + path.sep)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      res.end('Forbidden');
+      return;
+    }
+    fs.stat(target, (err, stats) => {
+      if (err || !stats.isFile()) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Not found');
+        return;
+      }
+      fs.readFile(target, (err2, data) => {
+        if (err2) { res.writeHead(500, { 'Content-Type': 'text/plain' }); res.end('Internal server error'); return; }
+        const type = mimeTypes[path.extname(target).toLowerCase()] || 'application/octet-stream';
+        res.writeHead(200, { 'Content-Type': /^(text\/|application\/json)/.test(type) ? type + '; charset=utf-8' : type });
+        res.end(data);
+      });
+    });
     return;
   }
 
@@ -111,5 +153,6 @@ server.listen(PORT, '0.0.0.0', () => {
   }
   console.log(`\n📄 Processing Department — local server running`);
   console.log(`   Local:   http://localhost:${PORT}`);
-  console.log(`   Network: http://${lanIP}:${PORT}  ← share this with LAN users\n`);
+  console.log(`   Network: http://${lanIP}:${PORT}  ← share this with LAN users`);
+  console.log(`   Archive: ${ARCHIVE_DIR}\n`);
 });

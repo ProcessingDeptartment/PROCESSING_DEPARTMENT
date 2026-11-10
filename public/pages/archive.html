@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archive</title>
+<style>
+  *{ box-sizing:border-box; }
+  body{ font-family:'Segoe UI',system-ui,sans-serif; color:#1b2330; background:#f4f5f3; font-size:13px; line-height:1.4; margin:0; }
+  .header{ background:#1d2b38; color:#f4f1e8; padding:16px 20px; }
+  .header h1{ margin:0; font-size:18px; font-weight:600; }
+  .header p{ margin:4px 0 0; color:#b9c3cc; font-size:12px; }
+  .back-link{ display:inline-block; margin-top:6px; color:#b9c3cc; text-decoration:none; font-size:12px; }
+  .back-link:hover{ color:#fff; }
+  .container{ max-width:1400px; margin:0 auto; padding:20px; }
+
+  .tab-bar{ display:flex; flex-wrap:wrap; margin-bottom:18px; border-bottom:2px solid #d0d5db; }
+  .tab-btn{ padding:9px 18px; border:none; background:none; font:inherit; font-size:13px; font-weight:600; color:#5c6771; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; }
+  .tab-btn:hover{ color:#1b2330; }
+  .tab-btn.active{ color:#2f4356; border-bottom-color:#2f4356; }
+  .tab-btn .n{ font-weight:400; color:#7b8791; margin-left:4px; }
+  .tab-btn:focus-visible, .btn:focus-visible, .filters input:focus-visible{ outline:3px solid #96652b; outline-offset:2px; }
+
+  .panel{ background:#fff; border:1px solid #e2e4e3; border-radius:8px; overflow:hidden; }
+  .panel-head{ padding:11px 16px; border-bottom:1px solid #e2e4e3; background:#fbfbfa; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{ margin:0; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:#2f4356; }
+  .filters{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .filters label{ font-size:12px; color:#5c6771; display:flex; align-items:center; gap:5px; }
+  .filters input{ padding:6px 10px; border:1px solid #d0d5db; border-radius:5px; font:inherit; font-size:12px; background:#fff; }
+  .filters input[type=search]{ min-width:230px; }
+  .btn{ display:inline-block; padding:6px 12px; border:1px solid #d0d5db; background:#fff; color:#1b2330; border-radius:5px; font:inherit; font-size:12px; cursor:pointer; text-decoration:none; }
+  .btn:hover{ background:#f2f4f6; }
+  .btn-primary{ background:#2f4356; color:#fff; border-color:#2f4356; }
+  .btn-primary:hover{ background:#3b5470; }
+
+  .table-wrap{ overflow-x:auto; }
+  table{ border-collapse:collapse; width:100%; }
+  th,td{ padding:9px 16px; text-align:left; border-bottom:1px solid #eceeed; vertical-align:middle; }
+  th{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#5c6771; background:#fbfbfa; white-space:nowrap; }
+  tbody tr:hover{ background:#f8f9f8; }
+  td.key{ font-family:Consolas,monospace; font-size:12px; color:#3d4955; }
+  td.when{ white-space:nowrap; font-variant-numeric:tabular-nums; }
+  td.actions{ white-space:nowrap; text-align:right; }
+  td.actions a + a{ margin-left:6px; }
+  .badge{ display:inline-block; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+  .badge.completed-record{ background:#d9eedd; color:#1c5a2c; }
+  .badge.record-def{ background:#dbe6f3; color:#234a75; }
+  .badge.policy{ background:#f3e6cf; color:#73500f; }
+  .badge.procedure{ background:#e8def0; color:#553273; }
+  .state{ padding:40px 20px; text-align:center; color:#5c6771; }
+  .state.error{ color:#a3352d; }
+  .state strong{ display:block; font-size:14px; margin-bottom:4px; color:inherit; }
+  .count{ font-size:12px; color:#5c6771; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Archive</h1>
+  <p>Verified records and superseded versions of record definitions, policies and procedures.</p>
+  <a class="back-link" href="/">&larr; Back to dashboard</a>
+</div>
+
+<div class="container">
+  <div class="tab-bar" id="tabs" role="tablist">
+    <button class="tab-btn active" data-type="" role="tab" aria-selected="true">All<span class="n"></span></button>
+    <button class="tab-btn" data-type="completed-record" role="tab" aria-selected="false">Completed Records<span class="n"></span></button>
+    <button class="tab-btn" data-type="record-def" role="tab" aria-selected="false">Record Definitions<span class="n"></span></button>
+    <button class="tab-btn" data-type="policy" role="tab" aria-selected="false">Policies<span class="n"></span></button>
+    <button class="tab-btn" data-type="procedure" role="tab" aria-selected="false">Procedures<span class="n"></span></button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="filters">
+        <input type="search" id="q" placeholder="Search title, key or label" aria-label="Search title, key or label">
+        <label>From <input type="date" id="from"></label>
+        <label>To <input type="date" id="to"></label>
+        <button class="btn" id="clear" type="button">Clear</button>
+      </div>
+      <span class="count" id="count" aria-live="polite"></span>
+    </div>
+    <div id="state" class="state">Loading archive&hellip;</div>
+    <div class="table-wrap" id="tableWrap" hidden>
+      <table>
+        <thead><tr><th>Type</th><th>Key</th><th>Title</th><th>Archived</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var TYPE_LABELS = { 'completed-record': 'Completed Record', 'record-def': 'Record Definition', policy: 'Policy', procedure: 'Procedure' };
+  var all = [], type = '';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  // Local calendar day, so the date filters match the date the user sees in the table.
+  function localDay(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? '' : d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function localStamp(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? esc(iso) : localDay(iso) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function fileUrl(rel) {
+    return '/api/archive/file/' + String(rel || '').split('/').map(encodeURIComponent).join('/');
+  }
+
+  function showState(html, isError) {
+    $('state').innerHTML = html;
+    $('state').className = 'state' + (isError ? ' error' : '');
+    $('state').hidden = false;
+    $('tableWrap').hidden = true;
+  }
+
+  function matches(e, q, from, to) {
+    if (q && [e.title, e.key, e.label].join(' ').toLowerCase().indexOf(q) === -1) return false;
+    var day = localDay(e.archivedAt);
+    if (from && day < from) return false;
+    if (to && day > to) return false;
+    return true;
+  }
+
+  function render() {
+    var q = $('q').value.trim().toLowerCase(), from = $('from').value, to = $('to').value;
+    var filtered = all.filter(function (e) { return matches(e, q, from, to); });
+    document.querySelectorAll('.tab-btn').forEach(function (b) {
+      var t = b.getAttribute('data-type');
+      b.querySelector('.n').textContent = '(' + filtered.filter(function (e) { return !t || e.type === t; }).length + ')';
+    });
+    var list = filtered.filter(function (e) { return !type || e.type === type; });
+    $('count').textContent = all.length ? list.length + ' of ' + all.length + ' shown' : '';
+
+    if (!all.length) { showState('<strong>Nothing has been archived yet.</strong>Items appear here when a record is verified or a record definition changes.'); return; }
+    if (!list.length) { showState('<strong>No archived items match.</strong>Try a different search, date range or tab.'); return; }
+
+    $('rows').innerHTML = list.map(function (e) {
+      return '<tr>'
+        + '<td><span class="badge ' + esc(e.type) + '">' + esc(TYPE_LABELS[e.type] || e.type) + '</span></td>'
+        + '<td class="key">' + esc(e.key) + '</td>'
+        + '<td>' + esc(e.title || e.label) + '</td>'
+        + '<td class="when">' + localStamp(e.archivedAt) + '</td>'
+        + '<td class="actions">'
+        + (e.htmlPath ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + esc(fileUrl(e.htmlPath)) + '">Open</a>' : '')
+        + (e.jsonPath ? '<a class="btn" target="_blank" rel="noopener" href="' + esc(fileUrl(e.jsonPath)) + '">JSON</a>' : '')
+        + '</td></tr>';
+    }).join('');
+    $('state').hidden = true;
+    $('tableWrap').hidden = false;
+  }
+
+  $('tabs').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.tab-btn');
+    if (!b) return;
+    type = b.getAttribute('data-type');
+    document.querySelectorAll('.tab-btn').forEach(function (x) {
+      x.classList.toggle('active', x === b);
+      x.setAttribute('aria-selected', x === b ? 'true' : 'false');
+    });
+    render();
+  });
+  ['q', 'from', 'to'].forEach(function (id) { $(id).addEventListener('input', render); });
+  $('clear').addEventListener('click', function () { $('q').value = ''; $('from').value = ''; $('to').value = ''; render(); });
+
+  fetch('/api/archive/index', { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (list) {
+      if (!Array.isArray(list)) throw new Error('unexpected response');
+      all = list.slice().sort(function (a, b) { return String(b.archivedAt).localeCompare(String(a.archivedAt)); });
+      render();
+    })
+    .catch(function () {
+      $('count').textContent = '';
+      showState('<strong>The archive could not be loaded.</strong>It is only available from the local server on the office network. '
+        + 'Check that the server is running and that the archive folder exists.', true);
+    });
+})();
+</script>
+</body>
+</html>

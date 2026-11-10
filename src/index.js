@@ -50,6 +50,7 @@ const { boxReport } = require('./box-report');
 const { awaitingBoxes, syncBoxInspections } = require('./box-inspection');
 const { syncSubmissionDates } = require('./submission-dates');
 const { syncGovernanceKey, isGovernanceKey } = require('./governance-store');
+const { maybeArchiveOnVerify, jobNoOf } = require('./archive-completed-record');
 const dryGuard = require('./drying-process-guard');
 const crateGuard = require('./crate-number-guard');
 const stockGuard = require('./dry-stock-guard');
@@ -277,6 +278,36 @@ async function handlePut(req, res) {
       safe('syncClosedBoxes', () => syncClosedBoxes(prisma, k, v)),
       safe('syncBoxInspections', async () => { const r = await syncBoxInspections(prisma, k, v); if (r && r.skipped.length) console.warn('box inspections skipped:', r.skipped); }),
       isGovernanceKey(k) ? safe('syncGovernanceKey', () => syncGovernanceKey(prisma, k, v)) : null,
+      // Permanent archive (MD/10_Archive-System.md): the entries named by the verification just logged, one file per job.
+      // The page logs the verification BEFORE it stamps `verification` onto the entries, so at this moment the rows are
+      // still "submitted" -- being named in the log is what makes them verified, and the log event is attached here.
+      k.startsWith('verification_log:') ? safe('archiveOnVerify', async () => {
+        const recordKey = k.slice('verification_log:'.length);
+        if (!/^[a-z0-9][a-z0-9_-]*$/.test(recordKey)) return;
+        let event = null;
+        try { const log = JSON.parse(v); if (Array.isArray(log)) event = log[log.length - 1]; } catch { return; }
+        const submissionIds = event && Array.isArray(event.entryIds) ? [...new Set(event.entryIds.filter((id) => id != null && id !== '').map(String))] : [];
+        if (!submissionIds.length) return;
+        let rows = [];
+        try {
+          rows = await prisma.$queryRawUnsafe(
+            `SELECT id, status, "rawJson" FROM "sub_${recordKey.replace(/-/g, '_')}" WHERE id = ANY($1::text[])`,
+            submissionIds,
+          );
+        } catch { return; }
+        const { entryIds, ...verification } = event;
+        const byJob = new Map();
+        for (const r of rows) {
+          if (r.status === 'draft') continue;   // a draft cannot be verified
+          let parsed = {};
+          try { parsed = JSON.parse(r.rawJson) || {}; } catch {}
+          const entry = { ...parsed, id: r.id, status: 'verified', verification: parsed.verification || verification };
+          const jobNo = jobNoOf(entry, recordKey);
+          if (!byJob.has(jobNo)) byJob.set(jobNo, []);
+          byJob.get(jobNo).push(entry);
+        }
+        for (const [jobNo, entries] of byJob) await maybeArchiveOnVerify(prisma, recordKey, entries, { jobNo });
+      }) : null,
     ]);
     if (!SYNC_BACKGROUND) await generic();
     res.json({ ok: true, warnings: violations, crateRanges });

@@ -95,6 +95,23 @@ Month subfolder (`YYYY-MM`) keeps completed-records directories manageable.
 
 ---
 
+### `scripts/archive-completed-records.mjs`
+
+The API runs on Render and cannot write to the T drive, so the on-verify hook alone never fills the shared archive. This script, run from a machine on the office network, pulls verified records from the database into `PROCESSING ARCHIVE\completed-records\`.
+
+Behaviour:
+1. Reads the verification log (`VerificationEvent` + entries) and loads the submissions each event verified.
+2. Writes one file per record + job + verification day: `<jobNo>_<YYYY-MM-DD>` under the month the verification was logged.
+3. The job number is read from `entry.values[<batchField>]` (entries keep their form fields under `values`).
+4. Read-only against the database. Safe to re-run or schedule: a group already archived with identical content is skipped; a group that has gained entries is rewritten.
+
+Usage:
+```
+node scripts/archive-completed-records.mjs [--since YYYY-MM-DD] [--record <recordKey>] [--archive-out "<path>"] [--dry-run]
+```
+
+---
+
 ### Hook into `src/index.js`
 
 1. Add require at the top:
