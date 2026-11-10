@@ -3102,7 +3102,12 @@
         const rowEl = e.target.closest && e.target.closest('.fr-roster-row');
         if (!rowEl) return;
         const n = Number(rowEl.dataset.rosterRow);
-        if (n !== pinnedOpen) pinnedOpen = -1;   // focus moved to a different row: the pin is released
+        // If focus landed on the Edit button, pin the row immediately.
+        // The button is about to be removed from the DOM (applyCollapse strips the summary),
+        // so click may not fire on some browsers -- the pin must be set here, not in the click handler.
+        const editBtn = e.target.closest && e.target.closest('[data-roster-edit]');
+        if (editBtn) pinnedOpen = n;
+        else if (n !== pinnedOpen) pinnedOpen = -1;   // focus moved to a different row: the pin is released
         collapseAllExcept(n);
       });
 
@@ -3632,11 +3637,13 @@
       container._importRows = (newRows) => {
         rows = rows.map((_, i) => readRow(i))
           .filter(r => roster.columns.some(c => String(r[c.key] || '').trim() !== ''));
+        const existingCount = rows.length;
         rows = rows.concat(newRows);
         draw();
 
         if (canCollapse) {
-          rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
+          // only the rows that were already there collapse; the newly added ones stay open
+          rows.forEach((_, i) => { if (i < existingCount && rowHasData(i)) collapsedRows.add(i); });
           applyCollapse();
         }
       };
