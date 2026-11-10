@@ -26,6 +26,7 @@
 
   // Barcode functions are administrator-only for now (role ADMINISTRATOR = the password-protected Administrator login).
   function allowed() {
+    if (window.BARCODE_ENABLED === false) return false;
     try { return !!(window.Auth && Auth.getCurrentRole && Auth.getCurrentRole() === 'ADMINISTRATOR'); } catch (e) { return false; }
   }
 

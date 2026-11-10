@@ -13,7 +13,11 @@ const TYPE_DIRS = {
   'completed-record': 'completed-records',
   policy: 'policies',
   procedure: 'procedures',
+  sop: 'sops',
+  prp: 'prps',
 };
+// The machine-readable copies live in their own tree (json/<same path>), apart from the pages staff open.
+const JSON_DIR = 'json';
 
 function archiveRoot() {
   return process.env.ARCHIVE_OUT
@@ -39,6 +43,17 @@ function readIndex(root) {
 }
 
 // Written to a temp file then renamed, so a reader (or a crash) never sees a half-written index.
+// Batch mode: a script writing many entries keeps the index in memory and writes it once at the end,
+// instead of re-reading and re-writing index.json on the network drive for every entry.
+let batch = null;
+function beginBatch() { batch = readIndex(archiveRoot()); }
+function endBatch() {
+  if (!batch) return;
+  try { fs.mkdirSync(archiveRoot(), { recursive: true }); writeIndex(archiveRoot(), batch); }
+  catch (e) { console.error('archive index write failed', e && e.message ? e.message : e); }
+  batch = null;
+}
+
 function writeIndex(root, list) {
   const file = path.join(root, 'index.json');
   const tmp = file + '.' + process.pid + '.tmp';
@@ -58,9 +73,10 @@ function writeArchiveEntry({ type, key, label, title, data, html, subdir, meta }
     if (subdir) parts.push(safeSegment(subdir));
     const name = safeSegment(label);
     fs.mkdirSync(path.join(root, ...parts), { recursive: true });
+    fs.mkdirSync(path.join(root, JSON_DIR, ...parts), { recursive: true });
 
     const archivedAt = new Date().toISOString();
-    const jsonPath = [...parts, name + '.json'].join('/');
+    const jsonPath = [JSON_DIR, ...parts, name + '.json'].join('/');
     const htmlPath = [...parts, name + '.html'].join('/');
     fs.writeFileSync(path.join(root, jsonPath), JSON.stringify(data, null, 2));
     fs.writeFileSync(path.join(root, htmlPath), html != null ? html : buildHtmlPage({
@@ -68,8 +84,12 @@ function writeArchiveEntry({ type, key, label, title, data, html, subdir, meta }
     }));
 
     const entry = { type, key, label: name, archivedAt, htmlPath, jsonPath, title: title || key, ...(meta || {}) };
-    const rest = readIndex(root).filter((e) => !(e.type === type && e.key === key && e.label === name));
-    writeIndex(root, [entry, ...rest]);
+    const current = batch || readIndex(root);
+    // Keep the saved PDFs listed on the item when it is rewritten (archive-pdfs.mjs re-makes them if the content changed).
+    const prev = current.find((e) => e.type === type && e.key === key && e.label === name);
+    if (prev && prev.pdfPaths) { entry.pdfPaths = prev.pdfPaths; if (prev.pdfSha) entry.pdfSha = prev.pdfSha; }
+    const rest = current.filter((e) => e !== prev);
+    if (batch) batch = [entry, ...rest]; else writeIndex(root, [entry, ...rest]);
     return entry;
   } catch (e) {
     console.error('archive write failed (' + type + ' ' + key + ')', e && e.message ? e.message : e);
@@ -102,7 +122,14 @@ table.kv th{width:28%}
 .muted{color:#6b7a88}
 pre{background:#fff;border:1px solid #cfd6dd;padding:10px;font-size:12px;white-space:pre-wrap;word-break:break-word}
 img.sig{max-height:60px;max-width:220px;border:1px solid #e3e8ed}
-@media print{body{background:#fff}header{background:#fff;color:#000;border-bottom:2px solid #000;padding:0 0 8px}main{margin:10px 0;padding:0;max-width:none}.entry{border-color:#999}}
+.toolbar{max-width:1100px;margin:14px auto 0;padding:0 20px;display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:inherit;font-size:13px;padding:7px 14px;border:1px solid #12344d;border-radius:4px;background:#fff;color:#12344d;cursor:pointer}
+.toolbar button.primary{background:#12344d;color:#fff}
+.toolbar button:hover{opacity:.85}
+.doc-body{background:#fff;border:1px solid #cfd6dd;border-radius:4px;padding:6px 18px 14px;margin-bottom:12px}
+.doc-body h3{font-size:14px;margin:18px 0 6px}
+.doc-body img{max-width:100%}
+@media print{.toolbar{display:none}.doc-body{border:0;padding:0}body{background:#fff}header{background:#fff;color:#000;border-bottom:2px solid #000;padding:0 0 8px}main{margin:10px 0;padding:0;max-width:none}.entry{border-color:#999}}
 `;
 
 function buildHtmlPage({ title, archivedAt, bodyHtml }) {
@@ -115,9 +142,24 @@ function buildHtmlPage({ title, archivedAt, bodyHtml }) {
 <style>${PAGE_CSS}</style></head>
 <body>
 <header><h1>${esc(title)}</h1><span class="when">Archived ${esc(when)}</span></header>
+<div class="toolbar"><button type="button" class="primary" onclick="window.print()">Print / Save as PDF</button><button type="button" onclick="archiveToWord()">Download Word document</button></div>
 <main>
 ${bodyHtml || ''}
 </main>
+<script>
+// Word opens an HTML document saved as .doc, so the page is handed over as-is (minus the buttons and this script).
+function archiveToWord() {
+  var doc = document.documentElement.cloneNode(true);
+  Array.prototype.forEach.call(doc.querySelectorAll('.toolbar, script'), function (n) { n.parentNode.removeChild(n); });
+  var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' + doc.innerHTML + '</html>';
+  var blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title.replace(/ — archived$/, '').replace(/[<>:"/\|?*]+/g, '-').trim() || 'archive') + '.doc';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+</script>
 </body></html>
 `;
 }
@@ -263,4 +305,52 @@ function submissionToHtml(recordKey, jobNo, entries, recordConfig) {
   return `<h2>Summary</h2>${head}<h2>Entries</h2>${body || '<p class="muted">No entries.</p>'}`;
 }
 
-module.exports = { writeArchiveEntry, buildHtmlPage, recordDefToHtml, submissionToHtml, archiveRoot, safeSegment, readIndex };
+// ---- controlled documents (policies, procedures, SOPs, PRPs) -------------------------------------------------------
+
+const SECTION_HEADINGS = { objective: 'Objective', purpose: 'Purpose', scope: 'Scope', roles: 'Roles and Responsibilities', process: 'Process', review: 'Review' };
+const headingOf = (k) => SECTION_HEADINGS[k] || String(k).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+
+// doc: { code, name, area, revision, revisionDate, sections, relatedDocs, history }. sections is either a list of
+// { heading | title, html } or a { key: html } map. Section HTML is the document's own authored content, kept as written.
+function documentToHtml(doc) {
+  const d = doc || {};
+  const out = ['<h2>Document</h2>' + kvTable({ 'Document no.': d.code, Title: d.name, Area: d.area, Revision: d.revision == null ? '' : String(d.revision), 'Revision date': d.revisionDate })];
+  const list = Array.isArray(d.sections)
+    ? d.sections.map((s) => ({ heading: s.heading || s.title || '', html: s.html }))
+    : Object.entries(d.sections || {}).map(([k, html]) => ({ heading: headingOf(k), html }));
+  const body = list.filter((s) => !isBlank(s.html) || s.heading)
+    .map((s) => (s.heading ? '<h3>' + esc(s.heading) + '</h3>' : '') + (typeof s.html === 'string' ? s.html : valueHtml(s.html))).join('');
+  out.push('<h2>Content</h2><div class="doc-body">' + (body || '<p class="muted">No content.</p>') + '</div>');
+  if (Array.isArray(d.relatedDocs) && d.relatedDocs.length) out.push('<h2>Related documents</h2>' + rowsTable(d.relatedDocs.map((r) => (isObj(r) ? r : { document: r }))));
+  if (Array.isArray(d.history) && d.history.length) out.push('<h2>Revision history</h2>' + rowsTable(d.history));
+  return out.join('');
+}
+
+// ---- CSV --------------------------------------------------------------------------------------------------------------
+
+function csvCell(v) {
+  if (v == null) return '';
+  const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+// Writes csv/<name>.csv in the archive (UTF-8 with BOM and CRLF, so Excel opens it directly). Rewritten only when the
+// content changed. Returns 'written' | 'unchanged' | null (failed). Never throws.
+function writeCsv(name, header, rows) {
+  try {
+    const dir = path.join(archiveRoot(), 'csv');
+    const file = path.join(dir, safeSegment(name) + '.csv');
+    const text = '﻿' + [header, ...rows].map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+    let old = null;
+    try { old = fs.readFileSync(file, 'utf8'); } catch {}
+    if (old === text) return 'unchanged';
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(file, text);
+    return 'written';
+  } catch (e) {
+    console.error('csv write failed (' + name + ')', e && e.message ? e.message : e);
+    return null;
+  }
+}
+
+module.exports = { writeCsv, fieldLabels, documentToHtml, beginBatch, endBatch, writeArchiveEntry, buildHtmlPage, recordDefToHtml, submissionToHtml, archiveRoot, safeSegment, readIndex };

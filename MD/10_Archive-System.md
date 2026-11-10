@@ -95,19 +95,73 @@ Month subfolder (`YYYY-MM`) keeps completed-records directories manageable.
 
 ---
 
+### As built (2026-11-10) — differences from the plan above
+
+- **JSON is stored separately.** Pages staff open stay at `<type>\<key>\...\<label>.html`; the machine-readable copy is at `json\<type>\<key>\...\<label>.json` (same path under a `json\` folder).
+- **Extra types:** `sops\` and `prps\` alongside `policies\` and `procedures\`.
+- **Every archived page has two buttons:** "Print / Save as PDF" and "Download Word document" (a `.doc` Word opens directly). Both are hidden on the printout.
+- **Filling the archive is done by scripts run on the office network**, because the API runs on Render and cannot write to the T drive. Run all three; each is read-only against the database and safe to re-run or schedule:
+
+```
+node scripts/archive-record-defs.mjs        # old version of any record template about to change (run before export-record-defs)
+node scripts/archive-documents.mjs          # current policies, procedures, SOPs, PRPs and record templates
+node scripts/archive-completed-records.mjs  # all submitted records
+```
+
+### `scripts/archive-pdfs.mjs` — real PDFs, identical to the online print
+
+Run after the two scripts above. One local command; no API or server needs to be running.
+
+1. For every archived record entry it opens the site's own print page (`pages/print-entry.html?...&printonly=1`) in headless Chrome/Edge and saves the PDF; for every policy, procedure, SOP and PRP it prints the document page itself with its print stylesheet. The output is therefore the same PDF a user gets printing online (header block, revision, sign-off rows).
+2. PDFs are saved to `pdf\<same path as the page>.pdf` (one per entry) and listed on the item in `index.json` (`pdfPaths`); the browse page shows a PDF button.
+3. How it reads the data: for the duration of the run only, it starts a private copy of the API code protected by a random one-time key, with the hourly unverified-records e-mail job switched off, behind a local web server that forwards GET requests only. The run cannot change the database and sends no e-mails. Both stop when the script ends.
+4. Skips items whose PDF is already saved and whose content has not changed; `--force` re-makes everything.
+   - **Records: only verified entries get a PDF.** A submitted-but-unverified entry has none (any existing one is deleted); it is made on the first run after the entry is verified. Documents have no verification step and always get one.
+   - The PDF is saved only when the site's print sheet is really finished (it drives the browser directly and waits for the engine's hand-over and for photos to load), never after a fixed delay.
+   - If the site shows "Print not available yet" (print lock on REC 7.4.1 / 7.4.2 until REC 7.4.10 is done for the job), no PDF is saved and it is retried on later runs.
+5. Record templates get no PDF (there is no online print of a blank template).
+
+```
+node scripts/archive-pdfs.mjs [--type completed-record|policy|procedure|sop|prp] [--record <key>] [--limit N] [--force] [--workers N] [--archive-out "<path>"]
+```
+
+### CSV files
+
+`archive-completed-records.mjs` also writes `csv\<recordKey>.csv` (one row per submission, one column per field) and `csv\<recordKey>_rows.csv` (repeating rows such as steams), refreshed on each full run. These are separate from the nightly whole-table exports in `..\DB EXPORTS\`.
+
+### `scripts/full-db-export.cjs` — one-off complete database export
+
+Exports every table and view to CSV, including empty tables (header row only), with `_manifest.csv` listing the row count in the database against rows written. Read-only.
+
+```
+node scripts/full-db-export.cjs "..\DB FULL EXPORT <date>"
+```
+
 ### `scripts/archive-completed-records.mjs`
 
-The API runs on Render and cannot write to the T drive, so the on-verify hook alone never fills the shared archive. This script, run from a machine on the office network, pulls verified records from the database into `PROCESSING ARCHIVE\completed-records\`.
+Archives **all submissions** (drafts excluded), verified or not.
 
-Behaviour:
-1. Reads the verification log (`VerificationEvent` + entries) and loads the submissions each event verified.
-2. Writes one file per record + job + verification day: `<jobNo>_<YYYY-MM-DD>` under the month the verification was logged.
-3. The job number is read from `entry.values[<batchField>]` (entries keep their form fields under `values`).
-4. Read-only against the database. Safe to re-run or schedule: a group already archived with identical content is skipped; a group that has gained entries is rewritten.
+1. Reads every `sub_<recordKey>` table plus the verification log.
+2. Writes one page per record + job + submission day: `completed-records\<recordKey>\<YYYY-MM>\<jobNo>_<YYYY-MM-DD>`. Records with no job number get one page per day (`log_<YYYY-MM-DD>`). Days are facility time (UTC+2).
+3. Each entry shows a `submitted` or `verified` badge; verified entries carry who verified them.
+4. The job number is read from `entry.values[<batchField>]` (entries keep their form fields under `values`).
+5. A group already archived with identical content is skipped; a group that changed (new entry, edit, now verified) is rewritten.
 
-Usage:
 ```
-node scripts/archive-completed-records.mjs [--since YYYY-MM-DD] [--record <recordKey>] [--archive-out "<path>"] [--dry-run]
+node scripts/archive-completed-records.mjs [--since YYYY-MM-DD] [--record <recordKey>] [--verified-only] [--archive-out "<path>"] [--dry-run]
+```
+
+### `scripts/archive-documents.mjs`
+
+Archives the **current version** of every controlled document and record template.
+
+1. Policies, procedures, SOPs and PRPs: reads the content each page in `public\<folder>\` passes to `<Type>Doc.mount(...)`, then applies edits (`policy_doc:` / `procedure_doc:` / `sop_doc:` / `prp_doc:`) and revision history (`document_revision:`) saved in the database — the same merge the page does. The blank `*-Create.html` pages are skipped.
+2. Record templates: every `public\data\record-defs\*.json`.
+3. Label: `<doc no.>_rev<N>_<revision date>` for documents, `<docCode>_<date archived>` for templates.
+4. Anything already archived with identical content is skipped. An edit or a revision bump produces a new archived copy, so earlier versions are kept.
+
+```
+node scripts/archive-documents.mjs [--no-db] [--archive-out "<path>"] [--dry-run]
 ```
 
 ---

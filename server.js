@@ -24,7 +24,9 @@ const mimeTypes = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.woff': 'font/woff',
-  '.woff2': 'font/woff2'
+  '.woff2': 'font/woff2',
+  '.pdf': 'application/pdf',
+  '.csv': 'text/csv'
 };
 
 const server = http.createServer((req, res) => {

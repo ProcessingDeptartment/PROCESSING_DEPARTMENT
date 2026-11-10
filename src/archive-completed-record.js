@@ -25,18 +25,18 @@ function jobNoOf(entry, recordKey) {
 
 const isVerified = (e) => !!e && (e.status === 'verified' || !!e.verification);
 
-// entries: [{ id, status, ...fields }]. Archives only when every entry is verified. Returns the index entry or null.
-// date (YYYY-MM-DD, default today) names the file and its month folder; meta is kept on the index entry. Both are
-// used by scripts/archive-completed-records.mjs, which files each group under the day it was verified.
-async function maybeArchiveOnVerify(prisma, recordKey, entries, { jobNo, date: day, meta } = {}) {
+// Write one group of entries (one job, one day) to the archive, whatever their status. Never throws.
+// date (YYYY-MM-DD, default today) names the page and its month folder; name overrides the page name (default: the
+// job number); meta is kept on the index entry. Returns the index entry or null.
+function archiveSubmissions(recordKey, entries, { jobNo, name: pageName, date: day, meta } = {}) {
   try {
-    if (!Array.isArray(entries) || !entries.length || !entries.every(isVerified)) return null;
+    if (!Array.isArray(entries) || !entries.length) return null;
     const config = loadRecordConfig(recordKey) || {};
     const now = new Date().toISOString();
     const date = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(day || '') ? day : now.slice(0, 10);
     // Records with no job number (monitoring logs) are named by their first entry so two same-day verifications stay apart.
-    const name = jobNo ? String(jobNo) : 'entry-' + String(entries[0].id || '').slice(0, 8);
-    const title = [config.docCode, config.title || recordKey].filter(Boolean).join(' — ') + (jobNo ? ' · Job ' + jobNo : '');
+    const name = pageName || (jobNo ? String(jobNo) : 'entry-' + String(entries[0].id || '').slice(0, 8));
+    const title = [config.docCode, config.title || recordKey].filter(Boolean).join(' — ') + (jobNo ? ' · Job ' + jobNo : '') + ' · ' + date;
     return writeArchiveEntry({
       type: 'completed-record',
       key: recordKey,
@@ -44,13 +44,19 @@ async function maybeArchiveOnVerify(prisma, recordKey, entries, { jobNo, date: d
       label: name + '_' + date,
       title,
       meta,
-      data: { recordKey, docCode: config.docCode || null, title: config.title || null, jobNo: jobNo || null, archivedAt: now, entries },
+      data: { recordKey, docCode: config.docCode || null, title: config.title || null, jobNo: jobNo || null, date, archivedAt: now, entries },
       html: buildHtmlPage({ title, archivedAt: now, bodyHtml: submissionToHtml(recordKey, jobNo, entries, config) }),
     });
   } catch (e) {
-    console.error('archiveOnVerify failed', e && e.message ? e.message : e);
+    console.error('archiveSubmissions failed', e && e.message ? e.message : e);
     return null;
   }
 }
 
-module.exports = { maybeArchiveOnVerify, jobNoOf };
+// Called by the API when a verification is logged: archives the group only when every entry in it is verified.
+async function maybeArchiveOnVerify(prisma, recordKey, entries, opts = {}) {
+  if (!Array.isArray(entries) || !entries.length || !entries.every(isVerified)) return null;
+  return archiveSubmissions(recordKey, entries, opts);
+}
+
+module.exports = { maybeArchiveOnVerify, archiveSubmissions, jobNoOf, loadRecordConfig };

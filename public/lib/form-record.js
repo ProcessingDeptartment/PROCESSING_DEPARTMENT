@@ -328,6 +328,19 @@
   .fr-qe-list .fr-roster-row [data-remove-roster-row], .rt-content .fr-qe-list .fr-roster-row [data-remove-roster-row],
   body.rt-pc .rt-content .fr-qe-list .fr-roster-row [data-remove-roster-row]{
     grid-column:auto; justify-self:start; width:44px; min-height:38px; padding:0; }
+  /* the worded Delete button (shown only on a row opened with Edit) needs room for its label */
+  .fr-roster-row .fr-row-del, .rt-content .fr-roster-row .fr-row-del, .rt-content .fr-qe-list .fr-roster-row .fr-row-del,
+  body.rt-pc .rt-content .fr-roster-row .fr-row-del, body.rt-pc .rt-content .fr-qe-list .fr-roster-row .fr-row-del{
+    width:auto; padding:0 14px; white-space:nowrap; color:var(--rt-fail,#a3352d); }
+  @media (max-width:699px){ .fr-qe-list .fr-roster-row, .rt-content .fr-qe-list .fr-roster-row{ grid-template-columns:repeat(2,minmax(0,1fr)) auto; } }
+  /* "Delete this row?" bubble anchored to the Delete button */
+  .fr-del-bubble{ position:fixed; z-index:600; background:#fff; border:1px solid var(--rt-border,#d5d9dc); border-radius:10px;
+    box-shadow:0 8px 28px rgba(20,25,30,.28); padding:12px 14px; max-width:min(300px,92vw); font-size:14px; color:var(--palette-ink,#1b2330); }
+  .fr-del-bubble-msg{ font-weight:600; margin-bottom:10px; }
+  .fr-del-bubble-detail{ font-weight:400; font-size:12.5px; margin-top:3px; color:#555; word-break:break-word; }
+  .fr-del-bubble-actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .fr-del-bubble-actions button{ min-height:40px; padding:0 16px; border-radius:6px; border:1px solid var(--rt-border,#d5d9dc); background:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  .fr-del-bubble-actions .fr-del-yes{ background:var(--rt-fail,#a3352d); border-color:var(--rt-fail,#a3352d); color:#fff; }
   /* roster.jobNumbered: the crate number is a greyed-out label, never an input (the server assigns it) */
   .fr-crate-no{ pointer-events:none; user-select:none; }
   .fr-crate-val{ display:inline-block; min-width:3.2em; padding:.5em .8em; background:#eceff1; color:#555; border:1px solid #d5d9dc;
@@ -2303,7 +2316,7 @@
       };
       return `<div class="fr-roster-row" data-roster-row="${idx}">
         ${roster.columns.map(cellOf).join('')}
-        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm" data-remove-roster-row="${idx}">✕</button>
+        <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-row-del" data-remove-roster-row="${idx}">Delete</button>
       </div>`;
     }
 
@@ -3087,6 +3100,60 @@
         applyRowVisibility();
       });
 
+      // Deleting a row that holds data always asks first, in a bubble next to the Delete button. One listener for the
+      // whole page, on window in the capture phase so it runs before record-chrome's undo-toast handler (document,
+      // capture). Card rows are left alone: they already confirm in the remove handler above.
+      if (!window.__frDelConfirmWired) {
+        window.__frDelConfirmWired = true;
+        let bubble = null;
+        const closeBubble = () => {
+          if (!bubble) return;
+          bubble.el.remove();
+          document.removeEventListener('keydown', bubble.onKey, true);
+          window.removeEventListener('resize', closeBubble);
+          bubble = null;
+        };
+        window.addEventListener('click', (e) => {
+          const t = e.target;
+          if (bubble && !(t.closest && t.closest('.fr-del-bubble'))) closeBubble();
+          const btn = t.closest && t.closest('[data-remove-roster-row]');
+          if (!btn) return;
+          const rowEl = btn.closest('.fr-roster-row');
+          if (!rowEl || btn.closest('.fr-pot-card')) return;
+          if (btn.__frConfirmed) { btn.__frConfirmed = false; btn.__rtCommit = true; return; }   // confirmed: remove now, no undo toast
+          const filled = Array.from(rowEl.querySelectorAll('input, select, textarea'))
+            .some(x => x.type !== 'hidden' && x.type !== 'button' && (x.type === 'checkbox' || x.type === 'radio' ? x.checked : String(x.value || '').trim() !== ''));
+          if (!filled) return;                                                                    // an empty row just goes
+          e.stopImmediatePropagation(); e.preventDefault();
+          const box = document.createElement('div');
+          box.className = 'fr-del-bubble no-print';
+          box.setAttribute('role', 'alertdialog');
+          box.setAttribute('aria-label', 'Confirm delete');
+          const vals = Array.from(rowEl.querySelectorAll('.fr-crate-val, input:not([type=hidden]), select, textarea'))
+            .map(x => String(x.value != null && x.value !== undefined && x.tagName !== 'SPAN' ? x.value : x.textContent || '').trim()).filter(Boolean);
+          box.innerHTML = `<div class="fr-del-bubble-msg">Delete this row?<div class="fr-del-bubble-detail">${esc(vals.slice(0, 4).join('  ·  '))}</div></div>`
+            + `<div class="fr-del-bubble-actions"><button type="button" class="fr-del-no">Cancel</button><button type="button" class="fr-del-yes">Delete</button></div>`;
+          document.body.appendChild(box);
+          const r = btn.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight;
+          const top = r.top - bh - 8 >= 8 ? r.top - bh - 8 : Math.min(r.bottom + 8, window.innerHeight - bh - 8);
+          const left = Math.max(8, Math.min(r.right - bw, window.innerWidth - bw - 8));
+          box.style.top = Math.max(8, top) + 'px';
+          box.style.left = left + 'px';
+          const onKey = (ev) => { if (ev.key === 'Escape') { ev.stopPropagation(); closeBubble(); } };
+          bubble = { el: box, onKey };
+          document.addEventListener('keydown', onKey, true);
+          window.addEventListener('resize', closeBubble);
+          box.querySelector('.fr-del-no').addEventListener('click', closeBubble);
+          box.querySelector('.fr-del-yes').addEventListener('click', () => {
+            closeBubble();
+            if (!document.body.contains(btn)) return;
+            btn.__frConfirmed = true;
+            btn.click();
+          });
+          try { box.querySelector('.fr-del-no').focus(); } catch (err) {}
+        }, true);
+      }
+
       function collapseAllExcept(openIdx) {
         if (!canCollapse) return;
         collapsedRows.clear();
@@ -3637,13 +3704,14 @@
       container._importRows = (newRows) => {
         rows = rows.map((_, i) => readRow(i))
           .filter(r => roster.columns.some(c => String(r[c.key] || '').trim() !== ''));
-        const existingCount = rows.length;
         rows = rows.concat(newRows);
         draw();
 
         if (canCollapse) {
-          // only the rows that were already there collapse; the newly added ones stay open
-          rows.forEach((_, i) => { if (i < existingCount && rowHasData(i)) collapsedRows.add(i); });
+          // every captured row, the new one included, shows as a summary line with Edit only: Delete appears
+          // only once a row has been opened with Edit
+          pinnedOpen = -1;
+          rows.forEach((_, i) => { if (rowHasData(i)) collapsedRows.add(i); });
           applyCollapse();
         }
       };

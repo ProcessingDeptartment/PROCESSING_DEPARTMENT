@@ -114,7 +114,7 @@ async function main() {
     const snap = names.length ? await tx.$queryRawUnsafe(
       names.map((t) => `SELECT '${t}' AS t, COALESCE(${snapRows(t)}, '[]'::json) AS rows FROM "${t}" x`).join(' UNION ALL ')) : [];
     return { names, pks, snap };
-  }, { isolationLevel: 'RepeatableRead', maxWait: 30000, timeout: 120000 });
+  }, { isolationLevel: 'RepeatableRead', maxWait: 30000, timeout: 900000 });   // 15 min: reading every table took 131s on 2026-11-10 and overran the old 2-min limit
 
   const now = new Date();
   const at = now.toISOString();

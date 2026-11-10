@@ -47,6 +47,8 @@
   .badge.record-def{ background:#dbe6f3; color:#234a75; }
   .badge.policy{ background:#f3e6cf; color:#73500f; }
   .badge.procedure{ background:#e8def0; color:#553273; }
+  .badge.sop{ background:#d8ecec; color:#1d5458; }
+  .badge.prp{ background:#f1dede; color:#7a2e2e; }
   .state{ padding:40px 20px; text-align:center; color:#5c6771; }
   .state.error{ color:#a3352d; }
   .state strong{ display:block; font-size:14px; margin-bottom:4px; color:inherit; }
@@ -56,17 +58,19 @@
 <body>
 <div class="header">
   <h1>Archive</h1>
-  <p>Verified records and superseded versions of record definitions, policies and procedures.</p>
+  <p>Submitted records, record templates, policies, procedures, SOPs and PRPs. Open an item to print it, save it as PDF or download it as a Word document.</p>
   <a class="back-link" href="/">&larr; Back to dashboard</a>
 </div>
 
 <div class="container">
   <div class="tab-bar" id="tabs" role="tablist">
     <button class="tab-btn active" data-type="" role="tab" aria-selected="true">All<span class="n"></span></button>
-    <button class="tab-btn" data-type="completed-record" role="tab" aria-selected="false">Completed Records<span class="n"></span></button>
-    <button class="tab-btn" data-type="record-def" role="tab" aria-selected="false">Record Definitions<span class="n"></span></button>
+    <button class="tab-btn" data-type="completed-record" role="tab" aria-selected="false">Records<span class="n"></span></button>
+    <button class="tab-btn" data-type="record-def" role="tab" aria-selected="false">Record Templates<span class="n"></span></button>
     <button class="tab-btn" data-type="policy" role="tab" aria-selected="false">Policies<span class="n"></span></button>
     <button class="tab-btn" data-type="procedure" role="tab" aria-selected="false">Procedures<span class="n"></span></button>
+    <button class="tab-btn" data-type="sop" role="tab" aria-selected="false">SOPs<span class="n"></span></button>
+    <button class="tab-btn" data-type="prp" role="tab" aria-selected="false">PRPs<span class="n"></span></button>
   </div>
 
   <div class="panel">
@@ -91,7 +95,7 @@
 
 <script>
 (function () {
-  var TYPE_LABELS = { 'completed-record': 'Completed Record', 'record-def': 'Record Definition', policy: 'Policy', procedure: 'Procedure' };
+  var TYPE_LABELS = { 'completed-record': 'Record', 'record-def': 'Record Template', policy: 'Policy', procedure: 'Procedure', sop: 'SOP', prp: 'PRP' };
   var all = [], type = '';
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (v) {
@@ -136,7 +140,7 @@
     var list = filtered.filter(function (e) { return !type || e.type === type; });
     $('count').textContent = all.length ? list.length + ' of ' + all.length + ' shown' : '';
 
-    if (!all.length) { showState('<strong>Nothing has been archived yet.</strong>Items appear here when a record is verified or a record definition changes.'); return; }
+    if (!all.length) { showState('<strong>Nothing has been archived yet.</strong>Items appear here once the archive scripts have been run.'); return; }
     if (!list.length) { showState('<strong>No archived items match.</strong>Try a different search, date range or tab.'); return; }
 
     $('rows').innerHTML = list.map(function (e) {
@@ -146,8 +150,12 @@
         + '<td>' + esc(e.title || e.label) + '</td>'
         + '<td class="when">' + localStamp(e.archivedAt) + '</td>'
         + '<td class="actions">'
-        + (e.htmlPath ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + esc(fileUrl(e.htmlPath)) + '">Open</a>' : '')
+        + (e.pdfPaths || []).map(function (p, i, a) {
+          return '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + esc(fileUrl(p)) + '">PDF' + (a.length > 1 ? ' ' + (i + 1) : '') + '</a>';
+        }).join('')
+        + (e.htmlPath ? '<a class="btn" target="_blank" rel="noopener" href="' + esc(fileUrl(e.htmlPath)) + '">Open</a>' : '')
         + (e.jsonPath ? '<a class="btn" target="_blank" rel="noopener" href="' + esc(fileUrl(e.jsonPath)) + '">JSON</a>' : '')
+        + (e.type === 'completed-record' ? '<a class="btn" href="' + esc(fileUrl('csv/' + e.key + '.csv')) + '">CSV</a>' : '')
         + '</td></tr>';
     }).join('');
     $('state').hidden = true;
