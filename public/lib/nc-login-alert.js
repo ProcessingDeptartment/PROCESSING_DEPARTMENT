@@ -67,7 +67,9 @@
     return apiFetch('/api/nc?limit=200')
       .then(function (r) { return r.json(); })
       .then(function (rows) {
-        return (rows || []).filter(function (nc) { return nc.status !== 'closed'; });
+        return (rows || []).filter(function (nc) {
+          return nc.status !== 'closed' && nc.status !== 'ready_to_close';
+        });
       });
   }
 
@@ -79,10 +81,8 @@
     overlay.className = 'nc-alert-overlay';
 
     var items = openNCs.map(function (nc) {
-      var cls = nc.status === 'in_progress' ? 'nc-alert-prog'
-               : nc.status === 'ready_to_close' ? 'nc-alert-rtc' : '';
-      var statusLabel = nc.status === 'in_progress' ? 'In progress'
-                      : nc.status === 'ready_to_close' ? 'Ready to close' : 'Open';
+      var cls = nc.status === 'in_progress' ? 'nc-alert-prog' : '';
+      var statusLabel = nc.status === 'in_progress' ? 'In progress' : 'Open';
       var meta = [];
       if (nc.jobNumber) meta.push('Job: <strong>' + esc(nc.jobNumber) + '</strong>');
       if (nc.recordRef) meta.push(esc(nc.recordRef));
