@@ -6,7 +6,7 @@
   const SYNC_QUEUE_KEY = STORAGE_PREFIX + 'sync-queue';
 
 
-  const BACKEND_URL = window.HANDOVER_BACKEND_URL || 'https://handover-backend.onrender.com';
+  const BACKEND_URL = window.HANDOVER_BACKEND_URL || 'https://processing-department-api.onrender.com';
 
   const pageConfigs = [
     { suffix: 'production-handover-report.html', pageKey: 'production', pageLabel: 'Production' },

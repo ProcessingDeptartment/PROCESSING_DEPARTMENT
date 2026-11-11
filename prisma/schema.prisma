@@ -6187,3 +6187,20 @@ model BlockOverrideAudit {
   @@index([overriddenAt(sort: Desc)], map: "idx_block_override_date")
   @@map("block_override_audit")
 }
+
+model HandoverRecord {
+  id          String   @id                // e.g. "production:2026-11-10:day"
+  page        String                      // "production" | "quality"
+  pageLabel   String?
+  date        String?                     // ISO date string "YYYY-MM-DD"
+  shift       String?                     // "day" | "night" etc.
+  ownerName   String?
+  status      String   @default("draft")  // "draft" | "submitted"
+  updatedAt   BigInt   @default(0)        // JS timestamp (ms)
+  submittedAt BigInt?
+  receivedAt  BigInt
+  payload     String   @default("{}")     // full form state JSON string
+  createdAt   DateTime @default(now())
+
+  @@index([page, date])
+}

@@ -1431,6 +1431,137 @@ setInterval(() => {
   runUnverifiedAlert(prisma).catch((e) => console.error('[unverified-alert] interval run failed:', e.message));
 }, 60 * 60 * 1000);
 
+// --- Handover routes (production & quality handover reports → Neon) ---
+function sanitiseHandover(raw) {
+  const now = Date.now();
+  return {
+    id:          raw.id,
+    page:        raw.page        || null,
+    pageLabel:   raw.pageLabel   || null,
+    date:        raw.date        || null,
+    shift:       raw.shift       || null,
+    ownerName:   raw.ownerName   || null,
+    status:      raw.status      || 'draft',
+    updatedAt:   BigInt(raw.updatedAt  || now),
+    submittedAt: raw.submittedAt ? BigInt(raw.submittedAt) : null,
+    receivedAt:  BigInt(now),
+    payload:     JSON.stringify(raw.payload || {}),
+  };
+}
+
+app.post('/api/handovers', async (req, res) => {
+  try {
+    const body = req.body;
+    if (!body || typeof body.id !== 'string' || !body.id) {
+      return res.status(400).json({ error: 'Missing required field: id' });
+    }
+    const data = sanitiseHandover(body);
+    const record = await prisma.handoverRecord.upsert({
+      where: { id: data.id },
+      update: data,
+      create: data,
+    });
+    res.json({ ok: true, id: record.id, receivedAt: Number(record.receivedAt) });
+  } catch (err) {
+    console.error('POST /api/handovers error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/handovers/export', async (req, res) => {
+  try {
+    const ExcelJS = require('exceljs');
+    const rows = await prisma.handoverRecord.findMany({
+      orderBy: [{ date: 'desc' }, { shift: 'asc' }],
+    });
+    if (!rows.length) return res.status(404).json({ error: 'No records to export' });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Handovers');
+    worksheet.columns = [
+      { header: 'Date',      key: 'date',      width: 12 },
+      { header: 'Shift',     key: 'shift',     width: 10 },
+      { header: 'Page',      key: 'page',      width: 15 },
+      { header: 'Manager',   key: 'ownerName', width: 20 },
+      { header: 'Status',    key: 'status',    width: 12 },
+      { header: 'Updated',   key: 'updatedAt', width: 20 },
+      { header: 'Submitted', key: 'submittedAt', width: 20 },
+    ];
+    rows.forEach(row => {
+      worksheet.addRow({
+        date:        row.date,
+        shift:       row.shift,
+        page:        row.page,
+        ownerName:   row.ownerName,
+        status:      row.status,
+        updatedAt:   new Date(Number(row.updatedAt)).toLocaleString(),
+        submittedAt: row.submittedAt ? new Date(Number(row.submittedAt)).toLocaleString() : 'N/A',
+      });
+    });
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const today = new Date().toISOString().split('T')[0];
+    res.writeHead(200, {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="handovers_${today}.xlsx"`,
+    });
+    res.end(buffer);
+  } catch (err) {
+    console.error('GET /api/handovers/export error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/handovers', async (req, res) => {
+  try {
+    const { page } = req.query;
+    const where = page ? { page } : {};
+    const rows = await prisma.handoverRecord.findMany({
+      where,
+      orderBy: [{ date: 'desc' }, { shift: 'asc' }],
+      select: {
+        id: true, page: true, pageLabel: true, date: true, shift: true,
+        ownerName: true, status: true, updatedAt: true, submittedAt: true, receivedAt: true,
+      },
+    });
+    const records = rows.map(r => ({
+      ...r,
+      updatedAt:   Number(r.updatedAt),
+      submittedAt: r.submittedAt !== null ? Number(r.submittedAt) : null,
+      receivedAt:  Number(r.receivedAt),
+    }));
+    res.json({ records });
+  } catch (err) {
+    console.error('GET /api/handovers error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/handovers/:id', async (req, res) => {
+  try {
+    const row = await prisma.handoverRecord.findUnique({ where: { id: req.params.id } });
+    if (!row) return res.status(404).json({ error: 'Record not found' });
+    res.json({
+      id:          row.id,
+      page:        row.page,
+      pageLabel:   row.pageLabel,
+      date:        row.date,
+      shift:       row.shift,
+      ownerName:   row.ownerName,
+      status:      row.status,
+      updatedAt:   Number(row.updatedAt),
+      submittedAt: row.submittedAt !== null ? Number(row.submittedAt) : null,
+      receivedAt:  Number(row.receivedAt),
+      payload:     JSON.parse(row.payload || '{}'),
+    });
+  } catch (err) {
+    console.error('GET /api/handovers/:id error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`facility-api listening on ${PORT}, ${dateFields.size} known date fields loaded`
     + ` — write validation ${VALIDATE_ENFORCE ? 'ENFORCED (422 on invalid)' : 'report-only'}`);
