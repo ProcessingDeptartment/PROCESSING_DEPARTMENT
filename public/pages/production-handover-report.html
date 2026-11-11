@@ -235,21 +235,59 @@ body {
         
         <div class="section-card" id="sec-2">
             <div class="section-title"><span id="status-2" class="status-icon">⚪</span>1. Staffing & Attendance</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 no-print">
                 <div class="flex flex-col gap-2">
-                    <button type="button" class="bubble-btn" data-name="Staff absent" onclick="toggleStaffingSelection(this, 'staff-absent-fields')">Staff absent</button>
-                    <div id="staff-absent-fields" class="hidden">
-                        <div class="bubble-block">
-                            <input type="number" id="staff-absent-input" class="bubble-val-input" placeholder="No. of staff" oninput="markFieldInput(this)">
-                        </div>
+                    <button type="button" class="bubble-btn" data-name="01 Sick leave" onclick="toggleStaffingSelection(this, 'leave-01-fields')">01 Sick leave</button>
+                    <div id="leave-01-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-01-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
                     </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button type="button" class="bubble-btn" data-name="Staff on leave" onclick="toggleStaffingSelection(this, 'staff-leave-fields')">Staff on leave</button>
-                    <div id="staff-leave-fields" class="hidden">
-                        <div class="bubble-block">
-                            <input type="number" id="staff-leave-input" class="bubble-val-input" placeholder="No. of staff" oninput="markFieldInput(this)">
-                        </div>
+                    <button type="button" class="bubble-btn" data-name="02 Unpaid sick leave" onclick="toggleStaffingSelection(this, 'leave-02-fields')">02 Unpaid sick leave</button>
+                    <div id="leave-02-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-02-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="04 Annual leave" onclick="toggleStaffingSelection(this, 'leave-04-fields')">04 Annual leave</button>
+                    <div id="leave-04-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-04-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="05 Discretionary leave" onclick="toggleStaffingSelection(this, 'leave-05-fields')">05 Discretionary leave</button>
+                    <div id="leave-05-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-05-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="06 Sick no certificate" onclick="toggleStaffingSelection(this, 'leave-06-fields')">06 Sick no certificate</button>
+                    <div id="leave-06-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-06-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="09 Family responsibility" onclick="toggleStaffingSelection(this, 'leave-09-fields')">09 Family responsibility</button>
+                    <div id="leave-09-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-09-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="10 Shop stewards leave" onclick="toggleStaffingSelection(this, 'leave-10-fields')">10 Shop stewards leave</button>
+                    <div id="leave-10-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-10-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="11 Occasional leave" onclick="toggleStaffingSelection(this, 'leave-11-fields')">11 Occasional leave</button>
+                    <div id="leave-11-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-11-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" class="bubble-btn" data-name="13 Study leave" onclick="toggleStaffingSelection(this, 'leave-13-fields')">13 Study leave</button>
+                    <div id="leave-13-fields" class="hidden">
+                        <div class="bubble-block"><input type="number" id="leave-13-input" class="bubble-val-input" placeholder="No. of staff" min="1" oninput="markFieldInput(this)"></div>
                     </div>
                 </div>
             </div>
@@ -986,11 +1024,22 @@ function buildSectionSummary(sectionId, labels) {
 }
 
 function buildStaffingSummary() {
-    const absent = document.getElementById('staff-absent-input').value.trim();
-    const leave = document.getElementById('staff-leave-input').value.trim();
-    const parts = [];
-    if (absent) parts.push('Absent: <strong>' + absent + '</strong>');
-    if (leave) parts.push('On leave: <strong>' + leave + '</strong>');
+    var categories = [
+        { id: 'leave-01-input', label: '01 Sick' },
+        { id: 'leave-02-input', label: '02 Unpaid sick' },
+        { id: 'leave-04-input', label: '04 Annual' },
+        { id: 'leave-05-input', label: '05 Discretionary' },
+        { id: 'leave-06-input', label: '06 Sick no cert' },
+        { id: 'leave-09-input', label: '09 Family resp.' },
+        { id: 'leave-10-input', label: '10 Shop stewards' },
+        { id: 'leave-11-input', label: '11 Occasional' },
+        { id: 'leave-13-input', label: '13 Study' },
+    ];
+    var parts = [];
+    categories.forEach(function(cat) {
+        var input = document.getElementById(cat.id);
+        if (input && input.value.trim()) parts.push('<strong>' + cat.label + ':</strong> ' + input.value.trim());
+    });
     if (!parts.length) return '<div class="print-empty">--</div>';
     return '<div class="print-summary-list"><div class="print-summary-item">' + parts.join(' &nbsp;|&nbsp; ') + '</div></div>';
 }
