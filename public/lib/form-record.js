@@ -108,6 +108,21 @@
   table.fr-table th,table.fr-table td{ border:1px solid var(--palette-border,#e2e4e3); padding:5px 7px; text-align:left; vertical-align:middle; font-size:11.5px; }
   table.fr-table th{ background:var(--palette-head-bg,#fbfbfa); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--palette-label,#54606b); font-weight:700; white-space:nowrap; }
   .fr-muted{ color:#8a939b; }
+  /* daily verification log: one block per calendar day, every submission of the day with its values */
+  .fr-history-list.fr-daylog-list{ max-height:none; }
+  .fr-daylog-day{ border-bottom:1px solid var(--palette-border,#e2e4e3); padding:8px 10px 10px; }
+  .fr-daylog-day:last-child{ border-bottom:none; }
+  .fr-daylog-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; margin-bottom:6px; }
+  .fr-daylog-head label{ display:flex; align-items:center; gap:6px; font-weight:700; }
+  .fr-daylog-table{ overflow-x:auto; }
+  .fr-daylog-table td.fr-daylog-text{ white-space:pre-wrap; min-width:140px; }
+  /* monthly log PDF */
+  .fr-sheet table.fr-table th,.fr-sheet table.fr-table td{ border:1px solid #000; padding:3px 5px; font-size:10px; }
+  .fr-sheet table.fr-table thead{ display:table-header-group; }
+  .fr-sheet table.fr-table tr{ page-break-inside:avoid; }
+  .fr-sheet tr.fr-monthlog-dh td{ padding:0 !important; border:none !important; }
+  .fr-sheet th.fr-monthlog-title{ font-size:13px; text-align:center; text-transform:none; letter-spacing:0; color:#000; background:#fff; padding:6px; }
+  .fr-sheet th.fr-monthlog-title small{ display:block; font-weight:400; font-size:10px; margin-top:2px; }
   .fr-empty{ padding:18px; text-align:center; color:#8a939b; }
   .fr-badge{ display:inline-block; padding:1px 7px; border-radius:9px; font-size:10px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; background:#eceeef; color:#54606b; white-space:nowrap; }
   .fr-badge-ok{ background:var(--palette-ok-bg,#e4f0e6); color:var(--palette-ok,#2f6b3a); }
@@ -1719,6 +1734,34 @@
     return true;
   }
 
+  // Daily verification log + monthly PDF (MD/verification-daily-log-and-monthly-pdf.md) -- the same
+  // behaviour monitoring-log.js gives the chiller / water records, for flat (no-roster) form records:
+  // the verifier sees every submission of a calendar day with its values, and every PDF is the month's log.
+  // Attach to another record by adding its key here, or with "dailyVerificationLog": true in its config.
+  const DAILY_LOG_KEYS = ['rec-7.8.9.1', 'lha-water-monitoring'];
+  function isDailyLog(config) {
+    if (!config || config.dailyVerificationLog === false) return false;
+    return config.dailyVerificationLog === true || DAILY_LOG_KEYS.indexOf(config.recordKey) !== -1;
+  }
+  function facilityDayOf(ms) {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date(ms)); }
+    catch (e) { return ''; }
+  }
+  function facilityTimeOf(ms) {
+    try { return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Johannesburg', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
+    catch (e) { return ''; }
+  }
+  function longDayLabel(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    if (!m) return '(no date)';
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function monthLabel(ym) {
+    const m = /^(\d{4})-(\d{2})/.exec(String(ym || ''));
+    if (!m) return '';
+    return new Date(Date.UTC(+m[1], +m[2] - 1, 1)).toLocaleDateString('en-GB', { timeZone: 'UTC', month: 'long', year: 'numeric' });
+  }
+
   function allFields(config) {
     const fields = [];
     (config.sections || []).forEach(sec => (sec.fields || []).forEach(f => fields.push(f)));
@@ -1989,8 +2032,8 @@
           <div class="fr-panel-body fr-collapsible" id="fr_verificationBody">
             <div class="fr-notice fr-notice-due" id="fr_verifyGate" style="display:none;"></div>
             <div class="fr-notice fr-notice-due" id="fr_verifyNotice"></div>
-            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verifySelect" data-label="entries to verify">View entries to verify</button>
-            <div class="fr-history-list fr-collapsible" id="fr_verifySelect" style="margin-bottom:10px;"></div>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_verifySelect" data-label="entries to verify">${isDailyLog(config) ? 'Hide' : 'View'} entries to verify</button>
+            <div class="fr-history-list fr-collapsible${isDailyLog(config) ? ' fr-open ml-open fr-daylog-list' : ''}" id="fr_verifySelect" style="margin-bottom:10px;"></div>
             ${window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'fr_verified', gridClass: 'fr-grid fr-grid-4', fieldClass: 'fr-field' })}
             <div class="fr-actions" style="justify-content:flex-start; margin-top:0;">
               <button class="fr-btn fr-btn-primary fr-btn-sm" id="fr_saveVerificationBtn">Log verification</button>
@@ -5025,7 +5068,72 @@ function fallbackDl(canvas,filename){
     }
 
 
+    // ── Daily verification log + monthly PDF ──────────────────────────────────────────────
+    const dailyLog = isDailyLog(config);
+    const logWhen = (s) => s.submittedAt || s.createdAt || 0;
+    const logDayOf = (s) => facilityDayOf(logWhen(s));
+
+    // One row per submission with its field values. o.pick adds a tick box on rows still awaiting
+    // verification; o.showDate adds the date (monthly log); o.topRows sits above the column
+    // headings inside thead, so it repeats on every printed page.
+    function dayLogTableHtml(list, o) {
+      o = o || {};
+      const cols = allFields(config).filter(f => f && f.key && !f.hidden && f.type !== 'heading' && f.type !== 'note');
+      let html = `<table class="fr-table"><thead>${o.topRows || ''}<tr>${o.pick ? '<th></th>' : ''}${o.showDate ? '<th>Date</th>' : ''}<th>Time</th><th>Completed by</th>${cols.map(f => `<th>${esc(f.label || f.key)}</th>`).join('')}<th>Verified</th></tr></thead><tbody>`;
+      list.slice().sort((a, b) => logWhen(a) - logWhen(b)).forEach(sub => {
+        const vf = sub.verification || null;
+        const vals = sub.values || {};
+        html += `<tr>`;
+        if (o.pick) html += `<td>${vf ? '' : `<input type="checkbox" class="fr-verify-pick" value="${esc(sub.id)}" aria-label="Verify this entry">`}</td>`;
+        if (o.showDate) html += `<td style="white-space:nowrap;">${esc(logDayOf(sub))}</td>`;
+        html += `<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(sub)))}</td>`;
+        html += `<td>${esc(subCompletedBy(sub) || '—')}</td>`;
+        cols.forEach(f => {
+          let v = vals[f.key];
+          if (Array.isArray(v)) v = v.join(', ');
+          else if (v && typeof v === 'object') v = v.value != null ? v.value : (v.label != null ? v.label : '');
+          if (v === '' || v == null) v = '—';
+          html += `<td class="${f.type === 'textarea' ? 'fr-daylog-text' : ''}">${esc(v)}</td>`;
+        });
+        html += `<td>${vf ? `✓ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="fr-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="fr-muted">Awaiting</span>'}</td>`;
+        html += `</tr>`;
+      });
+      return html + `</tbody></table>`;
+    }
+
+    // Every submission of one calendar month (facility time), oldest first. The current month
+    // runs from the 1st to today; ym ('YYYY-MM') picks an earlier month, printed in full.
+    function printMonthlyLog(ym) {
+      const today = facilityDayOf(Date.now());
+      if (!/^\d{4}-\d{2}$/.test(ym || '')) ym = today.slice(0, 7);
+      const list = submissions.filter(s => isSubmitted(s) && logDayOf(s).slice(0, 7) === ym && logDayOf(s) <= today);
+      if (!list.length) {
+        toast(`No submissions in ${monthLabel(ym)} to print.`);
+        if (window.__pdfOnly && window.__pdfFail) window.__pdfFail(`No submissions in ${monthLabel(ym)} to print.`);
+        return;
+      }
+      const sheetEl = el('fr_printSheet');
+      if (!sheetEl) return;
+      const heading = `${config.title} — ${monthLabel(ym)}`;
+      const h = window.DocHeader ? window.DocHeader.current(config.recordKey) : null;
+      const lastDay = list.reduce((d, s) => (logDayOf(s) > d ? logDayOf(s) : d), '');
+      const topRows = (h ? `<tr class="fr-monthlog-dh"><td colspan="99">${window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png')}</td></tr>` : '')
+        + `<tr><th colspan="99" class="fr-monthlog-title">${esc(heading)}<small>Monthly log · ${list.length} ${list.length === 1 ? 'submission' : 'submissions'} · ${esc(longDayLabel(ym + '-01'))} to ${esc(longDayLabel(ym === today.slice(0, 7) ? today : lastDay))}</small></th></tr>`;
+      sheetEl.innerHTML = dayLogTableHtml(list, { showDate: true, topRows });
+      const pageStyle = document.createElement('style');
+      pageStyle.textContent = '@media print{ @page{ size:A4 landscape; margin:10mm; } body.fr-printing #dh-print-header{ display:none !important; } }';
+      document.head.appendChild(pageStyle);
+      document.body.classList.add('fr-printing');
+      try { withPrintTitle(safeKey(config.title) + '_' + ym, () => window.print()); }
+      finally {
+        document.body.classList.remove('fr-printing');
+        pageStyle.remove();
+        sheetEl.innerHTML = '';
+      }
+    }
+
     function printPdf() {
+      if (dailyLog) return printMonthlyLog();
       printSheets(filtered(),
         safeKey(config.title) + '_' + new Date().toISOString().slice(0, 10));
     }
@@ -5033,6 +5141,8 @@ function fallbackDl(canvas,filename){
     function printSubmission(id) {
       const sub = submissions.find(s => s.id === id);
       if (!sub) return;
+      // daily-log records: an entry's PDF is the monthly log of the month it was submitted in
+      if (dailyLog) return printMonthlyLog(logDayOf(sub).slice(0, 7));
       const jobNo = safeKey(String((config.batchField && sub.values && sub.values[config.batchField]) || ''));
       const tsSource = sub.submittedAt || sub.createdAt;
       const submitTs = tsSource
@@ -5084,9 +5194,57 @@ function fallbackDl(canvas,filename){
         return submissions.filter(s => isSubmitted(s) && !s.verification);
       }
 
+      // Daily-log records: the verifier reviews whole calendar days. Today is always shown with
+      // every submission made so far (verified ones included, for context); earlier days appear
+      // while they still hold entries awaiting verification. One sign-off covers every ticked entry.
+      function renderDailyVerifySelect(target) {
+        const today = facilityDayOf(Date.now());
+        const byDay = {};
+        submissions.filter(isSubmitted).forEach(s => { const d = logDayOf(s) || ''; (byDay[d] || (byDay[d] = [])).push(s); });
+        const dayPending = d => (byDay[d] || []).filter(s => !s.verification).length;
+        const days = Object.keys(byDay).filter(d => d === today || dayPending(d) > 0);
+        if (days.indexOf(today) === -1) days.push(today);
+        days.sort().reverse();
+        const totalPending = days.reduce((n, d) => n + dayPending(d), 0);
+        let html = totalPending ? `<div class="fr-history-item"><label style="font-weight:700;">
+            <input type="checkbox" id="fr_verifyAll"> Select all (${totalPending})</label></div>` : '';
+        days.forEach(d => {
+          const list = byDay[d] || [], n = list.length, p = dayPending(d);
+          html += `<div class="fr-daylog-day">
+            <div class="fr-daylog-head">
+              <label>${p ? '<input type="checkbox" class="fr-verify-day">' : ''}${esc(longDayLabel(d))}${d === today ? ' (today)' : ''}</label>
+              <span class="fr-muted">${n} ${n === 1 ? 'submission' : 'submissions'} · ${p ? p + ' awaiting verification' : (n ? 'all verified' : 'nothing submitted yet')}</span>
+            </div>
+            ${n ? `<div class="fr-daylog-table">${dayLogTableHtml(list, { pick: true })}</div>` : ''}
+          </div>`;
+        });
+        target.innerHTML = html;
+        const picks = root => Array.prototype.slice.call(root.querySelectorAll('.fr-verify-pick'));
+        const sync = () => {
+          target.querySelectorAll('.fr-daylog-day').forEach(block => {
+            const box = block.querySelector('.fr-verify-day');
+            if (box) box.checked = picks(block).every(cb => cb.checked);
+          });
+          const all = el('fr_verifyAll');
+          if (all) all.checked = picks(target).length > 0 && picks(target).every(cb => cb.checked);
+        };
+        target.addEventListener('change', ev => {
+          const t = ev.target;
+          if (t.id === 'fr_verifyAll') picks(target).forEach(cb => { cb.checked = t.checked; });
+          else if (t.classList.contains('fr-verify-day')) picks(t.closest('.fr-daylog-day')).forEach(cb => { cb.checked = t.checked; });
+          sync();
+        });
+      }
+
       function renderVerifySelect() {
         const target = el('fr_verifySelect');
         if (!target) return;
+        if (dailyLog) {
+          // fresh node each render so the delegated change listener is not attached twice
+          const fresh = target.cloneNode(false);
+          target.parentNode.replaceChild(fresh, target);
+          return renderDailyVerifySelect(fresh);
+        }
         const pending = pendingForVerification();
         if (!pending.length) {
           target.innerHTML = `<div class="fr-history-item fr-muted">No submitted entries are waiting to be verified.</div>`;
