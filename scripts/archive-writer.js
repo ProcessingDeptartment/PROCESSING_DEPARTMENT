@@ -19,7 +19,19 @@ const TYPE_DIRS = {
 // The machine-readable copies live in their own tree (json/<same path>), apart from the pages staff open.
 const JSON_DIR = 'json';
 
+// The archive location is ONE setting: ARCHIVE_OUT=<folder> in the project's .env file (or the environment, or a
+// script's --archive-out). Every archive script, the cmd files and server.js read it from here, so moving the archive
+// is a one-line change. Only that one line is read from .env.
+function envArchiveOut() {
+  try {
+    const text = fs.readFileSync(path.join(__dirname, '..', '.env'), 'utf8');
+    const m = /^\s*ARCHIVE_OUT\s*=\s*(.*?)\s*$/m.exec(text);
+    return m ? m[1].replace(/^(["'])(.*)\1$/, '$2') : '';
+  } catch { return ''; }
+}
+
 function archiveRoot() {
+  if (!process.env.ARCHIVE_OUT) { const v = envArchiveOut(); if (v) process.env.ARCHIVE_OUT = v; }
   return process.env.ARCHIVE_OUT
     ? path.resolve(process.env.ARCHIVE_OUT)
     : path.resolve(__dirname, '..', '..', 'PROCESSING ARCHIVE');

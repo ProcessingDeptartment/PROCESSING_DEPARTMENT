@@ -9,7 +9,8 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 // Permanent archive beside the repo (MD/10_Archive-System.md). Browsed by public/pages/archive.html.
-const ARCHIVE_DIR = path.resolve(process.env.ARCHIVE_OUT || path.resolve(__dirname, '..', 'PROCESSING ARCHIVE'));
+// Location: ARCHIVE_OUT in .env (same setting the archive scripts use), else "PROCESSING ARCHIVE" beside the repo.
+const ARCHIVE_DIR = require('./scripts/archive-writer').archiveRoot();
 
 // Simple MIME type mapping
 const mimeTypes = {

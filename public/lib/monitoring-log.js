@@ -367,7 +367,22 @@
      * hidden here to avoid showing it twice. */
     body.ml-printing-list #dh-print-header{ display:none !important; }
     #ml-list-print-header-row td{ padding:0; border:none; }
-  }`;
+    .ml-sheet table.ml-table{ font-size:10px; }
+    .ml-sheet table.ml-table thead{ display:table-header-group; }
+    .ml-sheet table.ml-table tr{ page-break-inside:avoid; }
+  }
+  /* daily verification log: one block per calendar day, every submission of the day with its values */
+  .ml-history-list.ml-daylog-list{ max-height:none; }
+  .ml-daylog-day{ border-bottom:1px solid var(--palette-border,#e2e4e3); padding:8px 10px 10px; }
+  .ml-daylog-day:last-child{ border-bottom:none; }
+  .ml-daylog-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; margin-bottom:6px; }
+  .ml-daylog-head label{ display:flex; align-items:center; gap:6px; font-weight:700; }
+  .ml-daylog-table{ overflow-x:auto; margin-bottom:6px; }
+  .ml-daylog-table td.ml-daylog-text{ white-space:pre-wrap; min-width:140px; }
+  /* monthly log PDF */
+  .ml-sheet tr.ml-monthlog-dh td{ padding:0 !important; border:none !important; }
+  .ml-sheet th.ml-monthlog-title{ font-size:13px; text-align:center; text-transform:none; letter-spacing:0; color:#000; background:#fff; padding:6px; }
+  .ml-sheet th.ml-monthlog-title small{ display:block; font-weight:400; font-size:10px; margin-top:2px; }`;
 
 
   function setPageOrientation(orientation) {
@@ -526,6 +541,30 @@
   function facilityDateOf(ms) {
     try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date(ms)); }
     catch (e) { return ''; }
+  }
+  // Daily verification log + monthly PDF (MD/verification-daily-log-and-monthly-pdf.md).
+  // On these records the verifier sees every submission of a calendar day (with its values) before
+  // signing off, the entry list is never cut to "recent" rows, and every PDF is the month's log.
+  // Attach to another record by adding its key here, or with "dailyVerificationLog": true in its config.
+  const DAILY_LOG_KEYS = ['chiller-temperature-monitoring', 'water-monitoring', 'lha-water-monitoring'];
+  function isDailyLog(config) {
+    if (!config || config.dailyVerificationLog === false) return false;
+    return config.dailyVerificationLog === true || DAILY_LOG_KEYS.indexOf(config.recordKey) !== -1;
+  }
+  function facilityTimeOf(ms) {
+    try { return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Johannesburg', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
+    catch (e) { return ''; }
+  }
+  // 'YYYY-MM-DD' -> 'Wed 11 Nov 2026'; 'YYYY-MM' -> 'November 2026'
+  function longDayLabel(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    if (!m) return '(no date)';
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function monthLabel(ym) {
+    const m = /^(\d{4})-(\d{2})/.exec(String(ym || ''));
+    if (!m) return '';
+    return new Date(Date.UTC(+m[1], +m[2] - 1, 1)).toLocaleDateString('en-GB', { timeZone: 'UTC', month: 'long', year: 'numeric' });
   }
   // Calendar-day arithmetic on a YYYY-MM-DD string (no local-time drift); '' when the input is not a date.
   function addDaysISO(iso, days) {
@@ -1494,7 +1533,8 @@
       // recentEntries: show only the latest N logs (the previous readings) unless the person filters
       const recentN = Number(config.recentEntries) || 0;
       const filtering = ['filterFrom', 'filterTo', 'filterSearch'].some(k => el(`${ns}_${k}`) && el(`${ns}_${k}`).value) || (el(`${ns}_filterDevOnly`) && el(`${ns}_filterDevOnly`).checked);
-      if (recentN && !filtering) list = list.slice(0, recentN);
+      // daily-log records always list every submission: no "recent only" cut
+      if (recentN && !filtering && !dailyLog) list = list.slice(0, recentN);
       const table = tableWrap;
       if (!list.length) {
         table.innerHTML = `<div class="ml-empty">No entries yet${entries.length ? ' matching these filters' : ''}.</div>`;
@@ -2786,7 +2826,75 @@
       if (row) row.remove();
     }
 
+    // ── Daily verification log + monthly PDF ──────────────────────────────────────────────
+    const dailyLog = isDailyLog(config);
+    const logWhen = (e) => e.submittedAt || e.createdAt || 0;
+    const logDayOf = (e) => facilityDateOf(logWhen(e));
+
+    // One row per submission with its field values. opts.pick adds a tick box on rows still
+    // awaiting verification; opts.showDate adds the date (monthly log); opts.topRows goes above
+    // the column headings (inside thead, so it repeats on every printed page).
+    function dayLogTableHtml(list, o) {
+      o = o || {};
+      const cols = customBody && Array.isArray(customBody.listColumns)
+        ? customBody.listColumns.map(c => ({ label: c.label, custom: true, get: c.get }))
+        : listFields();
+      const specHead = deviationPolarity === 'accurate' ? 'In spec' : (deviationLabel || 'Deviation');
+      let html = `<table class="ml-table"><thead>${o.topRows || ''}<tr>${o.pick ? '<th></th>' : ''}${o.showDate ? '<th>Date</th>' : ''}<th>Time</th><th>Completed by</th>${cols.map(f => `<th>${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</th>`).join('')}<th>${esc(specHead)}</th><th>Verified</th></tr></thead><tbody>`;
+      list.slice().sort((a, b) => logWhen(a) - logWhen(b)).forEach(entryRow => {
+        const vf = entryRow.verification || null;
+        html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
+        if (o.pick) html += `<td>${vf ? '' : `<input type="checkbox" class="ml-verify-pick" data-which="${esc(o.which || 'primary')}" value="${esc(entryRow.id)}" aria-label="Verify this entry">`}</td>`;
+        if (o.showDate) html += `<td style="white-space:nowrap;">${esc(logDayOf(entryRow))}</td>`;
+        html += `<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(entryRow)))}</td>`;
+        html += `<td>${esc(entryCompletedBy(entryRow) || '—')}</td>`;
+        cols.forEach(f => {
+          let v;
+          if (f.custom) { try { v = f.get(entryRow.values, entryRow); } catch (e) { v = ''; } }
+          else { v = valueFor(entryRow, f); if (isStamp(f)) v = stampText(v); }
+          const bad = !f.custom && isBadValue(f, v);
+          if (v === '' || v == null) v = '—';
+          const cls = f.type === 'number' || f.type === 'computed' ? 'ml-num' : (f.type === 'textarea' ? 'ml-daylog-text' : '');
+          html += `<td class="${cls}">${bad ? `<span class="ml-bad">${esc(v)} &#9888;</span>` : esc(v)}</td>`;
+        });
+        html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
+        html += `<td>${vf ? `✓ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="ml-muted">Awaiting</span>'}</td>`;
+        html += `</tr>`;
+      });
+      return html + `</tbody></table>`;
+    }
+
+    // Every submission of one calendar month (facility time), oldest first. The current month
+    // runs from the 1st to today; ym ('YYYY-MM') picks an earlier month, printed in full.
+    function printMonthlyLog(ym) {
+      const today = facilityToday();
+      if (!/^\d{4}-\d{2}$/.test(ym || '')) ym = today.slice(0, 7);
+      const list = entries.filter(e => isSubmitted(e) && logDayOf(e).slice(0, 7) === ym && logDayOf(e) <= today);
+      const heading = `${config.title || docTitle || title} — ${monthLabel(ym)}`;
+      if (!list.length) {
+        toast(`No submissions in ${monthLabel(ym)} to print.`);
+        if (window.__pdfOnly && window.__pdfFail) window.__pdfFail(`No submissions in ${monthLabel(ym)} to print.`);
+        return;
+      }
+      const sheet = el('ml_printSheet');
+      if (!sheet) return;
+      const h = window.DocHeader ? window.DocHeader.current(recordKey) : null;
+      const lastDay = list.reduce((d, e) => (logDayOf(e) > d ? logDayOf(e) : d), '');
+      const topRows = (h ? `<tr class="ml-monthlog-dh"><td colspan="99">${window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png')}</td></tr>` : '')
+        + `<tr><th colspan="99" class="ml-monthlog-title">${esc(heading)}<small>Monthly log · ${list.length} ${list.length === 1 ? 'submission' : 'submissions'} · ${esc(longDayLabel(ym + '-01'))} to ${esc(longDayLabel(ym === today.slice(0, 7) ? today : lastDay))}</small></th></tr>`;
+      sheet.innerHTML = dayLogTableHtml(list, { showDate: true, topRows });
+      document.body.classList.add('ml-printing-entry');
+      document.body.classList.remove('ml-printing-dc');
+      setPageOrientation('landscape');
+      try { withPrintTitle(safeKey(config.title || docTitle || title) + '_' + ym, () => window.print()); }
+      finally {
+        document.body.classList.remove('ml-printing-entry');
+        sheet.innerHTML = '';
+      }
+    }
+
     function printPdf() {
+      if (dailyLog) return printMonthlyLog();
       setPageOrientation('landscape');
 
       const injected = injectListPrintHeader();
@@ -3147,6 +3255,8 @@
     async function printEntry(id) {
       const entryRow = entries.find(e => e.id === id);
       if (!entryRow) return;
+      // daily-log records: an entry's PDF is the monthly log of the month it was submitted in
+      if (dailyLog) return printMonthlyLog(logDayOf(entryRow).slice(0, 7));
       const dateF = roleField('date');
 
       // Build sheet HTML in the hidden print sheet (existing logic)
@@ -3372,6 +3482,7 @@ function fallbackDl(canvas,filename){
         return true;
       },
 
+      dailyLog, dayLogTableHtml, logDayOf,
       verifiableCount: () => submitFlow ? entries.filter(e => isSubmitted(e) && !e.verification).length : entries.length,
       // Deep-link support: open entry <id> in this log if it lives here.
       openIfPresent: (id) => {
@@ -3542,7 +3653,7 @@ function fallbackDl(canvas,filename){
       const entriesPanel = `
       <div class="ml-panel no-print jp-gate-exempt">
         <div class="ml-panel-head">
-          <h2>${config.recentEntries ? 'Previous ' + Number(config.recentEntries) + ' logs' : esc(blockTitle)}</h2>
+          <h2>${config.recentEntries && !isDailyLog(config) ? 'Previous ' + Number(config.recentEntries) + ' logs' : esc(blockTitle)}</h2>
           <span>
             <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="${ns}_entriesBody" data-label="entries">${config.recentEntries ? 'Hide' : 'View'} entries</button>
             ${inline ? '' : `<button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>`}
@@ -3592,8 +3703,8 @@ function fallbackDl(canvas,filename){
           <div class="ml-notice ml-notice-due" id="ml_verifyGate" style="display:none;"></div>
           <div class="ml-notice ml-notice-due" id="ml_verifyNotice"></div>
           ${submitFlow ? `
-          <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verifySelect" data-label="entries to verify">View entries to verify</button>
-          <div class="ml-history-list ml-collapsible" id="ml_verifySelect" style="margin-bottom:10px;"></div>` : ''}
+          <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="ml_verifySelect" data-label="entries to verify">${isDailyLog(config) ? 'Hide' : 'View'} entries to verify</button>
+          <div class="ml-history-list ml-collapsible${isDailyLog(config) ? ' ml-open ml-daylog-list' : ''}" id="ml_verifySelect" style="margin-bottom:10px;"></div>` : ''}
           ${window.SignOffBlock.verifyFieldsHtml({ idPrefix: 'ml_verified', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}
           <div class="ml-actions" style="justify-content:flex-start; margin-top:0;">
             <button class="ml-btn ml-btn-primary ml-btn-sm" id="ml_saveVerificationBtn">Log verification</button>
@@ -3957,9 +4068,66 @@ function fallbackDl(canvas,filename){
         return tag(primary, 'primary').concat(secondary ? tag(secondary, 'secondary') : []);
       }
 
+      // Daily-log records: the verifier reviews whole calendar days. Today is always shown with
+      // every submission made so far (verified ones included, for context); earlier days appear
+      // while they still hold entries awaiting verification. One sign-off covers every ticked entry.
+      function renderDailyVerifySelect(target) {
+        const today = facilityToday();
+        const ctrls = [{ which: 'primary', ctrl: primary }].concat(secondary ? [{ which: 'secondary', ctrl: secondary }] : []);
+        const byDay = {};
+        ctrls.forEach(c => c.ctrl.submittedEntries().forEach(e => {
+          const d = c.ctrl.logDayOf(e) || '';
+          const day = byDay[d] || (byDay[d] = {});
+          (day[c.which] || (day[c.which] = [])).push(e);
+        }));
+        const dayAll = d => ctrls.reduce((a, c) => a.concat((byDay[d] && byDay[d][c.which]) || []), []);
+        const dayPending = d => dayAll(d).filter(e => !e.verification).length;
+        const days = Object.keys(byDay).filter(d => d === today || dayPending(d) > 0);
+        if (days.indexOf(today) === -1) days.push(today);
+        days.sort().reverse();
+        const totalPending = days.reduce((n, d) => n + dayPending(d), 0);
+        let html = totalPending ? `<div class="ml-history-item"><label style="font-weight:700;">
+            <input type="checkbox" id="ml_verifyAll"> Select all (${totalPending})</label></div>` : '';
+        days.forEach(d => {
+          const n = dayAll(d).length, p = dayPending(d);
+          html += `<div class="ml-daylog-day">
+            <div class="ml-daylog-head">
+              <label>${p ? '<input type="checkbox" class="ml-verify-day">' : ''}${esc(longDayLabel(d))}${d === today ? ' (today)' : ''}</label>
+              <span class="ml-muted">${n} ${n === 1 ? 'submission' : 'submissions'} · ${p ? p + ' awaiting verification' : (n ? 'all verified' : 'nothing submitted yet')}</span>
+            </div>`;
+          ctrls.forEach(c => {
+            const list = (byDay[d] && byDay[d][c.which]) || [];
+            if (list.length) html += `<div class="ml-daylog-table">${c.ctrl.dayLogTableHtml(list, { pick: true, which: c.which })}</div>`;
+          });
+          html += `</div>`;
+        });
+        target.innerHTML = html;
+        const picks = root => Array.prototype.slice.call(root.querySelectorAll('.ml-verify-pick'));
+        const sync = () => {
+          target.querySelectorAll('.ml-daylog-day').forEach(block => {
+            const box = block.querySelector('.ml-verify-day');
+            if (box) box.checked = picks(block).every(cb => cb.checked);
+          });
+          const all = el('ml_verifyAll');
+          if (all) all.checked = picks(target).length > 0 && picks(target).every(cb => cb.checked);
+        };
+        target.addEventListener('change', ev => {
+          const t = ev.target;
+          if (t.id === 'ml_verifyAll') picks(target).forEach(cb => { cb.checked = t.checked; });
+          else if (t.classList.contains('ml-verify-day')) picks(t.closest('.ml-daylog-day')).forEach(cb => { cb.checked = t.checked; });
+          sync();
+        });
+      }
+
       function renderVerifySelect() {
         const target = el('ml_verifySelect');
         if (!target) return;
+        if (primary.dailyLog) {
+          // fresh node each render so the delegated change listener is not attached twice
+          const fresh = target.cloneNode(false);
+          target.parentNode.replaceChild(fresh, target);
+          return renderDailyVerifySelect(fresh);
+        }
         const pending = pendingForVerification();
         if (!pending.length) {
           target.innerHTML = `<div class="ml-history-item ml-muted">No submitted entries are waiting to be verified.</div>`;

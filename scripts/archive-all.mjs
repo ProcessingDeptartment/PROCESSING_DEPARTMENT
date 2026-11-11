@@ -11,7 +11,8 @@
 // A failed step does not stop the ones after it; the summary at the end says what failed, and the exit code is 1.
 // Nothing here is wired into the existing scheduled database archive -- run this (or scripts\archive-all.cmd) yourself.
 //
-//   node scripts/archive-all.mjs [--skip-db] [--skip-pdfs]
+//   node scripts/archive-all.mjs [--skip-db] [--skip-pdfs] [--csv-all]
+//   --csv-all: the database step writes a CSV for every table this run (changed or not, empty ones included).
 
 import path from 'path';
 import { spawnSync } from 'child_process';
@@ -21,7 +22,7 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 
 const steps = [
-  { name: 'Database change archive', script: 'scripts/archive-changes.js', skip: args.includes('--skip-db') },
+  { name: 'Database change archive', script: 'scripts/archive-changes.js', skip: args.includes('--skip-db'), args: args.includes('--csv-all') ? ['--csv-all'] : [] },
   { name: 'Superseded record templates', script: 'scripts/archive-record-defs.mjs' },
   { name: 'Documents and current record templates', script: 'scripts/archive-documents.mjs' },
   { name: 'Submitted records and CSV files', script: 'scripts/archive-completed-records.mjs' },
@@ -34,7 +35,7 @@ for (const [i, step] of steps.entries()) {
   if (step.skip) { results.push({ ...step, status: 'skipped' }); continue; }
   console.log(`\n=== ${i + 1}/${steps.length}  ${step.name}  (${step.script}) ===`);
   const t = Date.now();
-  const r = spawnSync(process.execPath, [step.script], { cwd: ROOT, stdio: 'inherit' });
+  const r = spawnSync(process.execPath, [step.script, ...(step.args || [])], { cwd: ROOT, stdio: 'inherit' });
   const ok = r.status === 0;
   results.push({ ...step, status: ok ? 'ok' : 'FAILED' + (r.error ? ' (' + r.error.message + ')' : ' (exit ' + r.status + ')'), secs: Math.round((Date.now() - t) / 1000) });
 }

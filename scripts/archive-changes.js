@@ -28,7 +28,7 @@
  *
  * submission_images.image_data (photos) is excluded -- see EXCLUDE_COLUMNS.
  *
- * Usage:  node scripts/archive-changes.js [--out "<folder>"] [--no-csv]
+ * Usage:  node scripts/archive-changes.js [--out "<folder>"] [--no-csv] [--csv-all]
  */
 const fs = require('fs');
 const path = require('path');
@@ -121,6 +121,13 @@ async function main() {
   const month = at.slice(0, 7);
   const stamp = at.replace(/\.\d+Z$/, '').replace(/:/g, '-');
   const doCsv = !process.argv.includes('--no-csv');
+  // --csv-all: write a readable CSV for EVERY table this run, changed or not, empty ones included (header row only).
+  // Used to start a fresh, complete set of exports (e.g. after moving the export folder).
+  const csvAll = doCsv && process.argv.includes('--csv-all');
+  const colsOf = {};
+  if (csvAll) for (const r of await prisma.$queryRawUnsafe(
+    `SELECT table_name AS t, column_name AS c FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position`)) (colsOf[r.t] ||= []).push(r.c);
+  let csvCount = 0;
   let totalNew = 0, totalChanged = 0, totalDeleted = 0;
   const touched = [], bad = [];
 
@@ -148,11 +155,12 @@ async function main() {
       fs.appendFileSync(path.join(tdir, `${safeName(t)}_${month}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n', 'utf8');
       touched.push(`${t} (+${n} new, ~${c} changed, -${d} removed)`);
       totalNew += n; totalChanged += c; totalDeleted += d;
-      if (doCsv && rows.length) {
-        const edir = path.join(exportDir(), safeName(t));
-        fs.mkdirSync(edir, { recursive: true });
-        fs.writeFileSync(path.join(edir, `${safeName(t)}_${stamp}.csv`), csv(rows), 'utf8');
-      }
+    }
+    if (doCsv && (csvAll || (lines.length && rows.length))) {
+      const edir = path.join(exportDir(), safeName(t));
+      fs.mkdirSync(edir, { recursive: true });
+      fs.writeFileSync(path.join(edir, `${safeName(t)}_${stamp}.csv`), rows.length ? csv(rows) : (colsOf[t] || []).join(',') + '\r\n', 'utf8');
+      csvCount++;
     }
     // Verify: replay what is now on disk and compare against what was read.
     const after = replay(dir, t);
@@ -184,6 +192,7 @@ Readable copies: ..\\DB EXPORTS\\<table>\\*.csv (a new file only when that table
   if (touched.length > 15) console.log(`        ...and ${touched.length - 15} more`);
   if (bad.length) console.log(`      MISMATCH after re-read: ${bad.join(', ')}`);
   console.log(`      -> ${dir}`);
+  if (doCsv) console.log(`      CSV files written: ${csvCount}${csvAll ? ' (every table)' : ''} -> ${exportDir()}`);
 
   await prisma.$disconnect();
   if (bad.length) process.exit(1);
