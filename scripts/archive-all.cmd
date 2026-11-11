@@ -1,9 +1,12 @@
 @echo off
-rem Runs the whole archive in one go: database change archive, record templates, documents,
-rem all submitted records + CSV files, and the PDFs. Only new or changed items are written.
-rem Double-click to run. The last run's output is also kept in scripts\archive-all.log.
+rem Full archive: database, templates, documents, records + CSV, PDFs. Only new or changed items are written.
+rem Double-click to run. Progress shows in this window; the last run is also kept in scripts\archive-all.log.
+title archive-all
 cd /d "%~dp0.."
-node scripts\archive-all.mjs %* > scripts\archive-all.log 2>&1
-type scripts\archive-all.log
+echo Full archive: database, templates, documents, records + CSV, PDFs. Only new or changed items are written.
+echo Started %date% %time%
+echo.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "node scripts\archive-all.mjs %* 2>&1 | ForEach-Object { "$_" } | Tee-Object -FilePath scripts\archive-all.log; exit $LASTEXITCODE"
+if errorlevel 1 (echo. & echo *** FINISHED WITH PROBLEMS - see the lines marked FAILED above ***) else (echo. & echo Finished OK.)
 echo.
 pause

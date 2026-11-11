@@ -15,7 +15,7 @@ const { PrismaClient } = require('@prisma/client');
 const dateFieldMap = require('./date-field-map');
 const recordKeyMap = require('./record-key-map');
 const { assembleRecordConfig } = require('./record-def');
-const { validateWrite, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
+const { validateWrite, requiredWhenRefusal, ENFORCE: VALIDATE_ENFORCE } = require('./validate-submission');
 const { recordEntryHistory, mount: mountEntryHistory } = require('./submission-history');
 const { entriesInOrder } = require('./submission-read');
 // TABLES_AUTHORITATIVE=1: the sub_* tables are updated INSIDE the save's transaction (so they can never lag the list)
@@ -225,6 +225,21 @@ async function handlePut(req, res) {
       }
     } catch (e) {
       console.error('validateWrite threw (write allowed)', e);
+    }
+
+    // requiredWhen fields (e.g. REC 7.4.2: a comment is required when "> 5%" is recorded). The form blocks this
+    // too; a 400 is a refusal the browser shows and does not retry.
+    try {
+      const why = await requiredWhenRefusal(prisma, req.params.key, value, async () => {
+        const prevRow = await prisma.keyValue.findUnique({ where: { key: req.params.key } });
+        return storedValue(prisma, req.params.key, prevRow);
+      });
+      if (why) {
+        console.warn('PUT', req.params.key, 'REFUSED — required field missing:', why);
+        return res.status(400).json({ ok: false, guard: true, error: why });
+      }
+    } catch (e) {
+      console.error('requiredWhenRefusal threw (write allowed)', e);
     }
 
     const isDryKey = req.params.key === dryGuard.KEY;

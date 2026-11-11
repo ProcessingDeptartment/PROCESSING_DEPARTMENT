@@ -106,6 +106,59 @@ function checkValueSet(fields, values, rowLabel, violations) {
 // prisma: PrismaClient (for the definition lookup). key/value: the write being attempted.
 // Returns { ok, status, violations } -- status 200 (allow) or 422 (block, only when ENFORCE).
 const defCache = new Map();
+// the record definition is ~5 queries to assemble and changes only when an admin edits it: reuse it for 60 s
+async function definitionFor(prisma, recordKey) {
+  const hit = defCache.get(recordKey);
+  if (hit && Date.now() - hit.at < 60000) return hit.assembled;
+  const assembled = await assembleRecordConfig(prisma, recordKey);
+  defCache.set(recordKey, { at: Date.now(), assembled });
+  return assembled;
+}
+
+// requiredWhen { field, equals } (+ requiredMessage): a field that must be filled while another answer holds,
+// e.g. REC 7.4.2's comment when "> 5%" is picked. Unlike the report-only checks above this one is a HARD rule:
+// the form blocks it too, so a submitted entry that breaks it only arrives when the form's check was bypassed.
+// Only entries whose answers for the rule are new or changed in this write are checked, so an older submitted
+// entry (saved before the rule existed) can never block later saves of the same record.
+// loadPrev: async () => the stored list (JSON string) or null. Returns the message to refuse with, or null.
+function condHolds(w, values) {
+  const have = String(values && values[w.field] != null ? values[w.field] : '').trim();
+  return Array.isArray(w.equals) ? w.equals.includes(have) : have === w.equals;
+}
+async function requiredWhenRefusal(prisma, key, value, loadPrev) {
+  const prefix = prefixOf(key);
+  if (!prefix) return null;
+  let entries;
+  try { entries = JSON.parse(value); } catch { return null; }
+  if (!Array.isArray(entries)) return null;
+
+  const assembled = await definitionFor(prisma, key.slice(prefix.length));
+  if (!assembled) return null;
+  const rules = flattenFields(assembled.config).filter((f) => f && f.key && f.requiredWhen && f.requiredWhen.field);
+  if (!rules.length) return null;
+
+  const prev = new Map();
+  try {
+    const stored = JSON.parse((await loadPrev()) || '[]');
+    if (Array.isArray(stored)) stored.forEach((e) => { if (e && e.id) prev.set(e.id, e); });
+  } catch (_) { /* no readable previous list: every submitted entry counts as new */ }
+
+  const same = (a, b) => String(a == null ? '' : a) === String(b == null ? '' : b);
+  for (const entry of entries) {
+    if (!isSubmitted(entry)) continue;
+    const v = entry.values || entry;
+    const was = prev.get(entry.id);
+    const pv = was && isSubmitted(was) ? (was.values || was) : null;
+    for (const f of rules) {
+      const w = f.requiredWhen;
+      if (pv && same(pv[f.key], v[f.key]) && same(pv[w.field], v[w.field])) continue;   // already stored like this
+      if (f.showWhen && f.showWhen.field && !condHolds(f.showWhen, v)) continue;        // the field is not on the form
+      if (condHolds(w, v) && isBlank(v[f.key])) return f.requiredMessage || `"${f.label || f.key}" is required.`;
+    }
+  }
+  return null;
+}
+
 async function validateWrite(prisma, key, value) {
   const prefix = prefixOf(key);
   if (!prefix) return { ok: true, status: 200, violations: [] };
@@ -116,12 +169,7 @@ async function validateWrite(prisma, key, value) {
 
   const recordKey = key.slice(prefix.length);
   let assembled;
-  try {
-    // the record definition is ~5 queries to assemble and changes only when an admin edits it: reuse it for 60 s
-    const hit = defCache.get(recordKey);
-    if (hit && Date.now() - hit.at < 60000) assembled = hit.assembled;
-    else { assembled = await assembleRecordConfig(prisma, recordKey); defCache.set(recordKey, { at: Date.now(), assembled }); }
-  }
+  try { assembled = await definitionFor(prisma, recordKey); }
   catch (e) { console.error('validateWrite: definition lookup failed for', recordKey, e); return { ok: true, status: 200, violations: [] }; }
   if (!assembled) return { ok: true, status: 200, violations: [] }; // no definition -> nothing to check against
 
@@ -145,4 +193,4 @@ async function validateWrite(prisma, key, value) {
   return { ok: true, status: 200, violations };
 }
 
-module.exports = { validateWrite, ENFORCE };
+module.exports = { validateWrite, requiredWhenRefusal, ENFORCE };

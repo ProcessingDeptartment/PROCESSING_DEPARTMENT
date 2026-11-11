@@ -252,10 +252,11 @@
       var wrap = document.createElement('div');
       wrap.className = 'nc-yesno-wrap'; wrap.setAttribute('data-for', field.key);
       wrap.innerHTML = '<div class="nc-yesno-alert">⚠ A minor NC will be raised for this check on Submit.</div>'
-        + '<div class="nc-yesno-note">'
+        // noNote: the record gives this check its own comment field, so the banner is the alert line only
+        + (field.noNote ? '' : '<div class="nc-yesno-note">'
         + '<label for="' + esc(taId) + '">Add a note (optional — max ' + maxLen + ' chars):</label>'
         + '<textarea id="' + esc(taId) + '" maxlength="' + maxLen + '" placeholder="Describe what was observed…" rows="2"></textarea>'
-        + '</div>';
+        + '</div>');
       yesnoSpan.insertAdjacentElement('afterend', wrap);
     }
 

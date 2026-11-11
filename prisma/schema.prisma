@@ -2425,6 +2425,10 @@ model Sub_dry_monitoring {
   footDamageComment          String?
   muscleDamageComment        String?
   gutsComment                String?
+  // REC 7.4.2 product condition: "< 5%" / "> 5%" sub-question (2026-11-11), stored as 'lt5' | 'gt5'
+  footDamagePct              String?
+  muscleDamagePct            String?
+  presenceOfGutsPct          String?
 
   @@index([jobNo], map: "sub_dry_monitoring_jobNo_idx")
   @@map("sub_dry_monitoring")

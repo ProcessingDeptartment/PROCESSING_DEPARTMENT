@@ -114,6 +114,9 @@
   .ml-tick input[type=checkbox]{ width:26px !important; height:26px !important; min-width:26px; padding:0 !important; margin:0; flex:none; }
   .ml-tick > span{ flex:1; min-width:0; white-space:normal; text-transform:none; letter-spacing:0; font-weight:600; }
   .ml-yesno button:disabled{ opacity:.55; cursor:not-allowed; }
+  /* radio: a neutral option toggle (e.g. "< 5%" / "> 5%" under a Yes answer). Selected = dark outline, never red/green. */
+  .ml-radio button.on{ background:#eef2f6; border-color:#54606b !important; color:#1d2125; font-weight:700; }
+  .ml-reqerr{ display:block; margin-top:4px; font-size:12px; font-weight:600; color:var(--palette-fail,#a3352d); }
   /* Scored signs (REC 7.4.2): numeric buttons only; 0 neutral/green, 1 amber, 2-3 red. Colour is never the only signal (bold + mark). */
   .ml-score{ display:flex; gap:8px; flex-wrap:wrap; }
   .ml-score button{ min-width:84px; flex:1 1 84px; max-width:150px; padding:7px 10px; font-size:14px; font-weight:700; min-height:36px; border:1px solid #c9cdd1 !important; background:#fff; color:#54606b; }
@@ -424,6 +427,13 @@
         <input type="hidden" id="${id}" value="${esc(v)}">
       </span>`;
     }
+    // radio: a small set of options as toggle buttons. options = stored values, optionLabels = what the buttons say.
+    if (field.type === 'radio') {
+      const labels = field.optionLabels || {};
+      return `<span class="ml-yesno ml-radio" data-radio-for="${id}" role="radiogroup" aria-label="${esc(field.label)}">` +
+        (field.options || []).map(o => `<button type="button" role="radio" data-v="${esc(o)}">${esc(labels[o] || o)}</button>`).join('') +
+        `<input type="hidden" id="${id}" value="${esc(v)}"></span>`;
+    }
     // scored-select (REC 7.4.2 QC signs): a row of numeric buttons, nothing else; the labels live in the (i) guide
     if (field.type === 'scored-select') {
       const os = field.scoreOptions || [];
@@ -446,7 +456,7 @@
 
     const ro = field.readOnly ? ' readonly' : '';
     if (field.type === 'textarea') {
-      return `<textarea id="${id}" rows="2"${ro}>${esc(v)}</textarea>`;
+      return `<textarea id="${id}" rows="2"${field.maxLength ? ` maxlength="${Number(field.maxLength)}"` : ''}${ro}>${esc(v)}</textarea>`;
     }
     if (field.type === 'number') {
       return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
@@ -1666,16 +1676,20 @@
     }
 
 
-    function conditionMet(f) {
-      if (!f.showWhen) return true;
+    // A { field, equals } condition against the open form (showWhen and requiredWhen share it).
+    function condHolds(w, f) {
+      if (!w) return true;
       // "(old)" fields of removed inputs: shown only when the entry actually holds an old value
-      if (f.showWhen.nonEmpty) { const own = el(`${ns}_f_${f.key}`); return !!(own && String(own.value || '').trim()); }
-      const src = el(`${ns}_f_${f.showWhen.field}`);
+      if (w.nonEmpty) { const own = el(`${ns}_f_${f.key}`); return !!(own && String(own.value || '').trim()); }
+      const src = el(`${ns}_f_${w.field}`);
       if (!src) return false;
-      const want = f.showWhen.equals;
+      const want = w.equals;
       const have = String(src.value == null ? '' : src.value).trim();
       return Array.isArray(want) ? want.indexOf(have) !== -1 : have === want;
     }
+    function conditionMet(f) { return condHolds(f.showWhen, f); }
+    // Fields run in definition order, so a hidden parent clears first and its own sub-fields then hide and clear too
+    // (Yes -> percentage -> comment collapses in one pass when the answer goes back to No).
     function applyConditionalFields(container) {
       entryFields.forEach((f) => {
         if (!f.showWhen) return;
@@ -1685,9 +1699,30 @@
         wrap.style.display = show ? '' : 'none';
         if (!show) {
           const inp = el(`${ns}_f_${f.key}`);
-          if (inp && inp.value) inp.value = '';
+          if (inp && inp.value) {
+            inp.value = '';
+            const grp = inp.closest('.ml-yesno');
+            if (grp) grp.querySelectorAll('button').forEach((b) => {
+              const on = b.dataset.v === '';
+              b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false');
+            });
+          }
+          setReqError(f.key, '');
         }
       });
+    }
+    // Inline "this is required" line under a field (requiredWhen); cleared as soon as the field gets a value or hides.
+    function setReqError(key, text) {
+      const inp = el(`${ns}_f_${key}`);
+      const wrap = inp ? inp.closest('label.ml-field') : null;
+      if (!wrap) return;
+      let n = wrap.querySelector('.ml-reqerr');
+      if (!text) { if (n) n.remove(); return; }
+      if (!n) {
+        n = document.createElement('span'); n.className = 'ml-reqerr'; n.setAttribute('role', 'alert'); wrap.appendChild(n);
+        inp.addEventListener('input', () => { if (String(inp.value || '').trim()) setReqError(key, ''); });
+      }
+      n.textContent = text;
     }
 
     // A small line under a field's input: grey for "From REC 7.4.0", amber when the source record is missing.
@@ -2296,7 +2331,7 @@
       } else {
 
       const raw = {};
-      let missingRequired = null, missingKey = null;
+      let missingRequired = null, missingKey = null, missingMessage = null;
       let badPattern = null, badPatternKey = null;
       let routeConflict = null, routeConflictKey = null;
 
@@ -2316,6 +2351,10 @@
 
         if (isStamp(f)) return;
         if (f.required && !missingRequired && !String(raw[f.key] || '').trim()) { missingRequired = f.label; missingKey = f.key; }
+        // requiredWhen { field, equals }: required only while another answer holds (e.g. a comment when "> 5%" is picked)
+        if (f.requiredWhen && !missingRequired && condHolds(f.requiredWhen, f) && !String(raw[f.key] || '').trim()) {
+          missingRequired = f.label; missingKey = f.key; missingMessage = f.requiredMessage || null;
+        }
 
         if (f.pattern && !badPattern && String(raw[f.key] || '').trim()
             && !new RegExp(f.pattern).test(String(raw[f.key]).trim())) {
@@ -2333,7 +2372,11 @@
         }
       });
 
-      if (missingRequired && (finalize || !submitFlow)) { revealField(el(`${ns}_f_${missingKey}`)); toast(`"${missingRequired}" is required.`); return; }
+      if (missingRequired && (finalize || !submitFlow)) {
+        revealField(el(`${ns}_f_${missingKey}`));
+        if (missingMessage) setReqError(missingKey, missingMessage);
+        toast(missingMessage || `"${missingRequired}" is required.`); return;
+      }
 
       if (badPattern) { revealField(el(`${ns}_f_${badPatternKey}`)); toast(badPattern); return; }
 
@@ -2475,26 +2518,29 @@
             const ncKey = 'ncOnYes:' + groupKey;
             if (ncHandled.has(ncKey)) continue;
 
-            // Build description listing the specific issues found in this group.
+            // Build description listing the specific issues found in this group. A field with a percentage
+            // sub-question (pctKey) carries the answer in brackets: "Foot damage (> 5%) observed — Job …".
+            const issueName = (f) => {
+              const pf = f.pctKey ? entryFields.find(x => x.key === f.pctKey) : null;
+              const pv = pf ? String(values[f.pctKey] || '') : '';
+              return f.label.replace(/\?$/, '').trim() + (pv ? ` (${(pf.optionLabels || {})[pv] || pv})` : '');
+            };
             let description;
             if (fields.length === 1) {
-              const singleDescs = {
-                footDamage:    `Foot damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
-                muscleDamage:  `Muscle damage observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
-                presenceOfGuts:`Presence of guts observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`,
-              };
-              description = singleDescs[fields[0].key] || `${fields[0].label} — Yes during dry room check. Job ${jobNo}, Entry date ${entryDateVal}`;
+              const name = issueName(fields[0]);
+              description = `${name}${/^presence/i.test(name) ? '' : ' observed'} — Job ${jobNo}, ${entryDateVal}`;
             } else {
-              const issueList = fields.map(f => f.label.replace(/\?$/, '').trim().toLowerCase());
+              const issueList = fields.map((f, i) => { const n = issueName(f); return i ? n.charAt(0).toLowerCase() + n.slice(1) : n; });
               const last = issueList.pop();
               const readable = issueList.length ? issueList.join(', ') + ' and ' + last : last;
-              description = `Product condition: ${readable} observed during dry room check — Job ${jobNo}, Entry date ${entryDateVal}`;
+              description = `Product condition: ${readable} observed — Job ${jobNo}, ${entryDateVal}`;
             }
 
-            // Collect any per-field notes from the Yes/No banners.
+            // Collect the per-field notes: the field's own comment box (commentKey), else the Yes/No banner note.
             const noteLines = fields.map(f => {
-              const n = window.NcRaise.yesNoBannerNote ? window.NcRaise.yesNoBannerNote(el(`${ns}_modalFields`), k => `${ns}_f_${k}`, f.key) : '';
-              return n ? `${f.label}: ${n}` : '';
+              const own = f.commentKey ? String(values[f.commentKey] || '').trim() : '';
+              const n = own || (window.NcRaise.yesNoBannerNote ? window.NcRaise.yesNoBannerNote(el(`${ns}_modalFields`), k => `${ns}_f_${k}`, f.key) : '');
+              return n ? `${f.label.replace(/\?$/, '').trim()}: ${n}` : '';
             }).filter(Boolean);
 
             try {
@@ -3035,17 +3081,19 @@
         let shown = (raw === '' || raw == null) ? '' : (isStamp(f) ? stampText(raw) : String(raw));
         if (shown && f.type === 'date' && !isStamp(f)) shown = fmtD(shown);
         if (shown && isScored(f)) shown = optionLabel(f, shown);
+        if (shown && f.optionLabels && f.optionLabels[shown]) shown = f.optionLabels[shown];
         return isBadValue(f, String(raw == null ? '' : raw)) ? `<span class="ml-bad">${esc(shown)} &#9888;</span>` : esc(shown);
       };
       const groups = [];
       sheetRowFields().forEach(f => {
-        if (f.legacy) { const raw = valueFor(entryRow, f); if (raw === '' || raw == null) return; }
+        // printIndent: a sub-answer (percentage, comment) prints indented under its question, and only when it holds a value
+        if (f.legacy || f.printIndent) { const raw = valueFor(entryRow, f); if (raw === '' || raw == null) return; }
         let g = groups.find(x => x.name === (f.group || ''));
         if (!g) { g = { name: f.group || '', fields: [] }; groups.push(g); }
         g.fields.push(f);
       });
       const wideF = (f) => f.type === 'textarea' || f.wide || f.legacy;
-      const label = (f) => esc(f.label) + (f.unit ? ` (${esc(f.unit)})` : '') + (f.legacy && !/\(old\)/i.test(f.label) ? ' (old)' : '');
+      const label = (f) => (f.printIndent ? '&nbsp;&nbsp;&nbsp;&#8627; ' : '') + esc(f.label) + (f.unit ? ` (${esc(f.unit)})` : '') + (f.legacy && !/\(old\)/i.test(f.label) ? ' (old)' : '');
       const pair = (f) => `<td class="dc-l${f.legacy ? ' dc-old' : ''}" data-sheet-field="${esc(f.key)}">${label(f)}</td>`
         + `<td class="dc-v${f.legacy ? ' dc-old' : ''}"${wideF(f) ? ' colspan="3"' : ''}>${cellText(f)}</td>`;
       const cols = '<colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup>';
@@ -3702,7 +3750,7 @@ function fallbackDl(canvas,filename){
       if (el(`${ns}_ncBtn`)) el(`${ns}_ncBtn`).addEventListener('click', () => ctrl.raiseNc());
       if (window.NcRaise && ns === 'ml_p' && config.ncThresholds) window.NcRaise.wireInline(el(`${ns}_modalFields`), window.SpecGate ? window.SpecGate.liveThresholds(config) : config.ncThresholds, f => `${ns}_f_${f}`);
       if (window.NcRaise && window.NcRaise.wireYesNoBanners) {
-        const ncOnYesFields = (config.entryFields || []).filter(f => f.ncOnYes).map(f => ({ key: f.key, commentKey: f.commentKey, commentMaxLength: f.commentMaxLength }));
+        const ncOnYesFields = (config.entryFields || []).filter(f => f.ncOnYes).map(f => ({ key: f.key, commentKey: f.commentKey, commentMaxLength: f.commentMaxLength, noNote: !!f.pctKey }));   // pctKey: the field has its own comment box
         if (ncOnYesFields.length) window.NcRaise.wireYesNoBanners(el(`${ns}_modalFields`), ncOnYesFields, f => `${ns}_f_${f}`);
       }
       if (window.SpecGate) window.SpecGate.wire(el(`${ns}_modalFields`), window.SpecGate.collectSpecs(config));
