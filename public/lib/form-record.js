@@ -335,7 +335,7 @@
   @media (max-width:699px){ .fr-qe-list .fr-roster-row, .rt-content .fr-qe-list .fr-roster-row{ grid-template-columns:repeat(2,minmax(0,1fr)) auto; } }
   /* "Delete this row?" bubble anchored to the Delete button */
   .fr-del-bubble{ position:fixed; z-index:600; background:#fff; border:1px solid var(--rt-border,#d5d9dc); border-radius:10px;
-    box-shadow:0 8px 28px rgba(20,25,30,.28); padding:12px 14px; max-width:min(300px,92vw); font-size:14px; color:var(--palette-ink,#1b2330); }
+    box-shadow:0 8px 28px rgba(20,25,30,.28); padding:12px 14px; max-width:min(300px,92vw); font-family:var(--rt-font,system-ui,-apple-system,'Segoe UI',sans-serif); font-size:14px; color:var(--palette-ink,#1b2330); }
   .fr-del-bubble-msg{ font-weight:600; margin-bottom:10px; }
   .fr-del-bubble-detail{ font-weight:400; font-size:12.5px; margin-top:3px; color:#555; word-break:break-word; }
   .fr-del-bubble-actions{ display:flex; gap:8px; justify-content:flex-end; }
