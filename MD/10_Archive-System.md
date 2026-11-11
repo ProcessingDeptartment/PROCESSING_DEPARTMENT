@@ -95,6 +95,17 @@ Month subfolder (`YYYY-MM`) keeps completed-records directories manageable.
 
 ---
 
+### Location (moved 2026-11-11)
+
+The archive is no longer beside the repo. Both folders are set in the project's `.env` file:
+
+```
+ARCHIVE_OUT=T:\Abagold Processing Facility\Neon Database Export\PROCESSING ARCHIVE   (pages, PDFs, JSON, record CSVs)
+EXPORT_DIR=T:\Abagold Processing Facility\Neon Database Export\DB EXPORTS            (one CSV folder per database table)
+```
+
+Every archive script, the cmd files and `server.js` read `ARCHIVE_OUT` from there, so moving the archive again is a one-line change. `DB ARCHIVE` (the permanent change log) stays at `20. Paperless\DB ARCHIVE`. To write a CSV for every table in one run (changed or not, empty ones included): `node scripts/archive-all.mjs --csv-all`.
+
 ### As built (2026-11-10) — differences from the plan above
 
 - **JSON is stored separately.** Pages staff open stay at `<type>\<key>\...\<label>.html`; the machine-readable copy is at `json\<type>\<key>\...\<label>.json` (same path under a `json\` folder).
