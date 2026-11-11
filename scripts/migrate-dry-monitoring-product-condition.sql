@@ -41,16 +41,35 @@ WITH b AS (
 UPDATE "RecordFieldDef" f SET "position" = r.np FROM r WHERE f."id" = r."id";
 
 -- 4. The nine rows, placed straight after "Batch status" and before "Trolleys clearly marked"
-WITH b AS (
-  SELECT "position" AS p FROM "RecordFieldDef"
-   WHERE "recordKey" = 'dry-monitoring' AND "key" = 'batchStatus' AND "parentFieldKey" IS NULL
-), r AS (
-  SELECT f."id", b.p + 9 + ROW_NUMBER() OVER (ORDER BY f."position") AS np
-    FROM "RecordFieldDef" f, b
-   WHERE f."recordKey" = 'dry-monitoring' AND f."parentFieldKey" IS NULL AND f."sectionIndex" IS NULL
-     AND f."position" > b.p
-)
-UPDATE "RecordFieldDef" f SET "position" = r.np FROM r WHERE f."id" = r."id";
+INSERT INTO "RecordFieldDef"
+  ("id", "recordKey", "sectionIndex", "parentFieldKey", "key", "label", "type", "required", "readOnly",
+   "options", "group", "position", "extraJson")
+SELECT 'drymon_' || v.key, 'dry-monitoring', NULL, NULL, v.key, v.label, v.type, FALSE, FALSE,
+       v.options, 'Product condition', b.p + v.n, v.extra::jsonb
+  FROM (SELECT "position" AS p FROM "RecordFieldDef"
+         WHERE "recordKey" = 'dry-monitoring' AND "key" = 'batchStatus' AND "parentFieldKey" IS NULL) b,
+  (VALUES
+    (1, 'footDamage', 'Foot damage?', 'yesno', ARRAY[]::text[],
+     '{"good":"No","redPrompt":"correctiveActions","ncOnYes":{"severity":"minor"},"pctKey":"footDamagePct","commentKey":"footDamageComment"}'),
+    (2, 'footDamagePct', 'Foot damage: how much affected?', 'radio', ARRAY['lt5','gt5'],
+     '{"optionLabels":{"lt5":"< 5%","gt5":"> 5%"},"showWhen":{"field":"footDamage","equals":"Yes"},"requiredWhen":{"field":"footDamage","equals":"Yes"},"requiredMessage":"Select < 5% or > 5% for foot damage.","printIndent":true}'),
+    (3, 'footDamageComment', 'Foot damage comment', 'textarea', ARRAY[]::text[],
+     '{"maxLength":500,"showWhen":{"field":"footDamagePct","equals":"gt5"},"requiredWhen":{"field":"footDamagePct","equals":"gt5"},"requiredMessage":"Comment required when > 5% foot damage is recorded.","printIndent":true}'),
+
+    (4, 'muscleDamage', 'Muscle damage?', 'yesno', ARRAY[]::text[],
+     '{"good":"No","redPrompt":"correctiveActions","ncOnYes":{"severity":"minor"},"pctKey":"muscleDamagePct","commentKey":"muscleDamageComment"}'),
+    (5, 'muscleDamagePct', 'Muscle damage: how much affected?', 'radio', ARRAY['lt5','gt5'],
+     '{"optionLabels":{"lt5":"< 5%","gt5":"> 5%"},"showWhen":{"field":"muscleDamage","equals":"Yes"},"requiredWhen":{"field":"muscleDamage","equals":"Yes"},"requiredMessage":"Select < 5% or > 5% for muscle damage.","printIndent":true}'),
+    (6, 'muscleDamageComment', 'Muscle damage comment', 'textarea', ARRAY[]::text[],
+     '{"maxLength":500,"showWhen":{"field":"muscleDamagePct","equals":"gt5"},"requiredWhen":{"field":"muscleDamagePct","equals":"gt5"},"requiredMessage":"Comment required when > 5% muscle damage is recorded.","printIndent":true}'),
+
+    (7, 'presenceOfGuts', 'Presence of guts?', 'yesno', ARRAY[]::text[],
+     '{"good":"No","redPrompt":"correctiveActions","ncOnYes":{"severity":"minor"},"pctKey":"presenceOfGutsPct","commentKey":"gutsComment"}'),
+    (8, 'presenceOfGutsPct', 'Presence of guts: how much affected?', 'radio', ARRAY['lt5','gt5'],
+     '{"optionLabels":{"lt5":"< 5%","gt5":"> 5%"},"showWhen":{"field":"presenceOfGuts","equals":"Yes"},"requiredWhen":{"field":"presenceOfGuts","equals":"Yes"},"requiredMessage":"Select < 5% or > 5% for presence of guts.","printIndent":true}'),
+    (9, 'gutsComment', 'Presence of guts comment', 'textarea', ARRAY[]::text[],
+     '{"maxLength":500,"showWhen":{"field":"presenceOfGutsPct","equals":"gt5"},"requiredWhen":{"field":"presenceOfGutsPct","equals":"gt5"},"requiredMessage":"Comment required when > 5% presence of guts is recorded.","printIndent":true}')
+  ) AS v(n, key, label, type, options, extra);
 
 
 -- 5. New definition version (devices refresh their cached copy)
