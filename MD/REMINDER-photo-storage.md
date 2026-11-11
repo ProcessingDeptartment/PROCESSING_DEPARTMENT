@@ -19,4 +19,4 @@ Dry Monitoring photos are stored inside the Neon database. The free Neon plan ho
 
 ## Until then
 - Photos are safe in Neon.
-- Run **Archive Photos Now** (desktop shortcut) now and then for an on-site backup copy in `T:\...\PROCESSING_DEPARTMENT\Images\`.
+- Run **Archive Photos Now** (desktop shortcut) now and then for an on-site backup copy in `T:\Abagold Processing Facility\Neon Database Export\Images\`.

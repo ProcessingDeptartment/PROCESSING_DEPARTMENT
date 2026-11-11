@@ -108,6 +108,7 @@ app.use('/api', (req, res, next) => {
   if (req.path === '/health') return next();      // uptime probes must stay reachable
   if (req.path === '/auth/admin-login') return next(); // public endpoint — password checked inside
   if (req.path === '/auth/device-enroll') return next(); // public — passkey checked inside
+  if (req.path.startsWith('/handovers')) return next();  // browser-submitted shift handovers
   // the local photo archive agent carries its own key instead (src/submission-images.js)
   if (require('./submission-images').isArchiveRequest(req)) return next();
   const header = req.get('authorization') || '';

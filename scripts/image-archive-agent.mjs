@@ -6,7 +6,7 @@
 // Config: scripts/.env (beside this file, git-ignored) or real environment variables:
 //   API_BASE=https://processing-department-api.onrender.com
 //   ARCHIVE_API_KEY=<same value as ARCHIVE_API_KEY on the Render API service>
-//   ARCHIVE_ROOT=T:\Abagold Processing Facility\20. Paperless\PROCESSING_DEPARTMENT\Images
+//   ARCHIVE_ROOT=T:\Abagold Processing Facility\Neon Database Export\Images
 //   POLL_INTERVAL_SECONDS=60
 //
 // Run:      node scripts/image-archive-agent.mjs
