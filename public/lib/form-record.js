@@ -1741,7 +1741,14 @@
   const DAILY_LOG_KEYS = ['rec-7.8.9.1', 'lha-water-monitoring'];
   function isDailyLog(config) {
     if (!config || config.dailyVerificationLog === false) return false;
-    return config.dailyVerificationLog === true || DAILY_LOG_KEYS.indexOf(config.recordKey) !== -1;
+    return config.dailyVerificationLog === true || DAILY_LOG_KEYS.indexOf(config.recordKey) !== -1 || isJobLog(config);
+  }
+  // Same pattern for job-based records: the verifier reviews whole jobs (every entry of a job number,
+  // roster rows included) instead of whole days. Attach with a key here or "verificationGroupBy": "job".
+  const JOB_LOG_KEYS = ['drying-process'];
+  function isJobLog(config) {
+    if (!config || config.dailyVerificationLog === false) return false;
+    return config.verificationGroupBy === 'job' || (config.verificationGroupBy == null && JOB_LOG_KEYS.indexOf(config.recordKey) !== -1);
   }
   function facilityDayOf(ms) {
     try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date(ms)); }
@@ -5072,31 +5079,52 @@ function fallbackDl(canvas,filename){
     const dailyLog = isDailyLog(config);
     const logWhen = (s) => s.submittedAt || s.createdAt || 0;
     const logDayOf = (s) => facilityDayOf(logWhen(s));
+    const logMs = (s) => +new Date(logWhen(s)) || 0;
+    const jobLog = isJobLog(config);
+    const jobOf = (s) => String((s.values || {})[config.batchField || 'jobNo'] || '').trim();
 
     // One row per submission with its field values. o.pick adds a tick box on rows still awaiting
     // verification; o.showDate adds the date (monthly log); o.topRows sits above the column
     // headings inside thead, so it repeats on every printed page.
+    // Job-grouped records (o.omit drops the job-constant columns shown in the group heading) also
+    // get one line per roster row (steam) and a Movements column.
     function dayLogTableHtml(list, o) {
       o = o || {};
-      const cols = allFields(config).filter(f => f && f.key && !f.hidden && f.type !== 'heading' && f.type !== 'note');
-      let html = `<table class="fr-table"><thead>${o.topRows || ''}<tr>${o.pick ? '<th></th>' : ''}${o.showDate ? '<th>Date</th>' : ''}<th>Time</th><th>Completed by</th>${cols.map(f => `<th>${esc(f.label || f.key)}</th>`).join('')}<th>Verified</th></tr></thead><tbody>`;
-      list.slice().sort((a, b) => logWhen(a) - logWhen(b)).forEach(sub => {
+      const filled = v => String(v == null ? '' : v).trim() !== '';
+      const cols = allFields(config).filter(f => f && f.key && !f.hidden && !f.movement && f.type !== 'heading' && f.type !== 'note'
+        && (!o.omit || o.omit.indexOf(f.key) === -1)
+        && (!f.legacy || list.some(s => filled((s.values || {})[f.key]))));
+      const moves = jobLog ? allFields(config).filter(f => f && f.movement) : [];
+      const rdef = jobLog && config.roster ? config.roster : null;
+      const rcols = rdef ? (rdef.columns || []).filter(c => !c.legacy && (!c.hidden || c.key === rdef.titleFrom || c.key === rdef.titleDate)) : [];
+      const cell = v => {
+        if (Array.isArray(v)) v = v.join(', ');
+        else if (v && typeof v === 'object') v = v.value != null ? v.value : (v.label != null ? v.label : '');
+        return (v === '' || v == null) ? '—' : v;
+      };
+      let html = `<table class="fr-table"><thead>${o.topRows || ''}<tr>${o.pick ? '<th></th>' : ''}${o.showDate ? '<th>Date</th>' : ''}<th>Time</th><th>Completed by</th>${cols.map(f => `<th>${esc(f.label || f.key)}</th>`).join('')}${rcols.map(c => `<th>${esc(c.label || c.key)}${c.unit ? ` (${esc(c.unit)})` : ''}</th>`).join('')}${moves.length ? '<th>Movements</th>' : ''}<th>Verified</th></tr></thead><tbody>`;
+      list.slice().sort((a, b) => logMs(a) - logMs(b)).forEach(sub => {
         const vf = sub.verification || null;
         const vals = sub.values || {};
+        const rrows = rdef ? (sub.roster || []) : [];
+        const rs = rrows.length > 1 ? ` rowspan="${rrows.length}"` : '';
         html += `<tr>`;
-        if (o.pick) html += `<td>${vf ? '' : `<input type="checkbox" class="fr-verify-pick" value="${esc(sub.id)}" aria-label="Verify this entry">`}</td>`;
-        if (o.showDate) html += `<td style="white-space:nowrap;">${esc(logDayOf(sub))}</td>`;
-        html += `<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(sub)))}</td>`;
-        html += `<td>${esc(subCompletedBy(sub) || '—')}</td>`;
+        if (o.pick) html += `<td${rs}>${vf ? '' : `<input type="checkbox" class="fr-verify-pick" value="${esc(sub.id)}" aria-label="Verify this entry">`}</td>`;
+        if (o.showDate) html += `<td${rs} style="white-space:nowrap;">${esc(logDayOf(sub))}</td>`;
+        html += `<td${rs} style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(sub)))}</td>`;
+        html += `<td${rs}>${esc(subCompletedBy(sub) || '—')}</td>`;
         cols.forEach(f => {
-          let v = vals[f.key];
-          if (Array.isArray(v)) v = v.join(', ');
-          else if (v && typeof v === 'object') v = v.value != null ? v.value : (v.label != null ? v.label : '');
-          if (v === '' || v == null) v = '—';
-          html += `<td class="${f.type === 'textarea' ? 'fr-daylog-text' : ''}">${esc(v)}</td>`;
+          html += `<td${rs} class="${f.type === 'textarea' ? 'fr-daylog-text' : ''}">${esc(cell(vals[f.key]))}</td>`;
         });
-        html += `<td>${vf ? `✓ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="fr-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="fr-muted">Awaiting</span>'}</td>`;
+        rcols.forEach(c => { html += `<td>${esc(cell((rrows[0] || {})[c.key]))}</td>`; });
+        if (moves.length) {
+          const done = moves.filter(f => /^(y|yes|true)$/i.test(String(vals[f.key] == null ? '' : vals[f.key]).trim()))
+            .map(f => esc((f.movement && f.movement.done) || f.label || f.key));
+          html += `<td${rs}>${done.length ? done.join('<br>') : '—'}</td>`;
+        }
+        html += `<td${rs}>${vf ? `✓ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="fr-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="fr-muted">Awaiting</span>'}</td>`;
         html += `</tr>`;
+        rrows.slice(1).forEach(r => { html += `<tr>${rcols.map(c => `<td>${esc(cell(r[c.key]))}</td>`).join('')}</tr>`; });
       });
       return html + `</tbody></table>`;
     }
@@ -5133,7 +5161,8 @@ function fallbackDl(canvas,filename){
     }
 
     function printPdf() {
-      if (dailyLog) return printMonthlyLog();
+      // job-grouped records (drying process) keep their normal printing; only verification changes
+      if (dailyLog && !jobLog) return printMonthlyLog();
       printSheets(filtered(),
         safeKey(config.title) + '_' + new Date().toISOString().slice(0, 10));
     }
@@ -5142,7 +5171,8 @@ function fallbackDl(canvas,filename){
       const sub = submissions.find(s => s.id === id);
       if (!sub) return;
       // daily-log records: an entry's PDF is the monthly log of the month it was submitted in
-      if (dailyLog) return printMonthlyLog(logDayOf(sub).slice(0, 7));
+      // (job-grouped records keep the single-entry sheet on the row's own PDF button)
+      if (dailyLog && !jobLog) return printMonthlyLog(logDayOf(sub).slice(0, 7));
       const jobNo = safeKey(String((config.batchField && sub.values && sub.values[config.batchField]) || ''));
       const tsSource = sub.submittedAt || sub.createdAt;
       const submitTs = tsSource
@@ -5205,17 +5235,40 @@ function fallbackDl(canvas,filename){
         const days = Object.keys(byDay).filter(d => d === today || dayPending(d) > 0);
         if (days.indexOf(today) === -1) days.push(today);
         days.sort().reverse();
-        const totalPending = days.reduce((n, d) => n + dayPending(d), 0);
+        let groups = days.map(d => ({ label: longDayLabel(d) + (d === today ? ' (today)' : ''), list: byDay[d] || [] }));
+        let omit = null;
+        if (jobLog) {
+          // one block per job number that still has an entry awaiting verification, showing every
+          // entry of that job (verified ones included, for context); most recently active job first
+          const byJob = {};
+          submissions.filter(isSubmitted).forEach(s => { const j = jobOf(s); (byJob[j] || (byJob[j] = [])).push(s); });
+          const lastMs = j => byJob[j].reduce((m, s) => Math.max(m, logMs(s)), 0);
+          const infoSec = (config.sections || []).find(sec => sec.title === config.jobInfoGroup) || {};
+          omit = (infoSec.fields || []).map(f => f.key);
+          const sumKeys = [].concat(infoSec.summaryField || []).filter(k => k !== (config.batchField || 'jobNo'));
+          groups = Object.keys(byJob).filter(j => byJob[j].some(s => !s.verification))
+            .sort((a, b) => lastMs(b) - lastMs(a))
+            .map(j => {
+              const extra = sumKeys.map(k => byJob[j].map(s => String((s.values || {})[k] || '').trim()).filter(Boolean).pop()).filter(Boolean);
+              return { label: (j ? 'Job ' + j : '(no job number)') + (extra.length ? ' · ' + extra.join(' · ') : ''), list: byJob[j] };
+            });
+          if (!groups.length) {
+            target.innerHTML = `<div class="fr-history-item fr-muted">No submitted entries are waiting to be verified.</div>`;
+            return;
+          }
+        }
+        const unit = n => jobLog ? (n === 1 ? 'entry' : 'entries') : (n === 1 ? 'submission' : 'submissions');
+        const totalPending = groups.reduce((n, g) => n + g.list.filter(s => !s.verification).length, 0);
         let html = totalPending ? `<div class="fr-history-item"><label style="font-weight:700;">
             <input type="checkbox" id="fr_verifyAll"> Select all (${totalPending})</label></div>` : '';
-        days.forEach(d => {
-          const list = byDay[d] || [], n = list.length, p = dayPending(d);
+        groups.forEach(g => {
+          const list = g.list, n = list.length, p = list.filter(s => !s.verification).length;
           html += `<div class="fr-daylog-day">
             <div class="fr-daylog-head">
-              <label>${p ? '<input type="checkbox" class="fr-verify-day">' : ''}${esc(longDayLabel(d))}${d === today ? ' (today)' : ''}</label>
-              <span class="fr-muted">${n} ${n === 1 ? 'submission' : 'submissions'} · ${p ? p + ' awaiting verification' : (n ? 'all verified' : 'nothing submitted yet')}</span>
+              <label>${p ? '<input type="checkbox" class="fr-verify-day">' : ''}${esc(g.label)}</label>
+              <span class="fr-muted">${n} ${unit(n)} · ${p ? p + ' awaiting verification' : (n ? 'all verified' : 'nothing submitted yet')}</span>
             </div>
-            ${n ? `<div class="fr-daylog-table">${dayLogTableHtml(list, { pick: true })}</div>` : ''}
+            ${n ? `<div class="fr-daylog-table">${dayLogTableHtml(list, { pick: true, omit, showDate: jobLog })}</div>` : ''}
           </div>`;
         });
         target.innerHTML = html;
