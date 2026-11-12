@@ -22,10 +22,13 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 
 const steps = [
-  { name: 'Database change archive', script: 'scripts/archive-changes.js', skip: args.includes('--skip-db'), args: args.includes('--csv-all') ? ['--csv-all'] : [] },
   { name: 'Superseded record templates', script: 'scripts/archive-record-defs.mjs' },
   { name: 'Documents and current record templates', script: 'scripts/archive-documents.mjs' },
   { name: 'Submitted records and CSV files', script: 'scripts/archive-completed-records.mjs' },
+  // Run the heavy DB step last: it holds a 237-table repeatable-read transaction for ~2-3 minutes,
+  // after which Neon's direct-connection compute briefly suspends. Running it last avoids that
+  // recovery window blocking the lighter Prisma steps above.
+  { name: 'Database change archive', script: 'scripts/archive-changes.js', skip: args.includes('--skip-db'), args: args.includes('--csv-all') ? ['--csv-all'] : [] },
   { name: 'PDFs (online print layout)', script: 'scripts/archive-pdfs.mjs', skip: args.includes('--skip-pdfs') },
 ];
 

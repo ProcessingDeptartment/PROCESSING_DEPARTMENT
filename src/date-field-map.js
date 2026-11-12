@@ -30,6 +30,7 @@ function parseCsvLine(line) {
 
 function load() {
   const map = new Map();
+  if (!fs.existsSync(CSV_PATH)) return map;
   const raw = fs.readFileSync(CSV_PATH, 'utf8');
   const lines = raw.split(/\r?\n/).filter(Boolean);
   for (const line of lines.slice(1)) {
