@@ -8,6 +8,7 @@ const MAP_PATH = path.join(__dirname, '..', 'data', 'record-key-map.json');
 const PREFIXES = ['formrecord:', 'monitoring_log:'];
 
 function load() {
+  if (!fs.existsSync(MAP_PATH)) return {};
   return JSON.parse(fs.readFileSync(MAP_PATH, 'utf8'));
 }
 
