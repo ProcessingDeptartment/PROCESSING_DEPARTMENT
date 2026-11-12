@@ -1,17 +1,18 @@
 // Run the whole archive in one go (MD/10_Archive-System.md). Each step only writes what is new or changed, so this
 // is safe to run as often as you like:
 //
-//   1. Database change archive        scripts/archive-changes.js          -> ..\DB ARCHIVE, ..\DB EXPORTS
-//   2. Superseded record templates    scripts/archive-record-defs.mjs     -> PROCESSING ARCHIVE\record-defs
-//   3. Policies, procedures, SOPs,    scripts/archive-documents.mjs       -> PROCESSING ARCHIVE\policies ... , record-defs
+//   1. Superseded record templates    scripts/archive-record-defs.mjs     -> PROCESSING ARCHIVE\record-defs
+//   2. Policies, procedures, SOPs,    scripts/archive-documents.mjs       -> PROCESSING ARCHIVE\policies ... , record-defs
 //      PRPs, current record templates
-//   4. All submitted records + CSV    scripts/archive-completed-records.mjs -> PROCESSING ARCHIVE\completed-records, csv
-//   5. Real PDFs (online print)       scripts/archive-pdfs.mjs            -> PROCESSING ARCHIVE\pdf
+//   3. All submitted records + CSV    scripts/archive-completed-records.mjs -> PROCESSING ARCHIVE\completed-records, csv
+//   4. Database change archive        scripts/archive-changes.js          -> ..\DB ARCHIVE, ..\DB EXPORTS
+//   5. Photos (record images)         scripts/image-archive-agent.mjs --once -> Images folder
+//   6. Real PDFs (online print)       scripts/archive-pdfs.mjs            -> PROCESSING ARCHIVE\pdf
 //
 // A failed step does not stop the ones after it; the summary at the end says what failed, and the exit code is 1.
 // Nothing here is wired into the existing scheduled database archive -- run this (or scripts\archive-all.cmd) yourself.
 //
-//   node scripts/archive-all.mjs [--skip-db] [--skip-pdfs] [--csv-all]
+//   node scripts/archive-all.mjs [--skip-db] [--skip-pdfs] [--skip-photos] [--csv-all]
 //   --csv-all: the database step writes a CSV for every table this run (changed or not, empty ones included).
 
 import path from 'path';
@@ -29,6 +30,7 @@ const steps = [
   // after which Neon's direct-connection compute briefly suspends. Running it last avoids that
   // recovery window blocking the lighter Prisma steps above.
   { name: 'Database change archive', script: 'scripts/archive-changes.js', skip: args.includes('--skip-db'), args: args.includes('--csv-all') ? ['--csv-all'] : [] },
+  { name: 'Photos (record images)', script: 'scripts/image-archive-agent.mjs', args: ['--once'], skip: args.includes('--skip-photos') },
   { name: 'PDFs (online print layout)', script: 'scripts/archive-pdfs.mjs', skip: args.includes('--skip-pdfs') },
 ];
 
