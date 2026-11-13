@@ -161,8 +161,10 @@
 
   var ROLE_LABELS = (window.PermissionRules && window.PermissionRules.ROLE_LABELS) || {};
   var indexByKey = {};
+  var indexByDoc = {};   // 'REC7.8.9.1' -> index row, for records saved under a key the index does not list
   ((window.MasterIndexData && window.MasterIndexData.rows) || []).forEach(function (row) {
     if (row.recordKey) indexByKey[row.recordKey] = { name: row.name, docNo: row.docNo, href: row.href };
+    if (row.docNo && row.href) indexByDoc[String(row.docNo).replace(/\s+/g, '').toUpperCase()] = { name: row.name, docNo: row.docNo, href: row.href };
   });
 
   function labelRoles(roles) {
@@ -279,6 +281,14 @@
     rows.sort(function (a, b) { return (a.submittedAt || Infinity) - (b.submittedAt || Infinity); });
     STATE.rows = rows;
     await loadDefs(rows.map(function (r) { return r.recordKey; }));
+    // a record saved under a different key than its master-index row (e.g. rec-7.8.9.1): find the row by document number
+    rows.forEach(function (r) {
+      if (r.href) return;
+      var def = DEFS[r.recordKey];
+      var hit = def && def.docCode && indexByDoc[String(def.docCode).replace(/\s+/g, '').toUpperCase()];
+      if (hit) { r.name = hit.name; r.docNo = hit.docNo; r.href = '../records/' + hit.href; }
+      else if (def && def.title) { r.name = def.title; r.docNo = r.docNo || def.docCode || ''; }
+    });
   }
 
   function visibleRows() {
