@@ -121,6 +121,8 @@
 
   const ALL_RECORDS = window.MasterIndexData.rows
     .filter(r => r.href)
+    // PRO documents are procedures / PRPs, not records — they live under Procedures.
+    .filter(r => !/^PRO\b/i.test((r.docNo || '').trim()))
     .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   function liveKey(r) { return (r.docNo || r.name || '').trim().toLowerCase(); }
