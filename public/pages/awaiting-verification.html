@@ -341,14 +341,45 @@
   // job shows every awaiting entry of that job with its steams; ticking the job selects all of them.
   // A record opts in with "verificationGroupBy": "job" in its definition.
   var JOBS = {};   // job key -> awaiting rows of that job
-  function isJobGrouped(rk) {
+  // Daily-log records (chiller / water / LHA monitoring) are grouped the same way, by calendar day
+  // (facility time) instead of job number: "verificationGroupBy": "day" or "dailyVerificationLog": true.
+  var DAY_KEYS = ['chiller-temperature-monitoring', 'water-monitoring', 'lha-water-monitoring', 'rec-7.8.9.1'];
+  function groupMode(rk) {
     var d = DEFS[rk];
-    if (d && d.verificationGroupBy != null) return d.verificationGroupBy === 'job';
-    return rk === 'drying-process';
+    if (d && d.verificationGroupBy != null) return (d.verificationGroupBy === 'job' || d.verificationGroupBy === 'day') ? d.verificationGroupBy : '';
+    if (d && d.dailyVerificationLog === false) return '';
+    if (rk === 'drying-process') return 'job';
+    return ((d && d.dailyVerificationLog === true) || DAY_KEYS.indexOf(rk) !== -1) ? 'day' : '';
+  }
+  function isJobGrouped(rk) { return !!groupMode(rk); }
+  function facilityFmt(ts, locale, opts) {
+    try { opts.timeZone = 'Africa/Johannesburg'; return new Intl.DateTimeFormat(locale, opts).format(new Date(ts)); }
+    catch (e) { return ''; }
   }
   function jobOf(r) {
+    if (groupMode(r.recordKey) === 'day') return r.submittedAt ? facilityFmt(r.submittedAt, 'en-CA', {}) : '';
     var d = DEFS[r.recordKey] || {};
     return String((r.values || {})[d.batchField || 'jobNo'] || '').trim();
+  }
+  function dayLabel(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    if (!m) return '(no date)';
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  // one line per entry of the day, with its field values
+  function dayPreviewTable(b, def) {
+    var fields = (def.entryFields || []).slice();
+    (def.sections || []).forEach(function (sec) { (sec.fields || []).forEach(function (f) { fields.push(f); }); });
+    fields = fields.filter(function (f) { return f && f.key && !f.hidden && f.type !== 'heading' && f.type !== 'note'; });
+    var h = '<table style="background:#fff;border:1px solid #e2e4e3;"><thead><tr><th>Time</th><th>Submitted by</th>' +
+      fields.map(function (f) { return '<th>' + esc(f.label || f.key) + (f.unit ? ' (' + esc(f.unit) + ')' : '') + '</th>'; }).join('') +
+      '</tr></thead><tbody>';
+    b.rows.forEach(function (r) {
+      h += '<tr><td class="when">' + (r.submittedAt ? esc(facilityFmt(r.submittedAt, 'en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })) : '&mdash;') + '</td>' +
+        '<td>' + cellText(r.who) + '</td>' +
+        fields.map(function (f) { return '<td>' + cellText(r.values[f.key]) + '</td>'; }).join('') + '</tr>';
+    });
+    return h + '</tbody></table>';
   }
   function jobKey(r) { return 'job:' + r.storageKey + '|' + jobOf(r); }
   function jobBundles(g) {
@@ -379,10 +410,11 @@
     });
     var moves = [];
     (def.sections || []).forEach(function (sec) { (sec.fields || []).forEach(function (f) { if (f.movement) moves.push(f); }); });
-    var h = '<table style="background:#fff;border:1px solid #e2e4e3;"><thead><tr><th>Submitted</th><th>Submitted by</th>' +
+    var byDay = groupMode(b.rows[0].recordKey) === 'day';
+    var h = byDay ? '' : '<table style="background:#fff;border:1px solid #e2e4e3;"><thead><tr><th>Submitted</th><th>Submitted by</th>' +
       rcols.map(function (c) { return '<th>' + esc(c.label || c.key) + (c.unit ? ' (' + esc(c.unit) + ')' : '') + '</th>'; }).join('') +
       (moves.length ? '<th>Movements</th>' : '') + '</tr></thead><tbody>';
-    b.rows.forEach(function (r) {
+    (byDay ? [] : b.rows).forEach(function (r) {
       var rr = r.roster || [], rs = rr.length > 1 ? ' rowspan="' + rr.length + '"' : '';
       var done = moves.filter(function (f) { return /^(y|yes|true)$/i.test(String(r.values[f.key] == null ? '' : r.values[f.key]).trim()); })
         .map(function (f) { return esc((f.movement && f.movement.done) || f.label || f.key); });
@@ -393,29 +425,30 @@
         h += '<tr>' + rcols.map(function (c) { return '<td>' + cellText(x[c.key]) + '</td>'; }).join('') + '</tr>';
       });
     });
-    h += '</tbody></table>';
+    h = byDay ? dayPreviewTable(b, def) : h + '</tbody></table>';
     var last = b.rows[b.rows.length - 1];
     var btn = 'font-size:12px;color:#1d4ed8;font-weight:600;text-decoration:none;border:1px solid #c3d4f7;padding:4px 10px;border-radius:4px;background:#f0f5ff;';
     if (last.href && last.id) {
       h += '<div style="margin-top:10px;">' +
         '<a href="' + esc(last.href) + '#' + encodeURIComponent(last.id) + '" target="_blank" style="' + btn + '">Open full record &rarr;</a>' +
-        '<a href="print-entry.html?rec=' + encodeURIComponent(last.recordKey) + '&engine=form&entry=' + encodeURIComponent(last.id) +
+        '<a href="print-entry.html?rec=' + encodeURIComponent(last.recordKey) + '&engine=' + (last.engine === 'log' ? 'log' : 'form') + '&entry=' + encodeURIComponent(last.id) +
           '&print=1&printonly=1" class="pdf-open" style="' + btn + 'margin-left:8px;">View PDF &rarr;</a></div>';
     }
     return h;
   }
   function renderJobGroup(g) {
     var selectable = g.mine, bundles = jobBundles(g);
+    var byDay = groupMode(g.recordKey) === 'day', unit = byDay ? 'day' : 'job';
     var title = (g.docNo ? esc(g.docNo) + ' &mdash; ' : '') + esc(g.name);
     return '<div class="grp" data-record="' + esc(g.recordKey) + '">' +
       '<div class="grp-head">' +
         (selectable ? '<input type="checkbox" class="grp-all" title="Select all in this record">' : '') +
         '<h2>' + (g.href ? '<a href="' + esc(g.href) + '">' + title + '</a>' : title) + '</h2>' +
-        '<span class="count">' + bundles.length + (bundles.length === 1 ? ' job' : ' jobs') + ' &middot; ' + g.rows.length + (g.rows.length === 1 ? ' entry' : ' entries') + '</span>' +
+        '<span class="count">' + bundles.length + ' ' + unit + (bundles.length === 1 ? '' : 's') + ' &middot; ' + g.rows.length + (g.rows.length === 1 ? ' entry' : ' entries') + '</span>' +
         '<span class="roles">Verifier: ' + esc(labelRoles(g.allowedRoles)) + (selectable ? '' : ' &mdash; not you') + '</span>' +
       '</div>' +
       '<table><thead><tr>' +
-        '<th class="chk"></th><th>Job number</th><th>Awaiting</th><th>Submitted by</th><th>Submitted</th><th>Waiting</th><th></th>' +
+        '<th class="chk"></th><th>' + (byDay ? 'Day' : 'Job number') + '</th><th>Awaiting</th><th>Submitted by</th><th>Submitted</th><th>Waiting</th><th></th>' +
       '</tr></thead><tbody>' +
       bundles.map(function (b) {
         var open = !!STATE.open[b.key];
@@ -430,10 +463,10 @@
         var roTitle = String(((DEFS[g.recordKey] || {}).roster || {}).title || 'rows').toLowerCase();
         var main = '<tr class="' + (g.mine ? '' : 'foreign') + '">' +
           '<td class="chk">' + (g.mine
-            ? '<input type="checkbox" class="job-pick" data-job="' + esc(b.key) + '"' + (allPicked ? ' checked' : '') + (canPick ? '' : ' disabled title="Preview this job before verifying it"') + '>'
+            ? '<input type="checkbox" class="job-pick" data-job="' + esc(b.key) + '"' + (allPicked ? ' checked' : '') + (canPick ? '' : ' disabled title="Preview these entries before verifying them"') + '>'
             : '') + '</td>' +
-          '<td><strong>' + esc(b.job || '(no job number)') + '</strong></td>' +
-          '<td>' + b.rows.length + (b.rows.length === 1 ? ' entry' : ' entries') + '<br><span style="color:#5c6771;font-size:11px;">' + steams + ' ' + esc(roTitle) + '</span></td>' +
+          '<td><strong>' + esc(byDay ? dayLabel(b.job) : (b.job || '(no job number)')) + '</strong></td>' +
+          '<td>' + b.rows.length + (b.rows.length === 1 ? ' entry' : ' entries') + (byDay ? '' : '<br><span style="color:#5c6771;font-size:11px;">' + steams + ' ' + esc(steams === 1 ? roTitle.replace(/s$/, '') : roTitle) + '</span>') + '</td>' +
           '<td>' + (who.length ? esc(who.join(', ')) : '&mdash;') + '</td>' +
           '<td class="when">' + (from === to ? from : from + ' to ' + to) + '</td>' +
           '<td class="' + ((d != null && d >= 7) ? 'age old' : 'age') + '">' + (d == null ? '&mdash;' : d + 'd') + '</td>' +
