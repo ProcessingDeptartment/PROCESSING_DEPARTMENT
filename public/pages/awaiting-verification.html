@@ -337,7 +337,136 @@
       'remains the evidence — this page is a work queue.';
   }
 
+  // Job-grouped records (drying process): one line per job number instead of one per entry. Previewing a
+  // job shows every awaiting entry of that job with its steams; ticking the job selects all of them.
+  // A record opts in with "verificationGroupBy": "job" in its definition.
+  var JOBS = {};   // job key -> awaiting rows of that job
+  function isJobGrouped(rk) {
+    var d = DEFS[rk];
+    if (d && d.verificationGroupBy != null) return d.verificationGroupBy === 'job';
+    return rk === 'drying-process';
+  }
+  function jobOf(r) {
+    var d = DEFS[r.recordKey] || {};
+    return String((r.values || {})[d.batchField || 'jobNo'] || '').trim();
+  }
+  function jobKey(r) { return 'job:' + r.storageKey + '|' + jobOf(r); }
+  function jobBundles(g) {
+    var list = [], by = {};
+    g.rows.forEach(function (r) {
+      var k = jobKey(r);
+      if (!by[k]) { by[k] = { key: k, job: jobOf(r), rows: [] }; list.push(by[k]); }
+      by[k].rows.push(r);
+    });
+    list.forEach(function (b) { JOBS[b.key] = b.rows; });
+    return list;
+  }
+  function cellText(v) {
+    if (Array.isArray(v)) v = v.join(', ');
+    else if (v && typeof v === 'object') v = v.value != null ? v.value : JSON.stringify(v);
+    return (v == null || String(v).trim() === '') ? '&mdash;' : esc(v);
+  }
+  function fmtDateTime(ts) {
+    if (!ts) return '&mdash;';
+    var d = new Date(ts); if (isNaN(d.getTime())) return '&mdash;';
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return fmtDate(ts) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function jobPreview(b) {
+    var def = DEFS[b.rows[0].recordKey] || {}, ro = def.roster || {};
+    var rcols = (ro.columns || []).filter(function (c) {
+      return !c.legacy && (!c.hidden || c.key === ro.titleFrom || c.key === ro.titleDate);
+    });
+    var moves = [];
+    (def.sections || []).forEach(function (sec) { (sec.fields || []).forEach(function (f) { if (f.movement) moves.push(f); }); });
+    var h = '<table style="background:#fff;border:1px solid #e2e4e3;"><thead><tr><th>Submitted</th><th>Submitted by</th>' +
+      rcols.map(function (c) { return '<th>' + esc(c.label || c.key) + (c.unit ? ' (' + esc(c.unit) + ')' : '') + '</th>'; }).join('') +
+      (moves.length ? '<th>Movements</th>' : '') + '</tr></thead><tbody>';
+    b.rows.forEach(function (r) {
+      var rr = r.roster || [], rs = rr.length > 1 ? ' rowspan="' + rr.length + '"' : '';
+      var done = moves.filter(function (f) { return /^(y|yes|true)$/i.test(String(r.values[f.key] == null ? '' : r.values[f.key]).trim()); })
+        .map(function (f) { return esc((f.movement && f.movement.done) || f.label || f.key); });
+      h += '<tr><td class="when"' + rs + '>' + fmtDateTime(r.submittedAt) + '</td><td' + rs + '>' + cellText(r.who) + '</td>' +
+        rcols.map(function (c) { return '<td>' + cellText((rr[0] || {})[c.key]) + '</td>'; }).join('') +
+        (moves.length ? '<td' + rs + '>' + (done.length ? done.join('<br>') : '&mdash;') + '</td>' : '') + '</tr>';
+      rr.slice(1).forEach(function (x) {
+        h += '<tr>' + rcols.map(function (c) { return '<td>' + cellText(x[c.key]) + '</td>'; }).join('') + '</tr>';
+      });
+    });
+    h += '</tbody></table>';
+    var last = b.rows[b.rows.length - 1];
+    var btn = 'font-size:12px;color:#1d4ed8;font-weight:600;text-decoration:none;border:1px solid #c3d4f7;padding:4px 10px;border-radius:4px;background:#f0f5ff;';
+    if (last.href && last.id) {
+      h += '<div style="margin-top:10px;">' +
+        '<a href="' + esc(last.href) + '#' + encodeURIComponent(last.id) + '" target="_blank" style="' + btn + '">Open full record &rarr;</a>' +
+        '<a href="print-entry.html?rec=' + encodeURIComponent(last.recordKey) + '&engine=form&entry=' + encodeURIComponent(last.id) +
+          '&print=1&printonly=1" class="pdf-open" style="' + btn + 'margin-left:8px;">View PDF &rarr;</a></div>';
+    }
+    return h;
+  }
+  function renderJobGroup(g) {
+    var selectable = g.mine, bundles = jobBundles(g);
+    var title = (g.docNo ? esc(g.docNo) + ' &mdash; ' : '') + esc(g.name);
+    return '<div class="grp" data-record="' + esc(g.recordKey) + '">' +
+      '<div class="grp-head">' +
+        (selectable ? '<input type="checkbox" class="grp-all" title="Select all in this record">' : '') +
+        '<h2>' + (g.href ? '<a href="' + esc(g.href) + '">' + title + '</a>' : title) + '</h2>' +
+        '<span class="count">' + bundles.length + (bundles.length === 1 ? ' job' : ' jobs') + ' &middot; ' + g.rows.length + (g.rows.length === 1 ? ' entry' : ' entries') + '</span>' +
+        '<span class="roles">Verifier: ' + esc(labelRoles(g.allowedRoles)) + (selectable ? '' : ' &mdash; not you') + '</span>' +
+      '</div>' +
+      '<table><thead><tr>' +
+        '<th class="chk"></th><th>Job number</th><th>Awaiting</th><th>Submitted by</th><th>Submitted</th><th>Waiting</th><th></th>' +
+      '</tr></thead><tbody>' +
+      bundles.map(function (b) {
+        var open = !!STATE.open[b.key];
+        if (open) b.rows.forEach(function (r) { STATE.previewed[rowId(r)] = true; });   // no preview, no verify
+        var canPick = b.rows.every(function (r) { return STATE.previewed[rowId(r)]; });
+        var allPicked = b.rows.every(function (r) { return STATE.picked[rowId(r)]; });
+        var first = b.rows[0], lastRow = b.rows[b.rows.length - 1];
+        var d = daysAgo(first.submittedAt);
+        var steams = b.rows.reduce(function (n, r) { return n + (r.roster ? r.roster.length : 0); }, 0);
+        var who = b.rows.map(function (r) { return r.who; }).filter(function (w, i, a) { return w && a.indexOf(w) === i; });
+        var from = fmtDate(first.submittedAt), to = fmtDate(lastRow.submittedAt);
+        var roTitle = String(((DEFS[g.recordKey] || {}).roster || {}).title || 'rows').toLowerCase();
+        var main = '<tr class="' + (g.mine ? '' : 'foreign') + '">' +
+          '<td class="chk">' + (g.mine
+            ? '<input type="checkbox" class="job-pick" data-job="' + esc(b.key) + '"' + (allPicked ? ' checked' : '') + (canPick ? '' : ' disabled title="Preview this job before verifying it"') + '>'
+            : '') + '</td>' +
+          '<td><strong>' + esc(b.job || '(no job number)') + '</strong></td>' +
+          '<td>' + b.rows.length + (b.rows.length === 1 ? ' entry' : ' entries') + '<br><span style="color:#5c6771;font-size:11px;">' + steams + ' ' + esc(roTitle) + '</span></td>' +
+          '<td>' + (who.length ? esc(who.join(', ')) : '&mdash;') + '</td>' +
+          '<td class="when">' + (from === to ? from : from + ' to ' + to) + '</td>' +
+          '<td class="' + ((d != null && d >= 7) ? 'age old' : 'age') + '">' + (d == null ? '&mdash;' : d + 'd') + '</td>' +
+          '<td><button type="button" class="rev" data-rid="' + esc(b.key) + '">' + (open ? 'Hide' : 'Preview') + '</button></td>' +
+        '</tr>';
+        return main + (open ? '<tr class="detail"><td></td><td colspan="6">' + jobPreview(b) + '</td></tr>' : '');
+      }).join('') +
+      '</tbody></table></div>';
+  }
+  function wireJobPicks() {
+    var setJob = function (cb, on) {
+      (JOBS[cb.getAttribute('data-job')] || []).forEach(function (r) {
+        if (on) STATE.picked[rowId(r)] = true; else delete STATE.picked[rowId(r)];
+      });
+    };
+    document.querySelectorAll('.job-pick').forEach(function (cb) {
+      cb.addEventListener('change', function () { setJob(cb, cb.checked); syncGroupAll(); renderBar(); });
+    });
+    document.querySelectorAll('.grp').forEach(function (grp) {
+      var all = grp.querySelector('.grp-all');
+      if (!all) return;
+      all.addEventListener('change', function () {
+        grp.querySelectorAll('.job-pick').forEach(function (cb) {
+          if (cb.disabled) return;   // not previewed yet
+          cb.checked = all.checked; setJob(cb, all.checked);
+        });
+        renderBar();
+      });
+    });
+  }
+
   function renderGroup(g) {
+    if (isJobGrouped(g.recordKey)) return renderJobGroup(g);
     var selectable = g.mine;
     return '<div class="grp" data-record="' + esc(g.recordKey) + '">' +
       '<div class="grp-head">' +
@@ -702,6 +831,7 @@
         renderBar();
       });
     });
+    wireJobPicks();
     document.querySelectorAll('.rev').forEach(function (b) {
       b.addEventListener('click', function () {
         var rid = b.getAttribute('data-rid');
@@ -729,7 +859,7 @@
     document.querySelectorAll('.grp').forEach(function (grp) {
       var all = grp.querySelector('.grp-all');
       if (!all) return;
-      var picks = grp.querySelectorAll('.row-pick');
+      var picks = grp.querySelectorAll('.row-pick, .job-pick');
       var checked = 0;
       picks.forEach(function (cb) { if (cb.checked) checked++; });
       all.checked = checked > 0 && checked === picks.length;
@@ -846,7 +976,7 @@
     });
     $('btnExpandAll').addEventListener('click', function () {
       var rows = visibleRows(), anyClosed = rows.some(function (r) { return !STATE.open[rowId(r)]; });
-      rows.forEach(function (r) { STATE.open[rowId(r)] = anyClosed; });
+      rows.forEach(function (r) { STATE.open[rowId(r)] = anyClosed; if (isJobGrouped(r.recordKey)) STATE.open[jobKey(r)] = anyClosed; });
       $('btnExpandAll').textContent = anyClosed ? 'Collapse all' : 'Expand all';
       render();
     });
