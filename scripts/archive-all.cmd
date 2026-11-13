@@ -6,7 +6,7 @@ cd /d "%~dp0.."
 echo Full archive: database, templates, documents, records + CSV, photos, PDFs. Only new or changed items are written.
 echo Started %date% %time%
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "node scripts\archive-all.mjs %* 2>&1 | ForEach-Object { "$_" } | Tee-Object -FilePath scripts\archive-all.log; exit $LASTEXITCODE"
-if errorlevel 1 (echo. & echo *** FINISHED WITH PROBLEMS - see the lines marked FAILED above ***) else (echo. & echo Finished OK.)
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\archive-all.ps1 %*
+if errorlevel 1 (echo. & echo *** FINISHED WITH PROBLEMS - see the lines marked FAILED or *** above ***) else (echo. & echo Finished OK.)
 echo.
 pause
