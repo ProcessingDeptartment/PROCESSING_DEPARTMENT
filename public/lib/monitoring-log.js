@@ -3362,7 +3362,7 @@ ${pageStyleCss}
 </style>
 </head><body>
 <div class="ml-print-bar">
-  <button onclick="window.print()">⬇ Save / Print PDF</button>
+  <button onclick="try{if(window.parent!==window)window.parent.document.title=document.title;}catch(e){}window.print()">⬇ Save / Print PDF</button>
   <button id="ml-img-btn" onclick="saveAsImage('ml-img-btn','${filename}')">📷 Save as Image</button>
   <span class="ml-pb-hint">iOS: tap Share → Print or Save to PDF</span>
 </div>
