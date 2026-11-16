@@ -58,8 +58,8 @@ Canning Report is organized around **cans produced** (can breakdown, harvest bre
 Pull from these existing records, matched on job number (same `abalone-receiving` job join canning-report.html already uses for header/harvest data):
 
 1. **`abalone-receiving`** — job header + harvest rows (receiving date, whole mass, animals, weight/animal, size range, out-of-salt weight, %). Same source canning-report.html already reads for its "Harvest breakdown" table.
-2. **`REC-7.4.1-drying-process`** (recordKey `drying-process`, job field `jobNumber`) — wholeWeight, cookingDate, cookingWeight, all steam dates, totalDryingTimeDays, dryWeight, estimateYield.
-3. **`REC-7.4.3.1-grading-production-log-cultivated`** (recordKey likely `grading-production-log-cultivated`, job field `jobNumber`) — driedWeightReceived, actualDriedWeight, dateIntoGradingRoom, gradingDate, the full size-grade weight fields (under8g, g8to10, g11to13, g14to16, g17to20, g21to23, g24to25, g26to28, g29to31, g32to35, g36to39, g40to44, g45to50, g51to55, g56to60, g60plus), bGrade, actualGradedWeight, yield.
+2. **`REC 7.4.1_Drying Process`** (recordKey `drying-process`, job field `jobNumber`) — wholeWeight, cookingDate, cookingWeight, all steam dates, totalDryingTimeDays, dryWeight, estimateYield.
+3. **`REC 7.4.3.1_Grading Production Log (Cultivated)`** (recordKey likely `grading-production-log-cultivated`, job field `jobNumber`) — driedWeightReceived, actualDriedWeight, dateIntoGradingRoom, gradingDate, the full size-grade weight fields (under8g, g8to10, g11to13, g14to16, g17to20, g21to23, g24to25, g26to28, g29to31, g32to35, g36to39, g40to44, g45to50, g51to55, g56to60, g60plus), bGrade, actualGradedWeight, yield.
 
 If a job has no drying-process or grading record yet, show the sections but leave values blank/dashed (same "No data yet from: X" warning pattern canning-report.html uses for missing records) — do not error.
 
@@ -789,7 +789,7 @@ Submit checks: hard block on job number and dry room area; soft "Missing: ..." n
 | `data/record-definitions.json`, `public/data/record-defs/dry-monitoring.json` | Updated definition and offline snapshot. |
 | `public/lib/monitoring-log.js` | v38. Stamped dates, `fromRecord` autofill, `addDays`, hidden and legacy fields, red styling and prompt, entry-date sort and filter. |
 | `src/index.js` | New `GET /api/dry-monitoring/job-facts/:jobNo`. |
-| `public/records/REC-7.4.2-dry-monitoring.html` | Script cache-buster `?v=38`. |
+| `public/records/REC 7.4.2_Dry Monitoring.html` | Script cache-buster `?v=38`. |
 | `prisma/schema.prisma`, `prisma/submission-models.prisma` | New columns added by hand (no migrate). `prisma validate` passes. |
 
 Neon views: `v_dry_monitoring_trolley_check` (now on entry date), `v_dry_monitoring_estimate` (`days_to_estimated_drying`), `v_dry_monitoring_flags` (one row per problem answer). Backups: `bak_sub_dry_monitoring_20260929`, `bak_recordfielddef_dry_monitoring_20260929`, `bak_recorddefinition_dry_monitoring_20260929`.
@@ -1341,8 +1341,8 @@ reinvented:
 Before the REC 7.4.8 wrinkle below, a more fundamental gap surfaced and was confirmed with
 Michaela: **a single dry export shipment is packed from bins that blend stock from multiple job
 numbers.** Grading splits one job's dried output across several physical bins
-(`REC-7.4.3.1-grading-production-log-cultivated.html` and
-`REC-7.4.3.2-grading-production-log-ranched.html` each carry a job number on the record itself,
+(`REC 7.4.3.1_Grading Production Log (Cultivated).html` and
+`REC 7.4.3.2_Grading Production Log (Ranched).html` each carry a job number on the record itself,
 plus a "Collection bins" roster of `{ binCode, binWeightStart, fullBoxWeight, finalBinWeight,
 gradedWeight }` rows — i.e. one job's graded stock gets divided into multiple named bins). At
 packing/export time, boxes are filled by pulling from whichever bins are on hand, which may carry

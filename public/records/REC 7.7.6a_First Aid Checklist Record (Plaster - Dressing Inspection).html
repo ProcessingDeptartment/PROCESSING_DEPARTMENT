@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.7.6a_First Aid Checklist Record (Plaster/Dressing Inspection)</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<script src="../lib/pdf-cover.js?v=7"></script>
+<script src="../lib/palette-map.js?v=2"></script>
+<link rel="stylesheet" href="../styles/record-theme.css?v=tv53">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body class="rt-tablet" data-page-id="records">
+<script src="../lib/record-chrome.js?v=28"></script>
+<div id="mlRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=4"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=7"></script>
+<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/nc-login-alert.js?v=2"></script>
+<script src="../lib/spec-registry.js?v=2"></script>
+<script src="../lib/document-revision.js?v=4"></script>
+<script src="../lib/signoff-block.js?v=8"></script>
+<script src="../lib/nc-raise.js?v=5"></script>
+<script src="../lib/time-picker.js?v=2"></script>
+<script src="../lib/spec-gate.js?v=4"></script>
+  <script src="../lib/monitoring-log.js?v=95"></script>
+<script>(function () {
+  MonitoringLog.init({
+    mount: '#mlRoot',
+    recordKey: 'first-aid-checklist-record',
+    docCode: 'REC 7.7.6a',
+    title: 'First Aid Checklist Record (Plaster/Dressing Inspection)',
+    docRevisionStart: 1,
+    entryFields: [
+      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
+      { key: 'dateOfIncident', label: 'Date of incident', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'time' },
+      { key: 'itemIssued', label: 'Item issued (plaster, glove, bandage)', type: 'text' },
+      { key: 'intact', label: 'Intact', type: 'yesno' },
+      { key: 'cleanlinessOfDressing', label: 'Cleanliness of the dressing', type: 'text' },
+      { key: 'firstAider', label: 'Name and surname of first aider', type: 'text' },
+      { key: 'nameOfInjured', label: 'Name of the injured', type: 'text', required: true },
+      { key: 'breakTime', label: 'Break time', type: 'time' }
+    ],
+    specFields: [],
+    deviationLabel: 'Deviation',
+    deviationPolarity: 'deviation'
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=11"></script>
+<script src="../lib/verification-block.js?v=4"></script>
+</body>
+</html>

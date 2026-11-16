@@ -52,7 +52,7 @@ function printSubmission(id) {
 Check the current version number used in the record HTML files:
 
 ```bash
-grep -m1 "form-record.js?v=" public/records/REC-7.4.1-drying-process.html
+grep -m1 "form-record.js?v=" public/records/REC 7.4.1_Drying Process.html
 ```
 
 Then update `bump-form-record-version.js` at the repo root — set `FROM` to the current version and `TO` to current + 1. Run:

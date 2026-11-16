@@ -9,8 +9,8 @@ Specs read: `MD/rec-7.1.2-basket-entry-flow-instructions.md`, `MD/rec-7.1.5-oosw
 | `public/lib/entry-flow.js` (new, v1) | `EntryFlow.oosw()` and `EntryFlow.receiving()` - the two entry panels |
 | `public/lib/form-record.js` (v70 -> **v71**) | one addition: `container._setRows(rows)` (replace all roster rows). Nothing else touched |
 | `public/styles/responsive.css` (v1 -> **v4**) | `.ef-*` styles, touch font sizes in the `(pointer: coarse)` block, print revert. Backup `.bak-2026-10-05` |
-| `public/records/REC-7.1.5-salting-oosw.html` | version bumps, loads entry-flow, `EntryFlow.oosw()` |
-| `public/records/REC-7.1.2-abalone-receiving.html` | version bumps, old inline Current-basket script replaced by `EntryFlow.receiving()`, Job info summary = job no. / farm / date. Backups `.bak-2026-10-05` |
+| `public/records/REC 7.1.5_Salting (OOSW).html` | version bumps, loads entry-flow, `EntryFlow.oosw()` |
+| `public/records/REC 7.1.2_Abalone Receiving.html` | version bumps, old inline Current-basket script replaced by `EntryFlow.receiving()`, Job info summary = job no. / farm / date. Backups `.bak-2026-10-05` |
 
 ## Storage
 No stored key, column, CSV or print change. The engine roster remains the only store (`sizeRange/weight` for 7.1.5; `sizeRange/basketNr/wholeWeight/farmCount/mortalityCount` for 7.1.2). The engine table is hidden on screen and shown again under `@media print`.

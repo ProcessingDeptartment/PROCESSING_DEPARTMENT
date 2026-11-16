@@ -61,7 +61,7 @@ Find the object/entry for REC 7.4.6 in `nav-menu.js`, `master-index-data.js`, or
 { label: 'REC 7.4.6 Dry Stock Control', href: '...8.1.6...' }
 
 // AFTER (correct)
-{ label: 'REC 7.4.6 Dry Stock Control', href: '/records/REC-7.4.6-dry-stock-control.html' }
+{ label: 'REC 7.4.6 Dry Stock Control', href: '/records/REC 7.4.6_Dry Stock Control.html' }
 // (use the actual filename found by the find command above)
 ```
 

@@ -10,8 +10,8 @@
 
 | Record | Allowed job numbers | Excluded |
 |---|---|---|
-| **REC 7.4.3.1** Grading Production Log (`REC-7.4.3.1-grading-production-log-cultivated.html`) | prefix **`DPR`** only | `3DP`, `3CP`, `CPR` and anything else |
-| **REC 7.4.3.2** Grading Production Log (`REC-7.4.3.2-grading-production-log-ranched.html`) | prefix **`3DP`** only | `DPR`, `3CP`, `CPR` and anything else |
+| **REC 7.4.3.1** Grading Production Log (`REC 7.4.3.1_Grading Production Log (Cultivated).html`) | prefix **`DPR`** only | `3DP`, `3CP`, `CPR` and anything else |
+| **REC 7.4.3.2** Grading Production Log (`REC 7.4.3.2_Grading Production Log (Ranched).html`) | prefix **`3DP`** only | `DPR`, `3CP`, `CPR` and anything else |
 
 Case-insensitive prefix check. A job number that does not match is excluded, never guessed.
 

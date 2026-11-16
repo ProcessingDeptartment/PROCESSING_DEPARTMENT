@@ -80,7 +80,7 @@ Confirmed by reading the source (`public/lib/*.js`, `src/index.js`, `prisma/sche
   already proven in this codebase, and the right precedent for how a bigger migration should work,
   rather than inventing something new.
 - **Some pages carry real bespoke behavior beyond declarative config** — e.g.
-  `REC-7.1.2-abalone-receiving.html` has ~300 lines of page-specific JS: barcode-scan parsing, a
+  `REC 7.1.2_Abalone Receiving.html` has ~300 lines of page-specific JS: barcode-scan parsing, a
   scale-weight integration hook (`window.RecScale`), a "current basket" entry panel with its own
   state machine, custom pre-submit validation blocking the save button, and a MutationObserver
   reconciling that panel against the generic roster UI. **This is not just data-and-fields — it's

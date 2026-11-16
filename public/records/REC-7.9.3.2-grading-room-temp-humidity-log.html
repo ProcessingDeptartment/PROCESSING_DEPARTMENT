@@ -1,72 +1,7 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
-<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REC 7.9.3.2 Grading Room Temp & Humidity Log</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
-<script src="../lib/pdf-cover.js?v=7"></script>
-<script src="../lib/palette-map.js?v=2"></script>
-<link rel="stylesheet" href="../styles/record-theme.css?v=tv53">
-  <link rel="stylesheet" href="../styles/responsive.css?v=1">
-</head>
-<body class="rt-tablet" data-page-id="records">
-<script src="../lib/record-chrome.js?v=27"></script>
-<div style="background:#fff4d6;border:1px solid #e6c46a;padding:10px 14px;margin:8px;font:600 14px sans-serif;">This record is retired and merged into <a href="REC-7.9.3.1-dry-room-temp-humidity-log.html">REC 7.9.3.1 Room Temp/Humidity Log</a> (choose Grading Room as the Room). Old entries stay readable here; add new readings in REC 7.9.3.1.</div>
-<div id="mlRoot"></div>
-
-<script src="../lib/doc-header.js?v=5"></script>
-<script src="../lib/master-index-data.js?v=4"></script>
-<script src="../lib/data-store.js?v=5"></script>
-<script src="../lib/api-backend.js?v=18"></script>
-<script src="../lib/auth.js?v=7"></script>
-<script src="../lib/login-ui.js?v=6"></script>
-<script src="../lib/nc-login-alert.js?v=2"></script>
-<script src="../lib/spec-registry.js?v=2"></script>
-<script src="../lib/thresholds.js?v=2"></script>
-<script src="../lib/document-revision.js?v=4"></script>
-<script src="../lib/signoff-block.js?v=8"></script>
-<script src="../lib/nc-raise.js?v=5"></script>
-<script src="../lib/time-picker.js?v=2"></script>
-<script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/monitoring-log.js?v=95"></script>
-<script>(function () {
-  MonitoringLog.init({
-    mount: '#mlRoot',
-    recordKey: 'grading-room-temp-humidity-log',
-    docCode: 'REC 7.9.3.2',
-    title: 'Grading Room Temp & Humidity Log',
-    docRevisionStart: 1,
-    instructions: [
-      { label: 'Check', text: 'Check temperature & relative humidity on the dial inside the grading room. Temperature should be 25–32°C; any deviation must be reported.' }
-    ],
-    entryFields: [
-      { key: 'week', label: 'Week', type: 'text' },
-      { key: 'shift', label: 'Shift', type: 'select', options: ['Day', 'Night'] },
-      { key: 'date', label: 'Date', type: 'date', required: true },
-      { key: 'room', label: 'Room', type: 'text', default: 'Grading Room' },
-      { key: 'startShiftTemp', label: 'Start shift — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
-      { key: 'startShiftHumidity', label: 'Start shift — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'duringProdTemp', label: 'During production — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
-      { key: 'duringProdHumidity', label: 'During production — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'endShiftTemp', label: 'End shift — temp', type: 'number', unit: '°C', specKey: 'roomTemp' },
-      { key: 'endShiftHumidity', label: 'End shift — humidity', type: 'number', unit: '% rH', specKey: 'roomHumidity' },
-      { key: 'checkedBy', label: 'Checked by', type: 'text', required: true },
-      { key: 'correctiveAction', label: 'Corrective action', type: 'textarea' }
-    ],
-    specFields: [
-      { key: 'roomTemp', label: 'Room temperature', unit: '°C', ...Thresholds.get('grading-room-temp-humidity-log', 'roomTemp') },
-      { key: 'roomHumidity', label: 'Relative humidity', unit: '% rH', ...Thresholds.get('grading-room-temp-humidity-log', 'roomHumidity') }
-    ],
-    deviationLabel: 'Deviation',
-    deviationPolarity: 'deviation'
-  });
-})();
-</script>
-<script src="../lib/record-shell.js?v=11"></script>
-<script src="../lib/verification-block.js?v=4"></script>
-</body>
-</html>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>REC 7.9.3.2_Grading Room Temp &amp; Humidity Log</title>
+<meta name="robots" content="noindex">
+<script>location.replace("REC%207.9.3.2_Grading%20Room%20Temp%20&%20Humidity%20Log.html" + location.search + location.hash);</script>
+<noscript><meta http-equiv="refresh" content="0; url=REC%207.9.3.2_Grading%20Room%20Temp%20&%20Humidity%20Log.html"></noscript>
+</head><body>This record has moved to <a href="REC%207.9.3.2_Grading%20Room%20Temp%20&%20Humidity%20Log.html">REC 7.9.3.2_Grading Room Temp &amp; Humidity Log</a>.</body></html>

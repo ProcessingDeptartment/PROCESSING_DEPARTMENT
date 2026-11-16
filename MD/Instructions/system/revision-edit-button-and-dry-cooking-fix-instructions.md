@@ -27,7 +27,7 @@ Find the row for `REC 7.4.0`. It currently reads:
     ...
     "dateOfIssue": "30/03/2026",
     "recordKey": "dry-cooking",
-    "href": "REC-7.4.0-dry-cooking.html"
+    "href": "REC 7.4.0_Dry Cooking.html"
 },
 ```
 

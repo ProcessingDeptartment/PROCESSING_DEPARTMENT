@@ -272,7 +272,7 @@ Add these rules in the `.ef-*` block:
 
 ## 6. Version bumps
 
-After editing `entry-flow.js`, bump `?v=N` on the `<script src="../lib/entry-flow.js?v=N">` line in `public/records/REC-7.1.5-salting-oosw.html`.
+After editing `entry-flow.js`, bump `?v=N` on the `<script src="../lib/entry-flow.js?v=N">` line in `public/records/REC 7.1.5_Salting (OOSW).html`.
 
 No other record pages reference `entry-flow.js`. Double-check with:
 ```bash
@@ -298,7 +298,7 @@ grep -rl "responsive.css" public/records/
 8. **Print / PDF:** banner does not appear (`.no-print` class).
 9. **Banner text is correct:** kg to 2 dp, % to 2 dp, date formatted as `15 Oct 2026, 09:32`.
 10. **No console errors** on load or during fetch.
-11. Version strings bumped on REC-7.1.5-salting-oosw.html and responsive.css references.
+11. Version strings bumped on REC 7.1.5_Salting (OOSW).html and responsive.css references.
 
 ---
 

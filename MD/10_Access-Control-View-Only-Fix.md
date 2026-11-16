@@ -31,7 +31,7 @@ access-control.js
   └── applyRules() → sets data-access on [data-page-id] elements (home page only)
 ```
 
-The record form HTML pages (`/records/REC-*.html`) load `form-record.js` and `record-shell.js` but neither consults `AccessControl`.
+The record form HTML pages (`/records/REC *.html`) load `form-record.js` and `record-shell.js` but neither consults `AccessControl`.
 
 ---
 
@@ -39,7 +39,7 @@ The record form HTML pages (`/records/REC-*.html`) load `form-record.js` and `re
 
 ### Step 1 — Add `data-page-id` to each record HTML `<body>`
 
-Each `REC-*.html` page needs to declare which page-ID it corresponds to so `AccessControl.getAccess()` can be called with the right key. For all standard record forms this is `"records"` (matching the access-control config key).
+Each `REC *.html` page needs to declare which page-ID it corresponds to so `AccessControl.getAccess()` can be called with the right key. For all standard record forms this is `"records"` (matching the access-control config key).
 
 ```html
 <body data-page-id="records">
@@ -112,7 +112,7 @@ Add to `public/styles/record-theme.css`:
 
 | File | Change |
 |---|---|
-| `public/records/REC-*.html` | Add `data-page-id="records"` to `<body>` |
+| `public/records/REC *.html` | Add `data-page-id="records"` to `<body>` |
 | `public/lib/record-shell.js` | Add `enforcePageAccessLevel()` function and call it after auth + AccessControl config load |
 | `public/styles/record-theme.css` | Add `.fr-access-banner` styles |
 
@@ -124,4 +124,4 @@ No changes needed to `form-record.js`, `access-control.js`, or any server-side c
 
 - `AccessControl.getAccess()` only returns `'read'` after the user has unlocked with a passkey **and** their role has `read` configured for `records` in the admin panel. Before unlock, non-admin users get `'edit'` for the default visible pages (`records` is in `DEFAULT_VISIBLE`). This is correct — view-only only applies once a specific role is active.
 - The `PermissionRules` module (`permission-rules.js`) is a separate system controlling action-level permissions (who can verify, delete, amend). The page-level read/edit distinction from `AccessControl` is an additional layer on top.
-- After implementing, bump the `?v=N` cache-bust param in all `REC-*.html` files if `record-shell.js` is changed (per CLAUDE.md convention — but `record-shell.js` is not version-suffixed the same way as `form-record.js`; check the HTML files for how `record-shell.js` is loaded).
+- After implementing, bump the `?v=N` cache-bust param in all `REC *.html` files if `record-shell.js` is changed (per CLAUDE.md convention — but `record-shell.js` is not version-suffixed the same way as `form-record.js`; check the HTML files for how `record-shell.js` is loaded).

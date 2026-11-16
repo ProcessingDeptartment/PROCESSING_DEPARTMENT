@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://processing-department-api.onrender.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC 7.6.7a_Staff Hygiene Inspection - Weekends</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#A9763A">
+<script src="../lib/pdf-cover.js?v=7"></script>
+<script src="../lib/palette-map.js?v=2"></script>
+<link rel="stylesheet" href="../styles/record-theme.css?v=tv53">
+  <link rel="stylesheet" href="../styles/responsive.css?v=1">
+</head>
+<body class="rt-tablet" data-page-id="records">
+<script src="../lib/record-chrome.js?v=28"></script>
+<div id="frRoot"></div>
+
+<script src="../lib/doc-header.js?v=5"></script>
+<script src="../lib/master-index-data.js?v=4"></script>
+<script src="../lib/data-store.js?v=5"></script>
+<script src="../lib/api-backend.js?v=18"></script>
+<script src="../lib/auth.js?v=7"></script>
+<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/nc-login-alert.js?v=2"></script>
+<script src="../lib/document-revision.js?v=4"></script>
+<script src="../lib/signoff-block.js?v=8"></script>
+<script src="../lib/nc-raise.js?v=5"></script>
+<script src="../lib/delete-submission-modal.js?v=1"></script>
+<script src="../lib/time-picker.js?v=2"></script>
+<script src="../lib/spec-gate.js?v=4"></script>
+  <script src="../lib/form-record.js?v=153"></script>
+<script>(function () {
+  FormRecord.init({
+    mount: '#frRoot',
+    recordKey: 'staff-hygiene-inspection-weekends',
+    docCode: 'REC 7.6.7a',
+    title: 'Staff Hygiene Inspection - Weekends',
+    docRevisionStart: 1,
+    listColumns: ['date'],
+    instructions: [
+      { label: 'Work instruction', text: 'Complete record at start-up of each working shift. Inspect per the Personnel Hygiene Procedure. Non-compliance observed should be recorded and reported to supervisors.' }
+    ],
+    sections: [
+      { title: 'Shift details', fields: [
+        { key: 'date', label: 'Date', type: 'date', required: true }
+      ]},
+      { title: 'Sign-off', fields: [
+        { key: 'verifiedBy', label: 'Verified by', type: 'text', required: true }
+      ]}
+    ],
+    roster: {
+      title: 'Staff members â€” day shift',
+      columns: [
+        { key: 'staffMember', label: 'Staff member', type: 'text' },
+        { key: 'protectiveClothing', label: 'Protective clothing', type: 'yesno' },
+        { key: 'hairBootsClean', label: 'Hair covered and boot washed', type: 'yesno' },
+        { key: 'fingernails', label: 'Fingernails short and clean', type: 'yesno' },
+        { key: 'noJewelleryMakeup', label: 'No jewellery/make-up', type: 'yesno' },
+        { key: 'handWash', label: 'Hand wash', type: 'yesno' },
+        { key: 'injuryIllness', label: 'Injury / illness', type: 'yesno' },
+        { key: 'noFood', label: 'No food', type: 'yesno' },
+        { key: 'correctiveAction', label: 'Corrective action', type: 'text' },
+        { key: 'comments', label: 'Comments', type: 'text' },
+        { key: 'qcSignature', label: 'QC signature', type: 'text' }
+      ]
+    }
+  });
+})();
+</script>
+<script src="../lib/record-shell.js?v=11"></script>
+<script src="../lib/verification-block.js?v=4"></script>
+</body>
+</html>
+
+
+

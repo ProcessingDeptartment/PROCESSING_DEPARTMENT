@@ -18,7 +18,7 @@ The system already has:
 What needs to be done:
 1. Create one HTML page per PRP in `public/prps/`
 2. Replace `public/lib/prp-index-data.js` with the full list
-3. Create `REC-8.8a-prp-verification.html` as a proper record form (separate section below)
+3. Create `REC 8.8a_PRP Verification.html` as a proper record form (separate section below)
 4. Bump version strings on any files that reference `prp-index-data.js`
 
 ---
@@ -183,13 +183,13 @@ The form needs the following fields at minimum (add to the record definition in 
 
 ### HTML shell
 
-Create `public/records/REC-8.8a-prp-verification.html` following the same pattern as other record shells in `public/records/`. Set `docCode: "REC 8.8a"` and `title: "PRP Verification"`.
+Create `public/records/REC 8.8a_PRP Verification.html` following the same pattern as other record shells in `public/records/`. Set `docCode: "REC 8.8a"` and `title: "PRP Verification"`.
 
 ### Index data
 
 Add to `public/lib/master-index-data.js` under the appropriate section (Quality / Verification):
 ```js
-{ code: 'REC 8.8a', name: 'PRP Verification', href: '/records/REC-8.8a-prp-verification.html', area: 'Verification' }
+{ code: 'REC 8.8a', name: 'PRP Verification', href: '/records/REC 8.8a_PRP Verification.html', area: 'Verification' }
 ```
 
 ---
@@ -235,7 +235,7 @@ The four sections on each PRP page map to:
 | **Create** (×22) | `public/prps/PRO-8.2*.html`, `PRO-8.8*.html` (see table in Part 1) |
 | **Replace** | `public/lib/prp-index-data.js` |
 | **Bump `?v=`** | Any file referencing `prp-index-data.js` |
-| **Create** | `public/records/REC-8.8a-prp-verification.html` |
+| **Create** | `public/records/REC 8.8a_PRP Verification.html` |
 | **Add row** | `public/lib/master-index-data.js` (REC 8.8a entry) |
 | **DB + export** | Add `REC 8.8a` record definition to Neon, run `export-record-defs.mjs`, commit JSON |
 | **Check/update** | `public/index.html` — PRPs nav tile |

@@ -148,9 +148,9 @@ Add one new field, `exportBatch` (free-text, same style as the existing `jobNumb
 | Record | File | Change |
 |---|---|---|
 | Dry Export Pack Front Page | `public/records/Dry-Export-Pack-Front-Page-dry-export-pack-front-page.html` | New field; **this becomes the page's `batchField`** (currently `jobNumber` is — see open item below) |
-| REC 7.4.7 Labelling of Dry Boxes | `public/records/REC-7.4.7-labelling-of-dry-boxes.html` | New field + new `batchField: 'exportBatch'` — this record currently has **no** batch link of any kind |
-| REC 7.4.8 Dry Labelling List | `public/records/REC-7.4.8-dry-labelling-list.html` | New field **alongside** existing `agCode`; **change `batchField` from `'agCode'` to `'exportBatch'`** — see note below |
-| REC 7.4.9 Dry Stock Transfers | `public/records/REC-7.4.9-dry-stock-transfers.html` | New field + new `batchField: 'exportBatch'` — currently has **no** batch link of any kind |
+| REC 7.4.7 Labelling of Dry Boxes | `public/records/REC 7.4.7_Labelling of Dry Boxes.html` | New field + new `batchField: 'exportBatch'` — this record currently has **no** batch link of any kind |
+| REC 7.4.8 Dry Labelling List | `public/records/REC 7.4.8_Dry Labelling List.html` | New field **alongside** existing `agCode`; **change `batchField` from `'agCode'` to `'exportBatch'`** — see note below |
+| REC 7.4.9 Dry Stock Transfers | `public/records/REC 7.4.9_Dry Stock Transfers.html` | New field + new `batchField: 'exportBatch'` — currently has **no** batch link of any kind |
 
 Decided with the requester (2026-09-09):
 - Batch codes are free text in the existing job-number style (no new numbering scheme).

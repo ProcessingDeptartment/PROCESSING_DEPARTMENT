@@ -13,7 +13,7 @@ Date: 2026-10-02. Spec: `rec-7.4.0-pot-slides-blanching-stage-instructions.md`. 
 | 5. Sticky batch codes | done | `stickyGet/stickySet`, localStorage `fr_sticky:dry-cooking:<salt\|sugar\|vinegar>`, try/catch wrapped |
 | 6. Weight rules | done | `jobWeights.cookFromOosw`: available to cook = OOSW − all Cooking kg; "OOSW not found" when no OOSW record; R1 untouched |
 | 7. Print / trace | done | print title `Blanching` / `Pot n — Cooking`; `src/index.js` + `public/records/batch-trace.html` list slides in order with blanching time/temp/salt batch and additions with batch codes |
-| CSS | done | `public/styles/record-theme.css` (v tv45), page `REC-7.4.0-dry-cooking.html` bumped to form-record v72 |
+| CSS | done | `public/styles/record-theme.css` (v tv45), page `REC 7.4.0_Dry Cooking.html` bumped to form-record v72 |
 
 Also: `src/validate-submission.js` no longer reports a required roster column as "empty" when its `showWhen` hides it (it was flagging blanching fields on every Cooking row); `src/dry-weight-override.js` keeps R2/R3 ids for old overrides.
 

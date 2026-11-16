@@ -12,7 +12,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "cans-released-form",
-    "pageFile": "REC-01-cans-released-form.html",
+    "pageFile": "REC 01_Cans Released Form (Awaiting NRCS Releases).html",
     "docCode": "REC 01",
     "title": "Cans Released Form (Awaiting NRCS Releases)",
     "batchField": "agCode",
@@ -23,7 +23,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "gonad-inspection-report",
-    "pageFile": "REC-1-gonad-inspection-report.html",
+    "pageFile": "REC 1_Gonad Inspection Report.html",
     "docCode": "REC 1",
     "title": "Gonad Inspection Report",
     "batchField": "jobNo",
@@ -34,7 +34,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "incubator-cans-log",
-    "pageFile": "REC-7.1-incubator-cans-log.html",
+    "pageFile": "REC 7.1_Incubator Cans Log.html",
     "docCode": "REC 7.1",
     "title": "Incubator Cans Log",
     "batchField": "jobNo",
@@ -45,7 +45,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "basket-removal-shucking-gutting",
-    "pageFile": "REC-7.1.1-basket-removal-shucking-gutting.html",
+    "pageFile": "REC 7.1.1_Basket Removal, Shucking & Gutting.html",
     "docCode": "REC 7.1.1",
     "title": "Basket Removal, Shucking & Gutting",
     "batchField": "jobNo",
@@ -56,7 +56,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "abalone-receiving",
-    "pageFile": "REC-7.1.2-abalone-receiving.html",
+    "pageFile": "REC 7.1.2_Abalone Receiving.html",
     "docCode": "REC 7.1.2",
     "title": "Abalone Receiving",
     "batchField": "jobNo",
@@ -67,7 +67,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "salting-and-tumbling",
-    "pageFile": "REC-7.1.3-salting-and-tumbling.html",
+    "pageFile": "REC 7.1.3_Salting and Tumbling.html",
     "docCode": "REC 7.1.3",
     "title": "Salting and Tumbling",
     "batchField": "jobNo",
@@ -82,7 +82,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "bleeding-and-salting",
-    "pageFile": "REC-7.1.3.1-bleeding-and-salting.html",
+    "pageFile": "REC 7.1.3.1_Bleeding and Salting.html",
     "docCode": "REC 7.1.3.1",
     "title": "Bleeding and Salting",
     "batchField": "jobNo",
@@ -96,7 +96,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "washing-control-sheet",
-    "pageFile": "REC-7.1.4-washing-control-sheet.html",
+    "pageFile": "REC 7.1.4_Washing Control Sheet.html",
     "docCode": "REC 7.1.4",
     "title": "Washing Control Sheet",
     "batchField": "jobNo",
@@ -107,7 +107,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "salting-oosw",
-    "pageFile": "REC-7.1.5-salting-oosw.html",
+    "pageFile": "REC 7.1.5_Salting (OOSW).html",
     "docCode": "REC 7.1.5",
     "title": "Salting (OOSW)",
     "batchField": "jobNo",
@@ -118,7 +118,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "scrubbing-check-supervisor",
-    "pageFile": "REC-7.1.6-scrubbing-check-supervisor.html",
+    "pageFile": "REC 7.1.6_Scrubbing Check - Supervisor.html",
     "docCode": "REC 7.1.6",
     "title": "Scrubbing Check - Supervisor",
     "batchField": "jobNo",
@@ -129,7 +129,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "stock-loading",
-    "pageFile": "REC-7.2.10-stock-loading.html",
+    "pageFile": "REC 7.2.10_Stock Loading.html",
     "docCode": "REC 7.2.10",
     "title": "Stock Loading",
     "batchField": "jobNo",
@@ -140,7 +140,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "qc-report",
-    "pageFile": "REC-7.2.11-qc-report.html",
+    "pageFile": "REC 7.2.11_QC Report.html",
     "docCode": "REC 7.2.11",
     "title": "QC Report",
     "batchField": "jobNo",
@@ -151,7 +151,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "double-seam-inspection-report",
-    "pageFile": "REC-7.2.12-double-seam-inspection-report.html",
+    "pageFile": "REC 7.2.12_Double Seam Inspection Report.html",
     "docCode": "REC 7.2.12",
     "title": "Double Seam Inspection Report",
     "batchField": "jobNo",
@@ -162,7 +162,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "abalone-packing-specification",
-    "pageFile": "REC-7.2.4-abalone-packing-specification.html",
+    "pageFile": "REC 7.2.4_Abalone Packing Specification.html",
     "docCode": "REC 7.2.4",
     "title": "Abalone Packing Specification",
     "batchField": "jobNo",
@@ -173,7 +173,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "rework-log",
-    "pageFile": "REC-7.2.13-rework-log.html",
+    "pageFile": "REC 7.2.13_Rework Log.html",
     "docCode": "REC 7.2.13",
     "title": "Rework Log",
     "batchField": "jobNo",
@@ -184,7 +184,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "stock-transfers",
-    "pageFile": "REC-7.2.16-stock-transfers.html",
+    "pageFile": "REC 7.2.16_Stock Transfers.html",
     "docCode": "REC 7.2.16",
     "title": "Stock Transfers",
     "batchField": "jobNo",
@@ -195,7 +195,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "precooking-check-sheet",
-    "pageFile": "REC-7.2.3-precooking-check-sheet.html",
+    "pageFile": "REC 7.2.3_Precooking Check Sheet.html",
     "docCode": "REC 7.2.3",
     "title": "Precooking Check Sheet",
     "batchField": "jobNo",
@@ -206,7 +206,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "can-filling-and-printing",
-    "pageFile": "REC-7.2.6-can-filling-and-printing.html",
+    "pageFile": "REC 7.2.6_Can Filling and Printing.html",
     "docCode": "REC 7.2.6",
     "title": "Can Filling and Printing",
     "batchField": "jobNo",
@@ -217,7 +217,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "cans-produced",
-    "pageFile": "REC-7.2.7-cans-produced.html",
+    "pageFile": "REC 7.2.7_Canning Production.html",
     "docCode": "REC 7.2.7",
     "title": "Cans Produced",
     "batchField": "jobNo",
@@ -239,7 +239,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "retorting-control-sheet",
-    "pageFile": "REC-7.2.8-retorting-control-sheet.html",
+    "pageFile": "REC 7.2.8_Retorting Control Sheet.html",
     "docCode": "REC 7.2.8",
     "title": "Retorting Control Sheet",
     "batchField": "jobNo",
@@ -250,7 +250,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "retort-inspection-report",
-    "pageFile": "REC-7.2.9-retort-inspection-report.html",
+    "pageFile": "REC 7.2.9_Retort Inspection Report.html",
     "docCode": "REC 7.2.9",
     "title": "Retort Inspection Report",
     "batchField": "jobNo",
@@ -261,7 +261,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "ingredient-weighing",
-    "pageFile": "REC-7.3.2-ingredient-weighing.html",
+    "pageFile": "REC 7.3.2_Ingredient Weighing.html",
     "docCode": "REC 7.3.2",
     "title": "Ingredient Weighing",
     "batchField": "jobNo",
@@ -281,7 +281,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "sauce-mixing",
-    "pageFile": "REC-7.3.3-sauce-mixing.html",
+    "pageFile": "REC 7.3.3_Sauce Mixing.html",
     "docCode": "REC 7.3.3",
     "title": "Sauce Mixing",
     "batchField": "jobNo",
@@ -300,7 +300,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "brine-mixing-report",
-    "pageFile": "REC-7.3.6-brine-mixing-report.html",
+    "pageFile": "REC 7.3.6_Brine Mixing Report.html",
     "docCode": "REC 7.3.6",
     "title": "Brine Mixing Report",
     "batchField": "jobNo",
@@ -311,7 +311,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dry-cooking",
-    "pageFile": "REC-7.4.0-dry-cooking.html",
+    "pageFile": "REC 7.4.0_Dry Cooking.html",
     "docCode": "REC 7.4.0",
     "title": "Dry Cooking",
     "batchField": "jobNo",
@@ -322,7 +322,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "drying-process",
-    "pageFile": "REC-7.4.1-drying-process.html",
+    "pageFile": "REC 7.4.1_Drying Process.html",
     "docCode": "REC 7.4.1",
     "title": "Drying Process",
     "batchField": "jobNo",
@@ -333,7 +333,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dried-abalone-transfer",
-    "pageFile": "REC-7.4.10-dried-abalone-transfer.html",
+    "pageFile": "REC 7.4.10_Dried Abalone Transfer.html",
     "docCode": "REC 7.4.10",
     "title": "Dried Abalone Transfer",
     "batchField": "jobNo",
@@ -344,7 +344,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dry-monitoring",
-    "pageFile": "REC-7.4.2-dry-monitoring.html",
+    "pageFile": "REC 7.4.2_Dry Monitoring.html",
     "docCode": "REC 7.4.2",
     "title": "Dry Monitoring",
     "batchField": "jobNo",
@@ -355,7 +355,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "grading-production-log-cultivated",
-    "pageFile": "REC-7.4.3.1-grading-production-log-cultivated.html",
+    "pageFile": "REC 7.4.3.1_Grading Production Log (Cultivated).html",
     "docCode": "REC 7.4.3.1",
     "title": "Grading Production Log (Cultivated)",
     "batchField": "jobNo",
@@ -366,7 +366,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "grading-production-log-ranched",
-    "pageFile": "REC-7.4.3.2-grading-production-log-ranched.html",
+    "pageFile": "REC 7.4.3.2_Grading Production Log (Ranched).html",
     "docCode": "REC 7.4.3.2",
     "title": "Grading Production Log (Ranched)",
     "batchField": "jobNo",
@@ -377,7 +377,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "grading-boxing-traceability",
-    "pageFile": "REC-7.4.4-grading-boxing-traceability.html",
+    "pageFile": "REC 7.4.4_Grading, Boxing & Traceability.html",
     "docCode": "REC 7.4.4",
     "title": "Grading, Boxing & Traceability",
     "batchField": "jobNo",
@@ -388,7 +388,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dry-stock-control",
-    "pageFile": "REC-7.4.6-dry-stock-control.html",
+    "pageFile": "REC 7.4.6_Dry Stock Control.html",
     "docCode": "REC 7.4.6",
     "title": "Dry Stock Control",
     "batchField": "jobNo",
@@ -399,7 +399,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dry-labelling-list",
-    "pageFile": "REC-7.4.8-dry-labelling-list.html",
+    "pageFile": "REC 7.4.8_Dry Labelling List.html",
     "docCode": "REC 7.4.8",
     "title": "Dry Labelling List",
     "batchField": "agCode",
@@ -410,7 +410,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "chemical-stock-issue-register",
-    "pageFile": "REC-7.6.4-chemical-stock-issue-register.html",
+    "pageFile": "REC 7.6.4_Chemical Stock & Issue Register.html",
     "docCode": "REC 7.6.4",
     "title": "Chemical Stock & Issue Register",
     "batchField": "batchNumber",
@@ -421,7 +421,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "salt-issuing-register",
-    "pageFile": "REC-7.7.7-salt-issuing-register.html",
+    "pageFile": "REC 7.7.7_Salt Issuing Register.html",
     "docCode": "REC 7.7.7",
     "title": "Salt Issuing Register",
     "batchField": "batchNumber",
@@ -432,7 +432,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "chiller-batch-control",
-    "pageFile": "REC-7.8.1-chiller-batch-control.html",
+    "pageFile": "REC 7.8.1_Chiller Batch Control (Canning).html",
     "docCode": "REC 7.8.1",
     "title": "Chiller Batch Control (Canning)",
     "batchField": "jobNo",
@@ -443,7 +443,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dry-chiller-batch-control",
-    "pageFile": "REC-7.8.1-dry-chiller-batch-control.html",
+    "pageFile": "REC 7.8.1_Dry Chiller Batch Control.html",
     "docCode": "REC 7.8.1",
     "title": "Dry Chiller Batch Control",
     "batchField": "jobNo",
@@ -454,7 +454,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "seamer-inspection-report",
-    "pageFile": "REC-7.8.4-seamer-inspection-report.html",
+    "pageFile": "REC 7.8.4_Seamer Inspection Report.html",
     "docCode": "REC 7.8.4",
     "title": "Seamer Inspection Report",
     "batchField": "jobNo",
@@ -465,7 +465,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "cans-incoming-inspection",
-    "pageFile": "REC-7.8.6-cans-incoming-inspection.html",
+    "pageFile": "REC 7.8.6_Cans Incoming Inspection.html",
     "docCode": "REC 7.8.6",
     "title": "Cans Incoming Inspection",
     "batchField": "jobNo",
@@ -476,7 +476,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dispatch-loading-inspection-checklist",
-    "pageFile": "REC-7.8.8-dispatch-loading-inspection-checklist.html",
+    "pageFile": "REC 7.8.8_Dispatch Loading Inspection Checklist.html",
     "docCode": "REC 7.8.8",
     "title": "Dispatch Loading Inspection Checklist",
     "batchField": "jobNo",
@@ -487,7 +487,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "dispatch-receiving-checklist",
-    "pageFile": "REC-7.8.8.1-dispatch-receiving-checklist.html",
+    "pageFile": "REC 7.8.8.1_Dispatch Receiving Checklist.html",
     "docCode": "REC 7.8.8.1",
     "title": "Dispatch Receiving Checklist",
     "batchField": "jobNo",
@@ -498,7 +498,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "chiller-temperature-monitoring",
-    "pageFile": "REC-7.9.1-chiller-temperature-monitoring.html",
+    "pageFile": "REC 7.9.1_Chiller Temperature Monitoring.html",
     "docCode": "REC 7.9.1",
     "title": "Chiller Temperature Monitoring",
     "batchField": "jobNo",
@@ -509,7 +509,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "disposition-investigation-record",
-    "pageFile": "REC-8.1.3-disposition-investigation-record.html",
+    "pageFile": "REC 8.1.3_Disposition Investigation Record.html",
     "docCode": "REC 8.1.3",
     "title": "Disposition Investigation Record",
     "batchField": "productionCode",
@@ -520,7 +520,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "traceability-mock-recall-canned-braised-abalone",
-    "pageFile": "REC-8.1.6-a-traceability-mock-recall-canned-braised-abalone.html",
+    "pageFile": "REC 8.1.6a_Traceability & Mock Recall Checklist for Canned Braised Abalone.html",
     "docCode": "REC 8.1.6a",
     "title": "Traceability & Mock Recall Checklist for Canned Braised Abalone",
     "batchField": "jobNo",
@@ -531,7 +531,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "traceability-mock-recall-canned-abalone",
-    "pageFile": "REC-8.1.6-traceability-mock-recall-canned-abalone.html",
+    "pageFile": "REC 8.1.6_Traceability & Mock Recall Checklist for Canned Abalone.html",
     "docCode": "REC 8.1.6",
     "title": "Traceability & Mock Recall Checklist for Canned Abalone",
     "batchField": "jobNo",
@@ -542,7 +542,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "traceability-mock-recall-canned-minced-abalone",
-    "pageFile": "REC-8.1.6b-traceability-mock-recall-canned-minced-abalone.html",
+    "pageFile": "REC 8.1.6b_Traceability & Mock Recall Checklist for Canned Minced Abalone.html",
     "docCode": "REC 8.1.6b",
     "title": "Traceability & Mock Recall Checklist for Canned Minced Abalone",
     "batchField": "jobNo",
@@ -553,7 +553,7 @@ window.TracedRecords = [
   },
   {
     "recordKey": "traceability-mock-recall-dried-abalone",
-    "pageFile": "REC-8.1.7-traceability-mock-recall-dried-abalone.html",
+    "pageFile": "REC 8.1.7_Traceability & Mock Recall Checklist for Dried Abalone.html",
     "docCode": "REC 8.1.7",
     "title": "Traceability & Mock Recall Checklist for Dried Abalone",
     "batchField": "jobNo",

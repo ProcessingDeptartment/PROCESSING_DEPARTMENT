@@ -29,7 +29,7 @@ Push to `main` → Render auto-deploys both the static site and the API service 
 public/
   ├── index.html                 Main landing page
   ├── pages/                     Handover reports and category pages
-  ├── records/                   Record forms (REC-*.html)
+  ├── records/                   Record forms (REC *.html)
   ├── sops/                      Standard Operating Procedures
   ├── data/
   │   └── record-defs/           Static JSON snapshots of record configs (read by the browser)

@@ -361,7 +361,7 @@
           + '<option value="yes"' + (r.carRequired === true ? ' selected' : '') + '>Yes — CAR required</option>'
           + '<option value="no"' + (r.carRequired === false ? ' selected' : '') + '>No</option></select></label>'
         + '<label>CAR reference <input name="car_ref" type="text" value="' + esc(r.carRef || '') + '" placeholder="e.g. CAR number from REC 8.1.1.a"></label>'
-        + '<div class="full" style="font-size:12px;color:#92400e">A CAR is the more severe process: raise it on <a href="../records/REC-8.1.1.a-internal-car.html" target="_blank" rel="noopener">REC 8.1.1.a Internal CAR</a>, then enter its reference here. This NC cannot be closed until the CAR reference is entered.</div>'
+        + '<div class="full" style="font-size:12px;color:#92400e">A CAR is the more severe process: raise it on <a href="../records/REC 8.1.1.a_Internal CAR.html" target="_blank" rel="noopener">REC 8.1.1.a Internal CAR</a>, then enter its reference here. This NC cannot be closed until the CAR reference is entered.</div>'
         + '<label>Status <select name="status">' + Object.keys(STAT).map(function (k) {
           return '<option value="' + k + '"' + (k === r.status ? ' selected' : '') + '>' + STAT[k] + '</option>'; }).join('') + '</select></label>'
         + '<div style="font-size:12px;color:#5c6771;padding:4px 0">🔐 Saving requires passkey sign-off.</div>'

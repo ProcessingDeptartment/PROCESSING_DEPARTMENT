@@ -41,7 +41,7 @@ If you cannot run the script (no local DB access), manually edit the JSON file t
 | `public/data/record-defs/<key>.json` | Static record config snapshots (what the browser actually reads) |
 | `src/record-def.js` | `assembleRecordConfig()` — builds config object from DB via Prisma |
 | `scripts/export-record-defs.mjs` | Reads DB, writes all `public/data/record-defs/*.json` files |
-| `public/records/REC-*.html` | One HTML shell per record form |
+| `public/records/REC *.html` | One HTML shell per record form |
 | `public/styles/record-theme.css` | Shared form styles |
 | `public/lib/signoff-block.js` | Sign-off / approval section |
 | `public/lib/api-backend.js` | Client-side API calls; serves cached → static file → live API |

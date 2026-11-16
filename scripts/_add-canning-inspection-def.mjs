@@ -19,7 +19,7 @@ const entry = {
   recordKey: 'canning-inspection',
   engine: 'form-record',
   mount: '#frRoot',
-  pageFile: 'REC-7.2.11-canning-inspection.html',
+  pageFile: 'REC 7.2.11_Canning Inspection Record.html',
   docCode: 'REC 7.2.11',
   title: 'Canning Inspection Record',
   docRevisionStart: 1,

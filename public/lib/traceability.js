@@ -71,7 +71,7 @@
 
 
   function hrefForThisPage(config, sub) {
-    const file = (config && config.pageFile) || location.pathname.split('/').pop() || '';
+    const file = (config && config.pageFile) || decodeURIComponent(location.pathname.split('/').pop() || '');
     return sub && sub.id ? file + '#' + sub.id : file;
   }
 

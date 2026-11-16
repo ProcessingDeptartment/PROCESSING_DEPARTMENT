@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-27 (Part 2 revised same day)
 **Raised by:** Michaela
-**Scope:** Two independent improvements to `REC-7.1.3-salting-and-tumbling.html` and its record definition.
+**Scope:** Two independent improvements to `REC 7.1.3_Salting and Tumbling.html` and its record definition.
 
 1. **Barcode scan** — add a lot-barcode field with camera scanner (admin-only), matching the pattern already used in REC 7.1.2 Abalone Receiving.
 2. **Roster row UX** — three targeted fixes to the salting batch roster row: compact size range selector, weight fields sized like job info fields, and "Add weight" button placed inline next to the weight(kg) field styled like the submit button.
@@ -53,7 +53,7 @@ If DB access is not available, edit the JSON file directly and commit it.
 ]
 ```
 
-### 1.3 HTML changes — `REC-7.1.3-salting-and-tumbling.html`
+### 1.3 HTML changes — `REC 7.1.3_Salting and Tumbling.html`
 
 Add `barcode-scan.js` and the `BarcodeScan.attach` call before `</body>`:
 
@@ -198,7 +198,7 @@ grep -rl "form-record.js" public/records/
 | File | Change |
 |------|--------|
 | `public/data/record-defs/salting-and-tumbling.json` | Add `lotBarcode` field to Job info; add `"compactSizeRange": true` to roster object |
-| `public/records/REC-7.1.3-salting-and-tumbling.html` | Add `barcode-scan.js` script tag + `BarcodeScan.attach` call |
+| `public/records/REC 7.1.3_Salting and Tumbling.html` | Add `barcode-scan.js` script tag + `BarcodeScan.attach` call |
 | `public/lib/form-record.js` | Add `compactSizeRange` render path (compact select, job-info-matched inputs, inline Add button); add CSS; bump version |
 | All HTML files referencing `form-record.js` | Bump `?v=N` query param |
 | DB (`RecordFieldDef` via Neon console) | Add `lotBarcode` field row for the Job info section of `salting-and-tumbling` |

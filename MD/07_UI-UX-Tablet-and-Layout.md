@@ -839,7 +839,7 @@ each bucket) before batch-applying, so Michaela can spot-check it.
 ### 9. REC 7.2.12 Double Seam Inspection Report — review feedback (2026-09-09)
 
 Michaela reviewed the live page at
-`records/REC-7.2.12-double-seam-inspection-report.html` and flagged four issues. This section
+`records/REC 7.2.12_Double Seam Inspection Report.html` and flagged four issues. This section
 records what was found on the page and the resulting instruction, as a worked example of Section
 3's rules for measurement-heavy single-submission records.
 
@@ -989,7 +989,7 @@ Additional rules:
 
 - Find why REC 7.8.1's Job info fields render one per full-width row (fields not wrapped in `fr-grid`/`ml-grid`, or the collapsible section body lacks the class). Wrap them in the standard grid so they follow the 4/2/1 rule. Check every record whose Job info section is collapsible — the same builder is probably shared.
 
-#### 3.7 REC 7.2.12 Double Seam (`public/records/REC-7.2.12-double-seam-inspection-report.html`) — layout only
+#### 3.7 REC 7.2.12 Double Seam (`public/records/REC 7.2.12_Double Seam Inspection Report.html`) — layout only
 
 1. After 3.1/3.3 the page stacks vertically again. Then:
 2. **Remove the Trend link** (`<a class="ds-btn-flat" href="double-seam-trend.html">Trend</a>`, ~line 417) — outstanding from the 09-09 brief §9. Do not delete `double-seam-trend.html` itself without asking Michaela.
@@ -1605,20 +1605,20 @@ combined date+time fields.
 - `data/record-definitions.json`: 47 fields changed `type: "text"` → `"time"` (45) or `"datetime"` (2).
 - 26 of those fields also live inline in 14 record HTML pages (not yet migrated to DB-only config)
   — edited to match:
-  - REC-7.5.2-live-pack-checklist.html
-  - REC-7.7.3-glass-breakage-clearance-certificate.html
-  - REC-7.7.6-plaster-dressing-inspection.html
-  - REC-7.7.6a-first-aid-checklist-record.html
-  - REC-7.8.1-chiller-batch-control.html
-  - REC-7.8.1-dry-chiller-batch-control.html
-  - REC-7.8.10-maintenance-job-card.html
-  - REC-7.8.2-daily-waste-removal.html
-  - REC-7.8.3-boiler-inspection-report.html
-  - REC-7.8.9.1-lha-water-monitoring.html
-  - REC-8.1.4-withdrawal-mock-recall-record.html
-  - REC-8.1.5-traceability.html
-  - REC-8.4.a-emergency-evacuation-attendance-register.html
-  - REC-8.4.b-handling-of-emergencies-and-incidences.html
+  - REC 7.5.2_Live Pack Checklist.html
+  - REC 7.7.3_Glass Breakage Clearance Certificate.html
+  - REC 7.7.6_Plaster Issuing - Dressing Inspection.html
+  - REC 7.7.6a_First Aid Checklist Record (Plaster - Dressing Inspection).html
+  - REC 7.8.1_Chiller Batch Control (Canning).html
+  - REC 7.8.1_Dry Chiller Batch Control.html
+  - REC 7.8.10_Maintenance Job Card.html
+  - REC 7.8.2_Daily Waste Removal.html
+  - REC 7.8.3_Boiler Inspection Report.html
+  - REC 7.8.9.1_LHA Water Monitoring.html
+  - REC 8.1.4_Withdrawal (Mock Recall) Record.html
+  - REC 8.1.5_Traceability Exercise.html
+  - REC 8.4.a_Emergency Evacuation Attendance Register.html
+  - REC 8.4.b_Handling of Emergencies and Incidences (Emergency Drill Report).html
 - `node scripts/verify-definitions.mjs` passes clean (0 real differences) after the edits.
 
 ### Fields deliberately left as text/number/derived (durations, not clock moments)
@@ -1708,7 +1708,7 @@ Best home: `public/records/master-record-index.html` — it already lists every 
 (it's the existing document-control register), so add an "Edit Template" action per row
 rather than building a new page. Each link just appends the query param:
 ```html
-<a href="REC-7.1-incubator-cans-log.html?editTemplate=1">Edit Template</a>
+<a href="REC 7.1_Incubator Cans Log.html?editTemplate=1">Edit Template</a>
 ```
 
 Check `public/lib/master-index-data.js` first — if the record table on that page is

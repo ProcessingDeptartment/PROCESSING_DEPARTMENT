@@ -6,7 +6,7 @@
 **Use in:** Claude Code (build)
 **Files to create/edit:**
 
-- `public/records/REC-7.8.9.1-lha-water-monitoring.html` — remove wrong fields, add Now button, fix chiller Y/N
+- `public/records/REC 7.8.9.1_LHA Water Monitoring.html` — remove wrong fields, add Now button, fix chiller Y/N
 - `public/data/record-defs/rec-7.8.9.1.json` — update field definitions
 - `server/routes/specs.js` — ensure Y/N spec logic is wired (see field-specifications-system-instructions.md update)
 - DB — confirm `sub_lha_water_monitoring` table structure matches below

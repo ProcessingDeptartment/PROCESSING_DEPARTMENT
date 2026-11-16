@@ -31,7 +31,7 @@ var formOnly = ['lookups.js?v=4', 'auth.js?v=5', 'login-ui.js?v=6', 'document-re
 
 ## Why this order matters
 
-The load order must match the individual record HTML pages (e.g. `REC-7.4.1-drying-process.html`):
+The load order must match the individual record HTML pages (e.g. `REC 7.4.1_Drying Process.html`):
 
 ```
 compute/registry.js  →  entry-log.js  →  form-record.js

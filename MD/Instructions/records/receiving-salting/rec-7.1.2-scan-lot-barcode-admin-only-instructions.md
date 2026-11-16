@@ -2,12 +2,12 @@
 
 **Date:** 2026-10-27  
 **Raised by:** Michaela — "scan lot and barcode scanning options. needs to only be visible on administrator such as the dry cooking. not just for basket scan lot also for job number scan lot."  
-**Scope:** Add barcode scanning (camera + handheld) to two fields in `REC-7.1.2-abalone-receiving.html`:
+**Scope:** Add barcode scanning (camera + handheld) to two fields in `REC 7.1.2_Abalone Receiving.html`:
 1. **Job number field** (Section 1 / Job Info) — scan to look up and autofill the job
 2. **Basket/lot # field** (Section 2 / Basket Entry) — scan a lot barcode to fill the field
 
 Both must be **invisible to non-admin users** — same gating pattern as dry cooking. Not just hidden visually; absent from the DOM entirely.  
-**Related files:** `claude/barcode-scanning-integration-instructions.md`, `public/records/REC-7.1.2-abalone-receiving.html`, `public/lib/form-record.js`, `public/lib/permission-rules.js`  
+**Related files:** `claude/barcode-scanning-integration-instructions.md`, `public/records/REC 7.1.2_Abalone Receiving.html`, `public/lib/form-record.js`, `public/lib/permission-rules.js`  
 **No coding in this file** — instructions for Claude Code only.
 
 ---
@@ -255,7 +255,7 @@ if (isAdmin) {
 
 | File | Change |
 |---|---|
-| `public/records/REC-7.1.2-abalone-receiving.html` | Add `<script src="../lib/scan-utils.js?v=1"></script>` (if new). Bump `?v=N` on `form-record.js`. |
+| `public/records/REC 7.1.2_Abalone Receiving.html` | Add `<script src="../lib/scan-utils.js?v=1"></script>` (if new). Bump `?v=N` on `form-record.js`. |
 | `public/lib/scan-utils.js` | Create if not present: `scanWithCamera()` and `applyFDCheck()`. |
 | `public/lib/form-record.js` | Only if the Enter-key / focus-select additions are put here rather than inline. Bump version if changed. |
 | Any HTML referencing `form-record.js` | Bump `?v=N` if `form-record.js` changed. Run: `grep -rl "form-record.js" public/records/` |
@@ -337,7 +337,7 @@ if (isAdmin) {
 2. Check if `public/lib/scan-utils.js` exists. If yes, confirm it has `scanWithCamera` and `applyFDCheck`. If no, create it.
 3. Add the admin-gated scan block to the receiving page (inline script or page-specific JS) — **job number first**, then basket/lot.
 4. Add CSS to `record-theme.css`.
-5. Add `<script src="../lib/scan-utils.js?v=1"></script>` to `REC-7.1.2-abalone-receiving.html` if it was created.
+5. Add `<script src="../lib/scan-utils.js?v=1"></script>` to `REC 7.1.2_Abalone Receiving.html` if it was created.
 6. Bump `?v=N` on `form-record.js` in the receiving HTML (and any other file that loads it, if `form-record.js` was changed).
 7. Commit and push to `main` → Render auto-deploys.
 8. Test on live site: log in as non-admin → no scan controls. Log in as admin → both scan buttons present and working.

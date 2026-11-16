@@ -151,7 +151,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "06/04/2020",
           "recordKey": "training-register",
-          "href": "REC-6.1.2-training-register.html"
+          "href": "REC 6.1.2_Training Register.html"
       },
       {
           "docNo": "REC 6.2.1",
@@ -206,7 +206,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "22/10/2020",
           "recordKey": "incubator-cans-log",
-          "href": "REC-7.1-incubator-cans-log.html"
+          "href": "REC 7.1_Incubator Cans Log.html"
       },
       {
           "docNo": "REC 7.2",
@@ -217,7 +217,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "22/10/2025",
           "recordKey": "sampling-log",
-          "href": "REC-7.2-sampling-log.html"
+          "href": "REC 7.2_Sampling Log.html"
       },
       {
           "docNo": "REC 7.1.0",
@@ -230,58 +230,58 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 7.1.00",
-          "name": "Fixed reader checks",
+          "name": "Fixed Reader Checks",
           "details": "New Document",
           "revision": 1,
           "obsoleteRetrieved": "N/A",
           "distributed": "",
           "dateOfIssue": "30/07/2021",
           "recordKey": "fixed-reader-checks",
-          "href": "REC-7.1.00-fixed-reader-checks.html"
+          "href": "REC 7.1.00_Fixed Reader Checks.html"
       },
       {
           "docNo": "REC 7.1.1",
-          "name": "Basket removal, Shucking & Gutting Checklist",
+          "name": "Basket Removal, Shucking & Gutting",
           "details": "Document review - format",
           "revision": 5,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "10/11/2022",
           "recordKey": "basket-removal-shucking-gutting",
-          "href": "REC-7.1.1-basket-removal-shucking-gutting.html"
+          "href": "REC 7.1.1_Basket Removal, Shucking & Gutting.html"
       },
       {
           "docNo": "REC 7.1.2",
-          "name": "Abalone Received",
+          "name": "Abalone Receiving",
           "details": "Document review - format",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "05/05/2020",
           "recordKey": "abalone-receiving",
-          "href": "REC-7.1.2-abalone-receiving.html"
+          "href": "REC 7.1.2_Abalone Receiving.html"
       },
       {
           "docNo": "REC 7.1.3",
-          "name": "Salting & Tumbling Checklist",
+          "name": "Salting and Tumbling",
           "details": "Document review - removed bleeding section",
           "revision": 9,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "21/08/2025",
           "recordKey": "salting-and-tumbling",
-          "href": "REC-7.1.3-salting-and-tumbling.html"
+          "href": "REC 7.1.3_Salting and Tumbling.html"
       },
       {
           "docNo": "REC 7.1.3.1",
-          "name": "Bleeding & Salting Checklist",
+          "name": "Bleeding and Salting",
           "details": "This was an obsolete rec that has been reviewed and is being used again, but with a new rec number",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "21/08/2025",
           "recordKey": "bleeding-and-salting",
-          "href": "REC-7.1.3.1-bleeding-and-salting.html"
+          "href": "REC 7.1.3.1_Bleeding and Salting.html"
       },
       {
           "docNo": "REC 7.1.4",
@@ -292,84 +292,84 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "21/08/2025",
           "recordKey": "washing-control-sheet",
-          "href": "REC-7.1.4-washing-control-sheet.html"
+          "href": "REC 7.1.4_Washing Control Sheet.html"
       },
       {
           "docNo": "REC 7.1.5",
-          "name": "Salting Record (OOSW)",
+          "name": "Salting (OOSW)",
           "details": "Document review - format",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "08/05/2020",
           "recordKey": "salting-oosw",
-          "href": "REC-7.1.5-salting-oosw.html"
+          "href": "REC 7.1.5_Salting (OOSW).html"
       },
       {
           "docNo": "REC 7.1.6",
-          "name": "Scrubbing Check Sheet",
+          "name": "Scrubbing Check - Supervisor",
           "details": "Document review - format",
           "revision": 5,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "21/08/2025",
           "recordKey": "scrubbing-check-supervisor",
-          "href": "REC-7.1.6-scrubbing-check-supervisor.html"
+          "href": "REC 7.1.6_Scrubbing Check - Supervisor.html"
       },
       {
           "docNo": "REC 7.2.2",
-          "name": "Scrubbing checklist",
+          "name": "Scrubbing Checklist",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "07/04/2020",
           "recordKey": "scrubbing-checklist-qc",
-          "href": "REC-7.2.2-scrubbing-checklist-qc.html"
+          "href": "REC 7.2.2_Scrubbing Checklist.html"
       },
       {
           "docNo": "REC 7.2.3",
-          "name": "Precooking check sheet",
+          "name": "Precooking Check Sheet",
           "details": "Document review - format",
           "revision": 5,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "25/10/2023",
           "recordKey": "precooking-check-sheet",
-          "href": "REC-7.2.3-precooking-check-sheet.html"
+          "href": "REC 7.2.3_Precooking Check Sheet.html"
       },
       {
           "docNo": "REC 7.2.4",
-          "name": "Abalone Sampling Packing Specification",
+          "name": "Abalone Packing Specification",
           "details": "Document review - format",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "01/02/2022",
           "recordKey": "abalone-packing-specification",
-          "href": "REC-7.2.4-abalone-packing-specification.html"
+          "href": "REC 7.2.4_Abalone Packing Specification.html"
       },
       {
           "docNo": "REC 7.2.5",
-          "name": "Can packing control sheet",
+          "name": "Can Packing Control Sheet",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "14/04/2020",
           "recordKey": "can-packing-control-sheet",
-          "href": "REC-7.2.5-can-packing-control-sheet.html"
+          "href": "REC 7.2.5_Can Packing Control Sheet.html"
       },
       {
           "docNo": "REC 7.2.6",
-          "name": "Can filling & Printing",
+          "name": "Can Filling and Printing",
           "details": "Added printed DW to be recorded",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "28/08/2026",
           "recordKey": "can-filling-and-printing",
-          "href": "REC-7.2.6-can-filling-and-printing.html"
+          "href": "REC 7.2.6_Can Filling and Printing.html"
       },
       {
           "docNo": "REC 7.2.6.1",
@@ -380,51 +380,51 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "08/12/2020",
           "recordKey": "printing-control-sheet",
-          "href": "REC-7.2.6.1-printing-control-sheet.html"
+          "href": "REC 7.2.6.1_Printing Control Sheet.html"
       },
       {
           "docNo": "REC 7.2.7",
-          "name": "Cans produced",
+          "name": "Canning Production",
           "details": "Document review - format",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "03/02/2022",
           "recordKey": "cans-produced",
-          "href": "REC-7.2.7-cans-produced.html"
+          "href": "REC 7.2.7_Canning Production.html"
       },
       {
           "docNo": "REC 7.2.8",
-          "name": "Retorting monitoring control sheet",
+          "name": "Retorting Control Sheet",
           "details": "Document review - format",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "27/05/2025",
           "recordKey": "retorting-control-sheet",
-          "href": "REC-7.2.8-retorting-control-sheet.html"
+          "href": "REC 7.2.8_Retorting Control Sheet.html"
       },
       {
           "docNo": "REC 7.2.9",
-          "name": "Retort inspection Reports",
+          "name": "Retort Inspection Report",
           "details": "Document review - format",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "14/11/2024",
           "recordKey": "retort-inspection-report",
-          "href": "REC-7.2.9-retort-inspection-report.html"
+          "href": "REC 7.2.9_Retort Inspection Report.html"
       },
       {
           "docNo": "REC 7.2.10",
-          "name": "Stock Loading Control Sheet",
+          "name": "Stock Loading",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "21/04/2020",
           "recordKey": "stock-loading",
-          "href": "REC-7.2.10-stock-loading.html"
+          "href": "REC 7.2.10_Stock Loading.html"
       },
       {
           "docNo": "REC 7.2.10",
@@ -446,7 +446,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "29/01/2025",
           "recordKey": "qc-report",
-          "href": "REC-7.2.11-qc-report.html"
+          "href": "REC 7.2.11_QC Report.html"
       },
       {
           "docNo": "REC 7.2.12",
@@ -457,7 +457,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "08/06/2026",
           "recordKey": "double-seam-inspection-report",
-          "href": "REC-7.2.12-double-seam-inspection-report.html"
+          "href": "REC 7.2.12_Double Seam Inspection Report.html"
       },
       {
           "docNo": "REC 7.2.13",
@@ -468,7 +468,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "20/04/2020",
           "recordKey": "rework-log",
-          "href": "REC-7.2.13-rework-log.html"
+          "href": "REC 7.2.13_Rework Log.html"
       },
       {
           "docNo": "REC 7.2.14",
@@ -479,29 +479,29 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "31/05/2023",
           "recordKey": "product-label-checklist",
-          "href": "REC-7.2.14-product-label-checklist.html"
+          "href": "REC 7.2.14_Product Label Checklist.html"
       },
       {
           "docNo": "REC 7.2.15",
-          "name": "Labelling of cans",
+          "name": "Labelling of Cans",
           "details": "Document review - format",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "13/09/2023",
           "recordKey": "labelling-of-cans",
-          "href": "REC-7.2.15-labelling-of-cans.html"
+          "href": "REC 7.2.15_Labelling of Cans.html"
       },
       {
           "docNo": "REC 7.2.16",
-          "name": "Stock Transfer",
+          "name": "Stock Transfers",
           "details": "Document review - format",
           "revision": 1,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "22/07/2020",
           "recordKey": "stock-transfers",
-          "href": "REC-7.2.16-stock-transfers.html"
+          "href": "REC 7.2.16_Stock Transfers.html"
       },
       {
           "docNo": "REC 7.3.1",
@@ -512,7 +512,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "12/06/2023",
           "recordKey": "broth-cooking",
-          "href": "REC-7.3.1-broth-cooking.html"
+          "href": "REC 7.3.1_Broth Cooking.html"
       },
       {
           "docNo": "REC 7.3.2",
@@ -523,7 +523,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "28/08/2026",
           "recordKey": "ingredient-weighing",
-          "href": "REC-7.3.2-ingredient-weighing.html"
+          "href": "REC 7.3.2_Ingredient Weighing.html"
       },
       {
           "docNo": "REC 7.3.3",
@@ -534,7 +534,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "12/06/2023",
           "recordKey": "sauce-mixing",
-          "href": "REC-7.3.3-sauce-mixing.html"
+          "href": "REC 7.3.3_Sauce Mixing.html"
       },
       {
           "docNo": "REC 7.3.4",
@@ -545,7 +545,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "12/06/2023",
           "recordKey": "final-sauce-mix",
-          "href": "REC-7.3.4-final-sauce-mix.html"
+          "href": "REC 7.3.4_Final Sauce Mix.html"
       },
       {
           "docNo": "REC 7.3.5",
@@ -556,7 +556,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "09/09/2020",
           "recordKey": "sauce-batch-coding",
-          "href": "REC-7.3.5-sauce-batch-coding.html"
+          "href": "REC 7.3.5_Sauce Batch Coding.html"
       },
       {
           "docNo": "REC 7.3.6",
@@ -567,7 +567,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "21/08/2025",
           "recordKey": "brine-mixing-report",
-          "href": "REC-7.3.6-brine-mixing-report.html"
+          "href": "REC 7.3.6_Brine Mixing Report.html"
       },
       {
           "docNo": "REC 7.4.0",
@@ -578,7 +578,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "03/03/2026",
           "recordKey": "dry-cooking",
-          "href": "REC-7.4.0-dry-cooking.html"
+          "href": "REC 7.4.0_Dry Cooking.html"
       },
       {
           "docNo": "REC 7.4.1",
@@ -589,7 +589,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "30/03/2026",
           "recordKey": "drying-process",
-          "href": "REC-7.4.1-drying-process.html"
+          "href": "REC 7.4.1_Drying Process.html"
       },
       {
           "docNo": "REC 7.4.2",
@@ -600,33 +600,33 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "07/10/2026",
           "recordKey": "dry-monitoring",
-          "href": "REC-7.4.2-dry-monitoring.html"
+          "href": "REC 7.4.2_Dry Monitoring.html"
       },
       {
           "docNo": "REC 7.4.3.1",
-          "name": "GRADING PRODUCTION LOG (CULTIVATED)",
+          "name": "Grading Production Log (Cultivated)",
           "details": "Reviewed for new process",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "27/04/2026",
           "recordKey": "grading-production-log-cultivated",
-          "href": "REC-7.4.3.1-grading-production-log-cultivated.html"
+          "href": "REC 7.4.3.1_Grading Production Log (Cultivated).html"
       },
       {
           "docNo": "REC 7.4.3.2",
-          "name": "GRADING PRODUCTION LOG (RANCHED)",
+          "name": "Grading Production Log (Ranched)",
           "details": "Reviewed for new process",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "27/04/2026",
           "recordKey": "grading-production-log-ranched",
-          "href": "REC-7.4.3.2-grading-production-log-ranched.html"
+          "href": "REC 7.4.3.2_Grading Production Log (Ranched).html"
       },
       {
           "docNo": "REC 7.4.4",
-          "name": "GRADING AND BOXING TRACEABILITY",
+          "name": "Grading, Boxing & Traceability",
           "details": "New document",
           "reportOnly": true,
           "revision": 1,
@@ -634,84 +634,84 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "27/04/2026",
           "recordKey": "grading-boxing-traceability",
-          "href": "REC-7.4.4-grading-boxing-traceability.html"
+          "href": "REC 7.4.4_Grading, Boxing & Traceability.html"
       },
       {
           "docNo": "REC 7.4.5",
-          "name": "CLOSED BOX INSPECTION",
+          "name": "Closed Box Inspection",
           "details": "Replaces Boxing and Labelling Traceability",
           "revision": 1,
           "obsoleteRetrieved": "N/A",
           "distributed": "Y",
           "dateOfIssue": "01/10/2026",
           "recordKey": "closed-box-inspection",
-          "href": "REC-7.4.5-closed-box-inspection.html"
+          "href": "REC 7.4.5_Closed Box Inspection.html"
       },
       {
           "docNo": "REC 7.4.5 (legacy)",
-          "name": "BOXING AND LABELLING TRACEABILITY (legacy, superseded by Closed Box Inspection)",
+          "name": "Boxing & Labelling",
           "details": "Reviewed for new process",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "27/04/2026",
           "recordKey": "boxing-and-labelling",
-          "href": "REC-7.4.5-boxing-and-labelling.html"
+          "href": "REC 7.4.5_Boxing & Labelling.html"
       },
       {
           "docNo": "REC 7.4.6",
-          "name": "DRY STOCK CONTROL",
+          "name": "Dry Stock Control",
           "details": "Reviewed for new process",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "30/03/2026",
           "recordKey": "dry-stock-control",
-          "href": "REC-7.4.6-dry-stock-control.html"
+          "href": "REC 7.4.6_Dry Stock Control.html"
       },
       {
           "docNo": "REC 7.4.7",
-          "name": "LABELLING OF DRY BOXES",
+          "name": "Labelling of Dry Boxes",
           "details": "Reviewed for new process, was REC 7.4.8",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "27/04/2026",
           "recordKey": "labelling-of-dry-boxes",
-          "href": "REC-7.4.7-labelling-of-dry-boxes.html"
+          "href": "REC 7.4.7_Labelling of Dry Boxes.html"
       },
       {
           "docNo": "REC 7.4.8",
-          "name": "DRY LABELLING LIST",
+          "name": "Dry Labelling List",
           "details": "Reviewed for new process, was REC 7.4.7",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "27/04/2026",
           "recordKey": "dry-labelling-list",
-          "href": "REC-7.4.8-dry-labelling-list.html"
+          "href": "REC 7.4.8_Dry Labelling List.html"
       },
       {
           "docNo": "REC 7.4.9",
-          "name": "DRY STOCK TRANSFERS",
+          "name": "Dry Stock Transfers",
           "details": "Reviewed for new process",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "28/04/2026",
           "recordKey": "dry-stock-transfers",
-          "href": "REC-7.4.9-dry-stock-transfers.html"
+          "href": "REC 7.4.9_Dry Stock Transfers.html"
       },
       {
           "docNo": "REC 7.4.10",
-          "name": "DRIED ABALONE TRANSFER",
+          "name": "Dried Abalone Transfer",
           "details": "Reviewed for new process",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "06/05/2026",
           "recordKey": "dried-abalone-transfer",
-          "href": "REC-7.4.10-dried-abalone-transfer.html"
+          "href": "REC 7.4.10_Dried Abalone Transfer.html"
       },
       {
           "docNo": "REC 7.4.11",
@@ -744,40 +744,40 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "13/04/2026",
           "recordKey": "live-production-pack",
-          "href": "REC-7.5.1-live-production-pack.html"
+          "href": "REC 7.5.1_Live Production Pack.html"
       },
       {
           "docNo": "REC 7.5.2",
-          "name": "Live Packing Checklist",
+          "name": "Live Pack Checklist",
           "details": "Addition of cleaning check before and after pack",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "22/04/2020",
           "recordKey": "live-pack-checklist",
-          "href": "REC-7.5.2-live-pack-checklist.html"
+          "href": "REC 7.5.2_Live Pack Checklist.html"
       },
       {
           "docNo": "REC 7.5.3",
-          "name": "Live packing - Bag Quality Check",
+          "name": "Live Packing - Bag Quality Check",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "13/04/2026",
           "recordKey": "live-packing-bag-quality-check",
-          "href": "REC-7.5.3-live-packing-bag-quality-check.html"
+          "href": "REC 7.5.3_Live Packing - Bag Quality Check.html"
       },
       {
           "docNo": "REC 7.5.4",
-          "name": "Individual abalone weight checks - Quality",
+          "name": "Individual Abalone Weight Checks - Quality",
           "details": "Addition - recording magnesium sulphate batch no",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "28/08/2026",
           "recordKey": "individual-abalone-weight-checks",
-          "href": "REC-7.5.4-individual-abalone-weight-checks.html"
+          "href": "REC 7.5.4_Individual Abalone Weight Checks - Quality.html"
       },
       {
           "docNo": "REC 7.5.5",
@@ -788,7 +788,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "13/04/2026",
           "recordKey": "receiving-live-returns",
-          "href": "REC-7.5.5-receiving-live-returns.html"
+          "href": "REC 7.5.5_Receiving Live Returns.html"
       },
       {
           "docNo": "REC 7.6.1",
@@ -799,29 +799,29 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "17/06/2026",
           "recordKey": "daily-cleaning-inspection",
-          "href": "REC-7.6.1-daily-cleaning-inspection.html"
+          "href": "REC 7.6.1_Daily Cleaning Inspection.html"
       },
       {
           "docNo": "REC 7.6.1.1",
-          "name": "Weekly Deep Cleaning Inspection",
+          "name": "Deep Cleaning Record Weekly",
           "details": "New Document",
           "revision": 1,
           "obsoleteRetrieved": "N/A",
           "distributed": "Y",
           "dateOfIssue": "01/06/2023",
           "recordKey": "deep-cleaning-record-weekly",
-          "href": "REC-7.6.1.1-deep-cleaning-record-weekly.html"
+          "href": "REC 7.6.1.1_Deep Cleaning Record Weekly.html"
       },
       {
           "docNo": "REC 7.6.2",
-          "name": "Weekly Cleaning Inspection",
+          "name": "Weekly Cleaning Record",
           "details": "Document review - format",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "22/09/2022",
           "recordKey": "weekly-cleaning-record",
-          "href": "REC-7.6.2-weekly-cleaning-record.html"
+          "href": "REC 7.6.2_Weekly Cleaning Record.html"
       },
       {
           "docNo": "REC 7.6.2.2",
@@ -832,7 +832,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "13/09/2023",
           "recordKey": "dispatch-cleaning-inspection",
-          "href": "REC-7.6.2.2-dispatch-cleaning-inspection.html"
+          "href": "REC 7.6.2.2_Dispatch Cleaning Inspection.html"
       },
       {
           "docNo": "REC 7.6.3",
@@ -843,7 +843,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "20/04/2026",
           "recordKey": "facility-inspection",
-          "href": "REC-7.6.3-facility-inspection.html"
+          "href": "REC 7.6.3_Facility Inspection.html"
       },
       {
           "docNo": "REC 7.6.3.1",
@@ -854,7 +854,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "20/04/2026",
           "recordKey": "facility-inspection-nc-report",
-          "href": "REC-7.6.3.1-facility-inspection-nc-report.html"
+          "href": "REC 7.6.3.1_Facility Inspection NC Report.html"
       },
       {
           "docNo": "REC 7.6.4",
@@ -865,7 +865,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "25/11/2020",
           "recordKey": "chemical-stock-issue-register",
-          "href": "REC-7.6.4-chemical-stock-issue-register.html"
+          "href": "REC 7.6.4_Chemical Stock & Issue Register.html"
       },
       {
           "docNo": "REC 7.6.5",
@@ -876,7 +876,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "15/04/2020",
           "recordKey": "internal-pest-sightings-log",
-          "href": "REC-7.6.5-internal-pest-sightings-log.html"
+          "href": "REC 7.6.5_Internal Pest Sightings Log.html"
       },
       {
           "docNo": "REC 7.6.6",
@@ -887,7 +887,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "01/08/2025",
           "recordKey": "pest-inspection-record",
-          "href": "REC-7.6.6-pest-inspection-record.html"
+          "href": "REC 7.6.6_Pest Inspection Record.html"
       },
       {
           "docNo": "REC 7.6.7",
@@ -898,29 +898,29 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "16/04/2020",
           "recordKey": "staff-hygiene-inspection",
-          "href": "REC-7.6.7-staff-hygiene-inspection.html"
+          "href": "REC 7.6.7_Staff Hygiene Inspection.html"
       },
       {
           "docNo": "REC 7.6.7 a",
-          "name": "Staff Hygiene Inspection weekend",
+          "name": "Staff Hygiene Inspection - Weekends",
           "details": "New document",
           "revision": 1,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "23/07/2020",
           "recordKey": "staff-hygiene-inspection-weekends",
-          "href": "REC-7.6.7-a-staff-hygiene-inspection-weekends.html"
+          "href": "REC 7.6.7a_Staff Hygiene Inspection - Weekends.html"
       },
       {
           "docNo": "REC 7.6.8",
-          "name": "Allergen Cleaning Inspection",
+          "name": "Allergen Cleaning Verification",
           "details": "Clarified questions on what was produced before and after swabbing",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "23/09/2020",
           "recordKey": "allergen-cleaning-verification",
-          "href": "REC-7.6.8-allergen-cleaning-verification.html"
+          "href": "REC 7.6.8_Allergen Cleaning Verification.html"
       },
       {
           "docNo": "REC 7.6.9",
@@ -942,18 +942,18 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "22/08/2025",
           "recordKey": "daily-equipment-checklist",
-          "href": "REC-7.7.1-daily-equipment-checklist.html"
+          "href": "REC 7.7.1_Daily Equipment Checklist.html"
       },
       {
           "docNo": "REC 7.7.2",
-          "name": "Glass, Plastic & Equipment Checklist",
+          "name": "Glass, Plastic & Equipment Inspection",
           "details": "Document review - format",
           "revision": 5,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "03/10/2025",
           "recordKey": "glass-plastic-equipment-inspection",
-          "href": "REC-7.7.2-glass-plastic-equipment-inspection.html"
+          "href": "REC 7.7.2_Glass, Plastic & Equipment Inspection.html"
       },
       {
           "docNo": "REC 7.7.3",
@@ -964,7 +964,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "17/04/2020",
           "recordKey": "glass-breakage-clearance-certificate",
-          "href": "REC-7.7.3-glass-breakage-clearance-certificate.html"
+          "href": "REC 7.7.3_Glass Breakage Clearance Certificate.html"
       },
       {
           "docNo": "REC 7.7.4",
@@ -975,7 +975,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "28/06/2023",
           "recordKey": "utensil-issue-record",
-          "href": "REC-7.7.4-utensil-issue-record.html"
+          "href": "REC 7.7.4_Utensil Issue Record.html"
       },
       {
           "docNo": "REC 7.7.4.1.a",
@@ -986,7 +986,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "08/02/2023",
           "recordKey": "safety-glass-register",
-          "href": "REC-7.7.4.1.a-safety-glass-register.html"
+          "href": "REC 7.7.4.1a_Safety Glass Register.html"
       },
       {
           "docNo": "REC 7.7.4.1.b",
@@ -997,18 +997,18 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "08/02/2023",
           "recordKey": "goggles-register",
-          "href": "REC-7.7.4.1.b-goggles-register.html"
+          "href": "REC 7.7.4.1b_Goggles Register.html"
       },
       {
           "docNo": "REC 7.7.4.1.c",
-          "name": "Knives Register",
+          "name": "Knife Register",
           "details": "Removed supervisor signature",
           "revision": 2,
           "obsoleteRetrieved": "",
           "distributed": "",
           "dateOfIssue": "31/12/2025",
           "recordKey": "knife-register",
-          "href": "REC-7.7.4.1.c-knife-register.html"
+          "href": "REC 7.7.4c_Knife Register.html"
       },
       {
           "docNo": "REC 7.7.5",
@@ -1019,18 +1019,18 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "19/01/2023",
           "recordKey": "glove-issuing-register",
-          "href": "REC-7.7.5-glove-issuing-register.html"
+          "href": "REC 7.7.5_Glove Issuing Register.html"
       },
       {
           "docNo": "REC 7.7.6",
-          "name": "Plaster Issuing Register/ Dressing Inspection",
+          "name": "Plaster Issuing / Dressing Inspection",
           "details": "Document review - no changes",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "19/11/2021",
           "recordKey": "plaster-dressing-inspection",
-          "href": "REC-7.7.6-plaster-dressing-inspection.html"
+          "href": "REC 7.7.6_Plaster Issuing - Dressing Inspection.html"
       },
       {
           "docNo": "REC 7.7.7",
@@ -1041,18 +1041,18 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "01/12/2020",
           "recordKey": "salt-issuing-register",
-          "href": "REC-7.7.7-salt-issuing-register.html"
+          "href": "REC 7.7.7_Salt Issuing Register.html"
       },
       {
           "docNo": "REC 7.8.1",
-          "name": "Chiller Batch Control",
+          "name": "Chiller Batch Control (Canning)",
           "details": "Document review",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "09/10/2024",
           "recordKey": "chiller-batch-control",
-          "href": "REC-7.8.1-chiller-batch-control.html"
+          "href": "REC 7.8.1_Chiller Batch Control (Canning).html"
       },
       {
           "docNo": "REC 7.8.2",
@@ -1063,62 +1063,62 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "21/09/2020",
           "recordKey": "daily-waste-removal",
-          "href": "REC-7.8.2-daily-waste-removal.html"
+          "href": "REC 7.8.2_Daily Waste Removal.html"
       },
       {
           "docNo": "REC 7.8.3",
-          "name": "Boiler Inspection",
+          "name": "Boiler Inspection Report",
           "details": "Document review - format",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "06/09/2022",
           "recordKey": "boiler-inspection-report",
-          "href": "REC-7.8.3-boiler-inspection-report.html"
+          "href": "REC 7.8.3_Boiler Inspection Report.html"
       },
       {
           "docNo": "REC 7.8.4",
-          "name": "Seamer Inspection",
+          "name": "Seamer Inspection Report",
           "details": "Reviewed due to new seamer",
           "revision": 7,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "30/01/2025",
           "recordKey": "seamer-inspection-report",
-          "href": "REC-7.8.4-seamer-inspection-report.html"
+          "href": "REC 7.8.4_Seamer Inspection Report.html"
       },
       {
           "docNo": "REC 7.8.5",
-          "name": "Incoming Inspection for PPE Checklist",
+          "name": "Incoming PPE Inspection",
           "details": "Made it specific for PPE receiving",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "25/05/2021",
           "recordKey": "incoming-ppe-inspection",
-          "href": "REC-7.8.5-incoming-ppe-inspection.html"
+          "href": "REC 7.8.5_Incoming PPE Inspection.html"
       },
       {
           "docNo": "REC 7.8.5.1",
-          "name": "Incoming goods inspection",
+          "name": "Incoming Goods Inspection (Log)",
           "details": "New Document added for goods without batch code",
           "revision": 1,
           "obsoleteRetrieved": "",
           "distributed": "",
           "dateOfIssue": "25/05/2021",
           "recordKey": "incoming-goods-inspection-log",
-          "href": "REC-7.8.5.1-incoming-goods-inspection-log.html"
+          "href": "REC 7.8.5.1_Incoming Goods Inspection (Log).html"
       },
       {
           "docNo": "REC 7.8.6",
-          "name": "Incoming Inspection for Cans & Lids",
+          "name": "Cans Incoming Inspection",
           "details": "Document review - format",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "09/01/2023",
           "recordKey": "cans-incoming-inspection",
-          "href": "REC-7.8.6-cans-incoming-inspection.html"
+          "href": "REC 7.8.6_Cans Incoming Inspection.html"
       },
       {
           "docNo": "REC 7.8.6.1",
@@ -1129,18 +1129,18 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "09/01/2023",
           "recordKey": "lids-incoming-inspection",
-          "href": "REC-7.8.6.1-lids-incoming-inspection.html"
+          "href": "REC 7.8.6.1_Lids Incoming Inspection.html"
       },
       {
           "docNo": "REC 7.8.6.2",
-          "name": "Lids/Cans Incoming Inspection",
+          "name": "Lids Incoming Inspection (Internal Inspection)",
           "details": "New Document",
           "revision": 1,
           "obsoleteRetrieved": "",
           "distributed": "",
           "dateOfIssue": "30/01/2025",
           "recordKey": "lids-incoming-inspection-internal",
-          "href": "REC-7.8.6.2-lids-incoming-inspection-internal.html"
+          "href": "REC 7.8.6.2_Lids Incoming Inspection (Internal Inspection).html"
       },
       {
           "docNo": "REC 7.8.7",
@@ -1151,29 +1151,29 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "21/11/2025",
           "recordKey": "incoming-goods-inspection",
-          "href": "REC-7.8.7-incoming-goods-inspection.html"
+          "href": "REC 7.8.7_Incoming Goods Inspection.html"
       },
       {
           "docNo": "REC 7.8.8",
-          "name": "Dispatch Loading Report",
+          "name": "Dispatch Loading Inspection Checklist",
           "details": "Document review - format",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "13/09/2023",
           "recordKey": "dispatch-loading-inspection-checklist",
-          "href": "REC-7.8.8-dispatch-loading-inspection-checklist.html"
+          "href": "REC 7.8.8_Dispatch Loading Inspection Checklist.html"
       },
       {
           "docNo": "REC 7.8.8.1",
-          "name": "Dispatch Receivig Cans",
+          "name": "Dispatch Receiving Checklist",
           "details": "New Document",
           "revision": 1,
           "obsoleteRetrieved": "",
           "distributed": "",
           "dateOfIssue": "30/01/2025",
           "recordKey": "dispatch-receiving-checklist",
-          "href": "REC-7.8.8.1-dispatch-receiving-checklist.html"
+          "href": "REC 7.8.8.1_Dispatch Receiving Checklist.html"
       },
       {
           "docNo": "REC 7.8.9",
@@ -1184,51 +1184,51 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "15/06/2023",
           "recordKey": "water-monitoring",
-          "href": "REC-7.8.9-water-monitoring.html"
+          "href": "REC 7.8.9_Water Monitoring.html"
       },
       {
           "docNo": "REC 7.8.9.1",
-          "name": "Water Monitoring LHA",
+          "name": "LHA Water Monitoring",
           "details": "Document review - format",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "15/06/2023",
           "recordKey": "lha-water-monitoring",
-          "href": "REC-7.8.9.1-lha-water-monitoring.html"
+          "href": "REC 7.8.9.1_LHA Water Monitoring.html"
       },
       {
           "docNo": "REC 7.8.11",
-          "name": "Water Tank Inspection/ Holding Tank Cleaning",
+          "name": "Water Tank Inspection",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "02/03/2020",
           "recordKey": "water-tank-inspection",
-          "href": "REC-7.8.11-water-tank-inspection.html"
+          "href": "REC 7.8.11_Water Tank Inspection.html"
       },
       {
           "docNo": "REC 7.8.12",
-          "name": "Factory Maintenance (Equipment check)",
+          "name": "Factory Maintenance Inspection",
           "details": "Added steamer",
           "revision": 7,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "06/04/2026",
           "recordKey": "factory-maintenance-inspection",
-          "href": "REC-7.8.12-factory-maintenance-inspection.html"
+          "href": "REC 7.8.12_Factory Maintenance Inspection.html"
       },
       {
           "docNo": "REC 7.8.12.1",
-          "name": "Equipment Checklist Roof",
+          "name": "Equipment Checklist - Roof (Daily Ozone & Compressor)",
           "details": "New Document",
           "revision": 1,
           "obsoleteRetrieved": "",
           "distributed": "",
           "dateOfIssue": "03/05/2023",
           "recordKey": "equipment-checklist-roof",
-          "href": "REC-7.8.12.1-equipment-checklist-roof.html"
+          "href": "REC 7.8.12.1_Equipment Checklist - Roof (Daily Ozone & Compressor).html"
       },
       {
           "docNo": "REC 7.9.1",
@@ -1239,18 +1239,18 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "15/08/2025",
           "recordKey": "chiller-temperature-monitoring",
-          "href": "REC-7.9.1-chiller-temperature-monitoring.html"
+          "href": "REC 7.9.1_Chiller Temperature Monitoring.html"
       },
       {
           "docNo": "REC 7.9.2",
-          "name": "Daily Incubator Temperature Log",
+          "name": "Daily Incubator Temperature Check",
           "details": "Document review - removed temperature verification",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "05/01/2026",
           "recordKey": "incubator-temperature-check",
-          "href": "REC-7.9.2-incubator-temperature-check.html"
+          "href": "REC 7.9.2_Daily Incubator Temperature Check.html"
       },
       {
           "docNo": "REC 7.9.3",
@@ -1265,14 +1265,14 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 7.9.3.1",
-          "name": "Dry Room Temperature & Humidity Log",
+          "name": "Room Temp/Humidity Log",
           "details": "Document review",
           "revision": 6,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "27/04/2026",
           "recordKey": "dry-room-temp-humidity-log",
-          "href": "REC-7.9.3.1-dry-room-temp-humidity-log.html"
+          "href": "REC 7.9.3.1_Room Temp - Humidity Log.html"
       },
       {
           "docNo": "REC 7.9.3.2",
@@ -1305,7 +1305,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "31/12/2025",
           "recordKey": "ph-verification",
-          "href": "REC-7.10.2-ph-verification.html"
+          "href": "REC 7.10.2_pH Verification.html"
       },
       {
           "docNo": "REC 7.10.3",
@@ -1316,18 +1316,18 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "07/11/2024",
           "recordKey": "thermometer-verification",
-          "href": "REC-7.10.3-thermometer-verification.html"
+          "href": "REC 7.10.3_Thermometer Verification.html"
       },
       {
           "docNo": "REC 7.10.4",
-          "name": "Thermometer Inhouse Calibration Correction Factors",
+          "name": "Thermometer Correction Factors",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "20/04/2020",
           "recordKey": "thermometer-correction-factors",
-          "href": "REC-7.10.4-thermometer-correction-factors.html"
+          "href": "REC 7.10.4_Thermometer Correction Factors.html"
       },
       {
           "docNo": "REC 7.10.5",
@@ -1364,25 +1364,25 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 8.1.3",
-          "name": "Disposition Investigation",
+          "name": "Disposition Investigation Record",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "20/04/2020",
           "recordKey": "disposition-investigation-record",
-          "href": "REC-8.1.3-disposition-investigation-record.html"
+          "href": "REC 8.1.3_Disposition Investigation Record.html"
       },
       {
           "docNo": "REC 8.1.4",
-          "name": "Withdrawal/Mock Recall",
+          "name": "Withdrawal (Mock Recall) Record",
           "details": "Document review - format",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "20/04/2020",
           "recordKey": "withdrawal-mock-recall-record",
-          "href": "REC-8.1.4-withdrawal-mock-recall-record.html"
+          "href": "REC 8.1.4_Withdrawal (Mock Recall) Record.html"
       },
       {
           "docNo": "REC 8.1.5",
@@ -1393,51 +1393,51 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "20/04/2020",
           "recordKey": "traceability",
-          "href": "REC-8.1.5-traceability.html"
+          "href": "REC 8.1.5_Traceability Exercise.html"
       },
       {
           "docNo": "REC 8.1.6 a",
-          "name": "Traceability/Mock Recall Checklist for Canned in sauce abalone (BEAISED)",
+          "name": "Traceability & Mock Recall Checklist for Canned Braised Abalone",
           "details": "Made it specific to Canned Abalone",
           "revision": 4,
           "obsoleteRetrieved": "N/A",
           "distributed": "Y",
           "dateOfIssue": "19/05/2024",
           "recordKey": "traceability-mock-recall-canned-braised-abalone",
-          "href": "REC-8.1.6-a-traceability-mock-recall-canned-braised-abalone.html"
+          "href": "REC 8.1.6a_Traceability & Mock Recall Checklist for Canned Braised Abalone.html"
       },
       {
           "docNo": "REC 8.1.6",
-          "name": "Traceability/Mock Recall Checklist for Canned abalone",
+          "name": "Traceability & Mock Recall Checklist for Canned Abalone",
           "details": "Canned Abalone in brine",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "19/05/2023",
           "recordKey": "traceability-mock-recall-canned-abalone",
-          "href": "REC-8.1.6-traceability-mock-recall-canned-abalone.html"
+          "href": "REC 8.1.6_Traceability & Mock Recall Checklist for Canned Abalone.html"
       },
       {
           "docNo": "REC 8.1.7",
-          "name": "Traceability/Mock Recall Checklist for Dried abalone",
+          "name": "Traceability & Mock Recall Checklist for Dried Abalone",
           "details": "New record - specific to dried abalone",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "04/10/2024",
           "recordKey": "traceability-mock-recall-dried-abalone",
-          "href": "REC-8.1.7-traceability-mock-recall-dried-abalone.html"
+          "href": "REC 8.1.7_Traceability & Mock Recall Checklist for Dried Abalone.html"
       },
       {
           "docNo": "REC 8.1.8",
-          "name": "Traceability/Mock Recall Checklist for Live abalone",
+          "name": "Traceability & Mock Recall Checklist for Live Abalone",
           "details": "Document review - added extra records to add to recall",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "10/11/2025",
           "recordKey": "traceability-mock-recall-live-abalone",
-          "href": "REC-8.1.8-traceability-mock-recall-live-abalone.html"
+          "href": "REC 8.1.8_Traceability & Mock Recall Checklist for Live Abalone.html"
       },
       {
           "docNo": "REC 8.2.1",
@@ -1448,7 +1448,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "28/05/2025",
           "recordKey": "supplier-questionnaire",
-          "href": "REC-8.2.1-supplier-questionnaire.html"
+          "href": "REC 8.2.1_Supplier Questionnaire.html"
       },
       {
           "docNo": "REC 8.2.1.1",
@@ -1463,14 +1463,14 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 8.2.2",
-          "name": "Supplier Approval",
+          "name": "Supplier Approval Record",
           "details": "Document review",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "16/04/2020",
           "recordKey": "supplier-approval-record",
-          "href": "REC-8.2.2-supplier-approval-record.html"
+          "href": "REC 8.2.2_Supplier Approval Record.html"
       },
       {
           "docNo": "REC 8.2.3",
@@ -1496,25 +1496,25 @@ window.MasterIndexData = {
       },
       {
           "docNo": "REC 8.2.8",
-          "name": "Medical screening assessment (Rapid Food Handler Assessment)",
+          "name": "Rapid Food Handler Medicals",
           "details": "Document review",
           "revision": 3,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "12/09/2025",
           "recordKey": "rapid-food-handler-medicals",
-          "href": "REC-8.2.8-rapid-food-handler-medicals.html"
+          "href": "REC 8.2.8_Rapid Food Handler Medicals.html"
       },
       {
           "docNo": "REC 8.2.8.1",
-          "name": "Medical screening assessment results (Rapid Food Handler Assessment)",
+          "name": "RFH Medical Result",
           "details": "New document",
           "revision": 1,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "12/09/2026",
           "recordKey": "rfh-medical-result",
-          "href": "REC-8.2.8.1-rfh-medical-result.html"
+          "href": "REC 8.2.8.1_RFH Medical Result.html"
       },
       {
           "docNo": "REC 8.8a",
@@ -1526,7 +1526,7 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "28/10/2026",
           "recordKey": "prp-verification",
-          "href": "REC-8.8a-prp-verification.html"
+          "href": "REC 8.8a_PRP Verification.html"
       },
       {
           "docNo": "REC 8.4.a",
@@ -1537,29 +1537,29 @@ window.MasterIndexData = {
           "distributed": "Y",
           "dateOfIssue": "25/09/2025",
           "recordKey": "emergency-evacuation-attendance-register",
-          "href": "REC-8.4.a-emergency-evacuation-attendance-register.html"
+          "href": "REC 8.4.a_Emergency Evacuation Attendance Register.html"
       },
       {
           "docNo": "REC 8.4.b",
-          "name": "Handling of emergency and incidences",
+          "name": "Handling of Emergencies and Incidences (Emergency Drill Report)",
           "details": "",
           "revision": 2,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "25/09/2025",
           "recordKey": "handling-of-emergencies-and-incidences",
-          "href": "REC-8.4.b-handling-of-emergencies-and-incidences.html"
+          "href": "REC 8.4.b_Handling of Emergencies and Incidences (Emergency Drill Report).html"
       },
       {
           "docNo": "REC 9.1",
-          "name": "Factory Feedback Meeting",
+          "name": "Daily Factory Feedback Meeting",
           "details": "Document review",
           "revision": 4,
           "obsoleteRetrieved": "Y",
           "distributed": "Y",
           "dateOfIssue": "20/01/2025",
           "recordKey": "daily-factory-feedback-meeting",
-          "href": "REC-9.1-daily-factory-feedback-meeting.html"
+          "href": "REC 9.1_Daily Factory Feedback Meeting.html"
       },
       {
           "docNo": "REC 9.2",
@@ -1618,7 +1618,7 @@ window.MasterIndexData = {
       },
       {
           "docNo": "QA 01",
-          "name": "Damaged can/lids",
+          "name": "Damaged Cans and Lids",
           "details": "New document",
           "revision": 1,
           "obsoleteRetrieved": "Y",
@@ -1647,7 +1647,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "cans-released-form",
-          "href": "REC-01-cans-released-form.html",
+          "href": "REC 01_Cans Released Form (Awaiting NRCS Releases).html",
           "notOnIndexList": true
       },
       {
@@ -1659,7 +1659,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "dry-chiller-batch-control",
-          "href": "REC-7.8.1-dry-chiller-batch-control.html",
+          "href": "REC 7.8.1_Dry Chiller Batch Control.html",
           "notOnIndexList": true
       },
       {
@@ -1676,7 +1676,7 @@ window.MasterIndexData = {
       },
       {
           "docNo": "Production Information NRCS (Dry)",
-          "name": "Dry NRCS Packs - Production Information NRCS",
+          "name": "Dry NRCS Packs — Production Information NRCS",
           "details": "",
           "revision": 1,
           "obsoleteRetrieved": "",
@@ -1695,7 +1695,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "first-aid-checklist-record",
-          "href": "REC-7.7.6a-first-aid-checklist-record.html",
+          "href": "REC 7.7.6a_First Aid Checklist Record (Plaster - Dressing Inspection).html",
           "notOnIndexList": true
       },
       {
@@ -1707,7 +1707,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "gonad-inspection-report",
-          "href": "REC-1-gonad-inspection-report.html",
+          "href": "REC 1_Gonad Inspection Report.html",
           "notOnIndexList": true
       },
       {
@@ -1719,7 +1719,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "internal-car",
-          "href": "REC-8.1.1.a-internal-car.html",
+          "href": "REC 8.1.1.a_Internal CAR.html",
           "notOnIndexList": true
       },
       {
@@ -1743,7 +1743,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "live-product-areas-cleaning-record",
-          "href": "REC-7.6.0b-live-product-areas-cleaning-record.html",
+          "href": "REC 7.6.0b_Live Product Areas Cleaning Record.html",
           "notOnIndexList": true
       },
       {
@@ -1755,7 +1755,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "maintenance-job-card",
-          "href": "REC-7.8.10-maintenance-job-card.html",
+          "href": "REC 7.8.10_Maintenance Job Card.html",
           "notOnIndexList": true
       },
       {
@@ -1815,7 +1815,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "personnel-facilities-cleaning-record",
-          "href": "REC-7.6.0c-personnel-facilities-cleaning-record.html",
+          "href": "REC 7.6.0c_Personnel Facilities Cleaning Record.html",
           "notOnIndexList": true
       },
       {
@@ -1827,7 +1827,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "production-areas-cleaning-record",
-          "href": "REC-7.6.0a-production-areas-cleaning-record.html",
+          "href": "REC 7.6.0a_Production Areas Cleaning Record.html",
           "notOnIndexList": true
       },
       {
@@ -1875,7 +1875,7 @@ window.MasterIndexData = {
           "distributed": "",
           "dateOfIssue": "",
           "recordKey": "traceability-mock-recall-canned-minced-abalone",
-          "href": "REC-8.1.6b-traceability-mock-recall-canned-minced-abalone.html",
+          "href": "REC 8.1.6b_Traceability & Mock Recall Checklist for Canned Minced Abalone.html",
           "notOnIndexList": true
       },
       {

@@ -80,7 +80,7 @@
         notice.innerHTML =
           '<span style="font-size:18px;line-height:1;flex-shrink:0">🔒</span>'
           + '<span>Print not available yet — '
-          + '<a href="../records/REC-7.4.10-dried-abalone-transfer.html"'
+          + '<a href="../records/REC 7.4.10_Dried Abalone Transfer.html"'
           + '   target="_blank"'
           + '   style="color:#7a4f10;text-decoration:underline">'
           + 'REC 7.4.10 Dried Abalone Transfer</a>'
@@ -127,7 +127,7 @@
       + '<div style="font-size:28px;margin-bottom:12px">🔒</div>'
       + '<div style="font-size:17px;margin-bottom:8px">Print not available yet</div>'
       + '<div style="font-weight:400;font-size:13px">'
-      + '<a href="../records/REC-7.4.10-dried-abalone-transfer.html" target="_parent"'
+      + '<a href="../records/REC 7.4.10_Dried Abalone Transfer.html" target="_parent"'
       + '   style="color:#7a4f10;font-weight:600">REC 7.4.10 Dried Abalone Transfer</a>'
       + ' must be completed for this job before printing.'
       + '</div></div></div>';
