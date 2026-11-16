@@ -133,7 +133,39 @@ const engineOf = (recordKey) => {
 };
 const pdfBase = (e) => 'pdf/' + e.htmlPath.replace(/\.html$/, '');
 
+// Entry ids a record still has in the database, or null when that cannot be told (API error, or the record keeps its
+// entries somewhere other than its formrecord:/monitoring_log: list). An entry that was archived and later deleted
+// online has no print page any more: without this check its PDF job waits out the full timeout on every run
+// (DPR01197, a deleted test entry, 2026-11).
+const liveCache = new Map();
+const apiGet = (p) => new Promise((res) => {
+  const r = http.get({ host: '127.0.0.1', port: apiPort, path: p, timeout: 60000, headers: { authorization: 'Bearer ' + apiKey } }, (x) => {
+    let body = ''; x.setEncoding('utf8'); x.on('data', (d) => { body += d; });
+    x.on('end', () => { try { res(x.statusCode === 200 ? JSON.parse(body) : undefined); } catch { res(undefined); } });
+  });
+  r.on('error', () => res(undefined)); r.on('timeout', () => { r.destroy(); res(undefined); });
+});
+async function liveIds(recordKey) {
+  if (liveCache.has(recordKey)) return liveCache.get(recordKey);
+  const ids = new Set();
+  let known = false, failed = false;
+  for (const prefix of ['formrecord:', 'monitoring_log:']) {
+    const got = await apiGet('/api/storage/key/' + encodeURIComponent(prefix + recordKey));
+    if (got === undefined) { failed = true; break; }
+    if (got.value == null) continue;
+    let data; try { data = JSON.parse(got.value); } catch { failed = true; break; }
+    known = true;
+    const lists = Array.isArray(data) ? [data] : Object.values(data || {}).filter(Array.isArray);
+    for (const list of lists) for (const x of list) if (x && x.id) ids.add(x.id);
+  }
+  const out = failed || !known ? null : ids;
+  liveCache.set(recordKey, out);
+  return out;
+}
+
 const pruned = [];   // index items that had PDFs of unverified entries removed
+const deletedNow = [];   // index items whose entries are all gone from the database (newly noticed this run)
+let skippedDeleted = 0;
 const jobs = [];   // { entry (index item), url, out (relative pdf path) }
 for (const e of index) {
   if (onlyType && e.type !== onlyType) continue;
@@ -157,6 +189,20 @@ for (const e of index) {
       pruned.push(e);
     }
     if (!verifiedIds.length) continue;
+    // Entries deleted online since they were archived cannot be printed: skip them instead of timing out.
+    // The archived HTML/JSON copy is left alone; the index item is marked so the archive shows why it has no PDF.
+    const live = await liveIds(e.key);
+    if (live) {
+      const gone = verifiedIds.filter((id) => !live.has(id));
+      if (gone.length) {
+        skippedDeleted += gone.length;
+        verifiedIds = verifiedIds.filter((id) => live.has(id));
+        if (!verifiedIds.length) {
+          if (!e.sourceDeleted) { deletedNow.push(e); console.log('skipped: entry deleted from the database -- ' + e.htmlPath); }
+          continue;
+        }
+      }
+    }
   }
   const done = !force && e.pdfSha && e.pdfSha === (e.sha256 || '') && Array.isArray(e.pdfPaths) && e.pdfPaths.length
     && (e.type !== 'completed-record' || verifiedIds.every((id) => e.pdfPaths.includes(outOf(id))))
@@ -182,6 +228,17 @@ if (pruned.length) {
   fs.renameSync(path.join(ARCHIVE, 'index.json.tmp'), path.join(ARCHIVE, 'index.json'));
   console.log('removed PDFs of unverified entries from ' + pruned.length + ' item(s)');
 }
+if (deletedNow.length) {
+  const fresh = readIndex(ARCHIVE);
+  const today = new Date().toISOString().slice(0, 10);
+  for (const e of deletedNow) {
+    const item = fresh.find((x) => x.type === e.type && x.key === e.key && x.label === e.label);
+    if (item) item.sourceDeleted = today;   // first run that found the entry gone from the database
+  }
+  fs.writeFileSync(path.join(ARCHIVE, 'index.json.tmp'), JSON.stringify(fresh, null, 1));
+  fs.renameSync(path.join(ARCHIVE, 'index.json.tmp'), path.join(ARCHIVE, 'index.json'));
+}
+if (skippedDeleted) console.log('entries deleted from the database, no PDF made: ' + skippedDeleted);
 console.log(`archive: ${ARCHIVE}\nbrowser: ${path.basename(browser)}   PDFs to make: ${jobs.length}   workers: ${workers}`);
 
 // ---- browser, driven over the DevTools protocol ----------------------------------------------------------------------
