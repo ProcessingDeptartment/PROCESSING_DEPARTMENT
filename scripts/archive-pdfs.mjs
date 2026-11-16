@@ -1,13 +1,16 @@
 // Save real PDFs into the PROCESSING ARCHIVE -- the same PDF a user gets when printing online
 // (MD/10_Archive-System.md). One local command; nothing else needs to be running:
 //
-//   node scripts/archive-pdfs.mjs [--type completed-record|policy|procedure|sop|prp] [--record <key>] [--limit N]
+//   node scripts/archive-pdfs.mjs [--type completed-record|record-def|policy|procedure|sop|prp] [--record <key>] [--limit N]
 //                                 [--force] [--workers N] [--archive-out "<path>"]
 //
 // For every archived record entry and controlled document it opens the site's OWN print page in headless
 // Chrome/Edge and saves what the browser would print:
 //   records    -> pages/print-entry.html?rec=..&entry=..&print=1&printonly=1  (the engine's print sheet)
 //   documents  -> the policy / procedure / SOP / PRP page itself, with its print stylesheet
+//   templates  -> the same print page as a record, given ONE blank entry, so the PDF is the empty form exactly as it
+//                 prints online. Every archived version of a template (current and superseded) gets its own PDF,
+//                 drawn from that version's own archived definition -- not from today's.
 // PDFs land in <archive>\pdf\<same path as the page>.pdf and are listed on the item in index.json (pdfPaths).
 // Run archive-completed-records.mjs and archive-documents.mjs first: this script works from what they archived.
 //
@@ -73,8 +76,38 @@ const printed = new Set();   // job tokens whose print sheet was actually writte
 // Without that signal the page is still the record form -- e.g. the site's print lock (REC 7.4.1 / 7.4.2 cannot be
 // printed until REC 7.4.10 is done for the job) -- and no PDF must be saved for it.
 const WATCH = "<script>(function(){var o;Object.defineProperty(window,'__pdfSameTab',{configurable:true,set:function(f){o=f},get:function(){return o&&function(){var p=o();var c=p.document.close;p.document.close=function(){try{var x=new XMLHttpRequest();x.open('GET','/__printed?t='+encodeURIComponent(new URLSearchParams(location.search).get('_t')||''),false);x.send()}catch(e){}return c.apply(this,arguments)};return p}}})})();</script>";
+// Template (blank form) jobs. The print page of such a job carries &_tpl=<n>; every request that page makes names it
+// in its Referer, which is how this server knows to answer with that template version's definition and one blank entry.
+// Nothing is written anywhere: the blank entry exists only in these answers.
+const templates = new Map();   // n -> { key, def }
+const TEMPLATE_ENTRY = '__template';
+const tplOf = (req, own) => {
+  const m = /[?&]_tpl=(\d+)/.exec(own ? req.url : String(req.headers.referer || ''));
+  return m ? templates.get(m[1]) : null;
+};
+// Template jobs only. A daily-log record (water / chiller monitoring ...) prints its monthly log with window.print()
+// on the page itself and clears the sheet straight afterwards. Here window.print() instead freezes the page exactly as
+// it stood at that moment (scripts removed, so nothing clears it) and then reports the sheet as ready.
+const WATCH_TPL = "<script>(function(){if(!/[?&]_tpl=/.test(location.search))return;var d=0;window.print=function(){if(d)return;d=1;"
+  + "['frRoot','mlRoot'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display=''});"   // the print page keeps the form hidden
+  + "var h=document.documentElement.outerHTML.replace(/<script[\\s\\S]*?<\\/script>/gi,'');var t=new URLSearchParams(location.search).get('_t')||'';"
+  + "setTimeout(function(){document.open();document.write('<!DOCTYPE html>'+h);document.close();"
+  + "setTimeout(function(){try{var x=new XMLHttpRequest();x.open('GET','/__printed?t='+encodeURIComponent(t),false);x.send()}catch(e){}},300)},0)};})();</script>";
 const web = http.createServer((req, res) => {
   const urlPath = req.url.split('?')[0];
+  const tpl = tplOf(req, false);
+  if (tpl && req.method === 'GET') {
+    let dec = ''; try { dec = decodeURIComponent(urlPath); } catch {}
+    if (dec === '/data/record-defs/' + tpl.key + '.json') {   // this version's definition, not the current one
+      res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(tpl.def)); return;
+    }
+    if (dec === '/api/storage/key/formrecord:' + tpl.key || dec === '/api/storage/key/monitoring_log:' + tpl.key) {
+      const now = new Date().toISOString();
+      const blank = { id: TEMPLATE_ENTRY, values: {}, rows: [], createdAt: now, updatedAt: now };
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ key: dec.slice('/api/storage/key/'.length), value: JSON.stringify([blank]) })); return;
+    }
+  }
   if (urlPath === '/__printed') {   // the print page reports that the engine really produced its print sheet
     printed.add(new URLSearchParams(req.url.split('?')[1] || '').get('t') || '');
     res.writeHead(204); res.end(); return;
@@ -96,7 +129,9 @@ const web = http.createServer((req, res) => {
     const ext = path.extname(file).toLowerCase();
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
     // Point the page's API calls at this server (same switch server.js uses for DEV_API).
-    if (ext === '.html') res.end(data.toString().replace(/<head(\s[^>]*)?>/i, (m) => `${m}\n<script>window.FACILITY_API_BASE=${JSON.stringify('http://127.0.0.1:' + webPort)};</script>` + WATCH));
+    // A blank template is not a product record: the print lock (REC 7.4.10 must be done for the job) does not apply.
+    if (ext === '.html' && tplOf(req, true)) data = Buffer.from(data.toString().replace(/var PRINT_LOCK_RECS = \[[^\]]*\]/, 'var PRINT_LOCK_RECS = []'));
+    if (ext === '.html') res.end(data.toString().replace(/<head(\s[^>]*)?>/i, (m) => `${m}\n<script>window.FACILITY_API_BASE=${JSON.stringify('http://127.0.0.1:' + webPort)};</script>` + WATCH + WATCH_TPL));
     else res.end(data);
   });
 });
@@ -127,10 +162,8 @@ if (!up) { console.error('The local API copy did not start:\n' + apiLog.slice(-1
 const DOC_TYPES = ['policy', 'procedure', 'sop', 'prp'];
 const index = readIndex(ARCHIVE);
 const readJson = (rel) => { try { return JSON.parse(fs.readFileSync(path.join(ARCHIVE, rel), 'utf8')); } catch { return null; } };
-const engineOf = (recordKey) => {
-  const cfg = readJson(path.relative(ARCHIVE, path.join(PUBLIC, 'data', 'record-defs', encodeURIComponent(recordKey) + '.json'))) || {};
-  return /ml/i.test(String(cfg.mount || '')) || cfg.entryFields ? 'log' : 'form';
-};
+const engineOfDef = (cfg) => (/ml/i.test(String((cfg || {}).mount || '')) || (cfg || {}).entryFields ? 'log' : 'form');
+const engineOf = (recordKey) => engineOfDef(readJson(path.relative(ARCHIVE, path.join(PUBLIC, 'data', 'record-defs', encodeURIComponent(recordKey) + '.json'))));
 const pdfBase = (e) => 'pdf/' + e.htmlPath.replace(/\.html$/, '');
 
 // Entry ids a record still has in the database, or null when that cannot be told (API error, or the record keeps its
@@ -165,12 +198,12 @@ async function liveIds(recordKey) {
 
 const pruned = [];   // index items that had PDFs of unverified entries removed
 const deletedNow = [];   // index items whose entries are all gone from the database (newly noticed this run)
-let skippedDeleted = 0;
+let skippedDeleted = 0, emptyTemplates = 0;
 const jobs = [];   // { entry (index item), url, out (relative pdf path) }
 for (const e of index) {
   if (onlyType && e.type !== onlyType) continue;
   if (onlyRecord && e.key !== onlyRecord) continue;
-  if (e.type !== 'completed-record' && !DOC_TYPES.includes(e.type)) continue;
+  if (e.type !== 'completed-record' && e.type !== 'record-def' && !DOC_TYPES.includes(e.type)) continue;
   const data = readJson(e.jsonPath);
   if (!data) continue;
   // Records: ONLY verified entries get a PDF. An entry that is submitted but not yet verified has none, and any PDF
@@ -212,6 +245,14 @@ for (const e of index) {
     const engine = engineOf(e.key);
     for (const id of verifiedIds.filter((x) => !onlyEntry || x === onlyEntry)) jobs.push({ entry: e, out: pdfBase(e) + (ids.length > 1 ? '_' + String(id).replace(/[^A-Za-z0-9_-]/g, '') : '') + '.pdf',
       url: `${BASE}/pages/print-entry.html?rec=${encodeURIComponent(e.key)}&engine=${engine}&entry=${encodeURIComponent(id)}&print=1&printonly=1&_t=${jobs.length}`, token: String(jobs.length) });
+  } else if (e.type === 'record-def') {
+    // A definition with no fields at all (an empty snapshot that was archived) has no form to print.
+    const hasForm = ['sections', 'fields', 'entryFields', 'rosters'].some((k) => Array.isArray(data[k]) && data[k].length) || data.roster;
+    if (!hasForm) { emptyTemplates++; continue; }
+    const n = String(jobs.length);
+    templates.set(n, { key: e.key, def: data });
+    jobs.push({ entry: e, out: pdfBase(e) + '.pdf', token: n,
+      url: `${BASE}/pages/print-entry.html?rec=${encodeURIComponent(e.key)}&engine=${engineOfDef(data)}&entry=${TEMPLATE_ENTRY}&print=1&printonly=1&_t=${n}&_tpl=${n}` });
   } else if (data.sourceFile) {
     jobs.push({ entry: e, out: pdfBase(e) + '.pdf', url: `${BASE}/${data.sourceFile.split('/').map(encodeURIComponent).join('/')}` });
   }
@@ -238,6 +279,7 @@ if (deletedNow.length) {
   fs.writeFileSync(path.join(ARCHIVE, 'index.json.tmp'), JSON.stringify(fresh, null, 1));
   fs.renameSync(path.join(ARCHIVE, 'index.json.tmp'), path.join(ARCHIVE, 'index.json'));
 }
+if (emptyTemplates) console.log('templates with no fields (nothing to print), no PDF made: ' + emptyTemplates);
 if (skippedDeleted) console.log('entries deleted from the database, no PDF made: ' + skippedDeleted);
 console.log(`archive: ${ARCHIVE}\nbrowser: ${path.basename(browser)}   PDFs to make: ${jobs.length}   workers: ${workers}`);
 
@@ -306,7 +348,11 @@ async function printJob(job) {
         if (loaded && quiet > 1500 && /Print not available yet/.test((await evalJs('document.body ? document.body.innerText.slice(0, 400) : ""')) || '')) { state = 'locked'; break; }
       } else if (loaded && quiet > 2000 && (inflight === 0 || quiet > 8000)) { state = 'ready'; break; }
     }
-    if (state !== 'ready') return { state, size: 0 };
+    if (state !== 'ready') {
+      // say what the page was showing, so a timeout can be understood from the log
+      const seen = state === 'timeout' ? String((await evalJs('(document.body ? document.body.innerText : "").replace(/\\s+/g, " ").slice(0, 160)')) || '') : '';
+      return { state, size: 0, err: seen ? 'page showed: ' + seen : undefined };
+    }
 
     // let the finished page settle: fonts and every image (photos, logo) loaded
     await evalJs('Promise.all([document.fonts ? document.fonts.ready : 0].concat(Array.from(document.images).map(function (i) { return i.complete ? 0 : new Promise(function (r) { i.onload = i.onerror = r; }); }))).then(function () { return 1; })');
