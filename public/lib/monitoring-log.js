@@ -3269,7 +3269,10 @@
 
       const dc = !prog && config.printLayout === '4col';
       const stamp = (dateF && entryRow.values[dateF.key]) || new Date(entryRow.createdAt).toISOString().slice(0, 10);
-      const filename = safeKey(title) + '_' + stamp;
+      // job records (Dry Monitoring): name the PDF by the naming standard "REC XXXXX_Record Name", then job number and date
+      const jobNo = safeKey(String((entryRow.values && entryRow.values[jobKeyOf()]) || ''));
+      const recName = [docCode, docTitle || title].map(s => String(s || '').trim().replace(/[\/\\]+/g, ' - ').replace(/['"<>:|?*]+/g, '')).filter(Boolean).join('_');
+      const filename = jobNo ? [recName, jobNo, stamp].filter(Boolean).join('_') : safeKey(title) + '_' + stamp;
 
       // Capture doc-header for the popup
       const docHeaderHtml = (() => {
