@@ -390,7 +390,8 @@
   .ml-rr-card-head span{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-label,#54606b); }
   .ml-rr-rm{ padding:4px 10px; font-size:11px; font-weight:600; background:#fbe8e6; color:#a3352d; border:1px solid #e8b8b3; border-radius:3px; cursor:pointer; font-family:'Segoe UI',system-ui,sans-serif; }
   .ml-rr-rm:disabled{ opacity:.35; cursor:not-allowed; }
-  .ml-rr-grid{ display:grid; gap:10px; grid-template-columns:repeat(3,1fr); }
+  .ml-rr-grid{ display:grid; gap:10px; grid-template-columns:repeat(3,1fr); align-items:end; }
+  @media (max-width:900px){ .ml-rr-grid{ grid-template-columns:1fr; } }
   .ml-rr-wide{ grid-column:1/-1; }
   .ml-rr-add{ margin-top:2px; }
   .ml-rr-sheet{ margin:8px 0; }
