@@ -741,7 +741,8 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
   const jobNo = String(req.params.jobNo || '').trim();
   const out = { 'dry-cooking': null, 'drying-process': null, 'drying-entry-date': null, 'drying-location': null,
     'drying-room-date': null,
-    'dry-cooked-weight': null, 'dried-transfer-weight': null, 'receiving-weight': null };
+    'dry-cooked-weight': null, 'dried-transfer-weight': null, 'receiving-weight': null,
+    'oosw-pct': null, 'cooked-weight-pct': null };
   if (!jobNo) return res.json(out);
   try {
     const cook = await prisma.$queryRawUnsafe(
@@ -827,6 +828,18 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
     const rc = await prisma.$queryRawUnsafe(`SELECT "intakeWeight", "receivingId" FROM "job_info" WHERE UPPER("jobNo") = UPPER($1)`, jobNo);
     if (rc.length && rc[0].intakeWeight != null) out['receiving-weight'] = { value: String(rc[0].intakeWeight), ids: [rc[0].receivingId], note: 'From REC 7.1.2 receiving' };
   } catch (e) { console.error('job-facts receiving weight failed', e.message); }
+  // REC 7.4.10 summary table: OOSW and cooked weight as a % of the whole (receiving) weight, one decimal.
+  //   'oosw-pct'          -> v_dry_job_weights.oosw_kg   / REC 7.1.2 whole weight
+  //   'cooked-weight-pct' -> v_dry_job_weights.cooked_kg / REC 7.1.2 whole weight
+  try {
+    const whole = out['receiving-weight'] ? Number(out['receiving-weight'].value) : NaN;
+    if (whole > 0) {
+      const w = await prisma.$queryRawUnsafe(`SELECT oosw_kg, cooked_kg FROM "v_dry_job_weights" WHERE UPPER(job_no) = UPPER($1)`, jobNo);
+      const pct = (kg) => String(Math.round((Number(kg) / whole) * 1000) / 10);
+      if (w.length && w[0].oosw_kg != null) out['oosw-pct'] = { value: pct(w[0].oosw_kg), note: 'REC 7.1.5 OOSW weight / REC 7.1.2 whole weight' };
+      if (w.length && w[0].cooked_kg != null) out['cooked-weight-pct'] = { value: pct(w[0].cooked_kg), note: 'REC 7.4.0 cooked weight / REC 7.1.2 whole weight' };
+    }
+  } catch (e) { console.error('job-facts weight percentages failed', e.message); }
   res.json(out);
 });
 

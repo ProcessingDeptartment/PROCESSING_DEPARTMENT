@@ -5,84 +5,6 @@
   "title": "Dry Monitoring",
   "docRevisionStart": 3,
   "jobInfoGroup": "Job info",
-  "scoring": {
-    "over": [
-      "skinScore",
-      "coreScore",
-      "frillsScore",
-      "shapeScore",
-      "colourScore"
-    ],
-    "ncRef": "ncEntryId",
-    "signs": [
-      "skinScore",
-      "coreScore",
-      "frillsScore",
-      "shapeScore",
-      "colourScore",
-      "wrinklesScore",
-      "stickyScore",
-      "mouldScore",
-      "odourScore"
-    ],
-    "steps": {
-      "over": [
-        "Overdrying signs: add an extra steam, reduce wind, rotate the trolley."
-      ],
-      "under": [
-        "Underdrying signs: steam now, move to the Pre-drying room with maximum airflow, remove and isolate mould pieces."
-      ]
-    },
-    "total": "totalScore",
-    "under": [
-      {
-        "key": "stickyScore",
-        "min": 1
-      },
-      {
-        "key": "mouldScore",
-        "min": 2
-      },
-      {
-        "key": "odourScore",
-        "min": 1
-      }
-    ],
-    "worst": "worstScore",
-    "autoNc": true,
-    "status": "batchStatus",
-    "actions": {
-      "Red": [
-        "Start the intervention plan immediately.",
-        "Notify the production & export manager and QA manager now.",
-        "Recheck every 2 hours."
-      ],
-      "Amber": [
-        "Find the cause (steam timing, airflow, orientation, loading).",
-        "Start an intervention plan.",
-        "Notify the dry supervisor and shift manager.",
-        "Recheck within 4 hours."
-      ],
-      "Critical": [
-        "Ring fence the trolley and tag it.",
-        "Do not move it to the grading room before management inspection.",
-        "Notify the production & export manager, QA manager and shift manager immediately, with photos."
-      ]
-    },
-    "maxTotal": 23,
-    "statuses": [
-      "Green",
-      "Amber",
-      "Red",
-      "Critical"
-    ],
-    "ncCategory": "Product quality",
-    "interpretation": {
-      "both": "Possible overdrying and underdrying signs present — check trolley carefully",
-      "over": "Possible overdrying (case hardening)",
-      "under": "Possible underdrying"
-    }
-  },
   "redPrompt": {
     "field": "correctiveActions",
     "blocksSubmit": false
@@ -153,10 +75,45 @@
       "hideInForm": true
     },
     {
+      "key": "cookedWeight",
+      "label": "Cooked weight (kg)",
+      "type": "number",
+      "readOnly": true,
+      "unit": "kg",
+      "group": "Summary",
+      "fromRecord": {
+        "note": "Total cooked weight from REC 7.4.0",
+        "source": "dry-cooked-weight",
+        "missing": "No REC 7.4.0 cooking weight found for this job. Fill in REC 7.4.0 first",
+        "idsField": "cookedWeightSourceId",
+        "manualFlag": "cookedWeightTypedManually",
+        "matchField": "jobNo",
+        "submittedOnly": true,
+        "unlockWhenMissing": true
+      }
+    },
+    {
+      "key": "cookedWeightSourceId",
+      "label": "Cooked weight source entries",
+      "type": "text",
+      "readOnly": true,
+      "group": "Summary",
+      "hidden": true
+    },
+    {
+      "key": "cookedWeightTypedManually",
+      "label": "Cooked weight typed manually",
+      "type": "yesno",
+      "readOnly": true,
+      "group": "Summary",
+      "hidden": true
+    },
+    {
       "key": "cookingDate",
       "label": "Cooking date",
       "type": "date",
       "readOnly": true,
+      "group": "Summary",
       "fromRecord": {
         "note": "From REC 7.4.0",
         "pick": "latest",
@@ -179,6 +136,7 @@
       "label": "Cooking date source entries",
       "type": "text",
       "readOnly": true,
+      "group": "Summary",
       "hidden": true
     },
     {
@@ -186,6 +144,7 @@
       "label": "Cooking date typed manually",
       "type": "yesno",
       "readOnly": true,
+      "group": "Summary",
       "hidden": true
     },
     {
@@ -193,6 +152,7 @@
       "label": "No. of trolleys",
       "type": "number",
       "readOnly": true,
+      "group": "Summary",
       "fromRecord": {
         "note": "From REC 7.4.1",
         "pick": "latest",
@@ -212,6 +172,7 @@
       "label": "Trolley count source entry",
       "type": "text",
       "readOnly": true,
+      "group": "Summary",
       "hidden": true
     },
     {
@@ -219,14 +180,15 @@
       "label": "Trolley count typed manually",
       "type": "yesno",
       "readOnly": true,
+      "group": "Summary",
       "hidden": true
     },
     {
       "key": "entryDate",
-      "label": "Entry date",
+      "label": "Date into drying room",
       "type": "date",
       "readOnly": true,
-      "group": "Dry room details",
+      "group": "Summary",
       "timeZone": "Africa/Johannesburg",
       "fromRecord": {
         "note": "From REC 7.4.1",
@@ -240,7 +202,7 @@
       "label": "Estimated drying date",
       "type": "date",
       "readOnly": true,
-      "group": "Dry room details",
+      "group": "Summary",
       "addDays": {
         "days": 22,
         "from": "cookingDate",
@@ -250,45 +212,41 @@
     {
       "key": "dryRoomArea",
       "label": "Current location",
-      "type": "select",
+      "type": "text",
       "required": true,
-      "options": [
-        "Main dry room",
-        "Dry container",
-        "Grading room"
-      ],
-      "group": "Dry room details",
+      "group": "Summary",
       "fromRecord": {
-        "note": "From REC 7.4.1. Tick Confirm location below.",
+        "note": "From REC 7.4.1",
         "source": "drying-location",
-        "missing": "REC 7.4.1 has no room movement for this job yet. Choose the area, then tick Confirm location.",
-        "prefill": true,
+        "missing": "REC 7.4.1 has no room movement for this job yet. Record the movement in REC 7.4.1 first",
         "idsField": "dryRoomAreaSourceId",
-        "confirmField": "dryRoomAreaConfirmed"
-      }
+        "unlockWhenMissing": true
+      },
+      "readOnly": true
     },
     {
       "key": "dryRoomAreaConfirmed",
       "label": "Confirm location",
       "type": "yesno",
-      "required": true,
-      "group": "Dry room details",
-      "tick": true,
-      "tickText": "The dry room area above is correct"
+      "required": false,
+      "group": "Summary",
+      "readOnly": true,
+      "hidden": true
     },
     {
       "key": "dryRoomAreaSourceId",
       "label": "Dry room area source entry",
       "type": "text",
-      "group": "Dry room details",
-      "hidden": true
+      "group": "Summary",
+      "hidden": true,
+      "readOnly": true
     },
     {
       "key": "dateOld",
       "label": "Date (old)",
       "type": "date",
       "readOnly": true,
-      "group": "Dry room details",
+      "group": "Summary",
       "legacy": true,
       "showWhen": {
         "nonEmpty": true
@@ -300,7 +258,7 @@
       "label": "QC check (old)",
       "type": "text",
       "readOnly": true,
-      "group": "Dry room details",
+      "group": "Summary",
       "legacy": true,
       "showWhen": {
         "nonEmpty": true
@@ -312,412 +270,12 @@
       "label": "Supervisor (old)",
       "type": "text",
       "readOnly": true,
-      "group": "Dry room details",
+      "group": "Summary",
       "legacy": true,
       "showWhen": {
         "nonEmpty": true
       },
       "legacyFrom": "supervisor"
-    },
-    {
-      "key": "skinScore",
-      "label": "Skin",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1",
-        "3"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Look at the skin and run a finger over it.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Ideal",
-          "value": 0,
-          "button": "Ideal",
-          "detail": "Dry skin that still flexes, drying at the same speed as the meat",
-          "photoUrl": ""
-        },
-        {
-          "label": "Warning",
-          "value": 1,
-          "button": "Warning",
-          "detail": "Skin turning smooth and firming ahead of the meat",
-          "photoUrl": ""
-        },
-        {
-          "label": "Failed",
-          "value": 3,
-          "button": "Failed",
-          "detail": "Dry, smooth, hard crust",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "coreScore",
-      "label": "Core",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1",
-        "3"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Press the centre of the foot firmly with a thumb. Read skin and core together: hard skin + soft core = case hardening (overdrying); soft skin + soft core = underdrying (check sticky and mould).",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Ideal",
-          "value": 0,
-          "button": "Ideal",
-          "detail": "Core firming at the same rate as the skin",
-          "photoUrl": ""
-        },
-        {
-          "label": "Warning",
-          "value": 1,
-          "button": "Warning",
-          "detail": "Core noticeably softer than the skin",
-          "photoUrl": ""
-        },
-        {
-          "label": "Failed",
-          "value": 3,
-          "button": "Failed",
-          "detail": "Core soft or wet when cut",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "frillsScore",
-      "label": "Frills",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1",
-        "3"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Feel test: run fingers along the beard, frills and foot edge.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Ideal",
-          "value": 0,
-          "button": "Ideal",
-          "detail": "Edges dry and firm but not sharp. Frills dry and elastic",
-          "photoUrl": ""
-        },
-        {
-          "label": "Warning",
-          "value": 1,
-          "button": "Warning",
-          "detail": "Frill tips stiffening, foot edge starting to sharpen",
-          "photoUrl": ""
-        },
-        {
-          "label": "Failed",
-          "value": 3,
-          "button": "Failed",
-          "detail": "Frills and beard spiky and crusty, foot edge sharp and hard",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "shapeScore",
-      "label": "Shape",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1",
-        "3"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Look at the gap where the frill meets the adductor muscle. Look for curl and dents.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Ideal",
-          "value": 0,
-          "button": "Ideal",
-          "detail": "Tight, closed shape. Small to no gap between frill and adductor",
-          "photoUrl": ""
-        },
-        {
-          "label": "Warning",
-          "value": 1,
-          "button": "Warning",
-          "detail": "Gap widening, edges starting to curl",
-          "photoUrl": ""
-        },
-        {
-          "label": "Failed",
-          "value": 3,
-          "button": "Failed",
-          "detail": "Big gap where the frill has pulled away from the adductor; dents and distortion",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "colourScore",
-      "label": "Colour",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1",
-        "3"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Compare against the Score 0 reference photo for the same day. Darkening is only a defect when ahead of schedule.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Ideal",
-          "value": 0,
-          "button": "Ideal",
-          "detail": "Colour matches the reference for this day",
-          "photoUrl": ""
-        },
-        {
-          "label": "Warning",
-          "value": 1,
-          "button": "Warning",
-          "detail": "Slightly darker than the reference",
-          "photoUrl": ""
-        },
-        {
-          "label": "Failed",
-          "value": 3,
-          "button": "Failed",
-          "detail": "Clearly darker, well ahead of schedule",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "wrinklesScore",
-      "label": "Wrinkles",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Look at the side of the foot. Pass or fail only.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Pass",
-          "value": 0,
-          "button": "Pass",
-          "detail": "Smooth",
-          "photoUrl": ""
-        },
-        {
-          "label": "Fail",
-          "value": 1,
-          "button": "Fail",
-          "detail": "Wrinkled",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "stickyScore",
-      "label": "Sticky",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Slide a clean, dry finger across the skin. Pass or fail only.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Pass",
-          "value": 0,
-          "button": "Pass",
-          "detail": "Smooth and dry, finger slides freely",
-          "photoUrl": ""
-        },
-        {
-          "label": "Fail",
-          "value": 1,
-          "button": "Fail",
-          "detail": "Sticky, finger cannot slide over the skin",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "mouldScore",
-      "label": "Mould",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "2",
-        "3"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Zero tolerance. Turn pieces over. Check the underside and every point where pieces touch each other or the trolley. Mould vs bloom: fully dried product can grow an even dry white bloom of protein, which is quality, not mould. Mould is raised or fuzzy spots, usually where pieces touch. If in doubt, score Isolated and call supervision. Score Isolated or Critical: remove and isolate the affected pieces immediately and check the remaining pieces one by one.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "None",
-          "value": 0,
-          "button": "None",
-          "detail": "No spots",
-          "photoUrl": ""
-        },
-        {
-          "label": "Isolated",
-          "value": 2,
-          "button": "Isolated",
-          "detail": "One or two small spots (white, grey, green or black) on a single piece",
-          "photoUrl": ""
-        },
-        {
-          "label": "Spread",
-          "value": 3,
-          "button": "Spread",
-          "detail": "Spots on more than one piece, fuzzy growth, or any spread",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "odourScore",
-      "label": "Odour",
-      "type": "scored-select",
-      "required": true,
-      "options": [
-        "0",
-        "1",
-        "3"
-      ],
-      "group": "Checks",
-      "redPrompt": "correctiveActions",
-      "howToCheck": "Smell the trolley.",
-      "showInTable": false,
-      "scoreOptions": [
-        {
-          "label": "Clean",
-          "value": 0,
-          "button": "Clean",
-          "detail": "Clean, normal dried smell",
-          "photoUrl": ""
-        },
-        {
-          "label": "Warning",
-          "value": 1,
-          "button": "Warning",
-          "detail": "Slightly sour",
-          "photoUrl": ""
-        },
-        {
-          "label": "Failed",
-          "value": 3,
-          "button": "Failed",
-          "detail": "Clearly sour, ammonia or off odour",
-          "photoUrl": ""
-        }
-      ],
-      "contributesToScore": true,
-      "showPhotoWhenAbove": 0
-    },
-    {
-      "key": "worstScore",
-      "label": "Worst score",
-      "type": "number",
-      "readOnly": true,
-      "group": "Checks",
-      "scoreOutput": "worst"
-    },
-    {
-      "key": "totalScore",
-      "label": "Total score",
-      "type": "number",
-      "readOnly": true,
-      "group": "Checks",
-      "scoreOutput": "total"
-    },
-    {
-      "key": "overdryingWorst",
-      "label": "Overdrying worst score",
-      "type": "number",
-      "readOnly": true,
-      "group": "Checks",
-      "scoreOutput": "overWorst"
-    },
-    {
-      "key": "overdryingTotal",
-      "label": "Overdrying total score",
-      "type": "number",
-      "readOnly": true,
-      "group": "Checks",
-      "scoreOutput": "overTotal"
-    },
-    {
-      "key": "underdryingWorst",
-      "label": "Underdrying worst score",
-      "type": "number",
-      "readOnly": true,
-      "group": "Checks",
-      "scoreOutput": "underWorst"
-    },
-    {
-      "key": "underdryingTotal",
-      "label": "Underdrying total score",
-      "type": "number",
-      "readOnly": true,
-      "group": "Checks",
-      "scoreOutput": "underTotal"
-    },
-    {
-      "key": "batchStatus",
-      "label": "Batch status",
-      "type": "text",
-      "readOnly": true,
-      "group": "Checks",
-      "scoreOutput": "status"
     },
     {
       "key": "footDamage",
@@ -882,6 +440,341 @@
       "requiredMessage": "Comment required when > 5% presence of guts is recorded."
     },
     {
+      "key": "skinScore",
+      "label": "Skin",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1",
+        "3"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Look at the skin and run a finger over it.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Ideal",
+          "value": 0,
+          "button": "Ideal",
+          "detail": "Dry skin that still flexes, drying at the same speed as the meat",
+          "photoUrl": ""
+        },
+        {
+          "label": "Warning",
+          "value": 1,
+          "button": "Warning",
+          "detail": "Skin turning smooth and firming ahead of the meat",
+          "photoUrl": ""
+        },
+        {
+          "label": "Failed",
+          "value": 3,
+          "button": "Failed",
+          "detail": "Dry, smooth, hard crust",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "coreScore",
+      "label": "Core",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1",
+        "3"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Press the centre of the foot firmly with a thumb. Read skin and core together: hard skin + soft core = case hardening (overdrying); soft skin + soft core = underdrying (check sticky and mould).",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Ideal",
+          "value": 0,
+          "button": "Ideal",
+          "detail": "Core firming at the same rate as the skin",
+          "photoUrl": ""
+        },
+        {
+          "label": "Warning",
+          "value": 1,
+          "button": "Warning",
+          "detail": "Core noticeably softer than the skin",
+          "photoUrl": ""
+        },
+        {
+          "label": "Failed",
+          "value": 3,
+          "button": "Failed",
+          "detail": "Core soft or wet when cut",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "frillsScore",
+      "label": "Frills",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1",
+        "3"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Feel test: run fingers along the beard, frills and foot edge.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Ideal",
+          "value": 0,
+          "button": "Ideal",
+          "detail": "Edges dry and firm but not sharp. Frills dry and elastic",
+          "photoUrl": ""
+        },
+        {
+          "label": "Warning",
+          "value": 1,
+          "button": "Warning",
+          "detail": "Frill tips stiffening, foot edge starting to sharpen",
+          "photoUrl": ""
+        },
+        {
+          "label": "Failed",
+          "value": 3,
+          "button": "Failed",
+          "detail": "Frills and beard spiky and crusty, foot edge sharp and hard",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "shapeScore",
+      "label": "Shape",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1",
+        "3"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Look at the gap where the frill meets the adductor muscle. Look for curl and dents.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Ideal",
+          "value": 0,
+          "button": "Ideal",
+          "detail": "Tight, closed shape. Small to no gap between frill and adductor",
+          "photoUrl": ""
+        },
+        {
+          "label": "Warning",
+          "value": 1,
+          "button": "Warning",
+          "detail": "Gap widening, edges starting to curl",
+          "photoUrl": ""
+        },
+        {
+          "label": "Failed",
+          "value": 3,
+          "button": "Failed",
+          "detail": "Big gap where the frill has pulled away from the adductor; dents and distortion",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "colourScore",
+      "label": "Colour",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1",
+        "3"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Compare against the Score 0 reference photo for the same day. Darkening is only a defect when ahead of schedule.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Ideal",
+          "value": 0,
+          "button": "Ideal",
+          "detail": "Colour matches the reference for this day",
+          "photoUrl": ""
+        },
+        {
+          "label": "Warning",
+          "value": 1,
+          "button": "Warning",
+          "detail": "Slightly darker than the reference",
+          "photoUrl": ""
+        },
+        {
+          "label": "Failed",
+          "value": 3,
+          "button": "Failed",
+          "detail": "Clearly darker, well ahead of schedule",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "wrinklesScore",
+      "label": "Wrinkles",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Look at the side of the foot. Pass or fail only.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Pass",
+          "value": 0,
+          "button": "Pass",
+          "detail": "Smooth",
+          "photoUrl": ""
+        },
+        {
+          "label": "Fail",
+          "value": 1,
+          "button": "Fail",
+          "detail": "Wrinkled",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "stickyScore",
+      "label": "Sticky",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Slide a clean, dry finger across the skin. Pass or fail only.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Pass",
+          "value": 0,
+          "button": "Pass",
+          "detail": "Smooth and dry, finger slides freely",
+          "photoUrl": ""
+        },
+        {
+          "label": "Fail",
+          "value": 1,
+          "button": "Fail",
+          "detail": "Sticky, finger cannot slide over the skin",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "mouldScore",
+      "label": "Mould",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "2",
+        "3"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Zero tolerance. Turn pieces over. Check the underside and every point where pieces touch each other or the trolley. Mould vs bloom: fully dried product can grow an even dry white bloom of protein, which is quality, not mould. Mould is raised or fuzzy spots, usually where pieces touch. If in doubt, score Isolated and call supervision. Score Isolated or Critical: remove and isolate the affected pieces immediately and check the remaining pieces one by one.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "None",
+          "value": 0,
+          "button": "None",
+          "detail": "No spots",
+          "photoUrl": ""
+        },
+        {
+          "label": "Isolated",
+          "value": 2,
+          "button": "Isolated",
+          "detail": "One or two small spots (white, grey, green or black) on a single piece",
+          "photoUrl": ""
+        },
+        {
+          "label": "Spread",
+          "value": 3,
+          "button": "Spread",
+          "detail": "Spots on more than one piece, fuzzy growth, or any spread",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
+      "key": "odourScore",
+      "label": "Odour",
+      "type": "scored-select",
+      "required": true,
+      "options": [
+        "0",
+        "1",
+        "3"
+      ],
+      "group": "Checks",
+      "redPrompt": "correctiveActions",
+      "howToCheck": "Smell the trolley.",
+      "showInTable": false,
+      "scoreOptions": [
+        {
+          "label": "Clean",
+          "value": 0,
+          "button": "Clean",
+          "detail": "Clean, normal dried smell",
+          "photoUrl": ""
+        },
+        {
+          "label": "Warning",
+          "value": 1,
+          "button": "Warning",
+          "detail": "Slightly sour",
+          "photoUrl": ""
+        },
+        {
+          "label": "Failed",
+          "value": 3,
+          "button": "Failed",
+          "detail": "Clearly sour, ammonia or off odour",
+          "photoUrl": ""
+        }
+      ],
+      "showPhotoWhenAbove": 0
+    },
+    {
       "key": "trolleysClearlyMarked",
       "label": "Trolleys clearly marked",
       "type": "yesno",
@@ -894,14 +787,6 @@
       "label": "Comment / corrective action",
       "type": "textarea",
       "group": "Checks"
-    },
-    {
-      "key": "ncEntryId",
-      "label": "NC reference",
-      "type": "text",
-      "readOnly": true,
-      "group": "Checks",
-      "hidden": true
     },
     {
       "key": "mouldVisibleOld",

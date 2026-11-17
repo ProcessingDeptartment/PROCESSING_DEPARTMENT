@@ -129,6 +129,33 @@
       ]
     },
     {
+      "title": "Summary",
+      "summaryTable": true,
+      "summaryTableFields": [
+        {
+          "label": "Cooked weight (kg)",
+          "fact": "dry-cooked-weight"
+        },
+        {
+          "label": "Cooking date",
+          "fact": "dry-cooking",
+          "type": "date"
+        },
+        {
+          "label": "No. of trolleys",
+          "field": "noOfTrolleys",
+          "fact": "drying-process"
+        },
+        {
+          "label": "Date into drying room",
+          "field": "dateIntoDryRoomAt",
+          "fact": "drying-room-date",
+          "type": "date"
+        }
+      ],
+      "fields": []
+    },
+    {
       "title": "Progress of product",
       "printHidden": true,
       "jobSoFarPanel": true,
