@@ -609,6 +609,55 @@
           "readOnly": true
         }
       ]
+    },
+    {
+      "title": "Summary",
+      "printSummaryTable": true,
+      "cols": 4,
+      "summaryFields": [
+        {
+          "key": "ooswPct",
+          "label": "OOSW",
+          "suffix": " %"
+        },
+        {
+          "key": "cookedWeightKg",
+          "label": "Cooked:",
+          "suffix": " kg"
+        }
+      ],
+      "fields": [
+        {
+          "key": "ooswKg",
+          "label": "OOSW (kg)",
+          "type": "text",
+          "readOnly": true,
+          "printFallback": "jiOoswKg"
+        },
+        {
+          "key": "ooswPct",
+          "label": "OOSW %",
+          "type": "number",
+          "readOnly": true,
+          "deriveFormula": {
+            "expr": "ooswKg / jiIntakeWeight * 100",
+            "round": 1
+          }
+        },
+        {
+          "key": "cookedWeightKg",
+          "label": "Cooked weight (kg)",
+          "type": "number",
+          "unit": "kg"
+        },
+        {
+          "key": "cookingDate",
+          "label": "Cooking date",
+          "type": "date",
+          "readOnly": true,
+          "recordDate": true
+        }
+      ]
     }
   ],
   "autofill": [

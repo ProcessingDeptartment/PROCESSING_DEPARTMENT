@@ -254,6 +254,9 @@
   .fr-sheet td,.fr-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; font-size:12px; color:#000; }
   .fr-sheet th{ background:#eee; font-weight:700; }
   .fr-sheet td.fr-sheet-lbl{ font-weight:700; width:26%; }
+  .fr-sheet table.fr-sheet-summary{ table-layout:fixed; }
+  .fr-sheet table.fr-sheet-summary th,.fr-sheet table.fr-sheet-summary td{ text-align:center; }
+  .fr-sheet table.fr-sheet-summary td{ font-weight:700; height:18px; }
   .fr-sheet .fr-sheet-sign td{ height:26px; font-size:14px; }
   .fr-sheet .fr-sheet-sign td.fr-sheet-lbl{ width:13%; }
   .fr-sheet .fr-sheet-sign{ page-break-inside:avoid; break-inside:avoid; }
@@ -323,6 +326,13 @@
     background:var(--surface-raised,#f7f8f8); border-radius:4px; }
   .fr-trolley-lbl{ font-size:13px; color:#54606b; }
   .fr-trolley-val{ font-size:22px; font-weight:700; color:#1a2026; }
+  .fr-summary-table{ width:100%; table-layout:fixed; border-collapse:collapse; margin:12px 0;
+    background:var(--surface-raised,#f7f8f8); border:1px solid #d0d3d6; border-radius:4px; }
+  .fr-summary-table td{ padding:8px 12px; border-left:1px solid #d0d3d6; vertical-align:top; }
+  .fr-summary-table td:first-child{ border-left:0; }
+  .fr-summary-lbl{ display:block; font-size:12px; color:#54606b; margin-bottom:2px; }
+  .fr-summary-val{ display:block; font-size:18px; font-weight:700; color:#1a2026; overflow-wrap:anywhere; }
+  @media (max-width:600px){ .fr-summary-table td{ padding:6px 8px; } .fr-summary-val{ font-size:15px; } }
   .fr-roster-totals{ font-size:11px; color:#54606b; margin-top:6px; font-weight:600; }
   /* fr-compact: one fixed field size (a quarter of the form) for everything that isn't free
      data entry -- a roster's quick-capture line, all-computed sections (totals), Completed by. */
@@ -2490,6 +2500,57 @@
       });
     }
 
+    // deriveFormula: { expr: 'ooswKg / jiIntakeWeight * 100', round: 1 } on a top-level field -- plain
+    // arithmetic (+ - * / and brackets) over other field keys. Blank until every field it names holds a
+    // number (and never NaN / Infinity, e.g. a zero divisor). No eval: a small recursive-descent parser.
+    function evalDeriveFormula(formula, values) {
+      const toks = String((formula && formula.expr) || '').match(/\s*(\d+\.?\d*|\.\d+|[A-Za-z_][A-Za-z0-9_]*|[-+*/()])/g);
+      if (!toks || toks.join('').replace(/\s/g, '') !== String(formula.expr).replace(/\s/g, '')) return '';
+      let i = 0, missing = false;
+      const peek = () => (toks[i] || '').trim();
+      const next = () => (toks[i++] || '').trim();
+      function atom() {
+        const t = next();
+        if (t === '(') { const v = sum(); if (next() !== ')') missing = true; return v; }
+        if (t === '-') return -atom();
+        if (t === '+') return atom();
+        if (/^[\d.]/.test(t)) return parseFloat(t);
+        if (!t || !/^[A-Za-z_]/.test(t)) { missing = true; return NaN; }
+        const raw = values[t] == null ? '' : String(values[t]).trim().replace(',', '.');
+        if (raw === '' || !isFinite(Number(raw))) { missing = true; return NaN; }
+        return Number(raw);
+      }
+      function product() {
+        let v = atom();
+        while (peek() === '*' || peek() === '/') { const op = next(); const r = atom(); v = op === '*' ? v * r : v / r; }
+        return v;
+      }
+      function sum() {
+        let v = product();
+        while (peek() === '+' || peek() === '-') { const op = next(); const r = product(); v = op === '+' ? v + r : v - r; }
+        return v;
+      }
+      const out = sum();
+      if (missing || i < toks.length || !isFinite(out)) return '';
+      const dp = formula.round == null ? 2 : Number(formula.round);
+      return out.toFixed(dp);
+    }
+    // Re-run every deriveFormula field from the values on screen (form input events, and again at save).
+    function refreshDeriveFormulas() {
+      const fields = allFields(config);
+      const derived = fields.filter(f => f.deriveFormula);
+      if (!derived.length) return;
+      const values = {};
+      fields.forEach(f => { const inp = el('fr_f_' + f.key); if (inp) values[f.key] = inp.value; });
+      derived.forEach(f => {
+        const inp = el('fr_f_' + f.key);
+        if (!inp) return;
+        const v = evalDeriveFormula(f.deriveFormula, values);
+        if (inp.value !== v) inp.value = v;
+        values[f.key] = v;
+      });
+    }
+
     function renderRosterEditor(existingRows, roster, rosterIndex) {
       const ns = rosterNs(rosterIndex);
       const containerId = rosterDomId('fr_rosterRows', rosterIndex);
@@ -3920,7 +3981,21 @@
             ${bodyHtml}
           </details>`;
       };
+      // summaryTable: read-only one-row table. Each column is a field key, or { label, field, fact, type }:
+      // `field` is read live from this form, `fact` is the fallback key in /api/dry-monitoring/job-facts/<job>
+      // (values held by other records, e.g. cooked weight from REC 7.4.0). Filled in by wireSummaryTables().
+      const summaryCols = sec => (sec.summaryTableFields || []).map(c => {
+        const col = typeof c === 'string' ? { field: c } : Object.assign({}, c);
+        const def = col.field ? allFields(config).find(f => f.key === col.field) : null;
+        if (!col.label) col.label = def ? def.label + (def.unit ? ` (${def.unit})` : '') : (col.field || col.fact || '');
+        if (!col.type && def) col.type = def.type;
+        return col;
+      });
       const renderSection = sec => {
+        if (sec.summaryTable) {
+          return `<table class="fr-summary-table no-print" data-summary-table="${(config.sections || []).indexOf(sec)}"><tbody><tr>${summaryCols(sec).map((c, i) =>
+            `<td><span class="fr-summary-lbl">${esc(c.label)}</span><span class="fr-summary-val" data-summary-col="${i}">—</span></td>`).join('')}</tr></tbody></table>`;
+        }
         if (sec.trolleyBanner) {
           const _tbVal = existing && existing.values[sec.bannerField] ? esc(existing.values[sec.bannerField]) : '—';
           return `<div class="fr-trolley-banner no-print"><span class="fr-trolley-lbl">${esc(sec.bannerLabel || 'No. of trolleys')}</span><span class="fr-trolley-val">${_tbVal}</span></div>`;
@@ -4073,6 +4148,7 @@
       wireCollapseAll(container);
       if (!locked) { wireJobSearch(container, config, !existing); wireAutofill(container, config); wireJobRouteCheck(container, config); }
       if (!locked) { container.addEventListener('input', refreshComputeFns); refreshComputeFns(); }
+      if (!locked) { ['input', 'change'].forEach(ev => container.addEventListener(ev, refreshDeriveFormulas)); refreshDeriveFormulas(); }
 
       const pickFields = allFields(config).concat(rosterList.reduce((acc, r) => acc.concat(r.columns || []), []));
       const traceJobField = (pickFields.find(f => f.type === 'recordpick' && f.jobField) || {}).jobField
@@ -4116,6 +4192,64 @@
 
       if (config.entryLog && window.EntryLog) window.EntryLog.attach({ config, existing, locked, container, el, toast, storeGet,
         submissions: () => submissions, openForm, formHasInput, reload: load });
+      // summaryTable sections: repaint on any form input, and re-read the job facts when the job changes
+      const summaryTables = Array.from(container.querySelectorAll('[data-summary-table]'));
+      if (summaryTables.length) {
+        const jobInput = el('fr_f_' + (config.batchField || 'jobNo'));
+        let facts = {}, factsJob = null, factsSeq = 0;
+        const fmtSummary = (c, raw) => {
+          const s = raw == null ? '' : String(raw).trim();
+          if (!s) return '—';
+          if (c.type === 'date' || c.type === 'timestamp') {
+            let day = s;
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+              const d = new Date(s);
+              if (isNaN(d)) return s;
+              day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+            return window.DocHeader.fmtDate(day);
+          }
+          return s;
+        };
+        const paintSummary = () => summaryTables.forEach(t => {
+          const cols = summaryCols(config.sections[Number(t.dataset.summaryTable)]);
+          t.querySelectorAll('[data-summary-col]').forEach(cell => {
+            const c = cols[Number(cell.dataset.summaryCol)];
+            const inp = c.field ? el('fr_f_' + c.field) : null;
+            let v = inp ? inp.value : (c.field && existing && existing.values ? existing.values[c.field] : '');
+            if ((v == null || String(v).trim() === '') && c.fact && facts[c.fact]) v = facts[c.fact].value;
+            cell.textContent = fmtSummary(c, v);
+          });
+        });
+        const loadFacts = async () => {
+          const job = jobInput ? String(jobInput.value || '').trim() : '';
+          if (job === factsJob) return;
+          factsJob = job; facts = {};
+          const seq = ++factsSeq;
+          paintSummary();
+          if (!job) return;
+          try {
+            const path = `/api/dry-monitoring/job-facts/${encodeURIComponent(job)}`;
+            const res = await (window.FacilityApi ? window.FacilityApi.fetch(path)
+              : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + path));
+            if (seq !== factsSeq) return;
+            if (res.ok) facts = (await res.json()) || {};
+            else factsJob = null;
+          } catch (e) { if (seq === factsSeq) factsJob = null; /* offline: this form's own values still show */ }
+          if (seq === factsSeq) paintSummary();
+        };
+        const refreshSummary = () => { paintSummary(); loadFacts(); };
+        // the form is redrawn into the same container: keep one listener, not one per redraw
+        ['input', 'change'].forEach(ev => {
+          if (container._frSummaryRefresh) container.removeEventListener(ev, container._frSummaryRefresh);
+          container.addEventListener(ev, refreshSummary);
+        });
+        container._frSummaryRefresh = refreshSummary;
+        refreshSummary();
+      } else if (container._frSummaryRefresh) {
+        ['input', 'change'].forEach(ev => container.removeEventListener(ev, container._frSummaryRefresh));
+        container._frSummaryRefresh = null;
+      }
       const computedIds = new Set(allFields(config).filter((f) => f.type === 'computed').map((f) => `fr_f_${f.key}`));
       container.querySelectorAll('input,select,textarea,button').forEach(i => { i.disabled = (locked && !i.hasAttribute('data-keep-enabled')) || computedIds.has(i.id); });
       if (locked) container.querySelectorAll('.fr-slide-nav').forEach(n => { n.style.display = 'none'; });
@@ -4186,6 +4320,7 @@
     async function saveForm(finalize) {
 
       if (!await refreshProvisional(el('fr_modalSections'), config, finalize, toast)) return;
+      refreshDeriveFormulas();   // autofill can change a source value without an input event
 
       const values = {};
       { const oo = el('fr_ooswDisplay'); if (oo && oo.dataset.kg !== undefined) values.jiOoswKg = oo.dataset.kg; }
@@ -4624,11 +4759,35 @@
       return String(raw);
     }
 
+    // printSummaryTable: the section's fields as one horizontal table -- a header row of labels over a row of
+    // values. A blank value falls back to field.printFallback (another stored key), then to its deriveFormula
+    // (entries saved before the field existed).
+    function sheetSummaryTableHtml(sec, sub, withTitle) {
+      const vals = sub.values || {};
+      const sf = (sec.fields || []).filter(f => !f.hidden);
+      if (!sf.length) return '';
+      const blank = x => x == null || String(x).trim() === '';
+      const lbl = f => f.label + (f.unit && !f.label.includes('(' + f.unit + ')') ? ' (' + f.unit + ')' : '');
+      const stored = k => (blank(vals[k]) && allFields(config).some(f => f.key === k && f.printFallback) ? vals[allFields(config).find(f => f.key === k).printFallback] : vals[k]);
+      const val = f => {
+        let v = stored(f.key);
+        if (blank(v) && f.deriveFormula) {
+          const src = {};
+          allFields(config).forEach(x => { src[x.key] = stored(x.key); });
+          v = evalDeriveFormula(f.deriveFormula, src);
+        }
+        return displayValue(f, v);
+      };
+      return `<div>${withTitle ? `<h3>${esc(sec.title)}</h3>` : ''}<table class="fr-sheet-flat fr-sheet-summary"><thead><tr>${sf.map(f => `<th>${esc(lbl(f))}</th>`).join('')}</tr></thead>
+        <tbody><tr>${sf.map(f => `<td>${esc(val(f))}</td>`).join('')}</tr></tbody></table></div>`;
+    }
+
     function sheetSectionsHtml(sub, which) {
       const { pre, post } = sectionsAroundRoster(config);
       const secs = which === 'post' ? post : which === 'pre' ? pre : (config.sections || []);
       return secs.map(sec => {
-        if (sec.printHidden) return '';
+        if (sec.printHidden || sec.summaryTable) return '';
+        if (sec.printSummaryTable) return sheetSummaryTableHtml(sec, sub, true);
         if (sec.trolleyBanner) {
           // already printed inside another section's table (e.g. Job info printFields)
           if ((config.sections || []).some(s => (s.printFields || []).includes(sec.bannerField))) return '';
@@ -4784,7 +4943,7 @@
             <td class="fr-sheet-lbl">Signature:</td><td>${cb && String(cb.signature || '').trim() ? 'Confirmed' : ''}</td></tr>
         <tr><td class="fr-sheet-lbl">Verified by:</td><td>${esc(sub.verification ? sub.verification.verifiedBy : '')}</td>
             <td class="fr-sheet-lbl">Title:</td><td>${esc(sub.verification ? sub.verification.verifiedSig : '')}</td>
-            <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification ? sub.verification.verifiedDate : '')}</td>
+            <td class="fr-sheet-lbl">Date:</td><td>${esc(sub.verification && sub.verification.verifiedDate ? window.DocHeader.fmtDate(sub.verification.verifiedDate) : '')}</td>
             <td class="fr-sheet-lbl">Signature:</td><td>${sub.verification && String(sub.verification.verifiedSignature || '').trim() ? 'Confirmed' : ''}</td></tr>
       </tbody></table>`;
     }
@@ -4897,7 +5056,8 @@
       const oos = v.oosWarningAck ? String(v.oosWarningNote || 'Cooking pot weight exceeding OOSW - possible batch mix').split('\n').filter(Boolean)
         .map(l => `<div class="dc-oos">⚠ OOSW Override — ${e(l)}<br>Acknowledged by: ${e(who)}</div>`).join('') : '';
 
-      return `<div class="fr-sheet-page fr-dc">${job}${body}${oos}${sheetSignHtml(sub)}</div>`;
+      const summary = (config.sections || []).filter(x => x.printSummaryTable).map(x => sheetSummaryTableHtml(x, sub, false)).join('');
+      return `<div class="fr-sheet-page fr-dc">${job}${summary}${body}${oos}${sheetSignHtml(sub)}</div>`;
     }
 
     // Footer of every page of this sheet: REC | Rev | Printed date | Page X of Y (margin box, right aligned, 7 pt)
