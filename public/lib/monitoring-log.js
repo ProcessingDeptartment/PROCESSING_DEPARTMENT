@@ -3521,8 +3521,8 @@
     async function printEntry(id) {
       const entryRow = entries.find(e => e.id === id);
       if (!entryRow) return;
-      // daily-log records: an entry's PDF is the monthly log of the month it was submitted in
-      if (dailyLog) return printMonthlyLog(logDayOf(entryRow).slice(0, 7));
+      // daily-log records: individual entry PDF shows the entry sheet with readings table (rrSheetHtml)
+      // The monthly log PDF (all entries for the month) is printed via printPdf() / printMonthlyLog() instead.
       const dateF = roleField('date');
 
       // Build sheet HTML in the hidden print sheet (existing logic)
