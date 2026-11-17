@@ -1240,8 +1240,9 @@
       if (f.type === 'textarea') {
         return `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="2" style="resize:vertical;">${esc(String(v))}</textarea>`;
       }
-      const unit = f.unit ? `<span class="hint">${esc(f.unit)}</span>` : '';
-      return `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}">${unit}`;
+      const unitSuffix = f.unit ? `<span class="hint" style="white-space:nowrap;">${esc(f.unit)}</span>` : '';
+      const inp = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}" style="width:100%;min-width:0;">`;
+      return unitSuffix ? `<span style="display:flex;align-items:center;gap:4px;">${inp}${unitSuffix}</span>` : inp;
     }
 
     function rrBuildCard(vals, idx, totalRows, locked) {
