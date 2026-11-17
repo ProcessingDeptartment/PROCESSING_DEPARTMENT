@@ -397,8 +397,12 @@
   .ml-rr-sheet{ margin:8px 0; }
   .ml-rr-sheet table{ width:100%; border-collapse:collapse; font-size:11px; }
   .ml-rr-sheet th{ background:#f4f5f3; font-size:10px; text-transform:uppercase; letter-spacing:.03em; padding:4px 6px; border:1px solid #c0c5c8; }
-  .ml-rr-sheet td{ padding:4px 6px; border:1px solid #c0c5c8; }
-  .ml-rr-sheet tr.ml-rr-oosw td{ background:#fbe8e6; }`;
+  .ml-rr-sheet td{ padding:4px 6px; border:1px solid #c0c5c8; vertical-align:top; }
+  .ml-rr-sheet td.rr-unit{ font-weight:700; white-space:nowrap; width:80px; }
+  .ml-rr-sheet td.rr-temp{ width:70px; text-align:center; }
+  .ml-rr-sheet td.rr-yn{ width:30px; text-align:center; }
+  .ml-rr-sheet td.rr-action{ min-width:120px; }
+  .ml-rr-sheet tr.ml-rr-oosw td{ border-left:3px solid #a3352d; }`;
 
 
   function setPageOrientation(orientation) {
@@ -1386,8 +1390,18 @@
       const rrT = config.ncThresholds || [];
       const isOosRow = (row) => rrT.some(t => { const n = parseFloat(row[t.field]); return !isNaN(n) && (n < (t.min ?? -Infinity) || n > (t.max ?? Infinity)); });
       const thead = printFields.map(f => `<th>${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</th>`).join('');
+      const colClass = (f) => {
+        if (f.key === (rrCfg.uniqueKey || 'chillerUnit')) return 'rr-unit';
+        if (f.type === 'number') return 'rr-temp';
+        if (f.type === 'yesno') return 'rr-yn';
+        if (f.type === 'textarea') return 'rr-action';
+        return '';
+      };
       const tbody = readings.map(row => {
-        const cells = printFields.map(f => `<td>${esc(String(row[f.key] != null ? row[f.key] : ''))}</td>`).join('');
+        const cells = printFields.map(f => {
+          const cls = colClass(f);
+          return `<td${cls ? ` class="${cls}"` : ''}>${esc(String(row[f.key] != null ? row[f.key] : ''))}</td>`;
+        }).join('');
         return `<tr${isOosRow(row) ? ' class="ml-rr-oosw"' : ''}>${cells}</tr>`;
       }).join('');
       return `<div class="ml-rr-sheet"><table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></div>`;
