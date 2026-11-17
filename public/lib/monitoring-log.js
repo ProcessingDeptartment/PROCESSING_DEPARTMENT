@@ -382,7 +382,22 @@
   /* monthly log PDF */
   .ml-sheet tr.ml-monthlog-dh td{ padding:0 !important; border:none !important; }
   .ml-sheet th.ml-monthlog-title{ font-size:13px; text-align:center; text-transform:none; letter-spacing:0; color:#000; background:#fff; padding:6px; }
-  .ml-sheet th.ml-monthlog-title small{ display:block; font-weight:400; font-size:10px; margin-top:2px; }`;
+  .ml-sheet th.ml-monthlog-title small{ display:block; font-weight:400; font-size:10px; margin-top:2px; }
+  /* repeating rows (config.repeatingRows) */
+  .ml-rr-wrap{ grid-column:1/-1; margin-bottom:2px; }
+  .ml-rr-table{ width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:8px; }
+  .ml-rr-table th{ background:var(--palette-head-bg,#fbfbfa); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--palette-label,#54606b); font-weight:700; padding:5px 7px; border:1px solid var(--palette-border,#e2e4e3); white-space:nowrap; }
+  .ml-rr-table td{ padding:4px 5px; border:1px solid var(--palette-border,#e2e4e3); vertical-align:middle; }
+  .ml-rr-table td input,.ml-rr-table td select,.ml-rr-table td textarea{ font-size:12.5px; padding:4px 6px; min-width:60px; width:100%; }
+  .ml-rr-table td.ml-rr-rmcol{ width:28px; text-align:center; }
+  .ml-rr-rm{ padding:3px 7px; font-size:11px; background:#fbe8e6; color:#a3352d; border:1px solid #e8b8b3; border-radius:3px; cursor:pointer; }
+  .ml-rr-rm:disabled{ opacity:.35; cursor:not-allowed; }
+  .ml-rr-add{ margin-top:4px; }
+  .ml-rr-sheet{ margin:8px 0; }
+  .ml-rr-sheet table{ width:100%; border-collapse:collapse; font-size:11px; }
+  .ml-rr-sheet th{ background:#f4f5f3; font-size:10px; text-transform:uppercase; letter-spacing:.03em; padding:4px 6px; border:1px solid #c0c5c8; }
+  .ml-rr-sheet td{ padding:4px 6px; border:1px solid #c0c5c8; }
+  .ml-rr-sheet tr.ml-rr-oosw td{ background:#fbe8e6; }`;
 
 
   function setPageOrientation(orientation) {
@@ -1199,6 +1214,153 @@
       return 'ok';
     }
 
+    // --- repeatingRows helpers (config.repeatingRows) ---
+    const rrCfg = config.repeatingRows || null;
+
+    function rrNormalise(existing) {
+      if (!rrCfg) return [];
+      const v = (existing && existing.values) || {};
+      if (Array.isArray(v.readings)) return v.readings;
+      // backward compat: old flat-field entry — wrap into single-element readings array
+      if (rrCfg.uniqueKey && v[rrCfg.uniqueKey] != null) {
+        const row = {};
+        (rrCfg.rowFields || []).forEach(f => { if (v[f.key] != null) row[f.key] = v[f.key]; });
+        return [row];
+      }
+      return [];
+    }
+
+    function rrBuildHtml(readings, locked) {
+      if (!rrCfg) return '';
+      const rf = rrCfg.rowFields || [];
+      const minRows = rrCfg.minRows || 1;
+      const maxRows = rrCfg.maxRows || 99;
+      const rows = readings.length ? readings : [{}];
+      const thCols = rf.map(f => `<th>${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</th>`).join('') + (locked ? '' : '<th></th>');
+      const buildRow = (vals, idx) => {
+        const cells = rf.map(f => {
+          const v = vals[f.key] != null ? vals[f.key] : '';
+          if (locked) return `<td>${esc(String(v))}</td>`;
+          let inp;
+          if (f.type === 'select') {
+            const opts = (f.options || []).map(o => `<option value="${esc(o)}"${v === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
+            inp = `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">—</option>${opts}</select>`;
+          } else if (f.type === 'textarea') {
+            inp = `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="1" style="resize:none;">${esc(String(v))}</textarea>`;
+          } else {
+            inp = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}">`;
+          }
+          return `<td>${inp}</td>`;
+        });
+        const rmBtn = locked ? '' : `<td class="ml-rr-rmcol"><button type="button" class="ml-rr-rm" data-rr-rm="${idx}"${rows.length <= minRows ? ' disabled' : ''}>×</button></td>`;
+        return `<tr data-rr-row="${idx}">${cells.join('')}${rmBtn}</tr>`;
+      };
+      const tbody = rows.map((r, i) => buildRow(r, i)).join('');
+      const addBtn = locked || rows.length >= maxRows ? '' : `<button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-rr-add">${esc(rrCfg.addLabel || '+ Add row')}</button>`;
+      return `<div class="ml-rr-wrap"><table class="ml-rr-table"><thead><tr>${thCols}</tr></thead><tbody id="${ns}_rrBody">${tbody}</tbody></table>${addBtn}</div>`;
+    }
+
+    function rrRead(container) {
+      if (!rrCfg) return [];
+      const rf = rrCfg.rowFields || [];
+      const rows = [];
+      container.querySelectorAll('[data-rr-row]').forEach(tr => {
+        const row = {};
+        rf.forEach(f => {
+          const inp = tr.querySelector(`[data-rr-field="${f.key}"]`);
+          row[f.key] = inp ? inp.value : '';
+        });
+        rows.push(row);
+      });
+      return rows;
+    }
+
+    function rrWire(container) {
+      if (!rrCfg || !container) return;
+      const rr = rrCfg;
+      const minRows = rr.minRows || 1;
+      const maxRows = rr.maxRows || 99;
+
+      function reindex() {
+        const tbody = container.querySelector(`#${ns}_rrBody`);
+        if (!tbody) return;
+        const trs = Array.from(tbody.querySelectorAll('[data-rr-row]'));
+        trs.forEach((tr, i) => {
+          tr.setAttribute('data-rr-row', i);
+          tr.querySelectorAll('[data-rr-field]').forEach(inp => {
+            inp.id = `${ns}_rr_${i}_${inp.getAttribute('data-rr-field')}`;
+          });
+          const rmBtn = tr.querySelector('[data-rr-rm]');
+          if (rmBtn) { rmBtn.setAttribute('data-rr-rm', i); rmBtn.disabled = trs.length <= minRows; }
+        });
+        const addBtn = container.querySelector('.ml-rr-add');
+        if (addBtn) addBtn.disabled = trs.length >= maxRows;
+        if (rr.uniqueKey) {
+          trs.forEach(tr => {
+            const sel = tr.querySelector(`[data-rr-field="${rr.uniqueKey}"]`);
+            if (!sel) return;
+            const own = sel.value;
+            const others = trs.filter(r => r !== tr).map(r => { const s = r.querySelector(`[data-rr-field="${rr.uniqueKey}"]`); return s ? s.value : ''; }).filter(Boolean);
+            Array.from(sel.options).forEach(o => { o.disabled = !!(o.value && o.value !== own && others.includes(o.value)); });
+          });
+        }
+      }
+
+      const tbody = container.querySelector(`#${ns}_rrBody`);
+      if (!tbody) return;
+
+      container.addEventListener('click', e => {
+        const btn = e.target.closest('[data-rr-rm]');
+        if (!btn) return;
+        const tr = btn.closest('[data-rr-row]');
+        if (!tr || tbody.querySelectorAll('[data-rr-row]').length <= minRows) return;
+        tr.remove(); reindex();
+      });
+
+      const addBtn = container.querySelector('.ml-rr-add');
+      if (addBtn) {
+        addBtn.addEventListener('click', () => {
+          const trs = tbody.querySelectorAll('[data-rr-row]');
+          if (trs.length >= maxRows) return;
+          const idx = trs.length;
+          const tr = document.createElement('tr');
+          tr.setAttribute('data-rr-row', idx);
+          tr.innerHTML = (rr.rowFields || []).map(f => {
+            let inp;
+            if (f.type === 'select') {
+              const opts = (f.options || []).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+              inp = `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">—</option>${opts}</select>`;
+            } else if (f.type === 'textarea') {
+              inp = `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="1" style="resize:none;"></textarea>`;
+            } else {
+              inp = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="">`;
+            }
+            return `<td>${inp}</td>`;
+          }).join('') + `<td class="ml-rr-rmcol"><button type="button" class="ml-rr-rm" data-rr-rm="${idx}">×</button></td>`;
+          tbody.appendChild(tr); reindex();
+        });
+      }
+
+      if (rr.uniqueKey) tbody.addEventListener('change', e => { if (e.target.closest(`[data-rr-field="${rr.uniqueKey}"]`)) reindex(); });
+      reindex();
+    }
+
+    function rrSheetHtml(entryRow) {
+      if (!rrCfg) return '';
+      const v = (entryRow && entryRow.values) || {};
+      const readings = Array.isArray(v.readings) ? v.readings : rrNormalise(entryRow);
+      if (!readings.length) return '';
+      const printFields = rrCfg.rowFields || [];
+      const rrT = config.ncThresholds || [];
+      const isOosRow = (row) => rrT.some(t => { const n = parseFloat(row[t.field]); return !isNaN(n) && (n < (t.min ?? -Infinity) || n > (t.max ?? Infinity)); });
+      const thead = printFields.map(f => `<th>${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</th>`).join('');
+      const tbody = readings.map(row => {
+        const cells = printFields.map(f => `<td>${esc(String(row[f.key] != null ? row[f.key] : ''))}</td>`).join('');
+        return `<tr${isOosRow(row) ? ' class="ml-rr-oosw"' : ''}>${cells}</tr>`;
+      }).join('');
+      return `<div class="ml-rr-sheet"><table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></div>`;
+    }
+
     function evaluateEntry(values) {
       let anyChecked = false, anyFail = false;
       // an Amber, Red or Critical batch is a deviation
@@ -1207,6 +1369,15 @@
         const r = checkField(f, values[f.key]);
         if (r) { anyChecked = true; if (r === 'fail') anyFail = true; }
       });
+      if (rrCfg && Array.isArray(values.readings)) {
+        const rrFields = new Set((rrCfg.rowFields || []).map(f => f.key));
+        liveThresholds().filter(t => rrFields.has(t.field)).forEach(t => {
+          values.readings.forEach(row => {
+            const _v = parseFloat(row[t.field]);
+            if (!isNaN(_v)) { anyChecked = true; if (_v < (t.min ?? -Infinity) || _v > (t.max ?? Infinity)) anyFail = true; }
+          });
+        });
+      }
       if (!anyChecked) return null;
       return !anyFail;
     }
@@ -2097,7 +2268,8 @@
 
       let lastGroup = null;
       const activeKey = entryStages ? activeStageKey(existing) : null;
-      container.innerHTML = entryFields.map(f => {
+      const _rrHtml = rrCfg ? rrBuildHtml(rrNormalise(existing), locked) : '';
+      container.innerHTML = _rrHtml + entryFields.map(f => {
         let head = '';
         if (f.group && f.group !== lastGroup) { head = stageHeadHtml(f, existing, activeKey); lastGroup = f.group; }
 
@@ -2115,6 +2287,7 @@
       wireTicks(container);
       wirePrefixed(container);
       wireDigits(container);
+      if (rrCfg && !locked) rrWire(container);
       const blocks = wireSectionCollapsibles(container, ns, entryFields);
       const ctl = el(`${ns}_collapseCtl`);
       if (ctl) { ctl.hidden = !blocks; wireCollapseAll(ctl, () => container.parentElement || container); }
@@ -2412,6 +2585,34 @@
         }
       });
 
+      // Collect and validate repeating rows
+      if (rrCfg) {
+        const _readings = rrRead(el(modalIds.fields));
+        raw.readings = _readings;
+        if (finalize || !submitFlow) {
+          if (_readings.length < (rrCfg.minRows || 1)) {
+            toast(`At least ${rrCfg.minRows || 1} ${rrCfg.rowLabel || 'row'} required.`); return;
+          }
+          for (let _rri = 0; _rri < _readings.length; _rri++) {
+            const _row = _readings[_rri];
+            const _unit = rrCfg.uniqueKey ? (_row[rrCfg.uniqueKey] || `Row ${_rri + 1}`) : `Row ${_rri + 1}`;
+            for (const _rf of (rrCfg.rowFields || [])) {
+              if (_rf.required && !String(_row[_rf.key] || '').trim()) {
+                toast(`${_unit}: "${_rf.label}" is required.`); return;
+              }
+            }
+          }
+          if (rrCfg.uniqueKey) {
+            const _seen = new Set();
+            for (const _row of _readings) {
+              const _v = _row[rrCfg.uniqueKey];
+              if (_v && _seen.has(_v)) { toast(`"${_v}" is selected more than once.`); return; }
+              if (_v) _seen.add(_v);
+            }
+          }
+        }
+      }
+
       if (missingRequired && (finalize || !submitFlow)) {
         revealField(el(`${ns}_f_${missingKey}`));
         if (missingMessage) setReqError(missingKey, missingMessage);
@@ -2503,6 +2704,25 @@
       // NC from records: an out-of-spec value (config.ncThresholds) or ncAlways prompts an NC; Skip is allowed (stamped nc_skipped)
       if (window.NcRaise && (finalize || !submitFlow) && (config.ncThresholds || config.ncAlways || config.redPrompt || (sc && sc.autoNc))) {
         const breaches = window.NcRaise.findBreaches(liveThresholds(), values).filter(b => !ncHandled.has(b.key));
+        if (rrCfg && Array.isArray(values.readings)) {
+          const _rrFields = new Set((rrCfg.rowFields || []).map(f => f.key));
+          const _rrT = liveThresholds().filter(t => _rrFields.has(t.field));
+          if (_rrT.length) {
+            values.readings.forEach((row, _rri) => {
+              const _uLabel = rrCfg.uniqueKey ? (row[rrCfg.uniqueKey] || `Row ${_rri + 1}`) : `Row ${_rri + 1}`;
+              _rrT.forEach(t => {
+                const _n = parseFloat(row[t.field]);
+                if (!isNaN(_n) && (_n < (t.min ?? -Infinity) || _n > (t.max ?? Infinity))) {
+                  const _bk = `rr:${_rri}:${t.field}:${_n}`;
+                  if (!ncHandled.has(_bk)) {
+                    const _rng = (t.min != null && t.max != null) ? `${t.min}–${t.max}${t.unit || ''}` : (t.max != null ? `max ${t.max}${t.unit || ''}` : `min ${t.min}${t.unit || ''}`);
+                    breaches.push({ key: _bk, category: t.category || 'Other', severity: t.severity || 'minor', description: `${_uLabel} — ${t.label} ${_n}${t.unit || ''} — outside accepted range ${_rng}.` });
+                  }
+                }
+              });
+            });
+          }
+        }
         // a red (problem) answer on a check is a non-conformance: one NC listing every failed check
         const auto = !!(sc && sc.autoNc);
         // scored signs raise their NC automatically (below); Yes/No checks still go through the NC form
@@ -2975,7 +3195,7 @@
         const latest = list[list.length - 1];
         return `<div class="ml-dc">${sheet4colBody(latest, config.checkHistoryGroups || ['Checks', 'Comments'])}${sc ? scoreMatrixPdfHtml(list) : checkHistoryPdfHtml(list)}${checkCommentsPdfHtml(list)}<div id="ml_dc_photos"></div>${dcSignHtml(latest)}</div>`;
       }
-      const body = `
+      const body = `${rrCfg ? rrSheetHtml(entryRow) : ''}
       <table class="sheet-body">
         <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : (stampDateF ? stampText(valueFor(entryRow, stampDateF)) : ''))}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
         ${rows}
