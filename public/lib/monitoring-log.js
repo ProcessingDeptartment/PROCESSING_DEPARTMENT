@@ -3107,21 +3107,34 @@
         : listFields();
       const specHead = deviationPolarity === 'accurate' ? 'In spec' : (deviationLabel || 'Deviation');
 
-      // When repeating-row readings exist, expand each entry into one row per reading area,
-      // with entry-level cells (date, time, completed by, deviation, verified) spanning all reading rows.
+      // When repeating-row readings exist, expand each entry into one row per reading area.
+      // Entry-level cells (date, time, deviation, completed by, verified) span all reading rows via rowspan.
+      // Deviation is placed after the last number-type field (e.g. after product temp).
       if (rrCfg) {
         const rrFields = rrCfg.rowFields || [];
-        const rrHead = rrFields.map(f => `<th>${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</th>`).join('');
-        let html = `<table class="ml-table"><thead>${o.topRows || ''}<tr>${o.showDate ? '<th>Date</th>' : ''}<th>Time</th>${rrHead}<th>Completed by</th><th>${esc(specHead)}</th><th>Verified</th></tr></thead><tbody>`;
+        // Position to insert the entry-level Deviation column: after the last number field
+        const lastNumIdx = rrFields.reduce((last, f, i) => f.type === 'number' ? i : last, -1);
+        const devAfter = lastNumIdx; // deviation goes after this index (-1 = before all fields)
+        const devText = (inSpec) => inSpec === null || inSpec === undefined ? '—'
+          : (deviationPolarity === 'accurate' ? (inSpec ? 'Yes' : 'No') : (inSpec ? 'No' : 'Yes'));
+        // Build header row inserting deviation after the last number field
+        const headCells = [];
+        rrFields.forEach((f, i) => {
+          headCells.push(`<th>${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</th>`);
+          if (i === devAfter) headCells.push(`<th>${esc(specHead)}</th>`);
+        });
+        if (devAfter < 0) headCells.unshift(`<th>${esc(specHead)}</th>`);
+        let html = `<table class="ml-table"><thead>${o.topRows || ''}<tr>${o.showDate ? '<th>Date</th>' : ''}<th>Time</th>${headCells.join('')}<th>Completed by</th><th>Verified</th></tr></thead><tbody>`;
         list.slice().sort((a, b) => logWhen(a) - logWhen(b)).forEach(entryRow => {
           const vf = entryRow.verification || null;
           const ev = entryRow.values || {};
           const readings = Array.isArray(ev.readings) ? ev.readings : rrNormalise(entryRow);
           const rowCount = Math.max(readings.length, 1);
           const failCls = entryRow.inSpec === false ? ' class="ml-fail"' : '';
-          const verifiedCell = `<td rowspan="${rowCount}">${vf ? `✓ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="ml-muted">Awaiting</span>'}</td>`;
+          const verifiedCell = `<td rowspan="${rowCount}">${vf ? `✓ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : 'Awaiting'}</td>`;
           if (!readings.length) {
-            html += `<tr${failCls}>${o.showDate ? `<td style="white-space:nowrap;">${esc(logDayOf(entryRow))}</td>` : ''}<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(entryRow)))}</td>${rrFields.map(() => '<td>—</td>').join('')}<td>${esc(entryCompletedBy(entryRow) || '—')}</td><td>${statusBadge(entryRow.inSpec)}</td>${verifiedCell}</tr>`;
+            const emptyCells = rrFields.map((f, i) => `<td>—</td>${i === devAfter ? `<td>—</td>` : ''}`).join('') + (devAfter < 0 ? '<td>—</td>' : '');
+            html += `<tr${failCls}>${o.showDate ? `<td style="white-space:nowrap;">${esc(logDayOf(entryRow))}</td>` : ''}<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(entryRow)))}</td>${emptyCells}<td>${esc(entryCompletedBy(entryRow) || '—')}</td>${verifiedCell}</tr>`;
             return;
           }
           readings.forEach((row, ri) => {
@@ -3130,7 +3143,7 @@
               if (o.showDate) html += `<td style="white-space:nowrap;" rowspan="${rowCount}">${esc(logDayOf(entryRow))}</td>`;
               html += `<td style="white-space:nowrap;" rowspan="${rowCount}">${esc(facilityTimeOf(logWhen(entryRow)))}</td>`;
             }
-            rrFields.forEach(f => {
+            rrFields.forEach((f, i) => {
               const val = row[f.key] != null ? String(row[f.key]) : '';
               const isOos = (config.ncThresholds || []).some(t => {
                 if (t.field !== f.key) return false;
@@ -3139,10 +3152,12 @@
               });
               const cls = f.type === 'number' ? ' class="ml-num"' : '';
               html += `<td${cls}>${isOos ? `<span class="ml-bad">${esc(val)} &#9888;</span>` : esc(val || '—')}</td>`;
+              // Insert Deviation (rowspan, entry-level) after the last number field
+              if (i === devAfter && ri === 0) html += `<td rowspan="${rowCount}">${esc(devText(entryRow.inSpec))}</td>`;
             });
+            if (devAfter < 0 && ri === 0) html += `<td rowspan="${rowCount}">${esc(devText(entryRow.inSpec))}</td>`;
             if (ri === 0) {
               html += `<td rowspan="${rowCount}">${esc(entryCompletedBy(entryRow) || '—')}</td>`;
-              html += `<td rowspan="${rowCount}">${statusBadge(entryRow.inSpec)}</td>`;
               html += verifiedCell;
             }
             html += `</tr>`;
@@ -3187,21 +3202,63 @@
         if (window.__pdfOnly && window.__pdfFail) window.__pdfFail(`No submissions in ${monthLabel(ym)} to print.`);
         return;
       }
-      const sheet = el('ml_printSheet');
-      if (!sheet) return;
-      const h = window.DocHeader ? window.DocHeader.current(recordKey) : null;
       const lastDay = list.reduce((d, e) => (logDayOf(e) > d ? logDayOf(e) : d), '');
-      const topRows = (h ? `<tr class="ml-monthlog-dh"><td colspan="99">${window.DocHeader.blockHtml(h, null, null, '../assets/abagold-logo.png')}</td></tr>` : '')
-        + `<tr><th colspan="99" class="ml-monthlog-title">${esc(heading)}<small>Monthly log · ${list.length} ${list.length === 1 ? 'submission' : 'submissions'} · ${esc(longDayLabel(ym + '-01'))} to ${esc(longDayLabel(ym === today.slice(0, 7) ? today : lastDay))}</small></th></tr>`;
-      sheet.innerHTML = dayLogTableHtml(list, { showDate: true, topRows });
-      document.body.classList.add('ml-printing-entry');
-      document.body.classList.remove('ml-printing-dc');
-      setPageOrientation('landscape');
-      try { withPrintTitle(safeKey(config.title || docTitle || title) + '_' + ym, () => window.print()); }
-      finally {
-        document.body.classList.remove('ml-printing-entry');
-        sheet.innerHTML = '';
+      const subLine = `${list.length} ${list.length === 1 ? 'submission' : 'submissions'} · ${longDayLabel(ym + '-01')} to ${longDayLabel(ym === today.slice(0, 7) ? today : lastDay)}`;
+      const m = sheetMeta || {};
+      const sheetHeadHtml = `<table class="sheet-head">
+        <tr><td class="sheet-logo" rowspan="4">${esc(m.logoText || 'ABAGOLD')}</td>
+            <td class="sheet-lbl">Document:</td><td>${esc(docTitle)}</td>
+            <td class="sheet-lbl">Doc number:</td><td>${esc(docCode)}</td></tr>
+        <tr><td class="sheet-lbl">Prepared by:</td><td>${esc(m.preparedBy || '')}</td>
+            <td class="sheet-lbl">Revision:</td><td>${esc(m.revision || '')}</td></tr>
+        <tr><td class="sheet-lbl">Approved by:</td><td>${esc(m.approvedBy || '')}</td>
+            <td class="sheet-lbl">Page:</td><td>1 of 1</td></tr>
+        <tr><td class="sheet-lbl">Effective Date:</td><td>${esc(m.effectiveDate || '')}</td>
+            <td class="sheet-lbl">Revision Date:</td><td>${esc(m.revisionDate || '')}</td></tr>
+        <tr><td colspan="5">Distribution approved as controlled copy:</td></tr>
+      </table>`;
+      const titleHtml = `<div style="margin:6px 0 4px;font-size:12px;font-weight:700;">${esc(heading)}</div>
+        <div style="margin-bottom:6px;font-size:11px;color:#555;">${esc(subLine)}</div>`;
+      const tableHtml = dayLogTableHtml(list, { showDate: true });
+      const sheetsHtml = sheetHeadHtml + titleHtml + tableHtml;
+      const filename = safeKey(config.title || docTitle || title) + '_' + ym;
+      const docHeaderStyles = (() => { const s = document.getElementById('dh-styles'); return s ? s.textContent : ''; })();
+      const pageStyleCss = (() => { const s = document.getElementById('ml-page-style'); return s ? s.textContent : ''; })();
+      const pw = (window.__pdfOnly && window.__pdfSameTab) ? window.__pdfSameTab() : window.open('', '_blank', 'width=900,height=700');
+      if (!pw) {
+        const sheet = el('ml_printSheet');
+        if (sheet) { sheet.innerHTML = sheetsHtml; }
+        document.body.classList.add('ml-printing-entry');
+        setPageOrientation('landscape');
+        try { withPrintTitle(filename, () => window.print()); }
+        finally { document.body.classList.remove('ml-printing-entry'); if (sheet) sheet.innerHTML = ''; }
+        return;
       }
+      pw.document.write(`<!doctype html><html><head>
+<meta charset="utf-8">
+<title>${filename.replace(/</g,'&lt;')}</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;padding:0;background:#fff;}
+${STYLE}
+.ml-sheet{display:block !important;}
+@media screen{
+  body{padding:12px;}
+  .ml-print-bar{position:sticky;top:0;z-index:999;display:flex;align-items:center;gap:10px;background:#1a2026;color:#fff;padding:10px 14px;margin:-12px -12px 14px;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;}
+  .ml-print-bar button{padding:7px 18px;font-size:14px;font-weight:600;cursor:pointer;border:none;border-radius:4px;background:#2f7a52;color:#fff;}
+}
+@media print{.ml-print-bar{display:none !important;}}
+${docHeaderStyles}
+${pageStyleCss}
+</style>
+</head><body>
+<div class="ml-print-bar">
+  <button onclick="window.print()">⬇ Save / Print PDF</button>
+</div>
+<div class="ml-sheet">${sheetsHtml}</div>
+</body></html>`);
+      pw.document.close();
+      pw.focus();
     }
 
     function printPdf() {
