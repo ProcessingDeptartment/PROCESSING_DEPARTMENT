@@ -6,8 +6,9 @@
 //      PRPs, current record templates
 //   3. All submitted records + CSV    scripts/archive-completed-records.mjs -> PROCESSING ARCHIVE\completed-records, csv
 //   4. Database change archive        scripts/archive-changes.js          -> ..\DB ARCHIVE, ..\DB EXPORTS
-//   5. Photos (record images)         scripts/image-archive-agent.mjs --once -> Images folder
-//   6. Real PDFs (online print)       scripts/archive-pdfs.mjs            -> PROCESSING ARCHIVE\pdf
+//   5. Database backup (full JSON)    scripts/backup.js                   -> ..\Neon Database Export  (logs to BackupRun)
+//   6. Photos (record images)         scripts/image-archive-agent.mjs --once -> Images folder
+//   7. Real PDFs (online print)       scripts/archive-pdfs.mjs            -> PROCESSING ARCHIVE\pdf
 //
 // A failed step does not stop the ones after it; the summary at the end says what failed, and the exit code is 1.
 // Nothing here is wired into the existing scheduled database archive -- run this (or scripts\archive-all.cmd) yourself.
@@ -30,6 +31,7 @@ const steps = [
   // after which Neon's direct-connection compute briefly suspends. Running it last avoids that
   // recovery window blocking the lighter Prisma steps above.
   { name: 'Database change archive', script: 'scripts/archive-changes.js', skip: args.includes('--skip-db'), args: args.includes('--csv-all') ? ['--csv-all'] : [] },
+  { name: 'Database backup (full JSON)', script: 'scripts/backup.js', skip: args.includes('--skip-db') },
   { name: 'Photos (record images)', script: 'scripts/image-archive-agent.mjs', args: ['--once'], skip: args.includes('--skip-photos') },
   { name: 'PDFs (online print layout)', script: 'scripts/archive-pdfs.mjs', skip: args.includes('--skip-pdfs') },
 ];
