@@ -262,6 +262,16 @@ async function getSchema(prisma, recordKey) {
       `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = 'submissionGroupId' LIMIT 1`, schema.table);
     schema.hasGroupCols = Array.isArray(rows) && rows.length > 0;
   } catch { schema.hasGroupCols = false; }
+  // submission_date / record_type — verification overdue tracking columns.
+  schema.hasSubmissionDateCol = false;
+  schema.hasRecordTypeCol = false;
+  try {
+    const rows = await prisma.$queryRawUnsafe(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name IN ('submission_date','record_type')`, schema.table);
+    const have = new Set(rows.map((r) => r.column_name));
+    schema.hasSubmissionDateCol = have.has('submission_date');
+    schema.hasRecordTypeCol = have.has('record_type');
+  } catch { /* leave false */ }
   // Only write columns the table really has (checked once per record). A field added to a record definition before its
   // migration has run is left to rawJson for now, instead of failing every save of that record.
   try {
@@ -425,6 +435,8 @@ async function syncSubmissionRows(prisma, key, value, opts) {
       JSON.stringify(entry),
       entry.inSpec != null ? entry.inSpec : null,
     ];
+    if (schema.hasSubmissionDateCol) { cols.push('"submission_date"'); params.push(entry.submittedAt ? new Date(entry.submittedAt) : null); }
+    if (schema.hasRecordTypeCol) { cols.push('"record_type"'); params.push(recordKey || null); }
     if (schema.hasPosition) { cols.push('"position"'); params.push(pos); }
 
     if (groupAssignments) {
