@@ -1240,6 +1240,14 @@
       if (f.type === 'textarea') {
         return `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="2" style="resize:vertical;">${esc(String(v))}</textarea>`;
       }
+      if (f.type === 'yesno') {
+        const hid = `<input type="hidden" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}">`;
+        const btn = (val, label) => {
+          const active = v === val;
+          return `<button type="button" class="ml-yn-btn${active ? ' ml-yn-active' : ''}" style="flex:1;padding:6px 0;font-size:12px;font-weight:600;border:1px solid var(--palette-border,#e2e4e3);border-radius:3px;cursor:pointer;background:${active ? 'var(--palette-heading,#2f4356)' : 'var(--palette-paper,#f4f5f3)'};color:${active ? '#fff' : 'inherit'};" data-yn-target="${ns}_rr_${idx}_${f.key}" data-yn-val="${esc(val)}">${label}</button>`;
+        };
+        return `${hid}<span style="display:flex;gap:4px;">${btn('', '—')}${btn('Y', 'Y')}${btn('N', 'N')}</span>`;
+      }
       const unitSuffix = f.unit ? `<span class="hint" style="white-space:nowrap;">${esc(f.unit)}</span>` : '';
       const inp = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}" style="width:100%;min-width:0;">`;
       return unitSuffix ? `<span style="display:flex;align-items:center;gap:4px;">${inp}${unitSuffix}</span>` : inp;
@@ -1330,6 +1338,21 @@
       if (!wrap) return;
 
       container.addEventListener('click', e => {
+        const ynBtn = e.target.closest('[data-yn-target]');
+        if (ynBtn) {
+          const hidId = ynBtn.getAttribute('data-yn-target');
+          const val = ynBtn.getAttribute('data-yn-val');
+          const hid = document.getElementById(hidId);
+          if (hid) {
+            hid.value = val;
+            ynBtn.closest('span').querySelectorAll('[data-yn-target]').forEach(b => {
+              const active = b.getAttribute('data-yn-val') === val;
+              b.style.background = active ? 'var(--palette-heading,#2f4356)' : 'var(--palette-paper,#f4f5f3)';
+              b.style.color = active ? '#fff' : 'inherit';
+            });
+          }
+          return;
+        }
         const btn = e.target.closest('[data-rr-rm]');
         if (!btn) return;
         const card = btn.closest('[data-rr-row]');
