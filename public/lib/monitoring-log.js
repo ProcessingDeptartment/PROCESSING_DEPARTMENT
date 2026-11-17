@@ -384,15 +384,15 @@
   .ml-sheet th.ml-monthlog-title{ font-size:13px; text-align:center; text-transform:none; letter-spacing:0; color:#000; background:#fff; padding:6px; }
   .ml-sheet th.ml-monthlog-title small{ display:block; font-weight:400; font-size:10px; margin-top:2px; }
   /* repeating rows (config.repeatingRows) */
-  .ml-rr-wrap{ grid-column:1/-1; margin-bottom:2px; }
-  .ml-rr-table{ width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:8px; }
-  .ml-rr-table th{ background:var(--palette-head-bg,#fbfbfa); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--palette-label,#54606b); font-weight:700; padding:5px 7px; border:1px solid var(--palette-border,#e2e4e3); white-space:nowrap; }
-  .ml-rr-table td{ padding:4px 5px; border:1px solid var(--palette-border,#e2e4e3); vertical-align:middle; }
-  .ml-rr-table td input,.ml-rr-table td select,.ml-rr-table td textarea{ font-size:12.5px; padding:4px 6px; min-width:60px; width:100%; }
-  .ml-rr-table td.ml-rr-rmcol{ width:28px; text-align:center; }
-  .ml-rr-rm{ padding:3px 7px; font-size:11px; background:#fbe8e6; color:#a3352d; border:1px solid #e8b8b3; border-radius:3px; cursor:pointer; }
+  .ml-rr-wrap{ grid-column:1/-1; }
+  .ml-rr-card{ background:var(--palette-head-bg,#fbfbfa); border:1px solid var(--palette-border,#e2e4e3); border-radius:5px; padding:10px 12px; margin-bottom:8px; position:relative; }
+  .ml-rr-card-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .ml-rr-card-head span{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-label,#54606b); }
+  .ml-rr-rm{ padding:4px 10px; font-size:11px; font-weight:600; background:#fbe8e6; color:#a3352d; border:1px solid #e8b8b3; border-radius:3px; cursor:pointer; font-family:'Segoe UI',system-ui,sans-serif; }
   .ml-rr-rm:disabled{ opacity:.35; cursor:not-allowed; }
-  .ml-rr-add{ margin-top:4px; }
+  .ml-rr-grid{ display:grid; gap:10px; grid-template-columns:repeat(3,1fr); }
+  .ml-rr-wide{ grid-column:1/-1; }
+  .ml-rr-add{ margin-top:2px; }
   .ml-rr-sheet{ margin:8px 0; }
   .ml-rr-sheet table{ width:100%; border-collapse:collapse; font-size:11px; }
   .ml-rr-sheet th{ background:#f4f5f3; font-size:10px; text-transform:uppercase; letter-spacing:.03em; padding:4px 6px; border:1px solid #c0c5c8; }
@@ -1230,44 +1230,55 @@
       return [];
     }
 
-    function rrBuildHtml(readings, locked) {
-      if (!rrCfg) return '';
+    function rrFieldInput(f, idx, v, locked) {
+      if (locked) return `<span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;">${esc(String(v))}${v !== '' && f.unit ? ' ' + esc(f.unit) : ''}</span>`;
+      if (f.type === 'select') {
+        const opts = (f.options || []).map(o => `<option value="${esc(o)}"${v === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
+        return `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">—</option>${opts}</select>`;
+      }
+      if (f.type === 'textarea') {
+        return `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="2" style="resize:vertical;">${esc(String(v))}</textarea>`;
+      }
+      const unit = f.unit ? `<span class="hint">${esc(f.unit)}</span>` : '';
+      return `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}">${unit}`;
+    }
+
+    function rrBuildCard(vals, idx, totalRows, locked) {
       const rf = rrCfg.rowFields || [];
       const minRows = rrCfg.minRows || 1;
-      const maxRows = rrCfg.maxRows || 99;
+      const unitLabel = rrCfg.uniqueKey && vals[rrCfg.uniqueKey] ? esc(vals[rrCfg.uniqueKey]) : `${esc(rrCfg.rowLabel || 'Area')} ${idx + 1}`;
+      const rmBtn = locked ? '' : `<button type="button" class="ml-rr-rm" data-rr-rm="${idx}"${totalRows <= minRows ? ' disabled' : ''}>Remove</button>`;
+      const fields = rf.map(f => {
+        const v = vals[f.key] != null ? vals[f.key] : '';
+        const isWide = f.type === 'textarea';
+        return `<label class="ml-field${isWide ? ' ml-rr-wide' : ''}" data-field="${esc(f.key)}">
+          ${esc(f.label)}${f.unit ? ` <span class="hint">(${esc(f.unit)})</span>` : ''}
+          ${rrFieldInput(f, idx, v, locked)}
+        </label>`;
+      }).join('');
+      return `<div class="ml-rr-card" data-rr-row="${idx}">
+        <div class="ml-rr-card-head"><span>${unitLabel}</span>${rmBtn}</div>
+        <div class="ml-rr-grid">${fields}</div>
+      </div>`;
+    }
+
+    function rrBuildHtml(readings, locked) {
+      if (!rrCfg) return '';
       const rows = readings.length ? readings : [{}];
-      const thCols = rf.map(f => `<th>${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</th>`).join('') + (locked ? '' : '<th></th>');
-      const buildRow = (vals, idx) => {
-        const cells = rf.map(f => {
-          const v = vals[f.key] != null ? vals[f.key] : '';
-          if (locked) return `<td>${esc(String(v))}</td>`;
-          let inp;
-          if (f.type === 'select') {
-            const opts = (f.options || []).map(o => `<option value="${esc(o)}"${v === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
-            inp = `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">—</option>${opts}</select>`;
-          } else if (f.type === 'textarea') {
-            inp = `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="1" style="resize:none;">${esc(String(v))}</textarea>`;
-          } else {
-            inp = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}">`;
-          }
-          return `<td>${inp}</td>`;
-        });
-        const rmBtn = locked ? '' : `<td class="ml-rr-rmcol"><button type="button" class="ml-rr-rm" data-rr-rm="${idx}"${rows.length <= minRows ? ' disabled' : ''}>×</button></td>`;
-        return `<tr data-rr-row="${idx}">${cells.join('')}${rmBtn}</tr>`;
-      };
-      const tbody = rows.map((r, i) => buildRow(r, i)).join('');
+      const maxRows = rrCfg.maxRows || 99;
+      const cards = rows.map((r, i) => rrBuildCard(r, i, rows.length, locked)).join('');
       const addBtn = locked || rows.length >= maxRows ? '' : `<button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-rr-add">${esc(rrCfg.addLabel || '+ Add row')}</button>`;
-      return `<div class="ml-rr-wrap"><table class="ml-rr-table"><thead><tr>${thCols}</tr></thead><tbody id="${ns}_rrBody">${tbody}</tbody></table>${addBtn}</div>`;
+      return `<div class="ml-rr-wrap"><div id="${ns}_rrBody">${cards}</div>${addBtn}</div>`;
     }
 
     function rrRead(container) {
       if (!rrCfg) return [];
       const rf = rrCfg.rowFields || [];
       const rows = [];
-      container.querySelectorAll('[data-rr-row]').forEach(tr => {
+      container.querySelectorAll('[data-rr-row]').forEach(card => {
         const row = {};
         rf.forEach(f => {
-          const inp = tr.querySelector(`[data-rr-field="${f.key}"]`);
+          const inp = card.querySelector(`[data-rr-field="${f.key}"]`);
           row[f.key] = inp ? inp.value : '';
         });
         rows.push(row);
@@ -1282,66 +1293,62 @@
       const maxRows = rr.maxRows || 99;
 
       function reindex() {
-        const tbody = container.querySelector(`#${ns}_rrBody`);
-        if (!tbody) return;
-        const trs = Array.from(tbody.querySelectorAll('[data-rr-row]'));
-        trs.forEach((tr, i) => {
-          tr.setAttribute('data-rr-row', i);
-          tr.querySelectorAll('[data-rr-field]').forEach(inp => {
+        const wrap = container.querySelector(`#${ns}_rrBody`);
+        if (!wrap) return;
+        const cards = Array.from(wrap.querySelectorAll('[data-rr-row]'));
+        cards.forEach((card, i) => {
+          card.setAttribute('data-rr-row', i);
+          card.querySelectorAll('[data-rr-field]').forEach(inp => {
             inp.id = `${ns}_rr_${i}_${inp.getAttribute('data-rr-field')}`;
           });
-          const rmBtn = tr.querySelector('[data-rr-rm]');
-          if (rmBtn) { rmBtn.setAttribute('data-rr-rm', i); rmBtn.disabled = trs.length <= minRows; }
+          const rmBtn = card.querySelector('[data-rr-rm]');
+          if (rmBtn) { rmBtn.setAttribute('data-rr-rm', i); rmBtn.disabled = cards.length <= minRows; }
+          // update card heading
+          const head = card.querySelector('.ml-rr-card-head span');
+          if (head) {
+            const unitSel = card.querySelector(`[data-rr-field="${rr.uniqueKey || ''}"]`);
+            const unitVal = unitSel && unitSel.value ? unitSel.value : null;
+            head.textContent = unitVal || `${rr.rowLabel || 'Area'} ${i + 1}`;
+          }
         });
         const addBtn = container.querySelector('.ml-rr-add');
-        if (addBtn) addBtn.disabled = trs.length >= maxRows;
+        if (addBtn) addBtn.disabled = cards.length >= maxRows;
         if (rr.uniqueKey) {
-          trs.forEach(tr => {
-            const sel = tr.querySelector(`[data-rr-field="${rr.uniqueKey}"]`);
+          cards.forEach(card => {
+            const sel = card.querySelector(`[data-rr-field="${rr.uniqueKey}"]`);
             if (!sel) return;
             const own = sel.value;
-            const others = trs.filter(r => r !== tr).map(r => { const s = r.querySelector(`[data-rr-field="${rr.uniqueKey}"]`); return s ? s.value : ''; }).filter(Boolean);
+            const others = cards.filter(c => c !== card).map(c => { const s = c.querySelector(`[data-rr-field="${rr.uniqueKey}"]`); return s ? s.value : ''; }).filter(Boolean);
             Array.from(sel.options).forEach(o => { o.disabled = !!(o.value && o.value !== own && others.includes(o.value)); });
           });
         }
       }
 
-      const tbody = container.querySelector(`#${ns}_rrBody`);
-      if (!tbody) return;
+      const wrap = container.querySelector(`#${ns}_rrBody`);
+      if (!wrap) return;
 
       container.addEventListener('click', e => {
         const btn = e.target.closest('[data-rr-rm]');
         if (!btn) return;
-        const tr = btn.closest('[data-rr-row]');
-        if (!tr || tbody.querySelectorAll('[data-rr-row]').length <= minRows) return;
-        tr.remove(); reindex();
+        const card = btn.closest('[data-rr-row]');
+        if (!card || wrap.querySelectorAll('[data-rr-row]').length <= minRows) return;
+        card.remove(); reindex();
       });
 
       const addBtn = container.querySelector('.ml-rr-add');
       if (addBtn) {
         addBtn.addEventListener('click', () => {
-          const trs = tbody.querySelectorAll('[data-rr-row]');
-          if (trs.length >= maxRows) return;
-          const idx = trs.length;
-          const tr = document.createElement('tr');
-          tr.setAttribute('data-rr-row', idx);
-          tr.innerHTML = (rr.rowFields || []).map(f => {
-            let inp;
-            if (f.type === 'select') {
-              const opts = (f.options || []).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
-              inp = `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">—</option>${opts}</select>`;
-            } else if (f.type === 'textarea') {
-              inp = `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="1" style="resize:none;"></textarea>`;
-            } else {
-              inp = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="">`;
-            }
-            return `<td>${inp}</td>`;
-          }).join('') + `<td class="ml-rr-rmcol"><button type="button" class="ml-rr-rm" data-rr-rm="${idx}">×</button></td>`;
-          tbody.appendChild(tr); reindex();
+          const existing = wrap.querySelectorAll('[data-rr-row]');
+          if (existing.length >= maxRows) return;
+          const idx = existing.length;
+          const div = document.createElement('div');
+          div.innerHTML = rrBuildCard({}, idx, idx + 1, false);
+          wrap.appendChild(div.firstElementChild);
+          reindex();
         });
       }
 
-      if (rr.uniqueKey) tbody.addEventListener('change', e => { if (e.target.closest(`[data-rr-field="${rr.uniqueKey}"]`)) reindex(); });
+      if (rr.uniqueKey) wrap.addEventListener('change', e => { if (e.target.closest(`[data-rr-field="${rr.uniqueKey}"]`)) reindex(); });
       reindex();
     }
 
