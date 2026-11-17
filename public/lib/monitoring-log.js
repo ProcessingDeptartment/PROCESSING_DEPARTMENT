@@ -3106,6 +3106,51 @@
         ? customBody.listColumns.map(c => ({ label: c.label, custom: true, get: c.get }))
         : listFields();
       const specHead = deviationPolarity === 'accurate' ? 'In spec' : (deviationLabel || 'Deviation');
+
+      // When repeating-row readings exist, expand each entry into one row per reading area,
+      // with entry-level cells (date, time, completed by, deviation, verified) spanning all reading rows.
+      if (rrCfg) {
+        const rrFields = rrCfg.rowFields || [];
+        const rrHead = rrFields.map(f => `<th>${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</th>`).join('');
+        let html = `<table class="ml-table"><thead>${o.topRows || ''}<tr>${o.showDate ? '<th>Date</th>' : ''}<th>Time</th>${rrHead}<th>Completed by</th><th>${esc(specHead)}</th><th>Verified</th></tr></thead><tbody>`;
+        list.slice().sort((a, b) => logWhen(a) - logWhen(b)).forEach(entryRow => {
+          const vf = entryRow.verification || null;
+          const ev = entryRow.values || {};
+          const readings = Array.isArray(ev.readings) ? ev.readings : rrNormalise(entryRow);
+          const rowCount = Math.max(readings.length, 1);
+          const failCls = entryRow.inSpec === false ? ' class="ml-fail"' : '';
+          const verifiedCell = `<td rowspan="${rowCount}">${vf ? `✓ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="ml-muted">Awaiting</span>'}</td>`;
+          if (!readings.length) {
+            html += `<tr${failCls}>${o.showDate ? `<td style="white-space:nowrap;">${esc(logDayOf(entryRow))}</td>` : ''}<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(entryRow)))}</td>${rrFields.map(() => '<td>—</td>').join('')}<td>${esc(entryCompletedBy(entryRow) || '—')}</td><td>${statusBadge(entryRow.inSpec)}</td>${verifiedCell}</tr>`;
+            return;
+          }
+          readings.forEach((row, ri) => {
+            html += `<tr${failCls}>`;
+            if (ri === 0) {
+              if (o.showDate) html += `<td style="white-space:nowrap;" rowspan="${rowCount}">${esc(logDayOf(entryRow))}</td>`;
+              html += `<td style="white-space:nowrap;" rowspan="${rowCount}">${esc(facilityTimeOf(logWhen(entryRow)))}</td>`;
+            }
+            rrFields.forEach(f => {
+              const val = row[f.key] != null ? String(row[f.key]) : '';
+              const isOos = (config.ncThresholds || []).some(t => {
+                if (t.field !== f.key) return false;
+                const n = parseFloat(val);
+                return !isNaN(n) && (n < (t.min ?? -Infinity) || n > (t.max ?? Infinity));
+              });
+              const cls = f.type === 'number' ? ' class="ml-num"' : '';
+              html += `<td${cls}>${isOos ? `<span class="ml-bad">${esc(val)} &#9888;</span>` : esc(val || '—')}</td>`;
+            });
+            if (ri === 0) {
+              html += `<td rowspan="${rowCount}">${esc(entryCompletedBy(entryRow) || '—')}</td>`;
+              html += `<td rowspan="${rowCount}">${statusBadge(entryRow.inSpec)}</td>`;
+              html += verifiedCell;
+            }
+            html += `</tr>`;
+          });
+        });
+        return html + `</tbody></table>`;
+      }
+
       let html = `<table class="ml-table"><thead>${o.topRows || ''}<tr>${o.pick ? '<th></th>' : ''}${o.showDate ? '<th>Date</th>' : ''}<th>Time</th><th>Completed by</th>${cols.map(f => `<th>${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</th>`).join('')}<th>${esc(specHead)}</th><th>Verified</th></tr></thead><tbody>`;
       list.slice().sort((a, b) => logWhen(a) - logWhen(b)).forEach(entryRow => {
         const vf = entryRow.verification || null;
@@ -3521,8 +3566,8 @@
     async function printEntry(id) {
       const entryRow = entries.find(e => e.id === id);
       if (!entryRow) return;
-      // daily-log records: individual entry PDF shows the entry sheet with readings table (rrSheetHtml)
-      // The monthly log PDF (all entries for the month) is printed via printPdf() / printMonthlyLog() instead.
+      // daily-log records: an entry's PDF is the monthly log of the month it was submitted in
+      if (dailyLog) return printMonthlyLog(logDayOf(entryRow).slice(0, 7));
       const dateF = roleField('date');
 
       // Build sheet HTML in the hidden print sheet (existing logic)
