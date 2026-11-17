@@ -9,6 +9,7 @@
 //   5. Database backup (full JSON)    scripts/backup.js                   -> ..\Neon Database Export  (logs to BackupRun)
 //   6. Photos (record images)         scripts/image-archive-agent.mjs --once -> Images folder
 //   7. Real PDFs (online print)       scripts/archive-pdfs.mjs            -> PROCESSING ARCHIVE\pdf
+//   8. PDF export (by job / month)    scripts/export-pdfs.mjs             -> 27. Completed records
 //
 // A failed step does not stop the ones after it; the summary at the end says what failed, and the exit code is 1.
 // Nothing here is wired into the existing scheduled database archive -- run this (or scripts\archive-all.cmd) yourself.
@@ -34,6 +35,7 @@ const steps = [
   { name: 'Database backup (full JSON)', script: 'scripts/backup.js', skip: args.includes('--skip-db') },
   { name: 'Photos (record images)', script: 'scripts/image-archive-agent.mjs', args: ['--once'], skip: args.includes('--skip-photos') },
   { name: 'PDFs (online print layout)', script: 'scripts/archive-pdfs.mjs', skip: args.includes('--skip-pdfs') },
+  { name: 'PDF export (by job / month)', script: 'scripts/export-pdfs.mjs', skip: args.includes('--skip-pdfs') },
 ];
 
 const results = [];
