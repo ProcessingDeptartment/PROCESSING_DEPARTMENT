@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const rows = await prisma.keyValue.findMany({
-    where: { key: { startsWith: 'formrecord:dry-cooking:' } },
+    where: { key: 'formrecord:dry-cooking' },
     select: { key: true, value: true },
   });
 
