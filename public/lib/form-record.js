@@ -4799,8 +4799,10 @@
           if (f && !visFields.includes(f)) visFields.push(f);
         });
         const cell = f => `<td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td><td>${esc(displayValue(f, sub.values[f.key]))}</td>`;
+        // job info section: always 4 columns and no section heading (matches buildSlideSheet behaviour)
+        const isJobInfo = !!(config.jobInfoGroup && sec.title === config.jobInfoGroup);
         // printCols: N label/value columns → N/2 pairs per row (e.g. printCols 4 = 2 pairs per row)
-        const perRow = Math.max(1, Math.floor((sec.printCols || 2) / 2));
+        const perRow = Math.max(1, Math.floor((sec.printCols || (isJobInfo ? 4 : 2)) / 2));
         let rows = '';
         for (let k = 0; k < visFields.length; k += perRow) {
           const chunk = visFields.slice(k, k + perRow);
@@ -4809,7 +4811,8 @@
         if (!rows) return '';
 
         const pageBreak = sec.newPage ? ' style="page-break-before:always;"' : '';
-        return `<div${pageBreak}><h3>${esc(sec.title)}</h3><table${perRow > 1 ? ' class="fr-sheet-grid"' : ''}><tbody>${rows}</tbody></table></div>`;
+        const titleHtml = isJobInfo ? '' : `<h3>${esc(sec.title)}</h3>`;
+        return `<div${pageBreak}>${titleHtml}<table${perRow > 1 ? ' class="fr-sheet-grid"' : ''}><tbody>${rows}</tbody></table></div>`;
       }).join('');
     }
 
