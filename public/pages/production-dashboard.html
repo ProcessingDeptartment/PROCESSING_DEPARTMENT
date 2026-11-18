@@ -682,8 +682,7 @@
     freezerChart = new Chart($('freezerChart').getContext('2d'), {
       type: 'line',
       data: { labels, datasets: [
-        { label: 'Dial',    data: fzDial, borderColor: '#7c3aed', backgroundColor: 'transparent', spanGaps: true, tension: 0, borderWidth: 1.5, pointRadius: fzDial.map(v => v != null && (v < -28 || v > 2) ? 3.5 : 0), pointBackgroundColor: ptColors(fzDial, -28, 2, '#7c3aed') },
-        { label: 'Product', data: fzProd, borderColor: '#ea580c', backgroundColor: 'transparent', spanGaps: true, tension: 0, borderWidth: 1.5, pointRadius: fzProd.map(v => v != null && (v < -28 || v > 2) ? 3.5 : 0), pointBackgroundColor: ptColors(fzProd, -28, 2, '#ea580c') },
+        { label: 'Dial', data: fzDial, borderColor: '#7c3aed', backgroundColor: 'transparent', spanGaps: true, tension: 0, borderWidth: 1.5, pointRadius: fzDial.map(v => v != null && (v < -28 || v > 2) ? 3.5 : 0), pointBackgroundColor: ptColors(fzDial, -28, 2, '#7c3aed') },
         refLine(n,   2, 'Max 2°C'),
         refLine(n, -28, 'Min -28°C'),
       ]},
@@ -692,7 +691,7 @@
 
     // summary line: count OOS points
     const oosC = [...c1, ...c2].filter(v => v != null && (v < 0 || v > 10)).length;
-    const oosF = [...fzDial, ...fzProd].filter(v => v != null && (v < -28 || v > 2)).length;
+    const oosF = fzDial.filter(v => v != null && (v < -28 || v > 2)).length;
     const sumEl = $('chillerTrendSummary');
     if (sumEl) {
       sumEl.innerHTML = n + ' submission' + (n !== 1 ? 's' : '') + ' &middot; ' +
