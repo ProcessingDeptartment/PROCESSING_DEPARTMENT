@@ -123,9 +123,21 @@ model RecordDefinition {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  sections  RecordSectionDef[]
-  fields    RecordFieldDef[]
-  autofills RecordAutofillDef[]
+  sections   RecordSectionDef[]
+  fields     RecordFieldDef[]
+  autofills  RecordAutofillDef[]
+  revisions  RecordDefinitionRevision[]
+}
+
+model RecordDefinitionRevision {
+  id         Int      @id @default(autoincrement())
+  recordKey  String
+  version    Int
+  snapshotAt DateTime @default(now())
+  config     Json
+
+  definition RecordDefinition @relation(fields: [recordKey], references: [recordKey])
+  @@unique([recordKey, version])
 }
 
 model RecordSectionDef {

@@ -15,6 +15,25 @@ function loadRecordConfig(recordKey) {
   catch { return null; }
 }
 
+// Pick the config version that was in force on `day` (YYYY-MM-DD).
+// revisionRows must be sorted by snapshotAt asc (as returned by the archive script).
+// Falls back to the current snapshot if no matching revision is found.
+function configForDay(recordKey, day, revisionRows) {
+  if (!revisionRows || !revisionRows.length) return loadRecordConfig(recordKey);
+  const match = [...revisionRows]
+    .reverse()
+    .find(r => r.snapshotAt.toISOString().slice(0, 10) <= day);
+  if (!match) return loadRecordConfig(recordKey);
+  try {
+    return JSON.parse(
+      fs.readFileSync(
+        path.join(SNAPSHOTS, 'snapshots', encodeURIComponent(recordKey) + '_v' + match.version + '.json'),
+        'utf8'
+      )
+    );
+  } catch { return loadRecordConfig(recordKey); }
+}
+
 // Entries keep their form fields under `values`; the job number is the record's batch field (usually jobNo).
 function jobNoOf(entry, recordKey) {
   const e = entry || {}, v = (e.values && typeof e.values === 'object') ? e.values : {};
@@ -28,10 +47,10 @@ const isVerified = (e) => !!e && (e.status === 'verified' || !!e.verification);
 // Write one group of entries (one job, one day) to the archive, whatever their status. Never throws.
 // date (YYYY-MM-DD, default today) names the page and its month folder; name overrides the page name (default: the
 // job number); meta is kept on the index entry. Returns the index entry or null.
-function archiveSubmissions(recordKey, entries, { jobNo, name: pageName, date: day, meta } = {}) {
+function archiveSubmissions(recordKey, entries, { jobNo, name: pageName, date: day, meta, revisions, startDay } = {}) {
   try {
     if (!Array.isArray(entries) || !entries.length) return null;
-    const config = loadRecordConfig(recordKey) || {};
+    const config = (revisions ? configForDay(recordKey, startDay || day, revisions) : null) || loadRecordConfig(recordKey) || {};
     const now = new Date().toISOString();
     const date = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(day || '') ? day : now.slice(0, 10);
     // Records with no job number (monitoring logs) are named by their first entry so two same-day verifications stay apart.
@@ -59,4 +78,4 @@ async function maybeArchiveOnVerify(prisma, recordKey, entries, opts = {}) {
   return archiveSubmissions(recordKey, entries, opts);
 }
 
-module.exports = { maybeArchiveOnVerify, archiveSubmissions, jobNoOf, loadRecordConfig };
+module.exports = { maybeArchiveOnVerify, archiveSubmissions, jobNoOf, loadRecordConfig, configForDay };
