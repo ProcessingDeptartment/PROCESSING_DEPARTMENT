@@ -9,6 +9,10 @@
     "field": "correctiveActions",
     "blocksSubmit": false
   },
+  "ncResolutionCondition": {
+    "triggerField": "batchStatus",
+    "resolvedWhen": "= Green"
+  },
   "scoring": {
     "over": [
       "skinScore",
