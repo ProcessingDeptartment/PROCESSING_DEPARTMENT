@@ -332,6 +332,7 @@ window.initFieldRules = (function () {
     (cfg.sections || []).forEach(function (s) { add(s.fields, s.title || ''); });
     if (cfg.roster) add(cfg.roster.columns, (cfg.roster.title || 'Roster') + ' (rows)');
     (cfg.rosters || []).forEach(function (r) { add(r.columns, (r.title || 'Roster') + ' (rows)'); });
+    if (cfg.repeatingRows && cfg.repeatingRows.rowFields) add(cfg.repeatingRows.rowFields, cfg.repeatingRows.rowLabel || 'Repeating rows');
     return out;
   }
 
