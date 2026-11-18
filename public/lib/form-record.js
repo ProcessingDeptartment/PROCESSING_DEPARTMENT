@@ -4964,17 +4964,24 @@
       const fdate = x => (x ? e(window.DocHeader.fmtDate(x)) : '');
 
       const jr = (l1, v1, l2, v2) => `<tr><td class="dc-l">${l1}</td><td>${v1}</td><td class="dc-l">${l2}</td><td>${v2}</td></tr>`;
+
+      const rows = getRosterRows(sub, ri, roster.key).filter(r => r && ((r.process === 'Blanching' || r.process === 'Cooking')
+        || (roster.columns || []).some(c => !c.hidden && !c.legacy && String(r[c.key] == null ? '' : r[c.key]).trim() !== '')));
+
+      const cookedKgTotal = rows.filter(r => r.process === 'Cooking').reduce((sum, r) => {
+        const kg = parseFloat(r.abaloneKg);
+        return sum + (isNaN(kg) ? 0 : kg);
+      }, 0);
+      const cookedKgVal = cookedKgTotal > 0 ? e(String(cookedKgTotal)) : '<span style="color:#888">Not recorded</span>';
       const ooswVal = v.ooswKg != null ? e(v.ooswKg) : (v.jiOoswKg != null ? e(v.jiOoswKg) : '<span style="color:#888">Not recorded</span>');
       const job = `<table class="dc-job"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
         ${jr('Job Number', e(v.jobNo), 'Harvest Farm', e(v.harvestFarm || v.jiReceivedFrom))}
         ${jr('Intake Date', fdate(v.intakeDate || v.jiReceivingDate), 'Whole Weight (kg)', e(v.jiIntakeWeight || v.intakeWeight))}
       </tbody></table>
       <table class="dc-job" style="margin-top:2px"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
-        ${jr('OOSW (kg)', ooswVal, 'Cooking Date', fdate(v.cookingDate))}
+        ${jr('OOSW (kg)', ooswVal, 'Cooked weight (kg)', cookedKgVal)}
       </tbody></table>`;
 
-      const rows = getRosterRows(sub, ri, roster.key).filter(r => r && ((r.process === 'Blanching' || r.process === 'Cooking')
-        || (roster.columns || []).some(c => !c.hidden && !c.legacy && String(r[c.key] == null ? '' : r[c.key]).trim() !== '')));
       // batch = one Blanching slide + the Cooking slides that follow it; Cooking before any Blanching has no batch
       const lead = [], batches = [];
       let cur = null;
