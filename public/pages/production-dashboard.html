@@ -234,6 +234,41 @@
     </div>
   </div>
 
+  <div class="panel" id="chillerTrendPanel">
+    <div class="panel-head">
+      <h2>Chiller &amp; Freezer temperature &mdash; trend</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <select id="chillerRange" class="seam-range">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="0">All time</option>
+        </select>
+        <span class="panel-note">REC 7.9.1</span>
+      </div>
+    </div>
+    <div class="panel-body pad">
+      <p id="chillerTrendLoading" style="color:#5c6771;font-size:12px;margin:0;">Loading&hellip;</p>
+      <div id="chillerTrendCharts" style="display:none;">
+        <div class="seam-charts">
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#5c6771;font-weight:700;margin-bottom:6px;">Chiller 1 &amp; 2 &mdash; dial temperature</div>
+            <div style="position:relative;height:180px;"><canvas id="chillerChart"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#5c6771;font-weight:700;margin-bottom:6px;">Freezer &mdash; dial &amp; product temperature</div>
+            <div style="position:relative;height:180px;"><canvas id="freezerChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+      <p id="chillerTrendError" style="display:none;color:#a3352d;font-size:12px;margin:0;"></p>
+    </div>
+    <div class="seam-foot">
+      <div id="chillerTrendSummary" class="seam-summary"></div>
+      <a class="view-log-btn" href="/records/REC%207.9.1_Chiller%20Temperature%20Monitoring.html">View full log &rarr;</a>
+    </div>
+  </div>
+
   <div class="two-col" style="grid-template-columns:1fr;">
 
     <div class="panel">
@@ -579,6 +614,122 @@
 })();
 </script>
 
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  let chillerChart = null, freezerChart = null;
+
+  function fmtTs(ts) {
+    const d = new Date(ts);
+    const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return ('0'+d.getDate()).slice(-2)+' '+mon[d.getMonth()]+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+  }
+  function toNum(v) { return v != null && v !== '' ? Number(v) : null; }
+  function ptColors(data, minV, maxV, color) {
+    return data.map(v => v != null && (v < minV || v > maxV) ? '#ef4444' : color);
+  }
+  function refLine(n, val, label) {
+    return { label, data: Array(n).fill(val), borderColor: '#b91c1c', borderDash: [5,4], pointRadius: 0, spanGaps: true, borderWidth: 1, backgroundColor: 'transparent' };
+  }
+
+  function renderCharts(entries, rangeDays) {
+    const now = Date.now();
+    const cutoff = rangeDays > 0 ? now - rangeDays * 86400000 : 0;
+    const filtered = entries
+      .filter(e => (e.submittedAt || e.createdAt || 0) >= cutoff && e.values)
+      .sort((a, b) => (a.submittedAt||a.createdAt||0) - (b.submittedAt||b.createdAt||0));
+
+    const labels = [], c1 = [], c2 = [], fzDial = [], fzProd = [];
+    filtered.forEach(e => {
+      labels.push(fmtTs(e.submittedAt || e.createdAt || 0));
+      const r = Array.isArray((e.values||{}).readings) ? e.values.readings : [];
+      const r1 = r.find(x => x.chillerUnit === 'Chiller 1');
+      const r2 = r.find(x => x.chillerUnit === 'Chiller 2');
+      const rf = r.find(x => x.chillerUnit === 'Freezer');
+      c1.push(r1 ? toNum(r1.dialTemp) : null);
+      c2.push(r2 ? toNum(r2.dialTemp) : null);
+      fzDial.push(rf ? toNum(rf.dialTemp) : null);
+      fzProd.push(rf ? toNum(rf.productTemp) : null);
+    });
+
+    const n = labels.length;
+    const chartOpts = (title, yLabel) => ({
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 16 } },
+        title: { display: false },
+        tooltip: { bodyFont: { size: 11 }, titleFont: { size: 11 } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, maxTicksLimit: 8, maxRotation: 30 }, grid: { color: '#eceeef' } },
+        y: { title: { display: true, text: yLabel, font: { size: 10 }, color: '#5c6771' }, ticks: { font: { size: 10 } }, grid: { color: '#eceeef' } }
+      }
+    });
+
+    if (chillerChart) { chillerChart.destroy(); chillerChart = null; }
+    chillerChart = new Chart($('chillerChart').getContext('2d'), {
+      type: 'line',
+      data: { labels, datasets: [
+        { label: 'Chiller 1', data: c1, borderColor: '#2563eb', backgroundColor: 'transparent', spanGaps: true, tension: 0, borderWidth: 1.5, pointRadius: c1.map(v => v != null && (v < 0 || v > 10) ? 3.5 : 0), pointBackgroundColor: ptColors(c1, 0, 10, '#2563eb') },
+        { label: 'Chiller 2', data: c2, borderColor: '#16a34a', backgroundColor: 'transparent', spanGaps: true, tension: 0, borderWidth: 1.5, pointRadius: c2.map(v => v != null && (v < 0 || v > 10) ? 3.5 : 0), pointBackgroundColor: ptColors(c2, 0, 10, '#16a34a') },
+        refLine(n, 10, 'Max 10°C'),
+        refLine(n,  0, 'Min 0°C'),
+      ]},
+      options: chartOpts('Chiller temps', '°C')
+    });
+
+    if (freezerChart) { freezerChart.destroy(); freezerChart = null; }
+    freezerChart = new Chart($('freezerChart').getContext('2d'), {
+      type: 'line',
+      data: { labels, datasets: [
+        { label: 'Dial',    data: fzDial, borderColor: '#7c3aed', backgroundColor: 'transparent', spanGaps: true, tension: 0, borderWidth: 1.5, pointRadius: fzDial.map(v => v != null && (v < -28 || v > 2) ? 3.5 : 0), pointBackgroundColor: ptColors(fzDial, -28, 2, '#7c3aed') },
+        { label: 'Product', data: fzProd, borderColor: '#ea580c', backgroundColor: 'transparent', spanGaps: true, tension: 0, borderWidth: 1.5, pointRadius: fzProd.map(v => v != null && (v < -28 || v > 2) ? 3.5 : 0), pointBackgroundColor: ptColors(fzProd, -28, 2, '#ea580c') },
+        refLine(n,   2, 'Max 2°C'),
+        refLine(n, -28, 'Min -28°C'),
+      ]},
+      options: chartOpts('Freezer temps', '°C')
+    });
+
+    // summary line: count OOS points
+    const oosC = [...c1, ...c2].filter(v => v != null && (v < 0 || v > 10)).length;
+    const oosF = [...fzDial, ...fzProd].filter(v => v != null && (v < -28 || v > 2)).length;
+    const sumEl = $('chillerTrendSummary');
+    if (sumEl) {
+      sumEl.innerHTML = n + ' submission' + (n !== 1 ? 's' : '') + ' &middot; ' +
+        (oosC ? '<strong class="bad">' + oosC + ' chiller OOS</strong>' : '<strong class="ok">chillers in spec</strong>') +
+        ' &middot; ' +
+        (oosF ? '<strong class="bad">' + oosF + ' freezer OOS</strong>' : '<strong class="ok">freezer in spec</strong>');
+    }
+  }
+
+  async function loadChillerTrends() {
+    try {
+      if (!window.FacilityApi) throw new Error('API not ready');
+      const res = await window.FacilityApi.fetch('/api/storage/key/' + encodeURIComponent('monitoring_log:chiller-temperature-monitoring'));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const blob = await res.json();
+      const raw = blob && blob.value != null ? blob.value : null;
+      if (!raw) { $('chillerTrendLoading').textContent = 'No data yet.'; return; }
+      const entries = JSON.parse(raw);
+      window._chillerTrendEntries = entries;
+      $('chillerTrendLoading').style.display = 'none';
+      $('chillerTrendCharts').style.display = '';
+      renderCharts(entries, +$('chillerRange').value);
+    } catch (e) {
+      $('chillerTrendLoading').style.display = 'none';
+      const errEl = $('chillerTrendError');
+      errEl.style.display = '';
+      errEl.textContent = 'Could not load chiller data: ' + (e.message || 'unknown error');
+    }
+  }
+
+  $('chillerRange').addEventListener('change', function () {
+    if (window._chillerTrendEntries) renderCharts(window._chillerTrendEntries, +this.value);
+  });
+
+  loadChillerTrends();
+})();
+</script>
 <script src="../lib/verification-block.js?v=4"></script>
 </body>
 </html>
