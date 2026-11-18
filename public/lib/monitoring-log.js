@@ -3947,7 +3947,8 @@ function fallbackDl(canvas,filename){
       }
       // Admin-set field specs (FieldSpec table) win over SpecRegistry defaults.
       try {
-        const r = await fetch('/api/specs/' + encodeURIComponent(config.recordKey), { cache: 'no-cache' });
+        const r = await (window.FacilityApi ? window.FacilityApi.fetch('/api/specs/' + encodeURIComponent(config.recordKey), { cache: 'no-cache' })
+          : fetch((window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com') + '/api/specs/' + encodeURIComponent(config.recordKey), { cache: 'no-cache' }));
         if (r.ok) {
           const rows = await r.json();
           if (rows.length) {
