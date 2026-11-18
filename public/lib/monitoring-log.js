@@ -1392,12 +1392,13 @@
         const spec = currentSpec && currentSpec[key];
         const label = inp.closest('label');
         if (!label) return;
-        // only highlight red when the spec explicitly requests it
-        if (!spec || !spec.highlightRed || (spec.min == null && spec.max == null)) { label.classList.remove('ml-rr-oos'); label.removeAttribute('data-oos-hint'); return; }
+        if (!spec || (spec.min == null && spec.max == null)) { label.classList.remove('ml-rr-oos'); label.removeAttribute('data-oos-hint'); return; }
         const v = parseFloat(inp.value);
         const bad = !isNaN(v) && ((spec.min != null && v < spec.min) || (spec.max != null && v > spec.max));
-        label.classList.toggle('ml-rr-oos', bad);
-        if (bad) label.setAttribute('data-oos-hint', `Out of range (${spec.min ?? '—'} to ${spec.max ?? '—'})`);
+        // highlight_red: red border + background on the input
+        label.classList.toggle('ml-rr-oos', bad && !!spec.highlightRed);
+        // show_warning_bubble: hint text below the field
+        if (bad && spec.showWarningBubble) label.setAttribute('data-oos-hint', `Out of range (${spec.min ?? '—'} to ${spec.max ?? '—'})`);
         else label.removeAttribute('data-oos-hint');
       }
       wrap.addEventListener('input', e => { const inp = e.target.closest('[data-rr-field]'); if (inp) rrCheckOos(inp); });
@@ -3989,7 +3990,7 @@ function fallbackDl(canvas,filename){
           const rows = await r.json();
           if (rows.length) {
             const overlay = Object.assign({}, published);
-            rows.forEach(s => { overlay[s.field_key] = { min: s.spec_min, max: s.spec_max, highlightRed: s.highlight_red }; });
+            rows.forEach(s => { overlay[s.field_key] = { min: s.spec_min, max: s.spec_max, highlightRed: s.highlight_red, showWarningBubble: s.show_warning_bubble }; });
             currentSpec = overlay;
             return;
           }
