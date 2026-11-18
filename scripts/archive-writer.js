@@ -118,6 +118,7 @@ header .when{font-size:12px;opacity:.85}
 main{max-width:1100px;margin:20px auto;padding:0 20px 40px}
 h2{font-size:15px;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid #12344d}
 h3{font-size:13px;margin:16px 0 6px;color:#12344d}
+h4{font-size:12px;margin:10px 0 4px;color:#12344d;font-weight:600}
 table{border-collapse:collapse;width:100%;background:#fff;margin-bottom:10px}
 th,td{border:1px solid #cfd6dd;padding:5px 8px;text-align:left;vertical-align:top;font-size:12.5px;word-break:break-word}
 th{background:#e8edf2;font-weight:600}
@@ -301,18 +302,102 @@ function submissionToHtml(recordKey, jobNo, entries, recordConfig) {
     'Job number': jobNo || '',
     Entries: String(list.length),
   });
+
+  // Build a roster table from an array of rows using explicit column definitions.
+  // Shows all provided columns; cells without data show a dash.
+  function rosterColTable(rows, cols) {
+    if (!rows.length || !cols.length) return '<span class="muted">—</span>';
+    return `<table><thead><tr><th>#</th>${cols.map(col => `<th>${esc(col.label || col.key)}</th>`).join('')}</tr></thead>`
+      + `<tbody>${rows.map((row, ri) =>
+        `<tr><td>${ri + 1}</td>${cols.map(col => `<td>${valueHtml(row[col.key], labels)}</td>`).join('')}</tr>`
+      ).join('')}</tbody></table>`;
+  }
+
   const body = list.map((e, i) => {
     const status = entryStatus(e);
-    const scalars = [], blocks = [];
     // Form fields live under `values`: lift them into the entry so they render as the main field grid.
     const flat = isObj(e && e.values) ? { ...e.values, ...Object.fromEntries(Object.entries(e).filter(([k]) => k !== 'values')) } : (e || {});
+
+    const shownKeys = new Set(['status', 'roster', 'rosters', 'id', 'submittedAt', 'submissionDate', 'createdAt', 'completedBy', 'verification']);
+    const parts = [];
+
+    // 1. Named sections from the record config (e.g. "Job info").
+    const configSections = Array.isArray(c.sections) ? c.sections : [];
+    for (const s of configSections) {
+      const fields = Array.isArray(s.fields) ? s.fields.filter(f => f && f.key) : [];
+      if (!fields.length) continue; // skip special sections (jobSoFarPanel, trolleyBanner, etc.)
+      const rows = fields.map(f => {
+        shownKeys.add(f.key);
+        const v = flat[f.key];
+        if (isBlank(v)) return null;
+        return `<tr><th>${esc(f.label || f.key)}</th><td>${valueHtml(v, labels)}</td></tr>`;
+      }).filter(Boolean);
+      if (rows.length) parts.push(`<h3>${esc(s.title || 'Section')}</h3><table class="kv">${rows.join('')}</table>`);
+    }
+
+    // 2. Roster (pots / steams / rows).
+    const rosterArr = Array.isArray(flat.roster) ? flat.roster : null;
+    if (rosterArr && rosterArr.length) {
+      const r = c.roster || {};
+      const rTitle = r.title || 'Roster';
+      const rCols = Array.isArray(r.columns) ? r.columns : null;
+      const procChoice = r.processChoice;
+
+      if (rCols && procChoice) {
+        // Group rows by process type, then render each group with its own column set.
+        const procField = procChoice.column || 'process';
+        const groups = {};
+        const groupOrder = [];
+        for (const row of rosterArr) {
+          const proc = row[procField] || 'Unknown';
+          if (!groups[proc]) { groups[proc] = []; groupOrder.push(proc); }
+          groups[proc].push(row);
+        }
+        parts.push(`<h3>${esc(rTitle)} (${rosterArr.length})</h3>`);
+        for (const proc of groupOrder) {
+          const procRows = groups[proc];
+          // Include columns that are explicitly for this process (showWhen.in includes proc)
+          // or have no showWhen restriction (but are not hidden or legacy).
+          const procCols = rCols.filter(col => {
+            if (col.hidden || col.legacy) return false;
+            if (!col.showWhen) return true;
+            const sw = col.showWhen;
+            if (Array.isArray(sw.in) && sw.field === procField) return sw.in.includes(proc);
+            return false;
+          });
+          if (!procCols.length) continue;
+          parts.push(`<h4>${esc(proc)} (${procRows.length})</h4>${rosterColTable(procRows, procCols)}`);
+        }
+      } else if (rCols) {
+        // No process choice — render one table with config columns that have any data.
+        const activeCols = rCols.filter(col => !col.hidden && !col.legacy && rosterArr.some(row => !isBlank(row[col.key])));
+        if (activeCols.length) {
+          parts.push(`<h3>${esc(rTitle)}</h3>${rosterColTable(rosterArr, activeCols)}`);
+        }
+      } else {
+        // No config columns — fall back to auto-detected columns.
+        parts.push(`<h3>${esc(rTitle)}</h3>${rowsTable(rosterArr, labels)}`);
+      }
+    }
+
+    // 3. Any remaining object-valued fields not already accounted for.
     Object.entries(flat).forEach(([k, v]) => {
-      if (k === 'status' || isBlank(v)) return;
-      if (typeof v === 'object') blocks.push(`<h3>${esc(labelOf(k, labels))}</h3>${valueHtml(v, labels)}`);
-      else scalars.push(`<div class="cell"><span class="l">${esc(labelOf(k, labels))}</span><span class="v">${scalarHtml(v)}</span></div>`);
+      if (shownKeys.has(k) || isBlank(v) || typeof v !== 'object') return;
+      parts.push(`<h3>${esc(labelOf(k, labels))}</h3>${valueHtml(v, labels)}`);
     });
+
+    // 4. Any scalar fields not covered by config sections.
+    const extraScalars = [];
+    Object.entries(flat).forEach(([k, v]) => {
+      if (shownKeys.has(k) || typeof v === 'object' || isBlank(v)) return;
+      if (!configSections.some(s => (s.fields || []).some(f => f.key === k))) {
+        extraScalars.push(`<div class="cell"><span class="l">${esc(labelOf(k, labels))}</span><span class="v">${scalarHtml(v)}</span></div>`);
+      }
+    });
+    if (extraScalars.length) parts.push(`<div class="grid">${extraScalars.join('')}</div>`);
+
     return `<section class="entry"><div class="entry-head"><strong>Entry ${i + 1}</strong><span class="badge ${status}">${status}</span></div>`
-      + `<div class="grid">${scalars.join('')}</div>${blocks.join('')}</section>`;
+      + parts.join('\n') + `</section>`;
   }).join('\n');
   return `<h2>Summary</h2>${head}<h2>Entries</h2>${body || '<p class="muted">No entries.</p>'}`;
 }
