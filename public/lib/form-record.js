@@ -4800,7 +4800,7 @@
         });
         const cell = f => `<td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td><td>${esc(displayValue(f, sub.values[f.key]))}</td>`;
         // job info section: always 4 columns and no section heading (matches buildSlideSheet behaviour)
-        const isJobInfo = !!(config.jobInfoGroup && sec.title === config.jobInfoGroup);
+        const isJobInfo = sec.title === (config.jobInfoGroup || 'Job info');
         // printCols: N label/value columns → N/2 pairs per row (e.g. printCols 4 = 2 pairs per row)
         const perRow = Math.max(1, Math.floor((sec.printCols || (isJobInfo ? 4 : 2)) / 2));
         let rows = '';
