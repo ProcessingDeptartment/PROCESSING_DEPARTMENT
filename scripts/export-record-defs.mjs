@@ -32,11 +32,13 @@ for (const { recordKey, version } of defs) {
   fs.writeFileSync(path.join(OUT, encodeURIComponent(recordKey) + '.json'), json);
   fs.writeFileSync(path.join(OUT, 'snapshots', encodeURIComponent(recordKey) + '_v' + version + '.json'), json);
   if (!noSnapshot) {
-    await prisma.recordDefinitionRevision.upsert({
-      where: { recordKey_version: { recordKey, version } },
-      create: { recordKey, version, config: out.config },
-      update: {},
-    });
+    try {
+      await prisma.recordDefinitionRevision.upsert({
+        where: { recordKey_version: { recordKey, version } },
+        create: { recordKey, version, config: out.config },
+        update: {},
+      });
+    } catch { /* table not yet migrated — run prisma db push to enable versioned snapshots */ }
   }
   n++;
 }
