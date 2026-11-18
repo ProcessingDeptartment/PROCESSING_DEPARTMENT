@@ -122,7 +122,7 @@ async function main() {
       `SELECT migration_name AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL ORDER BY started_at`
     )).map((r) => r.n);
     return { keyValues, dateFields, relational, counts, migrations };
-  }, { isolationLevel: 'RepeatableRead', maxWait: 30000, timeout: 120000 });
+  }, { isolationLevel: 'RepeatableRead', maxWait: 30000, timeout: 900000 });
   const { keyValues, dateFields, relational, counts, migrations } = snap;
 
   // Definition layer -> its own content-addressed file (see header).
