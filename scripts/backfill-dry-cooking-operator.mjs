@@ -30,12 +30,15 @@ async function main() {
       const v = entry.values || {};
       if (v.operator && String(v.operator).trim() !== '') continue; // already set
 
-      const signOff = (entry.signOffs || [])
-        .filter(s => s && s.action === 'submitted')
-        .slice(-1)[0];
-      if (!signOff || !signOff.by) continue;
+      // Primary: completedBy.by (the name filled in on the sign-off block)
+      const cb = entry.completedBy;
+      const cbName = cb && (typeof cb === 'object' ? cb.by : cb);
+      // Fallback: signOffs array
+      const signOff = (entry.signOffs || []).filter(s => s && s.action === 'submitted').slice(-1)[0];
+      const name = (cbName && String(cbName).trim()) || (signOff && signOff.by && String(signOff.by).trim()) || '';
+      if (!name) continue;
 
-      v.operator = signOff.by;
+      v.operator = name;
       entry.values = v;
       changed = true;
     }
