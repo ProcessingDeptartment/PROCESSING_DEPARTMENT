@@ -350,7 +350,7 @@ window.initFieldRules = (function () {
         res[1].forEach(function (s) { specs[s.field_key] = s; });
         drawFieldPicker(); drawSummary();
       })
-      .catch(function (e) { fs.innerHTML = '<option value="">Could not load</option>'; saToast('Could not load record: ' + e.message, true); }); });
+      .catch(function (e) { fs.innerHTML = '<option value="">Could not load</option>'; saToast('Could not load record: ' + e.message, true); });
   });
 
   function status(k) { var s = specs[k]; return !s ? 'No spec' : s.active ? 'Spec set' : 'Spec off'; }
