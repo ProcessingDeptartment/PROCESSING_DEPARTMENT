@@ -1236,7 +1236,7 @@
     }
 
     function rrFieldInput(f, idx, v, locked) {
-      if (locked) return `<span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;">${esc(String(v))}${v !== '' && f.unit ? ' ' + esc(f.unit) : ''}</span>`;
+      if (locked) { const dv = String(v || '—'); return `<span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;">${esc(dv)}${v !== '' && v != null && f.unit ? ' ' + esc(f.unit) : ''}</span>`; }
       if (f.type === 'select') {
         const opts = (f.options || []).map(o => `<option value="${esc(o)}"${v === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
         return `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">—</option>${opts}</select>`;
