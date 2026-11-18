@@ -1199,7 +1199,10 @@
     function rangeOf(field) {
       const s = field.spec;
       if (s && (s.min != null || s.max != null)) return { min: s.min, max: s.max };
-      return field.specKey ? specFor(field.specKey) : null;
+      if (field.specKey) return specFor(field.specKey);
+      // Fall back to a FieldSpec stored directly against this field's own key.
+      const byKey = specFor(field.key);
+      return (byKey && (byKey.min != null || byKey.max != null)) ? byKey : null;
     }
 
     function checkField(field, value) {
@@ -1209,7 +1212,7 @@
         if (!v) return null;
         return v === (field.good === 'No' ? 'No' : 'Yes') ? 'ok' : 'fail';
       }
-      if (!field.specKey && !(field.spec && (field.spec.min != null || field.spec.max != null))) return null;
+      if (!field.specKey && !(field.spec && (field.spec.min != null || field.spec.max != null)) && !rangeOf(field)) return null;
       const v = num(value);
       if (v === null) return null;
       const range = rangeOf(field);
