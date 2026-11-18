@@ -3945,21 +3945,8 @@ function fallbackDl(canvas,filename){
       return;
     }
 
-    try {
-      const _teRaw = await window.FacilityApi.templateOverride(config.recordKey);
-      if (_teRaw) {
-        const override = JSON.parse(_teRaw);
-        if (override && override.schemaVersion === 1 && override.engine === 'monitoring-log') {
-          if (override.entryFields) config.entryFields = override.entryFields;
-          if (override.specFields) config.specFields = override.specFields;
-        }
-      }
-    } catch (e) { console.warn('ml: template override parse failed', e); }
-
     // field specifications: pages that declare their fields inline get their specs from the static snapshot
     if (window.SpecGate) await window.SpecGate.attach(config);
-
-    const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
 
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
     mount.classList.add('ml-app');
@@ -4386,30 +4373,6 @@ function fallbackDl(canvas,filename){
       el('ml_thSaveBtn').addEventListener('click', saveThresholds);
     } else {
       el('ml_thresholdsModal').remove();
-    }
-
-
-    if (canManageTemplates && new URLSearchParams(location.search).get('editTemplate') === '1') {
-      function doOpen() {
-        window.TemplateEditor.open({
-          recordKey: config.recordKey,
-          engine: 'monitoring-log',
-          currentConfig: {
-            entryFields: JSON.parse(JSON.stringify(config.entryFields || [])),
-            specFields: JSON.parse(JSON.stringify(config.specFields || []))
-          },
-          inlineConfig: null,
-          docRevisionStart: config.docRevisionStart,
-          onSave: () => location.reload()
-        });
-      }
-      if (window.TemplateEditor) { doOpen(); }
-      else {
-        const s = document.createElement('script');
-        s.src = '../lib/template-editor.js';
-        s.onload = doOpen;
-        document.head.appendChild(s);
-      }
     }
 
 

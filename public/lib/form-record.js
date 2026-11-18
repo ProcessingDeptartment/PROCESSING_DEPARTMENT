@@ -1850,25 +1850,10 @@
       roster: config.roster ? JSON.parse(JSON.stringify(config.roster)) : null,
       listColumns: config.listColumns ? config.listColumns.slice() : undefined
     };
-    try {
-      const overrideRaw = await window.FacilityApi.templateOverride(config.recordKey);
-      if (overrideRaw) {
-        const override = JSON.parse(overrideRaw);
-        if (override && override.schemaVersion === 1 && override.engine === 'form-record') {
-          config.sections = override.sections;
-          if (override.roster !== undefined) config.roster = override.roster || undefined;
-          if (override.rosters !== undefined) config.rosters = override.rosters || undefined;
-          if (override.listColumns) config.listColumns = override.listColumns;
-        }
-      }
-    } catch (e) { console.warn('fr: template override parse failed', e); }
-
     // field specifications: pages that declare their fields inline get their specs from the static snapshot
     if (window.SpecGate) await window.SpecGate.attach(config);
 
     const rosterList = getRosterList(config);
-
-    const canManageTemplates = !window.PermissionRules || window.PermissionRules.can('manageTemplates');
 
     const mount = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
     mount.classList.add('fr-app');
@@ -5577,29 +5562,6 @@ function fallbackDl(canvas,filename){
     openForm(null);
 
 
-    if (canManageTemplates && new URLSearchParams(location.search).get('editTemplate') === '1') {
-      function doOpen() {
-        window.TemplateEditor.open({
-          recordKey: config.recordKey,
-          engine: 'form-record',
-          currentConfig: {
-            sections: JSON.parse(JSON.stringify(config.sections || [])),
-            roster: config.roster ? JSON.parse(JSON.stringify(config.roster)) : null,
-            listColumns: config.listColumns ? config.listColumns.slice() : undefined
-          },
-          inlineConfig,
-          docRevisionStart: config.docRevisionStart,
-          onSave: () => location.reload()
-        });
-      }
-      if (window.TemplateEditor) { doOpen(); }
-      else {
-        const s = document.createElement('script');
-        s.src = (config.libPath || '../lib/') + 'template-editor.js';
-        s.onload = doOpen;
-        document.head.appendChild(s);
-      }
-    }
 
 
 

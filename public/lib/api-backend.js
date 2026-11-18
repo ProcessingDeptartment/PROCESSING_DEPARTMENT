@@ -126,21 +126,6 @@
       return body && body.config ? body.config : null;
     } catch (e) { console.error('record-def ' + recordKey + ' failed', e); return null; }
   };
-  // -> raw override JSON string, or null. Never holds the page up: if the API doesn't answer within
-  // 0.6 s (asleep) the form simply draws with its standard layout.
-  window.FacilityApi.templateOverride = async function (recordKey) {
-    try {
-      const res = await Promise.race([
-        apiFetch('/api/storage/key/' + encodeURIComponent('record_template:' + recordKey)),
-        new Promise(function (_, rej) { setTimeout(function () { rej(new Error('slow')); }, 600); })
-      ]);
-      if (!res.ok) return null;
-      const body = await res.json();
-      return body && body.value != null ? body.value : null;
-    } catch (e) { return null; }
-  };
-
-
   // ---------- In-memory retry queue (no localStorage) ----------
   // If a write fails (network down, 5xx), it stays in this in-memory queue and retries every
   // 30 s and on `online`. If the user navigates away before it drains, the data is LOST — that
