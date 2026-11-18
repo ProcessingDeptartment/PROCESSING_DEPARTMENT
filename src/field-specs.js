@@ -66,10 +66,11 @@ function parseBody(b) {
 function configFieldKeys(cfg) {
   const keys = new Set();
   const add = (list) => (list || []).forEach((f) => { if (f && f.key) keys.add(f.key); });
-  add(cfg.fields); add(cfg.entryFields);
+  add(cfg.fields); add(cfg.entryFields); add(cfg.specFields);
   (cfg.sections || []).forEach((s) => add(s.fields));
   if (cfg.roster) add(cfg.roster.columns);
   (cfg.rosters || []).forEach((r) => add(r.columns));
+  if (cfg.repeatingRows) add(cfg.repeatingRows.rowFields);
   return keys;
 }
 

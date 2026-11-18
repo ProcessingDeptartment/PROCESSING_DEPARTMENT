@@ -40,10 +40,11 @@ async function attachSpecs(prisma, recordKey, cfg) {
   if (!rows.length) return;
   const byKey = new Map(rows.map((r) => [r.fieldKey, specOut(r)]));
   const tag = (list) => (list || []).forEach((f) => { if (f && byKey.has(f.key)) f.spec = byKey.get(f.key); });
-  tag(cfg.fields); tag(cfg.entryFields);
+  tag(cfg.fields); tag(cfg.entryFields); tag(cfg.specFields);
   (cfg.sections || []).forEach((sec) => tag(sec.fields));
   if (cfg.roster) tag(cfg.roster.columns);
   (cfg.rosters || []).forEach((r) => tag(r.columns));
+  if (cfg.repeatingRows) tag(cfg.repeatingRows.rowFields);
 }
 
 // prisma: a PrismaClient; recordKey: string. Returns { engine, version, config } or null.
