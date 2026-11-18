@@ -2671,6 +2671,17 @@
             box.dataset.kg = has ? jwKg(f.oosw) : '';
           }
         }
+        // jw.cookedField: read-only field showing the kg cooked for this JOB so far -- earlier entries plus the Cooking
+        // pots on screen. A submitted entry keeps the figure it was saved with.
+        if (jw.cookedField) {
+          const cEl = el('fr_f_' + jw.cookedField);
+          const sub = editingId && submissions.find(x => x.id === editingId);
+          if (cEl && !(sub && isSubmitted(sub) && String(cEl.value || '').trim() !== '')) {
+            cEl.readOnly = true;
+            cEl.value = jwState.job ? jwKg(f.cooked || 0) : '';
+          }
+        }
+        refreshDeriveFormulas();
         const span = (txt, n) => `<span${n != null && n < -1e-9 ? ' style="color:#b30000;font-weight:bold;"' : ''}>${txt}${n != null ? ' ' + jwKg(n) + ' kg' : ''}</span>`;
         if (jw.manualField) {
           const mEl = el('fr_f_' + jw.manualField);
