@@ -1389,7 +1389,7 @@
         const key = inp.getAttribute('data-rr-field');
         const field = (rr.rowFields || []).find(f => f.key === key);
         if (!field) return;
-        const spec = currentSpec && currentSpec[key];
+        const spec = specFor(field.specKey || key);
         const label = inp.closest('label');
         if (!label) return;
         if (!spec || (spec.min == null && spec.max == null)) { label.classList.remove('ml-rr-oos'); label.removeAttribute('data-oos-hint'); return; }
