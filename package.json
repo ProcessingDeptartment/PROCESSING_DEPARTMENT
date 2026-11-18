@@ -9,7 +9,8 @@
     "build": "echo \"No build step required\"",
     "api": "node src/index.js",
     "api:migrate": "prisma migrate deploy",
-    "api:generate": "prisma generate"
+    "api:generate": "prisma generate",
+    "check:record-defs": "node scripts/check-record-defs.mjs"
   },
   "engines": {
     "node": ">=18"

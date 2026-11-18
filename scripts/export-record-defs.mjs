@@ -15,7 +15,8 @@ import { PrismaClient } from '@prisma/client';
 const require = createRequire(import.meta.url);
 const { assembleRecordConfig } = require('../src/record-def.js');
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(ROOT, 'public', 'data', 'record-defs');
+// RECORD_DEFS_OUT lets the check script export to a temp folder without touching the committed files
+const OUT = process.env.RECORD_DEFS_OUT ? path.resolve(process.env.RECORD_DEFS_OUT) : path.join(ROOT, 'public', 'data', 'record-defs');
 const prisma = new PrismaClient();
 
 fs.mkdirSync(OUT, { recursive: true });

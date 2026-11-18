@@ -29,7 +29,7 @@ Neon DB (source of truth)
 2. Commit and push `public/data/record-defs/<recordKey>.json`
 3. Render will auto-deploy within ~30 seconds
 
-If you cannot run the script (no local DB access), manually edit the JSON file to match the DB state and commit it.
+Never hand-edit a record-def JSON file. If the export cannot run, stop and get `DATABASE_URL` set up first. The database is the only place a definition changes; the JSON is always produced by the export and committed with it. See `MD/Instructions/records/record-definitions-change-process.md`.
 
 ---
 
