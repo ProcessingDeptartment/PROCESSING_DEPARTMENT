@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -33,7 +33,7 @@
 <script src="../lib/delete-submission-modal.js?v=1"></script>
 <script src="../lib/time-picker.js?v=2"></script>
 <script src="../lib/spec-gate.js?v=4"></script>
-  <script src="../lib/form-record.js?v=163"></script>
+  <script src="../lib/form-record.js?v=164"></script>
 <script>(function () {
   FormRecord.init({
     mount: '#frRoot',
@@ -69,7 +69,7 @@
 })();
 </script>
 
-<script>window.BARCODE_ENABLED = false; /* barcode system in development � set to true when ready */</script>
+<script>window.BARCODE_ENABLED = false; /* barcode system in development ? set to true when ready */</script>
 <script src="../lib/barcode-scan.js?v=2"></script>
 <script src="../lib/entry-flow.js?v=8"></script>
 <script>EntryFlow.receiving({ required: ['jobNo', 'receivingDate', 'receivedFrom', 'toBeProcessedFor'].concat(window.BarcodeScan && BarcodeScan.allowed() ? ['lotBarcode'] : []) });</script>

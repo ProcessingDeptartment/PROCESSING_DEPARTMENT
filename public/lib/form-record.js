@@ -253,7 +253,7 @@
   .fr-sheet table{ width:100%; border-collapse:collapse; margin-bottom:7px; }
   .fr-sheet td,.fr-sheet th{ border:1px solid #000; padding:3px 5px; vertical-align:top; text-align:left; font-size:12px; color:#000; }
   .fr-sheet th{ background:#eee; font-weight:700; }
-  .fr-sheet td.fr-sheet-lbl{ font-weight:700; width:26%; }
+  .fr-sheet td.fr-sheet-lbl{ font-weight:700; width:26%; background:#eee; }
   .fr-sheet table.fr-sheet-summary{ table-layout:fixed; }
   .fr-sheet table.fr-sheet-summary th,.fr-sheet table.fr-sheet-summary td{ text-align:center; }
   .fr-sheet table.fr-sheet-summary td{ font-weight:700; height:18px; }
