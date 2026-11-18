@@ -402,7 +402,9 @@
   .ml-rr-sheet td.rr-temp{ width:70px; text-align:center; }
   .ml-rr-sheet td.rr-yn{ width:30px; text-align:center; }
   .ml-rr-sheet td.rr-action{ min-width:120px; }
-  .ml-rr-sheet tr.ml-rr-oosw td{ border-left:3px solid #a3352d; }`;
+  .ml-rr-sheet tr.ml-rr-oosw td{ border-left:3px solid #a3352d; }
+  .ml-rr-oos input, .ml-rr-oos select{ border-color:#a3352d !important; background:#fff5f5 !important; }
+  .ml-rr-oos::after{ content:attr(data-oos-hint); display:block; font-size:11px; color:#a3352d; margin-top:2px; }`;
 
 
   function setPageOrientation(orientation) {
@@ -1381,6 +1383,26 @@
       }
 
       if (rr.uniqueKey) wrap.addEventListener('change', e => { if (e.target.closest(`[data-rr-field="${rr.uniqueKey}"]`)) reindex(); });
+
+      // Live out-of-range highlighting for rowFields that have a FieldSpec
+      function rrCheckOos(inp) {
+        const key = inp.getAttribute('data-rr-field');
+        const field = (rr.rowFields || []).find(f => f.key === key);
+        if (!field) return;
+        const spec = currentSpec && currentSpec[key];
+        const label = inp.closest('label');
+        if (!label) return;
+        // only highlight red when the spec explicitly requests it
+        if (!spec || !spec.highlightRed || (spec.min == null && spec.max == null)) { label.classList.remove('ml-rr-oos'); label.removeAttribute('data-oos-hint'); return; }
+        const v = parseFloat(inp.value);
+        const bad = !isNaN(v) && ((spec.min != null && v < spec.min) || (spec.max != null && v > spec.max));
+        label.classList.toggle('ml-rr-oos', bad);
+        if (bad) label.setAttribute('data-oos-hint', `Out of range (${spec.min ?? '—'} to ${spec.max ?? '—'})`);
+        else label.removeAttribute('data-oos-hint');
+      }
+      wrap.addEventListener('input', e => { const inp = e.target.closest('[data-rr-field]'); if (inp) rrCheckOos(inp); });
+      wrap.addEventListener('change', e => { const inp = e.target.closest('[data-rr-field]'); if (inp) rrCheckOos(inp); });
+
       reindex();
     }
 
@@ -3967,7 +3989,7 @@ function fallbackDl(canvas,filename){
           const rows = await r.json();
           if (rows.length) {
             const overlay = Object.assign({}, published);
-            rows.forEach(s => { overlay[s.field_key] = { min: s.spec_min, max: s.spec_max }; });
+            rows.forEach(s => { overlay[s.field_key] = { min: s.spec_min, max: s.spec_max, highlightRed: s.highlight_red }; });
             currentSpec = overlay;
             return;
           }
