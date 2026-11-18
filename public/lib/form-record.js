@@ -4980,6 +4980,7 @@
       </tbody></table>
       <table class="dc-job" style="margin-top:2px"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
         ${jr('OOSW (kg)', ooswVal, 'Cooked weight (kg)', cookedKgVal)}
+        ${jr('Operator', e(v.operator) || '<span style="color:#888">Not recorded</span>', '', '')}
       </tbody></table>`;
 
       // batch = one Blanching slide + the Cooking slides that follow it; Cooking before any Blanching has no batch
