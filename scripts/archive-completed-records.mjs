@@ -26,6 +26,7 @@ const since = opt('--since');
 const onlyRecord = opt('--record');
 const dryRun = args.includes('--dry-run');
 const verifiedOnly = args.includes('--verified-only');
+const forceRegen = args.includes('--force');
 if (since && !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(since)) { console.error('--since must be YYYY-MM-DD'); process.exit(1); }
 if (opt('--archive-out')) process.env.ARCHIVE_OUT = opt('--archive-out');   // before archive-writer resolves the root
 
@@ -48,10 +49,13 @@ console.log('archive: ' + root + (dryRun ? '  (dry run -- nothing will be writte
 
 const defs = await prisma.recordDefinition.findMany({ where: onlyRecord ? { recordKey: onlyRecord } : {}, select: { recordKey: true }, orderBy: { recordKey: 'asc' } });
 
-const allRevisions = await prisma.recordDefinitionRevision.findMany({
-  orderBy: [{ recordKey: 'asc' }, { snapshotAt: 'asc' }],
-  select: { recordKey: true, version: true, snapshotAt: true },
-});
+let allRevisions = [];
+try {
+  allRevisions = await prisma.recordDefinitionRevision.findMany({
+    orderBy: [{ recordKey: 'asc' }, { snapshotAt: 'asc' }],
+    select: { recordKey: true, version: true, snapshotAt: true },
+  });
+} catch { /* table not yet migrated — versioned snapshots unavailable, falls back to current config */ }
 const revisionsByKey = new Map();
 for (const r of allRevisions) {
   if (!revisionsByKey.has(r.recordKey)) revisionsByKey.set(r.recordKey, []);
@@ -138,7 +142,7 @@ try {
       // Records with no job number (monitoring logs) get one page per day.
       const name = g.jobNo ? String(g.jobNo) : 'log';
       const label = safeSegment(name + '_' + g.day);
-      if (already.get(recordKey + '|' + label) === hash) { unchanged++; continue; }
+      if (!forceRegen && already.get(recordKey + '|' + label) === hash) { unchanged++; continue; }
       if (dryRun) { archived++; n++; continue; }
       const startDay = g.entries
         .map(e => dayOf(e.submissionDate) || dayOf(e.submittedAt) || dayOf(e.createdAt))
