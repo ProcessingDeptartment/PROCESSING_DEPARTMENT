@@ -3942,6 +3942,19 @@ function fallbackDl(canvas,filename){
           changeReason: `Seeded from paper record ${config.docCode}`, publishedBy: 'System', changedByTitle: 'System'
         });
       }
+      // Admin-set field specs (FieldSpec table) win over SpecRegistry defaults.
+      try {
+        const r = await fetch('/api/specs/' + encodeURIComponent(config.recordKey), { cache: 'no-cache' });
+        if (r.ok) {
+          const rows = await r.json();
+          if (rows.length) {
+            const overlay = Object.assign({}, published);
+            rows.forEach(s => { overlay[s.field_key] = { min: s.spec_min, max: s.spec_max }; });
+            currentSpec = overlay;
+            return;
+          }
+        }
+      } catch (e) { /* fall through to SpecRegistry result */ }
       currentSpec = published;
     }
 

@@ -442,7 +442,7 @@ window.initFieldRules = (function () {
         $sa('fieldSel').value = row.field_key;
         $sa('exportNotice').hidden = false;
         drawHistory(row);
-        return bumpDocRev(rec, reason, by, ttl).then(function (note) { saToast('Specification saved' + note + '.'); });
+        saToast('Specification saved.');
       })
       .catch(function (e) { saToast('Could not save: ' + e.message, true); })
       .finally(function () { btn.disabled = false; });
