@@ -1391,7 +1391,10 @@
       if (!readings.length) return '';
       const printFields = rrCfg.rowFields || [];
       const rrT = config.ncThresholds || [];
-      const isOosRow = (row) => rrT.some(t => { const n = parseFloat(row[t.field]); return !isNaN(n) && (n < (t.min ?? -Infinity) || n > (t.max ?? Infinity)); });
+      const isOosRow = (row) => {
+        if (rrT.some(t => { const n = parseFloat(row[t.field]); return !isNaN(n) && (n < (t.min ?? -Infinity) || n > (t.max ?? Infinity)); })) return true;
+        return printFields.some(f => { const range = rangeOf(f); if (!range || (range.min == null && range.max == null)) return false; const n = parseFloat(row[f.key]); return !isNaN(n) && ((range.min != null && n < range.min) || (range.max != null && n > range.max)); });
+      };
       const thead = printFields.map(f => `<th>${esc(f.label)}${f.unit ? ` (${esc(f.unit)})` : ''}</th>`).join('');
       const colClass = (f) => {
         if (f.key === (rrCfg.uniqueKey || 'chillerUnit')) return 'rr-unit';
@@ -1424,6 +1427,17 @@
           values.readings.forEach(row => {
             const _v = parseFloat(row[t.field]);
             if (!isNaN(_v)) { anyChecked = true; if (_v < (t.min ?? -Infinity) || _v > (t.max ?? Infinity)) anyFail = true; }
+          });
+        });
+        // Also check FieldSpec data (currentSpec overlay) for rowFields not already covered by ncThresholds
+        const ncFields = new Set(liveThresholds().map(t => t.field));
+        (rrCfg.rowFields || []).forEach(f => {
+          if (ncFields.has(f.key)) return;
+          const range = rangeOf(f);
+          if (!range || (range.min == null && range.max == null)) return;
+          values.readings.forEach(row => {
+            const _v = parseFloat(row[f.key]);
+            if (!isNaN(_v)) { anyChecked = true; if ((range.min != null && _v < range.min) || (range.max != null && _v > range.max)) anyFail = true; }
           });
         });
       }
