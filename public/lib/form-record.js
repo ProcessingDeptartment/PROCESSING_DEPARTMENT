@@ -701,7 +701,7 @@
           `<span class="fr-confirm-text">${esc(field.confirmText || 'Confirmed')}</span></span>`;
       }
       if (field.type === 'textarea') return `<textarea id="${id}" rows="3"${ro}>${esc(v)}</textarea>`;
-      if (field.type === 'number') return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
+      if (field.type === 'number') return `<input type="number" step="any" inputmode="decimal" id="${id}" value="${esc(v)}"${ro}>`;
       if (field.type === 'date') return `<input type="date" id="${id}" value="${esc(v)}"${ro}>`;
 
       if (field.type === 'time') return window.FRTimePicker ? window.FRTimePicker.html(id, v, field.readOnly, field.seg) : `<input type="time" id="${id}" value="${esc(v)}">`;

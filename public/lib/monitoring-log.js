@@ -496,7 +496,7 @@
       return `<textarea id="${id}" rows="2"${field.maxLength ? ` maxlength="${Number(field.maxLength)}"` : ''}${ro}>${esc(v)}</textarea>`;
     }
     if (field.type === 'number') {
-      return `<input type="number" step="0.01" id="${id}" value="${esc(v)}"${ro}>`;
+      return `<input type="number" step="any" inputmode="decimal" id="${id}" value="${esc(v)}"${ro}>`;
     }
     if (field.type === 'computed') {
       return `<input type="text" id="${id}" value="${esc(v)}" disabled>`;
