@@ -328,7 +328,7 @@ window.initFieldRules = (function () {
         seen[f.key] = 1; out.push({ key: f.key, label: f.label || f.key, type: f.type || 'text', unit: f.unit || '', where: where });
       });
     }
-    add(cfg.fields, ''); add(cfg.entryFields, '');
+    add(cfg.fields, ''); add(cfg.entryFields, ''); add(cfg.specFields, '');
     (cfg.sections || []).forEach(function (s) { add(s.fields, s.title || ''); });
     if (cfg.roster) add(cfg.roster.columns, (cfg.roster.title || 'Roster') + ' (rows)');
     (cfg.rosters || []).forEach(function (r) { add(r.columns, (r.title || 'Roster') + ' (rows)'); });
