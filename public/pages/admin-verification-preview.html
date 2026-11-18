@@ -191,6 +191,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1b2330; backgroun
       (sec.fields || []).forEach(add);
     });
     (def.entryFields || []).forEach(add);
+    if (def.repeatingRows && def.repeatingRows.rowFields) (def.repeatingRows.rowFields || []).forEach(add);
     if (def.roster) {
       fields.push({ key: 'roster:count', label: (def.roster.title || 'Roster') + ' count' });
       (def.roster.totals || []).forEach(function (t, i) {
