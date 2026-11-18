@@ -639,7 +639,7 @@
       .filter(e => (e.submittedAt || e.createdAt || 0) >= cutoff && e.values)
       .sort((a, b) => (a.submittedAt||a.createdAt||0) - (b.submittedAt||b.createdAt||0));
 
-    const labels = [], c1 = [], c2 = [], fzDial = [], fzProd = [];
+    const labels = [], c1 = [], c2 = [], fzDial = [];
     filtered.forEach(e => {
       labels.push(fmtTs(e.submittedAt || e.createdAt || 0));
       const r = Array.isArray((e.values||{}).readings) ? e.values.readings : [];
@@ -649,7 +649,6 @@
       c1.push(r1 ? toNum(r1.dialTemp) : null);
       c2.push(r2 ? toNum(r2.dialTemp) : null);
       fzDial.push(rf ? toNum(rf.dialTemp) : null);
-      fzProd.push(rf ? toNum(rf.productTemp) : null);
     });
 
     const n = labels.length;
