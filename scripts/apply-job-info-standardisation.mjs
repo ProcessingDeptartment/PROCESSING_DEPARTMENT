@@ -86,6 +86,15 @@ for (const { recordKey } of allRecords) {
         }
       }
 
+      // Re-sort canonical fields by canonical order (positions 0,1,2,3...)
+      const keptFields = jiFields.filter(f => f.key in CANONICAL);
+      const sortedKept = [...keptFields].sort((a, b) => CANONICAL[a.key].order - CANONICAL[b.key].order);
+      sortedKept.forEach((f, i) => {
+        if (f.position !== i) {
+          ops.push(prisma.recordFieldDef.update({ where: { id: f.id }, data: { position: i } }));
+        }
+      });
+
       // Delete dropped fields
       if (dropIds.length) {
         ops.push(prisma.recordFieldDef.deleteMany({ where: { id: { in: dropIds } } }));
