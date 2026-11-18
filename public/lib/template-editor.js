@@ -237,6 +237,8 @@
 
       const allKeys = [];
       (w.sections || []).forEach(sec => (sec.fields || []).forEach(f => { if (f.key) allKeys.push(f); }));
+      if (w.roster) (w.roster.columns || []).forEach(f => { if (f.key) allKeys.push(f); });
+      (w.rosters || []).forEach(r => (r.columns || []).forEach(f => { if (f.key) allKeys.push(f); }));
       const lc = new Set(w.listColumns || []);
       html += `<h3>List columns (shown in submissions table)</h3>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
