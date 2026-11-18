@@ -28,15 +28,12 @@ async function main() {
     for (const entry of entries) {
       if (!entry || typeof entry !== 'object') continue;
       const v = entry.values || {};
-      if (v.operator && String(v.operator).trim() !== '') continue; // already set
 
-      // Primary: completedBy.by (the name filled in on the sign-off block)
+      // Use completedBy.by (the person who filled in the form) — always prefer this over signOffs
       const cb = entry.completedBy;
-      const cbName = cb && (typeof cb === 'object' ? cb.by : cb);
-      // Fallback: signOffs array
-      const signOff = (entry.signOffs || []).filter(s => s && s.action === 'submitted').slice(-1)[0];
-      const name = (cbName && String(cbName).trim()) || (signOff && signOff.by && String(signOff.by).trim()) || '';
+      const name = cb && (typeof cb === 'object' ? String(cb.by || '').trim() : String(cb).trim());
       if (!name) continue;
+      if (v.operator === name) continue; // already correct
 
       v.operator = name;
       entry.values = v;

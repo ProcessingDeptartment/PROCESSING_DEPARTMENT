@@ -4972,7 +4972,7 @@
         const kg = parseFloat(r.abaloneKg);
         return sum + (isNaN(kg) ? 0 : kg);
       }, 0);
-      const cookedKgVal = cookedKgTotal > 0 ? e(String(cookedKgTotal)) : '<span style="color:#888">Not recorded</span>';
+      const cookedKgVal = cookedKgTotal > 0 ? e(String(parseFloat(cookedKgTotal.toFixed(2)))) : '<span style="color:#888">Not recorded</span>';
       const ooswVal = v.ooswKg != null ? e(v.ooswKg) : (v.jiOoswKg != null ? e(v.jiOoswKg) : '<span style="color:#888">Not recorded</span>');
       const job = `<table class="dc-job"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
         ${jr('Job Number', e(v.jobNo), 'Harvest Farm', e(v.harvestFarm || v.jiReceivedFrom))}
