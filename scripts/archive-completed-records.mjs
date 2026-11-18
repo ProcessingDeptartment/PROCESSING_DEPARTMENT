@@ -48,6 +48,16 @@ console.log('archive: ' + root + (dryRun ? '  (dry run -- nothing will be writte
 
 const defs = await prisma.recordDefinition.findMany({ where: onlyRecord ? { recordKey: onlyRecord } : {}, select: { recordKey: true }, orderBy: { recordKey: 'asc' } });
 
+const allRevisions = await prisma.recordDefinitionRevision.findMany({
+  orderBy: [{ recordKey: 'asc' }, { snapshotAt: 'asc' }],
+  select: { recordKey: true, version: true, snapshotAt: true },
+});
+const revisionsByKey = new Map();
+for (const r of allRevisions) {
+  if (!revisionsByKey.has(r.recordKey)) revisionsByKey.set(r.recordKey, []);
+  revisionsByKey.get(r.recordKey).push(r);
+}
+
 // submission id -> the verification that covers it (entries verified before `verification` was stamped on them).
 const events = await prisma.verificationEvent.findMany({
   where: onlyRecord ? { recordKey: onlyRecord } : {},
@@ -130,7 +140,14 @@ try {
       const label = safeSegment(name + '_' + g.day);
       if (already.get(recordKey + '|' + label) === hash) { unchanged++; continue; }
       if (dryRun) { archived++; n++; continue; }
-      const entry = archiveSubmissions(recordKey, g.entries, { jobNo: g.jobNo, name, date: g.day, meta: { sha256: hash } });
+      const startDay = g.entries
+        .map(e => dayOf(e.submissionDate) || dayOf(e.submittedAt) || dayOf(e.createdAt))
+        .filter(Boolean)
+        .sort()[0] || g.day;
+      const entry = archiveSubmissions(recordKey, g.entries, {
+        jobNo: g.jobNo, name, date: g.day, meta: { sha256: hash },
+        revisions: revisionsByKey.get(recordKey) || [], startDay,
+      });
       if (entry) { archived++; n++; } else { failed++; console.warn('FAILED ' + recordKey + ' ' + label); }
     }
     if (n) console.log((dryRun ? 'would archive ' : 'archived ') + recordKey + ': ' + n + ' page' + (n === 1 ? '' : 's'));
