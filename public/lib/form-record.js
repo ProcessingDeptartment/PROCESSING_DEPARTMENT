@@ -4968,6 +4968,8 @@
       const job = `<table class="dc-job"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
         ${jr('Job Number', e(v.jobNo), 'Harvest Farm', e(v.harvestFarm || v.jiReceivedFrom))}
         ${jr('Intake Date', fdate(v.intakeDate || v.jiReceivingDate), 'Whole Weight (kg)', e(v.jiIntakeWeight || v.intakeWeight))}
+      </tbody></table>
+      <table class="dc-job" style="margin-top:2px"><colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup><tbody>
         ${jr('OOSW (kg)', ooswVal, 'Cooking Date', fdate(v.cookingDate))}
       </tbody></table>`;
 
