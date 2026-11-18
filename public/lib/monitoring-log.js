@@ -1389,7 +1389,16 @@
         const key = inp.getAttribute('data-rr-field');
         const field = (rr.rowFields || []).find(f => f.key === key);
         if (!field) return;
-        const spec = specFor(field.specKey || key);
+        let specKey = field.specKey || key;
+        if (field.specKeyBy) {
+          const card = inp.closest('[data-rr-row]');
+          if (card) {
+            const sib = card.querySelector(`[data-rr-field="${field.specKeyBy.field}"]`);
+            const sibVal = sib ? (sib.value || '') : '';
+            specKey = (field.specKeyBy.map && field.specKeyBy.map[sibVal]) || field.specKeyBy.default || key;
+          }
+        }
+        const spec = specFor(specKey);
         const label = inp.closest('label');
         if (!label) return;
         if (!spec || (spec.min == null && spec.max == null)) { label.classList.remove('ml-rr-oos'); label.removeAttribute('data-oos-hint'); return; }
