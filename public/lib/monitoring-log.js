@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   // View PDF (printonly=1): cover the page the instant this script loads, before the record form renders.
   try {
     const q0 = new URLSearchParams(location.search);
@@ -3204,19 +3204,19 @@
       }
       const lastDay = list.reduce((d, e) => (logDayOf(e) > d ? logDayOf(e) : d), '');
       const subLine = `${list.length} ${list.length === 1 ? 'submission' : 'submissions'} · ${longDayLabel(ym + '-01')} to ${longDayLabel(ym === today.slice(0, 7) ? today : lastDay)}`;
-      const m = sheetMeta || {};
-      const sheetHeadHtml = `<table class="sheet-head">
-        <tr><td class="sheet-logo" rowspan="4">${esc(m.logoText || 'ABAGOLD')}</td>
-            <td class="sheet-lbl">Document:</td><td>${esc(docTitle)}</td>
-            <td class="sheet-lbl">Doc number:</td><td>${esc(docCode)}</td></tr>
-        <tr><td class="sheet-lbl">Prepared by:</td><td>${esc(m.preparedBy || '')}</td>
-            <td class="sheet-lbl">Revision:</td><td>${esc(m.revision || '')}</td></tr>
-        <tr><td class="sheet-lbl">Approved by:</td><td>${esc(m.approvedBy || '')}</td>
-            <td class="sheet-lbl">Page:</td><td>1 of 1</td></tr>
-        <tr><td class="sheet-lbl">Effective Date:</td><td>${esc(m.effectiveDate || '')}</td>
-            <td class="sheet-lbl">Revision Date:</td><td>${esc(m.revisionDate || '')}</td></tr>
-        <tr><td colspan="5">Distribution approved as controlled copy:</td></tr>
-      </table>`;
+       const _dhm = window.DocHeader && window.DocHeader.current ? window.DocHeader.current(recordKey) : null;
+       const sheetHeadHtml = window.DocHeader
+         ? window.DocHeader.blockHtml(_dhm, null, null, '../assets/abagold-logo.png')
+          : `<div style="font-weight:700;">${esc(docTitle)} - ${esc(docCode)}</div>`;
+
+
+
+
+
+
+
+
+
       const titleHtml = `<div style="margin:6px 0 4px;font-size:12px;font-weight:700;">${esc(heading)}</div>
         <div style="margin-bottom:6px;font-size:11px;color:#555;">${esc(subLine)}</div>`;
       const tableHtml = dayLogTableHtml(list, { showDate: true });
@@ -3348,20 +3348,20 @@ ${pageStyleCss}
         <tr><th>Date: ${esc(dateF ? (v[dateF.key] || '') : (stampDateF ? stampText(valueFor(entryRow, stampDateF)) : ''))}</th><th style="text-align:center;">Record:</th><th>Comments:</th></tr>
         ${rows}
       </table>`;
-      return `
-      <table class="sheet-head">
-        <tr><td class="sheet-logo" rowspan="4">${esc(m.logoText || 'ABAGOLD')}</td>
-            <td class="sheet-lbl">Document:</td><td>${esc(docTitle)}</td>
-            <td class="sheet-lbl">Doc number:</td><td>${esc(docCode)}</td></tr>
-        <tr><td class="sheet-lbl">Prepared by:</td><td>${esc(m.preparedBy || '')}</td>
-            <td class="sheet-lbl">Revision:</td><td>${esc(m.revision || '')}</td></tr>
-        <tr><td class="sheet-lbl">Approved by:</td><td>${esc(m.approvedBy || '')}</td>
-            <td class="sheet-lbl">Page:</td><td>1 of 1</td></tr>
-        <tr><td class="sheet-lbl">Effective Date:</td><td>${esc(m.effectiveDate || '')}</td>
-            <td class="sheet-lbl">Revision Date:</td><td>${esc(m.revisionDate || '')}</td></tr>
-        <tr><td colspan="5">Distribution approved as controlled copy:</td></tr>
-      </table>
-      ${body}
+       const _dhe = window.DocHeader && window.DocHeader.current ? window.DocHeader.current(recordKey) : null;
+       const _entryHead = window.DocHeader
+         ? window.DocHeader.blockHtml(_dhe, null, null, '../assets/abagold-logo.png')
+          : `<div style="font-weight:700;">${esc(docTitle)} - ${esc(docCode)}</div>`;
+       return `${_entryHead}
+
+
+
+
+
+
+
+
+       ${body}
       <table class="sheet-sign">
         <tr><td class="sheet-lbl">Completed by:</td><td>${esc(cb.by || (opF ? (v[opF.key] || '') : ''))}</td>
             <td class="sheet-lbl">Title:</td><td>${esc(cb.title || '')}</td>
