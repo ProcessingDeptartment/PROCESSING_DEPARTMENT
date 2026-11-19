@@ -110,7 +110,7 @@ for (const e of index) {
 
   const recordTitle = safeFile(cfg.title || e.key);
   // Stable filename: REC 7.4.1_DPR01199.pdf — same name every time so copying overwrites.
-  const stableName = safeFile((cfg.docCode || e.key) + '_' + jobNo);
+  const stableName = safeFile((cfg.docCode || e.key) + '_' + (cfg.title || e.key) + '_' + jobNo);
 
   // Remove old dated copies (previous format: "Drying Process - 2026-11-07.pdf") on first run.
   const jobDir = path.join(EXPORT, jobNo);
