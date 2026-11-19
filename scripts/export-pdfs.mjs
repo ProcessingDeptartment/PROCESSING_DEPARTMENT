@@ -64,6 +64,20 @@ function copyPdf(src, dest) {
 
 const index = readIndex(ARCHIVE);
 
+// Pre-build a set of completed job numbers for records that gate other records.
+// Key: "recordKey|jobNo" — used to check prerequisites before exporting.
+const completedJobs = new Set(
+  index
+    .filter(e => e.type === 'completed-record')
+    .map(e => e.key + '|' + e.label)
+);
+
+// Prerequisites: a record listed here is only exported when every listed prerequisite
+// also has a completed entry for the same job number.
+const PREREQUISITES = {
+  'drying-process': ['dried-abalone-transfer'],
+};
+
 // Monitoring: group all index entries by (recordKey, submissionMonth) first so we
 // can find the latest verification date across all entries of that month.
 // Map key: `${recordKey}|${submissionMonth}`
@@ -107,6 +121,10 @@ for (const e of index) {
     dateStr = (data && data.date) || (e.archivedAt ? e.archivedAt.slice(0, 10) : null);
   }
   if (!jobNo || !dateStr) { jobsSkipped++; continue; }
+
+  // Gate: skip if a required prerequisite record is not yet completed for this job.
+  const prereqs = PREREQUISITES[e.key] || [];
+  if (prereqs.some(p => !completedJobs.has(p + '|' + jobNo))) { jobsSkipped++; continue; }
 
   const recordTitle = safeFile(cfg.title || e.key);
   // Stable filename: REC 7.4.1_Drying Process_DPR01199.pdf
