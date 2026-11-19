@@ -5412,7 +5412,7 @@ function fallbackDl(canvas,filename){
           const byJob = {};
           submissions.filter(isSubmitted).forEach(s => { const j = jobOf(s); (byJob[j] || (byJob[j] = [])).push(s); });
           const lastMs = j => byJob[j].reduce((m, s) => Math.max(m, logMs(s)), 0);
-          const infoSec = (config.sections || []).find(sec => sec.title === config.jobInfoGroup) || {};
+          const infoSec = (config.sections || []).find(sec => sec.title === (config.jobInfoGroup || 'Job info')) || {};
           omit = (infoSec.fields || []).map(f => f.key);
           const sumKeys = [].concat(infoSec.summaryField || []).filter(k => k !== (config.batchField || 'jobNo'));
           groups = Object.keys(byJob).filter(j => byJob[j].some(s => !s.verification))
