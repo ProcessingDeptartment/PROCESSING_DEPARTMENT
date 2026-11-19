@@ -294,6 +294,46 @@ async function handlePut(req, res) {
       safe('syncClosedBoxes', () => syncClosedBoxes(prisma, k, v)),
       safe('syncBoxInspections', async () => { const r = await syncBoxInspections(prisma, k, v); if (r && r.skipped.length) console.warn('box inspections skipped:', r.skipped); }),
       isGovernanceKey(k) ? safe('syncGovernanceKey', () => syncGovernanceKey(prisma, k, v)) : null,
+      // When a salting-oosw record is saved, backfill ooswKg into any dry-cooking entries for the same
+      // job that still have it empty. This keeps the sub-table in sync via syncSubmissionRows so the
+      // parity check stays clean even when OOSW is entered after the dry-cooking form is submitted.
+      k === 'formrecord:salting-oosw' ? safe('backfillDryCookingOosw', async () => {
+        let ooswEntries;
+        try { ooswEntries = JSON.parse(v); } catch { return; }
+        if (!Array.isArray(ooswEntries)) return;
+        // Map jobNo (uppercased) -> numeric totalOoswKg from the most recent submitted entry
+        const ooswByJob = new Map();
+        for (const entry of ooswEntries) {
+          if (!entry || entry.status === 'draft') continue;
+          const vals = entry.values || entry;
+          const jobNo = String(vals.jobNo || '').trim().toUpperCase();
+          const kg = parseFloat(vals.totalOoswKg);
+          if (jobNo && !Number.isNaN(kg)) ooswByJob.set(jobNo, kg);
+        }
+        if (!ooswByJob.size) return;
+        const dcKey = 'formrecord:dry-cooking';
+        const dcRow = await prisma.keyValue.findUnique({ where: { key: dcKey } });
+        if (!dcRow) return;
+        let dcEntries;
+        try { dcEntries = JSON.parse(dcRow.value); } catch { return; }
+        if (!Array.isArray(dcEntries)) return;
+        let changed = 0;
+        for (const entry of dcEntries) {
+          if (!entry) continue;
+          const vals = entry.values || entry;
+          const jobNo = String(vals.jobNo || '').trim().toUpperCase();
+          const kg = ooswByJob.get(jobNo);
+          if (kg == null) continue;
+          if (vals.ooswKg != null && vals.ooswKg !== '') continue; // already filled
+          vals.ooswKg = kg;
+          changed++;
+        }
+        if (!changed) return;
+        const newValue = JSON.stringify(dcEntries);
+        await prisma.keyValue.update({ where: { key: dcKey }, data: { value: newValue } });
+        await syncSubmissionRows(prisma, dcKey, newValue, { incremental: true });
+        console.log(`backfillDryCookingOosw: updated ooswKg on ${changed} dry-cooking entry/entries`);
+      }) : null,
       // Permanent archive (MD/10_Archive-System.md): the entries named by the verification just logged, one file per job.
       // The page logs the verification BEFORE it stamps `verification` onto the entries, so at this moment the rows are
       // still "submitted" -- being named in the log is what makes them verified, and the log event is attached here.
