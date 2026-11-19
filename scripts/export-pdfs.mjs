@@ -76,6 +76,7 @@ const completedJobs = new Set(
 // also has a completed entry for the same job number.
 const PREREQUISITES = {
   'drying-process': ['dried-abalone-transfer'],
+  'dry-monitoring': ['dried-abalone-transfer'],
 };
 
 // Monitoring: group all index entries by (recordKey, submissionMonth) first so we
@@ -91,7 +92,9 @@ for (const e of index) {
 
   const cfg = loadRecordConfig(e.key) || {};
 
-  if (engineOfDef(cfg) === 'log') {
+  // Job-linked: any record with a batchField goes into the job number folder.
+  // Records without a batchField (pure monitoring logs) go to Monitoring.
+  if (!cfg.batchField) {
     // Extract submission month from jsonPath, e.g. "json/completed-records/water-monitoring/2026-11/..."
     const m = e.jsonPath.match(/\/(\d{4}-\d{2})\//);
     if (!m) continue;
