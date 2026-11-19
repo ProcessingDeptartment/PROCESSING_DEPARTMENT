@@ -109,11 +109,22 @@ for (const e of index) {
   if (!jobNo || !dateStr) { jobsSkipped++; continue; }
 
   const recordTitle = safeFile(cfg.title || e.key);
-  // Stable filename: REC 7.4.1_DPR01199.pdf — same name every time so copying overwrites.
+  // Stable filename: REC 7.4.1_Drying Process_DPR01199.pdf
   const stableName = safeFile((cfg.docCode || e.key) + '_' + (cfg.title || e.key) + '_' + jobNo);
 
+  // Route to subfolder by job number prefix:
+  //   CPR* → Canning Jobs/Abagold    3CP* → Canning Jobs/Third party
+  //   DPR* → Drying Jobs/Abagold     3DP* → Drying Jobs/Third party
+  function jobSubdir(jn) {
+    if (/^CPR/i.test(jn)) return path.join('Canning Jobs', 'Abagold');
+    if (/^3CP/i.test(jn)) return path.join('Canning Jobs', 'Third party');
+    if (/^DPR/i.test(jn)) return path.join('Drying Jobs', 'Abagold');
+    if (/^3DP/i.test(jn)) return path.join('Drying Jobs', 'Third party');
+    return jobNo; // unknown prefix: flat (old behaviour)
+  }
+  const jobDir = path.join(EXPORT, jobSubdir(jobNo), jobNo);
+
   // Remove old dated copies (previous format: "Drying Process - 2026-11-07.pdf") on first run.
-  const jobDir = path.join(EXPORT, jobNo);
   if (fs.existsSync(jobDir)) {
     for (const f of fs.readdirSync(jobDir)) {
       if (f.startsWith(recordTitle + ' - ') || f.startsWith(recordTitle + ' (')) {
@@ -125,7 +136,7 @@ for (const e of index) {
   for (const pdfPath of e.pdfPaths) {
     const src = path.join(ARCHIVE, pdfPath);
     if (!fs.existsSync(src)) continue;
-    if (copyPdf(src, path.join(EXPORT, jobNo, stableName + '.pdf'))) jobsCopied++;
+    if (copyPdf(src, path.join(jobDir, stableName + '.pdf'))) jobsCopied++;
   }
 }
 
