@@ -109,9 +109,10 @@ for (const e of index) {
   if (!jobNo || !dateStr) { jobsSkipped++; continue; }
 
   const recordTitle = safeFile(cfg.title || e.key);
+  // Stable filename: REC 7.4.1_DPR01199.pdf — same name every time so copying overwrites.
+  const stableName = safeFile((cfg.docCode || e.key) + '_' + jobNo);
 
-  // Remove any existing PDFs for this record+job before copying the current one,
-  // so stale dated copies left over from the old label format don't accumulate.
+  // Remove old dated copies (previous format: "Drying Process - 2026-11-07.pdf") on first run.
   const jobDir = path.join(EXPORT, jobNo);
   if (fs.existsSync(jobDir)) {
     for (const f of fs.readdirSync(jobDir)) {
@@ -124,10 +125,7 @@ for (const e of index) {
   for (const pdfPath of e.pdfPaths) {
     const src = path.join(ARCHIVE, pdfPath);
     if (!fs.existsSync(src)) continue;
-    // Multiple entries get an entry-id suffix in the basename; keep it.
-    const baseSuffix = path.basename(pdfPath, '.pdf').replace(/^[^_]*_\d{4}-\d{2}-\d{2}/, '').replace(/^_/, '');
-    const filename = recordTitle + (baseSuffix ? ' (' + baseSuffix + ')' : '') + ' - ' + dateStr + '.pdf';
-    if (copyPdf(src, path.join(EXPORT, jobNo, filename))) jobsCopied++;
+    if (copyPdf(src, path.join(EXPORT, jobNo, stableName + '.pdf'))) jobsCopied++;
   }
 }
 
