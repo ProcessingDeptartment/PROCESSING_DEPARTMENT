@@ -40,11 +40,11 @@ for (const { recordKey } of defs) {
   const onDisk = fs.readFileSync(file, 'utf8');
   const out = await assembleRecordConfig(prisma, recordKey);
   if (!out || !out.config) { console.warn('skip', recordKey); skipped++; continue; }
-  // Compared exactly as export-record-defs.mjs writes it, so "differs" means "the export will change this file".
-  if (sha(onDisk) === sha(JSON.stringify(out.config))) { unchanged++; continue; }
 
   let old;
   try { old = JSON.parse(onDisk); } catch { console.warn('skip (snapshot is not valid JSON)', recordKey); skipped++; continue; }
+  // Normalise both sides through JSON.stringify so key-ordering differences don't trigger a false archive.
+  if (sha(JSON.stringify(old)) === sha(JSON.stringify(out.config))) { unchanged++; continue; }
   const hash = sha(onDisk);
   const index = readIndex(root).filter((e) => e.type === 'record-def' && e.key === recordKey);
   if (index.some((e) => e.sha256 === hash)) { unchanged++; continue; }   // this exact version is already archived
