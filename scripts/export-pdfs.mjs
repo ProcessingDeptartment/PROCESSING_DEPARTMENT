@@ -96,18 +96,35 @@ for (const e of index) {
   }
 
   // ── Job-linked record ──────────────────────────────────────────────────────
-  // Job number comes from the label (format: JOBNO_YYYY-MM-DD).
+  // Labels are now just the job number (e.g. "DPR01199"). Old labels had a JOBNO_YYYY-MM-DD
+  // format; support both so old index entries still export correctly.
   const labelMatch = e.label && e.label.match(/^(.+?)_(\d{4}-\d{2}-\d{2})$/);
-  const jobNo = labelMatch ? labelMatch[1] : null;
-  const dateStr = labelMatch ? labelMatch[2] : null;
+  const jobNo = labelMatch ? labelMatch[1] : (e.label || null);
+  // Date: from label suffix (old format), or from the archived data's date field, or archivedAt.
+  let dateStr = labelMatch ? labelMatch[2] : null;
+  if (!dateStr) {
+    const data = readJson(e.jsonPath);
+    dateStr = (data && data.date) || (e.archivedAt ? e.archivedAt.slice(0, 10) : null);
+  }
   if (!jobNo || !dateStr) { jobsSkipped++; continue; }
 
   const recordTitle = safeFile(cfg.title || e.key);
 
+  // Remove any existing PDFs for this record+job before copying the current one,
+  // so stale dated copies left over from the old label format don't accumulate.
+  const jobDir = path.join(EXPORT, jobNo);
+  if (fs.existsSync(jobDir)) {
+    for (const f of fs.readdirSync(jobDir)) {
+      if (f.startsWith(recordTitle + ' - ') || f.startsWith(recordTitle + ' (')) {
+        try { fs.rmSync(path.join(jobDir, f)); } catch {}
+      }
+    }
+  }
+
   for (const pdfPath of e.pdfPaths) {
     const src = path.join(ARCHIVE, pdfPath);
     if (!fs.existsSync(src)) continue;
-    // Multiple entries on the same day get an entry-id suffix in the basename; keep it.
+    // Multiple entries get an entry-id suffix in the basename; keep it.
     const baseSuffix = path.basename(pdfPath, '.pdf').replace(/^[^_]*_\d{4}-\d{2}-\d{2}/, '').replace(/^_/, '');
     const filename = recordTitle + (baseSuffix ? ' (' + baseSuffix + ')' : '') + ' - ' + dateStr + '.pdf';
     if (copyPdf(src, path.join(EXPORT, jobNo, filename))) jobsCopied++;
