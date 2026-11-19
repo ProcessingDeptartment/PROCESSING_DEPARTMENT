@@ -45,14 +45,24 @@ function jobNoOf(entry, recordKey) {
 const isVerified = (e) => !!e && (e.status === 'verified' || !!e.verification);
 
 // Write one group of entries (one job, one day) to the archive, whatever their status. Never throws.
-// date (YYYY-MM-DD, default today) names the page and its month folder; name overrides the page name (default: the
-// job number); meta is kept on the index entry. Returns the index entry or null.
+// date (YYYY-MM-DD, default: first entry's own date) names the page and its month folder; name overrides the page name
+// (default: the job number); meta is kept on the index entry. Returns the index entry or null.
+// For job-based records the label is just the job number (no date suffix) so re-archiving the same job always
+// overwrites the previous file rather than accumulating a new one on each verification.
 function archiveSubmissions(recordKey, entries, { jobNo, name: pageName, date: day, meta, revisions, startDay } = {}) {
   try {
     if (!Array.isArray(entries) || !entries.length) return null;
     const config = (revisions ? configForDay(recordKey, startDay || day, revisions) : null) || loadRecordConfig(recordKey) || {};
     const now = new Date().toISOString();
-    const date = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(day || '') ? day : now.slice(0, 10);
+    // Derive a stable anchor date from the first entry so the month folder stays consistent across re-archives.
+    function stableDateFrom(e) {
+      if (!e) return null;
+      const v = (e.values && typeof e.values === 'object') ? e.values : {};
+      const ts = v.entryDate || e.submittedAt || e.createdAt;
+      return ts ? String(ts).slice(0, 10) : null;
+    }
+    const date = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(day || '') ? day
+      : (stableDateFrom(entries[0]) || now.slice(0, 10));
     // Records with no job number (monitoring logs) are named by their first entry so two same-day verifications stay apart.
     const name = pageName || (jobNo ? String(jobNo) : 'entry-' + String(entries[0].id || '').slice(0, 8));
     const title = [config.docCode, config.title || recordKey].filter(Boolean).join(' — ') + (jobNo ? ' · Job ' + jobNo : '') + ' · ' + date;
@@ -60,7 +70,7 @@ function archiveSubmissions(recordKey, entries, { jobNo, name: pageName, date: d
       type: 'completed-record',
       key: recordKey,
       subdir: date.slice(0, 7),
-      label: name + '_' + date,
+      label: name,   // stable: just the job/entry id, no date suffix — re-archiving overwrites
       title,
       meta,
       data: { recordKey, docCode: config.docCode || null, title: config.title || null, jobNo: jobNo || null, date, archivedAt: now, entries },
