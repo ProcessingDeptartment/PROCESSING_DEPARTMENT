@@ -5581,8 +5581,14 @@ function fallbackDl(canvas,filename){
     if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await mountDocHeader(config);
     renderDocBadge();
-    await load();
-    renderTable();
+    // Lazy-load submissions: only fetch on init when a deep link needs them.
+    // Otherwise load is deferred until the user clicks "View entries", avoiding
+    // a full formrecord fetch on every page open (major network transfer saving).
+    const _deepLinkId = (location.hash || '').replace(/^#/, '').trim() || new URLSearchParams(location.search).get('entry') || '';
+    if (_deepLinkId || config.entryLog || config.boxInspection) {
+      await load();
+      renderTable();
+    }
     refreshVerification();
     loadReferencedIn(config);
     if (config.recordKey) checkCertRevisionBanner(config.recordKey);
@@ -5701,6 +5707,15 @@ function fallbackDl(canvas,filename){
       var open = target.classList.toggle('ml-open');
       target.classList.toggle('fr-open', open);
       btn.textContent = (open ? 'Hide ' : 'View ') + btn.getAttribute('data-label');
+      // Lazy-load the submissions list the first time "View entries" is opened.
+      if (open && btn.getAttribute('data-reveal') === 'fr_submissionsBody') {
+        var wrap = document.getElementById('fr_table');
+        if (wrap && !wrap._listLoaded) {
+          wrap._listLoaded = true;
+          wrap.innerHTML = '<div class="fr-empty">Loading…</div>';
+          load().then(function () { renderTable(); });
+        }
+      }
     });
   }
 
