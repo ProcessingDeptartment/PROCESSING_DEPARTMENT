@@ -4074,23 +4074,11 @@ function fallbackDl(canvas,filename){
       const entriesPanel = `
       <div class="ml-panel no-print jp-gate-exempt">
         <div class="ml-panel-head">
-          <h2>${config.recentEntries && !isDailyLog(config) ? 'Previous ' + Number(config.recentEntries) + ' logs' : esc(blockTitle)}</h2>
+          <h2>${esc(blockTitle)}</h2>
           <span>
-            <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="${ns}_entriesBody" data-label="entries">${config.recentEntries ? 'Hide' : 'View'} entries</button>
+            <a href="../pages/submissions-log.html" class="ml-btn ml-btn-flat ml-btn-sm no-print">View all entries →</a>
             ${inline ? '' : `<button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>`}
           </span>
-        </div>
-        <div class="ml-panel-body ml-collapsible${config.recentEntries ? ' ml-open' : ''}" id="${ns}_entriesBody">
-          <div class="ml-filters">
-            <label>From <input type="date" id="${ns}_filterFrom"></label>
-            <label>To <input type="date" id="${ns}_filterTo"></label>
-            <input type="text" id="${ns}_filterSearch" placeholder="Search entries…">
-            <label><input type="checkbox" id="${ns}_filterDevOnly"> Deviations only</label>
-            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_exportCsvBtn">Export CSV</button>
-            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_exportJsonBtn">Export JSON</button>
-            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_printBtn">Print PDF</button>
-          </div>
-          <div id="${ns}_table" class="ml-table-wrap"></div>
         </div>
       </div>`;
       if (inline) {
