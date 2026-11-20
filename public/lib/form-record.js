@@ -5588,6 +5588,10 @@ function fallbackDl(canvas,filename){
     if (_deepLinkId || config.entryLog || config.boxInspection) {
       await load();
       renderTable();
+    } else {
+      // Expose lazy loader on the table element so the reveal handler (outside this closure) can call it.
+      const _tableWrap = el('fr_table');
+      if (_tableWrap) _tableWrap._lazyLoad = async () => { await load(); renderTable(); };
     }
     refreshVerification();
     loadReferencedIn(config);
@@ -5710,10 +5714,10 @@ function fallbackDl(canvas,filename){
       // Lazy-load the submissions list the first time "View entries" is opened.
       if (open && btn.getAttribute('data-reveal') === 'fr_submissionsBody') {
         var wrap = document.getElementById('fr_table');
-        if (wrap && !wrap._listLoaded) {
+        if (wrap && !wrap._listLoaded && wrap._lazyLoad) {
           wrap._listLoaded = true;
           wrap.innerHTML = '<div class="fr-empty">Loading…</div>';
-          load().then(function () { renderTable(); });
+          wrap._lazyLoad();
         }
       }
     });
