@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -147,11 +147,11 @@
       <span class="block-title">Verifications</span>
       <span class="block-desc">Review and sign off submitted entries waiting for your verification</span>
     </a>
-    <a class="block production admin-only" href="pages/production-dashboard.html" title="Live production floor snapshot" data-page-id="production-dashboard" style="display:none!important">
+    <a class="block production" href="pages/production-dashboard.html" title="Live production floor snapshot" style="display:none">
       <span class="block-title">Dashboards</span>
       <span class="block-desc">Live seam data, line status and quality overview for the production floor</span>
     </a>
-    <div class="block production admin-only" data-page-id="job-progress" style="display:none!important">
+    <div class="block production" style="display:none">
       <span class="block-title">Job Progress report</span>
       <span class="block-desc">Every job and whether it is still open, plus production view and trends</span>
       <div class="block-btns">
@@ -357,7 +357,7 @@
     loadBadge();
   })();
 </script>
-<script src="lib/access-control.js?v=6"></script>
+<script src="lib/access-control.js?v=7"></script>
 <script src="lib/master-index-data.js?v=4"></script>
 <script src="lib/permission-rules.js?v=8"></script>
 <script src="lib/verification-queue.js?v=3"></script>

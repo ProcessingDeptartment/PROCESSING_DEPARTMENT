@@ -1,4 +1,4 @@
-// public/lib/access-control.js  v6
+// public/lib/access-control.js  v7
 // Home-page visibility and within-page access enforcement.
 // Config: { ROLE_KEY: { pageId: 'edit' | 'read' | false } }
 // Before passkey unlock, non-admin users see only the default pages.
@@ -15,7 +15,7 @@
   function safeRemove(key) { try { sessionStorage.removeItem(key); } catch (e) {} }
 
   var _config = null;
-  var _unlocked = safeGet(SESSION_UNLOCK_KEY) === '1';
+  var _unlocked = true; // login IS the unlock now — passkey unlock row removed
   var _unlockedRole = safeGet(SESSION_ROLE_KEY) || null;
 
   // Maps passkey title to role key (must match the server's passkey role map).
