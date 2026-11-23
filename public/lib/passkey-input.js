@@ -6,32 +6,17 @@
 (function () {
   function el(id) { return document.getElementById(id); }
 
-  function updateDots() {
-    const display = document.getElementById('passkey-display');
-    if (!display) return;
-    display.innerHTML = '';
-    const len = currentPasskey.length;
-    const total = 6; // fixed 6-dot row
-    for (let i = 0; i < total; i++) {
-      const dot = document.createElement('span');
-      dot.className = 'passkey-dot' + (i < len ? ' filled' : '');
-      display.appendChild(dot);
-    }
-  }
-
   // Create number pad popup
   function createNumberPad() {
     const html = `
       <div id="passkey-modal-overlay" class="passkey-modal-overlay">
         <div class="passkey-modal">
           <div class="passkey-modal-header">
-            <div class="passkey-header-title" id="passkey-header-title">Enter your passkey</div>
-            <div class="passkey-header-sub" id="passkey-header-sub"></div>
-            <button type="button" class="passkey-close" onclick="PasskeyInput.closeModal()">✕</button>
+            <h3>Enter Your Passkey</h3>
+            <button type="button" class="close" onclick="PasskeyInput.closeModal()">✕</button>
           </div>
           <div class="passkey-modal-body">
-            <div class="passkey-dots" id="passkey-display"></div>
-            <div id="passkey-error" class="passkey-error"></div>
+            <div class="passkey-display" id="passkey-display"></div>
             <div class="passkey-pad">
               <button type="button" class="pad-btn" onclick="PasskeyInput.addDigit('1')">1</button>
               <button type="button" class="pad-btn" onclick="PasskeyInput.addDigit('2')">2</button>
@@ -42,135 +27,128 @@
               <button type="button" class="pad-btn" onclick="PasskeyInput.addDigit('7')">7</button>
               <button type="button" class="pad-btn" onclick="PasskeyInput.addDigit('8')">8</button>
               <button type="button" class="pad-btn" onclick="PasskeyInput.addDigit('9')">9</button>
-              <button type="button" class="pad-btn pad-delete" onclick="PasskeyInput.backspace()">⌫</button>
               <button type="button" class="pad-btn" onclick="PasskeyInput.addDigit('0')">0</button>
-              <button type="button" class="pad-btn pad-confirm" onclick="PasskeyInput.submit()">✓</button>
+              <button type="button" class="pad-btn clear" onclick="PasskeyInput.clear()">Clear</button>
+              <button type="button" class="pad-btn delete" onclick="PasskeyInput.backspace()">← Delete</button>
             </div>
           </div>
+          <div class="passkey-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="PasskeyInput.closeModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="PasskeyInput.submit()">Verify</button>
+          </div>
+          <div id="passkey-error" class="passkey-error"></div>
         </div>
       </div>
     `;
 
+    // Add styles
     const style = document.createElement('style');
     style.textContent = `
       .passkey-modal-overlay {
         display: none;
         position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.55);
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
         z-index: 9999;
         justify-content: center;
         align-items: center;
       }
-      .passkey-modal-overlay.active { display: flex; }
+      .passkey-modal-overlay.active {
+        display: flex;
+      }
       .passkey-modal {
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         width: 90%;
-        max-width: 320px;
-        overflow: hidden;
+        max-width: 400px;
       }
       .passkey-modal-header {
-        background: #1d2b38;
-        color: #f4f1e8;
-        padding: 20px 20px 16px;
-        position: relative;
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
-      .passkey-header-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 2px;
-        font-family: 'Segoe UI', system-ui, sans-serif;
+      .passkey-modal-header h3 {
+        margin: 0;
+        font-size: 18px;
       }
-      .passkey-header-sub {
-        font-size: 12px;
-        color: #b9c3cc;
-        font-family: 'Segoe UI', system-ui, sans-serif;
-      }
-      .passkey-close {
-        position: absolute;
-        top: 12px;
-        right: 14px;
+      .passkey-modal-header .close {
         background: none;
         border: none;
-        font-size: 18px;
+        font-size: 24px;
         cursor: pointer;
-        color: #b9c3cc;
-        line-height: 1;
-        padding: 4px 6px;
-        border-radius: 4px;
+        color: #999;
       }
-      .passkey-close:hover { color: #fff; }
-      .passkey-modal-body { padding: 20px 20px 24px; }
-      .passkey-dots {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 8px;
-        min-height: 20px;
+      .passkey-modal-header .close:hover {
+        color: #333;
       }
-      .passkey-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid #d4d4d8;
-        background: transparent;
-        transition: background 0.1s, border-color 0.1s;
-        flex-shrink: 0;
+      .passkey-modal-body {
+        padding: 20px;
       }
-      .passkey-dot.filled {
-        background: #1a1a1a;
-        border-color: #1a1a1a;
-        animation: passkey-dot-pop 0.15s ease;
-      }
-      @keyframes passkey-dot-pop {
-        0%   { transform: scale(1); }
-        50%  { transform: scale(1.3); }
-        100% { transform: scale(1); }
-      }
-      .passkey-error {
-        color: #dc2626;
-        font-size: 12px;
+      .passkey-display {
         text-align: center;
-        min-height: 18px;
-        margin-bottom: 14px;
-        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 32px;
+        letter-spacing: 8px;
+        font-weight: bold;
+        color: #333;
+        min-height: 50px;
+        margin-bottom: 20px;
+        font-family: monospace;
       }
       .passkey-pad {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
+        margin-bottom: 20px;
       }
       .pad-btn {
-        height: 60px;
-        font-size: 22px;
-        font-weight: 600;
-        color: #1a1a1a;
-        background: #f4f4f5;
-        border: 1px solid #d4d4d8;
-        border-radius: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        padding: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f9f9f9;
         cursor: pointer;
-        transition: background 0.1s, transform 0.08s;
+        transition: all 0.2s;
+      }
+      .pad-btn:hover {
+        background: #e3f2fd;
+        border-color: #2196F3;
+      }
+      .pad-btn:active {
+        background: #2196F3;
+        color: white;
+      }
+      .pad-btn.clear, .pad-btn.delete {
+        grid-column: span 1;
+        background: #ffebee;
+        color: #d32f2f;
+      }
+      .pad-btn.clear:hover, .pad-btn.delete:hover {
+        background: #ffcdd2;
+        border-color: #d32f2f;
+      }
+      .passkey-modal-footer {
+        padding: 20px;
+        border-top: 1px solid #eee;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Segoe UI', system-ui, sans-serif;
+        gap: 10px;
+        justify-content: flex-end;
       }
-      .pad-btn:hover { background: #e4e4e7; }
-      .pad-btn:active { background: #d4d4d8; transform: scale(0.96); }
-      .pad-delete { font-size: 18px; color: #555; }
-      .pad-confirm {
-        background: #2f7a52;
-        border-color: #2f7a52;
-        color: #fff;
+      .passkey-error {
+        color: #d32f2f;
+        font-size: 14px;
+        margin-top: 10px;
       }
-      .pad-confirm:hover { background: #256640; border-color: #256640; }
-      .pad-confirm:active { background: #1d5233; border-color: #1d5233; transform: scale(0.96); }
     `;
     document.head.appendChild(style);
 
+    // Add HTML to body
     const div = document.createElement('div');
     div.innerHTML = html;
     document.body.appendChild(div);
@@ -179,7 +157,6 @@
   let currentPasskey = '';
   let currentFieldId = null;
   let approvalResolve = null;
-  let enrollContext = null; // { deviceId, label, resolve }
 
   // Public API
   window.PasskeyInput = {
@@ -193,27 +170,9 @@
       currentPasskey = '';
       currentFieldId = fieldId;
       approvalResolve = null;
-      enrollContext = null;
-      updateDots();
+      document.getElementById('passkey-display').textContent = '';
       document.getElementById('passkey-error').textContent = '';
       document.getElementById('passkey-modal-overlay').classList.add('active');
-    },
-
-    // Open modal for device enrollment — calls /api/auth/device-enroll, stores key, resolves {displayName, key} or null
-    openForEnroll: function(deviceId, label) {
-      return new Promise(function(resolve) {
-        currentPasskey = '';
-        currentFieldId = null;
-        approvalResolve = null;
-        enrollContext = { deviceId: deviceId || '', label: label || navigator.userAgent, resolve: resolve };
-        const title = document.getElementById('passkey-header-title');
-        if (title) title.textContent = 'Set up this device';
-        const sub = document.getElementById('passkey-header-sub');
-        if (sub) sub.textContent = 'Enter your passkey to register this device';
-        updateDots();
-        document.getElementById('passkey-error').textContent = '';
-        document.getElementById('passkey-modal-overlay').classList.add('active');
-      });
     },
 
     // Open modal for approval — returns a Promise resolving to {displayName, title} or null on cancel
@@ -222,10 +181,9 @@
         currentPasskey = '';
         currentFieldId = null;
         approvalResolve = resolve;
-        enrollContext = null;
-        const title = document.getElementById('passkey-header-title');
-        if (title) title.textContent = promptText || 'Approve change — enter your passkey';
-        updateDots();
+        const header = document.querySelector('.passkey-modal-header h3');
+        if (header) header.textContent = promptText || 'Approve change — enter your passkey';
+        document.getElementById('passkey-display').textContent = '';
         document.getElementById('passkey-error').textContent = '';
         document.getElementById('passkey-modal-overlay').classList.add('active');
       });
@@ -235,7 +193,7 @@
     addDigit: function(digit) {
       if (currentPasskey.length < 8) {
         currentPasskey += digit;
-        updateDots();
+        document.getElementById('passkey-display').textContent = '•'.repeat(currentPasskey.length);
         document.getElementById('passkey-error').textContent = '';
       }
     },
@@ -244,7 +202,7 @@
     backspace: function() {
       if (currentPasskey.length > 0) {
         currentPasskey = currentPasskey.slice(0, -1);
-        updateDots();
+        document.getElementById('passkey-display').textContent = '•'.repeat(currentPasskey.length);
         document.getElementById('passkey-error').textContent = '';
       }
     },
@@ -252,7 +210,7 @@
     // Clear all
     clear: function() {
       currentPasskey = '';
-      updateDots();
+      document.getElementById('passkey-display').textContent = '';
       document.getElementById('passkey-error').textContent = '';
     },
 
@@ -271,31 +229,6 @@
 
         if (!response.ok) {
           document.getElementById('passkey-error').textContent = result.error || 'Passkey not recognized';
-          return;
-        }
-
-        // Enroll-mode: call device-enroll endpoint
-        if (enrollContext) {
-          const ctx = enrollContext;
-          enrollContext = null;
-          try {
-            const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
-            const enrollOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: currentPasskey, deviceId: ctx.deviceId, label: ctx.label }) };
-            const enrollRes = window.FacilityApi ? await window.FacilityApi.fetch('/api/auth/device-enroll', enrollOpts) : await fetch(API_BASE + '/api/auth/device-enroll', enrollOpts);
-            const enrollJson = await enrollRes.json().catch(() => ({}));
-            if (!enrollRes.ok || !enrollJson.ok) {
-              document.getElementById('passkey-error').textContent = enrollJson.error || ('Enrolment failed (' + enrollRes.status + ')');
-              enrollContext = ctx; // restore so closeModal can cancel it
-              enrollContext.resolve = ctx.resolve;
-              return;
-            }
-            if (window.FacilityApi) window.FacilityApi.setKey(enrollJson.key);
-            this.closeModal();
-            ctx.resolve({ displayName: enrollJson.displayName, key: enrollJson.key });
-          } catch (e) {
-            document.getElementById('passkey-error').textContent = 'Could not reach the server: ' + e.message;
-            enrollContext = ctx;
-          }
           return;
         }
 
@@ -353,20 +286,13 @@
       document.getElementById('passkey-modal-overlay').classList.remove('active');
       currentPasskey = '';
       currentFieldId = null;
-      if (enrollContext) {
-        const ctx = enrollContext;
-        enrollContext = null;
-        ctx.resolve(null); // cancelled
-      }
       if (approvalResolve) {
         const cb = approvalResolve;
         approvalResolve = null;
         cb(null); // cancelled
       }
-      const title = document.getElementById('passkey-header-title');
-      if (title) title.textContent = 'Enter your passkey';
-      const sub = document.getElementById('passkey-header-sub');
-      if (sub) sub.textContent = '';
+      const header = document.querySelector('.passkey-modal-header h3');
+      if (header) header.textContent = 'Enter Your Passkey';
     }
   };
 

@@ -7,7 +7,15 @@
   .login-box-header h1 { margin:0 0 4px; font-size:18px; font-weight:600; }
   .login-box-header p { margin:0; font-size:12px; color:#b9c3cc; }
   .login-box-content { padding:32px; }
+  .login-box label { display:block; margin-bottom:16px; }
+  .login-box label .label-text { font-size:12px; font-weight:600; color:#1b2330; margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:0.02em; }
+  .login-box input { width:100%; padding:10px 12px; border:1px solid #d0d5db; border-radius:6px; font-size:14px; font-family:'Segoe UI',system-ui,sans-serif; box-sizing:border-box; }
+  .login-box input:focus { outline:none; border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
   .login-box .error { background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; padding:10px 12px; border-radius:4px; font-size:12px; margin-bottom:16px; }
+  .login-box .user-list { margin:24px 0; padding:16px; background:#f9fafb; border-radius:6px; border:1px solid #e2e8f0; }
+  .login-box .user-list label { margin-bottom:8px; display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; }
+  .login-box .user-list label:last-child { margin-bottom:0; }
+  .login-box .user-list input[type=radio] { margin:0; width:auto; }
   .login-box button { width:100%; padding:12px; background:#1d4ed8; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; margin-top:8px; }
   .login-box button:hover { background:#1d3a9e; }
   .login-box button.login-cancel { background:#fff; color:#1d2b38; border:1px solid #1d2b38; }
@@ -43,57 +51,139 @@
     const box = document.createElement('div');
     box.className = 'login-box';
 
+    const users = window.Auth ? window.Auth.getAvailableUsers() : [];
+
     box.innerHTML = `
       <div class="login-box-header">
         <div>
           <div class="doc-code">PROCESSING</div>
           <h1>Department Records</h1>
         </div>
-        <p style="margin:0; color:#b9c3cc; font-size:12px;">Enter your passkey to sign in</p>
+        <p style="margin:0; color:#b9c3cc; font-size:12px;">Sign in to access records</p>
       </div>
       <div class="login-box-content">
         <div id="loginError" class="error" style="display:none;"></div>
-        <button id="loginPasskeyBtn" type="button">Enter Passkey</button>
-        <button id="loginCancelBtn" type="button" class="login-cancel" style="margin-top:10px;">Cancel</button>
+        <div class="user-list">
+          ${users.map((u, i) => `
+            <label>
+              <input type="radio" name="user" value="${u.username}" data-no-password="${u.noPassword ? '1' : ''}" ${i === 0 ? 'checked' : ''}>
+              <span>${u.displayName}</span>
+            </label>
+          `).join('')}
+        </div>
+        <label id="passwordLabel">
+          <span class="label-text">Password</span>
+          <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
+        </label>
+        <button id="loginBtn">Sign In</button>
+        <div style="display:flex;align-items:center;gap:10px;margin:12px 0 4px;">
+          <hr style="flex:1;border:none;border-top:1px solid #e2e8f0;">
+          <span style="font-size:11px;color:#94a3b8;white-space:nowrap;">or</span>
+          <hr style="flex:1;border:none;border-top:1px solid #e2e8f0;">
+        </div>
+        <button id="loginPasskeyBtn" type="button" style="background:#f8fafc;color:#1d2b38;border:1px solid #d0d5db;">Sign in with passkey</button>
+        <button id="loginCancelBtn" type="button" class="login-cancel">Cancel</button>
       </div>
     `;
 
     modal.appendChild(box);
     document.body.appendChild(modal);
 
+    const loginBtn = modal.querySelector('#loginBtn');
+    const passwordInput = modal.querySelector('#loginPassword');
+    const passwordLabel = modal.querySelector('#passwordLabel');
     const errorDiv = modal.querySelector('#loginError');
+    const userRadios = modal.querySelectorAll('input[name=user]');
 
-    async function doPasskeyLogin() {
-      if (!window.PasskeyInput) {
-        errorDiv.textContent = 'Passkey input not available on this page';
+    function updatePasswordVisibility() {
+      const checked = modal.querySelector('input[name=user]:checked');
+      const needsPassword = checked && checked.dataset.noPassword !== '1';
+      passwordLabel.style.display = needsPassword ? '' : 'none';
+      if (!needsPassword) passwordInput.value = '';
+    }
+
+    userRadios.forEach(r => r.addEventListener('change', updatePasswordVisibility));
+    updatePasswordVisibility();
+
+    async function attemptLogin() {
+      errorDiv.style.display = 'none';
+      const checkedRadio = modal.querySelector('input[name=user]:checked');
+      const selectedUser = checkedRadio ? checkedRadio.value : null;
+      const needsPassword = checkedRadio && checkedRadio.dataset.noPassword !== '1';
+      const password = passwordInput.value;
+      if (!selectedUser) {
+        errorDiv.textContent = 'Please select a user';
         errorDiv.style.display = 'block';
         return;
       }
-      hideLoginModal();
-      const result = await window.PasskeyInput.openForApproval('Enter your passkey to sign in');
-      if (!result) { showLoginModal(); return; }
+      if (needsPassword && !password) {
+        errorDiv.textContent = 'Please enter your password';
+        errorDiv.style.display = 'block';
+        return;
+      }
       if (window.Auth) {
-        const loginResult = window.Auth.loginByPasskeyResult(result);
-        if (loginResult.ok) {
-          document.dispatchEvent(new CustomEvent('authSuccess', { detail: loginResult.user }));
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Signing in…';
+        const result = await window.Auth.login(selectedUser, password);
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign In';
+        if (result.ok) {
+          hideLoginModal();
+          document.dispatchEvent(new CustomEvent('authSuccess', { detail: result.user }));
         } else {
-          showLoginModal();
-          errorDiv.textContent = loginResult.error || 'Sign-in failed';
+          errorDiv.textContent = result.error || 'Login failed';
           errorDiv.style.display = 'block';
+          passwordInput.value = '';
+          if (needsPassword) passwordInput.focus();
         }
       }
     }
 
-    modal.querySelector('#loginPasskeyBtn').addEventListener('click', doPasskeyLogin);
+    loginBtn.addEventListener('click', attemptLogin);
+
+    // Passkey sign-in
+    const passkeyBtn = modal.querySelector('#loginPasskeyBtn');
+    if (passkeyBtn) {
+      passkeyBtn.addEventListener('click', async function () {
+        if (!window.PasskeyInput) {
+          errorDiv.textContent = 'Passkey input not available on this page';
+          errorDiv.style.display = 'block';
+          return;
+        }
+        // Hide the login modal temporarily while the numpad is showing
+        hideLoginModal();
+        const result = await window.PasskeyInput.openForApproval('Enter your passkey to sign in');
+        if (!result) {
+          // Cancelled — reopen login modal
+          showLoginModal();
+          return;
+        }
+        if (window.Auth) {
+          const loginResult = window.Auth.loginByPasskeyResult(result);
+          if (loginResult.ok) {
+            document.dispatchEvent(new CustomEvent('authSuccess', { detail: loginResult.user }));
+          } else {
+            showLoginModal();
+            errorDiv.textContent = loginResult.error || 'Sign-in failed';
+            errorDiv.style.display = 'block';
+          }
+        }
+      });
+    }
+
     modal.querySelector('#loginCancelBtn').addEventListener('click', hideLoginModal);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) hideLoginModal();
+    });
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') attemptLogin();
     });
 
     return modal;
   }
 
-  window.AUTH_GATES_ENABLED = true;
+  // TEMPORARY: sign-in and verification gates switched off. Set to true to re-enable.
+  window.AUTH_GATES_ENABLED = false;
 
   function ensureAuthenticated() {
     if (!window.AUTH_GATES_ENABLED) return Promise.resolve();

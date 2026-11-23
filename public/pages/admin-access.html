@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Page Access â€” Admin</title>
+  <title>User Page Access — Admin</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
@@ -148,21 +148,21 @@
 <div class="brand-bar">
   <div class="brand-inner">
     <img class="brand-logo" src="/assets/abagold-logo.png" alt="Abagold">
-    <a class="back-link" href="/index.html">â† Back to home</a>
+    <a class="back-link" href="/index.html">← Back to home</a>
   </div>
 </div>
 
 <div class="header">
   <div class="header-inner">
     <h1>User Page Access</h1>
-    <p>Administrator â€” control which categories each role can see, and whether they can view only or also edit</p>
+    <p>Administrator — control which categories each role can see, and whether they can view only or also edit</p>
   </div>
 </div>
 
 <div class="container">
 
   <div id="auth-gate" style="display:none;">
-    <p>â›” Administrator access required.</p>
+    <p>⛔ Administrator access required.</p>
   </div>
 
   <div id="main" style="display:none;">
@@ -172,9 +172,9 @@
     </div>
 
     <div class="legend">
-      <div class="legend-item"><div class="legend-swatch ls-none"></div> Hidden â€” not shown to this role</div>
-      <div class="legend-item"><div class="legend-swatch ls-read"></div> View only â€” can see but not save changes</div>
-      <div class="legend-item"><div class="legend-swatch ls-edit"></div> Edit â€” full access</div>
+      <div class="legend-item"><div class="legend-swatch ls-none"></div> Hidden — not shown to this role</div>
+      <div class="legend-item"><div class="legend-swatch ls-read"></div> View only — can see but not save changes</div>
+      <div class="legend-item"><div class="legend-swatch ls-edit"></div> Edit — full access</div>
     </div>
 
     <div class="role-tabs" id="roleTabs"></div>
@@ -195,13 +195,13 @@
 <script src="/lib/data-store.js?v=5"></script>
 <script src="/lib/api-backend.js?v=19"></script>
 <script src="/lib/auth.js?v=7"></script>
-<script src="/lib/login-ui.js?v=8"></script>
-<script src="/lib/passkey-input.js?v=3"></script>
+<script src="/lib/login-ui.js?v=6"></script>
+<script src="/lib/passkey-input.js?v=1"></script>
 <script>
 (function () {
   'use strict';
 
-  // â”€â”€ Page catalogue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Page catalogue ─────────────────────────────────────────────────────────
   const PAGES = [
     // Categories (blocks on the home page)
     { id: 'records',              label: 'Records',              sub: 'Find and open a record to fill in',                        category: 'Categories', authOnly: true },
@@ -216,7 +216,7 @@
     { id: 'fsms-calendar',       label: 'FSMS Calendar',        sub: 'FSMS activity calendar',                                   category: 'Categories', adminOnly: true, parent: 'fsms' },
     { id: 'micro-testing',       label: 'Micro Testing Record', sub: 'Microbiology testing log',                                 category: 'Categories', adminOnly: true, parent: 'fsms' },
     { id: 'verifier-assignments',label: 'Verifier Assignments', sub: 'Who verifies which records',                               category: 'Categories', adminOnly: true, parent: 'fsms' },
-    { id: 'master-record-index', label: 'Master Record Index',  sub: 'REC 01 â€” master index of all records',                    category: 'Categories', authOnly: true,  parent: 'fsms' },
+    { id: 'master-record-index', label: 'Master Record Index',  sub: 'REC 01 — master index of all records',                    category: 'Categories', authOnly: true,  parent: 'fsms' },
     { id: 'verifications',        label: 'Verifications',        sub: 'Review and sign off submitted entries',                    category: 'Categories', authOnly: true },
     { id: 'production-dashboard', label: 'Production Dashboard', sub: 'Live seam data, line status and quality',                 category: 'Categories', adminOnly: true },
     { id: 'job-progress',         label: 'Job Progress report',  sub: 'Job Status + Dashboard buttons',                          category: 'Categories', authOnly: true },
@@ -234,7 +234,7 @@
     { id: 'passkeys',             label: 'Passkeys',             sub: 'Add people and set numeric passkeys',                     category: 'More (admin tools)', adminOnly: true },
     { id: 'verification-preview', label: 'Verification Preview Fields', sub: 'Fields a verifier sees in preview',               category: 'More (admin tools)', adminOnly: true },
     { id: 'authorised-devices',   label: 'Authorised Devices',   sub: 'Devices that have signed in to save records',             category: 'More (admin tools)', adminOnly: true },
-    { id: 'user-access',          label: 'User Page Access',     sub: 'This page â€” control which pages each role can see',       category: 'More (admin tools)', adminOnly: true },
+    { id: 'user-access',          label: 'User Page Access',     sub: 'This page — control which pages each role can see',       category: 'More (admin tools)', adminOnly: true },
   ];
 
   // Roles (excluding ADMINISTRATOR which is always unrestricted)
@@ -270,7 +270,7 @@
   let config = {};      // { ROLE_KEY: { pageId: 'edit'|'read'|false } | null/undefined }
   let activeRole = ROLES[0].key;
 
-  // â”€â”€ Fetch config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Fetch config ───────────────────────────────────────────────────────────
   async function loadConfig() {
     try {
       const res = await window.FacilityApi.fetch('/api/admin/access-control', {
@@ -284,20 +284,20 @@
     }
   }
 
-  // â”€â”€ Is this role in restricted mode? â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Is this role in restricted mode? ──────────────────────────────────────
   // A role is considered "restricted" if its config has at least one non-false value.
   function isRestricted(roleKey) {
     if (!config[roleKey]) return false;
     return Object.values(config[roleKey]).some(v => v && v !== 'none');
   }
 
-  // â”€â”€ Get current access level for a page within a role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Get current access level for a page within a role ─────────────────────
   function getPageAccess(roleKey, pageId) {
     if (!config[roleKey]) return 'none';
     return normalise(config[roleKey][pageId]);
   }
 
-  // â”€â”€ Render role tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Render role tabs ───────────────────────────────────────────────────────
   function renderTabs() {
     const tabs = document.getElementById('roleTabs');
     tabs.innerHTML = '';
@@ -305,8 +305,8 @@
       const restricted = isRestricted(r.key);
       const btn = document.createElement('button');
       btn.className = 'role-tab' + (r.key === activeRole ? ' active' : '');
-      btn.textContent = r.label + (restricted ? ' â—' : '');
-      btn.title = restricted ? 'Restrictions active for this role' : 'No restrictions â€” unrestricted';
+      btn.textContent = r.label + (restricted ? ' ●' : '');
+      btn.title = restricted ? 'Restrictions active for this role' : 'No restrictions — unrestricted';
       btn.addEventListener('click', function () {
         activeRole = r.key;
         renderTabs();
@@ -316,7 +316,7 @@
     });
   }
 
-  // â”€â”€ Render permission panel for the active role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Render permission panel for the active role ────────────────────────────
   function renderPanel() {
     const panel = document.getElementById('rolePanel');
     const roleLabel = (ROLES.find(r => r.key === activeRole) || {}).label || activeRole;
@@ -341,7 +341,7 @@
       </label>
       <span class="sub">${restricted
         ? 'Only pages set to View or Edit will be visible to this role after they unlock with their passkey.'
-        : 'No restrictions â€” this role sees everything it is normally allowed to see after passkey unlock. Tick to configure page-by-page access.'
+        : 'No restrictions — this role sees everything it is normally allowed to see after passkey unlock. Tick to configure page-by-page access.'
       }</span>
     </div>`;
 
@@ -380,7 +380,7 @@
             const cAccess = restricted ? getPageAccess(activeRole, c.id) : 'none';
             html += `<div class="perm-item perm-item-child">
               <div class="perm-item-header">
-                <div class="perm-label">â†³ ${c.label}</div>
+                <div class="perm-label">↳ ${c.label}</div>
                 ${c.sub ? `<div class="perm-sub">${c.sub}</div>` : ''}
               </div>
               <div class="access-seg" data-page-id="${c.id}">
@@ -453,13 +453,13 @@
     });
   }
 
-  // â”€â”€ Save with passkey gate (uses PasskeyInput popup â€” same as delete-submission-modal) â”€â”€
+  // ── Save with passkey gate (uses PasskeyInput popup — same as delete-submission-modal) ──
   document.getElementById('saveBtn').addEventListener('click', async function () {
     const btn = document.getElementById('saveBtn');
     const status = document.getElementById('saveStatus');
     status.textContent = '';
 
-    // 1. Open the passkey numpad popup â€” PasskeyInput handles FacilityApi.fetch + Bearer token
+    // 1. Open the passkey numpad popup — PasskeyInput handles FacilityApi.fetch + Bearer token
     const result = await window.PasskeyInput.openForApproval('Administrator passkey required');
     if (!result) return; // user cancelled
 
@@ -468,14 +468,14 @@
     const titleLow = String(result.title || '').toLowerCase();
     const isAdmin = ADMIN_FRAGMENTS.some(function (f) { return titleLow.includes(f); });
     if (!isAdmin) {
-      status.textContent = 'âœ— ' + (result.displayName || 'That user') + ' (' + (result.title || 'no title') + ') is not authorised for this action';
+      status.textContent = '✗ ' + (result.displayName || 'That user') + ' (' + (result.title || 'no title') + ') is not authorised for this action';
       status.style.color = '#dc2626';
       return;
     }
 
     // 3. Save config
     btn.disabled = true;
-    btn.textContent = 'Savingâ€¦';
+    btn.textContent = 'Saving…';
     try {
       const saveRes = await window.FacilityApi.fetch('/api/admin/access-control', {
         method: 'POST',
@@ -488,13 +488,13 @@
       });
       const saveData = await saveRes.json();
       if (saveData.success) {
-        status.textContent = 'âœ“ Saved';
+        status.textContent = '✓ Saved';
         status.style.color = '#15803d';
       } else {
         throw new Error(saveData.error || 'Save failed');
       }
     } catch (e) {
-      status.textContent = 'âœ— ' + e.message;
+      status.textContent = '✗ ' + e.message;
       status.style.color = '#dc2626';
     } finally {
       btn.disabled = false;
@@ -502,7 +502,7 @@
     }
   });
 
-  // â”€â”€ Auth gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Auth gate ──────────────────────────────────────────────────────────────
   function init() {
     const user = window.Auth && window.Auth.getCurrentUser();
     if (!user || user.role !== 'ADMINISTRATOR') {

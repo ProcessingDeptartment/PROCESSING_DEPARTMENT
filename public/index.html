@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -51,6 +51,8 @@
   tr.auth-only,tr.admin-only{ display:none; }
   body.authenticated.is-admin tr.admin-only{ display:table-row; }
   body.authenticated tr.auth-only{ display:table-row; }
+  .block.admin-only{ display:none; }
+  body.authenticated .block.admin-only{ display:flex; }
   .section-title{ font-size:18px; font-weight:600; color:#1b2330; margin:0 0 12px; }
   .more-title{ margin-top:28px; }
   .block-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
@@ -75,16 +77,9 @@
   body.authenticated .block.auth-only{ display:flex; }
   body.authenticated .more-title.auth-only{ display:block; }
   body.authenticated table.auth-only{ display:table; }
-  /* admin-only: only show to is-admin, not all authenticated */
-  .block.admin-only{ display:none !important; }
-  body.authenticated.is-admin .block.admin-only{ display:flex !important; }
-  .more-title.admin-only, table.admin-only{ display:none; }
-  body.authenticated.is-admin .more-title.admin-only{ display:block; }
-  body.authenticated.is-admin table.admin-only{ display:table; }
-  /* auth-user-only: authenticated non-admin users only */
-  .block.auth-user-only{ display:none; }
-  body.authenticated:not(.is-admin) .block.auth-user-only{ display:flex; }
-.verification-alert-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; }
+  .nc-link{ color:inherit; font-weight:600; text-decoration:none; margin-right:auto; }
+  .nc-badge{ display:inline-block; background:#dc2626; color:#fff; border-radius:20px; padding:0 7px; font-size:11px; font-weight:700; margin-left:4px; }
+  .verification-alert-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; }
   .verification-alert-box{ background:#fff; border-radius:12px; padding:2rem 2.5rem; max-width:420px; width:90%; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,.18); }
   .verification-alert-icon{ font-size:2.5rem; margin-bottom:.5rem; color:#b45309; }
   .verification-alert-title{ font-size:1.3rem; font-weight:700; color:#b45309; margin-bottom:.75rem; }
@@ -96,9 +91,34 @@
   .verification-alert-btn-secondary:hover{ background:#e5e7eb; }
   @media (prefers-color-scheme: dark){ .verification-alert-box{ background:#1f2937; color:#f3f4f6; } .verification-alert-title{ color:#fbbf24; } .verification-alert-body{ color:#e5e7eb; } .verification-alert-btn-secondary{ background:#374151; color:#f3f4f6; border-color:#4b5563; } .verification-alert-btn-secondary:hover{ background:#4b5563; } }
 
+  /* ── Passkey unlock row ─────────────────────────────────────────────────── */
+  #passkeyUnlockRow{
+    max-width:1100px; margin:12px auto 0; padding:0 20px;
+    display:none; /* shown by access-control.js when non-admin is authenticated */
+  }
+  .passkey-unlock-bar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:#fff; border:1px solid #d0d5db; border-left:4px solid #a9763a;
+    border-radius:6px; padding:10px 14px; font-size:13px;
+  }
+  .passkey-unlock-bar span{ color:#5c6771; flex:1; min-width:160px; }
+  .passkey-unlock-input{
+    padding:6px 10px; border:1px solid #d0d5db; border-radius:4px;
+    font-size:13px; width:120px; letter-spacing:2px;
+  }
+  .passkey-unlock-input:focus{ outline:2px solid #a9763a; border-color:#a9763a; }
+  .passkey-unlock-btn{
+    padding:6px 16px; background:#a9763a; color:#fff; border:none;
+    border-radius:4px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .passkey-unlock-btn:hover{ background:#8a5e2a; }
+  .passkey-unlock-btn:disabled{ background:#9ca3af; cursor:default; }
+  #passkeyUnlockError{ font-size:12px; color:#dc2626; }
 </style>
 </head>
 <body>
+<script src="lib/page-nav.js?v=1"></script>
+
 <div class="brand-bar">
   <div class="brand-inner">
     <img class="brand-logo" src="assets/abagold-logo.png" alt="Abagold" width="1608" height="200" decoding="async">
@@ -114,10 +134,20 @@
 </div>
 
 <div class="session-bar">
+  <a class="nc-link" href="pages/nc-log.html">&#9888; NC Log<span class="nc-badge" id="ncBadge" hidden></span></a>
   <span id="sessionUser"></span>
-  <button id="deviceSetupBtn" type="button" style="display:none;">Set Up This Device</button>
-  <button id="loginBtnTop" type="button" style="display:none;">Log In</button>
+  <a id="deviceLink" href="pages/device-signin.html" style="display:none;color:#1d4ed8;font-weight:600;text-decoration:none;">Set up this device</a>
+  <button id="loginBtnTop" type="button" style="display:none;">Log in</button>
   <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
+</div>
+
+<!-- Passkey unlock row — shown for non-admin authenticated users -->
+<div id="passkeyUnlockRow">
+  <div class="passkey-unlock-bar">
+    <span>&#128274; Enter your passkey to access additional pages</span>
+    <button type="button" id="passkeyUnlockBtn" class="passkey-unlock-btn">Enter passkey</button>
+    <span id="passkeyUnlockError"></span>
+  </div>
 </div>
 
 <div class="container">
@@ -129,12 +159,13 @@
   <!-- 24 Hours At a Glance moved to pages/dashboard.html (Job Progress report > Dashboard) -->
 
 
+  <h2 class="section-title">Categories</h2>
   <div class="block-grid">
     <a class="block index auth-only" href="records/record-list.html" title="Find and open a record to fill in" data-page-id="records">
       <span class="block-title">Records</span>
       <span class="block-desc">Find and open a record to fill in</span>
     </a>
-    <a class="block index admin-only" href="pages/fsms.html" title="SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index" data-page-id="fsms">
+    <a class="block index auth-only" href="pages/fsms.html" title="SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index" data-page-id="fsms">
       <span class="block-title">FSMS</span>
       <span class="block-desc">SOPs, Policies, Procedures, PRPs, Specifications, Batch Traceability, Verifier Assignments and the REC 01 Master Record Index</span>
     </a>
@@ -146,7 +177,7 @@
       <span class="block-title">Dashboards</span>
       <span class="block-desc">Live seam data, line status and quality overview for the production floor</span>
     </a>
-    <div class="block production admin-only" data-page-id="job-progress">
+    <div class="block production auth-only" data-page-id="job-progress">
       <span class="block-title">Job Progress report</span>
       <span class="block-desc">Every job and whether it is still open, plus production view and trends</span>
       <div class="block-btns">
@@ -166,18 +197,14 @@
       <span class="block-title">Handovers</span>
       <span class="block-desc">Shift handover reporting &mdash; Production and Quality</span>
     </a>
-    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator â€" enter measurements and get instant pass/fail results" data-page-id="seam-calculator">
+    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator — enter measurements and get instant pass/fail results" data-page-id="seam-calculator">
       <span class="block-title">Seam Calculator</span>
       <span class="block-desc">Double seam quick calculator</span>
     </a>
-    <a class="block index auth-user-only" href="pages/submissions-log.html?tab=print" title="PDF-ready entries â€" verified records ready to print" data-page-id="print-hub">
-      <span class="block-title">Print Hub</span>
-      <span class="block-desc">Verified records ready to print as PDF</span>
-    </a>
   </div>
 
-  <h2 class="section-title more-title admin-only">More</h2>
-  <table class="nav-table admin-only">
+  <h2 class="section-title more-title auth-only">More</h2>
+  <table class="nav-table auth-only">
     <tbody>
       <tr class="index admin-only">
         <td class="document"><a href="pages/specifications.html#field-rules">Field Specifications</a></td>
@@ -217,31 +244,21 @@
 <script src="lib/data-store.js?v=5"></script>
 <script src="lib/api-backend.js?v=18"></script>
 <script src="lib/auth.js?v=8"></script>
-<script src="lib/passkey-input.js?v=3"></script>
-<script src="lib/login-ui.js?v=8"></script>
+<script src="lib/passkey-input.js?v=1"></script>
+<script src="lib/login-ui.js?v=7"></script>
 <script src="lib/nc-login-alert.js?v=2"></script>
 <script>  function refreshSessionBar() {
     var user = window.Auth.getCurrentUser();
     document.getElementById('sessionUser').textContent = user ? (user.displayName + ' (' + user.role + ')') : '';
     document.getElementById('loginBtnTop').style.display = user ? 'none' : '';
-    document.getElementById('deviceSetupBtn').style.display = user ? 'none' : '';
+    document.getElementById('deviceLink').style.display = user ? 'none' : '';
     document.getElementById('logoutBtn').style.display = user ? '' : 'none';
     document.body.classList.toggle('authenticated', !!user);
     document.body.classList.toggle('is-admin', !!user && /ADMIN(ISTRATOR)?$/.test(user.role || ''));
   }
 
-  document.getElementById('loginBtnTop').addEventListener('click', async function () {
-    if (!window.PasskeyInput) { window.LoginUI.showLoginModal(); return; }
-    var result = await window.PasskeyInput.openForApproval('Enter your passkey to sign in');
-    if (!result) return;
-    if (window.Auth) {
-      var loginResult = window.Auth.loginByPasskeyResult(result);
-      if (loginResult.ok) {
-        document.dispatchEvent(new CustomEvent('authSuccess', { detail: loginResult.user }));
-      } else {
-        alert(loginResult.error || 'Sign-in failed');
-      }
-    }
+  document.getElementById('loginBtnTop').addEventListener('click', function () {
+    window.LoginUI.showLoginModal();
   });
 
   document.getElementById('logoutBtn').addEventListener('click', function () {
@@ -252,80 +269,44 @@
   document.addEventListener('authSuccess', refreshSessionBar);
 
   refreshSessionBar();
+
+  // NC Log click guard — show "Login to access" if not authenticated
+  (function () {
+    var ncLink = document.querySelector('.nc-link');
+    if (!ncLink) return;
+    ncLink.addEventListener('click', function (e) {
+      if (window.Auth && window.Auth.isAuthenticated()) return; // allow navigation
+      e.preventDefault();
+      // Show a brief toast instead of looping to nc-log.html
+      var existing = document.getElementById('ncLoginToast');
+      if (existing) { existing.remove(); }
+      var toast = document.createElement('div');
+      toast.id = 'ncLoginToast';
+      toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);'
+        + 'background:#1d2b38;color:#f4f1e8;padding:10px 20px;border-radius:8px;'
+        + 'font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);'
+        + 'white-space:nowrap;';
+      toast.textContent = '🔒 Log in to access NC Log';
+      document.body.appendChild(toast);
+      setTimeout(function () { toast.remove(); }, 2800);
+    });
+  })();
 </script>
 
-<script>  // â"€â"€ Set Up This Device modal â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+<script>  // ── Passkey unlock for non-admin users ─────────────────────────────────────
   (function () {
-    var btn = document.getElementById('deviceSetupBtn');
-    if (!btn) return;
-    function getDeviceId() {
-      try {
-        var id = localStorage.getItem('facility_device_id');
-        if (!id) {
-          id = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
-          localStorage.setItem('facility_device_id', id);
-        }
-        return id;
-      } catch (e) { return ''; }
-    }
+    var btn   = document.getElementById('passkeyUnlockBtn');
+    var errEl = document.getElementById('passkeyUnlockError');
 
-    function showInstructions(onContinue) {
-      var existing = document.getElementById('deviceSetupModal');
-      if (existing) existing.remove();
-      var alreadySetUp = window.FacilityApi && !!window.FacilityApi.getKey();
-      var overlay = document.createElement('div');
-      overlay.id = 'deviceSetupModal';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-      overlay.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;">'
-        + '<div style="background:#1d2b38;color:#f4f1e8;padding:20px 24px;">'
-        + '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#b9c3cc;margin-bottom:4px;">PROCESSING DEPARTMENT</div>'
-        + '<div style="font-size:17px;font-weight:600;">Set Up This Device</div>'
-        + '</div>'
-        + '<div style="padding:24px;font-size:14px;color:#1b2330;line-height:1.6;">'
-        + (alreadySetUp ? '<div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:13px;color:#065f46;font-weight:600;">&#10003; This device is already set up</div>' : '')
-        + '<ol style="margin:0 0 20px;padding-left:20px;">'
-        + '<li style="margin-bottom:10px;">Open <strong>Chrome</strong> on this device.</li>'
-        + '<li style="margin-bottom:10px;">Navigate to <strong>processing-department.onrender.com</strong></li>'
-        + '<li style="margin-bottom:10px;">Bookmark the page &mdash; press <strong>Ctrl+D</strong> (or tap the star).</li>'
-        + '<li>Keep this tab open during your shift.</li>'
-        + '</ol>'
-        + '<button id="deviceSetupContinue" type="button" style="width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:8px;">'
-        + (alreadySetUp ? 'Register again with passkey' : 'Continue &mdash; enter passkey')
-        + '</button>'
-        + '<button id="deviceSetupDismiss" type="button" style="width:100%;padding:9px;background:#f4f5f3;color:#1b2330;border:1px solid #d0d5db;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">Dismiss</button>'
-        + '</div></div>';
-      document.body.appendChild(overlay);
-      overlay.querySelector('#deviceSetupContinue').addEventListener('click', function () {
-        overlay.remove();
-        onContinue();
-      });
-      overlay.querySelector('#deviceSetupDismiss').addEventListener('click', function () { overlay.remove(); });
-      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
-    }
-
-    function showResult(message, success) {
-      var overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-      overlay.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;">'
-        + '<div style="background:' + (success ? '#2f7a52' : '#a3352d') + ';color:#fff;padding:18px 24px;font-size:16px;font-weight:600;">'
-        + (success ? '&#10003; Device registered' : '&#9888; Setup failed')
-        + '</div>'
-        + '<div style="padding:20px 24px;font-size:14px;color:#1b2330;">'
-        + message
-        + '<br><br><button id="deviceResultClose" type="button" style="width:100%;padding:10px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">OK</button>'
-        + '</div></div>';
-      document.body.appendChild(overlay);
-      overlay.querySelector('#deviceResultClose').addEventListener('click', function () { overlay.remove(); });
-      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
-    }
-
-    btn.addEventListener('click', function () {
-      showInstructions(async function () {
-        if (!window.PasskeyInput) { showResult('Passkey input not available on this page.', false); return; }
-        var result = await window.PasskeyInput.openForEnroll(getDeviceId(), navigator.userAgent);
-        if (!result) return;
-        showResult('Signed in as <strong>' + result.displayName + '</strong>. This device is now set up and can save records.', true);
-      });
+    btn.addEventListener('click', async function () {
+      errEl.textContent = '';
+      if (!window.PasskeyInput) { errEl.textContent = 'Passkey input not ready'; return; }
+      var result = await window.PasskeyInput.openForApproval('Enter your passkey to unlock pages');
+      if (!result) return; // cancelled
+      // Tell access-control.js to show pages for the passkey's role
+      if (window.AccessControl) {
+        window.AccessControl.unlockForSession(result.title || null);
+      }
     });
   })();
 </script>
@@ -344,16 +325,16 @@
         if (!res.ok) return;
         var s = await res.json(), parts = [];
         if (s.pending > 0) parts.push('&#128247; ' + s.pending + ' photo' + (s.pending === 1 ? '' : 's') + ' not yet archived to local server.');
-        if (s.failed > 0) parts.push('&#9888; ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped â€" check the agent log.');
+        if (s.failed > 0) parts.push('&#9888; ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped — check the agent log.');
         if (!parts.length) { el.hidden = true; clearInterval(timer); timer = null; return; }
         var html = parts.join('<br>');
         if (s.pending > 0 && isAdmin()) {
           var online = s.agentSeenAt && (Date.now() - new Date(s.agentSeenAt)) < 2 * 60000;
           html += '<div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:400;font-size:13px;">'
             + (s.requestedAt
-                ? '<span>&#128247; Archive requested â€" waiting for the file serverâ€¦</span>'
+                ? '<span>&#128247; Archive requested — waiting for the file server…</span>'
                 : '<button type="button" id="archiveNowBtn" style="padding:6px 14px;border-radius:6px;border:1px solid #b7791f;background:#b7791f;color:#fff;font-weight:600;cursor:pointer;">Archive now</button>')
-            + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' â€" is it running?') + '</span></div>';
+            + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' — is it running?') + '</span></div>';
         }
         el.innerHTML = html; el.hidden = false;
         var archBtn = document.getElementById('archiveNowBtn');
@@ -362,7 +343,7 @@
       } catch (e) {}
     }
     async function requestArchive() {
-      var archBtn = document.getElementById('archiveNowBtn'); if (archBtn) { archBtn.disabled = true; archBtn.textContent = 'Requestingâ€¦'; }
+      var archBtn = document.getElementById('archiveNowBtn'); if (archBtn) { archBtn.disabled = true; archBtn.textContent = 'Requesting…'; }
       try {
         var res = await window.FacilityApi.fetch('/api/images/archive-request', { method: 'POST' });
         if (!res.ok) throw new Error((await res.json().catch(function () { return {}; })).error || ('HTTP ' + res.status));
@@ -372,6 +353,18 @@
     document.addEventListener('authSuccess', load);
     document.getElementById('logoutBtn').addEventListener('click', function () { setTimeout(load, 0); });
     load();
+  })();
+</script>
+<script>  // NC badge on the NC Log link (the 24-hour tiles now live on pages/dashboard.html)
+  (function () {
+    var badge = document.getElementById('ncBadge');
+    async function loadBadge() {
+      try {
+        var res = await window.FacilityApi.fetch('/api/nc/count-open', { cache: 'no-store' });
+        if (res.ok) { var n = (await res.json()).openNCs; badge.textContent = n; badge.hidden = !(n > 0); }
+      } catch (e) {  }
+    }
+    loadBadge();
   })();
 </script>
 

@@ -5548,7 +5548,7 @@ function fallbackDl(canvas,filename){
     if (window.NcRaise && config.ncThresholds) window.NcRaise.wireInline(el('fr_modalSections'), liveThresholds(), f => 'fr_f_' + f);
     if (window.SpecGate) window.SpecGate.wire(el('fr_modalSections'), specMap);
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
-    el('fr_exportJsonBtn')?.addEventListener('click', exportJson);
+    el('fr_exportJsonBtn').addEventListener('click', exportJson);
     el('fr_printBtn').addEventListener('click', printPdf);
     const instrToggle = el('fr_instrToggle');
     if (instrToggle) {
