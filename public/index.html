@@ -221,7 +221,7 @@
 <script src="lib/data-store.js?v=5"></script>
 <script src="lib/api-backend.js?v=18"></script>
 <script src="lib/auth.js?v=8"></script>
-<script src="lib/passkey-input.js?v=2"></script>
+<script src="lib/passkey-input.js?v=3"></script>
 <script src="lib/login-ui.js?v=8"></script>
 <script src="lib/nc-login-alert.js?v=2"></script>
 <script>  function refreshSessionBar() {
@@ -262,29 +262,74 @@
   (function () {
     var btn = document.getElementById('deviceSetupBtn');
     if (!btn) return;
-    btn.addEventListener('click', function () {
+    function getDeviceId() {
+      try {
+        var id = localStorage.getItem('facility_device_id');
+        if (!id) {
+          id = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
+          localStorage.setItem('facility_device_id', id);
+        }
+        return id;
+      } catch (e) { return ''; }
+    }
+
+    function showInstructions(onContinue) {
       var existing = document.getElementById('deviceSetupModal');
-      if (existing) { existing.style.display = 'flex'; return; }
+      if (existing) existing.remove();
+      var alreadySetUp = window.FacilityApi && !!window.FacilityApi.getKey();
       var overlay = document.createElement('div');
       overlay.id = 'deviceSetupModal';
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-      overlay.innerHTML = '<div style="background:#fff;border-radius:10px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;">'
-        + '<div style="background:#1d2b38;color:#f4f1e8;padding:20px 28px;">'
-        + '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#b9c3cc;margin-bottom:4px;">PROCESSING DEPARTMENT</div>'
-        + '<h2 style="margin:0;font-size:17px;font-weight:600;">Set Up This Device</h2>'
+      overlay.innerHTML = '<div style=”background:#fff;border-radius:16px;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;”>'
+        + '<div style=”background:#1d2b38;color:#f4f1e8;padding:20px 24px;”>'
+        + '<div style=”font-size:11px;font-weight:700;letter-spacing:.06em;color:#b9c3cc;margin-bottom:4px;”>PROCESSING DEPARTMENT</div>'
+        + '<div style=”font-size:17px;font-weight:600;”>Set Up This Device</div>'
         + '</div>'
-        + '<div style="padding:28px;font-size:14px;color:#1b2330;line-height:1.6;">'
-        + '<ol style="margin:0 0 20px;padding-left:20px;">'
-        + '<li style="margin-bottom:10px;">Open <strong>Chrome</strong> on this device.</li>'
-        + '<li style="margin-bottom:10px;">Navigate to <strong>processing-department.onrender.com</strong></li>'
-        + '<li style="margin-bottom:10px;">Bookmark the page â€” press <strong>Ctrl+D</strong> (or tap the star in the address bar).</li>'
+        + '<div style=”padding:24px;font-size:14px;color:#1b2330;line-height:1.6;”>'
+        + (alreadySetUp ? '<div style=”background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:13px;color:#065f46;font-weight:600;”>&#10003; This device is already set up</div>' : '')
+        + '<ol style=”margin:0 0 20px;padding-left:20px;”>'
+        + '<li style=”margin-bottom:10px;”>Open <strong>Chrome</strong> on this device.</li>'
+        + '<li style=”margin-bottom:10px;”>Navigate to <strong>processing-department.onrender.com</strong></li>'
+        + '<li style=”margin-bottom:10px;”>Bookmark the page &mdash; press <strong>Ctrl+D</strong> (or tap the star).</li>'
         + '<li>Keep this tab open during your shift.</li>'
         + '</ol>'
-        + '<button id="deviceSetupClose" type="button" style="width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer;">Done</button>'
+        + '<button id=”deviceSetupContinue” type=”button” style=”width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:8px;”>'
+        + (alreadySetUp ? 'Register again with passkey' : 'Continue &mdash; enter passkey')
+        + '</button>'
+        + '<button id=”deviceSetupDismiss” type=”button” style=”width:100%;padding:9px;background:#f4f5f3;color:#1b2330;border:1px solid #d0d5db;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;”>Dismiss</button>'
         + '</div></div>';
       document.body.appendChild(overlay);
-      document.getElementById('deviceSetupClose').addEventListener('click', function () { overlay.style.display = 'none'; });
-      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.style.display = 'none'; });
+      document.getElementById('deviceSetupContinue').addEventListener('click', function () {
+        overlay.remove();
+        onContinue();
+      });
+      document.getElementById('deviceSetupDismiss').addEventListener('click', function () { overlay.remove(); });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+    }
+
+    function showResult(message, success) {
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML = '<div style=”background:#fff;border-radius:16px;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;”>'
+        + '<div style=”background:' + (success ? '#2f7a52' : '#a3352d') + ';color:#fff;padding:18px 24px;font-size:16px;font-weight:600;”>'
+        + (success ? '&#10003; Device registered' : '&#9888; Setup failed')
+        + '</div>'
+        + '<div style=”padding:20px 24px;font-size:14px;color:#1b2330;”>'
+        + message
+        + '<br><br><button id=”deviceResultClose” type=”button” style=”width:100%;padding:10px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;”>OK</button>'
+        + '</div></div>';
+      document.body.appendChild(overlay);
+      document.getElementById('deviceResultClose').addEventListener('click', function () { overlay.remove(); });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+    }
+
+    btn.addEventListener('click', function () {
+      showInstructions(async function () {
+        if (!window.PasskeyInput) { showResult('Passkey input not available on this page.', false); return; }
+        var result = await window.PasskeyInput.openForEnroll(getDeviceId(), navigator.userAgent);
+        if (!result) return;
+        showResult('Signed in as <strong>' + result.displayName + '</strong>. This device is now set up and can save records.', true);
+      });
     });
   })();
 </script>

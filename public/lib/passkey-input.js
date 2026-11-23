@@ -179,6 +179,7 @@
   let currentPasskey = '';
   let currentFieldId = null;
   let approvalResolve = null;
+  let enrollContext = null; // { deviceId, label, resolve }
 
   // Public API
   window.PasskeyInput = {
@@ -192,9 +193,27 @@
       currentPasskey = '';
       currentFieldId = fieldId;
       approvalResolve = null;
+      enrollContext = null;
       updateDots();
       document.getElementById('passkey-error').textContent = '';
       document.getElementById('passkey-modal-overlay').classList.add('active');
+    },
+
+    // Open modal for device enrollment — calls /api/auth/device-enroll, stores key, resolves {displayName, key} or null
+    openForEnroll: function(deviceId, label) {
+      return new Promise(function(resolve) {
+        currentPasskey = '';
+        currentFieldId = null;
+        approvalResolve = null;
+        enrollContext = { deviceId: deviceId || '', label: label || navigator.userAgent, resolve: resolve };
+        const title = document.getElementById('passkey-header-title');
+        if (title) title.textContent = 'Set up this device';
+        const sub = document.getElementById('passkey-header-sub');
+        if (sub) sub.textContent = 'Enter your passkey to register this device';
+        updateDots();
+        document.getElementById('passkey-error').textContent = '';
+        document.getElementById('passkey-modal-overlay').classList.add('active');
+      });
     },
 
     // Open modal for approval — returns a Promise resolving to {displayName, title} or null on cancel
@@ -203,6 +222,7 @@
         currentPasskey = '';
         currentFieldId = null;
         approvalResolve = resolve;
+        enrollContext = null;
         const title = document.getElementById('passkey-header-title');
         if (title) title.textContent = promptText || 'Approve change — enter your passkey';
         updateDots();
@@ -251,6 +271,31 @@
 
         if (!response.ok) {
           document.getElementById('passkey-error').textContent = result.error || 'Passkey not recognized';
+          return;
+        }
+
+        // Enroll-mode: call device-enroll endpoint
+        if (enrollContext) {
+          const ctx = enrollContext;
+          enrollContext = null;
+          try {
+            const API_BASE = window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com';
+            const enrollOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passkey: currentPasskey, deviceId: ctx.deviceId, label: ctx.label }) };
+            const enrollRes = window.FacilityApi ? await window.FacilityApi.fetch('/api/auth/device-enroll', enrollOpts) : await fetch(API_BASE + '/api/auth/device-enroll', enrollOpts);
+            const enrollJson = await enrollRes.json().catch(() => ({}));
+            if (!enrollRes.ok || !enrollJson.ok) {
+              document.getElementById('passkey-error').textContent = enrollJson.error || ('Enrolment failed (' + enrollRes.status + ')');
+              enrollContext = ctx; // restore so closeModal can cancel it
+              enrollContext.resolve = ctx.resolve;
+              return;
+            }
+            if (window.FacilityApi) window.FacilityApi.setKey(enrollJson.key);
+            this.closeModal();
+            ctx.resolve({ displayName: enrollJson.displayName, key: enrollJson.key });
+          } catch (e) {
+            document.getElementById('passkey-error').textContent = 'Could not reach the server: ' + e.message;
+            enrollContext = ctx;
+          }
           return;
         }
 
@@ -308,6 +353,11 @@
       document.getElementById('passkey-modal-overlay').classList.remove('active');
       currentPasskey = '';
       currentFieldId = null;
+      if (enrollContext) {
+        const ctx = enrollContext;
+        enrollContext = null;
+        ctx.resolve(null); // cancelled
+      }
       if (approvalResolve) {
         const cb = approvalResolve;
         approvalResolve = null;
@@ -315,6 +365,8 @@
       }
       const title = document.getElementById('passkey-header-title');
       if (title) title.textContent = 'Enter your passkey';
+      const sub = document.getElementById('passkey-header-sub');
+      if (sub) sub.textContent = '';
     }
   };
 
