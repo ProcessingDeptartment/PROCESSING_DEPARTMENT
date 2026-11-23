@@ -299,11 +299,11 @@
         + '<button id=”deviceSetupDismiss” type=”button” style=”width:100%;padding:9px;background:#f4f5f3;color:#1b2330;border:1px solid #d0d5db;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;”>Dismiss</button>'
         + '</div></div>';
       document.body.appendChild(overlay);
-      document.getElementById('deviceSetupContinue').addEventListener('click', function () {
+      overlay.querySelector('#deviceSetupContinue').addEventListener('click', function () {
         overlay.remove();
         onContinue();
       });
-      document.getElementById('deviceSetupDismiss').addEventListener('click', function () { overlay.remove(); });
+      overlay.querySelector('#deviceSetupDismiss').addEventListener('click', function () { overlay.remove(); });
       overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
     }
 
@@ -319,7 +319,7 @@
         + '<br><br><button id=”deviceResultClose” type=”button” style=”width:100%;padding:10px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;”>OK</button>'
         + '</div></div>';
       document.body.appendChild(overlay);
-      document.getElementById('deviceResultClose').addEventListener('click', function () { overlay.remove(); });
+      overlay.querySelector('#deviceResultClose').addEventListener('click', function () { overlay.remove(); });
       overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
     }
 
