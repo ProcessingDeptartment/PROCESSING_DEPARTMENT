@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -77,7 +77,7 @@
     <div class="panel no-print">
       <div class="toolbar">
         <span class="muted">Job no.</span>
-        <span class="jobno" id="jobLabel" style="font-size:16px;">—</span>
+        <span class="jobno" id="jobLabel" style="font-size:16px;">â€”</span>
         <button class="btn btn-flat" id="refreshBtn">Refresh</button>
         <span class="grow"></span>
         <button class="btn btn-flat" id="csvBtn">Export CSV</button>
@@ -94,14 +94,14 @@
 <script src="../lib/job-status.js?v=2"></script>
 <script src="../lib/api-backend.js?v=19"></script>
 <script src="../lib/auth.js?v=7"></script>
-<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/login-ui.js?v=8"></script>
 <script src="../lib/nc-login-alert.js?v=2"></script>
 <script>(function () {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
-  const fmt = (n, d) => (n == null ? '—' : n.toFixed(d == null ? 2 : d));
+  const fmt = (n, d) => (n == null ? 'â€”' : n.toFixed(d == null ? 2 : d));
 
   let CACHE = {};
 
@@ -169,14 +169,14 @@
   const submitted = (subs) => subs.filter((s) => s.status !== 'draft');
 
   const SIZE_GRADES = [
-    ['under8g', 'Under 8g'], ['g8to10', '8g–10g'], ['g11to13', '11g–13g'], ['g14to16', '14g–16g'],
-    ['g17to20', '17g–20g'], ['g21to23', '21g–23g'], ['g24to25', '24g–25g'], ['g26to28', '26g–28g'],
-    ['g29to31', '29g–31g'], ['g32to35', '32g–35g'], ['g36to39', '36g–39g'], ['g40to44', '40g–44g'],
-    ['g45to50', '45g–50g'], ['g51to55', '51g–55g'], ['g56to60', '56g–60g'], ['g60plus', '60g+']
+    ['under8g', 'Under 8g'], ['g8to10', '8gâ€“10g'], ['g11to13', '11gâ€“13g'], ['g14to16', '14gâ€“16g'],
+    ['g17to20', '17gâ€“20g'], ['g21to23', '21gâ€“23g'], ['g24to25', '24gâ€“25g'], ['g26to28', '26gâ€“28g'],
+    ['g29to31', '29gâ€“31g'], ['g32to35', '32gâ€“35g'], ['g36to39', '36gâ€“39g'], ['g40to44', '40gâ€“44g'],
+    ['g45to50', '45gâ€“50g'], ['g51to55', '51gâ€“55g'], ['g56to60', '56gâ€“60g'], ['g60plus', '60g+']
   ];
   const SIZE_GRADES_RANCHED = [
-    ['under50g', 'Under 50g'], ['g51to80', '51g–80g'], ['g81to100', '81g–100g'], ['g101to150', '101g–150g'],
-    ['g151to200', '151g–200g'], ['g200plus', '200g+'], ['darkUnder100g', 'Dark under 100g'], ['dark100gPlus', 'Dark 100g+']
+    ['under50g', 'Under 50g'], ['g51to80', '51gâ€“80g'], ['g81to100', '81gâ€“100g'], ['g101to150', '101gâ€“150g'],
+    ['g151to200', '151gâ€“200g'], ['g200plus', '200g+'], ['darkUnder100g', 'Dark under 100g'], ['dark100gPlus', 'Dark 100g+']
   ];
 
   async function loadAll() {
@@ -292,7 +292,7 @@
       gs.total = total != null ? total : ((gs.rows.reduce((a, r) => a + (r.weight || 0), 0) + (gs.bGrade || 0)) || null);
     });
 
-    // REC 7.4.6 Dry Stock Control — latest submitted stage for this job
+    // REC 7.4.6 Dry Stock Control â€” latest submitted stage for this job
     const dryStockForJob = submitted(forJob(CACHE.dryStock || [], jobNo));
     // stages are separate submissions; merge values across all stages (later stages overwrite earlier)
     const dryStockValues = Object.assign({}, ...dryStockForJob.map(e => e.values || {}));
@@ -329,9 +329,9 @@
       </div>
 
       <dl class="kv" style="margin-bottom:6px;">
-        <dt>Drying process for</dt><dd>${esc(h.toBeProcessedFor || '—')}</dd>
-        <dt>Received from</dt><dd>${esc(h.receivedFrom || '—')}</dd>
-        <dt>Receiving date</dt><dd>${esc(h.receivingDate || '—')}</dd>
+        <dt>Drying process for</dt><dd>${esc(h.toBeProcessedFor || 'â€”')}</dd>
+        <dt>Received from</dt><dd>${esc(h.receivedFrom || 'â€”')}</dd>
+        <dt>Receiving date</dt><dd>${esc(h.receivingDate || 'â€”')}</dd>
       </dl>
 
       <h2 class="sec">Yield summary</h2>
@@ -339,35 +339,35 @@
         <thead><tr><th>Measure</th><th class="num">Value</th></tr></thead>
         <tbody>
           <tr><td>Whole weight (in)</td><td class="num">${fmt(rep.wholeWeight)} kg</td></tr>
-          <tr><td>Cooked weight (REC 7.4.0)</td><td class="num">${rep.cookedWeight == null ? '— <span class="muted">No cooking weight found — enter REC 7.4.0</span>' : fmt(rep.cookedWeight) + ' kg'}</td></tr>
-          <tr><td>OOSW weight (REC 7.1.5${rep.ooswSource === '7.4.0' ? ' — fallback from REC 7.4.0' : ''})</td><td class="num">${rep.ooswKg == null ? '— <span class="muted">No OOSW record found (REC 7.1.5 or REC 7.4.0)</span>' : fmt(rep.ooswKg) + ' kg'}</td></tr>
-          <tr><td>No. of trolleys</td><td class="num">${rep.trolleys == null ? '—' : rep.trolleys}</td></tr>
+          <tr><td>Cooked weight (REC 7.4.0)</td><td class="num">${rep.cookedWeight == null ? 'â€” <span class="muted">No cooking weight found â€” enter REC 7.4.0</span>' : fmt(rep.cookedWeight) + ' kg'}</td></tr>
+          <tr><td>OOSW weight (REC 7.1.5${rep.ooswSource === '7.4.0' ? ' â€” fallback from REC 7.4.0' : ''})</td><td class="num">${rep.ooswKg == null ? 'â€” <span class="muted">No OOSW record found (REC 7.1.5 or REC 7.4.0)</span>' : fmt(rep.ooswKg) + ' kg'}</td></tr>
+          <tr><td>No. of trolleys</td><td class="num">${rep.trolleys == null ? 'â€”' : rep.trolleys}</td></tr>
           <tr><td>Actual dried weight${esc(rep.driedSource)}</td><td class="num">${fmt(rep.driedWeight)} kg</td></tr>
           <tr><td>Drying loss (cooked to dried)</td><td class="num">${fmt(rep.dryingLoss)} %</td></tr>
           <tr class="total"><td>Actual yield</td><td class="num statbig">${fmt(rep.actualYield)} %</td></tr>
         </tbody>
       </table>
-      <div class="muted" style="margin-top:4px;">Yield = dried weight ÷ whole weight × 100. Dried weight and grading come from REC 7.4.3.1 / 7.4.3.2; an old REC 7.4.1 dry weight is used only when there is no grading record and is marked (old).</div>
+      <div class="muted" style="margin-top:4px;">Yield = dried weight Ã· whole weight Ã— 100. Dried weight and grading come from REC 7.4.3.1 / 7.4.3.2; an old REC 7.4.1 dry weight is used only when there is no grading record and is marked (old).</div>
 
       <h2 class="sec">Dry Stock Control (REC 7.4.6)</h2>
       ${rep.dryStock.stageCount === 0 ? `<div class="warn no-print">No REC 7.4.6 Dry Stock Control submitted for this job.</div>` : `
       <table>
         <thead><tr><th>Field</th><th class="num">Value</th></tr></thead>
         <tbody>
-          <tr><td>Weight in (from REC 7.4.0)</td><td class="num">${rep.dryStock.values.weightIn != null ? fmt(num(rep.dryStock.values.weightIn)) + ' kg' : '—'}</td></tr>
-          <tr><td>Date in</td><td class="num">${esc(rep.dryStock.values.dateIn || '—')}</td></tr>
-          <tr><td>Count in — factory</td><td class="num">${rep.dryStock.values.countInFactory != null ? rep.dryStock.values.countInFactory : '—'}</td></tr>
-          <tr><td>Count in — finance</td><td class="num">${rep.dryStock.values.countInFinance != null ? rep.dryStock.values.countInFinance : '—'}</td></tr>
-          <tr><td>Weight out (entered)</td><td class="num">${rep.dryStock.weightOut != null ? fmt(rep.dryStock.weightOut) + ' kg' : '—'}</td></tr>
-          <tr><td>REC 7.4.10 transfer weight</td><td class="num">${rep.dryStock.weight7410 != null ? fmt(rep.dryStock.weight7410) + ' kg' : '—'}</td></tr>
+          <tr><td>Weight in (from REC 7.4.0)</td><td class="num">${rep.dryStock.values.weightIn != null ? fmt(num(rep.dryStock.values.weightIn)) + ' kg' : 'â€”'}</td></tr>
+          <tr><td>Date in</td><td class="num">${esc(rep.dryStock.values.dateIn || 'â€”')}</td></tr>
+          <tr><td>Count in â€” factory</td><td class="num">${rep.dryStock.values.countInFactory != null ? rep.dryStock.values.countInFactory : 'â€”'}</td></tr>
+          <tr><td>Count in â€” finance</td><td class="num">${rep.dryStock.values.countInFinance != null ? rep.dryStock.values.countInFinance : 'â€”'}</td></tr>
+          <tr><td>Weight out (entered)</td><td class="num">${rep.dryStock.weightOut != null ? fmt(rep.dryStock.weightOut) + ' kg' : 'â€”'}</td></tr>
+          <tr><td>REC 7.4.10 transfer weight</td><td class="num">${rep.dryStock.weight7410 != null ? fmt(rep.dryStock.weight7410) + ' kg' : 'â€”'}</td></tr>
           <tr style="${rep.dryStock.variance != null && Math.abs(rep.dryStock.variance) > 0.001 ? 'color:#8a5a10;font-weight:700;' : ''}">
             <td>Variance (weight out - REC 7.4.10)</td>
-            <td class="num">${rep.dryStock.variance != null ? fmt(rep.dryStock.variance) + ' kg' : '—'}</td>
+            <td class="num">${rep.dryStock.variance != null ? fmt(rep.dryStock.variance) + ' kg' : 'â€”'}</td>
           </tr>
           ${rep.dryStock.values.weightVarianceReason ? `<tr><td>Variance explanation</td><td>${esc(rep.dryStock.values.weightVarianceReason)}</td></tr>` : ''}
-          <tr><td>Date out</td><td class="num">${esc(rep.dryStock.values.dateOut || '—')}</td></tr>
-          <tr><td>Count out — factory</td><td class="num">${rep.dryStock.values.countOutFactory != null ? rep.dryStock.values.countOutFactory : '—'}</td></tr>
-          <tr><td>Count out — finance</td><td class="num">${rep.dryStock.values.countOutFinance != null ? rep.dryStock.values.countOutFinance : '—'}</td></tr>
+          <tr><td>Date out</td><td class="num">${esc(rep.dryStock.values.dateOut || 'â€”')}</td></tr>
+          <tr><td>Count out â€” factory</td><td class="num">${rep.dryStock.values.countOutFactory != null ? rep.dryStock.values.countOutFactory : 'â€”'}</td></tr>
+          <tr><td>Count out â€” finance</td><td class="num">${rep.dryStock.values.countOutFinance != null ? rep.dryStock.values.countOutFinance : 'â€”'}</td></tr>
         </tbody>
       </table>
       ${rep.dryStock.variance != null && Math.abs(rep.dryStock.variance) > 0.001 && !rep.dryStock.values.weightVarianceReason ? `<div class="warn">Weight out differs from REC 7.4.10 by ${fmt(Math.abs(rep.dryStock.variance))} kg. No variance explanation recorded.</div>` : ''}`}
@@ -380,17 +380,17 @@
         </tr></thead>
         <tbody>
           ${rep.harvest.length ? rep.harvest.map((r) => `<tr>
-            <td>${esc(r.date || '—')}</td>
-            <td>${esc(r.sizeRange || '—')}</td>
+            <td>${esc(r.date || 'â€”')}</td>
+            <td>${esc(r.sizeRange || 'â€”')}</td>
             <td class="num">${fmt(r.mass, 3)}</td>
-            <td class="num">${r.animals == null ? '—' : r.animals}</td>
-            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : '—'}</td>
+            <td class="num">${r.animals == null ? 'â€”' : r.animals}</td>
+            <td class="num">${(r.mass != null && r.animals) ? (r.mass / r.animals * 1000).toFixed(1) : 'â€”'}</td>
           </tr>`).join('') : '<tr><td colspan="5" class="muted">No Abalone Receiving records for this job.</td></tr>'}
           ${rep.harvest.length ? `<tr class="total">
             <td>TOTAL</td><td></td>
             <td class="num">${fmt(rep.totalMass, 2)} kg</td>
-            <td class="num">${rep.totalAnimals || '—'}</td>
-            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : '—'}</td>
+            <td class="num">${rep.totalAnimals || 'â€”'}</td>
+            <td class="num">${rep.totalAnimals ? (rep.totalMass / rep.totalAnimals * 1000).toFixed(1) : 'â€”'}</td>
           </tr>` : ''}
         </tbody>
       </table>
@@ -402,7 +402,7 @@
           ${rep.timeline.length ? rep.timeline.map((r) => `<tr>
             <td>${esc(r.label)}</td><td class="num">${esc(r.when)}</td><td>${esc(r.detail || '')}</td>
           </tr>`).join('') : '<tr><td colspan="3" class="muted">No Drying Process entries recorded for this job.</td></tr>'}
-          <tr class="total"><td>Total drying time</td><td class="num" colspan="2">${rep.dryingDays == null ? '—' : rep.dryingDays + ' days'}</td></tr>
+          <tr class="total"><td>Total drying time</td><td class="num" colspan="2">${rep.dryingDays == null ? 'â€”' : rep.dryingDays + ' days'}</td></tr>
         </tbody>
       </table>
 
@@ -489,7 +489,7 @@
   }
 
   async function show(jobNo) {
-    $('jobLabel').textContent = jobNo || '—';
+    $('jobLabel').textContent = jobNo || 'â€”';
     if (!jobNo) {
       $('reportPanel').innerHTML = '<div class="muted">No job specified. Open this report from <a href="job-status.html">Job Status Updates</a>.</div>';
       return;
@@ -497,11 +497,11 @@
     const rep = buildReport(jobNo);
     render(rep, JOB_STATUSES.find((s) => String(s.job_no) === String(jobNo)));
     $('statusLine').textContent =
-      `${rep.counts.receiving} receiving · ${rep.counts.drying} drying process entr${rep.counts.drying === 1 ? 'y' : 'ies'} · ${rep.counts.grading} grading log record(s) for this job`;
+      `${rep.counts.receiving} receiving Â· ${rep.counts.drying} drying process entr${rep.counts.drying === 1 ? 'y' : 'ies'} Â· ${rep.counts.grading} grading log record(s) for this job`;
   }
 
   async function refresh() {
-    $('statusLine').textContent = 'Loading…';
+    $('statusLine').textContent = 'Loadingâ€¦';
     [STATUSES] = await Promise.all([window.JobStatus.list(), loadAll()]);
     JOB_STATUSES = STATUSES.filter((s) => isDryingJob(s.job_no));
     CURRENT_JOB = new URLSearchParams(location.search).get('job');

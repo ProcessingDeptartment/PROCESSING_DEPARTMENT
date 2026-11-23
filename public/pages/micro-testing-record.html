@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="preconnect" href="https://processing-department-api.onrender.com" crossorigin>
@@ -33,7 +33,7 @@
   .banner.bad { background:#fbe8e6; color:#a3352d; }
   .banner.info { background:#eef2f7; color:#33475b; }
 
-  /* ── grid ── */
+  /* â”€â”€ grid â”€â”€ */
   .grid-wrap { overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px; }
   table.mt { border-collapse:collapse; width:100%; min-width:1300px; table-layout:fixed; }
   table.mt th, table.mt td { border:1px solid #eceeed; padding:4px 5px; vertical-align:top; }
@@ -46,23 +46,23 @@
   td.cell { height:52px; min-height:52px; cursor:pointer; position:relative; }
   td.cell:hover { background:color-mix(in srgb, var(--c,#ccc) 6%, #fff); }
   td.cell.na { background:#f9fafb; cursor:default; }
-  td.cell.na::after { content:'—'; color:#c8cdd2; font-size:12px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  td.cell.na::after { content:'â€”'; color:#c8cdd2; font-size:12px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
   .chip { display:block; border:none; border-left:3px solid var(--c); background:color-mix(in srgb, var(--c) 10%, #fff); color:var(--text); padding:3px 5px; border-radius:3px; font-size:11px; line-height:1.3; width:100%; text-align:left; cursor:pointer; font-family:inherit; }
   .chip + .chip { margin-top:2px; }
   .chip.done { opacity:.65; }
-  .chip.done::before { content:'✓ '; font-weight:700; color:#166534; }
+  .chip.done::before { content:'âœ“ '; font-weight:700; color:#166534; }
   .chip.skipped { opacity:.5; font-style:italic; }
   .chip.pending { }
   .add-btn { border:1px dashed #cbd2d9; background:none; color:#8a949d; border-radius:3px; width:100%; font-size:11px; cursor:pointer; padding:1px 0; opacity:0; transition:opacity .15s; }
   td.cell:hover .add-btn { opacity:1; }
   .freq-badge { font-size:9.5px; color:var(--muted); display:block; margin-top:1px; }
 
-  /* ── legend ── */
+  /* â”€â”€ legend â”€â”€ */
   .legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:10px; }
   .legend-item { display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--muted); }
   .legend-dot { width:10px; height:10px; border-radius:2px; flex:none; }
 
-  /* ── side panel ── */
+  /* â”€â”€ side panel â”€â”€ */
   .panel-bg { position:fixed; inset:0; background:rgba(15,23,32,.35); display:none; z-index:50; }
   .panel-bg.show { display:block; }
   .panel { position:absolute; top:0; right:0; bottom:0; width:100%; max-width:420px; background:#fff; padding:20px; overflow-y:auto; box-shadow:-4px 0 20px rgba(0,0,0,.18); }
@@ -83,7 +83,7 @@
   .err { color:#a3352d; font-size:12px; min-height:1em; margin-top:8px; }
   .signed { font-size:11.5px; color:var(--muted); margin-top:6px; }
 
-  /* ── year setup modal ── */
+  /* â”€â”€ year setup modal â”€â”€ */
   .modal-bg { position:fixed; inset:0; background:rgba(15,23,32,.5); display:none; align-items:flex-start; justify-content:center; padding:40px 12px; z-index:60; }
   .modal-bg.show { display:flex; }
   .modal { background:#fff; border-radius:10px; width:100%; max-width:460px; padding:20px; }
@@ -113,7 +113,7 @@
     <a class="back-link" href="fsms.html">&larr; FSMS</a>
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <a class="back-link" href="fsms-calendar.html" style="margin:0">📅 FSMS Calendar</a>
+    <a class="back-link" href="fsms-calendar.html" style="margin:0">ðŸ“… FSMS Calendar</a>
   </div>
 </div>
 
@@ -125,7 +125,7 @@
       Year <select id="yearSel" style="width:90px"></select>
     </label>
     <button class="btn primary" id="setupBtn" type="button">+ Set up year</button>
-    <button class="btn" id="printBtn" type="button">🖨 Print</button>
+    <button class="btn" id="printBtn" type="button">ðŸ–¨ Print</button>
     <div style="margin-left:auto;font-size:11.5px;color:var(--muted)" id="completionStats"></div>
   </div>
 
@@ -152,11 +152,11 @@
     <h2 id="setupTitle">Set up year</h2>
     <label class="opt" id="optAuto">
       <input type="radio" name="setupMode" value="auto" checked>
-      <div class="opt-body"><b>Auto-setup one year</b><small>Creates standard monthly, quarterly and annual test slots automatically — ready in seconds.</small></div>
+      <div class="opt-body"><b>Auto-setup one year</b><small>Creates standard monthly, quarterly and annual test slots automatically â€” ready in seconds.</small></div>
     </label>
     <label class="opt" id="optAll">
       <input type="radio" name="setupMode" value="all">
-      <div class="opt-body"><b>Set up all years (2021 – present)</b><small>Creates test slots for every year from 2021 to today in one click. Already-set-up years are skipped safely.</small></div>
+      <div class="opt-body"><b>Set up all years (2021 â€“ present)</b><small>Creates test slots for every year from 2021 to today in one click. Already-set-up years are skipped safely.</small></div>
     </label>
     <label class="opt" id="optClone">
       <input type="radio" name="setupMode" value="clone">
@@ -177,7 +177,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=19"></script>
 <script src="../lib/auth.js?v=7"></script>
-<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/login-ui.js?v=8"></script>
 <script src="../lib/nc-login-alert.js?v=2"></script>
 <script>
 (function () {
@@ -217,7 +217,7 @@
         await loadYears(THIS_YEAR);
         banner('ok', THIS_YEAR + ' set up automatically with all standard test slots.');
       } catch(e) {
-        // 409 = already has events (race condition) — just reload quietly
+        // 409 = already has events (race condition) â€” just reload quietly
         if (e.message && e.message.indexOf('already') !== -1) { await loadYears(THIS_YEAR); }
       }
     }
@@ -254,7 +254,7 @@
     var showNow = data.year === THIS_YEAR;
     var cats = data.categories;
 
-    // Build lookup: catId → month → events[]
+    // Build lookup: catId â†’ month â†’ events[]
     var byCell = {};
     data.events.forEach(function(e){
       var k = e.categoryId+':'+e.month;
@@ -307,7 +307,7 @@
 
   function freqLabel(f) {
     if (f === 'monthly') return 'Monthly';
-    if (f === 'quarterly') return 'Quarterly — Jan, Apr, Jul, Oct';
+    if (f === 'quarterly') return 'Quarterly â€” Jan, Apr, Jul, Oct';
     return 'Annual';
   }
 
@@ -327,7 +327,7 @@
         if (filled.length) return filled.slice(0,2).join(', ')+(filled.length>2 ? ' +'+( filled.length-2) : '');
       }
     } catch(_){}
-    return e.title || '—';
+    return e.title || 'â€”';
   }
 
   function renderStats() {
@@ -366,7 +366,7 @@
       + '<div class="cat-line" style="--c:'+esc(cat ? cat.color : '#ccc')+'">'
         + '<span class="dot"></span>'
         + FULL[e.month-1]+' '+data.year
-        + ' &nbsp;·&nbsp; <span class="status-pill s-'+e.status+'">'+e.status+'</span>'
+        + ' &nbsp;Â·&nbsp; <span class="status-pill s-'+e.status+'">'+e.status+'</span>'
         + who
       + '</div>'
       + (cat && cat.determinant ? '<div class="det"><b>Determinant:</b> '+esc(cat.determinant)
@@ -376,7 +376,7 @@
       + '<label>Your name (to sign off)<input id="pWho" value="'+esc(userName())+'"></label>'
       + '<div class="err" id="pErr"></div>'
       + '<div class="actions">'
-        + (e.status!=='done' ? '<button class="btn primary" data-act="done" type="button">✓ Mark done</button>' : '')
+        + (e.status!=='done' ? '<button class="btn primary" data-act="done" type="button">âœ“ Mark done</button>' : '')
         + (e.status!=='skipped' ? '<button class="btn" data-act="skipped" type="button">Skip</button>' : '')
         + (e.status!=='pending' ? '<button class="btn" data-act="pending" type="button">Reopen</button>' : '')
         + (!ro ? '<button class="btn" data-act="save" type="button">Save samples</button>' : '')
@@ -412,7 +412,7 @@
       } else {
         var who = $('pWho') ? $('pWho').value.trim() : userName();
         if ((act==='done'||act==='skipped') && !who) { err.textContent = 'Enter your name to sign off.'; return; }
-        // For past (read-only) years the API rejects notes in the PATCH body — only send notes for writable years.
+        // For past (read-only) years the API rejects notes in the PATCH body â€” only send notes for writable years.
         var patch = { status: act, completedBy: who };
         if (!data.readOnly) patch.notes = buildNotesJson();
         await call('/api/fsms/events/'+id, json('PATCH', patch));
@@ -473,15 +473,15 @@
           var created = r.results.filter(function(x){ return !x.skipped; });
           var skipped = r.results.filter(function(x){ return x.skipped; });
           bulkMsg = r.totalCreated + ' events created across ' + created.length + ' year(s)';
-          if (skipped.length) bulkMsg += ' (' + skipped.map(function(x){ return x.year; }).join(', ') + ' already existed — skipped)';
+          if (skipped.length) bulkMsg += ' (' + skipped.map(function(x){ return x.year; }).join(', ') + ' already existed â€” skipped)';
           bulkOk = true;
         } catch(bulkErr) {
-          // Bulk endpoint not yet available — fall back to setting up each year individually
+          // Bulk endpoint not yet available â€” fall back to setting up each year individually
           var fallbackCreated = 0;
           for (var yr = FIRST_YEAR; yr <= THIS_YEAR; yr++) {
             try { var ry = await call('/api/micro-testing/years/'+yr+'/setup', { method:'POST' }); fallbackCreated += ry.created || 0; } catch(_) {}
           }
-          bulkMsg = fallbackCreated + ' events created for years ' + FIRST_YEAR + '–' + THIS_YEAR;
+          bulkMsg = fallbackCreated + ' events created for years ' + FIRST_YEAR + 'â€“' + THIS_YEAR;
           bulkOk = true;
         }
         if (bulkOk) {
@@ -499,7 +499,7 @@
         var year = parseInt($('setupYear').value, 10);
         var src = parseInt($('cloneSrc').value, 10);
         var r3 = await call('/api/fsms/years/'+year+'/clone', json('POST', { sourceYear: src }));
-        banner('ok', r3.copied + ' events copied from ' + src + ' into ' + year + ' — reset to pending.');
+        banner('ok', r3.copied + ' events copied from ' + src + ' into ' + year + ' â€” reset to pending.');
         $('setupBg').classList.remove('show');
         await loadYears(year);
       }

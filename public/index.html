@@ -77,9 +77,7 @@
   body.authenticated .block.auth-only{ display:flex; }
   body.authenticated .more-title.auth-only{ display:block; }
   body.authenticated table.auth-only{ display:table; }
-  .nc-link{ color:inherit; font-weight:600; text-decoration:none; margin-right:auto; }
-  .nc-badge{ display:inline-block; background:#dc2626; color:#fff; border-radius:20px; padding:0 7px; font-size:11px; font-weight:700; margin-left:4px; }
-  .verification-alert-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; }
+.verification-alert-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; }
   .verification-alert-box{ background:#fff; border-radius:12px; padding:2rem 2.5rem; max-width:420px; width:90%; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,.18); }
   .verification-alert-icon{ font-size:2.5rem; margin-bottom:.5rem; color:#b45309; }
   .verification-alert-title{ font-size:1.3rem; font-weight:700; color:#b45309; margin-bottom:.75rem; }
@@ -117,8 +115,6 @@
 </style>
 </head>
 <body>
-<script src="lib/page-nav.js?v=1"></script>
-
 <div class="brand-bar">
   <div class="brand-inner">
     <img class="brand-logo" src="assets/abagold-logo.png" alt="Abagold" width="1608" height="200" decoding="async">
@@ -134,10 +130,9 @@
 </div>
 
 <div class="session-bar">
-  <a class="nc-link" href="pages/nc-log.html">&#9888; NC Log<span class="nc-badge" id="ncBadge" hidden></span></a>
   <span id="sessionUser"></span>
-  <a id="deviceLink" href="pages/device-signin.html" style="display:none;color:#1d4ed8;font-weight:600;text-decoration:none;">Set up this device</a>
-  <button id="loginBtnTop" type="button" style="display:none;">Log in</button>
+  <button id="deviceSetupBtn" type="button" style="display:none;">Set Up This Device</button>
+  <button id="loginBtnTop" type="button" style="display:none;">Log In</button>
   <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
 </div>
 
@@ -159,7 +154,6 @@
   <!-- 24 Hours At a Glance moved to pages/dashboard.html (Job Progress report > Dashboard) -->
 
 
-  <h2 class="section-title">Categories</h2>
   <div class="block-grid">
     <a class="block index auth-only" href="records/record-list.html" title="Find and open a record to fill in" data-page-id="records">
       <span class="block-title">Records</span>
@@ -245,20 +239,30 @@
 <script src="lib/api-backend.js?v=18"></script>
 <script src="lib/auth.js?v=8"></script>
 <script src="lib/passkey-input.js?v=1"></script>
-<script src="lib/login-ui.js?v=7"></script>
+<script src="lib/login-ui.js?v=8"></script>
 <script src="lib/nc-login-alert.js?v=2"></script>
 <script>  function refreshSessionBar() {
     var user = window.Auth.getCurrentUser();
     document.getElementById('sessionUser').textContent = user ? (user.displayName + ' (' + user.role + ')') : '';
     document.getElementById('loginBtnTop').style.display = user ? 'none' : '';
-    document.getElementById('deviceLink').style.display = user ? 'none' : '';
+    document.getElementById('deviceSetupBtn').style.display = user ? 'none' : '';
     document.getElementById('logoutBtn').style.display = user ? '' : 'none';
     document.body.classList.toggle('authenticated', !!user);
     document.body.classList.toggle('is-admin', !!user && /ADMIN(ISTRATOR)?$/.test(user.role || ''));
   }
 
-  document.getElementById('loginBtnTop').addEventListener('click', function () {
-    window.LoginUI.showLoginModal();
+  document.getElementById('loginBtnTop').addEventListener('click', async function () {
+    if (!window.PasskeyInput) { window.LoginUI.showLoginModal(); return; }
+    var result = await window.PasskeyInput.openForApproval('Enter your passkey to sign in');
+    if (!result) return;
+    if (window.Auth) {
+      var loginResult = window.Auth.loginByPasskeyResult(result);
+      if (loginResult.ok) {
+        document.dispatchEvent(new CustomEvent('authSuccess', { detail: loginResult.user }));
+      } else {
+        alert(loginResult.error || 'Sign-in failed');
+      }
+    }
   });
 
   document.getElementById('logoutBtn').addEventListener('click', function () {
@@ -269,26 +273,35 @@
   document.addEventListener('authSuccess', refreshSessionBar);
 
   refreshSessionBar();
+</script>
 
-  // NC Log click guard — show "Login to access" if not authenticated
+<script>  // ── Set Up This Device modal ────────────────────────────────────────────────
   (function () {
-    var ncLink = document.querySelector('.nc-link');
-    if (!ncLink) return;
-    ncLink.addEventListener('click', function (e) {
-      if (window.Auth && window.Auth.isAuthenticated()) return; // allow navigation
-      e.preventDefault();
-      // Show a brief toast instead of looping to nc-log.html
-      var existing = document.getElementById('ncLoginToast');
-      if (existing) { existing.remove(); }
-      var toast = document.createElement('div');
-      toast.id = 'ncLoginToast';
-      toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);'
-        + 'background:#1d2b38;color:#f4f1e8;padding:10px 20px;border-radius:8px;'
-        + 'font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);'
-        + 'white-space:nowrap;';
-      toast.textContent = '🔒 Log in to access NC Log';
-      document.body.appendChild(toast);
-      setTimeout(function () { toast.remove(); }, 2800);
+    var btn = document.getElementById('deviceSetupBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var existing = document.getElementById('deviceSetupModal');
+      if (existing) { existing.style.display = 'flex'; return; }
+      var overlay = document.createElement('div');
+      overlay.id = 'deviceSetupModal';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML = '<div style="background:#fff;border-radius:10px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;">'
+        + '<div style="background:#1d2b38;color:#f4f1e8;padding:20px 28px;">'
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#b9c3cc;margin-bottom:4px;">PROCESSING DEPARTMENT</div>'
+        + '<h2 style="margin:0;font-size:17px;font-weight:600;">Set Up This Device</h2>'
+        + '</div>'
+        + '<div style="padding:28px;font-size:14px;color:#1b2330;line-height:1.6;">'
+        + '<ol style="margin:0 0 20px;padding-left:20px;">'
+        + '<li style="margin-bottom:10px;">Open <strong>Chrome</strong> on this device.</li>'
+        + '<li style="margin-bottom:10px;">Navigate to <strong>processing-department.onrender.com</strong></li>'
+        + '<li style="margin-bottom:10px;">Bookmark the page — press <strong>Ctrl+D</strong> (or tap the star in the address bar).</li>'
+        + '<li>Keep this tab open during your shift.</li>'
+        + '</ol>'
+        + '<button id="deviceSetupClose" type="button" style="width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer;">Done</button>'
+        + '</div></div>';
+      document.body.appendChild(overlay);
+      document.getElementById('deviceSetupClose').addEventListener('click', function () { overlay.style.display = 'none'; });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.style.display = 'none'; });
     });
   })();
 </script>
@@ -353,18 +366,6 @@
     document.addEventListener('authSuccess', load);
     document.getElementById('logoutBtn').addEventListener('click', function () { setTimeout(load, 0); });
     load();
-  })();
-</script>
-<script>  // NC badge on the NC Log link (the 24-hour tiles now live on pages/dashboard.html)
-  (function () {
-    var badge = document.getElementById('ncBadge');
-    async function loadBadge() {
-      try {
-        var res = await window.FacilityApi.fetch('/api/nc/count-open', { cache: 'no-store' });
-        if (res.ok) { var n = (await res.json()).openNCs; badge.textContent = n; badge.hidden = !(n > 0); }
-      } catch (e) {  }
-    }
-    loadBadge();
   })();
 </script>
 

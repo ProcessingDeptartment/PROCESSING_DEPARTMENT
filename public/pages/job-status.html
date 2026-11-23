@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -109,7 +109,7 @@
     <div class="panel">
       <div class="toolbar no-print">
         <button class="btn btn-primary" id="refreshBtn">Refresh</button>
-        <input type="search" id="filterInput" placeholder="Filter job no. / farm…">
+        <input type="search" id="filterInput" placeholder="Filter job no. / farmâ€¦">
         <label class="muted"><input type="checkbox" id="showClosed"> Show closed</label>
         <span class="grow"></span>
         <button class="btn btn-flat" id="csvBtn">Export CSV</button>
@@ -118,7 +118,7 @@
       <div class="muted" id="statusLine" style="margin-top:10px;"></div>
       <div class="muted">
         Every job number captured on Abalone Receiving (REC 7.1.2). Closing a job removes it from
-        the job-number pickers on every downstream record — already-submitted records keep showing
+        the job-number pickers on every downstream record â€” already-submitted records keep showing
         the job they were filed against.
       </div>
       <div class="muted" style="margin-top:4px;">
@@ -144,7 +144,7 @@
   <div class="modal-backdrop" id="detailsModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <h2><span id="detailsTitlePrefix">Add Job Details</span> — <span id="detailsJobNo"></span></h2>
+        <h2><span id="detailsTitlePrefix">Add Job Details</span> â€” <span id="detailsJobNo"></span></h2>
         <p class="modal-sub" id="detailsSub">Complete the required fields before you can close this job.</p>
       </div>
 
@@ -160,12 +160,12 @@
 
       <div class="modal-section">
         <h3>Report notes</h3>
-        <div class="field-row"><label>Canning efficiency <span class="muted">(optional — no formula defined yet)</span></label><input type="text" id="fldCanningEfficiency"></div>
+        <div class="field-row"><label>Canning efficiency <span class="muted">(optional â€” no formula defined yet)</span></label><input type="text" id="fldCanningEfficiency"></div>
         <div class="field-row"><label>Comments<span class="req-mark">*</span></label><textarea id="fldComments"></textarea></div>
       </div>
 
       <div class="modal-section">
-        <h3>NRCS AG codes<span class="req-mark">*</span> <span class="muted" style="text-transform:none; letter-spacing:0; font-weight:400;">— a job may have more than one; at least one required</span></h3>
+        <h3>NRCS AG codes<span class="req-mark">*</span> <span class="muted" style="text-transform:none; letter-spacing:0; font-weight:400;">â€” a job may have more than one; at least one required</span></h3>
         <div id="nrcsRows"></div>
         <button class="btn btn-flat btn-sm" id="addNrcsRow" type="button" style="margin-top:6px;">+ Add</button>
       </div>
@@ -188,7 +188,7 @@
 <script src="../lib/job-status.js?v=3"></script>
 <script src="../lib/api-backend.js?v=19"></script>
 <script src="../lib/auth.js?v=7"></script>
-<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/login-ui.js?v=8"></script>
 <script src="../lib/nc-login-alert.js?v=2"></script>
 <script>(function () {
   const $ = (id) => document.getElementById(id);
@@ -245,7 +245,7 @@
   }
 
   async function load() {
-    $('statusLine').textContent = 'Loading…';
+    $('statusLine').textContent = 'Loadingâ€¦';
     const [jobs, byJob] = await Promise.all([window.JobStatus.list(), receivingByJob()]);
     rows = jobs.map((j) => Object.assign({}, byJob.get(String(j.job_no)) || {}, j));
     render();
@@ -265,22 +265,22 @@
     const list = visibleRows();
     const openCount = rows.filter((r) => r.status !== 'closed').length;
     $('statusLine').textContent =
-      `${rows.length} job${rows.length === 1 ? '' : 's'} — ${openCount} open, ${rows.length - openCount} closed`
-      + (list.length !== rows.length ? ` · showing ${list.length}` : '');
+      `${rows.length} job${rows.length === 1 ? '' : 's'} â€” ${openCount} open, ${rows.length - openCount} closed`
+      + (list.length !== rows.length ? ` Â· showing ${list.length}` : '');
 
     $('jobsBody').innerHTML = list.map((r) => {
       const closed = r.status === 'closed';
       const closedTxt = closed
-        ? `${(r.closed_at || '').slice(0, 10)}${r.closed_by ? ' · ' + esc(r.closed_by) : ''}`
-        : '—';
+        ? `${(r.closed_at || '').slice(0, 10)}${r.closed_by ? ' Â· ' + esc(r.closed_by) : ''}`
+        : 'â€”';
       const detailsDone = hasRequiredJobDetails(r);
       const canClose = closed || detailsDone;
       return `<tr class="${closed ? 'closed' : ''} ${!closed && !detailsDone ? 'details-pending' : ''}">
         <td><strong>${esc(r.job_no)}</strong></td>
-        <td>${esc(r.receivingDate || '—')}</td>
-        <td>${esc(r.receivedFrom || '—')}</td>
-        <td>${esc(r.toBeProcessedFor || '—')}</td>
-        <td>${esc(r.intakeWeight || '—')}</td>
+        <td>${esc(r.receivingDate || 'â€”')}</td>
+        <td>${esc(r.receivedFrom || 'â€”')}</td>
+        <td>${esc(r.toBeProcessedFor || 'â€”')}</td>
+        <td>${esc(r.intakeWeight || 'â€”')}</td>
         <td class="status-cell">
           <span class="pill ${closed ? 'closed' : 'open'}">${closed ? 'Closed' : 'Open'}</span>
           <div class="details-status ${detailsDone ? 'complete' : 'pending'}">
@@ -291,7 +291,7 @@
         <td class="no-print" style="white-space:nowrap;">
           ${isCanningJob(r.job_no) ? `<a class="btn btn-flat btn-sm" href="canning-report.html?job=${encodeURIComponent(r.job_no)}">Canning</a>` : ''}
           ${isDryingJob(r.job_no) ? `<a class="btn btn-flat btn-sm" href="drying-report.html?job=${encodeURIComponent(r.job_no)}">Drying</a>` : ''}
-          ${!isCanningJob(r.job_no) && !isDryingJob(r.job_no) ? '<span class="muted">—</span>' : ''}
+          ${!isCanningJob(r.job_no) && !isDryingJob(r.job_no) ? '<span class="muted">â€”</span>' : ''}
         </td>
         <td class="no-print">
           <div class="row-actions">
@@ -329,7 +329,7 @@
   }
 
   // Legacy shape (pre-migration): nrcsEntries: [{ agCode, additionalCans }, ...] treated AG code
-  // and Additional NRCS cans as one paired record. They are independent data points — a job can
+  // and Additional NRCS cans as one paired record. They are independent data points â€” a job can
   // have multiple AG codes, and Additional NRCS cans is one job-level quantity, not per-code.
   // This derives the new shape from old data without dropping anything already saved.
   function migrateNrcsShape(row) {
@@ -345,7 +345,7 @@
     return { agCodes, additionalNrcsCans: total == null ? '' : String(total) };
   }
 
-  // Required before a job can be closed. Canning efficiency is deliberately excluded — it has
+  // Required before a job can be closed. Canning efficiency is deliberately excluded â€” it has
   // no defined formula yet, so requiring it would block every job from ever closing.
   function hasRequiredJobDetails(row) {
     const r = row || {};
@@ -377,7 +377,7 @@
     $('detailsJobNo').textContent = jobNo;
     $('detailsTitlePrefix').textContent = readOnly ? 'Job Details' : 'Add Job Details';
     $('detailsSub').textContent = readOnly
-      ? 'This job is closed — details are read-only.'
+      ? 'This job is closed â€” details are read-only.'
       : 'Complete the required fields before you can close this job.';
 
     const fields = ['fldGrnNo', 'fldPoNo', 'fldCostPerKg', 'fldDeliveryNoteNo', 'fldCanningEfficiency', 'fldComments', 'fldAdditionalNrcsCans'];
@@ -411,7 +411,7 @@
       additionalNrcsCans: $('fldAdditionalNrcsCans').value.trim()
     };
     const res = await window.JobStatus.saveDetails(editingJobNo, patch);
-    if (!res) { alert('Could not save — please retry.'); return; }
+    if (!res) { alert('Could not save â€” please retry.'); return; }
     closeDetails();
     await load();
   }
@@ -432,7 +432,7 @@
     const res = isClosed
       ? await window.JobStatus.reopen(jobNo, { note })
       : await window.JobStatus.close(jobNo, { note });
-    if (!res) { alert('Could not save — please retry.'); return; }
+    if (!res) { alert('Could not save â€” please retry.'); return; }
     await load();
   }
 
