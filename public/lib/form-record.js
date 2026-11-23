@@ -2156,7 +2156,6 @@
     function renderTable() {
       const list = filtered();
       const wrap = el('fr_table');
-      if (!wrap) return;
       if (!list.length) {
         wrap.innerHTML = `<div class="fr-empty">No submissions yet${submissions.length ? ' matching these filters' : ''}.</div>`;
         return;
