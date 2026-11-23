@@ -84,9 +84,6 @@
   /* auth-user-only: authenticated non-admin users only */
   .block.auth-user-only{ display:none; }
   body.authenticated:not(.is-admin) .block.auth-user-only{ display:flex; }
-  .nc-link{ color:inherit; font-weight:600; text-decoration:none; margin-right:auto; display:none; }
-  body.authenticated .nc-link{ display:inline; }
-  .nc-badge{ display:inline-block; background:#dc2626; color:#fff; border-radius:20px; padding:0 7px; font-size:11px; font-weight:700; margin-left:4px; }
 .verification-alert-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; }
   .verification-alert-box{ background:#fff; border-radius:12px; padding:2rem 2.5rem; max-width:420px; width:90%; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,.18); }
   .verification-alert-icon{ font-size:2.5rem; margin-bottom:.5rem; color:#b45309; }
@@ -117,7 +114,6 @@
 </div>
 
 <div class="session-bar">
-  <a class="nc-link" href="pages/nc-log.html">&#9888; NC Log<span class="nc-badge" id="ncBadge" hidden></span></a>
   <span id="sessionUser"></span>
   <button id="deviceSetupBtn" type="button" style="display:none;">Set Up This Device</button>
   <button id="loginBtnTop" type="button" style="display:none;">Log In</button>
@@ -393,18 +389,6 @@
     </div>
   </div>
 </div>
-<script>  (function () {
-    var badge = document.getElementById('ncBadge');
-    async function loadBadge() {
-      try {
-        var res = await window.FacilityApi.fetch('/api/nc/count-open', { cache: 'no-store' });
-        if (res.ok) { var n = (await res.json()).openNCs; badge.textContent = n; badge.hidden = !(n > 0); }
-      } catch (e) {}
-    }
-    document.addEventListener('authSuccess', loadBadge);
-    loadBadge();
-  })();
-</script>
 <script src="lib/access-control.js?v=6"></script>
 <script src="lib/master-index-data.js?v=4"></script>
 <script src="lib/permission-rules.js?v=8"></script>
