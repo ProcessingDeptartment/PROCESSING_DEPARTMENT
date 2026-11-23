@@ -5549,7 +5549,7 @@ function fallbackDl(canvas,filename){
     if (window.SpecGate) window.SpecGate.wire(el('fr_modalSections'), specMap);
     el('fr_submitBtn').addEventListener('click', () => saveForm(true));
     el('fr_exportJsonBtn')?.addEventListener('click', exportJson);
-    el('fr_printBtn').addEventListener('click', printPdf);
+    el('fr_printBtn')?.addEventListener('click', printPdf);
     const instrToggle = el('fr_instrToggle');
     if (instrToggle) {
       instrToggle.addEventListener('click', () => {
