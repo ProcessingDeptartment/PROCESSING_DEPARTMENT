@@ -170,11 +170,11 @@
       <span class="block-title">Handovers</span>
       <span class="block-desc">Shift handover reporting &mdash; Production and Quality</span>
     </a>
-    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator â€” enter measurements and get instant pass/fail results" data-page-id="seam-calculator">
+    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator â€" enter measurements and get instant pass/fail results" data-page-id="seam-calculator">
       <span class="block-title">Seam Calculator</span>
       <span class="block-desc">Double seam quick calculator</span>
     </a>
-    <a class="block index auth-user-only" href="pages/submissions-log.html?tab=print" title="PDF-ready entries â€” verified records ready to print" data-page-id="print-hub">
+    <a class="block index auth-user-only" href="pages/submissions-log.html?tab=print" title="PDF-ready entries â€" verified records ready to print" data-page-id="print-hub">
       <span class="block-title">Print Hub</span>
       <span class="block-desc">Verified records ready to print as PDF</span>
     </a>
@@ -258,7 +258,7 @@
   refreshSessionBar();
 </script>
 
-<script>  // â”€â”€ Set Up This Device modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+<script>  // â"€â"€ Set Up This Device modal â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   (function () {
     var btn = document.getElementById('deviceSetupBtn');
     if (!btn) return;
@@ -280,23 +280,23 @@
       var overlay = document.createElement('div');
       overlay.id = 'deviceSetupModal';
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-      overlay.innerHTML = '<div style=”background:#fff;border-radius:16px;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;”>'
-        + '<div style=”background:#1d2b38;color:#f4f1e8;padding:20px 24px;”>'
-        + '<div style=”font-size:11px;font-weight:700;letter-spacing:.06em;color:#b9c3cc;margin-bottom:4px;”>PROCESSING DEPARTMENT</div>'
-        + '<div style=”font-size:17px;font-weight:600;”>Set Up This Device</div>'
+      overlay.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;">'
+        + '<div style="background:#1d2b38;color:#f4f1e8;padding:20px 24px;">'
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#b9c3cc;margin-bottom:4px;">PROCESSING DEPARTMENT</div>'
+        + '<div style="font-size:17px;font-weight:600;">Set Up This Device</div>'
         + '</div>'
-        + '<div style=”padding:24px;font-size:14px;color:#1b2330;line-height:1.6;”>'
-        + (alreadySetUp ? '<div style=”background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:13px;color:#065f46;font-weight:600;”>&#10003; This device is already set up</div>' : '')
-        + '<ol style=”margin:0 0 20px;padding-left:20px;”>'
-        + '<li style=”margin-bottom:10px;”>Open <strong>Chrome</strong> on this device.</li>'
-        + '<li style=”margin-bottom:10px;”>Navigate to <strong>processing-department.onrender.com</strong></li>'
-        + '<li style=”margin-bottom:10px;”>Bookmark the page &mdash; press <strong>Ctrl+D</strong> (or tap the star).</li>'
+        + '<div style="padding:24px;font-size:14px;color:#1b2330;line-height:1.6;">'
+        + (alreadySetUp ? '<div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:13px;color:#065f46;font-weight:600;">&#10003; This device is already set up</div>' : '')
+        + '<ol style="margin:0 0 20px;padding-left:20px;">'
+        + '<li style="margin-bottom:10px;">Open <strong>Chrome</strong> on this device.</li>'
+        + '<li style="margin-bottom:10px;">Navigate to <strong>processing-department.onrender.com</strong></li>'
+        + '<li style="margin-bottom:10px;">Bookmark the page &mdash; press <strong>Ctrl+D</strong> (or tap the star).</li>'
         + '<li>Keep this tab open during your shift.</li>'
         + '</ol>'
-        + '<button id=”deviceSetupContinue” type=”button” style=”width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:8px;”>'
+        + '<button id="deviceSetupContinue" type="button" style="width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:8px;">'
         + (alreadySetUp ? 'Register again with passkey' : 'Continue &mdash; enter passkey')
         + '</button>'
-        + '<button id=”deviceSetupDismiss” type=”button” style=”width:100%;padding:9px;background:#f4f5f3;color:#1b2330;border:1px solid #d0d5db;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;”>Dismiss</button>'
+        + '<button id="deviceSetupDismiss" type="button" style="width:100%;padding:9px;background:#f4f5f3;color:#1b2330;border:1px solid #d0d5db;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">Dismiss</button>'
         + '</div></div>';
       document.body.appendChild(overlay);
       overlay.querySelector('#deviceSetupContinue').addEventListener('click', function () {
@@ -310,13 +310,13 @@
     function showResult(message, success) {
       var overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-      overlay.innerHTML = '<div style=”background:#fff;border-radius:16px;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;”>'
-        + '<div style=”background:' + (success ? '#2f7a52' : '#a3352d') + ';color:#fff;padding:18px 24px;font-size:16px;font-weight:600;”>'
+      overlay.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;">'
+        + '<div style="background:' + (success ? '#2f7a52' : '#a3352d') + ';color:#fff;padding:18px 24px;font-size:16px;font-weight:600;">'
         + (success ? '&#10003; Device registered' : '&#9888; Setup failed')
         + '</div>'
-        + '<div style=”padding:20px 24px;font-size:14px;color:#1b2330;”>'
+        + '<div style="padding:20px 24px;font-size:14px;color:#1b2330;">'
         + message
-        + '<br><br><button id=”deviceResultClose” type=”button” style=”width:100%;padding:10px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;”>OK</button>'
+        + '<br><br><button id="deviceResultClose" type="button" style="width:100%;padding:10px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">OK</button>'
         + '</div></div>';
       document.body.appendChild(overlay);
       overlay.querySelector('#deviceResultClose').addEventListener('click', function () { overlay.remove(); });
@@ -348,16 +348,16 @@
         if (!res.ok) return;
         var s = await res.json(), parts = [];
         if (s.pending > 0) parts.push('&#128247; ' + s.pending + ' photo' + (s.pending === 1 ? '' : 's') + ' not yet archived to local server.');
-        if (s.failed > 0) parts.push('&#9888; ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped â€” check the agent log.');
+        if (s.failed > 0) parts.push('&#9888; ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped â€" check the agent log.');
         if (!parts.length) { el.hidden = true; clearInterval(timer); timer = null; return; }
         var html = parts.join('<br>');
         if (s.pending > 0 && isAdmin()) {
           var online = s.agentSeenAt && (Date.now() - new Date(s.agentSeenAt)) < 2 * 60000;
           html += '<div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:400;font-size:13px;">'
             + (s.requestedAt
-                ? '<span>&#128247; Archive requested â€” waiting for the file serverâ€¦</span>'
+                ? '<span>&#128247; Archive requested â€" waiting for the file serverâ€¦</span>'
                 : '<button type="button" id="archiveNowBtn" style="padding:6px 14px;border-radius:6px;border:1px solid #b7791f;background:#b7791f;color:#fff;font-weight:600;cursor:pointer;">Archive now</button>')
-            + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' â€” is it running?') + '</span></div>';
+            + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' â€" is it running?') + '</span></div>';
         }
         el.innerHTML = html; el.hidden = false;
         var archBtn = document.getElementById('archiveNowBtn');
