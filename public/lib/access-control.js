@@ -157,7 +157,7 @@
 
   document.addEventListener('authSuccess', function () {
     _config = null;
-    _unlocked = false;
+    _unlocked = true; // login = unlock
     _unlockedRole = null;
     run();
   });
