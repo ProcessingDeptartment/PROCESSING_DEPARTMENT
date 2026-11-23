@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -170,11 +170,11 @@
       <span class="block-title">Handovers</span>
       <span class="block-desc">Shift handover reporting &mdash; Production and Quality</span>
     </a>
-    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator — enter measurements and get instant pass/fail results" data-page-id="seam-calculator">
+    <a class="block" href="records/seam-quick-calculator.html" title="Double seam quick calculator â€” enter measurements and get instant pass/fail results" data-page-id="seam-calculator">
       <span class="block-title">Seam Calculator</span>
       <span class="block-desc">Double seam quick calculator</span>
     </a>
-    <a class="block index auth-user-only" href="pages/submissions-log.html?tab=print" title="PDF-ready entries — verified records ready to print" data-page-id="print-hub">
+    <a class="block index auth-user-only" href="pages/submissions-log.html?tab=print" title="PDF-ready entries â€” verified records ready to print" data-page-id="print-hub">
       <span class="block-title">Print Hub</span>
       <span class="block-desc">Verified records ready to print as PDF</span>
     </a>
@@ -221,7 +221,7 @@
 <script src="lib/data-store.js?v=5"></script>
 <script src="lib/api-backend.js?v=18"></script>
 <script src="lib/auth.js?v=8"></script>
-<script src="lib/passkey-input.js?v=1"></script>
+<script src="lib/passkey-input.js?v=2"></script>
 <script src="lib/login-ui.js?v=8"></script>
 <script src="lib/nc-login-alert.js?v=2"></script>
 <script>  function refreshSessionBar() {
@@ -258,7 +258,7 @@
   refreshSessionBar();
 </script>
 
-<script>  // ── Set Up This Device modal ────────────────────────────────────────────────
+<script>  // â”€â”€ Set Up This Device modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   (function () {
     var btn = document.getElementById('deviceSetupBtn');
     if (!btn) return;
@@ -277,7 +277,7 @@
         + '<ol style="margin:0 0 20px;padding-left:20px;">'
         + '<li style="margin-bottom:10px;">Open <strong>Chrome</strong> on this device.</li>'
         + '<li style="margin-bottom:10px;">Navigate to <strong>processing-department.onrender.com</strong></li>'
-        + '<li style="margin-bottom:10px;">Bookmark the page — press <strong>Ctrl+D</strong> (or tap the star in the address bar).</li>'
+        + '<li style="margin-bottom:10px;">Bookmark the page â€” press <strong>Ctrl+D</strong> (or tap the star in the address bar).</li>'
         + '<li>Keep this tab open during your shift.</li>'
         + '</ol>'
         + '<button id="deviceSetupClose" type="button" style="width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer;">Done</button>'
@@ -303,16 +303,16 @@
         if (!res.ok) return;
         var s = await res.json(), parts = [];
         if (s.pending > 0) parts.push('&#128247; ' + s.pending + ' photo' + (s.pending === 1 ? '' : 's') + ' not yet archived to local server.');
-        if (s.failed > 0) parts.push('&#9888; ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped — check the agent log.');
+        if (s.failed > 0) parts.push('&#9888; ' + s.failed + ' photo' + (s.failed === 1 ? '' : 's') + ' failed to archive 5 times and ' + (s.failed === 1 ? 'is' : 'are') + ' skipped â€” check the agent log.');
         if (!parts.length) { el.hidden = true; clearInterval(timer); timer = null; return; }
         var html = parts.join('<br>');
         if (s.pending > 0 && isAdmin()) {
           var online = s.agentSeenAt && (Date.now() - new Date(s.agentSeenAt)) < 2 * 60000;
           html += '<div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:400;font-size:13px;">'
             + (s.requestedAt
-                ? '<span>&#128247; Archive requested — waiting for the file server…</span>'
+                ? '<span>&#128247; Archive requested â€” waiting for the file serverâ€¦</span>'
                 : '<button type="button" id="archiveNowBtn" style="padding:6px 14px;border-radius:6px;border:1px solid #b7791f;background:#b7791f;color:#fff;font-weight:600;cursor:pointer;">Archive now</button>')
-            + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' — is it running?') + '</span></div>';
+            + '<span style="color:#7a5a1a;">File server agent: ' + (online ? 'online' : (s.agentSeenAt ? 'last seen ' + ago(s.agentSeenAt) : 'not seen since the API restarted') + ' â€” is it running?') + '</span></div>';
         }
         el.innerHTML = html; el.hidden = false;
         var archBtn = document.getElementById('archiveNowBtn');
@@ -321,7 +321,7 @@
       } catch (e) {}
     }
     async function requestArchive() {
-      var archBtn = document.getElementById('archiveNowBtn'); if (archBtn) { archBtn.disabled = true; archBtn.textContent = 'Requesting…'; }
+      var archBtn = document.getElementById('archiveNowBtn'); if (archBtn) { archBtn.disabled = true; archBtn.textContent = 'Requestingâ€¦'; }
       try {
         var res = await window.FacilityApi.fetch('/api/images/archive-request', { method: 'POST' });
         if (!res.ok) throw new Error((await res.json().catch(function () { return {}; })).error || ('HTTP ' + res.status));
