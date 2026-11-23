@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -121,7 +121,7 @@
 
   const ALL_RECORDS = window.MasterIndexData.rows
     .filter(r => r.href)
-    // PRO documents are procedures / PRPs, not records â€” they live under Procedures.
+    // PRO documents are procedures / PRPs, not records — they live under Procedures.
     .filter(r => !/^PRO\b/i.test((r.docNo || '').trim()))
     .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
 
@@ -149,7 +149,7 @@
 
     const panel = document.createElement('div');
     panel.className = 'admin-panel';
-    panel.innerHTML = '<strong>Administrator view</strong> â€” All records are shown. Use the <em>Live</em> toggle to control which records appear for all other logins.';
+    panel.innerHTML = '<strong>Administrator view</strong> — All records are shown. Use the <em>Live</em> toggle to control which records appear for all other logins.';
     document.querySelector('.search-box').before(panel);
   }
 
@@ -176,7 +176,7 @@
       const liveBadge = (!isAdmin && isLive) ? '' : '';
       const liveCell = isAdmin
         ? `<td class="live-col">${isLive
-            ? `<button class="un-live" data-key="${esc(liveKey(r))}">Live âœ“</button>`
+            ? `<button class="un-live" data-key="${esc(liveKey(r))}">Live ✓</button>`
             : `<button class="go-live" data-key="${esc(liveKey(r))}">Go Live</button>`
           }</td>`
         : '';
