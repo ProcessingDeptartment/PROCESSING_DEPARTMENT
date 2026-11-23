@@ -505,7 +505,7 @@
   // ── Auth gate ──────────────────────────────────────────────────────────────
   function init() {
     const user = window.Auth && window.Auth.getCurrentUser();
-    if (!user || user.role !== 'ADMINISTRATOR') {
+    if (!user || !/ADMIN(ISTRATOR)?$/.test(user.role || '')) {
       document.getElementById('auth-gate').style.display = 'flex';
       return;
     }
