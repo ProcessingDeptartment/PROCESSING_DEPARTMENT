@@ -4607,8 +4607,12 @@ function fallbackDl(canvas,filename){
       primary.renderTable();
       if (secondary) { await secondary.load(); secondary.renderTable(); }
     } else {
-      const _mlTable = document.getElementById(`${ns}_table`);
+      const _mlTable = document.getElementById('ml_p_table');
       if (_mlTable) _mlTable._lazyLoad = async () => { await primary.load(); primary.renderTable(); };
+      if (secondary) {
+        const _mlTable2 = document.getElementById('ml_s_table');
+        if (_mlTable2) _mlTable2._lazyLoad = async () => { await secondary.load(); secondary.renderTable(); };
+      }
     }
     refreshVerification();
 
