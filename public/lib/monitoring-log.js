@@ -1,4 +1,4 @@
-ï»¿(function () {
+(function () {
   // View PDF (printonly=1): cover the page the instant this script loads, before the record form renders.
   try {
     const q0 = new URLSearchParams(location.search);
@@ -162,7 +162,7 @@
   .ml-stageline.complete{ background:#e6f4ea; border-color:#b9dcc3; }
   .ml-so-banner{ margin:0 0 10px; padding:8px 10px; border-radius:6px; font-size:12.5px; font-weight:600; background:#fff4d6; color:#8a5a00; border:1px solid #e6c46a; }
   .ml-so-banner.info{ background:#eef3f7; color:#3a444d; border-color:#d5dfe7; font-weight:500; }
-  .ml-signoff-block.ml-so-needed > summary::after{ content:' â€” required to submit'; color:#8a5a00; text-transform:none; letter-spacing:0; font-weight:700; }
+  .ml-signoff-block.ml-so-needed > summary::after{ content:' — required to submit'; color:#8a5a00; text-transform:none; letter-spacing:0; font-weight:700; }
   .ml-so-split{ border-top:1px solid var(--palette-border,#e2e4e3); margin:14px 0 10px; }
   .ml-field input.ml-stage-locked{ background:#f2f4f6; }
   .ml-stages-row > td{ background:#f7f9fb; padding:0 0 0 24px; }
@@ -438,7 +438,7 @@
         return Promise.resolve(window.RecordNotifications.send(payload));
       }
     } catch (e) { console.error('notification send failed', e); }
-    console.info('[notification not delivered â€” no transport configured]', payload);
+    console.info('[notification not delivered — no transport configured]', payload);
     return Promise.resolve(false);
   }
 
@@ -488,7 +488,7 @@
       const opts = ['', ...(field.options || [])];
 
       if (v !== '' && opts.indexOf(v) === -1) opts.push(v);
-      return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? 'â€”' : esc(o)}</option>`).join('')}</select>`;
+      return `<select id="${id}">${opts.map(o => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${o === '' ? '—' : esc(o)}</option>`).join('')}</select>`;
     }
 
     const ro = field.readOnly ? ' readonly' : '';
@@ -517,7 +517,7 @@
 
     if (field.type === 'jobsearch') {
       return `<select id="${id}" data-jobsearch="1"${field.jobEntry ? ` data-job-entry="${esc(field.jobEntry)}"` : ''}${field.route ? ` data-route="${esc(field.route)}"` : ''}>` +
-        (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">â€”</option>') +
+        (v ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '<option value="">—</option>') +
         `</select>`;
     }
 
@@ -694,7 +694,7 @@
       if (!pairs.length) return;
       const paint = () => {
         const parts = pairs.map((p) => summaryPart(p.k, p.src.value, p.k === jobField.key)).filter(Boolean);
-        span.textContent = parts.length ? 'â€” ' + parts.join('  Â·  ') : '';
+        span.textContent = parts.length ? '— ' + parts.join('  ·  ') : '';
       };
       pairs.forEach((p) => { p.src.addEventListener('input', paint); p.src.addEventListener('change', paint); });
       paint();
@@ -858,7 +858,7 @@
     note.classList.toggle('show', !!any);
     if (any) {
       note.textContent = 'Warning: the Abalone Receiving record (REC 7.1.2) for this job is still a '
-        + 'draft. The highlighted fields are provisional â€” they will be refreshed when you save. This '
+        + 'draft. The highlighted fields are provisional — they will be refreshed when you save. This '
         + 'entry can be saved as a draft, but not submitted as final until that receiving record is '
         + 'submitted.';
     }
@@ -883,7 +883,7 @@
         const latest = found[sourceKey];
         if (latest != null && String(latest) !== String(targetEl.value)) {
           const before = targetEl.value;
-          if (setAutofilled(targetEl, latest)) changed.push(`${targetKey}: ${before} â†’ ${latest}`);
+          if (setAutofilled(targetEl, latest)) changed.push(`${targetKey}: ${before} ? ${latest}`);
         }
         markProvisional(targetEl, nowProvisional);
       });
@@ -891,7 +891,7 @@
     renderProvisionalNotice(container, ns);
     if (changed.length) toast('Updated from source: ' + changed.join(', '));
     if (finalize && stillDraft) {
-      toast('Cannot submit â€” the source record for this job is still a draft, so its values are provisional. Save as a draft instead.');
+      toast('Cannot submit — the source record for this job is still a draft, so its values are provisional. Save as a draft instead.');
       return false;
     }
     return true;
@@ -942,7 +942,7 @@
         const current = sel.value;
         const options = all.slice();
         if (current && options.indexOf(current) === -1) options.unshift(current);
-        sel.innerHTML = '<option value="">â€”</option>' +
+        sel.innerHTML = '<option value="">—</option>' +
           options.map((val) => `<option value="${esc(val)}" data-status="${status.get(val) || 'open'}">${esc(val)}</option>`).join('');
         sel.value = current;
         if (sel._jobPicker) sel._jobPicker.drawList();
@@ -1038,7 +1038,7 @@
       out.push(f);
       if (!f.withComment) return;
       out.push({
-        key: f.key + '__comment', label: 'Comment â€” ' + f.label, type: 'text',
+        key: f.key + '__comment', label: 'Comment — ' + f.label, type: 'text',
         isComment: true, showInTable: false, group: f.group
       });
     });
@@ -1055,7 +1055,7 @@
     // A page can hand the engine its own entry-form body (render/read/validate/
     // summary/listColumns/sheetHtml) via config.customBody. The engine still owns
     // the entry list, the monitoring_log:* store, the draft/submit lifecycle,
-    // verification, print, traceability and the doc-revision badge â€” only the
+    // verification, print, traceability and the doc-revision badge — only the
     // fields inside the form are the page's. Used where a flat entryFields list
     // cannot express the record (e.g. the double-seam measurement matrix).
     let customBodyReady = false;
@@ -1068,7 +1068,7 @@
     let chainDriving = false;
     const chainValue = (entryRow, level) => level.keys
       .map(k => String(entryRow.values[k] == null ? '' : entryRow.values[k]).trim())
-      .filter(Boolean).join(' Â· ');
+      .filter(Boolean).join(' · ');
 
     let unlockedStages = new Set();
     let keepUnlocked = false;
@@ -1165,9 +1165,9 @@
     }
 
     function fmtSubmittedAt(ts) {
-      if (!ts) return 'â€”';
+      if (!ts) return '—';
       const d = new Date(ts);
-      if (isNaN(d)) return 'â€”';
+      if (isNaN(d)) return '—';
       const p = n => String(n).padStart(2, '0');
       return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
     }
@@ -1231,7 +1231,7 @@
       if (!rrCfg) return [];
       const v = (existing && existing.values) || {};
       if (Array.isArray(v.readings)) return v.readings;
-      // backward compat: old flat-field entry â€” wrap into single-element readings array
+      // backward compat: old flat-field entry — wrap into single-element readings array
       if (rrCfg.uniqueKey && v[rrCfg.uniqueKey] != null) {
         const row = {};
         (rrCfg.rowFields || []).forEach(f => { if (v[f.key] != null) row[f.key] = v[f.key]; });
@@ -1241,10 +1241,10 @@
     }
 
     function rrFieldInput(f, idx, v, locked) {
-      if (locked) { const dv = String(v || 'â€”'); return `<span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;">${esc(dv)}${v !== '' && v != null && f.unit ? ' ' + esc(f.unit) : ''}</span>`; }
+      if (locked) { const dv = String(v || '—'); return `<span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;">${esc(dv)}${v !== '' && v != null && f.unit ? ' ' + esc(f.unit) : ''}</span>`; }
       if (f.type === 'select') {
         const opts = (f.options || []).map(o => `<option value="${esc(o)}"${v === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
-        return `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">â€”</option>${opts}</select>`;
+        return `<select id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}"><option value="">—</option>${opts}</select>`;
       }
       if (f.type === 'textarea') {
         return `<textarea id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" rows="2" style="resize:vertical;">${esc(String(v))}</textarea>`;
@@ -1255,7 +1255,7 @@
           const active = v === val;
           return `<button type="button" class="ml-yn-btn${active ? ' ml-yn-active' : ''}" style="flex:1;padding:6px 0;font-size:12px;font-weight:600;border:1px solid var(--palette-border,#e2e4e3);border-radius:3px;cursor:pointer;background:${active ? 'var(--palette-heading,#2f4356)' : 'var(--palette-paper,#f4f5f3)'};color:${active ? '#fff' : 'inherit'};" data-yn-target="${ns}_rr_${idx}_${f.key}" data-yn-val="${esc(val)}">${label}</button>`;
         };
-        return `${hid}<span style="display:flex;gap:4px;">${btn('', 'â€”')}${btn('Y', 'Y')}${btn('N', 'N')}</span>`;
+        return `${hid}<span style="display:flex;gap:4px;">${btn('', '—')}${btn('Y', 'Y')}${btn('N', 'N')}</span>`;
       }
       const unitSuffix = f.unit ? `<span class="hint" style="white-space:nowrap;">${esc(f.unit)}</span>` : '';
       const inp = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${ns}_rr_${idx}_${f.key}" data-rr-field="${esc(f.key)}" value="${esc(String(v))}" style="width:100%;min-width:0;">`;
@@ -1407,7 +1407,7 @@
         // highlight_red: red border + background on the input
         label.classList.toggle('ml-rr-oos', bad && !!spec.highlightRed);
         // show_warning_bubble: hint text below the field
-        if (bad && spec.showWarningBubble) label.setAttribute('data-oos-hint', `Out of range (${spec.min ?? 'â€”'} to ${spec.max ?? 'â€”'})`);
+        if (bad && spec.showWarningBubble) label.setAttribute('data-oos-hint', `Out of range (${spec.min ?? '—'} to ${spec.max ?? '—'})`);
         else label.removeAttribute('data-oos-hint');
       }
       wrap.addEventListener('input', e => { const inp = e.target.closest('[data-rr-field]'); if (inp) rrCheckOos(inp); });
@@ -1478,7 +1478,7 @@
     }
 
     function statusBadge(inSpec) {
-      if (inSpec === null || inSpec === undefined) return `<span class="ml-badge ml-badge-muted">â€”</span>`;
+      if (inSpec === null || inSpec === undefined) return `<span class="ml-badge ml-badge-muted">—</span>`;
       const isAccuratePolarity = deviationPolarity === 'accurate';
       const goodText = isAccuratePolarity ? 'Yes' : 'No';
       const badText = isAccuratePolarity ? 'No' : 'Yes';
@@ -1663,7 +1663,7 @@
         pool.forEach(e => { const v = chainValue(e, lv); if (v && vals.indexOf(v) === -1) vals.push(v); });
         vals.sort();
         const keep = vals.indexOf(sels[i]) !== -1 ? sels[i] : '';
-        sel.innerHTML = '<option value="">â€” any â€”</option>' +
+        sel.innerHTML = '<option value="">— any —</option>' +
           vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
         sel.value = keep;
         sels[i] = keep;
@@ -1672,10 +1672,10 @@
       if (!hint) return;
       const open = openBatches();
       const matches = chainMatches(sels);
-      if (!open.length) { hint.textContent = 'No batches part-way through â€” fill in section 1 below to start one.'; return; }
+      if (!open.length) { hint.textContent = 'No batches part-way through — fill in section 1 below to start one.'; return; }
       if (matches.length === 1 && sels.some(Boolean)) {
         const next = entryStages.find(st => !stageDone(matches[0], st.key));
-        hint.textContent = `Showing this batch â€” next section to fill in: ${next ? next.label : 'none'}.`;
+        hint.textContent = `Showing this batch — next section to fill in: ${next ? next.label : 'none'}.`;
       } else {
         hint.textContent = `${open.length} batch${open.length === 1 ? '' : 'es'} part-way through, ${matches.length} matching. Narrow it down to one, or press "Start a new entry".`;
       }
@@ -1706,15 +1706,15 @@
       const fin = e.financeRep && e.financeRep.by ? e.financeRep.by : '';
       const cb = entryCompletedBy(e);
       if (st && st.signoffRequired === false) return 'No sign-off (no weights or counts in this stage)';
-      if (!fin) return cb ? `${esc(cb)} Â· finance: not recorded (before finance sign-off was added)` : 'Not recorded (before finance sign-off was added)';
-      return `${esc(cb || 'â€”')} Â· finance: ${esc(fin)}`;
+      if (!fin) return cb ? `${esc(cb)} · finance: not recorded (before finance sign-off was added)` : 'Not recorded (before finance sign-off was added)';
+      return `${esc(cb || '—')} · finance: ${esc(fin)}`;
     }
     function renderStockTable() {
       const list = filteredEntries();
       if (!list.length) { tableWrap.innerHTML = `<div class="ml-empty">No entries yet${entries.length ? ' matching these filters' : ''}.</div>`; return; }
       const byJob = new Map();
-      list.forEach((e) => { const j = entryJob(e) || 'â€”'; if (!byJob.has(j)) byJob.set(j, []); byJob.get(j).push(e); });
-      const num = (v) => (hasVal(v) ? esc(v) : 'â€”');
+      list.forEach((e) => { const j = entryJob(e) || '—'; if (!byJob.has(j)) byJob.set(j, []); byJob.get(j).push(e); });
+      const num = (v) => (hasVal(v) ? esc(v) : '—');
       let html = `<table class="ml-table"><thead><tr><th>Job</th><th>Stage</th><th>Status</th><th>Last submitted</th><th>Finance rep.</th><th>Weight in (kg)</th><th>Weight out (kg)</th><th></th></tr></thead><tbody>`;
       byJob.forEach((rows, job) => {
         const subs = rows.filter(isSubmitted).sort(stageSort);
@@ -1725,13 +1725,13 @@
           const lv = last.values || {};
           html += `<tr><td><strong>${esc(job)}</strong></td><td>${stageNoOf(last, subs)}${drafts.length ? ' <span class="ml-badge ml-badge-muted">+ draft</span>' : ''}</td>
             <td><span class="ml-badge ${stageStatusOf(last) === 'complete' ? 'ml-badge-ok' : 'ml-badge-muted'}">${statusLabel(stageStatusOf(last))}</span></td>
-            <td style="white-space:nowrap;">${esc(dayMon(last.submittedAt))} Â· ${esc(stageSignedBy(last) || 'â€”')}</td>
-            <td>${esc((last.financeRep && last.financeRep.by) || 'â€”')}</td><td class="ml-num">${num(lv.weightIn)}</td><td class="ml-num">${num(lv.weightOut)}</td>
+            <td style="white-space:nowrap;">${esc(dayMon(last.submittedAt))} · ${esc(stageSignedBy(last) || '—')}</td>
+            <td>${esc((last.financeRep && last.financeRep.by) || '—')}</td><td class="ml-num">${num(lv.weightIn)}</td><td class="ml-num">${num(lv.weightOut)}</td>
             <td style="white-space:nowrap;"><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${last.id}">View</button>
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${last.id}" title="Print the whole job: every stage, oldest first">PDF</button>
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-expand="${jid}">Stages (${subs.length + drafts.length})</button></td></tr>`;
         } else {
-          html += `<tr><td><strong>${esc(job)}</strong></td><td>â€”</td><td><span class="ml-badge ml-badge-muted">Draft</span></td><td>â€”</td><td>â€”</td><td>â€”</td><td>â€”</td>
+          html += `<tr><td><strong>${esc(job)}</strong></td><td>—</td><td><span class="ml-badge ml-badge-muted">Draft</span></td><td>—</td><td>—</td><td>—</td><td>—</td>
             <td><button class="ml-btn ml-btn-flat ml-btn-sm" data-edit="${drafts[0].id}">Edit</button>
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-pdf="${drafts[0].id}" title="Print this job as the paper form">PDF</button>
               <button class="ml-btn ml-btn-flat ml-btn-sm" data-expand="${jid}">Stages (${drafts.length})</button></td></tr>`;
@@ -1769,7 +1769,7 @@
         if (!entry) return;
         const ref = entryJobRef(entry);
         const dateStr = fmtSubmittedAt(entry.submittedAt) || '(no date)';
-        const summary = [dateStr, ref.val ? `Job ${ref.val}` : '', entryCompletedBy(entry) || ''].filter(Boolean).join(' Â· ');
+        const summary = [dateStr, ref.val ? `Job ${ref.val}` : '', entryCompletedBy(entry) || ''].filter(Boolean).join(' · ');
         Promise.all([
           loadLib('permission-rules.js?v=8', 'PermissionRules'),
           loadLib('delete-submission-modal.js?v=1', 'DeleteSubmissionModal')
@@ -1810,19 +1810,19 @@
         ? customBody.listColumns.map(c => ({ label: c.label, custom: true, get: c.get }))
         : listFields();
 
-      let html = `<table class="ml-table"><thead><tr>${submitFlow ? '<th>Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th>' : ''}${!submitFlow ? cols.map(f => `<th>${esc(f.label)}</th>`).join('') : ''}${photosOn ? '<th title="Photos">ðŸ“·</th>' : ''}<th>In spec</th><th></th></tr></thead><tbody>`;
+      let html = `<table class="ml-table"><thead><tr>${submitFlow ? '<th>Submitted</th><th>Completed by</th><th>Job / Ref</th><th>Status</th>' : ''}${!submitFlow ? cols.map(f => `<th>${esc(f.label)}</th>`).join('') : ''}${photosOn ? '<th title="Photos">??</th>' : ''}<th>In spec</th><th></th></tr></thead><tbody>`;
       list.forEach(entryRow => {
         const ref = entryJobRef(entryRow);
         const refCell = ref.val
           ? (ref.isJob ? `<strong>${esc(ref.val)}</strong>` : `<span style="color:#8a939b;font-size:11px;">${esc(ref.val)}</span>`)
-          : 'â€”';
+          : '—';
         html += `<tr class="${entryRow.inSpec === false ? 'ml-fail' : ''}">`;
         if (submitFlow) {
           html += `<td style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${fmtSubmittedAt(entryRow.submittedAt)}</td>`;
-          html += `<td>${esc(entryCompletedBy(entryRow) || 'â€”')}</td>`;
+          html += `<td>${esc(entryCompletedBy(entryRow) || '—')}</td>`;
           html += `<td>${refCell}</td>`;
-          if (entryRow.verification) html += `<td><span class="ml-badge ml-badge-ok">âœ“ Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
-          else if (isSubmitted(entryRow)) html += `<td><span class="ml-badge ml-badge-ok">âœ“ Submitted</span></td>`;
+          if (entryRow.verification) html += `<td><span class="ml-badge ml-badge-ok">? Verified</span><br><span class="ml-muted" style="font-size:10px;">${esc(entryRow.verification.verifiedBy)}</span></td>`;
+          else if (isSubmitted(entryRow)) html += `<td><span class="ml-badge ml-badge-ok">? Submitted</span></td>`;
           else html += `<td><span class="ml-badge ml-badge-muted">Draft</span></td>`;
         } else {
           cols.forEach(f => {
@@ -1833,8 +1833,8 @@
               if (isStamp(f)) v = stampText(v);
             }
             const bad = !f.custom && isBadValue(f, v);
-            if (f.type === 'yesno' || f.type === 'select') v = v || 'â€”';
-            else if (v === '' || v == null) v = 'â€”';
+            if (f.type === 'yesno' || f.type === 'select') v = v || '—';
+            else if (v === '' || v == null) v = '—';
             html += `<td class="${f.type === 'number' || f.type === 'computed' ? 'ml-num' : ''}">${bad ? `<span class="ml-bad">${esc(v)} &#9888;</span>` : esc(v)}</td>`;
           });
         }
@@ -1856,7 +1856,7 @@
           if (!counts) return;
           table.querySelectorAll('[data-photos-for]').forEach((td) => {
             const n = counts[td.dataset.photosFor] || 0;
-            td.textContent = n ? 'ðŸ“· ' + n : '';
+            td.textContent = n ? '?? ' + n : '';
           });
         });
       }
@@ -1875,7 +1875,7 @@
           if (!entry) return;
           const ref = entryJobRef(entry);
           const dateStr = fmtSubmittedAt(entry.submittedAt) || '(no date)';
-          const summary = [dateStr, ref.val ? `Job ${ref.val}` : '', entryCompletedBy(entry) || ''].filter(Boolean).join(' Â· ');
+          const summary = [dateStr, ref.val ? `Job ${ref.val}` : '', entryCompletedBy(entry) || ''].filter(Boolean).join(' · ');
           Promise.all([
             loadLib('permission-rules.js?v=8', 'PermissionRules'),
             loadLib('delete-submission-modal.js?v=1', 'DeleteSubmissionModal')
@@ -1928,7 +1928,7 @@
         const when = done.at ? new Date(done.at).toLocaleDateString() : '';
         state = unlockedStages.has(field.stage)
           ? `<span class="ml-stage-state ml-stage-open">Unlocked for editing</span>`
-          : `<span class="ml-stage-state">âœ“ Submitted ${esc(when)}` +
+          : `<span class="ml-stage-state">? Submitted ${esc(when)}` +
             (isSubmitted(existing) ? '' : ` <button type="button" class="ml-btn ml-btn-flat ml-btn-sm" data-unlock="${esc(field.stage)}">Edit</button>`) +
             `</span>`;
       } else if (field.stage === activeKey) {
@@ -1978,7 +1978,7 @@
       unlockedStages.add(stageKey);
       keepUnlocked = true;
       openForm(existing.id);
-      toast('Section unlocked â€” the change will be recorded against your name.');
+      toast('Section unlocked — the change will be recorded against your name.');
     }
 
 
@@ -2233,10 +2233,10 @@
       const isOver = (sc.over || []).indexOf(key) !== -1, isUnder = (sc.under || []).some(u => u.key === key);
       const steps = [].concat(isOver ? st.over || [] : [], isUnder ? st.under || [] : []);
       const bg = scoreModal(cls, `<h2><span class="ml-statusbadge ${cls}">${esc(level)}</span></h2>
-        ${f ? `<p><b>${esc(f.label)}: ${esc(opt ? opt.label : val)}</b>${opt && opt.detail ? ' â€” ' + esc(opt.detail) : ''}</p>` : ''}
+        ${f ? `<p><b>${esc(f.label)}: ${esc(opt ? opt.label : val)}</b>${opt && opt.detail ? ' — ' + esc(opt.detail) : ''}</p>` : ''}
         <p><b>Immediate action</b></p><ul>${acts.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
         ${steps.length ? `<p><b>Suggested corrective actions</b></p><ul>${steps.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
-        <div class="ml-sc-btns"><button type="button" class="primary" data-ok>Got it â€” continue</button></div>`);
+        <div class="ml-sc-btns"><button type="button" class="primary" data-ok>Got it — continue</button></div>`);
       const done = () => {
         bg.remove();
         const ta = el(`${ns}_f_correctiveActions`);
@@ -2287,7 +2287,7 @@
         if (panel) {
           const cls = s.status ? 'st-' + s.status.toLowerCase() : '';
           panel.querySelector('[data-score-badge]').innerHTML = `<span class="ml-statusbadge ${cls}">${esc(s.status || (s.entered ? `${s.entered} of ${sc.signs.length} signs scored` : 'Not scored'))}</span>`
-            + (s.entered ? ` <span class="hint">worst ${s.worst} Â· total ${s.total} / ${sc.maxTotal}</span>` : '');
+            + (s.entered ? ` <span class="hint">worst ${s.worst} · total ${s.total} / ${sc.maxTotal}</span>` : '');
           panel.querySelector('[data-score-interp]').textContent = s.interp;
         }
         // the corrective action box shows once a sign is above 0 (or a Yes/No check failed), and stays if it already has text
@@ -2325,7 +2325,7 @@
       }
       lockedNote.hidden = !locked;
       lockedNote.textContent = locked
-        ? `Submitted${existing.submittedAt ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} â€” this submission can no longer be changed.`
+        ? `Submitted${existing.submittedAt ? ' on ' + new Date(existing.submittedAt).toLocaleString() : ''} — this submission can no longer be changed.`
         : '';
       if (window.NcRaise) {
         let ncSlot = lockedNote.nextElementSibling;
@@ -2442,7 +2442,7 @@
         const st = entryStages.find((x) => x.key === (fixing || activeKey));
         const submitBtn = el(`${ns}_submitBtn`);
         if (submitBtn) submitBtn.textContent = !st ? 'Submit'
-          : (fixing ? `Save correction â€” ${st.label}` : `Submit â€” ${st.label}`);
+          : (fixing ? `Save correction — ${st.label}` : `Submit — ${st.label}`);
       }
       if (submitFlow) {
         container.querySelectorAll('input,select,textarea,.ml-yesno button,.ml-score button').forEach(inp => { inp.disabled = locked; });
@@ -2512,9 +2512,9 @@
     }
     function stageSummaryLine(last, list, next) {
       const n = stageNoOf(last, list);
-      if (stageStatusOf(last) === 'complete') return `Complete, stage ${n} Â· submitted ${dayMon(last.submittedAt)} by ${stageSignedBy(last) || 'â€”'}`;
+      if (stageStatusOf(last) === 'complete') return `Complete, stage ${n} · submitted ${dayMon(last.submittedAt)} by ${stageSignedBy(last) || '—'}`;
       const fin = last.financeRep && last.financeRep.by ? `, finance: ${last.financeRep.by}` : '';
-      return `In progress, ${next ? 'stage ' + (n + 1) : 'stage ' + n} Â· last submitted ${dayMon(last.submittedAt)} by ${stageSignedBy(last) || 'â€”'}${fin}`;
+      return `In progress, ${next ? 'stage ' + (n + 1) : 'stage ' + n} · last submitted ${dayMon(last.submittedAt)} by ${stageSignedBy(last) || '—'}${fin}`;
     }
     function clearStageLocks() {
       progLockedKeys.forEach((k) => {
@@ -2551,7 +2551,7 @@
       }
       if (locked && existing) {
         const list = jobStages(entryJob(existing));
-        paintStageLine(container, `Stage ${stageNoOf(existing, list)} Â· ${statusLabel(stageStatusOf(existing))} Â· submitted ${dayMon(existing.submittedAt)} by ${stageSignedBy(existing) || 'â€”'}`, stageStatusOf(existing) === 'complete');
+        paintStageLine(container, `Stage ${stageNoOf(existing, list)} · ${statusLabel(stageStatusOf(existing))} · submitted ${dayMon(existing.submittedAt)} by ${stageSignedBy(existing) || '—'}`, stageStatusOf(existing) === 'complete');
         const st = existing.stage || null;
         if (st && st.signoffRequired === false) progViewNote = 'No sign-off (no weights or counts in this stage).';
         else if (!existing.financeRep && !(existing.completedBy && existing.completedBy.signature)) progViewNote = 'Not recorded (before finance sign-off was added).';
@@ -2561,8 +2561,8 @@
       }
       if (existing) {          // a reopened draft: its earlier stage is still locked, its own sign-offs are exactly what was typed
         const prev = existing.previousSubmissionId ? entries.find((x) => x.id === existing.previousSubmissionId) : null;
-        if (prev) { progPrev = prev; lockFromStage(prev); paintStageLine(container, `Draft for stage ${stageNoOf(prev) + 1} Â· continues stage ${stageNoOf(prev)}`, false); }
-        else paintStageLine(container, 'Draft Â· first entry for this job', false);
+        if (prev) { progPrev = prev; lockFromStage(prev); paintStageLine(container, `Draft for stage ${stageNoOf(prev) + 1} · continues stage ${stageNoOf(prev)}`, false); }
+        else paintStageLine(container, 'Draft · first entry for this job', false);
         updateSignOffUi();
         return;
       }
@@ -2786,7 +2786,7 @@
               const r = await window.NcRaise.open({
                 recordRef: docCode, jobNumber: String(values[jobKeyOf()] || '').trim(),
                 submissionId: editingId || '', category: b.category, severity: b.severity, description: b.description,
-                allowSkip: b.allowSkip, heading: 'âš  Out of spec â€” raise an NC'
+                allowSkip: b.allowSkip, heading: '? Out of spec — raise an NC'
               });
               if (!r) return;                   // cancelled: back to the form (a spec with nc_optional_skip off cannot be skipped)
               ncHandled.add(b.key);
@@ -2810,8 +2810,8 @@
                 if (!isNaN(_n) && (_n < (t.min ?? -Infinity) || _n > (t.max ?? Infinity))) {
                   const _bk = `rr:${_rri}:${t.field}:${_n}`;
                   if (!ncHandled.has(_bk)) {
-                    const _rng = (t.min != null && t.max != null) ? `${t.min}â€“${t.max}${t.unit || ''}` : (t.max != null ? `max ${t.max}${t.unit || ''}` : `min ${t.min}${t.unit || ''}`);
-                    breaches.push({ key: _bk, category: t.category || 'Other', severity: t.severity || 'minor', description: `${_uLabel} â€” ${t.label} ${_n}${t.unit || ''} â€” outside accepted range ${_rng}.` });
+                    const _rng = (t.min != null && t.max != null) ? `${t.min}–${t.max}${t.unit || ''}` : (t.max != null ? `max ${t.max}${t.unit || ''}` : `min ${t.min}${t.unit || ''}`);
+                    breaches.push({ key: _bk, category: t.category || 'Other', severity: t.severity || 'minor', description: `${_uLabel} — ${t.label} ${_n}${t.unit || ''} — outside accepted range ${_rng}.` });
                   }
                 }
               });
@@ -2839,7 +2839,7 @@
             const others = entryFields.filter(f => badAnswerOf(f) && isBadValue(f, values[f.key])).map(f => `${f.label}: ${values[f.key]}`);
             const note = String(values[config.redPrompt && config.redPrompt.field || 'correctiveActions'] || '').trim();
             const description = `Dry monitoring batch status ${s.status} (worst score ${s.worst}, total ${s.total}/${sc.maxTotal}). Job ${String(values[jobKeyOf()] || '').trim()}`
-              + `, ${values.dryRoomArea || 'area not set'}, entry date ${values.entryDate || 'â€”'}. Signs found: ${signs.join('; ')}.` + (others.length ? ` Also: ${others.join('; ')}.` : '')
+              + `, ${values.dryRoomArea || 'area not set'}, entry date ${values.entryDate || '—'}. Signs found: ${signs.join('; ')}.` + (others.length ? ` Also: ${others.join('; ')}.` : '')
               + (s.interp ? ` ${s.interp}.` : '');
             try {
               const nc = await window.NcRaise.create({
@@ -2859,7 +2859,7 @@
           const ncOnYesFields = (config.entryFields || []).filter(f => f.ncOnYes && values[f.key] === 'Yes');
           const subId = editingId || formEntryId || '';
           const jobNo = String(values[jobKeyOf()] || '').trim();
-          const entryDateVal = values.entryDate || 'â€”';
+          const entryDateVal = values.entryDate || '—';
 
           // Group by ncGroup; ungrouped fields use their own key as the group.
           const groups = {};
@@ -2874,7 +2874,7 @@
             if (ncHandled.has(ncKey)) continue;
 
             // Build description listing the specific issues found in this group. A field with a percentage
-            // sub-question (pctKey) carries the answer in brackets: "Foot damage (> 5%) observed â€” Job â€¦".
+            // sub-question (pctKey) carries the answer in brackets: "Foot damage (> 5%) observed — Job …".
             const issueName = (f) => {
               const pf = f.pctKey ? entryFields.find(x => x.key === f.pctKey) : null;
               const pv = pf ? String(values[f.pctKey] || '') : '';
@@ -2883,12 +2883,12 @@
             let description;
             if (fields.length === 1) {
               const name = issueName(fields[0]);
-              description = `${name}${/^presence/i.test(name) ? '' : ' observed'} â€” Job ${jobNo}, ${entryDateVal}`;
+              description = `${name}${/^presence/i.test(name) ? '' : ' observed'} — Job ${jobNo}, ${entryDateVal}`;
             } else {
               const issueList = fields.map((f, i) => { const n = issueName(f); return i ? n.charAt(0).toLowerCase() + n.slice(1) : n; });
               const last = issueList.pop();
               const readable = issueList.length ? issueList.join(', ') + ' and ' + last : last;
-              description = `Product condition: ${readable} observed â€” Job ${jobNo}, ${entryDateVal}`;
+              description = `Product condition: ${readable} observed — Job ${jobNo}, ${entryDateVal}`;
             }
 
             // Collect the per-field notes: the field's own comment box (commentKey), else the Yes/No banner note.
@@ -2922,7 +2922,7 @@
           const r = await window.NcRaise.open({
             recordRef: docCode, jobNumber: String(values[jobKeyOf()] || '').trim(),
             submissionId: editingId || '', category: b.category, severity: b.severity, description: b.description,
-            allowSkip: !config.ncAlways, heading: config.ncAlways ? 'âš  Raise NC â€” every entry on this record is an NC' : 'âš  Out of spec â€” raise an NC'
+            allowSkip: !config.ncAlways, heading: config.ncAlways ? '? Raise NC — every entry on this record is an NC' : '? Out of spec — raise an NC'
           });
           if (!r) return;                       // cancelled: back to the form (ncAlways cannot be skipped)
           ncHandled.add(b.key);
@@ -3024,7 +3024,7 @@
         // a server refusal (sign-off rule, Complete job) says why; the stored record is re-read so the failed attempt is not left half-applied
         const why = prog && window.FacilityApi && window.FacilityApi.lastReject;
         if (prog) { await load(true); if (editingId && !entries.some((e) => e.id === editingId)) editingId = null; }
-        toast(why || 'Save failed â€” please retry.');
+        toast(why || 'Save failed — please retry.');
         return;
       }
       // the server stamps the stage (number, status, who/when): take the stored copy back
@@ -3045,14 +3045,14 @@
       if (submitFlow) {
         if (entryStages && finalize && correctingStage) {
           const st = entryStages.find((x) => x.key === correctingStage);
-          toast(`Correction saved to ${st ? st.label : 'that section'} â€” recorded against your name.`);
+          toast(`Correction saved to ${st ? st.label : 'that section'} — recorded against your name.`);
         } else if (entryStages && finalize) {
           const st = entryStages.find((x) => x.key === savingStage);
           toast(allStagesDone
-            ? 'Final section submitted â€” this entry is now complete and locked.'
+            ? 'Final section submitted — this entry is now complete and locked.'
             : `${st ? st.label : 'Section'} submitted. Come back by job no. for the next section.`);
         } else if (prog && finalize) {
-          toast(`Stage ${stageNoOf(savedEntry)} submitted${stageStatusOf(savedEntry) === 'complete' ? ' â€” this job is now Complete and locked.' : '. Pick the job again to continue it.'}`);
+          toast(`Stage ${stageNoOf(savedEntry)} submitted${stageStatusOf(savedEntry) === 'complete' ? ' — this job is now Complete and locked.' : '. Pick the job again to continue it.'}`);
         } else toast(finalize ? 'Entry submitted.' + softNote : 'Draft saved.');
       }
       else toast(editingId ? 'Entry updated.' : 'Entry added.');
@@ -3072,7 +3072,7 @@
         }).then(function (r) { return r.json(); }).then(function (data) {
           if (!data.ncsReady || !data.ncsReady.length) return;
           const refs = data.ncsReady.map(function (n) { return n.nc_ref; }).join(', ');
-          toast('âœ“ NC ready to close: ' + refs + ' â€” open the NC log to confirm corrective action.');
+          toast('? NC ready to close: ' + refs + ' — open the NC log to confirm corrective action.');
         }).catch(function (e) { console.warn('NC check-resolution failed', e); });
       }
     }
@@ -3141,7 +3141,7 @@
       if (row) row.remove();
     }
 
-    // â”€â”€ Daily verification log + monthly PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Daily verification log + monthly PDF ----------------------------------------------
     const dailyLog = isDailyLog(config);
     const logWhen = (e) => e.submittedAt || e.createdAt || 0;
     const logDayOf = (e) => facilityDateOf(logWhen(e));
@@ -3164,7 +3164,7 @@
         // Position to insert the entry-level Deviation column: after the last number field
         const lastNumIdx = rrFields.reduce((last, f, i) => f.type === 'number' ? i : last, -1);
         const devAfter = lastNumIdx; // deviation goes after this index (-1 = before all fields)
-        const devText = (inSpec) => inSpec === null || inSpec === undefined ? 'â€”'
+        const devText = (inSpec) => inSpec === null || inSpec === undefined ? '—'
           : (deviationPolarity === 'accurate' ? (inSpec ? 'Yes' : 'No') : (inSpec ? 'No' : 'Yes'));
         // Build header row inserting deviation after the last number field
         const headCells = [];
@@ -3180,10 +3180,10 @@
           const readings = Array.isArray(ev.readings) ? ev.readings : rrNormalise(entryRow);
           const rowCount = Math.max(readings.length, 1);
           const failCls = entryRow.inSpec === false ? ' class="ml-fail"' : '';
-          const verifiedCell = `<td rowspan="${rowCount}">${vf ? `âœ“ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : 'Awaiting'}</td>`;
+          const verifiedCell = `<td rowspan="${rowCount}">${vf ? `? ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : 'Awaiting'}</td>`;
           if (!readings.length) {
-            const emptyCells = rrFields.map((f, i) => `<td>â€”</td>${i === devAfter ? `<td>â€”</td>` : ''}`).join('') + (devAfter < 0 ? '<td>â€”</td>' : '');
-            html += `<tr${failCls}>${o.showDate ? `<td style="white-space:nowrap;">${esc(logDayOf(entryRow))}</td>` : ''}<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(entryRow)))}</td>${emptyCells}<td>${esc(entryCompletedBy(entryRow) || 'â€”')}</td>${verifiedCell}</tr>`;
+            const emptyCells = rrFields.map((f, i) => `<td>—</td>${i === devAfter ? `<td>—</td>` : ''}`).join('') + (devAfter < 0 ? '<td>—</td>' : '');
+            html += `<tr${failCls}>${o.showDate ? `<td style="white-space:nowrap;">${esc(logDayOf(entryRow))}</td>` : ''}<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(entryRow)))}</td>${emptyCells}<td>${esc(entryCompletedBy(entryRow) || '—')}</td>${verifiedCell}</tr>`;
             return;
           }
           readings.forEach((row, ri) => {
@@ -3200,13 +3200,13 @@
                 return !isNaN(n) && (n < (t.min ?? -Infinity) || n > (t.max ?? Infinity));
               });
               const cls = f.type === 'number' ? ' class="ml-num"' : '';
-              html += `<td${cls}>${isOos ? `<span class="ml-bad">${esc(val)} &#9888;</span>` : esc(val || 'â€”')}</td>`;
+              html += `<td${cls}>${isOos ? `<span class="ml-bad">${esc(val)} &#9888;</span>` : esc(val || '—')}</td>`;
               // Insert Deviation (rowspan, entry-level) after the last number field
               if (i === devAfter && ri === 0) html += `<td rowspan="${rowCount}">${esc(devText(entryRow.inSpec))}</td>`;
             });
             if (devAfter < 0 && ri === 0) html += `<td rowspan="${rowCount}">${esc(devText(entryRow.inSpec))}</td>`;
             if (ri === 0) {
-              html += `<td rowspan="${rowCount}">${esc(entryCompletedBy(entryRow) || 'â€”')}</td>`;
+              html += `<td rowspan="${rowCount}">${esc(entryCompletedBy(entryRow) || '—')}</td>`;
               html += verifiedCell;
             }
             html += `</tr>`;
@@ -3222,18 +3222,18 @@
         if (o.pick) html += `<td>${vf ? '' : `<input type="checkbox" class="ml-verify-pick" data-which="${esc(o.which || 'primary')}" value="${esc(entryRow.id)}" aria-label="Verify this entry">`}</td>`;
         if (o.showDate) html += `<td style="white-space:nowrap;">${esc(logDayOf(entryRow))}</td>`;
         html += `<td style="white-space:nowrap;">${esc(facilityTimeOf(logWhen(entryRow)))}</td>`;
-        html += `<td>${esc(entryCompletedBy(entryRow) || 'â€”')}</td>`;
+        html += `<td>${esc(entryCompletedBy(entryRow) || '—')}</td>`;
         cols.forEach(f => {
           let v;
           if (f.custom) { try { v = f.get(entryRow.values, entryRow); } catch (e) { v = ''; } }
           else { v = valueFor(entryRow, f); if (isStamp(f)) v = stampText(v); }
           const bad = !f.custom && isBadValue(f, v);
-          if (v === '' || v == null) v = 'â€”';
+          if (v === '' || v == null) v = '—';
           const cls = f.type === 'number' || f.type === 'computed' ? 'ml-num' : (f.type === 'textarea' ? 'ml-daylog-text' : '');
           html += `<td class="${cls}">${bad ? `<span class="ml-bad">${esc(v)} &#9888;</span>` : esc(v)}</td>`;
         });
         html += `<td>${statusBadge(entryRow.inSpec)}</td>`;
-        html += `<td>${vf ? `âœ“ ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="ml-muted">Awaiting</span>'}</td>`;
+        html += `<td>${vf ? `? ${esc(vf.verifiedBy || '')}${vf.verifiedDate ? `<br><span class="ml-muted" style="font-size:10px;">${esc(vf.verifiedDate)}</span>` : ''}` : '<span class="ml-muted">Awaiting</span>'}</td>`;
         html += `</tr>`;
       });
       return html + `</tbody></table>`;
@@ -3245,14 +3245,14 @@
       const today = facilityToday();
       if (!/^\d{4}-\d{2}$/.test(ym || '')) ym = today.slice(0, 7);
       const list = entries.filter(e => isSubmitted(e) && logDayOf(e).slice(0, 7) === ym && logDayOf(e) <= today);
-      const heading = `${config.title || docTitle || title} â€” ${monthLabel(ym)}`;
+      const heading = `${config.title || docTitle || title} — ${monthLabel(ym)}`;
       if (!list.length) {
         toast(`No submissions in ${monthLabel(ym)} to print.`);
         if (window.__pdfOnly && window.__pdfFail) window.__pdfFail(`No submissions in ${monthLabel(ym)} to print.`);
         return;
       }
       const lastDay = list.reduce((d, e) => (logDayOf(e) > d ? logDayOf(e) : d), '');
-      const subLine = `${list.length} ${list.length === 1 ? 'submission' : 'submissions'} Â· ${longDayLabel(ym + '-01')} to ${longDayLabel(ym === today.slice(0, 7) ? today : lastDay)}`;
+      const subLine = `${list.length} ${list.length === 1 ? 'submission' : 'submissions'} · ${longDayLabel(ym + '-01')} to ${longDayLabel(ym === today.slice(0, 7) ? today : lastDay)}`;
        const _dhm = window.DocHeader && window.DocHeader.current ? window.DocHeader.current(recordKey) : null;
        const sheetHeadHtml = window.DocHeader
          ? window.DocHeader.blockHtml(_dhm, null, null, '../assets/abagold-logo.png')
@@ -3302,7 +3302,7 @@ ${pageStyleCss}
 </style>
 </head><body>
 <div class="ml-print-bar">
-  <button onclick="window.print()">â¬‡ Save / Print PDF</button>
+  <button onclick="window.print()">? Save / Print PDF</button>
 </div>
 <div class="ml-sheet">${sheetsHtml}</div>
 </body></html>`);
@@ -3357,7 +3357,7 @@ ${pageStyleCss}
       const list = stages.includes(entryRow) || isSubmitted(entryRow) ? stages : stages.concat([entryRow]);
       if (list.length < 1) return buildEntrySheet(entryRow);
       const sum = list.map((e) => { const v = e.values || {};
-        return `<tr><td>${isSubmitted(e) ? stageNoOf(e, stages) : 'Draft'}</td><td>${esc(isSubmitted(e) ? statusLabel(stageStatusOf(e)) : 'â€”')}</td><td>${esc(dayMon(e.submittedAt) || '')}</td>
+        return `<tr><td>${isSubmitted(e) ? stageNoOf(e, stages) : 'Draft'}</td><td>${esc(isSubmitted(e) ? statusLabel(stageStatusOf(e)) : '—')}</td><td>${esc(dayMon(e.submittedAt) || '')}</td>
           <td>${esc(stageSignedBy(e) || '')}</td><td>${esc((e.financeRep && e.financeRep.by) || '')}</td><td>${esc(v.weightIn || '')}</td><td>${esc(v.weightOut || '')}</td></tr>`; }).join('');
       const head = `<div class="sheet-jobsofar"><h3 style="margin:0 0 6px;">Job so far: ${esc(entryJob(entryRow))}</h3>
         <table class="sheet-body"><tr><th>Stage</th><th>Status</th><th>Submitted</th><th>By</th><th>Finance rep.</th><th>Weight in (kg)</th><th>Weight out (kg)</th></tr>${sum}</table></div>`;
@@ -3459,7 +3459,7 @@ ${pageStyleCss}
       const bad = failedChecks(e);
       const note = String(v.correctiveActions || '').trim();
       const st = sc && v[sc.status] ? `<b>${esc(v[sc.status])}</b> (worst ${esc(v[sc.worst])}, total ${esc(v[sc.total])}/${sc.maxTotal}) ` : '';
-      const what = bad.length ? `${st}<span class="ml-hist-bad">NC: ${esc(bad.join(', '))}</span>${note ? ' â€” ' + esc(note) : ''}` : st + 'Conforms';
+      const what = bad.length ? `${st}<span class="ml-hist-bad">NC: ${esc(bad.join(', '))}</span>${note ? ' — ' + esc(note) : ''}` : st + 'Conforms';
       return { when: esc(histStamp(e)), what, where: esc(v.dryRoomArea || ''), by: esc((e.completedBy && e.completedBy.by) || ''), nc: bad.length > 0 };
     }
     function checkTableHtml(list, cls) {
@@ -3499,11 +3499,11 @@ ${pageStyleCss}
         const f = entryFields.find(x => x.key === k);
         const sv = v[k];
         const has = sv != null && sv !== '';
-        return `<tr><td>${esc(f ? f.label : k)}</td><td>${has ? (isBadValue(f, sv) ? `<span class="ml-bad">${esc(optionLabel(f, sv))} &#9888;</span>` : esc(optionLabel(f, sv))) : 'â€”'}</td></tr>`;
+        return `<tr><td>${esc(f ? f.label : k)}</td><td>${has ? (isBadValue(f, sv) ? `<span class="ml-bad">${esc(optionLabel(f, sv))} &#9888;</span>` : esc(optionLabel(f, sv))) : '—'}</td></tr>`;
       }).join('');
       const tf = entryFields.find(x => x.key === 'trolleysClearlyMarked');
-      const trol = tf ? `<tr><td>${esc(tf.label)}</td><td>${esc(v.trolleysClearlyMarked || 'â€”')}</td></tr>` : '';
-      const st = v[sc.status] ? `<div style="margin:6px 0;font-size:15px;"><b>Batch status: ${esc(v[sc.status])}</b> &nbsp; Worst score ${esc(v[sc.worst])} Â· Total ${esc(v[sc.total])} / ${sc.maxTotal}</div>` : '';
+      const trol = tf ? `<tr><td>${esc(tf.label)}</td><td>${esc(v.trolleysClearlyMarked || '—')}</td></tr>` : '';
+      const st = v[sc.status] ? `<div style="margin:6px 0;font-size:15px;"><b>Batch status: ${esc(v[sc.status])}</b> &nbsp; Worst score ${esc(v[sc.worst])} · Total ${esc(v[sc.total])} / ${sc.maxTotal}</div>` : '';
       const ncs = (e.nc_refs && e.nc_refs.length) ? `<div style="font-size:11px;">NC raised: ${esc(e.nc_refs.join(', '))}</div>` : '';
       return `<div class="dc-block"><div class="dc-bhead">QC signs (latest check)</div>${st}<table class="dc-checks"><colgroup><col style="width:30%"><col style="width:70%"></colgroup>`
         + `<thead><tr><th>Sign</th><th>Score</th></tr></thead><tbody>${rows}${trol}</tbody></table>${ncs}</div>`;
@@ -3524,26 +3524,26 @@ ${pageStyleCss}
           + part.map(e => `<td${o && o.bold ? ' style="font-weight:700"' : ''}>${cell(e, fn)}</td>`).join('') + '</tr>';
         const signRows = signF.map(f => row(f.label, v => {
           const x = v[f.key];
-          if (x == null || x === '') return 'â€”';
+          if (x == null || x === '') return '—';
           return isBadValue(f, x) ? `<span class="ml-bad">${esc(optionLabel(f, x))}</span>` : esc(optionLabel(f, x));
         })).join('');
-        const num = x => (x == null || x === '' ? 'â€”' : esc(x));
-        const sides = (a, b) => v => (v[a] == null || v[a] === '' ? 'â€”' : `${esc(v[a])} / ${esc(v[b])}`);
+        const num = x => (x == null || x === '' ? '—' : esc(x));
+        const sides = (a, b) => v => (v[a] == null || v[a] === '' ? '—' : `${esc(v[a])} / ${esc(v[b])}`);
         const old = part.some(e => !hasScores(e));
         tables.push(`<table class="dc-checks dc-matrix" style="width:${20 + w * part.length}%;"><colgroup><col style="width:20%">${part.map(() => `<col style="width:${w}%">`).join('')}</colgroup>`
-          + `<thead><tr><th>${list.length > PER ? `Checks ${i + 1}â€“${i + part.length} of ${list.length}` : 'Check'}</th>${part.map((e, j) => `<th>${i + j + 1}</th>`).join('')}</tr></thead><tbody>`
+          + `<thead><tr><th>${list.length > PER ? `Checks ${i + 1}–${i + part.length} of ${list.length}` : 'Check'}</th>${part.map((e, j) => `<th>${i + j + 1}</th>`).join('')}</tr></thead><tbody>`
           + row('Date / time', (v, e) => esc(histStamp(e)))
-          + row('Location', v => esc(v.dryRoomArea || 'â€”'))
-          + row('Checked by', (v, e) => esc((e.completedBy && e.completedBy.by) || 'â€”'))
+          + row('Location', v => esc(v.dryRoomArea || '—'))
+          + row('Checked by', (v, e) => esc((e.completedBy && e.completedBy.by) || '—'))
           + signRows
           + row('Worst score', v => num(v[sc.worst]))
           + row('Total score (/ ' + sc.maxTotal + ')', v => num(v[sc.total]))
           + row('Overdrying worst / total', sides('overdryingWorst', 'overdryingTotal'))
           + row('Underdrying worst / total', sides('underdryingWorst', 'underdryingTotal'))
-          + row('Batch status', v => (v[sc.status] ? esc(v[sc.status]) : 'â€”'), { bold: true })
-          + (tf ? row(tf.label, v => esc(v.trolleysClearlyMarked || 'â€”')) : '')
-          + (old ? row('Old checks failed', (v, e) => (hasScores(e) ? '' : esc(failedChecks(e).join(', ') || 'â€”'))) : '')
-          + row('NC raised', (v, e) => esc((e.nc_refs || []).join(', ') || 'â€”'))
+          + row('Batch status', v => (v[sc.status] ? esc(v[sc.status]) : '—'), { bold: true })
+          + (tf ? row(tf.label, v => esc(v.trolleysClearlyMarked || '—')) : '')
+          + (old ? row('Old checks failed', (v, e) => (hasScores(e) ? '' : esc(failedChecks(e).join(', ') || '—'))) : '')
+          + row('NC raised', (v, e) => esc((e.nc_refs || []).join(', ') || '—'))
           + '</tbody></table>');
       }
       // corrective action text is long (the suggested actions), so it is listed under the table, matched by check number
@@ -3657,14 +3657,14 @@ ${pageStyleCss}
       </tbody></table>`;
     }
 
-    // REC 7.4.0's page: A4 portrait, 10 mm margins, footer "REC â€” Title | Rev. N | Printed: date | Page X of Y" (7 pt)
+    // REC 7.4.0's page: A4 portrait, 10 mm margins, footer "REC — Title | Rev. N | Printed: date | Page X of Y" (7 pt)
     function dcPageStyle() {
       let st = document.getElementById('ml-page-style');
       if (!st) { st = document.createElement('style'); st.id = 'ml-page-style'; document.head.appendChild(st); }
       const h = window.DocHeader && window.DocHeader.current ? window.DocHeader.current(recordKey) : null;
       const rev = h && h.revision !== '' && h.revision != null ? h.revision : (config.docRevisionStart || 1);
       const printed = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/,/g, '');
-      const txt = (docCode + ' â€” ' + docTitle + '  |  Rev. ' + rev + '  |  Printed: ' + printed + '  |  Page ').replace(/[\\"]/g, '');
+      const txt = (docCode + ' — ' + docTitle + '  |  Rev. ' + rev + '  |  Printed: ' + printed + '  |  Page ').replace(/[\\"]/g, '');
       st.textContent = '@page{ size:A4 portrait; margin:10mm; @bottom-right{ content:"' + txt + '" counter(page) " of " counter(pages);'
         + " font-family:'Segoe UI',system-ui,sans-serif; font-size:7pt; color:#000; border-top:0.5pt solid #000; padding-top:1mm; } }";
     }
@@ -3713,10 +3713,10 @@ ${pageStyleCss}
         const ov = document.createElement('div');
         ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
         ov.innerHTML = `<div style="background:#fff;border-radius:14px;padding:24px;max-width:340px;width:100%;font-family:system-ui,sans-serif;text-align:center;">
-          <div style="font-size:32px;margin-bottom:8px;">ðŸ“„</div>
+          <div style="font-size:32px;margin-bottom:8px;">??</div>
           <div style="font-weight:800;font-size:17px;margin-bottom:8px;">Open in Safari to print</div>
           <div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:20px;">
-            Tap the <strong>Share</strong> button <span style="font-size:18px;">âŽ‹</span> at the bottom of the screen,<br>
+            Tap the <strong>Share</strong> button <span style="font-size:18px;">?</span> at the bottom of the screen,<br>
             then tap <strong>"Open in Safari"</strong>.<br><br>
             From Safari you can tap PDF and save as a PDF file.
           </div>
@@ -3734,7 +3734,7 @@ ${pageStyleCss}
         return;
       }
       if (!pw) {
-        // Popup blocked â€” fall back to in-page print
+        // Popup blocked — fall back to in-page print
         sheet.innerHTML = sheetsHtml;
         document.body.classList.add('ml-printing-entry');
         document.body.classList.toggle('ml-printing-dc', dc);
@@ -3779,16 +3779,16 @@ ${pageStyleCss}
 </style>
 </head><body>
 <div class="ml-print-bar">
-  <button onclick="try{if(window.parent!==window)window.parent.document.title=document.title;}catch(e){}window.print()">â¬‡ Save / Print PDF</button>
-  <button id="ml-img-btn" onclick="saveAsImage('ml-img-btn','${filename}')">ðŸ“· Save as Image</button>
-  <span class="ml-pb-hint">iOS: tap Share â†’ Print or Save to PDF</span>
+  <button onclick="try{if(window.parent!==window)window.parent.document.title=document.title;}catch(e){}window.print()">? Save / Print PDF</button>
+  <button id="ml-img-btn" onclick="saveAsImage('ml-img-btn','${filename}')">?? Save as Image</button>
+  <span class="ml-pb-hint">iOS: tap Share ? Print or Save to PDF</span>
 </div>
 ${docHeaderHtml ? `<div style="margin-bottom:6px;">${docHeaderHtml}</div>` : ''}
 <div class="ml-sheet${dc ? ' ml-sheet-dc' : ''}">${sheetsHtml}</div>
 <script>
 function saveAsImage(btnId,filename){
   var btn=document.getElementById(btnId);
-  if(btn){btn.disabled=true;btn.textContent='Capturingâ€¦';}
+  if(btn){btn.disabled=true;btn.textContent='Capturing…';}
   var target=document.querySelector('.ml-sheet')||document.body;
   var scr=document.createElement('script');
   scr.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
@@ -3799,15 +3799,15 @@ function saveAsImage(btnId,filename){
         if(navigator.canShare&&navigator.canShare({files:[file]})){
           navigator.share({files:[file],title:filename}).catch(function(){fallbackDl(canvas,filename);});
         } else { fallbackDl(canvas,filename); }
-        if(btn){btn.disabled=false;btn.textContent='ðŸ“· Save as Image';}
+        if(btn){btn.disabled=false;btn.textContent='?? Save as Image';}
       },'image/png');
     }).catch(function(){
-      if(btn){btn.disabled=false;btn.textContent='ðŸ“· Save as Image';}
+      if(btn){btn.disabled=false;btn.textContent='?? Save as Image';}
       alert('Could not capture image. Use the PDF button instead.');
     });
   };
   scr.onerror=function(){
-    if(btn){btn.disabled=false;btn.textContent='ðŸ“· Save as Image';}
+    if(btn){btn.disabled=false;btn.textContent='?? Save as Image';}
     alert('Image library failed to load. Check your connection.');
   };
   document.head.appendChild(scr);
@@ -3822,7 +3822,7 @@ function fallbackDl(canvas,filename){
 </body></html>`);
       pw.document.close();
       pw.focus();
-      // Auto-print removed â€” user taps the green button in the popup tab.
+      // Auto-print removed — user taps the green button in the popup tab.
     }
 
     function exportEntryJson(id) {
@@ -3850,13 +3850,13 @@ function fallbackDl(canvas,filename){
         // already saved: stamp it now (also for a submitted record -- the link is not a change to its data)
         existing.nc_refs = (existing.nc_refs || []).concat(r.nc.ncRef);
         const ok = await persist();
-        toast(ok ? r.nc.ncRef + ' raised and linked to this record.' : r.nc.ncRef + ' raised, but it could not be linked to the record â€” note it on the form.');
+        toast(ok ? r.nc.ncRef + ' raised and linked to this record.' : r.nc.ncRef + ' raised, but it could not be linked to the record — note it on the form.');
         if (ok && isSubmitted(existing)) openForm(existing.id);
         else if (ok) { pendingNc.push(r.nc.ncRef); if (note) note.textContent = 'NC raised: ' + pendingNc.join(', '); }
       } else {
         pendingNc.push(r.nc.ncRef); ncHandled.add('__manual');
-        if (note) note.textContent = 'NC raised: ' + pendingNc.join(', ') + ' â€” linked when this entry is saved.';
-        toast(r.nc.ncRef + ' raised â€” it will be linked when you save.');
+        if (note) note.textContent = 'NC raised: ' + pendingNc.join(', ') + ' — linked when this entry is saved.';
+        toast(r.nc.ncRef + ' raised — it will be linked when you save.');
       }
     }
 
@@ -3898,7 +3898,7 @@ function fallbackDl(canvas,filename){
 
         const ok = await persist();
         renderTable();
-        if (!ok) { toast('Verification could not be saved â€” please retry.'); return false; }
+        if (!ok) { toast('Verification could not be saved — please retry.'); return false; }
         return true;
       },
 
@@ -3941,7 +3941,7 @@ function fallbackDl(canvas,filename){
     if (!config.entryFields && !config.customBody) {
       const m = typeof config.mount === 'string' ? document.querySelector(config.mount) : config.mount;
       if (m) m.innerHTML = '<p style="padding:20px;font:600 14px system-ui;color:#9c241d">'
-        + 'Could not load this recordâ€™s definition. The records API may be starting up â€” reload in a moment.</p>';
+        + 'Could not load this record’s definition. The records API may be starting up — reload in a moment.</p>';
       return;
     }
 
@@ -3970,7 +3970,7 @@ function fallbackDl(canvas,filename){
 
     async function loadSpec() {
       // A customBody page owns its own spec system (e.g. multiple named
-      // profiles) â€” the engine must not seed or bind a single spec for it.
+      // profiles) — the engine must not seed or bind a single spec for it.
       if (config.customBody) return;
       let published = await SpecRegistry.getPublished(specKey);
       if (!published) {
@@ -4014,7 +4014,7 @@ function fallbackDl(canvas,filename){
       const hist = await DocumentRevision.history(docRevisionKey);
       if (!hist.length) { target.innerHTML = `<div class="ml-history-item ml-muted">No revisions logged yet (currently Rev ${config.docRevisionStart || 1}).</div>`; return; }
       target.innerHTML = hist.map(h => `
-        <div class="ml-history-item"><span>Rev ${h.revisionNumber} Â· ${new Date(h.changedAt).toLocaleString()} Â· ${esc(h.changedBy)} (${esc(h.changedByTitle)})<br><span class="ml-muted">${esc(h.reason)}</span></span></div>`).join('');
+        <div class="ml-history-item"><span>Rev ${h.revisionNumber} · ${new Date(h.changedAt).toLocaleString()} · ${esc(h.changedBy)} (${esc(h.changedByTitle)})<br><span class="ml-muted">${esc(h.reason)}</span></span></div>`).join('');
     }
 
 
@@ -4027,7 +4027,7 @@ function fallbackDl(canvas,filename){
 
     const relatedHtml = (config.relatedLinks || []).length ? `
       <div class="ml-panel no-print ml-related"><div class="ml-panel-body">
-        ${config.relatedLinks.map(l => `<a href="${esc(l.href)}">â†’ ${esc(l.label)}</a>`).join('<br>')}
+        ${config.relatedLinks.map(l => `<a href="${esc(l.href)}">? ${esc(l.label)}</a>`).join('<br>')}
       </div></div>` : '';
 
 
@@ -4044,7 +4044,7 @@ function fallbackDl(canvas,filename){
           <div class="ml-continue">
             <div class="ml-continue-row">
               ${chain.map((lv, i) => `<label class="ml-field">${esc(lv.label)}
-                <select id="${ns}_continue${i}"><option value="">â€” any â€”</option></select>
+                <select id="${ns}_continue${i}"><option value="">— any —</option></select>
               </label>`).join('')}
             </div>
             <button type="button" class="ml-btn ml-btn-flat" id="${ns}_continueReset">Start a new entry</button>
@@ -4063,7 +4063,7 @@ function fallbackDl(canvas,filename){
             ${window.SignOffBlock.completedByHtml({ byLabel: 'Finance representative', byId: ns + '_fin_by', titleId: ns + '_fin_title', dateId: ns + '_fin_date', signatureId: ns + '_fin_signature', gridClass: 'ml-grid ml-grid-4', fieldClass: 'ml-field' })}` : ''}
           </details>`;
       const fieldsAndActions = `
-          <div class="ml-collapse-ctl no-print" id="${ns}_collapseCtl" hidden><button type="button" data-ml-collapse="close">Collapse all</button><span aria-hidden="true">Â·</span><button type="button" data-ml-collapse="open">Expand all</button></div>
+          <div class="ml-collapse-ctl no-print" id="${ns}_collapseCtl" hidden><button type="button" data-ml-collapse="close">Collapse all</button><span aria-hidden="true">·</span><button type="button" data-ml-collapse="open">Expand all</button></div>
           <div id="${ns}_modalFields" class="ml-grid ml-grid-2"></div>${completedByPanel}
           ${window.NcRaise ? window.NcRaise.buttonHtml(ns + '_ncBtn') : ''}
           <div class="ml-actions">
@@ -4074,11 +4074,23 @@ function fallbackDl(canvas,filename){
       const entriesPanel = `
       <div class="ml-panel no-print jp-gate-exempt">
         <div class="ml-panel-head">
-          <h2>${esc(blockTitle)}</h2>
+          <h2>${config.recentEntries && !isDailyLog(config) ? 'Previous ' + Number(config.recentEntries) + ' logs' : esc(blockTitle)}</h2>
           <span>
-            <a href="../pages/submissions-log.html" class="ml-btn ml-btn-flat ml-btn-sm no-print">View all entries â†’</a>
+            <button type="button" class="ml-btn ml-btn-flat ml-btn-sm ml-reveal-btn no-print" data-reveal="${ns}_entriesBody" data-label="entries">${config.recentEntries ? 'Hide' : 'View'} entries</button>
             ${inline ? '' : `<button class="ml-btn ml-btn-primary ml-btn-sm" id="${ns}_addEntryBtn">+ Add entry</button>`}
           </span>
+        </div>
+        <div class="ml-panel-body ml-collapsible${config.recentEntries ? ' ml-open' : ''}" id="${ns}_entriesBody">
+          <div class="ml-filters">
+            <label>From <input type="date" id="${ns}_filterFrom"></label>
+            <label>To <input type="date" id="${ns}_filterTo"></label>
+            <input type="text" id="${ns}_filterSearch" placeholder="Search entries…">
+            <label><input type="checkbox" id="${ns}_filterDevOnly"> Deviations only</label>
+            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_exportCsvBtn">Export CSV</button>
+            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_exportJsonBtn">Export JSON</button>
+            <button class="ml-btn ml-btn-flat ml-btn-sm" id="${ns}_printBtn">Print PDF</button>
+          </div>
+          <div id="${ns}_table" class="ml-table-wrap"></div>
         </div>
       </div>`;
       if (inline) {
@@ -4351,7 +4363,7 @@ function fallbackDl(canvas,filename){
         await renderDocRevHistory();
         primary.renderTable();
         if (secondary) secondary.renderTable();
-        toast(`Thresholds saved â€” document is now Rev ${rev.revisionNumber}.`);
+        toast(`Thresholds saved — document is now Rev ${rev.revisionNumber}.`);
         el('ml_thresholdsModal').style.display = 'none';
       } catch (e) { toast(e.message); }
     }
@@ -4417,12 +4429,12 @@ function fallbackDl(canvas,filename){
         else if (lastMs == null) {
           const n = entryCountForVerification();
           due = true;
-          message = `Never verified â€” ${n} ${n === 1 ? 'entry is' : 'entries are'} awaiting verification.`;
+          message = `Never verified — ${n} ${n === 1 ? 'entry is' : 'entries are'} awaiting verification.`;
         }
         else if (Date.now() > dueMs) {
           const daysOver = Math.floor((Date.now() - dueMs) / 86400000);
           due = true;
-          message = `Verification overdue by ${daysOver} day${daysOver === 1 ? '' : 's'} (last verified ${esc(last.verifiedDate || 'â€”')}, every ${intervalDays} days).`;
+          message = `Verification overdue by ${daysOver} day${daysOver === 1 ? '' : 's'} (last verified ${esc(last.verifiedDate || '—')}, every ${intervalDays} days).`;
         }
 
         notice.innerHTML = due ? message : '';
@@ -4478,7 +4490,7 @@ function fallbackDl(canvas,filename){
           html += `<div class="ml-daylog-day">
             <div class="ml-daylog-head">
               <label>${p ? '<input type="checkbox" class="ml-verify-day">' : ''}${esc(longDayLabel(d))}${d === today ? ' (today)' : ''}</label>
-              <span class="ml-muted">${n} ${n === 1 ? 'submission' : 'submissions'} Â· ${p ? p + ' awaiting verification' : (n ? 'all verified' : 'nothing submitted yet')}</span>
+              <span class="ml-muted">${n} ${n === 1 ? 'submission' : 'submissions'} · ${p ? p + ' awaiting verification' : (n ? 'all verified' : 'nothing submitted yet')}</span>
             </div>`;
           ctrls.forEach(c => {
             const list = (byDay[d] && byDay[d][c.which]) || [];
@@ -4523,7 +4535,7 @@ function fallbackDl(canvas,filename){
           pending.map(p => `<div class="ml-history-item"><label>
             <input type="checkbox" class="ml-verify-pick" data-which="${p.which}" value="${esc(p.entry.id)}">
             ${esc(p.entry.values.date || '(no date)')}
-            <span class="ml-muted">Â· ${esc(operatorField ? (p.entry.values[operatorField.key] || 'â€”') : '')}</span></label>
+            <span class="ml-muted">· ${esc(operatorField ? (p.entry.values[operatorField.key] || '—') : '')}</span></label>
             ${p.entry.inSpec === false ? '<span class="ml-badge ml-badge-fail">Deviation</span>' : ''}</div>`).join('');
         el('ml_verifyAll').addEventListener('change', ev => {
           target.querySelectorAll('.ml-verify-pick').forEach(cb => { cb.checked = ev.target.checked; });
