@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -395,7 +395,7 @@
 <div id="auditModal" class="dh-modal" style="display:none;">
   <div class="dh-modal-inner" style="max-width:860px;">
     <h2>Master Index Audit Log</h2>
-    <p class="dh-hint">Y/N changes, archives and restores — most recent first.</p>
+    <p class="dh-hint">Y/N changes, archives and restores ï¿½ most recent first.</p>
     <div id="auditContent" style="overflow-x:auto;"></div>
     <div class="dh-actions" style="margin-top:14px;">
       <button class="btn btn-ghost" id="auditClose">Close</button>
@@ -406,7 +406,7 @@
 <script src="../lib/data-store.js?v=5"></script>
 <script src="../lib/api-backend.js?v=19"></script>
 <script src="../lib/auth.js?v=7"></script>
-<script src="../lib/login-ui.js?v=6"></script>
+<script src="../lib/login-ui.js?v=8"></script>
 <script src="../lib/nc-login-alert.js?v=2"></script>
 <script src="../lib/permission-rules.js?v=8"></script>
 <script src="../lib/document-revision.js?v=4"></script>
@@ -560,7 +560,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entry)
       });
-    } catch (e) { /* non-fatal — log silently */ }
+    } catch (e) { /* non-fatal ï¿½ log silently */ }
   }
 
   async function saveSopLink(id, rec, sop) {
@@ -793,20 +793,20 @@ const isArchived = !!archived[id];
       const id = archBtn.dataset.row;
       const nowArchived = !archived[id];
       const rowData = ROWS.find(r => rowId(r) === id);
-      const label = rowData ? (rowData.docNo + ' — ' + rowData.name) : id;
+      const label = rowData ? (rowData.docNo + ' ï¿½ ' + rowData.name) : id;
       const archiveReason = nowArchived
-        ? prompt(`Archive "${label}"?\n\nEnter reason (required — leave blank to cancel):\n`)
+        ? prompt(`Archive "${label}"?\n\nEnter reason (required ï¿½ leave blank to cancel):\n`)
         : null;
       if (nowArchived && (!archiveReason || !archiveReason.trim())) return;
-      $('saveState').textContent = 'Saving…';
+      $('saveState').textContent = 'Savingï¿½';
       try {
         await setArchived(id, nowArchived);
         $('saveState').textContent = nowArchived ? 'Archived' : 'Restored';
         setTimeout(() => { $('saveState').textContent = ''; }, 2000);
         await postAudit({
           recordId: id,
-          docNo: String(label.split(' — ')[0] || ''),
-          docName: String(label.split(' — ').slice(1).join(' — ') || ''),
+          docNo: String(label.split(' ï¿½ ')[0] || ''),
+          docName: String(label.split(' ï¿½ ').slice(1).join(' ï¿½ ') || ''),
           action: nowArchived ? 'archived' : 'restored',
           reason: nowArchived ? archiveReason.trim() : 'Restored by admin',
           changedBy: (window.Auth && window.Auth.getDisplayName && window.Auth.getDisplayName()) || ''
@@ -825,8 +825,8 @@ const isArchived = !!archived[id];
       const addedId = delBtn.dataset.addedId;
       const row = addedRows.find(r => r.addedId === addedId);
       if (!row) return;
-      if (!confirm(`Permanently delete "${row.docNo} — ${row.name}" from the index?\n\nThis cannot be undone.`)) return;
-      $('saveState').textContent = 'Deleting…';
+      if (!confirm(`Permanently delete "${row.docNo} ï¿½ ${row.name}" from the index?\n\nThis cannot be undone.`)) return;
+      $('saveState').textContent = 'Deletingï¿½';
       try {
         addedRows = addedRows.filter(r => r.addedId !== addedId);
         const idx = ROWS.findIndex(r => r.addedId === addedId);
@@ -1099,7 +1099,7 @@ const isArchived = !!archived[id];
   const auditModal = $('auditModal');
 
   async function openAuditLog() {
-    $('auditContent').innerHTML = '<p style="color:var(--palette-label);font-size:12px;">Loading…</p>';
+    $('auditContent').innerHTML = '<p style="color:var(--palette-label);font-size:12px;">Loadingï¿½</p>';
     auditModal.classList.add('open');
     auditModal.style.display = 'flex';
     try {
@@ -1120,7 +1120,7 @@ const isArchived = !!archived[id];
           <th style="padding:6px 8px;border-bottom:2px solid var(--palette-border);">Changed by</th>
         </tr></thead><tbody>`;
       rows.forEach(r => {
-        const change = r.field ? `${r.field}: ${r.oldValue || '–'} ? ${r.newValue || '–'}` : '';
+        const change = r.field ? `${r.field}: ${r.oldValue || 'ï¿½'} ? ${r.newValue || 'ï¿½'}` : '';
         html += `<tr style="border-bottom:1px solid var(--palette-border);">
           <td style="padding:5px 8px;white-space:nowrap;">${esc(fmt(r.changedAt))}</td>
           <td style="padding:5px 8px;white-space:nowrap;">${esc(r.docNo || '')} ${esc(r.docName || '')}</td>
@@ -1184,9 +1184,9 @@ const isArchived = !!archived[id];
         const newEffective = $('dhEffectiveDate').value;
         if (newEffective !== dhOriginalEffectiveDate) {
           if (!window.PasskeyInput) { dhSetState('Passkey module not loaded.', 'error'); return; }
-          dhSetState('Waiting for passkey approval…');
-          const approval = await window.PasskeyInput.openForApproval('Approve effective date change — enter your passkey');
-          if (!approval) { dhSetState('Change cancelled — passkey required to update effective date.', 'error'); return; }
+          dhSetState('Waiting for passkey approvalï¿½');
+          const approval = await window.PasskeyInput.openForApproval('Approve effective date change ï¿½ enter your passkey');
+          if (!approval) { dhSetState('Change cancelled ï¿½ passkey required to update effective date.', 'error'); return; }
           $('dhApprovedBy').value = approval.displayName;
         }
         dhSetState('Saving?');
@@ -1255,14 +1255,14 @@ const isArchived = !!archived[id];
 
   function openRevModal() {
     const sel = document.getElementById('revSelectRecord');
-    sel.innerHTML = '<option value="">— select a record —</option>';
+    sel.innerHTML = '<option value="">ï¿½ select a record ï¿½</option>';
     const withKeys = ROWS
       .filter(r => r.recordKey)
       .sort((a, b) => (a.docNo || '').localeCompare(b.docNo || '', undefined, { numeric: true, sensitivity: 'base' }));
     withKeys.forEach(r => {
       const opt = document.createElement('option');
       opt.value = r.recordKey;
-      opt.textContent = (r.docNo ? r.docNo + ' — ' : '') + r.name;
+      opt.textContent = (r.docNo ? r.docNo + ' ï¿½ ' : '') + r.name;
       sel.appendChild(opt);
     });
 
@@ -1328,7 +1328,7 @@ const isArchived = !!archived[id];
     }
 
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving…';
+    saveBtn.textContent = 'Savingï¿½';
 
     try {
       const row = ROWS.find(r => r.recordKey === recordKey);
@@ -1339,7 +1339,7 @@ const isArchived = !!archived[id];
         { reason, changedBy: name, changedByTitle: title }
       );
       msg.style.color = '#15803d';
-      msg.textContent = `Saved — ${row ? row.docNo + ' ' + row.name : recordKey} set to Rev ${entry.revisionNumber} (${revDate}).`;
+      msg.textContent = `Saved ï¿½ ${row ? row.docNo + ' ' + row.name : recordKey} set to Rev ${entry.revisionNumber} (${revDate}).`;
       saveBtn.textContent = 'Saved ?';
       await loadLive();
       render();
@@ -1363,7 +1363,7 @@ const isArchived = !!archived[id];
     <div class="rev-field">
       <label for="revSelectRecord">Record</label>
       <select id="revSelectRecord">
-        <option value="">— select a record —</option>
+        <option value="">ï¿½ select a record ï¿½</option>
       </select>
     </div>
 
@@ -1379,11 +1379,11 @@ const isArchived = !!archived[id];
 
     <div class="rev-field">
       <label for="revReason">Reason for change</label>
-      <textarea id="revReason" rows="2" placeholder="e.g. Updated process — new cooking times"></textarea>
+      <textarea id="revReason" rows="2" placeholder="e.g. Updated process ï¿½ new cooking times"></textarea>
     </div>
 
     <div class="rev-field">
-      <label for="revSig_signature">Passkey <span style="color:#6b7280;font-weight:400;">(tap to enter — autofills name &amp; title)</span></label>
+      <label for="revSig_signature">Passkey <span style="color:#6b7280;font-weight:400;">(tap to enter ï¿½ autofills name &amp; title)</span></label>
       <input type="text" id="revSig_signature" readonly inputmode="none" autocomplete="off"
              placeholder="Tap to enter passkey"
              style="cursor:pointer;background:#f9fafb;"
