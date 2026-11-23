@@ -4598,11 +4598,18 @@ function fallbackDl(canvas,filename){
 
     if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await loadSpec();
-    await primary.load();
     // the Delete button is drawn only when PermissionRules is present, and most log pages never include it: load it first
     await loadLib('permission-rules.js?v=8', 'PermissionRules');
-    primary.renderTable();
-    if (secondary) { await secondary.load(); secondary.renderTable(); }
+    // Lazy-load entries: only fetch on init when a deep link needs them.
+    const _mlDeepLinkId = (location.hash || '').replace(/^#/, '').trim() || new URLSearchParams(location.search).get('entry') || '';
+    if (_mlDeepLinkId) {
+      await primary.load();
+      primary.renderTable();
+      if (secondary) { await secondary.load(); secondary.renderTable(); }
+    } else {
+      const _mlTable = document.getElementById(`${ns}_table`);
+      if (_mlTable) _mlTable._lazyLoad = async () => { await primary.load(); primary.renderTable(); };
+    }
     refreshVerification();
 
     // #<entryId> deep link (e.g. from Batch Traceability) opens that entry.
@@ -4691,6 +4698,15 @@ function fallbackDl(canvas,filename){
       var open = target.classList.toggle('ml-open');
       target.classList.toggle('fr-open', open);
       btn.textContent = (open ? 'Hide ' : 'View ') + btn.getAttribute('data-label');
+      // Lazy-load the entries list the first time the entries panel is opened.
+      if (open) {
+        var wrap = target.querySelector('.ml-table-wrap');
+        if (wrap && !wrap._listLoaded && wrap._lazyLoad) {
+          wrap._listLoaded = true;
+          wrap.innerHTML = '<div class="ml-empty">Loading...</div>';
+          wrap._lazyLoad();
+        }
+      }
     });
   }
 
