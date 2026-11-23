@@ -2082,7 +2082,17 @@
         <div class="fr-panel no-print jp-gate-exempt">
           <div class="fr-panel-head">
             <h2>Submissions</h2>
-            <a href="../pages/submissions-log.html" class="fr-btn fr-btn-flat fr-btn-sm no-print">View all entries →</a>
+            <button type="button" class="fr-btn fr-btn-flat fr-btn-sm fr-reveal-btn no-print" data-reveal="fr_submissionsBody" data-label="entries">View entries</button>
+          </div>
+          <div class="fr-panel-body fr-collapsible" id="fr_submissionsBody">
+            <div class="fr-filters">
+              <label>From <input type="date" id="fr_filterFrom"></label>
+              <label>To <input type="date" id="fr_filterTo"></label>
+              <input type="text" id="fr_filterSearch" placeholder="Search submissions…">
+              <button class="fr-btn fr-btn-flat fr-btn-sm" id="fr_exportJsonBtn">Export JSON</button>
+              <button class="fr-btn fr-btn-flat fr-btn-sm" id="fr_printBtn">Print</button>
+            </div>
+            <div id="fr_table" class="fr-table-wrap"></div>
           </div>
         </div>
         ${verificationHtml}
@@ -5571,10 +5581,17 @@ function fallbackDl(canvas,filename){
     if (window.storage && window.storage.whenReady) await window.storage.whenReady();
     await mountDocHeader(config);
     renderDocBadge();
+    // Lazy-load submissions: only fetch on init when a deep link needs them.
+    // Otherwise load is deferred until the user clicks "View entries", avoiding
+    // a full formrecord fetch on every page open (major network transfer saving).
     const _deepLinkId = (location.hash || '').replace(/^#/, '').trim() || new URLSearchParams(location.search).get('entry') || '';
     if (_deepLinkId || config.entryLog || config.boxInspection) {
       await load();
       renderTable();
+    } else {
+      // Expose lazy loader on the table element so the reveal handler (outside this closure) can call it.
+      const _tableWrap = el('fr_table');
+      if (_tableWrap) _tableWrap._lazyLoad = async () => { await load(); renderTable(); };
     }
     refreshVerification();
     loadReferencedIn(config);
@@ -5694,6 +5711,15 @@ function fallbackDl(canvas,filename){
       var open = target.classList.toggle('ml-open');
       target.classList.toggle('fr-open', open);
       btn.textContent = (open ? 'Hide ' : 'View ') + btn.getAttribute('data-label');
+      // Lazy-load the submissions list the first time "View entries" is opened.
+      if (open && btn.getAttribute('data-reveal') === 'fr_submissionsBody') {
+        var wrap = document.getElementById('fr_table');
+        if (wrap && !wrap._listLoaded && wrap._lazyLoad) {
+          wrap._listLoaded = true;
+          wrap.innerHTML = '<div class="fr-empty">Loading…</div>';
+          wrap._lazyLoad();
+        }
+      }
     });
   }
 
