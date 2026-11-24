@@ -108,7 +108,8 @@ const CAPTURE_SRC = `(function(){
   }};};
   try{Object.defineProperty(window,'__pdfOnly',{value:true,writable:false,configurable:false})}catch(e){}
   try{Object.defineProperty(window,'__pdfSameTab',{value:fn,writable:false,configurable:false})}catch(e){}
-  window.__pdfFail=function(m){window.__archivePdfFail=m||'fail';};
+  // Lock __pdfFail too: pdf-cover.js overwrites it with a DOM error display that never sets __archivePdfFail.
+  try{Object.defineProperty(window,'__pdfFail',{value:function(m){window.__archivePdfFail=m||'fail';},writable:false,configurable:false})}catch(e){}
 })();`;
 
 // Captured print sheets keyed by token: token -> absolute path of saved HTML file.
@@ -157,8 +158,16 @@ const web = http.createServer((req, res) => {
     }
   }
 
-  // Storage intercept: never proxy storage reads to Supabase -- return instantly from cache or as empty.
-  // This covers formrecord, monitoring_log, doc-header, document_revision, sign-off, and any other key.
+  // Storage intercept: never proxy storage reads OR writes to Supabase -- return instantly from cache or as empty.
+  // Writes (PUT/POST) return a fake 200 so storage.set() with sync=true doesn't block retrying.
+  if (urlPath.startsWith('/api/storage/key/') && (req.method === 'PUT' || req.method === 'POST')) {
+    let dec = ''; try { dec = decodeURIComponent(urlPath.slice('/api/storage/key/'.length)); } catch {}
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ key: dec, value: null }));
+    // Drain the request body so the socket isn't left open.
+    req.resume();
+    return;
+  }
   if (urlPath.startsWith('/api/storage/key/') && (req.method === 'GET' || req.method === 'HEAD')) {
     let dec = ''; try { dec = decodeURIComponent(urlPath.slice('/api/storage/key/'.length)); } catch {}
     let body;
@@ -422,12 +431,16 @@ async function printJob(job) {
         if (await evalJs('!!window.__archivePdfReady')) { state = 'ready'; break; }
         const fail = await evalJs('window.__archivePdfFail||""');
         if (fail) { state = 'error'; errMsg = String(fail); break; }
-        if (loaded && quiet > 1500 && /Print not available yet/.test((await evalJs('document.body ? document.body.innerText.slice(0,400) : ""')) || '')) { state = 'locked'; break; }
+        if (loaded && quiet > 1500) {
+          const body = String((await evalJs('document.body ? document.body.innerText.replace(/\\s+/g," ").slice(0,400) : ""')) || '');
+          if (/Print not available yet/.test(body)) { state = 'locked'; break; }
+        }
+
       } else if (loaded && quiet > 2000 && (inflight === 0 || quiet > 8000)) { state = 'ready'; break; }
     }
 
     if (state !== 'ready') {
-      const seen = state === 'timeout' ? String((await evalJs('(document.body ? document.body.innerText : "").replace(/\\s+/g," ").slice(0,160)')) || '') : '';
+      const seen = String((await evalJs('(document.body ? document.body.innerText : "").replace(/\\s+/g," ").slice(0,200)')) || '');
       return { state, size: 0, err: (errMsg || '') + (seen ? ' page: ' + seen : '') };
     }
 
