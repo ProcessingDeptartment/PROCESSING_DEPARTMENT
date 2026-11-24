@@ -169,7 +169,7 @@
   .ml-stages-row table{ width:100%; font-size:12px; }
   .ml-stages-row.ml-hide{ display:none; }
   .ml-commentprompt{ outline:2px solid var(--palette-fail,#a3352d); }
-  .ml-field.ml-readonly-calc input:disabled, .ml-field input[readonly]{ background:#f2f4f6; color:#3a444d; }
+  .ml-field.ml-readonly-calc input:disabled, .ml-field input[readonly]{ background:#f2f4f6; color:#3a444d; border-color:#e2e4e3; cursor:default; pointer-events:none; }
   .ml-grouphead{ grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--palette-heading,#2f4356);
     font-weight:700; border-bottom:1px solid var(--palette-border,#e2e4e3); padding-bottom:4px; margin:12px 0 2px; }
   .ml-grouphead:first-child{ margin-top:0; }
