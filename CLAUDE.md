@@ -6,7 +6,7 @@ Static site (Render) + API server (Render) + Neon Postgres + GitHub auto-deploy.
 
 - **Public site**: `https://processing-department.onrender.com` — serves `public/` folder, auto-deploys on push to `main`
 - **API**: `https://processing-department-api.onrender.com` — Node/Express, also auto-deploys on push
-- **Database**: Neon Postgres (serverless), accessed via Prisma
+- **Database**: Supabase Postgres, accessed via Prisma
 - **Repo**: `https://github.com/ProcessingDeptartment/PROCESSING_DEPARTMENT` on `main`
 
 ---
