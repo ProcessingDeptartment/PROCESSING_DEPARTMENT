@@ -133,6 +133,18 @@ function coerce(value, kind, recordKey, fieldKey) {
   }
 }
 
+// Maps a Postgres information_schema data_type string to the coerce() kind used by this store.
+function pgKind(dataType) {
+  if (!dataType) return 'string';
+  const t = dataType.toLowerCase();
+  if (t === 'double precision' || t === 'real' || t === 'numeric' || t === 'decimal') return 'float';
+  if (t === 'integer' || t === 'bigint' || t === 'smallint' || t === 'int') return 'int';
+  if (t === 'boolean') return 'boolean';
+  if (t === 'date' || t.startsWith('timestamp')) return 'date';
+  if (t.startsWith('time')) return 'time';
+  return 'string';
+}
+
 function toCol(fieldKey) {
   let col = fieldKey;
   if (/^\d/.test(col)) col = 'f_' + col;
@@ -275,21 +287,33 @@ async function getSchema(prisma, recordKey) {
   // Only write columns the table really has (checked once per record). A field added to a record definition before its
   // migration has run is left to rawJson for now, instead of failing every save of that record.
   try {
-    const cols = await prisma.$queryRawUnsafe(`SELECT column_name FROM information_schema.columns WHERE table_name = $1`, schema.table);
+    const cols = await prisma.$queryRawUnsafe(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1`, schema.table);
     const have = new Set(cols.map((r) => r.column_name));
+    const dbKind = new Map(cols.map((r) => [r.column_name, pgKind(r.data_type)]));
     const missing = schema.topCols.filter((c) => !have.has(c.col)).map((c) => c.col);
     if (missing.length && have.size) {
       console.warn('submission store: ' + schema.table + ' has no column(s) ' + missing.join(', ') + ' - skipped until migrated');
       schema.topCols = schema.topCols.filter((c) => have.has(c.col));
     }
+    // Override kind from actual DB column type so a RecordFieldDef type mismatch never causes a
+    // "column X is of type Y but expression is of type text" error.
+    for (const c of schema.topCols) { if (dbKind.has(c.col) && dbKind.get(c.col) !== 'string') c.kind = dbKind.get(c.col); }
+    // Deduplicate by column name: a duplicate RecordFieldDef row would cause "column X specified
+    // more than once" on INSERT. Keep the first occurrence.
+    const seenCols = new Set();
+    schema.topCols = schema.topCols.filter((c) => { if (seenCols.has(c.col)) return false; seenCols.add(c.col); return true; });
     if (schema.childTable) {
-      const rcols = await prisma.$queryRawUnsafe(`SELECT column_name FROM information_schema.columns WHERE table_name = $1`, schema.childTable);
+      const rcols = await prisma.$queryRawUnsafe(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1`, schema.childTable);
       const rhave = new Set(rcols.map((r) => r.column_name));
+      const rdbKind = new Map(rcols.map((r) => [r.column_name, pgKind(r.data_type)]));
       const rmissing = schema.rosterCols.filter((c) => !rhave.has(c.col)).map((c) => c.col);
       if (rmissing.length && rhave.size) {
         console.warn('submission store: ' + schema.childTable + ' has no column(s) ' + rmissing.join(', ') + ' - skipped until migrated');
         schema.rosterCols = schema.rosterCols.filter((c) => rhave.has(c.col));
       }
+      for (const c of schema.rosterCols) { if (rdbKind.has(c.col) && rdbKind.get(c.col) !== 'string') c.kind = rdbKind.get(c.col); }
+      const seenRCols = new Set();
+      schema.rosterCols = schema.rosterCols.filter((c) => { if (seenRCols.has(c.col)) return false; seenRCols.add(c.col); return true; });
     }
   } catch { /* leave the schema as built */ }
   schemaCache.set(recordKey, { at: Date.now(), schema });

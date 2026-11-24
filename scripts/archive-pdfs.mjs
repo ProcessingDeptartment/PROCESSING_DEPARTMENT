@@ -14,11 +14,12 @@
 // PDFs land in <archive>\pdf\<same path as the page>.pdf and are listed on the item in index.json (pdfPaths).
 // Run archive-completed-records.mjs and archive-documents.mjs first: this script works from what they archived.
 //
-// How it gets the data without the online API: for the duration of the run only, it starts
-//   - a private copy of the API code on 127.0.0.1-only traffic, protected by a random one-time key, with the hourly
-//     "unverified records" e-mail job switched off (no e-mails are sent), and
-//   - a small local web server for public\ that forwards READ requests (GET) to it and refuses everything else,
-// so the run cannot change the database. Both are stopped when the script ends. Needs DATABASE_URL.
+// How it works for records: a private local API + web server serve the data while Chrome renders the print page.
+// The form engine's __pdfSameTab function is replaced before pdf-cover.js runs: instead of calling document.open()
+// the captured print-sheet HTML is POSTed to the local server, which serves it back as a clean page for printing.
+// Entry data is pre-fetched before Chrome starts so the form engine never waits on Supabase.
+//
+// Needs DATABASE_URL in env.
 
 import fs from 'fs';
 import path from 'path';
@@ -34,7 +35,7 @@ const onlyType = opt('--type'), onlyRecord = opt('--record');
 const limit = Number(opt('--limit')) || Infinity;
 const workers = Math.max(1, Math.min(6, Number(opt('--workers')) || 3));
 const force = args.includes('--force');
-const onlyEntry = opt('--entry');            // one submission id (troubleshooting)
+const onlyEntry = opt('--entry');
 if (opt('--archive-out')) process.env.ARCHIVE_OUT = opt('--archive-out');
 
 const require = createRequire(import.meta.url);
@@ -42,7 +43,7 @@ const { archiveRoot, readIndex } = require('./archive-writer.js');
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
 const ARCHIVE = archiveRoot();
-const WORK = path.join(ARCHIVE, '.pdf-work');   // browser profiles for this run; removed at the end
+const WORK = path.join(ARCHIVE, '.pdf-work');
 
 const BROWSERS = [
   process.env.ARCHIVE_BROWSER,
@@ -57,50 +58,97 @@ if (!browser) { console.error('No Chrome or Edge found. Set ARCHIVE_BROWSER to t
 const freePort = () => new Promise((res, rej) => { const s = http.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); s.on('error', rej); });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// ---- private API copy -------------------------------------------------------------------------------------------------
+// ---- private API copy ------------------------------------------------------------------------------------------------
 const apiPort = await freePort();
 const apiKey = crypto.randomBytes(24).toString('hex');
 const BOOT = "const p=require.resolve('./src/jobs/unverified-alert');"
-  + "require.cache[p]={id:p,filename:p,loaded:true,exports:{runUnverifiedAlert:async()=>{}}};"   // no e-mails from this copy
+  + "require.cache[p]={id:p,filename:p,loaded:true,exports:{runUnverifiedAlert:async()=>{}}};"
   + "require('./src/index.js');";
 const api = spawn(process.execPath, ['-e', BOOT], { cwd: ROOT, env: { ...process.env, PORT: String(apiPort), API_KEY: apiKey }, stdio: ['ignore', 'pipe', 'pipe'] });
 let apiLog = '';
 api.stdout.on('data', (d) => { apiLog += d; });
 api.stderr.on('data', (d) => { apiLog += d; });
 
-// ---- local web server: public\ + read-only /api ---------------------------------------------------------------------
+// ---- local web server ------------------------------------------------------------------------------------------------
 const MIME = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json' };
 let webPort = 0;
-const printed = new Set();   // job tokens whose print sheet was actually written
-// Observes (does not change) the print: when the engine hands over its finished print sheet, tell this script.
-// Without that signal the page is still the record form -- e.g. the site's print lock (REC 7.4.1 / 7.4.2 cannot be
-// printed until REC 7.4.10 is done for the job) -- and no PDF must be saved for it.
-const WATCH = "<script>(function(){var o;Object.defineProperty(window,'__pdfSameTab',{configurable:true,set:function(f){o=f},get:function(){return o&&function(){var p=o();var c=p.document.close;p.document.close=function(){try{var x=new XMLHttpRequest();x.open('GET','/__printed?t='+encodeURIComponent(new URLSearchParams(location.search).get('_t')||''),false);x.send()}catch(e){}return c.apply(this,arguments)};return p}}})})();</script>";
-// Template (blank form) jobs. The print page of such a job carries &_tpl=<n>; every request that page makes names it
-// in its Referer, which is how this server knows to answer with that template version's definition and one blank entry.
-// Nothing is written anywhere: the blank entry exists only in these answers.
-const templates = new Map();   // n -> { key, def }
+
+// Template (blank form) jobs.
+const templates = new Map();
 const TEMPLATE_ENTRY = '__template';
-const tplOf = (req, own) => {
-  const m = /[?&]_tpl=(\d+)/.exec(own ? req.url : String(req.headers.referer || ''));
-  return m ? templates.get(m[1]) : null;
-};
-// Template jobs only. A daily-log record (water / chiller monitoring ...) prints its monthly log with window.print()
-// on the page itself and clears the sheet straight afterwards. Here window.print() instead freezes the page exactly as
-// it stood at that moment (scripts removed, so nothing clears it) and then reports the sheet as ready.
+const tplOf = (req, own) => { const m = /[?&]_tpl=(\d+)/.exec(own ? req.url : String(req.headers.referer || '')); return m ? templates.get(m[1]) : null; };
+
+// Template job print-readiness: window.print() replaced to freeze the page and signal via flag.
 const WATCH_TPL = "<script>(function(){if(!/[?&]_tpl=/.test(location.search))return;var d=0;window.print=function(){if(d)return;d=1;"
-  + "['frRoot','mlRoot'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display=''});"   // the print page keeps the form hidden
-  + "var h=document.documentElement.outerHTML.replace(/<script[\\s\\S]*?<\\/script>/gi,'');var t=new URLSearchParams(location.search).get('_t')||'';"
+  + "['frRoot','mlRoot'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display=''});"
+  + "var h=document.documentElement.outerHTML.replace(/<script[\\s\\S]*?<\\/script>/gi,'');"
   + "setTimeout(function(){document.open();document.write('<!DOCTYPE html>'+h);document.close();"
-  + "setTimeout(function(){try{var x=new XMLHttpRequest();x.open('GET','/__printed?t='+encodeURIComponent(t),false);x.send()}catch(e){}},300)},0)};})();</script>";
+  + "setTimeout(function(){window.__archivePdfReady=true;},100)},0)};})();</script>";
+
+// Completed-record jobs: replace __pdfSameTab before pdf-cover.js sets it.
+// The form engine writes the print-sheet HTML into our fake window; close() POSTs it to /__capture/{token}
+// instead of calling document.open(). The server saves it and signals readiness via window.__archivePdfReady.
+// Using Object.defineProperty(writable:false) so pdf-cover.js's later assignment silently fails (sloppy mode).
+const CAPTURE_SRC = `(function(){
+  var t=new URLSearchParams(location.search).get('_t')||'0';
+  // Inject a fake API key so LoginUI.ensureAuthenticated() resolves immediately.
+  // The proxy overwrites the Authorization header with the real key before hitting the local API.
+  try{localStorage.setItem('facility_api_key','archive-session-key');}catch(e){}
+  // login-ui.js sets AUTH_GATES_ENABLED=true then ensureAuthenticated shows a login modal.
+  // Lock it false so ensureAuthenticated returns Promise.resolve() immediately.
+  try{Object.defineProperty(window,'AUTH_GATES_ENABLED',{value:false,writable:false,configurable:false});}catch(e){}
+  var buf='';
+  var fn=function(){buf='';return{document:{
+    write:function(h){buf+=h;},
+    close:function(){
+      fetch('/__capture/'+t,{method:'POST',headers:{'content-type':'text/html;charset=utf-8'},body:buf})
+        .then(function(){window.__archivePdfReady=true;})
+        .catch(function(e){window.__archivePdfFail=String(e);});
+    }
+  }};};
+  try{Object.defineProperty(window,'__pdfOnly',{value:true,writable:false,configurable:false})}catch(e){}
+  try{Object.defineProperty(window,'__pdfSameTab',{value:fn,writable:false,configurable:false})}catch(e){}
+  window.__pdfFail=function(m){window.__archivePdfFail=m||'fail';};
+})();`;
+
+// Captured print sheets keyed by token: token -> absolute path of saved HTML file.
+const sheets = new Map();
+
+// Pre-fetched entry data served to Chrome instead of Supabase: 'formrecord:KEY:ENTRYID' -> JSON response string.
+const entryCache = new Map();
+
 const web = http.createServer((req, res) => {
   const urlPath = req.url.split('?')[0];
+
+  // Capture POST: form engine sends print-sheet HTML here instead of calling document.open().
+  if (urlPath.startsWith('/__capture/') && req.method === 'POST') {
+    const token = path.basename(urlPath).replace(/[^0-9a-zA-Z_-]/g, '');
+    const sheetFile = path.join(WORK, 'sheets', token + '.html');
+    fs.mkdirSync(path.join(WORK, 'sheets'), { recursive: true });
+    const chunks = [];
+    req.on('data', (d) => chunks.push(d));
+    req.on('end', () => { fs.writeFileSync(sheetFile, Buffer.concat(chunks)); sheets.set(token, sheetFile); res.writeHead(200); res.end(); });
+    return;
+  }
+
+  // Serve saved print sheet so Chrome can load and print it cleanly.
+  if (urlPath.startsWith('/__sheet/') && req.method === 'GET') {
+    const token = path.basename(urlPath).replace(/[^0-9a-zA-Z_-]/g, '');
+    const sheetFile = sheets.get(token);
+    if (!sheetFile || !fs.existsSync(sheetFile)) { res.writeHead(404); res.end(); return; }
+    fs.readFile(sheetFile, (err, data) => {
+      if (err) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
+    return;
+  }
+
+  // Template jobs: serve this version's definition + blank entry.
   const tpl = tplOf(req, false);
   if (tpl && req.method === 'GET') {
     let dec = ''; try { dec = decodeURIComponent(urlPath); } catch {}
-    if (dec === '/data/record-defs/' + tpl.key + '.json') {   // this version's definition, not the current one
-      res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(tpl.def)); return;
-    }
+    if (dec === '/data/record-defs/' + tpl.key + '.json') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(tpl.def)); return; }
     if (dec === '/api/storage/key/formrecord:' + tpl.key || dec === '/api/storage/key/monitoring_log:' + tpl.key) {
       const now = new Date().toISOString();
       const blank = { id: TEMPLATE_ENTRY, values: {}, rows: [], createdAt: now, updatedAt: now };
@@ -108,10 +156,30 @@ const web = http.createServer((req, res) => {
       res.end(JSON.stringify({ key: dec.slice('/api/storage/key/'.length), value: JSON.stringify([blank]) })); return;
     }
   }
-  if (urlPath === '/__printed') {   // the print page reports that the engine really produced its print sheet
-    printed.add(new URLSearchParams(req.url.split('?')[1] || '').get('t') || '');
-    res.writeHead(204); res.end(); return;
+
+  // Storage intercept: never proxy storage reads to Supabase -- return instantly from cache or as empty.
+  // This covers formrecord, monitoring_log, doc-header, document_revision, sign-off, and any other key.
+  if (urlPath.startsWith('/api/storage/key/') && (req.method === 'GET' || req.method === 'HEAD')) {
+    let dec = ''; try { dec = decodeURIComponent(urlPath.slice('/api/storage/key/'.length)); } catch {}
+    let body;
+    if (dec.startsWith('formrecord:') || dec.startsWith('monitoring_log:')) {
+      const referer = req.headers.referer || '';
+      const em = /[?&]entry=([^&]+)/.exec(referer);
+      const entryId = em ? decodeURIComponent(em[1]) : null;
+      const cached = (entryId && entryId !== TEMPLATE_ENTRY) ? entryCache.get(dec + ':' + entryId) : null;
+      body = cached || JSON.stringify({ key: dec, value: '[]' });
+    } else {
+      body = JSON.stringify({ key: dec, value: null });
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(body); return;
   }
+  if (urlPath.startsWith('/api/storage/prefix/') && (req.method === 'GET' || req.method === 'HEAD')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ value: null }));
+    return;
+  }
+
+  // All other API requests: proxy to local API (read-only).
   if (urlPath.startsWith('/api/')) {
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') { res.writeHead(405); res.end('read-only'); return; }
     const up = http.request({ host: '127.0.0.1', port: apiPort, path: req.url, method: req.method, headers: { ...req.headers, host: '127.0.0.1:' + apiPort, authorization: 'Bearer ' + apiKey } },
@@ -120,19 +188,21 @@ const web = http.createServer((req, res) => {
     up.end();
     return;
   }
-  let rel;
-  try { rel = decodeURIComponent(urlPath); } catch { rel = '/'; }
+
+  // Static files from public\.
+  let rel; try { rel = decodeURIComponent(urlPath); } catch { rel = '/'; }
   const file = path.join(PUBLIC, rel === '/' ? 'index.html' : rel);
   if (!file.startsWith(PUBLIC + path.sep)) { res.writeHead(403); res.end(); return; }
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not found'); return; }
     const ext = path.extname(file).toLowerCase();
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
-    // Point the page's API calls at this server (same switch server.js uses for DEV_API).
-    // A blank template is not a product record: the print lock (REC 7.4.10 must be done for the job) does not apply.
-    if (ext === '.html' && tplOf(req, true)) data = Buffer.from(data.toString().replace(/var PRINT_LOCK_RECS = \[[^\]]*\]/, 'var PRINT_LOCK_RECS = []'));
-    if (ext === '.html') res.end(data.toString().replace(/<head(\s[^>]*)?>/i, (m) => `${m}\n<script>window.FACILITY_API_BASE=${JSON.stringify('http://127.0.0.1:' + webPort)};</script>` + WATCH + WATCH_TPL));
-    else res.end(data);
+    if (ext === '.html') {
+      let html = data.toString()
+        .replace(/var PRINT_LOCK_RECS = \[[^\]]*\]/, 'var PRINT_LOCK_RECS = []')
+        .replace(/<head(\s[^>]*)?>/i, (m) => `${m}\n<script>window.FACILITY_API_BASE=${JSON.stringify('http://127.0.0.1:' + webPort)};</script>` + WATCH_TPL);
+      res.end(html);
+    } else res.end(data);
   });
 });
 await new Promise((r) => web.listen(0, '127.0.0.1', r));
@@ -149,7 +219,7 @@ function stop() {
 process.on('SIGINT', () => { stop(); process.exit(130); });
 process.on('exit', stop);
 
-// wait for the API copy to answer
+// Wait for the API copy to answer.
 let up = false;
 for (let i = 0; i < 90 && !up; i++) {
   if (api.exitCode != null) break;
@@ -166,10 +236,6 @@ const engineOfDef = (cfg) => (/ml/i.test(String((cfg || {}).mount || '')) || (cf
 const engineOf = (recordKey) => engineOfDef(readJson(path.relative(ARCHIVE, path.join(PUBLIC, 'data', 'record-defs', encodeURIComponent(recordKey) + '.json'))));
 const pdfBase = (e) => 'pdf/' + e.htmlPath.replace(/\.html$/, '');
 
-// Entry ids a record still has in the database, or null when that cannot be told (API error, or the record keeps its
-// entries somewhere other than its formrecord:/monitoring_log: list). An entry that was archived and later deleted
-// online has no print page any more: without this check its PDF job waits out the full timeout on every run
-// (DPR01197, a deleted test entry, 2026-11).
 const liveCache = new Map();
 const apiGet = (p) => new Promise((res) => {
   const r = http.get({ host: '127.0.0.1', port: apiPort, path: p, timeout: 60000, headers: { authorization: 'Bearer ' + apiKey } }, (x) => {
@@ -180,8 +246,7 @@ const apiGet = (p) => new Promise((res) => {
 });
 async function liveIds(recordKey) {
   if (liveCache.has(recordKey)) return liveCache.get(recordKey);
-  const ids = new Set();
-  let known = false, failed = false;
+  const ids = new Set(); let known = false, failed = false;
   for (const prefix of ['formrecord:', 'monitoring_log:']) {
     const got = await apiGet('/api/storage/key/' + encodeURIComponent(prefix + recordKey));
     if (got === undefined) { failed = true; break; }
@@ -196,34 +261,28 @@ async function liveIds(recordKey) {
   return out;
 }
 
-const pruned = [];   // index items that had PDFs of unverified entries removed
-const deletedNow = [];   // index items whose entries are all gone from the database (newly noticed this run)
+const pruned = [], deletedNow = [];
 let skippedDeleted = 0, emptyTemplates = 0;
-const jobs = [];   // { entry (index item), url, out (relative pdf path) }
+const jobs = [];
 for (const e of index) {
   if (onlyType && e.type !== onlyType) continue;
   if (onlyRecord && e.key !== onlyRecord) continue;
   if (e.type !== 'completed-record' && e.type !== 'record-def' && !DOC_TYPES.includes(e.type)) continue;
   const data = readJson(e.jsonPath);
   if (!data) continue;
-  // Records: ONLY verified entries get a PDF. An entry that is submitted but not yet verified has none, and any PDF
-  // that exists for one is removed. It is made on a later run, once the entry has been verified.
-  let ids = [], verifiedIds = [];
-  const outOf = (id) => pdfBase(e) + (ids.length > 1 ? '_' + String(id).replace(/[^A-Za-z0-9_-]/g, '') : '') + '.pdf';
+
+  let verifiedIds = [];
+  const stablePdf = pdfBase(e) + '.pdf';
+  const outOf = () => stablePdf;
+
   if (e.type === 'completed-record') {
     const entries = (data.entries || []).filter((x) => x && x.id);
-    ids = entries.map((x) => x.id);
+    const ids = entries.map((x) => x.id);
     verifiedIds = entries.filter((x) => x.status === 'verified' || x.verification).map((x) => x.id);
-    const allowed = new Set(verifiedIds.map(outOf));
-    const stale = [...new Set([...(e.pdfPaths || []), ...ids.map(outOf)])].filter((p) => !allowed.has(p));
+    const stale = [...new Set([...(e.pdfPaths || []), ...ids.map((id) => pdfBase(e) + '_' + String(id).replace(/[^A-Za-z0-9_-]/g, '') + '.pdf')])].filter((p) => p !== stablePdf);
     for (const p of stale) { try { fs.rmSync(path.join(ARCHIVE, p), { force: true }); } catch {} }
-    if ((e.pdfPaths || []).some((p) => !allowed.has(p))) {
-      e.pdfPaths = e.pdfPaths.filter((p) => allowed.has(p));
-      pruned.push(e);
-    }
+    if ((e.pdfPaths || []).some((p) => p !== stablePdf)) { e.pdfPaths = e.pdfPaths.filter((p) => p === stablePdf); pruned.push(e); }
     if (!verifiedIds.length) continue;
-    // Entries deleted online since they were archived cannot be printed: skip them instead of timing out.
-    // The archived HTML/JSON copy is left alone; the index item is marked so the archive shows why it has no PDF.
     const live = await liveIds(e.key);
     if (live) {
       const gone = verifiedIds.filter((id) => !live.has(id));
@@ -237,34 +296,33 @@ for (const e of index) {
       }
     }
   }
+
   const done = !force && e.pdfSha && e.pdfSha === (e.sha256 || '') && Array.isArray(e.pdfPaths) && e.pdfPaths.length
-    && (e.type !== 'completed-record' || verifiedIds.every((id) => e.pdfPaths.includes(outOf(id))))
-    && e.pdfPaths.every((p) => fs.existsSync(path.join(ARCHIVE, p)));
+    && e.pdfPaths.includes(stablePdf) && e.pdfPaths.every((p) => fs.existsSync(path.join(ARCHIVE, p)));
   if (done) continue;
+
   if (e.type === 'completed-record') {
     const engine = engineOf(e.key);
-    for (const id of verifiedIds.filter((x) => !onlyEntry || x === onlyEntry)) jobs.push({ entry: e, out: pdfBase(e) + (ids.length > 1 ? '_' + String(id).replace(/[^A-Za-z0-9_-]/g, '') : '') + '.pdf',
-      url: `${BASE}/pages/print-entry.html?rec=${encodeURIComponent(e.key)}&engine=${engine}&entry=${encodeURIComponent(id)}&print=1&printonly=1&_t=${jobs.length}`, token: String(jobs.length) });
+    const printId = verifiedIds.filter((x) => !onlyEntry || x === onlyEntry).at(-1);
+    if (printId) jobs.push({ entry: e, out: stablePdf,
+      url: `${BASE}/pages/print-entry.html?rec=${encodeURIComponent(e.key)}&engine=${engine}&entry=${encodeURIComponent(printId)}&print=1&printonly=1&_t=${jobs.length}`,
+      token: String(jobs.length), isRecord: true });
   } else if (e.type === 'record-def') {
-    // A definition with no fields at all (an empty snapshot that was archived) has no form to print.
     const hasForm = ['sections', 'fields', 'entryFields', 'rosters'].some((k) => Array.isArray(data[k]) && data[k].length) || data.roster;
     if (!hasForm) { emptyTemplates++; continue; }
     const n = String(jobs.length);
     templates.set(n, { key: e.key, def: data });
-    jobs.push({ entry: e, out: pdfBase(e) + '.pdf', token: n,
+    jobs.push({ entry: e, out: pdfBase(e) + '.pdf', token: n, isRecord: true,
       url: `${BASE}/pages/print-entry.html?rec=${encodeURIComponent(e.key)}&engine=${engineOfDef(data)}&entry=${TEMPLATE_ENTRY}&print=1&printonly=1&_t=${n}&_tpl=${n}` });
   } else if (data.sourceFile) {
     jobs.push({ entry: e, out: pdfBase(e) + '.pdf', url: `${BASE}/${data.sourceFile.split('/').map(encodeURIComponent).join('/')}` });
   }
   if (new Set(jobs.map((j) => j.entry)).size >= limit) break;
 }
+
 if (pruned.length) {
   const fresh = readIndex(ARCHIVE);
-  for (const e of pruned) {
-    const item = fresh.find((x) => x.type === e.type && x.key === e.key && x.label === e.label);
-    if (!item) continue;
-    if (e.pdfPaths.length) item.pdfPaths = e.pdfPaths; else { delete item.pdfPaths; delete item.pdfSha; }
-  }
+  for (const e of pruned) { const item = fresh.find((x) => x.type === e.type && x.key === e.key && x.label === e.label); if (!item) continue; if (e.pdfPaths.length) item.pdfPaths = e.pdfPaths; else { delete item.pdfPaths; delete item.pdfSha; } }
   fs.writeFileSync(path.join(ARCHIVE, 'index.json.tmp'), JSON.stringify(fresh, null, 1));
   fs.renameSync(path.join(ARCHIVE, 'index.json.tmp'), path.join(ARCHIVE, 'index.json'));
   console.log('removed PDFs of unverified entries from ' + pruned.length + ' item(s)');
@@ -272,22 +330,37 @@ if (pruned.length) {
 if (deletedNow.length) {
   const fresh = readIndex(ARCHIVE);
   const today = new Date().toISOString().slice(0, 10);
-  for (const e of deletedNow) {
-    const item = fresh.find((x) => x.type === e.type && x.key === e.key && x.label === e.label);
-    if (item) item.sourceDeleted = today;   // first run that found the entry gone from the database
-  }
+  for (const e of deletedNow) { const item = fresh.find((x) => x.type === e.type && x.key === e.key && x.label === e.label); if (item) item.sourceDeleted = today; }
   fs.writeFileSync(path.join(ARCHIVE, 'index.json.tmp'), JSON.stringify(fresh, null, 1));
   fs.renameSync(path.join(ARCHIVE, 'index.json.tmp'), path.join(ARCHIVE, 'index.json'));
 }
 if (emptyTemplates) console.log('templates with no fields (nothing to print), no PDF made: ' + emptyTemplates);
 if (skippedDeleted) console.log('entries deleted from the database, no PDF made: ' + skippedDeleted);
+
+// Pre-fetch entry data for completed-record jobs so Chrome never waits on Supabase.
+{
+  const recordKeys = [...new Set(jobs.filter((j) => j.isRecord && j.entry.type === 'completed-record').map((j) => j.entry.key))];
+  for (const rk of recordKeys) {
+    const entryIds = new Set(jobs.filter((j) => j.entry.key === rk && j.isRecord && j.entry.type === 'completed-record').map((j) => { const m = /[?&]entry=([^&]+)/.exec(j.url); return m ? decodeURIComponent(m[1]) : null; }).filter(Boolean));
+    if (!entryIds.size) continue;
+    for (const prefix of ['formrecord:', 'monitoring_log:']) {
+      const got = await apiGet('/api/storage/key/' + encodeURIComponent(prefix + rk));
+      if (!got || !got.value) continue;
+      let all; try { all = JSON.parse(got.value); } catch { continue; }
+      if (!Array.isArray(all)) continue;
+      for (const id of entryIds) {
+        const entry = all.find((x) => x && x.id === id);
+        if (entry) entryCache.set(prefix + rk + ':' + id, JSON.stringify({ key: prefix + rk, value: JSON.stringify([entry]) }));
+      }
+    }
+  }
+  if (entryCache.size) console.log(`pre-loaded ${entryCache.size} entr${entryCache.size === 1 ? 'y' : 'ies'} for fast serving`);
+}
+
 console.log(`archive: ${ARCHIVE}\nbrowser: ${path.basename(browser)}   PDFs to make: ${jobs.length}   workers: ${workers}`);
 
-// ---- browser, driven over the DevTools protocol ----------------------------------------------------------------------
-// One headless browser for the whole run, one tab per PDF. Each PDF is saved only when the page is really finished:
-//   records    -> the engine has handed over its print sheet (the /__printed signal) and its images have loaded
-//   documents  -> the page has loaded and gone quiet (no more requests)
-// A fixed wait is not used: an entry with photos can take a while, and saving early gives a page with only the header.
+// ---- browser over CDP ------------------------------------------------------------------------------------------------
+try { fs.rmSync(WORK, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch {}
 const chrome = spawn(browser, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions',
   '--remote-debugging-port=0', '--user-data-dir=' + path.join(WORK, 'profile'), 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 const wsUrl = await new Promise((res) => {
@@ -303,20 +376,18 @@ if (!wsUrl) { console.error('The browser did not start.'); stopAll(); process.ex
 const ws = new WebSocket(wsUrl);
 await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('could not connect to the browser')); });
 let seq = 0;
-const pending = new Map();     // command id -> { res, rej }
-const listeners = new Map();   // tab session -> (method, params) => void
+const pending = new Map();
+const listeners = new Map();
 ws.onmessage = (ev) => {
   const m = JSON.parse(ev.data);
   if (m.id && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); if (m.error) p.rej(new Error(m.error.message)); else p.res(m.result); }
   else if (m.method && m.sessionId && listeners.has(m.sessionId)) listeners.get(m.sessionId)(m.method, m.params);
 };
 const send = (method, params = {}, sessionId) => new Promise((res, rej) => {
-  const id = ++seq;
-  pending.set(id, { res, rej });
+  const id = ++seq; pending.set(id, { res, rej });
   ws.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
 });
 
-// Returns { state: 'ready' | 'locked' | 'timeout' | 'error', size }.
 async function printJob(job) {
   const outAbs = path.join(ARCHIVE, job.out);
   const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
@@ -331,41 +402,57 @@ async function printJob(job) {
     });
     await send('Page.enable', {}, sessionId);
     await send('Network.enable', {}, sessionId);
+
+    // Inject capture script before any page script for record jobs.
+    if (job.isRecord) await send('Page.addScriptToEvaluateOnNewDocument', { source: CAPTURE_SRC }, sessionId);
     await send('Page.navigate', { url: job.url }, sessionId);
-    const evalJs = async (expression) => {
-      const r = await Promise.race([send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, sessionId), sleep(20000).then(() => null)]);
+
+    const evalJs = async (expr) => {
+      const r = await Promise.race([send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }, sessionId), sleep(20000).then(() => null)]);
       return r && r.result ? r.result.value : undefined;
     };
 
-    let state = 'timeout';
+    // Wait for readiness signal.
+    let state = 'timeout', errMsg = '';
     const deadline = Date.now() + 150000;
     while (Date.now() < deadline) {
       await sleep(250);
       const quiet = Date.now() - lastNet;
-      if (job.token) {
-        if (printed.has(job.token)) { state = 'ready'; break; }
-        // The site's own "cannot print yet" page (print lock on REC 7.4.1 / 7.4.2 until REC 7.4.10 is done for the job).
-        if (loaded && quiet > 1500 && /Print not available yet/.test((await evalJs('document.body ? document.body.innerText.slice(0, 400) : ""')) || '')) { state = 'locked'; break; }
+      if (job.isRecord) {
+        if (await evalJs('!!window.__archivePdfReady')) { state = 'ready'; break; }
+        const fail = await evalJs('window.__archivePdfFail||""');
+        if (fail) { state = 'error'; errMsg = String(fail); break; }
+        if (loaded && quiet > 1500 && /Print not available yet/.test((await evalJs('document.body ? document.body.innerText.slice(0,400) : ""')) || '')) { state = 'locked'; break; }
       } else if (loaded && quiet > 2000 && (inflight === 0 || quiet > 8000)) { state = 'ready'; break; }
     }
+
     if (state !== 'ready') {
-      // say what the page was showing, so a timeout can be understood from the log
-      const seen = state === 'timeout' ? String((await evalJs('(document.body ? document.body.innerText : "").replace(/\\s+/g, " ").slice(0, 160)')) || '') : '';
-      return { state, size: 0, err: seen ? 'page showed: ' + seen : undefined };
+      const seen = state === 'timeout' ? String((await evalJs('(document.body ? document.body.innerText : "").replace(/\\s+/g," ").slice(0,160)')) || '') : '';
+      return { state, size: 0, err: (errMsg || '') + (seen ? ' page: ' + seen : '') };
     }
 
-    // let the finished page settle: fonts and every image (photos, logo) loaded
-    await evalJs('Promise.all([document.fonts ? document.fonts.ready : 0].concat(Array.from(document.images).map(function (i) { return i.complete ? 0 : new Promise(function (r) { i.onload = i.onerror = r; }); }))).then(function () { return 1; })');
+    // For record jobs: navigate to the captured print sheet and print that clean page.
+    if (job.isRecord && job.token) {
+      loaded = false; inflight = 0; lastNet = Date.now();
+      await send('Page.navigate', { url: `${BASE}/__sheet/${job.token}` }, sessionId);
+      const sheetDeadline = Date.now() + 30000;
+      while (Date.now() < sheetDeadline) {
+        await sleep(100);
+        if (loaded && inflight === 0 && Date.now() - lastNet > 500) break;
+      }
+    }
+
+    // Fonts and images settled.
+    await evalJs('Promise.all([document.fonts?document.fonts.ready:0].concat(Array.from(document.images).map(function(i){return i.complete?0:new Promise(function(r){i.onload=i.onerror=r;})}))).then(function(){return 1;})');
     await sleep(300);
-    // Same as the browser's print dialog with its defaults: A4, no browser header/footer, "Background graphics" off
-    // (the print sheets mark their own shading to print regardless), page size / margins from the page's own @page rule.
+
     const pdf = await send('Page.printToPDF', { printBackground: false, preferCSSPageSize: true, displayHeaderFooter: false, paperWidth: 8.27, paperHeight: 11.69 }, sessionId);
     const buf = Buffer.from(pdf.data, 'base64');
     if (buf.length < 1500) return { state: 'error', size: 0 };
-    // Two workers creating the same folder at once can collide on a network drive: retry instead of failing the run.
+
     for (let i = 0; ; i++) {
       try { fs.mkdirSync(path.dirname(outAbs), { recursive: true }); fs.writeFileSync(outAbs + '.part', buf); fs.renameSync(outAbs + '.part', outAbs); break; }
-      catch (e) { if (i >= 5) return { state: 'error', size: 0 }; await sleep(200); }
+      catch { if (i >= 5) return { state: 'error', size: 0 }; await sleep(200); }
     }
     return { state: 'ready', size: buf.length };
   } finally {
@@ -374,24 +461,23 @@ async function printJob(job) {
   }
 }
 
+// ---- worker pool ----------------------------------------------------------------------------------------------------
 let made = 0, failed = 0, locked = 0, next = 0;
-const total = new Map();     // index item -> number of PDFs it needs
+const total = new Map();
 for (const j of jobs) total.set(j.entry, (total.get(j.entry) || 0) + 1);
-const results = new Map();   // index item -> { paths: [], done: n, ok: bool, saved: bool }
+const results = new Map();
 
-// Record finished items on index.json. Called every so often and at the end, so an interrupted run keeps its progress
-// and the next run only makes what is still missing.
 function saveProgress() {
   const ready = [...results].filter(([e, r]) => !r.saved && r.done === total.get(e));
   if (!ready.length) return;
-  const fresh = readIndex(ARCHIVE);   // re-read: another script may have run meanwhile
+  const fresh = readIndex(ARCHIVE);
   for (const [e, r] of ready) {
     r.saved = true;
     const item = fresh.find((x) => x.type === e.type && x.key === e.key && x.label === e.label);
     if (!item) continue;
     if (!r.paths.length) { delete item.pdfPaths; delete item.pdfSha; continue; }
     item.pdfPaths = r.paths.slice().sort();
-    if (r.ok) item.pdfSha = item.sha256 || ''; else delete item.pdfSha;   // incomplete -> retried next run
+    if (r.ok) item.pdfSha = item.sha256 || ''; else delete item.pdfSha;
   }
   const file = path.join(ARCHIVE, 'index.json');
   fs.writeFileSync(file + '.tmp', JSON.stringify(fresh, null, 1));
@@ -407,7 +493,7 @@ await Promise.all(Array.from({ length: workers }, async () => {
     if (res.size) { made++; r.paths.push(job.out); }
     else {
       r.ok = false;
-      try { fs.rmSync(path.join(ARCHIVE, job.out), { force: true }); } catch {}   // never leave a stale or partial PDF behind
+      try { fs.rmSync(path.join(ARCHIVE, job.out), { force: true }); } catch {}
       if (res.state === 'locked') locked++;
       else { failed++; console.warn('FAILED (' + res.state + (res.err ? ': ' + res.err : '') + ') ' + job.out); }
     }
@@ -418,6 +504,6 @@ await Promise.all(Array.from({ length: workers }, async () => {
 saveProgress();
 console.log(`PDFs saved ${made}` + (locked ? `, not printable online yet (print lock) ${locked}` : '') + (failed ? `, FAILED ${failed}` : ''));
 await send('Browser.close').catch(() => {});
-await sleep(1500);   // let the browser let go of its profile folder before it is removed
+await sleep(1500);
 stopAll();
 process.exit(failed ? 1 : 0);
