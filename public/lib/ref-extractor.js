@@ -1,4 +1,4 @@
-﻿// ref-extractor.js — extract record/spec/cert cross-references from SOP/procedure plain text.
+// ref-extractor.js — extract record/spec/cert cross-references from SOP/procedure plain text.
 // Returns an array of { targetType, targetKey, matchText, contextText }.
 // Plain ES module: works in <script type="module"> and in Node (import).
 
