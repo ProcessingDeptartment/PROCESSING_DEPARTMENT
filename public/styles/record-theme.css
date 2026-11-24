@@ -1299,7 +1299,7 @@ body.rt-tablet .rt-content .ml-field input:focus, body.rt-tablet .rt-content .ml
   outline: 3px solid var(--action); outline-offset: 1px; border-color: var(--action);
 }
 body.rt-tablet .rt-content input[readonly], body.rt-tablet .rt-content input:disabled,
-body.rt-tablet .rt-content .ml-field.ml-readonly-calc input:disabled { background: var(--field-ro); color: var(--ink); opacity: 1; }
+body.rt-tablet .rt-content .ml-field.ml-readonly-calc input:disabled { background: var(--field-ro); color: var(--ink); opacity: 1; border-color: var(--field-ro); cursor: default; }
 body.rt-tablet .rt-content .fr-field.invalid input, body.rt-tablet .rt-content .ml-field.invalid input { border-color: var(--fail); }
 
 /* ---- C1: one container level -- flat white section, hairline under heading ---- */
