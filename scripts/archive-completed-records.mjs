@@ -105,8 +105,12 @@ try {
       if (!day || (since && day < since)) continue;
       const entry = { ...parsed, id: row.id, status: verification ? 'verified' : 'submitted', ...(verification ? { verification } : {}) };
       const jobNo = jobNoOf(entry, recordKey);
-      const gk = day + '|' + (jobNo == null ? '' : jobNo);
+      // Job-based records: group ALL entries for a job together regardless of day (each steam is a
+      // separate submission but they all belong to one job page). Monitoring logs (no jobNo) stay
+      // grouped by day so each day produces its own page.
+      const gk = jobNo != null ? String(jobNo) : (day + '|');
       if (!groups.has(gk)) groups.set(gk, { day, jobNo, entries: [] });
+      else { const g = groups.get(gk); if (day > g.day) g.day = day; }  // track latest day for subdir
       groups.get(gk).entries.push(entry);
       all.push({ entry, day, jobNo });
     }
