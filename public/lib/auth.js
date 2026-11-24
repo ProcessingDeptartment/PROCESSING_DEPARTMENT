@@ -34,7 +34,7 @@
   }
 
   function restoreSession() {
-    const username = safeSession(() => window.sessionStorage.getItem(SESSION_KEY), null);
+    const username = safeSession(() => window.localStorage.getItem(SESSION_KEY), null);
     if (!username) return;
     const user = USERS.find(u => u.username === username);
     if (!user) return;
@@ -48,7 +48,7 @@
 
     if (user.noPassword) {
       currentUser = user;
-      safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+      safeSession(() => window.localStorage.setItem(SESSION_KEY, user.username));
       applyRole(user);
       return Promise.resolve({ ok: true, user });
     }
@@ -62,7 +62,7 @@
       .then(function (data) {
         if (!data.ok) return { ok: false, error: data.error || 'Incorrect password' };
         currentUser = user;
-        safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+        safeSession(() => window.localStorage.setItem(SESSION_KEY, user.username));
         applyRole(user);
         return { ok: true, user };
       })
@@ -73,7 +73,7 @@
 
   function logout() {
     currentUser = null;
-    safeSession(() => window.sessionStorage.removeItem(SESSION_KEY));
+    safeSession(() => window.localStorage.removeItem(SESSION_KEY));
   }
 
   function getCurrentUser() {
@@ -155,7 +155,7 @@
     const user = (role ? USERS.find(u => u.role === role) : null) ||
                  { username: result.displayName.toLowerCase(), role: role || result.title, displayName: result.displayName, noPassword: true };
     currentUser = user;
-    safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+    safeSession(() => window.localStorage.setItem(SESSION_KEY, user.username));
     applyRole(user);
     return { ok: true, user };
   }
