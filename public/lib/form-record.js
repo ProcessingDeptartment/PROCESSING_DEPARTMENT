@@ -1445,11 +1445,6 @@
       ownTotal = priorOwn + thisOwn;
     } catch (e) { console.error('business rule lookup failed', rule, e); return true; }
     if (capTotal == null || isNaN(capTotal) || ownTotal == null || ownTotal <= capTotal) return true;
-    const proceed = confirm(
-      `${rule.message}\n\nTotal for this job so far (including this batch): ${ownTotal.toFixed(2)} kg\n` +
-      `Recorded cap for this job: ${capTotal.toFixed(2)} kg\n\n` +
-      `Click OK to confirm this is correct and submit anyway, or Cancel to go back and check.`);
-    if (!proceed) return false;
     stampOverride(values, rule.message);
     return true;
   }
@@ -1489,11 +1484,6 @@
       rowTotal = (parseFloat(g[rule.rowFilter.equals]) || 0) - (parseFloat(l[rule.rowFilter.equals]) || 0) + sumNow(rule.rowFilter.equals);
     } catch (e) { console.error('business rule lookup failed', rule, e); return true; }
     if (rowTotal <= capTotal + 1e-9) return true;
-    const proceed = confirm(
-      `${rule.message}\n\n${rule.rowFilter.equals} total for this job so far (including this batch): ${rowTotal.toFixed(2)} kg\n` +
-      `${rule.capFilter.equals} total for this job: ${capTotal.toFixed(2)} kg\n\n` +
-      `Click OK to confirm this is correct and submit anyway, or Cancel to go back and check.`);
-    if (!proceed) return false;
     stampOverride(values, rule.message);
     return true;
   }
