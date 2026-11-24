@@ -815,12 +815,12 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
   //   'drying-location'   -> the room of the job's latest movement marked Done (a reversed movement is blank, so it never counts)
   try {
     const ents = await prisma.$queryRawUnsafe(
-      `SELECT "id", to_char(dry_local_date("entryDate"), 'YYYY-MM-DD') AS d, "entryDate",
+      `SELECT "id", to_char(dry_local_date(COALESCE("entryDate", "submittedAt"::date::timestamp)), 'YYYY-MM-DD') AS d, "entryDate",
               "movedIntoDryRoom", "dateIntoDryRoomAt", "movedIntoDryContainer", "dateIntoDryContainerAt",
               "movedIntoGradingRoom", "dateIntoGradingRoomAt"
        FROM "sub_drying_process"
        WHERE UPPER("jobNo") = UPPER($1) AND COALESCE("status", 'submitted') <> 'draft'
-       ORDER BY "entryDate" ASC NULLS LAST`, jobNo);
+       ORDER BY COALESCE("entryDate", "submittedAt"::date::timestamp) ASC NULLS LAST`, jobNo);
     const first = ents.find((r) => r.d);
     if (first) out['drying-entry-date'] = { value: first.d, ids: [first.id] };
     const MOVES = [['movedIntoDryRoom', 'dateIntoDryRoomAt', 'Main dry room'], ['movedIntoDryContainer', 'dateIntoDryContainerAt', 'Dry container'], ['movedIntoGradingRoom', 'dateIntoGradingRoomAt', 'Grading room']];
