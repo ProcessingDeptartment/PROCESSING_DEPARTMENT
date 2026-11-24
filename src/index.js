@@ -786,8 +786,9 @@ app.get('/api/dry-monitoring/job-facts/:jobNo', async (req, res) => {
   if (!jobNo) return res.json(out);
   try {
     const cook = await prisma.$queryRawUnsafe(
-      `SELECT DISTINCT "submissionId", to_char("recordDate", 'YYYY-MM-DD') AS d FROM "dry_cooking_pot"
-       WHERE UPPER("jobNo") = UPPER($1) AND "process" = 'Cooking' AND "recordDate" IS NOT NULL
+      `SELECT DISTINCT "submissionId", to_char(COALESCE("recordDate", "submittedAt"::date), 'YYYY-MM-DD') AS d FROM "dry_cooking_pot"
+       WHERE UPPER("jobNo") = UPPER($1) AND "process" = 'Cooking'
+         AND COALESCE("recordDate", "submittedAt") IS NOT NULL
          AND COALESCE("status", 'submitted') <> 'draft'`, jobNo);
     if (cook.length) {
       const dates = [...new Set(cook.map((r) => r.d))].sort();
