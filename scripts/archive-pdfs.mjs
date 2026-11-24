@@ -347,19 +347,31 @@ if (emptyTemplates) console.log('templates with no fields (nothing to print), no
 if (skippedDeleted) console.log('entries deleted from the database, no PDF made: ' + skippedDeleted);
 
 // Pre-fetch entry data for completed-record jobs so Chrome never waits on Supabase.
+// For multi-entry jobs (e.g. drying-process where each steam is a separate entry),
+// all entries for the archive group are merged so the form engine renders every steam.
 {
-  const recordKeys = [...new Set(jobs.filter((j) => j.isRecord && j.entry.type === 'completed-record').map((j) => j.entry.key))];
+  const recordJobs = jobs.filter((j) => j.isRecord && j.entry.type === 'completed-record');
+  const recordKeys = [...new Set(recordJobs.map((j) => j.entry.key))];
   for (const rk of recordKeys) {
-    const entryIds = new Set(jobs.filter((j) => j.entry.key === rk && j.isRecord && j.entry.type === 'completed-record').map((j) => { const m = /[?&]entry=([^&]+)/.exec(j.url); return m ? decodeURIComponent(m[1]) : null; }).filter(Boolean));
-    if (!entryIds.size) continue;
     for (const prefix of ['formrecord:', 'monitoring_log:']) {
       const got = await apiGet('/api/storage/key/' + encodeURIComponent(prefix + rk));
       if (!got || !got.value) continue;
       let all; try { all = JSON.parse(got.value); } catch { continue; }
       if (!Array.isArray(all)) continue;
-      for (const id of entryIds) {
-        const entry = all.find((x) => x && x.id === id);
-        if (entry) entryCache.set(prefix + rk + ':' + id, JSON.stringify({ key: prefix + rk, value: JSON.stringify([entry]) }));
+      const allById = new Map(all.filter(Boolean).map((x) => [x.id, x]));
+      for (const job of recordJobs.filter((j) => j.entry.key === rk)) {
+        const m = /[?&]entry=([^&]+)/.exec(job.url);
+        const printId = m ? decodeURIComponent(m[1]) : null;
+        if (!printId) continue;
+        // Collect all entry IDs in this archive group (the group may span multiple entries, e.g. one per steam).
+        let groupIds;
+        try {
+          const gdata = JSON.parse(fs.readFileSync(path.join(ARCHIVE, job.entry.jsonPath), 'utf8'));
+          groupIds = (gdata.entries || []).map((x) => x.id).filter(Boolean);
+        } catch { groupIds = []; }
+        const groupEntries = groupIds.map((id) => allById.get(id)).filter(Boolean);
+        const payload = groupEntries.length ? groupEntries : (allById.has(printId) ? [allById.get(printId)] : null);
+        if (payload) entryCache.set(prefix + rk + ':' + printId, JSON.stringify({ key: prefix + rk, value: JSON.stringify(payload) }));
       }
     }
   }
