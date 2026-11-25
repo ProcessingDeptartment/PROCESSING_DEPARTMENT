@@ -4788,7 +4788,15 @@
           const f = (config.sections || []).flatMap(s => s.fields || []).find(x => x.key === k);
           if (f && !visFields.includes(f)) visFields.push(f);
         });
-        const cell = f => `<td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td><td>${esc(displayValue(f, sub.values[f.key]))}</td>`;
+        const sheetVal = (f) => {
+          const stored = sub.values[f.key];
+          if ((stored == null || stored === '') && f.computeFn && window.ComputeRegistry) {
+            const r = window.ComputeRegistry.run(f.computeFn, f.computeArgs || {}, sub.values);
+            return r === '' || r == null ? '' : String(r);
+          }
+          return stored;
+        };
+        const cell = f => `<td class="fr-sheet-lbl">${esc(f.label)}${f.unit ? ' (' + esc(f.unit) + ')' : ''}</td><td>${esc(displayValue(f, sheetVal(f)))}</td>`;
         // job info section: always 4 columns and no section heading (matches buildSlideSheet behaviour)
         const isJobInfo = sec.title === (config.jobInfoGroup || 'Job info');
         // printCols: N label/value columns → N/2 pairs per row (e.g. printCols 4 = 2 pairs per row)
@@ -4801,7 +4809,7 @@
         if (!rows) return '';
 
         const pageBreak = sec.newPage ? ' style="page-break-before:always;"' : '';
-        const titleHtml = isJobInfo ? '' : `<h3>${esc(sec.title)}</h3>`;
+        const titleHtml = (isJobInfo || sec.printNoTitle) ? '' : `<h3>${esc(sec.title)}</h3>`;
         return `<div${pageBreak}>${titleHtml}<table${perRow > 1 ? ' class="fr-sheet-grid"' : ''}><tbody>${rows}</tbody></table></div>`;
       }).join('');
     }
