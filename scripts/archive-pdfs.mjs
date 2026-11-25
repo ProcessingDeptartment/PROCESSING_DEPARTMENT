@@ -375,6 +375,38 @@ if (skippedDeleted) console.log('entries deleted from the database, no PDF made:
       }
     }
   }
+  // Fallback: for jobs whose entry data was not found in storage, load directly from the DB table.
+  // This covers entries that exist in the DB but were never written to Supabase storage
+  // (e.g. submitted via a path that bypassed the browser storage layer).
+  const subTable = (key) => 'sub_' + key.replace(/-/g, '_');
+  const { PrismaClient } = await import('@prisma/client');
+  const prisma = new PrismaClient();
+  try {
+    for (const job of jobs.filter((j) => j.isRecord && j.entry.type === 'completed-record')) {
+      const m = /[?&]entry=([^&]+)/.exec(job.url);
+      const printId = m ? decodeURIComponent(m[1]) : null;
+      if (!printId) continue;
+      const cacheKey = 'formrecord:' + job.entry.key + ':' + printId;
+      if (entryCache.has(cacheKey)) continue;  // already loaded from storage
+      // Load all entries for this archive group from the DB.
+      let groupIds;
+      try {
+        const gdata = JSON.parse(fs.readFileSync(path.join(ARCHIVE, job.entry.jsonPath), 'utf8'));
+        groupIds = (gdata.entries || []).map((x) => x.id).filter(Boolean);
+      } catch { groupIds = [printId]; }
+      let rows;
+      try { rows = await prisma.$queryRawUnsafe(`SELECT id, "rawJson"::text AS raw FROM "${subTable(job.entry.key)}" WHERE id = ANY($1::text[])`, groupIds); }
+      catch { continue; }
+      const entries = rows.map((r) => { try { const p = JSON.parse(r.raw); return { ...p, id: r.id }; } catch { return null; } }).filter(Boolean);
+      if (!entries.length) continue;
+      const payload = entries;
+      for (const prefix of ['formrecord:', 'monitoring_log:']) {
+        entryCache.set(prefix + job.entry.key + ':' + printId, JSON.stringify({ key: prefix + job.entry.key, value: JSON.stringify(payload) }));
+      }
+      console.log(`  DB fallback: loaded ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} for ${job.entry.key} / ${printId}`);
+    }
+  } finally { await prisma.$disconnect(); }
+
   if (entryCache.size) console.log(`pre-loaded ${entryCache.size} entr${entryCache.size === 1 ? 'y' : 'ies'} for fast serving`);
 }
 
