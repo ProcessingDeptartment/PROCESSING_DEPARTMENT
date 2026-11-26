@@ -12,8 +12,6 @@
   'use strict';
   if (window.EntryFlow) return;
 
-  var FALLBACK_OOSW = ['0-50g', '50-100g', '100-150g', '150-200g', '200-250g', '250-300g', '300-350g', '350-400g', '400-450g', '450g+'];
-
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmt2(n) { return (Math.round(n * 100) / 100).toFixed(2); }
@@ -74,15 +72,13 @@
   function oosw(opts) {
     opts = opts || {};
     var lockProbe = opts.lockProbe || 'fr_f_intakeDate';
-    var S = { sel: '', pref: false, sig: '', opts: FALLBACK_OOSW.slice(), dupJob: null, dupResult: null };
+    var S = { sig: '', dupJob: null, dupResult: null };
 
-    // ---- duplicate-submission warning. Submissions are one shared blob 'formrecord:salting-oosw' (array of
-    // { values, roster, status, submittedAt }) -- see storageKey in form-record.js.
+    // ---- duplicate-submission warning
     function checkDuplicate(jobNo, onResult) {
       var done = false;
       function finish(r) { if (done) return; done = true; clearTimeout(timer); onResult(r); }
       var timer = setTimeout(function () { finish(null); }, 5000);
-      // Ask the server for just this job's submitted entries; fall back to the shared blob if the API call fails.
       function fromApi() {
         return window.FacilityApi.fetch('/api/submissions/salting-oosw?full=1&status=submitted&jobNo=' + encodeURIComponent(jobNo))
           .then(function (res) { if (!res.ok) throw new Error('api'); return res.json(); })
@@ -133,42 +129,23 @@
     }
     function dupCheck() {
       var f = $('fr_f_jobNo'), job = f ? String(f.value || '').trim() : '';
-      // job is confirmed once the receiving autofill has landed (intakeDate / jiIntakeWeight) or it is a complete job number
-      // (3 characters + 5 digits, e.g. DPR01193): this form has no jiIntakeDate field, which the first version waited for
       var ia = $('fr_f_intakeDate'), iw = $('fr_f_jiIntakeWeight');
       var settled = job && ((ia && ia.value) || (iw && iw.value) || /^[A-Za-z0-9]{3}\d{5}$/.test(job));
       if (!settled || isLocked()) { S.dupJob = null; S.dupResult = null; renderDupBanner(null); return; }
       if (S.dupJob !== job) {
         S.dupJob = job; S.dupResult = null; renderDupBanner(null);
         checkDuplicate(job, function (r) {
-          if (S.dupJob !== job) return;   // job changed while fetching
+          if (S.dupJob !== job) return;
           S.dupResult = r; renderDupBanner(r);
         });
       } else if (S.dupResult) renderDupBanner(S.dupResult);
     }
 
-    function sizeOpts() {
-      var h = rosterHost();
-      var s = h && h.querySelector('select[id$="_sizeRange"]');
-      if (s) {
-        var o = [].slice.call(s.options).map(function (x) { return x.value; }).filter(Boolean);
-        if (o.length) S.opts = o;
-      }
-      return S.opts;
-    }
     function isLocked() { var p = $(lockProbe); return !!(p && p.disabled); }
-    function stored() {
-      return getRows().filter(function (r) { return r.sizeRange && num(r.weight) > 0; });
-    }
-    function storedFor(size) {
-      var r = stored().filter(function (x) { return x.sizeRange === size; })[0];
-      return r ? String(r.weight) : '';
-    }
+    function stored() { return getRows().filter(function (r) { return num(r.weight) > 0; }); }
     function intakeKg() { var f = $('fr_f_jiIntakeWeight'); var n = f ? num(f.value) : null; return n > 0 ? n : null; }
 
     function build(host) {
-      // Insert the entry panel OUTSIDE any jp-gated ancestor so it is always visible.
-      // (The jp-gated section hides the raw roster table, not the entry UI.)
       var jpGated = host.closest('.jp-gated');
       var insertRef = jpGated || host.closest('details') || host;
       var insertParent = insertRef.parentNode;
@@ -176,22 +153,17 @@
       panel.id = 'ef_oosw';
       panel.className = 'ef-panel no-print';
       panel.innerHTML =
-        '<div class="ef-label" id="ef_sr_lab">Size range</div>' +
-        '<div class="ef-seg" id="ef_seg" role="group" aria-labelledby="ef_sr_lab"></div>' +
-        '<label class="ef-field" for="ef_w"><span class="ef-label">Weight (kg)</span>' +
-          '<span class="ef-input-wrap"><input type="text" id="ef_w" inputmode="decimal" autocomplete="off" disabled>' +
+        '<label class="ef-field" for="ef_w"><span class="ef-label">OOSW weight (kg)</span>' +
+          '<span class="ef-input-wrap"><input type="text" id="ef_w" inputmode="decimal" autocomplete="off">' +
           '<span class="ef-suffix" aria-hidden="true">kg</span></span></label>' +
-        '<div class="ef-hint">Enter the total weight for this size range.</div>' +
         '<div class="ef-err" id="ef_err" role="alert"></div>' +
         '<button type="button" class="ef-btn ef-btn-primary ef-btn-lg" id="ef_add" disabled>Add weight</button>';
       var totals = document.createElement('div');
       totals.id = 'ef_totals';
       totals.className = 'ef-totals no-print';
-      totals.innerHTML = '<div class="ef-toastwrap"></div><div id="ef_conf"></div><div class="ef-totals-head">Size range totals</div>' +
-        '<div class="ef-hint">Percentages are auto-calculated from the total.</div><div id="ef_trows"></div>';
+      totals.innerHTML = '<div class="ef-toastwrap"></div><div id="ef_conf"></div><div class="ef-totals-head">OOSW totals</div><div id="ef_trows"></div>';
       insertParent.insertBefore(panel, insertRef);
       insertParent.insertBefore(totals, insertRef);
-      // the engine's own table / totals stay in the DOM (the store, and what prints) but are not shown on screen
       host.classList.add('ef-screen-hide');
       var rt = host.parentNode.querySelector('[id^="fr_rosterTotals"]'); if (rt) rt.classList.add('ef-screen-hide');
       ['fr_addRosterRowBtn', 'fr_importCsvBtn'].forEach(function (id) {
@@ -202,67 +174,38 @@
 
     function wire(panel, totals) {
       var w = panel.querySelector('#ef_w'), add = panel.querySelector('#ef_add');
-      panel.querySelector('#ef_seg').addEventListener('click', function (e) {
-        var b = e.target.closest('[data-size]'); if (!b || b.disabled) return;
-        select(b.getAttribute('data-size'), true);
-      });
       w.addEventListener('input', function () { panel.querySelector('#ef_err').textContent = ''; updateAdd(); });
       w.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); if (!add.disabled) addWeight(); } });
       add.addEventListener('click', addWeight);
       totals.addEventListener('click', function (e) {
-        var ed = e.target.closest('[data-edit]'), del = e.target.closest('[data-del]');
-        if (ed) { select(ed.getAttribute('data-edit'), false, true); }
-        else if (del) {
-          var size = del.getAttribute('data-del'), kg = storedFor(size);
-          confirmBar($('ef_conf'), 'Remove ' + size + ' (' + fmt2(num(kg)) + ' kg)?', function () {
-            setRows(getRows().filter(function (r) { return r.sizeRange !== size; }));
-            if (S.sel === size) { S.sel = ''; S.pref = false; w.value = ''; }
-            render(true);
+        var del = e.target.closest('[data-del]');
+        if (del) {
+          var i = parseInt(del.getAttribute('data-del'), 10);
+          var rows = stored(), r = rows[i];
+          if (!r) return;
+          confirmBar($('ef_conf'), 'Remove entry ' + (i + 1) + ' (' + fmt2(num(r.weight)) + ' kg)?', function () {
+            var all = getRows().filter(nonBlank); all.splice(i, 1); setRows(all); render(true);
           });
         }
       });
     }
 
-    function select(size, toggle, scroll) {
-      var w = $('ef_w');
-      if (toggle && S.sel === size) { S.sel = ''; S.pref = false; w.value = ''; }
-      else {
-        S.sel = size;
-        var cur = storedFor(size);
-        w.value = cur; S.pref = cur !== '';
-        var er = $('ef_err'); if (er) er.textContent = '';
-      }
-      render(true);
-      if (scroll) { var p = $('ef_oosw'); if (p && p.scrollIntoView) p.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }); }
-      if (S.sel) { try { w.focus(); w.select(); } catch (e) { } }
-    }
-
     function updateAdd() {
       var w = $('ef_w'), add = $('ef_add'); if (!w || !add) return;
       var lock = isLocked();
-      w.disabled = !S.sel || lock;
-      add.disabled = !S.sel || lock || !(num(w.value) > 0);
-      add.textContent = S.pref ? 'Update weight' : 'Add weight';
+      w.disabled = lock;
+      add.disabled = lock || !(num(w.value) > 0);
     }
 
     function addWeight() {
       var w = $('ef_w'), err = $('ef_err');
       var kg = num(w.value);
-      if (!S.sel) { err.textContent = 'Pick a size range first.'; return; }
       if (!(kg > 0)) { err.textContent = 'Enter a weight greater than 0 kg.'; try { w.focus(); } catch (e) { } return; }
       var rows = getRows().filter(nonBlank);
-      var had = false;
-      rows.forEach(function (r) { if (r.sizeRange === S.sel) { r.weight = String(kg); had = true; } });
-      if (!had) rows.push({ sizeRange: S.sel, weight: String(kg) });
-      var order = sizeOpts();
-      rows.sort(function (a, b) {
-        var ia = order.indexOf(a.sizeRange), ib = order.indexOf(b.sizeRange);
-        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-      });
+      rows.push({ weight: String(kg) });
       setRows(rows);
-      toastIn($('ef_totals').querySelector('.ef-toastwrap').parentNode, S.sel + (had ? ' updated to ' : ' set to ') + fmt2(kg) + ' kg');
-      toastIn($('ef_oosw'), S.sel + (had ? ' updated to ' : ' set to ') + fmt2(kg) + ' kg');
-      w.value = ''; S.pref = false; err.textContent = '';
+      toastIn($('ef_totals'), fmt2(kg) + ' kg added');
+      w.value = ''; err.textContent = '';
       render(true);
       try { w.focus(); } catch (e) { }
     }
@@ -270,32 +213,24 @@
     function render(force) {
       var host = rosterHost();
       if (!host) return;
-      if (!$('ef_oosw')) { build(host); S.sel = ''; S.pref = false; S.sig = ''; }   // fresh form render: nothing selected
-      var opts = sizeOpts(), rows = stored(), lock = isLocked();
+      if (!$('ef_oosw')) { build(host); S.sig = ''; }
+      var rows = stored(), lock = isLocked();
       dupCheck();
-      var sig = JSON.stringify([opts, S.sel, S.pref, lock, rows.map(function (r) { return [r.sizeRange, r.weight]; }), intakeKg()]);
+      var sig = JSON.stringify([lock, rows.map(function (r) { return r.weight; }), intakeKg()]);
       if (!force && sig === S.sig) { updateAdd(); return; }
       S.sig = sig;
       var panel = $('ef_oosw');
       panel.classList.toggle('ef-locked', lock);
-      $('ef_seg').innerHTML = opts.map(function (o) {
-        var on = o === S.sel;
-        return '<button type="button" class="ef-seg-btn' + (on ? ' on' : '') + '" data-size="' + esc(o) + '" aria-pressed="' + on + '"' + (lock ? ' disabled' : '') + '>' +
-          (on ? '<span class="ef-tick" aria-hidden="true">✓</span>' : '') + esc(o) + '</button>';
-      }).join('');
-      var total = rows.reduce(function (s, r) { return s + num(r.weight); }, 0);
+      var total = rows.reduce(function (s, r) { return s + (num(r.weight) || 0); }, 0);
       var html = '';
-      rows.forEach(function (r) {
-        var kg = num(r.weight), pct = total > 0 ? kg / total * 100 : 0;
-        html += '<div class="ef-trow"><span class="ef-tsize">' + esc(r.sizeRange) + '</span>' +
+      rows.forEach(function (r, i) {
+        var kg = num(r.weight);
+        html += '<div class="ef-trow"><span class="ef-tsize">Entry ' + (i + 1) + '</span>' +
           '<span class="ef-tkg">' + fmt2(kg) + ' kg</span>' +
-          '<span class="ef-tpct" aria-readonly="true" title="Auto-calculated"><span aria-hidden="true">🔒</span> ' + fmt2(pct) + ' %</span>' +
-          (lock ? '' : '<button type="button" class="ef-link" data-edit="' + esc(r.sizeRange) + '" aria-label="Edit ' + esc(r.sizeRange) + '">Edit</button>' +
-            '<button type="button" class="ef-x" data-del="' + esc(r.sizeRange) + '" aria-label="Remove ' + esc(r.sizeRange) + '">✕</button>') + '</div>';
+          (lock ? '' : '<button type="button" class="ef-x" data-del="' + i + '" aria-label="Remove entry ' + (i + 1) + '">✕</button>') + '</div>';
       });
-      if (!rows.length) html += '<div class="ef-hint">Add weights above for each size range.</div>';
-      html += '<div class="ef-trow ef-ttotal"><span class="ef-tsize">Total OOSW</span><span class="ef-tkg">' + fmt2(total) + ' kg</span>' +
-        '<span class="ef-tpct">' + (rows.length ? '100.00' : '0.00') + ' %</span></div>';
+      if (!rows.length) html += '<div class="ef-hint">No weights added yet.</div>';
+      html += '<div class="ef-trow ef-ttotal"><span class="ef-tsize">Total OOSW</span><span class="ef-tkg">' + fmt2(total) + ' kg</span></div>';
       var ik = intakeKg();
       if (ik && total > 0) html += '<div class="ef-hint">OOSW % of job whole weight: ' + fmt2(total / ik * 100) + ' %</div>';
       $('ef_trows').innerHTML = html;
