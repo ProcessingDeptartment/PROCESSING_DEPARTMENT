@@ -15,6 +15,7 @@
   let currentUser = null;
 
   const SESSION_KEY = 'processing.auth.username';
+  const AUTH_CHANNEL = 'processing.auth.channel';
 
   function apiBase() {
     return (window.FACILITY_API_BASE || 'https://processing-department-api.onrender.com').replace(/\/$/, '');
@@ -33,8 +34,39 @@
     window.__currentUserName = user ? user.displayName : '';
   }
 
+  // Listen for auth requests from other tabs and broadcast logouts.
+  function initChannel() {
+    if (!window.BroadcastChannel) return;
+    const ch = new BroadcastChannel(AUTH_CHANNEL);
+    ch.onmessage = function (e) {
+      if (e.data.type === 'AUTH_REQUEST' && currentUser) {
+        ch.postMessage({ type: 'AUTH_RESPONSE', username: currentUser.username });
+      } else if (e.data.type === 'AUTH_LOGOUT') {
+        currentUser = null;
+        safeSession(() => window.sessionStorage.removeItem(SESSION_KEY));
+        applyRole(null);
+      }
+    };
+  }
+
+  // Broadcast current login state to any tab that just asked.
+  function broadcastLogin(username) {
+    if (!window.BroadcastChannel) return;
+    const ch = new BroadcastChannel(AUTH_CHANNEL);
+    ch.postMessage({ type: 'AUTH_RESPONSE', username });
+    ch.close();
+  }
+
+  function broadcastLogout() {
+    if (!window.BroadcastChannel) return;
+    const ch = new BroadcastChannel(AUTH_CHANNEL);
+    ch.postMessage({ type: 'AUTH_LOGOUT' });
+    ch.close();
+  }
+
+  // Sync restore from sessionStorage (runs at load time).
   function restoreSession() {
-    const username = safeSession(() => window.localStorage.getItem(SESSION_KEY), null);
+    const username = safeSession(() => window.sessionStorage.getItem(SESSION_KEY), null);
     if (!username) return;
     const user = USERS.find(u => u.username === username);
     if (!user) return;
@@ -42,14 +74,49 @@
     applyRole(user);
   }
 
+  // Async restore: if sessionStorage is empty, ask other tabs via BroadcastChannel.
+  // Resolves true if session was restored, false if not.
+  function restoreSessionAsync() {
+    if (currentUser) return Promise.resolve(true);
+    if (!window.BroadcastChannel) return Promise.resolve(false);
+    return new Promise(function (resolve) {
+      const ch = new BroadcastChannel(AUTH_CHANNEL);
+      let done = false;
+      ch.onmessage = function (e) {
+        if (e.data.type === 'AUTH_RESPONSE' && !done) {
+          done = true;
+          ch.close();
+          const user = USERS.find(u => u.username === e.data.username);
+          if (user) {
+            currentUser = user;
+            safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+            applyRole(user);
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }
+      };
+      ch.postMessage({ type: 'AUTH_REQUEST' });
+      setTimeout(function () {
+        if (!done) { done = true; ch.close(); resolve(false); }
+      }, 300);
+    });
+  }
+
+  function _setUser(user) {
+    currentUser = user;
+    safeSession(() => window.sessionStorage.setItem(SESSION_KEY, user.username));
+    applyRole(user);
+    broadcastLogin(user.username);
+  }
+
   function login(username, password) {
     const user = USERS.find(u => u.username === username.toLowerCase().trim());
     if (!user) return Promise.resolve({ ok: false, error: 'Invalid username' });
 
     if (user.noPassword) {
-      currentUser = user;
-      safeSession(() => window.localStorage.setItem(SESSION_KEY, user.username));
-      applyRole(user);
+      _setUser(user);
       return Promise.resolve({ ok: true, user });
     }
 
@@ -61,9 +128,7 @@
       .then(function (res) { return res.json(); })
       .then(function (data) {
         if (!data.ok) return { ok: false, error: data.error || 'Incorrect password' };
-        currentUser = user;
-        safeSession(() => window.localStorage.setItem(SESSION_KEY, user.username));
-        applyRole(user);
+        _setUser(user);
         return { ok: true, user };
       })
       .catch(function () {
@@ -73,7 +138,8 @@
 
   function logout() {
     currentUser = null;
-    safeSession(() => window.localStorage.removeItem(SESSION_KEY));
+    safeSession(() => window.sessionStorage.removeItem(SESSION_KEY));
+    broadcastLogout();
   }
 
   function getCurrentUser() {
@@ -108,6 +174,7 @@
   }
 
   restoreSession();
+  initChannel();
 
   if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', function () { applyRole(currentUser); });
@@ -154,9 +221,7 @@
     // Find matching USERS entry by role, or fall back to a synthetic user
     const user = (role ? USERS.find(u => u.role === role) : null) ||
                  { username: result.displayName.toLowerCase(), role: role || result.title, displayName: result.displayName, noPassword: true };
-    currentUser = user;
-    safeSession(() => window.localStorage.setItem(SESSION_KEY, user.username));
-    applyRole(user);
+    _setUser(user);
     return { ok: true, user };
   }
 
@@ -168,6 +233,7 @@
     getCurrentUsername,
     getCurrentRole,
     isAuthenticated,
+    restoreSessionAsync,
     getAvailableUsers,
     createSignOff,
     verifyPasskey,

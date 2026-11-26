@@ -98,11 +98,18 @@
   function ensureAuthenticated() {
     if (!window.AUTH_GATES_ENABLED) return Promise.resolve();
     if (window.Auth && window.Auth.isAuthenticated()) return Promise.resolve();
-    return new Promise((resolve) => {
-      showLoginModal();
-      document.addEventListener('authSuccess', function handler() {
-        document.removeEventListener('authSuccess', handler);
-        resolve();
+    // Try to inherit session from another open tab before prompting.
+    const crossTabRestore = (window.Auth && window.Auth.restoreSessionAsync)
+      ? window.Auth.restoreSessionAsync()
+      : Promise.resolve(false);
+    return crossTabRestore.then(function (restored) {
+      if (restored) return;
+      return new Promise(function (resolve) {
+        showLoginModal();
+        document.addEventListener('authSuccess', function handler() {
+          document.removeEventListener('authSuccess', handler);
+          resolve();
+        });
       });
     });
   }
